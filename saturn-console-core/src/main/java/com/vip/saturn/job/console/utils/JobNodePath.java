@@ -88,10 +88,6 @@ public final class JobNodePath {
         return String.format("/%s/%s/leader/%s", $JOBS_NODE_NAME, jobName, nodeName);
     }
     
-    public static String getRunAtOncePath(final String jobName) {
-        return String.format("/%s/%s/leader/execution/runAtOnce", $JOBS_NODE_NAME, jobName);
-    }
-    
     public static String getRunOneTimePath(final String jobName, final String executorName) {
         return String.format("/%s/%s/servers/%s/runOneTime", $JOBS_NODE_NAME, jobName, executorName);
     }
