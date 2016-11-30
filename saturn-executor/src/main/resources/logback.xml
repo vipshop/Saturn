@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="log.directory" value="${saturn.log.dir}" />
+    <property name="log.context.name" value="saturn-job-executor" />
+    <property name="log.charset" value="UTF-8" />
+    <property name="log.maxHistory" value="20" />
+    <property name="log.maxFileSize" value="1GB" />
+    <property name="log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n" />
+    <property name="process.log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n" />
+    <property name="log.error.log.level" value="WARN" />
+    <property name="log.async.queue.size" value="1024" />
+    
+    <contextName>${log.context.name}</contextName>
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    	<file>${log.directory}/${log.context.name}-log.log</file>
+    	<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${log.directory}/${log.context.name}-log-%i.log</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<append>true</append>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1GB</maxFileSize>
+		</triggeringPolicy>
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Asynchronized log, for FILE only -->
+    <appender name ="ASYNC_FILE" class= "ch.qos.logback.classic.AsyncAppender">
+        <!-- Don't discard log, logback will discard TRACE, DEBUG, INFO log when queue 80% capacity reached by default. -->
+        <discardingThreshold >0</discardingThreshold>
+        <queueSize>${log.async.queue.size}</queueSize>
+        <appender-ref ref = "FILE"/>
+    </appender>
+    
+     
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    	<file>${log.directory}/${log.context.name}-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+          <level>${log.error.log.level}</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${log.directory}/${log.context.name}-error-%i.log</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<append>true</append>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+		<maxFileSize>1GB</maxFileSize>
+		</triggeringPolicy>
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+    </appender>
+    
+
+
+	<!-- 为了单独控制com.vip.saturn的日志级别，例如DEBUG -->
+	<logger name="com.vip.saturn" additivity="false">
+		<level value="INFO" />
+		<if condition='property("saturn.stdout").equals("true")'>
+			<then>
+				<appender-ref ref="STDOUT" />
+			</then>
+		</if>
+		<appender-ref ref="ASYNC_FILE" />
+		<appender-ref ref="ERROR" />
+	</logger>
+	
+    <root>
+        <level value="INFO" />
+        <if condition='property("saturn.stdout").equals("true")'>
+			<then>
+				<appender-ref ref="STDOUT" />
+			</then>
+		</if>
+        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ERROR" />
+    </root>
+</configuration>

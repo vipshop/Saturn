@@ -1,0 +1,43 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+layout:decorator="frame-layout">
+	<head>
+		<link href="lib/datatables/dataTables.bootstrap.min.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div th:remove="tag" layout:fragment="content">
+			<div class="panel panel-default">
+				<div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
+					<div class="panel-title">
+						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 注册中心信息</span>
+					</div>
+					<div class="clearfix"></div>
+				</div>
+				<div class="panel-body">
+					<table id="regCenters" class="table table-hover table-bordered">
+						<thead>
+							<tr>
+								<th>命名空间</th>
+								<th>业务组</th>
+								<th>连接地址</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+			<div th:replace="fragments :: success-dialog"></div>
+			<div th:replace="fragments :: failure-dialog(id='connect-reg-center-failure-dialog', reason='连接失败，请检查注册中心配置')"></div>
+			<div th:replace="fragments :: failure-dialog(id='refresh-cmdb-failure-dialog', reason='')"></div>
+			<div th:replace="fragments :: failure-dialog(id='add-reg-center-failure-dialog', reason='注册中心名称重复')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='delete-confirm-dialog', text='确认要删除吗？')"></div>
+		</div>
+		<div th:remove="tag" layout:fragment="footer-scripts">
+			<script src="lib/datatables/jquery.dataTables.min.js"></script>
+			<script src="lib/datatables/dataTables.bootstrap.min.js"></script>
+			<script src="js/registry_center.js"></script>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.vip.saturn</groupId>
+		<artifactId>saturn-job</artifactId>
+		<version>master-SNAPSHOT</version>
+	</parent>
+	<artifactId>saturn-plugin</artifactId>
+	<packaging>maven-plugin</packaging>
+	<name>${project.artifactId}</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.gmavenplus</groupId>
+				<artifactId>gmavenplus-plugin</artifactId>
+				<version>1.5</version>
+ 				<executions>
+ 					<execution>
+ 						<goals>
+ 							<goal>addSources</goal>
+ 							<goal>addTestSources</goal>
+ 							<goal>generateStubs</goal>
+ 							<goal>compile</goal>
+ 							<goal>testGenerateStubs</goal>
+ 							<goal>testCompile</goal>
+ 							<goal>removeStubs</goal>
+ 							<goal>removeTestStubs</goal>
+ 						</goals>
+ 					</execution>
+ 				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>doclint-java8-disable</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<additionalparam>-Xdoclint:none</additionalparam>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.gradle</groupId>
+			<artifactId>gradle-core</artifactId>
+			<version>${gradle.version}</version>
+		</dependency>
+
+		<!-- gradle-base-services-groovy need to be dependent explicitly. -->
+		<dependency>
+			<groupId>org.gradle</groupId>
+			<artifactId>gradle-base-services-groovy</artifactId>
+			<version>${gradle.version}</version>
+		</dependency>
+
+		<!-- gradle-base-services need to be dependent explicitly. -->
+		<dependency>
+			<groupId>org.gradle</groupId>
+			<artifactId>gradle-base-services</artifactId>
+			<version>${gradle.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>${groovy.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-plugin-api</artifactId>
+			<version>${maven-plugin-api.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-plugin-descriptor</artifactId>
+			<version>${maven-plugin-descriptor.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.maven.plugin-tools</groupId>
+			<artifactId>maven-plugin-tools-annotations</artifactId>
+			<version>${maven-plugin-plugin.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.maven.plugin-tools</groupId>
+			<artifactId>maven-plugin-annotations</artifactId>
+			<version>${maven-plugin-plugin.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-plugin-plugin</artifactId>
+			<version>${maven-plugin-plugin.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-project</artifactId>
+			<version>${maven-project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.ivy</groupId>
+			<artifactId>ivy</artifactId>
+			<version>${ivy.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
