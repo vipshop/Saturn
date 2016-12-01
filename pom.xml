@@ -619,16 +619,4 @@
 		</profile>
 	</profiles>
 
-	<distributionManagement>
-		<repository>
-			<id>releases</id>
-			<name>vipshop internal releases repository</name>
-			<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>vipshop internal snapshots repository</name>
-			<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>

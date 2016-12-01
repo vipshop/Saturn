@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by xiaopeng.he on 2016/8/19.
- *
- * http://gitlab.tools.vipshop.com/platform/saturn/issues/761
  */
 public class DemoMsgJob extends AbstractSaturnMsgJob {
 
