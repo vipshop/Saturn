@@ -586,6 +586,8 @@
                     <instrumentation>
                         <ignoreTrivial>true</ignoreTrivial>
                         <excludes>
+                            <exclude>com/vip/**/*Test.class</exclude>
+                            <exclude>com/vip/**/Test*.class</exclude>
                             <exclude>com/vip/saturn/job/console/**/*.class</exclude>
                         </excludes>
                     </instrumentation>
@@ -684,12 +686,12 @@
 				<repository>
 					<id>releases</id>
 					<name>vipshop internal releases repository</name>
-					<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/releases</url>
+					<url>http://mvn1.tools.inner.com/nexus/content/repositories/releases</url>
 				</repository>
 				<snapshotRepository>
 					<id>snapshots</id>
 					<name>vipshop internal snapshots repository</name>
-					<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/snapshots</url>
+					<url>http://mvn1.tools.inner.com/nexus/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
         </profile>
