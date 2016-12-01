@@ -7,10 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.exec.OS;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import com.vip.saturn.it.AbstractSaturnIT;
@@ -21,22 +18,15 @@ import com.vip.saturn.job.internal.config.JobConfiguration;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ScriptJobIT extends AbstractSaturnIT {
-	public static String NORMAL_PHP_PATH;
-	public static String RETURN_VAL_PHP_PATH;
-	public static String ERROR_PHP_PATH;
+	public static String NORMAL_SH_PATH;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
 		startNamespaceShardingManagerList(1);
 		startExecutorList(1);
 
-		File file1 = new File("src/test/resources/script/normal/normal_0.php");
-		NORMAL_PHP_PATH = file1.getAbsolutePath();
-		File file2 = new File("src/test/resources/script/normal/return_val.php");
-		RETURN_VAL_PHP_PATH = file2.getAbsolutePath();
-		File file3 = new File("src/test/resources/script/normal/throw_error.php");
-		ERROR_PHP_PATH = file3.getAbsolutePath();
-
+		File file1 = new File("src/test/resources/script/normal/normal_0.sh");
+		NORMAL_SH_PATH = file1.getAbsolutePath();
 	}
 
 	@AfterClass
@@ -48,7 +38,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 	}
 
 	@Test
-	public void A_NormalPhp() throws InterruptedException {
+	public void A_Normalsh() throws InterruptedException {
 		if (!OS.isFamilyUnix()) {
 			return;
 		}
@@ -58,7 +48,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		jobConfiguration.setJobClass("com.vip.saturn.job.shell.SaturnScriptJob");
 		jobConfiguration.setShardingTotalCount(1);
 		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setShardingItemParameters("0=php " + NORMAL_PHP_PATH);
+		jobConfiguration.setShardingItemParameters("0=sh " + NORMAL_SH_PATH);
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
 		log.info("enabled job...");

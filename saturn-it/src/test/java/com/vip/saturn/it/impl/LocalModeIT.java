@@ -1,39 +1,29 @@
 package com.vip.saturn.it.impl;
 
-import java.io.File;
-
-import org.apache.commons.exec.OS;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-
+import org.apache.commons.exec.OS;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class LocalModeIT extends AbstractSaturnIT {
-	public static String NORMAL_PHP_PATH;
-	public static String RETURN_VAL_PHP_PATH;
-	public static String ERROR_PHP_PATH;
+	public static String NORMAL_SH_PATH;
 
 	@BeforeClass
 	public static void setUp() throws Exception {		
 		startNamespaceShardingManagerList(1);
 		startExecutorList(2);
-		File file1 = new File("src/test/resources/script/normal/normal_0.php");
-		NORMAL_PHP_PATH = file1.getAbsolutePath();
-
-		File file2 = new File("src/test/resources/script/normal/return_val.php");
-		RETURN_VAL_PHP_PATH = file2.getAbsolutePath();
-
-		File file3 = new File("src/test/resources/script/normal/throw_error.php");
-		ERROR_PHP_PATH = file3.getAbsolutePath();
+		File file1 = new File("src/test/resources/script/normal/normal_0.sh");
+		NORMAL_SH_PATH = file1.getAbsolutePath();
 	}
 
 	@AfterClass
@@ -47,11 +37,11 @@ public class LocalModeIT extends AbstractSaturnIT {
 		if (!OS.isFamilyUnix()) {
 			return;
 		}
-		final JobConfiguration jobConfiguration = new JobConfiguration("phpLocalModeJob");
+		final JobConfiguration jobConfiguration = new JobConfiguration("shLocalModeJob");
 		jobConfiguration.setCron("*/2 * * * * ?");
 		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
 		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setShardingItemParameters("*=php " + NORMAL_PHP_PATH);
+		jobConfiguration.setShardingItemParameters("*=sh " + NORMAL_SH_PATH);
 		jobConfiguration.setLocalMode(true);		
 
 		addJob(jobConfiguration);

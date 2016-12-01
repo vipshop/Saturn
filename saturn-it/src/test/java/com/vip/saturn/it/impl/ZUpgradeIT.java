@@ -22,14 +22,14 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 
 public class ZUpgradeIT extends AbstractSaturnIT {
-	public static String LONG_TIME_PHP_PATH;
+	public static String LONG_TIME_SH_PATH;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
 		startNamespaceShardingManagerList(1);
 
-		File file1 = new File("src/test/resources/script/normal/longtime.php");
-		LONG_TIME_PHP_PATH = file1.getAbsolutePath();
+		File file1 = new File("src/test/resources/script/normal/longtime.sh");
+		LONG_TIME_SH_PATH = file1.getAbsolutePath();
 
 	}
 
@@ -54,7 +54,7 @@ public class ZUpgradeIT extends AbstractSaturnIT {
 		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
 		jobConfiguration.setShardingTotalCount(shardCount);
 		jobConfiguration.setShardingItemParameters(
-				"0=php " + LONG_TIME_PHP_PATH + ",1=php " + LONG_TIME_PHP_PATH + ",2=php " + LONG_TIME_PHP_PATH);
+				"0=sh " + LONG_TIME_SH_PATH + ",1=sh " + LONG_TIME_SH_PATH + ",2=sh " + LONG_TIME_SH_PATH);
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
@@ -109,7 +109,7 @@ public class ZUpgradeIT extends AbstractSaturnIT {
 		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
 		jobConfiguration.setShardingTotalCount(shardCount);
 		jobConfiguration.setShardingItemParameters(
-				"0=php " + LONG_TIME_PHP_PATH + ",1=php " + LONG_TIME_PHP_PATH + ",2=php " + LONG_TIME_PHP_PATH);
+				"0=sh " + LONG_TIME_SH_PATH + ",1=sh " + LONG_TIME_SH_PATH + ",2=sh " + LONG_TIME_SH_PATH);
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);

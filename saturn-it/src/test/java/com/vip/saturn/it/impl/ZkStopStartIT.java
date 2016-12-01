@@ -3,31 +3,25 @@
  */
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.fail;
 
 public class ZkStopStartIT extends AbstractSaturnIT {
-	public static String LONG_TIME_PHP_PATH;
 	
 	@BeforeClass
     public static void setUp() throws Exception {
         startNamespaceShardingManagerList(1);
         startExecutorList(3);
-        
-		File file1 = new File("src/test/resources/script/normal/longtime.php");
-		LONG_TIME_PHP_PATH = file1.getAbsolutePath();
     }
 
     @AfterClass

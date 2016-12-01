@@ -25,15 +25,15 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 
 public class TimeoutJobIT extends AbstractSaturnIT {
-	public static String LONG_TIME_PHP_PATH;
+	public static String LONG_TIME_SH_PATH;
 	
 	@BeforeClass
     public static void setUp() throws Exception {
         startNamespaceShardingManagerList(1);
         startExecutorList(3);
         
-		File file1 = new File("src/test/resources/script/normal/longtime.php");
-		LONG_TIME_PHP_PATH = file1.getAbsolutePath();
+		File file1 = new File("src/test/resources/script/normal/longtime.sh");
+		LONG_TIME_SH_PATH = file1.getAbsolutePath();
 
     }
 
@@ -124,12 +124,12 @@ public class TimeoutJobIT extends AbstractSaturnIT {
     }
     
     @Test
-    public void test_B_PhpJob() throws InterruptedException{
+    public void test_B_shJob() throws InterruptedException{
     	if (!OS.isFamilyUnix()) {
     		return;
     	}
     	final int shardCount = 3;
-    	final String jobName = "timeoutITJobPhp";
+    	final String jobName = "timeoutITJobsh";
 
     	JobConfiguration jobConfiguration = new JobConfiguration(jobName);
     	jobConfiguration.setCron("* * 1 * * ?");
@@ -137,7 +137,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
     	jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
     	jobConfiguration.setTimeoutSeconds(3);
     	jobConfiguration.setShardingTotalCount(shardCount);
-    	jobConfiguration.setShardingItemParameters("0=php "+LONG_TIME_PHP_PATH+",1=php "+LONG_TIME_PHP_PATH+",2=php "+LONG_TIME_PHP_PATH);
+    	jobConfiguration.setShardingItemParameters("0=sh "+LONG_TIME_SH_PATH+",1=sh "+LONG_TIME_SH_PATH+",2=sh "+LONG_TIME_SH_PATH);
     	addJob(jobConfiguration);
     	Thread.sleep(1000);
     	enableJob(jobConfiguration.getJobName());    	
