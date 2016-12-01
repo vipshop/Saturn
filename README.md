@@ -1,4 +1,4 @@
-# Saturn
+# ![logo](https://github.com/vipshop/Saturn/blob/doc/saturn-logo.jpg)
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
 [![Coverage Status](https://coveralls.io/repos/vipshop/Saturn/badge.svg?branch=develop&service=github)](https://coveralls.io/github/vipshop/Saturn?branch=develop)
