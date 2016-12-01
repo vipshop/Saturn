@@ -1,6 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +70,20 @@ public class SaturnExecutor {
 		}
 		try {
 			extClazz.getMethod("initZK").invoke(null);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * 判断zk是否有该域
+	 */
+	private void doValidation() {
+		if (extClazz == null) {
+			return;
+		}
+		try {
+			extClazz.getMethod("doValidation", String.class).invoke(null, namespace);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -291,6 +304,8 @@ public class SaturnExecutor {
 		StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
 
 		initZK();
+		// 验证namespace是否存在
+		doValidation();
 		String serverLists = SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
 		zkConfig = new ZookeeperConfiguration(monitorPort, serverLists, namespace, 1000, 3000, 3);
 		if (regCenter != null) {
@@ -305,7 +320,6 @@ public class SaturnExecutor {
 		// 初始化注册中心
 		try {
 			regCenter.init();
-
 			ConnectionLostListener connectionLostListener = new ConnectionLostListener();
 			regCenter.addConnectionStateListener(connectionLostListener);
 
