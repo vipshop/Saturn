@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.springboot;
 
+import org.apache.curator.test.TestingServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,9 +25,20 @@ import org.springframework.http.HttpStatus;
 		JpaRepositoriesAutoConfiguration.class })
 @ImportResource("classpath:context/*Context.xml")
 public class SaturnConsoleApp {
-	
-	public static void main(String[] args) {
+
+	private static TestingServer embeddedZookeeper;
+
+	public static void main(String[] args) throws Exception {
+		startEmbeddedZkIfNeeded();
+
 		SpringApplication.run(SaturnConsoleApp.class, args);
+	}
+
+	private static void startEmbeddedZkIfNeeded() throws Exception {
+		if (Boolean.getBoolean("saturn.embeddedzk")) {
+			embeddedZookeeper = new TestingServer(2181);
+			embeddedZookeeper.start();
+		}
 	}
 
 	@Bean
