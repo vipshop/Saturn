@@ -10,3 +10,6 @@ script: "mvn install"
 branches:
   only:
     - develop
+    
+after_success:
+  - mvn clean cobertura:cobertura coveralls:report    
