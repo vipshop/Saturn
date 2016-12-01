@@ -575,6 +575,12 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <quiet>true</quiet>
                     <format>xml</format>
+                    <instrumentation>
+                        <ignoreTrivial>true</ignoreTrivial>
+                        <excludes>
+                            <exclude>com/vip/saturn/job/console/**/*.class</exclude>
+                        </excludes>
+                    </instrumentation>
                 </configuration>
             </plugin>
             <plugin>
