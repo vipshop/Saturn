@@ -98,6 +98,7 @@
         <sonar.jacoco.utReportPath>${project.basedir}/jacoco-ut.exec</sonar.jacoco.utReportPath>
         <sonar.language>java</sonar.language>
         <cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
+        <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
 
         <ivy.version>2.3.0</ivy.version>
 
@@ -575,6 +576,11 @@
                     <quiet>true</quiet>
                     <format>xml</format>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>${coveralls-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
