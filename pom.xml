@@ -1,6 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+	    <groupId>org.sonatype.oss</groupId>
+	    <artifactId>oss-parent</artifactId>
+	    <version>7</version>
+	</parent>
+
     <groupId>com.vip.saturn</groupId>
     <artifactId>saturn-job</artifactId>
     <version>master-SNAPSHOT</version>
@@ -103,6 +109,8 @@
         <ivy.version>2.3.0</ivy.version>
 
         <jxl.version>2.6.12</jxl.version>
+        
+       	<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -632,44 +640,88 @@
 
     <profiles>
         <profile>
-            <id>jacoco</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.7.2.201409121644</version>
-                        <configuration>
-                            <append>true</append>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>agent-for-ut</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
+		                <groupId>org.apache.maven.plugins</groupId>
+		                <artifactId>maven-gpg-plugin</artifactId>
+		                <version>${maven-gpg-plugin.version}</version>
+		                <executions>
+		                    <execution>
+		                        <id>sign-artifacts</id>
+		                        <phase>verify</phase>
+		                        <goals>
+		                            <goal>sign</goal>
+		                        </goals>
+		                    </execution>
+		                </executions>
+		            </plugin>
                 </plugins>
             </build>
         </profile>
-        
-        <profile>
-            <id>inner</id>
-            <distributionManagement>
-				<repository>
-					<id>releases</id>
-					<name>internal releases repository</name>
-					<url>http://mvn1.tools.inner.com/nexus/content/repositories/releases</url>
-				</repository>
-				<snapshotRepository>
-					<id>snapshots</id>
-					<name>internal snapshots repository</name>
-					<url>http://mvn1.tools.inner.com/nexus/content/repositories/snapshots</url>
-				</snapshotRepository>
-			</distributionManagement>
-        </profile>
     </profiles>
+    
+    <repositories>
+        <repository>
+            <id>alfresco-maven-repo</id>
+            <url>https://maven.alfresco.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>java-net</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>terracotta-releases</id>
+            <url>http://terracotta.org/download/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+    
+    <url>https://github.com/vipshop/Saturn</url>
+    <developers>
+        <developer>
+            <id>dylanxue</id>
+            <name>Xueke</name>
+            <email>dylan_xueke@hotmail.com.com</email>
+            <timezone>8</timezone>
+        </developer>
+    </developers>   
+     
+    <licenses> 
+        <license>
+            <name>Apache License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
+    <scm>
+        <connection>scm:git:https://github.com/vipshop/Saturn.git</connection>
+        <developerConnection>scm:git:git@github.com:dylanxue/vipshop/Saturn.git</developerConnection>
+        <url>https://github.com/vipshop/Saturn</url>
+    </scm>
+    
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-releases</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
 
 </project>
