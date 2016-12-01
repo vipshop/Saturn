@@ -5,8 +5,8 @@
 
 ## Special thanks
 
-Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdotcom/elastic-job), we enhance it according to our requirement and understandings. Special thanks to Zhang Liang who give us a lot of help and suggestions.
+Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdotcom/elastic-job), we enhance it according to our requirement and understandings. Special thanks to Zhang Liang@dangdang who give us a lot of help and suggestions.
 
 ## Description
 
-The VIP's distributed job schedule platform. It supports java and shell jobs with tolerance, high availability.
+The VIP's distributed job schedule platform. It supports java and shell jobs with sharding, tolerance, high availability...
