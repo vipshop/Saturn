@@ -11,11 +11,11 @@ Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdo
 
 The VIP's distributed job schedule platform. It supports java and shell jobs with sharding, tolerance, high availability...
 
-### 1.1 Product feature list map
+### 1.1 Feature Map
 
-[Feature List](https://github.com/vipshop/Saturn/wiki/Saturn-Feature-List-Map---Chinese-Version)
+see [Feature Map](https://github.com/vipshop/Saturn/wiki/Saturn-Feature-List-Map---Chinese-Version)
 
-### 1.2 Product artichecture
+### 1.2 Product Artichecture
 TODO
 
 ## 2 The team
