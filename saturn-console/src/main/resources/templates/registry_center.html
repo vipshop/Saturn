@@ -3,7 +3,7 @@
 xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
 layout:decorator="frame-layout">
 	<head>
-		<link href="lib/datatables/dataTables.bootstrap.min.css" rel="stylesheet" />
+		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 	</head>
 	<body>
 		<div th:remove="tag" layout:fragment="content">
@@ -32,8 +32,8 @@ layout:decorator="frame-layout">
 			<div th:replace="fragments :: confirm-dialog(id='confirm-dialog', text='')"></div>
 		</div>
 		<div th:remove="tag" layout:fragment="footer-scripts">
-			<script src="lib/datatables/jquery.dataTables.min.js"></script>
-			<script src="lib/datatables/dataTables.bootstrap.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
 			<script src="js/registry_center.js"></script>
 		</div>
 	</body>
