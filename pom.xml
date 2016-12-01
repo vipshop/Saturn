@@ -586,6 +586,8 @@
                     <instrumentation>
                         <ignoreTrivial>true</ignoreTrivial>
                         <excludes>
+                            <exclude>com/vip/**/*Test.class</exclude>
+                            <exclude>com/vip/**/Test*.class</exclude>
                             <exclude>com/vip/saturn/job/console/**/*.class</exclude>
                         </excludes>
                     </instrumentation>
