@@ -98,8 +98,6 @@
 		<sonar.jacoco.utReportPath>${project.basedir}/jacoco-ut.exec</sonar.jacoco.utReportPath>
 		<sonar.language>java</sonar.language>
 
-		<gradle.version>2.6</gradle.version>
-		<groovy.version>2.4.5</groovy.version>
 		<ivy.version>2.3.0</ivy.version>
 
 		<jxl.version>2.6.12</jxl.version>

@@ -56,32 +56,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.gradle</groupId>
-			<artifactId>gradle-core</artifactId>
-			<version>${gradle.version}</version>
-		</dependency>
-
-		<!-- gradle-base-services-groovy need to be dependent explicitly. -->
-		<dependency>
-			<groupId>org.gradle</groupId>
-			<artifactId>gradle-base-services-groovy</artifactId>
-			<version>${gradle.version}</version>
-		</dependency>
-
-		<!-- gradle-base-services need to be dependent explicitly. -->
-		<dependency>
-			<groupId>org.gradle</groupId>
-			<artifactId>gradle-base-services</artifactId>
-			<version>${gradle.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-			<version>${groovy.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
 			<version>${maven-plugin-api.version}</version>
