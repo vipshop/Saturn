@@ -648,6 +648,22 @@
                 </plugins>
             </build>
         </profile>
+        
+        <profile>
+            <id>inner</id>
+            <distributionManagement>
+				<repository>
+					<id>releases</id>
+					<name>internal releases repository</name>
+					<url>http://mvn1.tools.inner.com/nexus/content/repositories/releases</url>
+				</repository>
+				<snapshotRepository>
+					<id>snapshots</id>
+					<name>internal snapshots repository</name>
+					<url>http://mvn1.tools.inner.com/nexus/content/repositories/snapshots</url>
+				</snapshotRepository>
+			</distributionManagement>
+        </profile>
     </profiles>
 
 </project>
