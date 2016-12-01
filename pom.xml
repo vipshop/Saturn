@@ -583,6 +583,12 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <quiet>true</quiet>
                     <format>xml</format>
+                    <instrumentation>
+                        <ignoreTrivial>true</ignoreTrivial>
+                        <excludes>
+                            <exclude>com/vip/saturn/job/console/**/*.class</exclude>
+                        </excludes>
+                    </instrumentation>
                 </configuration>
             </plugin>
             <plugin>
@@ -659,6 +665,33 @@
 		            </plugin>
                 </plugins>
             </build>
+            
+                <distributionManagement>
+			        <snapshotRepository>
+			            <id>sonatype-nexus-snapshots</id>
+			            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			        </snapshotRepository>
+			        <repository>
+			            <id>sonatype-nexus-releases</id>
+			            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+			        </repository>
+			    </distributionManagement>
+        </profile>
+        
+         <profile>
+            <id>inner</id>
+            <distributionManagement>
+				<repository>
+					<id>releases</id>
+					<name>vipshop internal releases repository</name>
+					<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/releases</url>
+				</repository>
+				<snapshotRepository>
+					<id>snapshots</id>
+					<name>vipshop internal snapshots repository</name>
+					<url>http://mvn1.tools.vipshop.com/nexus/content/repositories/snapshots</url>
+				</snapshotRepository>
+			</distributionManagement>
         </profile>
     </profiles>
     
@@ -713,15 +746,6 @@
         <url>https://github.com/vipshop/Saturn</url>
     </scm>
     
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>sonatype-nexus-releases</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-        </repository>
-    </distributionManagement>
+
 
 </project>
