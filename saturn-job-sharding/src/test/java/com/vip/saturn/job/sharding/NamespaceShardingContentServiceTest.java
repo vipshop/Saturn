@@ -7,10 +7,7 @@ import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.NestedZkUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +35,7 @@ public class NamespaceShardingContentServiceTest {
     }
 
     @Test
+    @Ignore
     public void testBigData() throws Exception {
         CuratorFramework framework = nestedZkUtils.createClient("namespace");
         NamespaceShardingContentService namespaceShardingContentService = new NamespaceShardingContentService(framework);
