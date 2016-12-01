@@ -295,3 +295,6 @@ span.fancytree-title {
 .degree-5 > .fancytree-icon:after {
 	content: "5";
 }
+#zk-select {
+	margin-top: 8px;
+}
