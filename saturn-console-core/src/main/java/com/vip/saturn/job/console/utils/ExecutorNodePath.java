@@ -27,6 +27,10 @@ public class ExecutorNodePath {
         return String.format("/%s/executors", $EXECUTOR_NODE_NAME);
     }
     
+    public static String get$ExecutorTaskNodePath(String executorName) {
+    	return String.format("/%s/executors/%s/task", $EXECUTOR_NODE_NAME, executorName);
+    }
+    
     public static String getExecutorNodePath(final String executorName) {
         return String.format("%s/%s", getExecutorNodePath(), executorName);
     }
