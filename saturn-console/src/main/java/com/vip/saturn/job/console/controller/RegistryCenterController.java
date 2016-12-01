@@ -37,8 +37,10 @@ import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.TreeNode;
+import com.vip.saturn.job.console.service.InitRegistryCenterService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 @RestController
@@ -64,14 +66,9 @@ public class RegistryCenterController extends AbstractController {
 	@RequestMapping(method = RequestMethod.GET)
 	public Map<?, ?> load(final HttpSession session) {
 		Map<String, Object> model = new HashMap<String, Object>();
-		model.put("configs", registryCenterService.getConfigs());
-		RegistryCenterClient client = getClientInSession(session);
-		if (null == client || !client.isConnected()) {
-			return model;
-		} else {
-			model.put("actived", client.getNameAndNamespace());
-			return model;
-		}
+		model.put("configs", RegistryCenterServiceImpl.REGISTRY_CENTER_CONFIGURATION_MAP.get(getCurrentZkAddr(session)));
+		model.put("currentZk", getCurrentZkAddr(session));
+		return model;
 	}
 
 	@RequestMapping(value = "refreshRegCenter", method = RequestMethod.GET)
@@ -92,6 +89,12 @@ public class RegistryCenterController extends AbstractController {
 		return model;
 	}
 	
+	@RequestMapping(value = "selectZk", method = RequestMethod.POST)
+    public String selectZk(final HttpSession session, String newZkBsKey) {
+    	setCurrentZkAddr(newZkBsKey, session);
+    	return "ok";
+    }
+
 	private String replaceQuotation(String str) {
 		if(str == null) {
 			return "";
@@ -137,8 +140,7 @@ public class RegistryCenterController extends AbstractController {
 		if (!Strings.isNullOrEmpty(fp)) {
 			return connectAndLoadJobs(request, fp, session);
 		}
-		return null;//TODO
-//		return InitRegistryCenterService.treeData.getChildren();
+		return InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.get(getCurrentZkAddr(session)).getChildren(); 
 	}
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)

@@ -45,6 +45,7 @@ public final class CuratorSessionClientInterceptor extends HandlerInterceptorAda
         	ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
         	RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
         	request.getSession().setAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY, conf);
+        	request.getSession().setAttribute(AbstractController.CURRENT_ZK, conf.getZkAddressList());
         	return true;
         }
     	RegistryCenterConfiguration reg = (RegistryCenterConfiguration) request.getSession().getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);

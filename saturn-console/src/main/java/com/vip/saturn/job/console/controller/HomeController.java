@@ -17,7 +17,11 @@
 
 package com.vip.saturn.job.console.controller;
 
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -31,18 +35,20 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 
 @Controller
 @RequestMapping("/")
-public class DashboardController  extends AbstractController {
+public class HomeController  extends AbstractController {
 	
-	protected static Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
+	protected static Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
     @Resource
     private RegistryCenterService registryCenterService;
     
@@ -141,5 +147,14 @@ public class DashboardController  extends AbstractController {
 			model.put("aliveExecutors", "");
 		}
     }
-
+	
+	@RequestMapping(value = "loadZks", method = RequestMethod.GET)
+    @ResponseBody
+	public Map<String, Object> loadZks(final HttpSession session) throws IOException, ParseException {
+    	Map<String, Object> model = new HashMap<>();
+    	model.put("clusters", RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.values());
+    	model.put("currentZk", getCurrentZkAddr(session));
+    	return model;
+	}
+	
 }

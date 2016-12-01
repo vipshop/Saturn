@@ -3,6 +3,8 @@
  */
 package com.vip.saturn.job.console.controller;
 
+import java.util.Collection;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -14,6 +16,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -28,6 +31,7 @@ public class AbstractController {
 	
     public static final String ACTIVATED_CONFIG_SESSION_KEY = "activated_config";
     public static final String REQUEST_NAMESPACE_PARAM = "nns";
+    public static final String CURRENT_ZK = "current_zk";
     
     @Resource
     protected RegistryCenterService registryCenterService;
@@ -56,9 +60,25 @@ public class AbstractController {
 	
 	public void setSession(final RegistryCenterClient client, final HttpSession session) {
 		 ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
-         
          RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
          session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
+         setCurrentZkAddr(conf.getZkAddressList(), session);
+	}
+	
+	public void setCurrentZkAddr(String zkAddr, final HttpSession session) {
+		session.setAttribute(CURRENT_ZK, zkAddr);
+	}
+	
+	public String getCurrentZkAddr(final HttpSession session) {
+		String zkAddr = (String)session.getAttribute(CURRENT_ZK);
+		if (zkAddr == null) {
+			Collection<ZkCluster> zks = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.values();
+			for (ZkCluster zkCluster : zks) {
+				setCurrentZkAddr(zkCluster.getZkAddr(), session);
+				return zkCluster.getZkAddr();
+			}
+		}
+		return zkAddr;
 	}
 	
 	public RegistryCenterConfiguration getActivatedConfigInSession(final HttpSession session) {

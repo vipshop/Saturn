@@ -1,3 +1,7 @@
+$(function() {
+    $("[data-toggle='tooltip']").tooltip();
+});
+
 var language = {
 	"sLengthMenu": "每页显示 _MENU_ 条记录",
 	"sSearch":"过滤",

@@ -17,12 +17,11 @@
 
 package com.vip.saturn.job.console.service;
 
+import javax.servlet.http.HttpSession;
+
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
-
-import javax.servlet.http.HttpSession;
-import java.util.Set;
 
 public interface RegistryCenterService {
 	
@@ -30,8 +29,6 @@ public interface RegistryCenterService {
 	
 	void init() throws Exception;
 
-    void add(RegistryCenterConfiguration config);
-	
     RegistryCenterClient connect(String name);
 
     RegistryCenterClient connectByNamespace(String namespace);
@@ -42,6 +39,4 @@ public interface RegistryCenterService {
 
     RegistryCenterConfiguration findConfigByNamespace(String namespace);
 
-    Set<RegistryCenterConfiguration> getConfigs();
-    
 }
