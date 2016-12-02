@@ -96,9 +96,9 @@
 
         <javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
 
-        <sonar.jacoco.utReportPath>${project.basedir}/jacoco-ut.exec</sonar.jacoco.utReportPath>
         <sonar.language>java</sonar.language>
         <cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
         <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
 
         <ivy.version>2.3.0</ivy.version>
@@ -572,6 +572,19 @@
                         </excludes>
                     </instrumentation>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.eluder.coveralls</groupId>
