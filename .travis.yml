@@ -12,4 +12,4 @@ branches:
     - develop
     
 after_success:
-  - mvn clean cobertura:cobertura jacoco:report coveralls:report
+  - mvn clean test cobertura:cobertura jacoco:report coveralls:report
