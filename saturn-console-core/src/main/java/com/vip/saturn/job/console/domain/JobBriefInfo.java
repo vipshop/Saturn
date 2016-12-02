@@ -82,6 +82,8 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     private Boolean isNewSaturn;// 判断是否是新版本的executor(1.0.11及其以后的新版本支持动态添加JAVA和MSG作业)
     
     private String jobRate;
+
+	private Boolean migrateEnabled;
     
     @Override
     public int compareTo(final JobBriefInfo o) {
@@ -327,5 +329,12 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 	public void setJobRate(String jobRate) {
 		this.jobRate = jobRate;
 	}
-    
+
+	public Boolean getMigrateEnabled() {
+		return migrateEnabled;
+	}
+
+	public void setMigrateEnabled(Boolean migrateEnabled) {
+		this.migrateEnabled = migrateEnabled;
+	}
 }

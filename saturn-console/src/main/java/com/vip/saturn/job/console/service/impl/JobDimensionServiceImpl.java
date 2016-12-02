@@ -17,36 +17,13 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.constants.SaturnConstants;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -55,6 +32,16 @@ import com.vip.saturn.job.console.utils.CommonUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.util.*;
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
 
@@ -574,6 +561,16 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
 		return allExecutorsBuilder.toString();
+	}
+
+	@Override
+	public JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException {
+		return null;
+	}
+
+	@Override
+	public void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException {
+
 	}
 
 	@Override

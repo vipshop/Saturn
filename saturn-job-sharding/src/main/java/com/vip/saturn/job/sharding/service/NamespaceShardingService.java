@@ -1,18 +1,8 @@
 package com.vip.saturn.job.sharding.service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.vip.saturn.job.sharding.entity.Executor;
+import com.vip.saturn.job.sharding.entity.Shard;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -20,9 +10,14 @@ import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.sharding.entity.Executor;
-import com.vip.saturn.job.sharding.entity.Shard;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -964,6 +959,46 @@ public class NamespaceShardingService {
 
 	}
 
+	/**
+	 * 执行作业全排，该作业的所有分片将重新分配
+	 */
+	private class ExecuteJobforceShardShardingTask extends AbstractAsyncShardingTask {
+
+		private String jobName;
+
+		public ExecuteJobforceShardShardingTask(String jobName) {
+			this.jobName = jobName;
+		}
+
+		@Override
+		protected boolean pick(List<String> allJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+			// 移除已经在Executor运行的该作业的所有Shard
+			boolean hasRemove = false;
+			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
+				Executor executor = lastOnlineExecutorList.get(i);
+				Iterator<Shard> iterator = executor.getShardList().iterator();
+				while (iterator.hasNext()) {
+					Shard shard = iterator.next();
+					if (jobName.equals(shard.getJobName())) {
+						iterator.remove();
+						hasRemove = true;
+					}
+				}
+			}
+
+			// 获取该作业的Shard
+			shardList.addAll(getShardsByJobInfo(jobName, lastOnlineExecutorList));
+
+			// 如果shardList为空，并且没有移除shard，则没必要再进行放回等操作，摘取失败
+			if (shardList.isEmpty() && !hasRemove) {
+				return false;
+			}
+
+			return true;
+		}
+
+	}
+
     /**
      * 结点上线处理
      * @param executorName
@@ -1009,6 +1044,16 @@ public class NamespaceShardingService {
 		if(isLeadership()) {
 			shardingCount.incrementAndGet();
 			executorService.submit(new ExecuteJobDisableShardingTask(jobName));
+		}
+	}
+
+	/**
+	 * 处理作业全排
+	 */
+	public void asyncShardingWhenJobForceShard(String jobName) throws Exception {
+		if (isLeadership()) {
+			shardingCount.incrementAndGet();
+			executorService.submit(new ExecuteJobforceShardShardingTask(jobName));
 		}
 	}
 

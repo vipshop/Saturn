@@ -1,14 +1,13 @@
 package com.vip.saturn.job.sharding.listener;
 
+import com.vip.saturn.job.sharding.NamespaceShardingManager;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.sharding.service.AddJobConfigListenersService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vip.saturn.job.sharding.NamespaceShardingManager;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.sharding.service.EnabledJobService;
 
 /**
  * 
@@ -18,12 +17,12 @@ import com.vip.saturn.job.sharding.service.EnabledJobService;
 public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	static Logger log = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
 
-	private EnabledJobService enabledJobService;
+	private AddJobConfigListenersService addJobConfigListenersService;
 	private String namespace;
 	private NamespaceShardingManager namespaceShardingManager;
 	
-	public AddOrRemoveJobListener(String namespace, EnabledJobService enabledJobService, NamespaceShardingManager namespaceShardingManager) {
-		this.enabledJobService = enabledJobService;
+	public AddOrRemoveJobListener(String namespace, AddJobConfigListenersService addJobConfigListenersService, NamespaceShardingManager namespaceShardingManager) {
+		this.addJobConfigListenersService = addJobConfigListenersService;
 		this.namespace = namespace;
 		this.namespaceShardingManager = namespaceShardingManager;
 	}
@@ -34,7 +33,7 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 			String job = StringUtils.substringAfterLast(path, "/");
 			if (!SaturnExecutorsNode.$JOBS.equals(job)) {
 				log.info("job: {} created, now try to add listener to its config path.", job);
-				enabledJobService.addOneJobEnabledPathListener(job);
+				addJobConfigListenersService.addJobConfigPathListener(job);
 			}
 		} else if (isRemoveJob(type)) {
 			namespaceShardingManager.cleanTreeCache(namespace + path + "/config");

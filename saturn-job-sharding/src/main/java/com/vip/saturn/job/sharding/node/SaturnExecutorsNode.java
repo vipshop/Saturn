@@ -16,6 +16,8 @@ public class SaturnExecutorsNode {
 	private static final String IP = "ip";
 	private static final String CLEAN = "clean";
 	private static final String TASK = "task";
+	private static final String $DCOS = "$DCOS";
+	private static final String TASKS = "tasks";
 	public static final String SHARDING_COUNT_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + "count";
 	public final static String LEADER_HOSTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + HOST;
 	public final static String LEADERNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER;
@@ -23,6 +25,7 @@ public class SaturnExecutorsNode {
     public static String LEADER_LATCHNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + LATCH;
     public static String SHARDING_CONTENTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT;
     public final static String JOBCONFIG_ENABLE_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "enabled";
+	public final static String JOBCONFIG_FORCESHARD_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "forceShard";
     public static final String EXECUTOR_IPNODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*" + "/" + IP;
     public static final String CONFIG_VERSION_PATH = "/" + $SATURNEXECUTORS + "/config/version";
     
@@ -109,7 +112,14 @@ public class SaturnExecutorsNode {
     public static String getShardingContentElementNodePath(String element) {
     	return "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT + "/" + element;
     }
-    
+
+	/**
+	 * 获取作业结点完整路径
+	 */
+	public static String getJobNodePath(String jobName) {
+		return String.format("/%s/%s", $JOBS, jobName);
+	}
+
     /**
      * 获取$Jobs/xx/config/shardingTotalCount结点完整路径
      * @param jobName
@@ -172,6 +182,15 @@ public class SaturnExecutorsNode {
 	public static String getJobConfigUseDispreferListNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "useDispreferList");
 	}
+
+	/**
+	 * 获取$Jobs/xx/config/forceShard结点完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobConfigForceShardNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "forceShard");
+	}
     
 	/**
 	 * 从$Jobs/xx/config/enabled中抽取出jobName
@@ -180,6 +199,18 @@ public class SaturnExecutorsNode {
 	 */
     public static String getJobNameByConfigEnabledPath(String path) {
 		int lastIndexOf = path.lastIndexOf("/config/enabled");
+		String substring = path.substring(0, lastIndexOf);
+		int lastIndexOf2 = substring.lastIndexOf('/');
+		return substring.substring(lastIndexOf2 + 1);
+	}
+
+	/**
+	 * 从$Jobs/xx/config/forceShard中抽取出jobName
+	 * @param path
+	 * @return
+	 */
+	public static String getJobNameByConfigForceShardPath(String path) {
+		int lastIndexOf = path.lastIndexOf("/config/forceShard");
 		String substring = path.substring(0, lastIndexOf);
 		int lastIndexOf2 = substring.lastIndexOf('/');
 		return substring.substring(lastIndexOf2 + 1);
@@ -220,6 +251,15 @@ public class SaturnExecutorsNode {
      */
 	public static String getJobServersExecutorNodePath(String jobName, String executorName) {
 		return String.format("/%s/%s/servers/%s", $JOBS, jobName, executorName);
+	}
+
+	/**
+	 * 获取$DCOS/tasks/xxx完整路径
+	 * @param task
+	 * @return
+	 */
+	public static String getDcosTaskNodePath(String task) {
+		return String.format("/%s/%s/%s", $DCOS, TASKS, task);
 	}
 
 }

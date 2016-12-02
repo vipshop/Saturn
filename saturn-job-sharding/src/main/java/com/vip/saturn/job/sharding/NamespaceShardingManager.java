@@ -1,22 +1,21 @@
 package com.vip.saturn.job.sharding;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorCleanListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.sharding.service.EnabledJobService;
+import com.vip.saturn.job.sharding.service.AddJobConfigListenersService;
 import com.vip.saturn.job.sharding.service.ExecutorCleanService;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * 
@@ -30,18 +29,16 @@ public class NamespaceShardingManager {
 	private ExecutorCleanService executorCleanService;
 	public ConcurrentMap<String/*path*/, TreeCache> TREE_CACHE_MAP = new ConcurrentHashMap<>();
 	private CuratorFramework curatorFramework;
-	private EnabledJobService enabledJobService;
+	private AddJobConfigListenersService addJobConfigListenersService;
 	private String namespace;
 	
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue) {
 		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
-		this.enabledJobService = new EnabledJobService(namespace, curatorFramework, namespaceShardingService, this);
+		this.addJobConfigListenersService = new AddJobConfigListenersService(namespace, curatorFramework, namespaceShardingService, this);
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 	}
-
-	
 
 	/**
 	 * leadership election, add listeners
@@ -49,7 +46,7 @@ public class NamespaceShardingManager {
 	public void start() throws Exception {
 		// create ephemeral node $SaturnExecutors/leader/host & $Jobs.
 		namespaceShardingService.leaderElection();
-		enabledJobService.addExistJobEnabledPathListener();
+		addJobConfigListenersService.addExistJobConfigPathListener();
 		addOnlineOfflineListener();
 		addExecutorCleannerListener();
 		addLeaderElectionListener();
@@ -65,11 +62,11 @@ public class NamespaceShardingManager {
 					.setExecutor(new TreeCacheThreadFactory(namespace + "-$jobs")).setMaxDepth(1).build();
 			TREE_CACHE_MAP.putIfAbsent(path, treeCache);
 			treeCache.start();
-			treeCache.getListenable().addListener(new AddOrRemoveJobListener(namespace, enabledJobService, this));
+			treeCache.getListenable().addListener(new AddOrRemoveJobListener(namespace, addJobConfigListenersService, this));
 			log.info("namespaceSharding: listen to {}, depth = {} started.", SaturnExecutorsNode.$JOBSNODE_PATH, 1);
 		} else {
 			treeCache = TREE_CACHE_MAP.get(path);
-			treeCache.getListenable().addListener(new AddOrRemoveJobListener(namespace, enabledJobService, this));
+			treeCache.getListenable().addListener(new AddOrRemoveJobListener(namespace, addJobConfigListenersService, this));
 		}
 	}
 
