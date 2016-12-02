@@ -1,0 +1,6 @@
+[
+    {
+        "nameAndNamespace":"/demo/mydomain",
+        "zkAddressList":"localhost:2181"
+    }
+]
