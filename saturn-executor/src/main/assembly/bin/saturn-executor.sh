@@ -27,6 +27,8 @@ APP_LIB_DIR=$PARENTDIR/app
 STATUS_FILE=${PRGDIR}/status
 PID_FILE=${PRGDIR}/PID
 
+RUN_MODE="background"
+
 USAGE()
 {
 	echo "Usage: $0 start|stop [-n|--namespace namespace] [-e|--executorName executorName] [-m|--monport monitorport] [-jmx|--jmx-port port] [JVM args, e.g., -Xms2048m -DVIP_SATURN_RUNNING_IP=192.168.1.100. Note that additional arguments should be put in the end.]"
@@ -34,6 +36,7 @@ USAGE()
 	echo -e "\n      '-e|--executorName': optional,default value is ${EXECUTORNAME}."
 	echo -e "\n      '-m|--monport': optional,default value is  ${MONITOR_PORT}."
 	echo -e "\n      '-d|--libdir': optional, default value is $PARENTDIR/app."
+	echo -e "\n      '-r|--runmode': optional, default value is $RUN_MODE, you can set it foreground"
 	echo -e "\n      '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
 	echo -e "\n      '-env|--environment': optional."
 	echo -e "\n      JVM args: optional."
@@ -53,6 +56,7 @@ while true; do
 		-e|--executorName) EXECUTORNAME="$2"; shift 2;;
 		-m|--monport) MONITOR_PORT="$2"; shift 2;;
 		-d| --libdir) APP_LIB_DIR="$2"; shift 2;;
+		-r| --runmode) RUN_MODE="$2"; shift 2;;
 		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
 		-env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
 		*) break;;
@@ -218,6 +222,10 @@ START()
 		exit -1
 	fi
 	
+	if [[ "$RUN_MODE" = "foreground" ]]; then
+		trap STOP SIGTERM
+		wait $PID
+	fi
 }
 
 STOP()
