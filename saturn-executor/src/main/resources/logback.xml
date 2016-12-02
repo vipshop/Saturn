@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property name="log.directory" value="${saturn.log.dir}" />
-    <property name="log.context.name" value="saturn-job-executor" />
+    <property name="log.context.name" value="saturn-executor" />
     <property name="log.charset" value="UTF-8" />
     <property name="log.maxHistory" value="20" />
     <property name="log.maxFileSize" value="1GB" />
