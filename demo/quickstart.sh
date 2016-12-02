@@ -3,6 +3,12 @@ PRGDIR=`dirname "$PRG"`
 BASEDIR=`cd "$PRGDIR/.." >/dev/null; pwd`
 cd ${BASEDIR}
 
+echo [Preparing] try to kill the existing saturn processes.
+
+kill `pgrep -f saturn-console`
+kill `pgrep -f saturn-job-executor`
+
+
 echo "[Step 1] Buidling Staturn, take a coffee."
 mvn clean package -Dmaven.javadoc.skip=true -Dmaven.test.skip=true 
 
