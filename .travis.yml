@@ -5,11 +5,11 @@ jdk:
   - oraclejdk7
   - openjdk7
 
-script: "mvn install"
+script: "mvn clean install"
 
 branches:
   only:
     - develop
     
 after_success:
-  - mvn clean test cobertura:cobertura jacoco:report coveralls:report
+  - mvn cobertura:cobertura jacoco:report coveralls:report
