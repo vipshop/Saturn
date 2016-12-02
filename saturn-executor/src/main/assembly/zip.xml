@@ -41,9 +41,9 @@
 
 	<files>
 		<file>
-			<source>src/main/assembly/bin/saturn-job-executor.sh</source>
+			<source>src/main/assembly/bin/saturn-executor.sh</source>
 			<outputDirectory>bin</outputDirectory>
-			<destName>saturn-job-executor.sh</destName>
+			<destName>saturn-executor.sh</destName>
 			<fileMode>777</fileMode>
 			<lineEnding>unix</lineEnding>
 		</file>
