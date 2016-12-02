@@ -70,8 +70,8 @@ public class AddJobConfigListenersService {
 			log.info("namespaceSharding: listen to {}, depth = {} started.", configPath, 1);
 		} else {
 			treeCache = namespaceShardingManager.TREE_CACHE_MAP.get(fullConfigPath);
-			treeCache.getListenable().addListener(enabledJobTriggerShardingListener);
-			treeCache.getListenable().addListener(forceShardJobTriggerShardingListener);
 		}
+		treeCache.getListenable().addListener(enabledJobTriggerShardingListener);
+		treeCache.getListenable().addListener(forceShardJobTriggerShardingListener);
 	}
 }
