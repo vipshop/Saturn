@@ -32,11 +32,7 @@
 		<fileSet>
 			<directory>src/main/assembly/bin</directory>
 			<outputDirectory>bin</outputDirectory>
-		</fileSet>
-		<fileSet>
-			<directory>src/main/assembly/mercurylib</directory>
-			<outputDirectory>mercurylib</outputDirectory>
-		</fileSet>		
+		</fileSet>	
 		<fileSet>
 			<directory>src/main/assembly/demo_script</directory>
 			<outputDirectory>demo_script</outputDirectory>
