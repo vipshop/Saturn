@@ -99,10 +99,8 @@ echo -e "The java version is $JAVA_VERSION"
 
 if [[ "$JAVA_VERSION" < "1.8" ]]; then
   MEM_OPTS="$MEM_OPTS -XX:PermSize=${PERM_SIZE} -XX:MaxPermSize=${MAX_PERM_SIZE} -Djava.security.egd=file:/dev/./urandom"
-  JAVA_OPTS="$JAVA_OPTS -javaagent:${BASEDIR}/mercurylib/aspectjweaver-1.7.3.jar"
 else         
   MEM_OPTS="$MEM_OPTS -XX:MetaspaceSize=${PERM_SIZE} -XX:MaxMetaspaceSize=${MAX_PERM_SIZE} "
-  JAVA_OPTS="$JAVA_OPTS -javaagent:${BASEDIR}/mercurylib/aspectjweaver-1.8.6.jar"
 fi
 
 
