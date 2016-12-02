@@ -84,10 +84,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	protected SaturnExecutorService saturnExecutorService;
 	
-	private ExecutorService zkExecutionService;
-	
-	private int runCount = 0;
-	
+
 	/**
 	 * vms job这个状态无效。
 	 */
@@ -105,10 +102,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		if (executorService != null && !executorService.isShutdown()) {
 			executorService.shutdown();
 		}
-			
-		if(zkExecutionService != null && !zkExecutionService.isShutdown()){
-			zkExecutionService.shutdown();
-		}
 	}
 
 	protected ExecutorService getExecutorService() {
@@ -123,7 +116,6 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected void init() throws SchedulerException {
 		scheduler = getTrigger().build(this);
 		getExecutorService();
-		zkExecutionService = Executors.newSingleThreadExecutor();
 	}
 
 	public final void execute() {
@@ -180,48 +172,29 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext)
 			throws JobExecutionException {
-		final int version = ++runCount;
-		zkExecutionService.submit(new Runnable(){
-			@Override
-			public void run() {
-				if(version < runCount){
-					return;
-				}
-				if (shouldUploadRunningData()) {
-					executionService.registerJobBegin(shardingContext);
-				}
-			}
-		});
+		if (shouldUploadRunningData()) {
+			executionService.registerJobBegin(shardingContext);
+		}
 
 		try {
 			executeJob(shardingContext);
 		} finally {
-			zkExecutionService.submit(new Runnable(){
-				
-				@Override
-				public void run() {
-					if(version < runCount){
-						return;
-					}
-					
-					boolean updateServerStatus = false;
-					for (int item : shardingContext.getShardingItems()) {
-						if (!continueAfterExecution(item)) {
-							continue;// NOSONAR
-						}
-						if (shouldUploadRunningData() && !aborted) {
-							if (!updateServerStatus) {
-								serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
-								updateServerStatus = true;
-							}
-							executionService.registerJobCompleted(shardingContext, item);
-						}
-						if (isFailoverSupported() && configService.isFailover()) {
-							failoverService.updateFailoverComplete(item);
-						}
-					}
+			boolean updateServerStatus = false;
+			for (int item : shardingContext.getShardingItems()) {
+				if (!continueAfterExecution(item)) {
+					continue;// NOSONAR
 				}
-			});
+				if (shouldUploadRunningData() && !aborted) {
+					if (!updateServerStatus) {
+						serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
+						updateServerStatus = true;
+					}
+					executionService.registerJobCompleted(shardingContext, item);
+				}
+				if (isFailoverSupported() && configService.isFailover()) {
+					failoverService.updateFailoverComplete(item);
+				}
+			}
 			afterMainThreadDone(shardingContext);
 		}
 	}
