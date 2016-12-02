@@ -27,27 +27,6 @@ APP_LIB_DIR=$PARENTDIR/app
 STATUS_FILE=${PRGDIR}/status
 PID_FILE=${PRGDIR}/PID
 
-
-## 20160307 check java Version (by yejun)
-function funCHK_JAVA() {
-	JAVA_EXEC="/apps/svr/jdk/bin/java"
-	JAVA_VERSION=$(java -version |grep 'java version "1.6'|wc -l)
-	if [ $JAVA_VERSION == "1" ]; then
-		echo `date` ERROR!!!!!!!!!!!!!!!!!   java must be 1.7 or above , executor exit|tee -a $OUTFILE
-		exit
-	fi
-	if [ -x /apps/sh/web_env.sh ]; then
-		echo -e "source /apps/sh/web_env.sh"
-		source /apps/sh/web_env.sh
-	fi
-	if [ -x /apps/sh/app_env.sh ]; then
-		echo -e "source /apps/sh/app_env.sh"
-		source /apps/sh/app_env.sh
-	fi
-}
-
-funCHK_JAVA
-
 USAGE()
 {
 	echo "Usage: $0 start|stop [-n|--namespace namespace] [-e|--executorName executorName] [-m|--monport monitorport] [-jmx|--jmx-port port] [JVM args, e.g., -Xms2048m -DVIP_SATURN_RUNNING_IP=192.168.1.100. Note that additional arguments should be put in the end.]"
