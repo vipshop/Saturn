@@ -560,7 +560,7 @@
                         <packageLineRate>85</packageLineRate>
                         <packageBranchRate>85</packageBranchRate>
                     </check>
-                    <aggregate>true</aggregate>
+                    <aggregate>false</aggregate>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <quiet>true</quiet>
                     <format>xml</format>
