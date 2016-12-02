@@ -78,7 +78,7 @@ fi
 
 
 LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
-OUTFILE=$LOGDIR/saturn-job-executor.log
+OUTFILE=$LOGDIR/saturn-executor.log
 
 JAVA_OPTS="-Dsaturn.log=${LOGDIR} -XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
 MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxTenuringThreshold=6 -XX:+ExplicitGCInvokesConcurrent"
@@ -145,7 +145,7 @@ CHECK_JMX()
 
 GET_PID()
 {
-	echo `ps -ef | grep java | grep "\-jar" | grep "saturn-job-executor.jar" | grep -v grep | awk '{print $2}' `
+	echo `ps -ef | grep java | grep "\-jar" | grep "saturn-executor.jar" | grep -v grep | awk '{print $2}' `
 }
 
 CHECK_PARAMETERS()
@@ -189,7 +189,7 @@ START()
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR} $MON_CONF"
-    nohup java  $JAVA_OPTS $MEM_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASEDIR}/saturn-job-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
+    nohup java  $JAVA_OPTS $MEM_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASEDIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
 	PID=$!
 	echo $PID > $PID_FILE
   
