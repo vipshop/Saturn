@@ -98,7 +98,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		forceStopped = false;
 		aborted = false;
 		running = true;
-		runCount++;
 	}
 
 	@Override
@@ -181,7 +180,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext)
 			throws JobExecutionException {
-		final int version = runCount;
+		final int version = ++runCount;
 		zkExecutionService.submit(new Runnable(){
 			@Override
 			public void run() {
