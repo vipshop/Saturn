@@ -25,6 +25,10 @@ see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%
 - see [Quick Start with Docker Container](https://github.com/vipshop/Saturn/wiki/Quick-Start---Docker)
 - see [User Guide CN](https://github.com/vipshop/Saturn/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%BC%95(%E5%AE%8C%E6%95%B4))
 
+### 1.4 Deployment Guide
+- see [Console Deployment](https://github.com/vipshop/Saturn/wiki/saturn部署文档之console)
+- see [Executor Deployment](https://github.com/vipshop/Saturn/wiki/Saturn部署文档之executor)
+
 ## 2 The team
 
 [The Saturn Wow Team](https://github.com/vipshop/Saturn/wiki/Saturn's-Wow-Team)
