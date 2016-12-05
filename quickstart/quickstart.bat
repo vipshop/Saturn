@@ -18,9 +18,10 @@ sleep 10
 
 echo [Step 4] Add a demo java job
 cd %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT
-cp %base_dir%\quickstart -r %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT
+mkdir %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT\demo
+cp %base_dir%\quickstart\DemoJavaJob.class -r %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT\demo
 set LIB_JARS=lib\*;%CLASSPATH%
-java -cp %LIB_JARS% quickstart/DemoJavaJob
+java -cp %LIB_JARS% demo/DemoJavaJob
 
 echo [Step 5] Done, visit http://localhost:9088 for more
 @echo on

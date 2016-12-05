@@ -32,8 +32,9 @@ sleep 10
 
 echo "[Step 4] Add a demo java job"
 cd ${BASEDIR}/saturn-executor/target/saturn-executor-master-SNAPSHOT
-cp -r ${BASEDIR}/quickstart  $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT
+mkdir $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/demo
+cp ${BASEDIR}/quickstart/DemoJavaJob.class $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/demo
 export LIB_JARS=lib/*:$CLASSPATH
-java -cp $LIB_JARS quickstart/DemoJavaJob
+java -cp $LIB_JARS demo/DemoJavaJob
 
 echo "[Step 5] Done, visit http://localhost:9088 for more"
