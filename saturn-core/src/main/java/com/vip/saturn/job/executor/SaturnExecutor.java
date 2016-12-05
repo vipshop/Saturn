@@ -394,6 +394,20 @@ public class SaturnExecutor {
 		}
 	}
 
+	private void shutdownAllCountThread() {
+		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
+		if (schdMap != null) {
+			Iterator<String> it = schdMap.keySet().iterator();
+			while (it.hasNext()) {
+				String jobName = it.next();
+				JobScheduler jobScheduler = schdMap.get(jobName);
+				if (jobScheduler != null) {
+					jobScheduler.shutdownCountThread();
+				}
+			}
+		}
+	}
+	
 	private void shutdownUnfinishJob() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {
@@ -439,6 +453,8 @@ public class SaturnExecutor {
 	 */
 	public void shutdownGracefully() {
 		synchronized (shutdownLock) {
+			shutdownAllCountThread();
+			
 			// 清理Executor的IP运行Node
 			String ipNode = saturnExecutorService.getIpNode();
 			if (regCenter != null && ipNode != null && regCenter.isConnected()) {
