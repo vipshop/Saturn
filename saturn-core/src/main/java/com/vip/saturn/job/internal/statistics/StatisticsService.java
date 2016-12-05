@@ -43,6 +43,8 @@ public class StatisticsService extends AbstractSaturnService {
 
 	private ScheduledFuture<?> processCountJobFuture;
 
+	private boolean isdown = false;
+			
 	public StatisticsService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
@@ -107,6 +109,10 @@ public class StatisticsService extends AbstractSaturnService {
 
 	@Override
 	public void shutdown() {
+		if(isdown){
+			return;
+		}
+		isdown = true;
 		stopProcessCountJob();
 		ProcessCountStatistics.resetSuccessFailureCount(executorName, jobName);
 	}
