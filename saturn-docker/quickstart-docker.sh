@@ -1,6 +1,9 @@
 #!/bin/sh
 
-docker build --no-cache=true -t vipshop/saturn-executor:master-SNAPSHOT ./saturn-executor/
-docker build --no-cache=true -t vipshop/saturn-console:master-SNAPSHOT ./saturn-console/
+\cp ./demo/demo-java-job.jar ./demo/
+
+docker build -t saturn/saturn-executor:master-SNAPSHOT ./saturn-executor/
+docker build -t saturn/saturn-console:master-SNAPSHOT ./saturn-console/
+docker build -t saturn/demo-init ./demo/
 
 docker-compose up

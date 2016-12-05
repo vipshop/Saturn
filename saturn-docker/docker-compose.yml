@@ -7,22 +7,35 @@ services:
     ports:
       - 2181:2181
   console:
-    image: vipshop/saturn-console:master-SNAPSHOT
-    container_name: vipshop_saturn_console 
+    image: saturn/saturn-console:master-SNAPSHOT
+    container_name: saturn_console 
     restart: always
     links:
       - zookeeper
     ports:
       - 9088:9088
+  demo-init:
+    image: saturn/demo-init
+    container_name: demo-init
+    volumes: 
+      - /saturn-executor-master-SNAPSHOT/apps
+    links:
+      - zookeeper
+    depends_on:
+      - console            
   executor-a:
-    image: vipshop/saturn-executor:master-SNAPSHOT
-    container_name: vipshop_saturn_executor_a
+    image: saturn/saturn-executor:master-SNAPSHOT
+    container_name: saturn_executor_a
     restart: always
     links:
       - zookeeper
+    volumes_from:
+      - demo-init
   executor-b:
-    image: vipshop/saturn-executor:master-SNAPSHOT
-    container_name: vipshop_saturn_executor_b
+    image: saturn/saturn-executor:master-SNAPSHOT
+    container_name: saturn_executor_b
     restart: always
     links:
       - zookeeper
+    volumes_from:
+      - demo-init
