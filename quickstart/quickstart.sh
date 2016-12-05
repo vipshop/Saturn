@@ -30,11 +30,16 @@ cp -r ${BASEDIR}/quickstart/demo-java-job.jar $BASEDIR/saturn-executor/target/sa
 nohup java -Xms256m -Xmx256m -Xss256K -Dsaturn.log=saturn-job-executor.log -Dlog.folder=executor-1 -Dsaturn.stdout=true -Dstart.check.outfile=status  -jar saturn-executor-master-SNAPSHOT.jar  -namespace mydomain -executorName executor-1 -saturnLibDir $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT -appLibDir $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/lib > ./saturn-executor.log 2>&1 & 
 sleep 10
 
-echo "[Step 4] Add a demo java job"
+echo "[Step 4] Add a demo java job by code"
 cd ${BASEDIR}/saturn-executor/target/saturn-executor-master-SNAPSHOT
 mkdir $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/demo
 cp ${BASEDIR}/quickstart/DemoJavaJob.class $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/demo
 export LIB_JARS=lib/*:$CLASSPATH
 java -cp $LIB_JARS demo/DemoJavaJob
+
+if [ $? -ne 0 ];then
+  echo "Quit because add  demo java job fail"
+  exit -1
+fi
 
 echo "[Step 5] Done, visit http://localhost:9088 for more"
