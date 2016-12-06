@@ -29,7 +29,7 @@ The VIP's distributed job schedule platform. It supports java and shell jobs wit
 ## 2 System Design
 
 ### 2.1 Entity Model
-see [Entity Model]()
+see [Entity Model](https://github.com/vipshop/Saturn/wiki/Saturn-Entity-Model)
 
 ### 2.2 Artichecture
 see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%E6%9E%B6%E6%9E%84%E6%96%87%E6%A1%A3)
