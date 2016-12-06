@@ -12,6 +12,8 @@ COPY ./InitSaturnJob.class /saturn-executor-master-SNAPSHOT/demo/InitSaturnJob.c
 COPY ./demo-java-job.jar /saturn-executor-master-SNAPSHOT/apps/demo-java-job.jar 
 COPY ./demo-init.sh /saturn-executor-master-SNAPSHOT/demo-init.sh
 
+RUN chmod a+x /saturn-executor-master-SNAPSHOT/demo-init.sh
+
 ENV TZ "Asia/Shanghai"
 ENV LIB_JARS=/saturn-executor-master-SNAPSHOT/lib/*:$CLASSPATH
 
