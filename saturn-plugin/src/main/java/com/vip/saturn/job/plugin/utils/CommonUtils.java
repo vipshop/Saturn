@@ -68,9 +68,9 @@ public class CommonUtils {
 	
 	public static void zip(List<File> runtimeLibFiles, File saturnContainerDir, File zipFile) throws IOException {
 		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
-		for(File file : saturnContainerDir.listFiles()) {
+/*		for(File file : saturnContainerDir.listFiles()) {
 			zip(file, "saturn", zos);
-		}
+		}*/
 		
 		
 		for(File file : runtimeLibFiles) {
