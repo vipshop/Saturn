@@ -1,10 +1,12 @@
 FROM java:7
 MAINTAINER jamin.li@vipshop.com
 
+ARG SATURN_EXECUTOR_DOWNLOAD_URL
+
 RUN apt-get update \
  && apt-get install -y lsof \
  && apt-get clean \
- && wget https://oss.sonatype.org/content/repositories/snapshots/com/vip/saturn/saturn-executor/master-SNAPSHOT/saturn-executor-master-20161205.010145-6-zip.zip \
+ && wget ${SATURN_EXECUTOR_DOWNLOAD_URL} \
  && unzip ./saturn-executor*.zip \
  && chmod a+x /saturn-executor-master-SNAPSHOT/bin/saturn-executor.sh \
  && rm -rf ./saturn-executor*.zip \
