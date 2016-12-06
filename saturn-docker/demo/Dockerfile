@@ -8,7 +8,7 @@ RUN wget https://oss.sonatype.org/content/repositories/snapshots/com/vip/saturn/
  && mkdir -p /saturn-executor-master-SNAPSHOT/apps/ \
  && cp /saturn-executor-master-SNAPSHOT/lib/*.jar /saturn-executor-master-SNAPSHOT/apps/
 
-COPY ./InitJavaJob.class /saturn-executor-master-SNAPSHOT/demo/InitJavaJob.class
+COPY ./InitSaturnJob.class /saturn-executor-master-SNAPSHOT/demo/InitSaturnJob.class
 COPY ./demo-java-job.jar /saturn-executor-master-SNAPSHOT/apps/demo-java-job.jar 
 COPY ./demo-init.sh /saturn-executor-master-SNAPSHOT/demo-init.sh
 
