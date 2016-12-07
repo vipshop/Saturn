@@ -928,6 +928,7 @@ public class NamespaceShardingService {
 					Shard shard = iterator.next();
 					if(jobName.equals(shard.getJobName())) {
 						log.warn("The Shard {}-{} is running in the executor {}, need to remove", jobName, shard.getItem(), executor.getExecutorName());
+                        executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
 						iterator.remove();
 						hasRemove = true;
 					}
@@ -1031,6 +1032,7 @@ public class NamespaceShardingService {
 				while (iterator.hasNext()) {
 					Shard shard = iterator.next();
 					if (jobName.equals(shard.getJobName())) {
+                        executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
 						iterator.remove();
 						hasRemove = true;
 					}
