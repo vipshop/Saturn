@@ -1000,6 +1000,27 @@ public class NamespaceShardingService {
 			this.jobName = jobName;
 		}
 
+        @Override
+        public void run() {
+            log.info("Execute the {} with {} forceShard", this.getClass().getSimpleName(), jobName);
+            try {
+                super.run();
+            } finally {
+                deleteForceShardNode();
+            }
+        }
+
+        private void deleteForceShardNode() {
+            try {
+                String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
+                if (curatorFramework.checkExists().forPath(jobConfigForceShardNodePath) != null) {
+                    curatorFramework.delete().forPath(jobConfigForceShardNodePath);
+                }
+            } catch (Throwable t) {
+                log.error("delete forceShard node error", t);
+            }
+        }
+
 		@Override
 		protected boolean pick(List<String> allJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
