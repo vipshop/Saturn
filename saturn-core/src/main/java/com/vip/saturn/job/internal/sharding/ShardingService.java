@@ -202,11 +202,6 @@ public class ShardingService extends AbstractSaturnService {
         		return;
         	}
             for (Entry<String, List<Integer>> entry : shardingItems.entrySet()) {
-                // create server node first if not exists
-                String serverNodePath = JobNodePath.getServerNodePath(jobName, entry.getKey());
-                if(!coordinatorRegistryCenter.isExisted(serverNodePath)) {
-                    coordinatorRegistryCenter.persist(serverNodePath, "");
-                }
                 curatorTransactionFinal.create().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(entry.getKey())), ItemUtils.toItemsString(entry.getValue()).getBytes(StandardCharsets.UTF_8)).and();
             }
             curatorTransactionFinal.setData().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();

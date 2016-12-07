@@ -7,6 +7,7 @@ import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.TreeCacheThreadFactory;
 import com.vip.saturn.job.sharding.listener.EnabledJobTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.ForceShardJobTriggerShardingListener;
+import com.vip.saturn.job.sharding.listener.JobServersTriggerShardingListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCache;
@@ -18,17 +19,19 @@ import java.util.List;
 /**
  * @author chembo.huang
  */
-public class AddJobConfigListenersService {
-	static Logger log = LoggerFactory.getLogger(AddJobConfigListenersService.class);
+public class AddJobListenersService {
+	static Logger log = LoggerFactory.getLogger(AddJobListenersService.class);
 
 	private CuratorFramework curatorFramework;
+	private NamespaceShardingService namespaceShardingService;
 	private EnabledJobTriggerShardingListener enabledJobTriggerShardingListener;
 	private ForceShardJobTriggerShardingListener forceShardJobTriggerShardingListener;
 	private String namespace;
 	private NamespaceShardingManager namespaceShardingManager;
 
-	public AddJobConfigListenersService(String namespace, CuratorFramework curatorFramework, NamespaceShardingService namespaceShardingService, NamespaceShardingManager namespaceShardingManager) {
+	public AddJobListenersService(String namespace, CuratorFramework curatorFramework, NamespaceShardingService namespaceShardingService, NamespaceShardingManager namespaceShardingManager) {
 		this.curatorFramework = curatorFramework;
+		this.namespaceShardingService = namespaceShardingService;
 		this.namespace = namespace;
 		enabledJobTriggerShardingListener = new EnabledJobTriggerShardingListener(namespaceShardingService);
 		forceShardJobTriggerShardingListener = new ForceShardJobTriggerShardingListener(namespaceShardingService);
@@ -42,6 +45,7 @@ public class AddJobConfigListenersService {
 			if (jobs != null) {
 				for (String job : jobs) {
 					addJobConfigPathListener(job);
+					addJobServersPathListener(job);
 				}
 			}
 		}
@@ -73,5 +77,30 @@ public class AddJobConfigListenersService {
 		}
 		treeCache.getListenable().addListener(enabledJobTriggerShardingListener);
 		treeCache.getListenable().addListener(forceShardJobTriggerShardingListener);
+	}
+
+	public void addJobServersPathListener(String jobName) throws Exception {
+		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/servers";
+		try {
+			// create servers if not exists
+			if (curatorFramework.checkExists().forPath(path) == null) {
+				curatorFramework.create().forPath(path);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		String fullPath = namespace + path;
+		int depth = 2;
+		TreeCache treeCache = null;
+		if (!namespaceShardingManager.TREE_CACHE_MAP.containsKey(fullPath)) {
+			treeCache = TreeCache.newBuilder(curatorFramework, path).setMaxDepth(depth)
+					.setExecutor(new TreeCacheThreadFactory(namespace + "-" + jobName + "-servers")).build();
+			namespaceShardingManager.TREE_CACHE_MAP.putIfAbsent(fullPath, treeCache);
+			treeCache.start();
+			log.info("namespaceSharding: listen to {}, depth = {} started.", path, depth);
+		} else {
+			treeCache = namespaceShardingManager.TREE_CACHE_MAP.get(fullPath);
+		}
+		treeCache.getListenable().addListener(new JobServersTriggerShardingListener(jobName, namespaceShardingService));
 	}
 }

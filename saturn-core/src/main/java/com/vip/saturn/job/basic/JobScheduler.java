@@ -138,6 +138,8 @@ public class JobScheduler {
 
 		// 埋点内容在console都能看到，包括 cron/queue/channel/成功次数/失败次数/分片参数/超时时间/并发线程数，埋毛线啊
 		// HemersCounter.registerHermesMetrics(jobName, configService);
+
+		serverService.persistServerOnline();
 	}
 
 	private void startAll() {
@@ -156,7 +158,7 @@ public class JobScheduler {
 		limitMaxJobsService.check(currentConf.getJobName());
 		listenerManager.start();
 		leaderElectionService.leaderElection();
-		serverService.persistServerOnline();
+
 		serverService.clearRunOneTimePath();
 		serverService.clearStopOneTimePath();
 		serverService.resetCount();

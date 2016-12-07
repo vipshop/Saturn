@@ -2,7 +2,7 @@ package com.vip.saturn.job.sharding.listener;
 
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.sharding.service.AddJobConfigListenersService;
+import com.vip.saturn.job.sharding.service.AddJobListenersService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
@@ -17,26 +17,33 @@ import org.slf4j.LoggerFactory;
 public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	static Logger log = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
 
-	private AddJobConfigListenersService addJobConfigListenersService;
+	private AddJobListenersService addJobListenersService;
 	private String namespace;
 	private NamespaceShardingManager namespaceShardingManager;
 	
-	public AddOrRemoveJobListener(String namespace, AddJobConfigListenersService addJobConfigListenersService, NamespaceShardingManager namespaceShardingManager) {
-		this.addJobConfigListenersService = addJobConfigListenersService;
+	public AddOrRemoveJobListener(String namespace, AddJobListenersService addJobListenersService, NamespaceShardingManager namespaceShardingManager) {
+		this.addJobListenersService = addJobListenersService;
 		this.namespace = namespace;
 		this.namespaceShardingManager = namespaceShardingManager;
 	}
 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
-		if(isAddJob(type)) {
+		try {
 			String job = StringUtils.substringAfterLast(path, "/");
 			if (!SaturnExecutorsNode.$JOBS.equals(job)) {
-				log.info("job: {} created, now try to add listener to its config path.", job);
-				addJobConfigListenersService.addJobConfigPathListener(job);
+				if (isAddJob(type)) {
+					log.info("job: {} created, now try to add listeners to its config and servers path.", job);
+					addJobListenersService.addJobConfigPathListener(job);
+					addJobListenersService.addJobServersPathListener(job);
+				} else if (isRemoveJob(type)) {
+					namespaceShardingManager.cleanTreeCache(namespace + path + "/config");
+					namespaceShardingManager.cleanTreeCache(namespace + path + "/servers");
+				}
 			}
-		} else if (isRemoveJob(type)) {
-			namespaceShardingManager.cleanTreeCache(namespace + path + "/config");
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw e;
 		}
 	}
 

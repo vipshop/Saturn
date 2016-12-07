@@ -288,6 +288,20 @@ public class NamespaceShardingService {
 			// 获取非容器executor
 			List<Executor> notDockerExecutors = getNotDockerExecutors(lastOnlineExecutorList);
 
+			// 获取作业级别的executor
+			Map<String, List<Executor>> notDockerExecutorsMapByJob = new HashMap<>();
+			Map<String, List<Executor>> lastOnlineExecutorListMapByJob = new HashMap<>();
+			Iterator<Shard> iterator0 = shardList.iterator();
+			while(iterator0.hasNext()) {
+				String jobName = iterator0.next().getJobName();
+				if(!notDockerExecutorsMapByJob.containsKey(jobName)) {
+					notDockerExecutorsMapByJob.put(jobName, filterExecutorsByJob(notDockerExecutors, jobName));
+				}
+				if(!lastOnlineExecutorListMapByJob.containsKey(jobName)) {
+					lastOnlineExecutorListMapByJob.put(jobName, filterExecutorsByJob(lastOnlineExecutorList, jobName));
+				}
+			}
+
 			// 整体算法放回算法：拿取Shard，放进负荷最小的executor
 
 			// 1、放回localMode的Shard
@@ -296,13 +310,15 @@ public class NamespaceShardingService {
 			Iterator<Shard> shardIterator = shardList.iterator();
 			while(shardIterator.hasNext()) {
 				Shard shard = shardIterator.next();
-				if(isLocalMode(shard.getJobName())) {
-					if(preferListIsConfigured(shard.getJobName())) {
-						List<String> preferListConfigured = getPreferListConfigured(shard.getJobName());
+				String jobName = shard.getJobName();
+				if(isLocalMode(jobName)) {
+					if(preferListIsConfigured(jobName)) {
+						List<String> preferListConfigured = getPreferListConfigured(jobName);
 						if (!preferListConfigured.isEmpty()) {
 							List<Executor> preferExecutorList = new ArrayList<>();
-							for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
-								Executor executor = lastOnlineExecutorList.get(i);
+							List<Executor> lastOnlineExecutorListByJob = lastOnlineExecutorListMapByJob.get(jobName);
+							for (int i = 0; i < lastOnlineExecutorListByJob.size(); i++) {
+								Executor executor = lastOnlineExecutorListByJob.get(i);
 								if (preferListConfigured.contains(executor.getExecutorName())) {
 									preferExecutorList.add(executor);
 								}
@@ -313,7 +329,7 @@ public class NamespaceShardingService {
 							}
 						}
 					} else {
-						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(notDockerExecutors, shard.getJobName());
+						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(notDockerExecutorsMapByJob.get(jobName), shard.getJobName());
 						putShardIntoExecutor(shard, executor);
 					}
 					shardIterator.remove();
@@ -325,11 +341,13 @@ public class NamespaceShardingService {
 			List<Shard> noTransferSharding = new ArrayList<>();// 全部preferList都offline的情况且勾选了“只使用优先Executor”，记录不需要迁移的Shard
 			while(shardIterator2.hasNext()) {
 				Shard shard = shardIterator2.next();
-				if(preferListIsConfigured(shard.getJobName())) { // fix, preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
-					List<String> preferList = getPreferListConfigured(shard.getJobName());
+				String jobName = shard.getJobName();
+				if(preferListIsConfigured(jobName)) { // fix, preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
+					List<String> preferList = getPreferListConfigured(jobName);
 					List<Executor> preferExecutorList = new ArrayList<>();
-					for(int i=0; i<lastOnlineExecutorList.size(); i++) {
-						Executor executor = lastOnlineExecutorList.get(i);
+					List<Executor> lastOnlineExecutorListByJob = lastOnlineExecutorListMapByJob.get(jobName);
+					for(int i=0; i<lastOnlineExecutorListByJob.size(); i++) {
+						Executor executor = lastOnlineExecutorListByJob.get(i);
 						if (preferList.contains(executor.getExecutorName())) {
 							preferExecutorList.add(executor);
 						}
@@ -342,7 +360,7 @@ public class NamespaceShardingService {
 						shardIterator2.remove();
 					} else{ // 如果不存在preferExecutor
 						// 如果“只使用preferExecutor”，则标记，添加到noTransferSharding；否则，等到后续（在第3步）进行放回操作，避免不均衡的情况
-						if(!useDispreferList(shard.getJobName())) {
+						if(!useDispreferList(jobName)) {
 							noTransferSharding.add(shard);
 						}
 					}
@@ -356,7 +374,7 @@ public class NamespaceShardingService {
 				if(noTransferSharding.contains(shard)){ // 如果是“只使用preferExecutor”，则不需要迁移，直接丢弃
 					continue;
 				}
-				Executor executor = getExecutorWithMinLoadLevel(notDockerExecutors);
+				Executor executor = getExecutorWithMinLoadLevel(notDockerExecutorsMapByJob.get(shard.getJobName()));
 				putShardIntoExecutor(shard, executor);
 				shardIterator3.remove();
 			}
@@ -418,7 +436,7 @@ public class NamespaceShardingService {
 					executor.setTotalLoadLevel(executor.getTotalLoadLevel() + shard.getLoadLevel());
 				}
 			} else {
-				log.warn("No executor to take over the shard: {}-{}", shard.getJobName(), shard.getItem());
+				log.info("No executor to take over the shard: {}-{}", shard.getJobName(), shard.getItem());
 			}
 		}
 
@@ -544,6 +562,19 @@ public class NamespaceShardingService {
 			return preferListOnline;
 		}
 
+		protected List<Executor> filterExecutorsByJob(List<Executor> executorList, String jobName) throws Exception {
+			List<Executor> executorListByJob = new ArrayList<>();
+			for(int i=0; i<executorList.size(); i++) {
+				Executor executor = executorList.get(i);
+				String executorName = executor.getExecutorName();
+				String jobServersExecutorStatusNodePath = SaturnExecutorsNode.getJobServersExecutorStatusNodePath(jobName, executorName);
+				if(curatorFramework.checkExists().forPath(jobServersExecutorStatusNodePath) != null) {
+					executorListByJob.add(executor);
+				}
+			}
+			return executorListByJob;
+		}
+
 	}
 
     private class ExecuteAllShardingTask extends AbstractAsyncShardingTask {
@@ -591,7 +622,6 @@ public class NamespaceShardingService {
 
 	}
 
-    // 每个域拥有相同的作业
     private class ExecuteOnlineShardingTask extends AbstractAsyncShardingTask {
 
 		private String executorName;
