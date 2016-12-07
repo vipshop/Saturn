@@ -505,6 +505,8 @@ public class SaturnExecutor {
 				if (jobScheduler.getJob().isRunning()) {
 					hasRunning = true;
 					break;
+				}else{
+					hasRunning = false;
 				}
 			}
 		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
