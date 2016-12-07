@@ -11,8 +11,13 @@ layout:decorator="frame-layout">
 				<div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
 					<div class="panel-title">
 						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 注册中心信息</span>
+						<div class="pull-right">
+							<button id="refresh-reg" class="btn btn-info" data-loading-text="刷新中...">
+								刷新注册中心
+							</button>
+						</div>
+						<div class="clearfix"></div>
 					</div>
-					<div class="clearfix"></div>
 				</div>
 				<div class="panel-body">
 					<table id="regCenters" class="table table-hover table-bordered">

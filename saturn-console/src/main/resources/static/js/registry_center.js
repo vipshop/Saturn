@@ -23,13 +23,13 @@ function renderRegCenters() {
 }
 
 function bindRefreshRegCenterButton() {
-	$("#refresh-cmdb").click(function() {
+	$("#refresh-reg").click(function() {
 		var $btn = $(this);
 		$btn.button("loading");
 		$.get("registry_center/refreshRegCenter", function(data) {
 			if(data.success == true) {
 				window.parent.reloadTreeData();
-				location.reload();
+				window.parent.location.reload(true);
 			} else {
 				showFailureDialogWithMsg("failure-dialog", data.message);
 			}

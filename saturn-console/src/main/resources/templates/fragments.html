@@ -36,9 +36,7 @@
 						<h4 class="modal-title">信息框</h4>
 					</div>
 					<div class="modal-body">
-						<pre>操作未成功，原因：</pre>
-						<pre class="fail-reason" th:text="${reason}">
-						</pre>
+						<pre>操作未成功，原因：<strong class="fail-reason" th:text="${reason}"></strong></pre>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-danger" data-dismiss="modal">
