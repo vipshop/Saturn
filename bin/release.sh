@@ -29,6 +29,13 @@ for i in `find . -name pom.xml`; do
   sed -i "s|master-SNAPSHOT|${FULLVERSION}|g" $i
 done
 
+for i in `find . -name quickstart.sh`; do
+  sed -i "s|master-SNAPSHOT|${FULLVERSION}|g" $i
+done
+
+for i in `find . -name quickstart.bat`; do
+  sed -i "s|master-SNAPSHOT|${FULLVERSION}|g" $i
+done
 
 echo "[step 2/8] Replace build.version=saturn-dev to ${FULLVERSION} in saturn-core.properties"
 

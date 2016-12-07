@@ -257,6 +257,13 @@ public class JobScheduler {
 	}
 
 	/**
+	 * 关闭process count thread
+	 */
+	public void shutdownCountThread(){
+		statisticsService.shutdown();
+	}
+	
+	/**
 	 * 关闭调度器.
 	 */
 	public void shutdown(boolean removejob) {

@@ -35,8 +35,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -76,9 +76,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@PostConstruct
 	public void init() throws Exception {
-		refreshRegistryCenterFromJsonFile();
-		refreshNamespaceShardingListenerManagerMap();
-		refreshTreeData();
+		refreshAll();
 	}
 
 	private String generateShardingLeadershipHostValue() {
@@ -91,17 +89,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			for(RegistryCenterConfiguration conf: REGISTRY_CENTER_CONFIGURATION_MAP.get(zkCluster.getZkAddr())) {
 				String namespace = conf.getNamespace();
 				if(!namespaceShardingListenerManagerMap.containsKey(namespace)) {
-					CuratorFramework client = curatorRepository.connect(conf.getZkAddressList(), namespace, null);
-					NamespaceShardingManager newObj = new NamespaceShardingManager(client, namespace, generateShardingLeadershipHostValue());
-					if(namespaceShardingListenerManagerMap.putIfAbsent(namespace, newObj) == null) {
-						try {
+					// client 从缓存取，不再新建也就不需要关闭
+					try {
+						CuratorFramework client = connect(conf.getNameAndNamespace()).getCuratorClient();
+						NamespaceShardingManager newObj = new NamespaceShardingManager(client, namespace, generateShardingLeadershipHostValue());
+						if (namespaceShardingListenerManagerMap.putIfAbsent(namespace, newObj) == null) {
 							log.info("start NamespaceShardingManager {}", namespace);
 							newObj.start();
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
+							log.info("done starting NamespaceShardingManager {}", namespace);
 						}
-					} else {
-						client.close();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
 					}
 				}
 			}
@@ -127,34 +125,47 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 	}
-	private void refreshRegistryCenterFromJsonFile() {
+	private void refreshRegistryCenterFromJsonFile() throws IOException {
 		ArrayList<RegistryCenterConfiguration> list = new ArrayList<>();
-		try {
-			String json = FileUtils.readFileToString(new File(SaturnEnvProperties.REG_CENTER_JSON_FILE), StandardCharsets.UTF_8);
-			list = (ArrayList<RegistryCenterConfiguration>) JSON.parseArray(json, RegistryCenterConfiguration.class);
-			HashMap<String/** bsKey **/, ArrayList<RegistryCenterConfiguration>> newRegMap = new HashMap<>();
-			for (RegistryCenterConfiguration conf: list) {
+		String json = FileUtils.readFileToString(new File(SaturnEnvProperties.REG_CENTER_JSON_FILE), StandardCharsets.UTF_8);
+		list = (ArrayList<RegistryCenterConfiguration>) JSON.parseArray(json, RegistryCenterConfiguration.class);
+		HashMap<String/** bsKey **/, ArrayList<RegistryCenterConfiguration>> newRegMap = new HashMap<>();
+		for (RegistryCenterConfiguration conf: list) {
+			try {
 				conf.initNameAndNamespace(conf.getNameAndNamespace());
 				if (conf.getZkAlias() == null) {
 					conf.setZkAlias(conf.getZkAddressList());
 				}
 				ZkCluster cluster = ZKADDR_TO_ZKCLUSTER_MAP.get(conf.getZkAddressList());
-				if (cluster == null || (cluster.getCuratorFramework() != null && !cluster.getCuratorFramework().getZookeeperClient().isConnected())) {
-					cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), null);
+				if (cluster == null) {
+					CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
+					cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), curatorFramework);
 					ZKADDR_TO_ZKCLUSTER_MAP.put(conf.getZkAddressList(), cluster);
+				} else if (cluster.getCuratorFramework() == null || (cluster.getCuratorFramework() !=null && !cluster.getCuratorFramework().getZookeeperClient().isConnected())) {
+					CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
+					cluster.setCuratorFramework(curatorFramework);
 				}
+				if (cluster.getCuratorFramework() == null) {
+					throw new IllegalArgumentException();
+				}
+				cluster.setOffline(false);
 				ArrayList<RegistryCenterConfiguration> confList = newRegMap.get(conf.getZkAddressList());
 				if (confList == null) {
 					confList = new ArrayList<>();
 				}
 				confList.add(conf);
 				newRegMap.put(conf.getZkAddressList(), confList);
+			} catch (Exception e) {
+				log.error("found an offline zkCluster: {}", conf);
+				log.error(e.getMessage(), e);
+				ZkCluster cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), null);
+				cluster.setOffline(true);
+				ZKADDR_TO_ZKCLUSTER_MAP.put(conf.getZkAddressList(), cluster);
+				newRegMap.put(conf.getZkAddressList(), new ArrayList<RegistryCenterConfiguration>());
 			}
-			REGISTRY_CENTER_CONFIGURATION_MAP = newRegMap;
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
 		}
-		
+		REGISTRY_CENTER_CONFIGURATION_MAP = newRegMap;
+		CURATOR_CLIENT_MAP.clear();
 	}
 	
 	private void refreshTreeData() {
@@ -164,24 +175,22 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 	
-	
 	@Override
 	public RegistryCenterClient connect(final String nameAndNameSpace) {
-		RegistryCenterClient result = new RegistryCenterClient(nameAndNameSpace);
-		RegistryCenterConfiguration toBeConnectedConfig = findConfig(nameAndNameSpace);
 		RegistryCenterClient clientInCache = findInCache(nameAndNameSpace);
 		if (null != clientInCache) {
 			return clientInCache;
 		}
+		RegistryCenterConfiguration toBeConnectedConfig = findConfig(nameAndNameSpace);
 		CuratorFramework client = curatorRepository.connect(toBeConnectedConfig.getZkAddressList(),
 				toBeConnectedConfig.getNamespace(), toBeConnectedConfig.getDigest());
+
+		RegistryCenterClient result = new RegistryCenterClient(nameAndNameSpace);
+
 		if (null == client) {
 			return result;
 		}
-		if (!CuratorFrameworkState.STARTED.equals(client.getState())) {
-			client.start();
-		}
-		setRegistryCenterClient(result, nameAndNameSpace, client);
+		setRegistryCenterClient(result, client);
 		return result;
 	}
 
@@ -198,10 +207,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		CuratorFramework client = curatorRepository.connect(registryCenterConfiguration.getZkAddressList(),
 				registryCenterConfiguration.getNamespace(), registryCenterConfiguration.getDigest());
+		result.setNameAndNamespace(registryCenterConfiguration.getNameAndNamespace());
 		if (null == client) {
 			return result;
 		}
-		setRegistryCenterClient(result, registryCenterConfiguration.getNameAndNamespace(), client);
+		setRegistryCenterClient(result, client);
 		return result;
 	}
 
@@ -215,14 +225,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return null;
 	}
 
-	private void setRegistryCenterClient(final RegistryCenterClient registryCenterClient, final String nameAndNameSpace,
-			final CuratorFramework client) {
-		registryCenterClient.setNameAndNamespace(nameAndNameSpace);
+
+	private void setRegistryCenterClient(final RegistryCenterClient registryCenterClient, final CuratorFramework client) {
 		registryCenterClient.setConnected(true);
 		registryCenterClient.setCuratorClient(client);
-		CURATOR_CLIENT_MAP.putIfAbsent(nameAndNameSpace, registryCenterClient);
+		CURATOR_CLIENT_MAP.putIfAbsent(registryCenterClient.getNameAndNamespace(), registryCenterClient);
 	}
-
 	@Override
 	public RegistryCenterConfiguration findActivatedConfig(HttpSession session) {
 		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) session.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
@@ -270,22 +278,26 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		RequestResult result = new RequestResult();
 		if(refreshingRegCenter.compareAndSet(false, true)) {
 			try {
-				refreshRegistryCenterFromJsonFile();
-				refreshNamespaceShardingListenerManagerMap();
-				refreshTreeData();
+				refreshAll();
 				result.setSuccess(true);
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
 				result.setSuccess(false);
-				result.setMessage(t.getMessage());
+				result.setMessage(ExceptionUtils.getMessage(t));
 			} finally {
 				refreshingRegCenter.set(false);
 			}
 		} else {
 			result.setSuccess(false);
-			result.setMessage("refreshing, retry later if necessary!");
+			result.setMessage("refreshing, try it later!");
 		}
 		return result;
+	}
+
+	private void refreshAll() throws IOException {
+		refreshRegistryCenterFromJsonFile();
+		refreshNamespaceShardingListenerManagerMap();
+		refreshTreeData();
 	}
 	
 	public static RegistryCenterClient getCuratorByNameAndNamespace(String nameAndNamespace) {

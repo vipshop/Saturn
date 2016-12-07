@@ -202,4 +202,15 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.namespace = StringUtils.substringAfterLast(nameAndNamespace, SLASH);
     	this.name = StringUtils.substringBeforeLast(nameAndNamespace, SLASH);
 	}
+
+	@Override
+	public String toString() {
+		return "RegistryCenterConfiguration [name=" + name + ", zkAddressList="
+				+ zkAddressList + ", namespace=" + namespace + ", zkAlias="
+				+ zkAlias + ", bootstrapKey=" + bootstrapKey + ", digest="
+				+ digest + ", nameAndNamespace=" + nameAndNamespace
+				+ ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
+				+ ", degree=" + degree + "]";
+	}
+	
 }
