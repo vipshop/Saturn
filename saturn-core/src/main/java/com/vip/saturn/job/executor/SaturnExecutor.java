@@ -502,9 +502,13 @@ public class SaturnExecutor {
 			}
 			for(Entry<String, JobScheduler> entry : entries){
 				JobScheduler  jobScheduler = entry.getValue();
-				if (jobScheduler.getJob().isRunning()) {
-					hasRunning = true;
-					break;
+				if("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType()) || "SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType())){
+					if (jobScheduler.getJob().isRunning()) {
+						hasRunning = true;
+						break;
+					}else{
+						hasRunning = false;
+					}
 				}
 			}
 		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
