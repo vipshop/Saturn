@@ -3,9 +3,9 @@ MAINTAINER jamin.li@vipshop.com
 
 ARG SATURN_EXECUTOR_DOWNLOAD_URL
 
-RUN wget ${SATURN_EXECUTOR_DOWNLOAD_URL} \
- && unzip ./saturn-executor*.zip \
- && rm -rf ./saturn-executor*.zip \
+RUN wget ${SATURN_EXECUTOR_DOWNLOAD_URL} -O saturn-executor.zip\
+ && unzip ./saturn-executor.zip \
+ && rm -rf ./saturn-executor.zip \
  && mkdir -p /saturn-executor-master-SNAPSHOT/demo/ \
  && mkdir -p /saturn-executor-master-SNAPSHOT/apps/ \
  && cp /saturn-executor-master-SNAPSHOT/lib/*.jar /saturn-executor-master-SNAPSHOT/apps/

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<property resource="application.properties" />
-    <property name="log.directory" value="/apps/logs/saturn_console_opensource" />
-    <property name="log.context.name" value="saturn.vip.vip.com" />
+    <property name="log.directory" value="${saturn.console.log}" />
+    <property name="log.context.name" value="saturn.console" />
     <property name="log.file.name" value="${log.context.name}" />
     <property name="log.error.file.name" value="${log.context.name}-error" />
     <property name="log.charset" value="UTF-8" />
