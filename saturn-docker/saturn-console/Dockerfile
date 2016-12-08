@@ -3,8 +3,7 @@ MAINTAINER jamin.li@vipshop.com
 
 ARG SATURN_CONSOLE_DOWNLOAD_URL
 
-RUN wget ${SATURN_CONSOLE_DOWNLOAD_URL} \
- && mv saturn-console-*.jar saturn-console.jar \
+RUN wget ${SATURN_CONSOLE_DOWNLOAD_URL} -O saturn-console.jar\
  && mkdir -p /apps/saturn/config
 
 COPY ./nptree.json /apps/saturn/config/nptree.json 
