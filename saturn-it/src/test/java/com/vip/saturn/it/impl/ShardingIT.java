@@ -61,8 +61,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		runAtOnce(jobName);
 		Thread.sleep(1000);
 
-		// sharding count should be 2.
-		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("3");
+		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("4");
 		
 		waitForFinish(new FinishCheck(){
 
@@ -115,9 +114,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).hasSize(1);
 
 		stopExecutor(0); //停第1个executor
-		
-		// sharding count should be 5.
-		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("6");
+
+		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("9");
 		
 		Thread.sleep(1000);
 		runAtOnce(jobName);
