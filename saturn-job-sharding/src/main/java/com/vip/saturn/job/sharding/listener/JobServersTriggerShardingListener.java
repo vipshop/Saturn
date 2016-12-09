@@ -24,14 +24,13 @@ public class JobServersTriggerShardingListener extends AbstractTreeCacheListener
     @Override
     public void childEvent(TreeCacheEvent.Type type, String path, String nodeData) throws Exception {
         if(isJobServerStatus(path)) {
+            String executorName = SaturnExecutorsNode.getJobServersExecutorNameByStatusPath(path);
             switch (type) {
                 case NODE_ADDED:
-                    logger.info("The node {} is added, trigger job force shard", path);
-                    namespaceShardingService.asyncShardingWhenJobForceShard(jobName);
+                    namespaceShardingService.asyncShardingWhenJobServerOnline(jobName, executorName);
                     break;
                 case NODE_REMOVED:
-                    logger.info("The node {} is removed, trigger job force shard", path);
-                    namespaceShardingService.asyncShardingWhenJobForceShard(jobName);
+                    namespaceShardingService.asyncShardingWhenJobServerOffline(jobName, executorName);
                     break;
             }
         }

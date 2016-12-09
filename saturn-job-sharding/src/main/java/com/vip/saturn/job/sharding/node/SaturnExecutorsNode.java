@@ -264,6 +264,12 @@ public class SaturnExecutorsNode {
 		return "/\\" + $JOBS + "/"+ jobName + "/"  + "servers" + "/" + "[^/]*" + "/" + "status";
 	}
 
+	public static String getJobServersExecutorNameByStatusPath(String path) {
+		int beginIndexOf = path.lastIndexOf("/servers/") + 9;
+		int lastIndexOf = path.lastIndexOf("/status");
+		return path.substring(beginIndexOf, lastIndexOf);
+	}
+
 	/**
 	 * 获取$DCOS/tasks/xxx完整路径
 	 * @param task

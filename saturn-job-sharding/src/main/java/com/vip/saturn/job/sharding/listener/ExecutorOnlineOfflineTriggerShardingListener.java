@@ -23,7 +23,7 @@ public class ExecutorOnlineOfflineTriggerShardingListener extends AbstractTreeCa
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
 		if(isExecutorOnline(type, path)) {
 			String executorName = SaturnExecutorsNode.getExecutorNameByIpPath(path);
-			namespaceShardingService.asyncShardingWhenExecutorOnline(executorName);
+			namespaceShardingService.asyncShardingWhenExecutorOnline(executorName, nodeData);
 		} else if(isExecutorOffline(type, path)) {
 			String executorName = SaturnExecutorsNode.getExecutorNameByIpPath(path);
 			namespaceShardingService.asyncShardingWhenExecutorOffline(executorName);
