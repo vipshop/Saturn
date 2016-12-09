@@ -966,7 +966,7 @@ public class NamespaceShardingService {
 			for(int i=0; i<lastOnlineExecutorList.size(); i++) {
 				List<Shard> shardList = lastOnlineExecutorList.get(i).getShardList();
 				for(int j=0; j<shardList.size(); j++) {
-					if(shardList.get(i).getJobName().equals(jobName)) {
+					if(shardList.get(j).getJobName().equals(jobName)) {
 						return true;
 					}
 				}
