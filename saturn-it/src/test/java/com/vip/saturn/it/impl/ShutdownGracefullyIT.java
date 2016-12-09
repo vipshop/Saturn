@@ -4,10 +4,8 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.Collection;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import com.vip.saturn.it.AbstractSaturnIT;
@@ -29,6 +27,16 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 	public static void tearDown() throws Exception {
 		// stopExecutorList();
 		stopNamespaceShardingManagerList();
+	}
+
+	@Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
+	@After
+	public void after() {
+		LongtimeJavaJob.statusMap.clear();
 	}
 
 	@Test

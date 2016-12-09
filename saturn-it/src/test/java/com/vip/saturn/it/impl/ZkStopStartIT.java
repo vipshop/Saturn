@@ -7,10 +7,7 @@ import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
@@ -32,7 +29,17 @@ public class ZkStopStartIT extends AbstractSaturnIT {
         stopExecutorList();
         stopNamespaceShardingManagerList();
     }
-    
+
+	@Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
+	@After
+	public void after() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
     @Test
     public void test_A_JavaJob() throws InterruptedException, IOException {
     	final int shardCount = 3;

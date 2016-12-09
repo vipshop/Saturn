@@ -8,10 +8,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
@@ -36,6 +33,16 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 	public static void tearDown() throws Exception {
 		stopExecutorList();
 		stopNamespaceShardingManagerList();
+	}
+
+	@Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
+	@After
+	public void after() {
+		LongtimeJavaJob.statusMap.clear();
 	}
 
 	@Test

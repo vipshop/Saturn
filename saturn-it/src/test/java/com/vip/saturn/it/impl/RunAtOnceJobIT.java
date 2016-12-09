@@ -11,10 +11,7 @@ import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.server.ServerNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import static org.assertj.core.api.Assertions.fail;
@@ -33,6 +30,18 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
         stopExecutorList();
         stopNamespaceShardingManagerList();
     }
+
+	@Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+		SimpleJavaJob.statusMap.clear();
+	}
+
+	@After
+	public void after() {
+		LongtimeJavaJob.statusMap.clear();
+		SimpleJavaJob.statusMap.clear();
+	}
     
     /**
      * 作业STOPPING时立即强制终止

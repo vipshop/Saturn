@@ -11,10 +11,7 @@ import java.io.File;
 import java.util.Collection;
 
 import org.apache.commons.exec.OS;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
@@ -45,6 +42,16 @@ public class TimeoutJobIT extends AbstractSaturnIT {
         stopExecutorList();
         stopNamespaceShardingManagerList();
     }
+
+    @Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
+	@After
+	public void after() {
+		LongtimeJavaJob.statusMap.clear();
+	}
     
     @Test
     public void test_A_JavaJob() throws InterruptedException{

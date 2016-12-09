@@ -8,10 +8,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
@@ -35,6 +32,16 @@ public class FailoverIT extends AbstractSaturnIT {
 	public static void tearDown() throws Exception {
 		stopNamespaceShardingManagerList();
 	}
+
+	@Before
+	public void before() {
+		LongtimeJavaJob.statusMap.clear();
+	}
+
+	@After
+    public void after() {
+        LongtimeJavaJob.statusMap.clear();
+    }
 
 	/**
 	 * 场景1：如果有空闲的Executor，failover就会立即执行，不需要等到主节点sharding完成
