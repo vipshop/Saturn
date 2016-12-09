@@ -40,6 +40,7 @@ import com.vip.saturn.job.internal.statistics.StatisticsService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.internal.storage.JobNodeStorage;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import com.vip.saturn.job.trigger.SaturnScheduler;
 
 /**
  * 作业调度器.
@@ -199,7 +200,11 @@ public class JobScheduler {
 	 */
 	public NextFireTimePausePeriodEffected getNextFireTimePausePeriodEffected() {
 		NextFireTimePausePeriodEffected result = new NextFireTimePausePeriodEffected();
-		Trigger trigger = job.getScheduler().getTrigger();
+		SaturnScheduler saturnScheduler =  job.getScheduler();
+		if(saturnScheduler == null){
+			return result;
+		}
+		Trigger trigger = saturnScheduler.getTrigger();
 
 		if (trigger == null) {
 			return result;
