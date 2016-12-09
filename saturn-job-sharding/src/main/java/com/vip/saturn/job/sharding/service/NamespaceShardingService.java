@@ -205,12 +205,12 @@ public class NamespaceShardingService {
 
     	/**
     	 * 摘取
-    	 * @param allJob 该域下所有作业
+    	 * @param allEnableJobs 该域下所有启用的作业
     	 * @param shardList 默认为空集合
     	 * @param lastOnlineExecutorList 默认为当前存储的数据，如果不想使用存储数据，请重写{@link #getLastOnlineExecutorList()}}方法
     	 * @return true摘取成功；false摘取失败，不需要继续下面的逻辑
     	 */
-    	protected abstract boolean pick(List<String> allJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception;
+    	protected abstract boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception;
 
     	/**
     	 * 按照loadLevel降序排序，如果loadLevel相同，按照作业名降序排序
@@ -859,12 +859,11 @@ public class NamespaceShardingService {
 	/**
 	 * 作业重排，移除所有executor的该作业shard，重新获取该作业的shards，finally删除forceShard结点
 	 */
-	private class ExecuteJobForceShardShardingTask extends ExecuteJobEnableShardingTask {
+	private class ExecuteJobForceShardShardingTask extends AbstractAsyncShardingTask {
 
 		private String jobName;
 
 		public ExecuteJobForceShardShardingTask(String jobName) {
-			super(jobName);
 			this.jobName = jobName;
 		}
 
@@ -893,6 +892,32 @@ public class NamespaceShardingService {
             }
         }
 
+		@Override
+		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+			// 移除已经在Executor运行的该作业的所有Shard
+			boolean hasRemove = false;
+			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
+				Executor executor = lastOnlineExecutorList.get(i);
+				Iterator<Shard> iterator = executor.getShardList().iterator();
+				while (iterator.hasNext()) {
+					Shard shard = iterator.next();
+					if (jobName.equals(shard.getJobName())) {
+						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
+						iterator.remove();
+						hasRemove = true;
+					}
+				}
+			}
+			if(allEnableJobs.contains(jobName)) {
+				// 获取该作业的Shard
+				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
+			}
+			// 如果shardList为空，并且没有移除shard，则没必要再进行放回等操作，摘取失败
+			if (shardList.isEmpty() && !hasRemove) {
+				return false;
+			}
+			return true;
+		}
 	}
 
     /**
@@ -1083,7 +1108,7 @@ public class NamespaceShardingService {
 		}
 
         @Override
-        protected boolean pick(List<String> allJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+        protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			boolean preferListIsConfigured = preferListIsConfigured(jobName); // 是否配置了preferList
 			boolean useDispreferList = useDispreferList(jobName); // 是否useDispreferList
 			List<String> preferListConfigured = getPreferListConfigured(jobName); // 配置态的preferList
@@ -1129,7 +1154,9 @@ public class NamespaceShardingService {
 							pickBalance(shardList, lastOnlineExecutorList);
 						} else {
 							// 如果没有分片正在运行，则需要新建，无需平衡摘取
-							shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+							if(allEnableJobs.contains(jobName)) {
+								shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+							}
 						}
 					} else {
 						if(useDispreferList) {
@@ -1144,7 +1171,9 @@ public class NamespaceShardingService {
 								}
 							} else {
 								// 如果没有分片正在运行，则需要新建，无需平衡摘取
-								shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+								if(allEnableJobs.contains(jobName)) {
+									shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+								}
 							}
 						} else { // 不能再平衡摘取
 							// 摘取全部运行在非优先节点上的分片
@@ -1157,7 +1186,9 @@ public class NamespaceShardingService {
 						pickBalance(shardList, lastOnlineExecutorList);
 					} else {
 						// 如果没有分片正在运行，则需要新建，无需平衡摘取
-						shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+						if(allEnableJobs.contains(jobName)) {
+							shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+						}
 					}
 				}
 			}
