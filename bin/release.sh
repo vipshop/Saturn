@@ -55,31 +55,3 @@ for i in `find . -name application.properties`; do
   sed -i "s/build.version=saturn-dev/build.version=${FULLVERSION}/g" $i
   sed -i "s/console.version=saturn-dev/console.version=${FULLVERSION}/g" $i
 done
-
-echo "[step 5/8] Maven install"
-mvn clean install -Dmaven.test.skip=true -Pprod -Dmaven.javadoc.skip=true
-
-if [ $? -ne 0 ];then
-  echo "Quit the release progress because maven install fail"
-  git reset --hard
-  exit -1
-fi
-
-echo "[step 6/8] Maven deploy"
-mvn deploy -Dmaven.test.skip=true -P inner
-
-
-echo "[step 7/8] Reset the version to master-SNAPSHOT"
-git reset --hard
-
-# git push tag by jenkins
-#echo "[step 7/8] Git tag"
-#git tag -a "${FULLVERSION}-tag" -m "${FULLVERSION}-tag"
-#git push origin $FULLVERSION
-
-if [ x"$PUSH_TARGET" == x ]; then
-	echo "[step 8/8] Done. Won't do the merge operation."
-else
-	echo "[step 8/8] Merge to ${PUSH_TARGET} "
-	git push --force origin HEAD:$PUSH_TARGET	
-fi
