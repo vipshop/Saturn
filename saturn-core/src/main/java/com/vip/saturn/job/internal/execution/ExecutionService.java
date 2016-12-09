@@ -128,7 +128,7 @@ public class ExecutionService extends AbstractSaturnService {
 
 		getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
-		updateNextFireTimeAndPausePeriodEffected(item);
+		//updateNextFireTimeAndPausePeriodEffected(item);
 	}
     
     /**
@@ -176,6 +176,7 @@ public class ExecutionService extends AbstractSaturnService {
 				}
 			}
 		}
+		updateNextFireTimeAndPausePeriodEffected(item);
 		getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
 		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 		getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), System.currentTimeMillis());
