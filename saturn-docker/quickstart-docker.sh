@@ -2,8 +2,15 @@
 
 \cp ../quickstart/demo-java-job.jar ./demo/
 
-sudo docker build --build-arg SATURN_EXECUTOR_DOWNLOAD_URL=https://oss.sonatype.org/content/repositories/snapshots/com/vip/saturn/saturn-executor/master-SNAPSHOT/saturn-executor-master-20161205.010145-6-zip.zip -t saturn/saturn-executor:master-SNAPSHOT ./saturn-executor/
-sudo docker build --build-arg SATURN_CONSOLE_DOWNLOAD_URL=https://oss.sonatype.org/content/repositories/snapshots/com/vip/saturn/saturn-console/master-SNAPSHOT/saturn-console-master-20161205.005702-7.jar -t saturn/saturn-console:master-SNAPSHOT ./saturn-console/
-sudo docker build --build-arg SATURN_EXECUTOR_DOWNLOAD_URL=https://oss.sonatype.org/content/repositories/snapshots/com/vip/saturn/saturn-executor/master-SNAPSHOT/saturn-executor-master-20161205.010145-6-zip.zip -t saturn/demo-init ./demo/
+#get the latest snapshot version
+VERSION=LATEST
+REPO=snapshots
 
-sudo docker-compose up
+EXECUTOR_DL_URL=https://oss.sonatype.org/service/local/artifact/maven/content?r=${REPO}&g=com.vip.saturn&a=saturn-executor&v=${VERSION}&e=zip&c=zip
+CONSOLE_DL_URL=https://oss.sonatype.org/service/local/artifact/maven/content?r=${REPO}&g=com.vip.saturn&a=saturn-console&v=${VERSION}
+
+docker build --build-arg SATURN_EXECUTOR_DOWNLOAD_URL=$EXECUTOR_DL_URL -t saturn/saturn-executor:master-SNAPSHOT ./saturn-executor/
+docker build --build-arg SATURN_CONSOLE_DOWNLOAD_URL=$EXECUTOR_DL_URL -t saturn/saturn-console:master-SNAPSHOT ./saturn-console/
+docker build --build-arg SATURN_EXECUTOR_DOWNLOAD_URL=$EXECUTOR_DL_URL -t saturn/demo-init ./demo/
+
+docker-compose up

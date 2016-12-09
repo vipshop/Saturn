@@ -6,8 +6,8 @@ ARG SATURN_EXECUTOR_DOWNLOAD_URL
 RUN apt-get update \
  && apt-get install -y lsof \
  && apt-get clean \
- && wget ${SATURN_EXECUTOR_DOWNLOAD_URL} \
- && unzip ./saturn-executor*.zip \
+ && wget ${SATURN_EXECUTOR_DOWNLOAD_URL} -O saturn-executor.zip\
+ && unzip ./saturn-executor.zip \
  && chmod a+x /saturn-executor-master-SNAPSHOT/bin/saturn-executor.sh \
  && rm -rf ./saturn-executor*.zip \
  && mkdir -p /saturn-executor-master-SNAPSHOT/apps/

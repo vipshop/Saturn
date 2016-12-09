@@ -53,6 +53,7 @@ public class SystemEnvProperties {
 	 * Executor优雅退出的全局默认超时时间（单位：精确到秒，默认1分钟）
 	 */
 	public static int VIP_SATURN_SHUTDOWN_TIMEOUT = 60;
+	public static int VIP_SATURN_SHUTDOWN_TIMEOUT_MAX = 5*60 - 10;
 
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 
@@ -88,7 +89,9 @@ public class SystemEnvProperties {
 				log.error("msg=" + t.getMessage(), t);
 			}
 		}
-		
+		if(VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX){
+			VIP_SATURN_SHUTDOWN_TIMEOUT = VIP_SATURN_SHUTDOWN_TIMEOUT_MAX;
+		}
 	}
 
 	
