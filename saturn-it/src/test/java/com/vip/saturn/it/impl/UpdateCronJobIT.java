@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 
 import com.vip.saturn.it.AbstractSaturnIT;
@@ -12,7 +13,9 @@ import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.it.job.UpdateCronJob;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import org.junit.runners.MethodSorters;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UpdateCronJobIT extends AbstractSaturnIT {
 	
 	   @BeforeClass

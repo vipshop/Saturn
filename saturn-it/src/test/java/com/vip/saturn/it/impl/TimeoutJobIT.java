@@ -13,6 +13,7 @@ import java.util.Collection;
 import org.apache.commons.exec.OS;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 
 import com.vip.saturn.it.AbstractSaturnIT;
@@ -23,7 +24,9 @@ import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ScriptPidUtils;
+import org.junit.runners.MethodSorters;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TimeoutJobIT extends AbstractSaturnIT {
 	public static String LONG_TIME_SH_PATH;
 	

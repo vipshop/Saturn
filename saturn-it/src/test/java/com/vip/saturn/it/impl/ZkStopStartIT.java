@@ -9,13 +9,16 @@ import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.fail;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ZkStopStartIT extends AbstractSaturnIT {
 	
 	@BeforeClass

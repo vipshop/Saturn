@@ -2,28 +2,24 @@
  * vips Inc.
  * Copyright (c) 2016 All Rights Reserved.
  */   
-package com.vip.saturn.it.impl;   
-
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.Collection;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+package com.vip.saturn.it.impl;
 
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.SaturnAutoBasic.FinishCheck;
 import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.server.ServerNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
+import static org.assertj.core.api.Assertions.fail;
+
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RunAtOnceJobIT extends AbstractSaturnIT {
 
 	@BeforeClass

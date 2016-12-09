@@ -11,6 +11,7 @@ import java.util.Collection;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 
 import com.vip.saturn.it.AbstractSaturnIT;
@@ -19,6 +20,7 @@ import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.junit.runners.MethodSorters;
 
 /**
  * 项目名称：saturn-job-it 
@@ -29,6 +31,7 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
  * 文件名称：ForceStopJobIT.java  
  * 类说明：  
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ForceStopJobIT extends AbstractSaturnIT {
 
 	@BeforeClass
