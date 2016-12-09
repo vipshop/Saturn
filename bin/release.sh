@@ -66,7 +66,7 @@ if [ $? -ne 0 ];then
 fi
 
 echo "[step 6/8] Maven deploy"
-mvn deploy -Dmaven.test.skip=true
+mvn deploy -Dmaven.test.skip=true -P inner
 
 
 echo "[step 7/8] Reset the version to master-SNAPSHOT"
