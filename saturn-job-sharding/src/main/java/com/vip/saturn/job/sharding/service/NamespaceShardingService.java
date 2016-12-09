@@ -361,15 +361,20 @@ public class NamespaceShardingService {
     	 * 1、存在结点，并且该结点值为false，返回false；<br>
     	 * 2、其他情况，返回true
     	 */
-    	protected boolean useDispreferList(String jobName) throws Exception {
-    		String jobConfigUseDispreferListNodePath = SaturnExecutorsNode.getJobConfigUseDispreferListNodePath(jobName);
-    		if(curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath) != null) {
-				byte[] useDispreferListData = curatorFramework.getData().forPath(jobConfigUseDispreferListNodePath);
-				if(useDispreferListData != null && !Boolean.valueOf(new String(useDispreferListData, "UTF-8"))) {
-					return false;
+    	protected boolean useDispreferList(String jobName) {
+			try {
+				String jobConfigUseDispreferListNodePath = SaturnExecutorsNode.getJobConfigUseDispreferListNodePath(jobName);
+				if (curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath) != null) {
+					byte[] useDispreferListData = curatorFramework.getData().forPath(jobConfigUseDispreferListNodePath);
+					if (useDispreferListData != null && !Boolean.valueOf(new String(useDispreferListData, "UTF-8"))) {
+						return false;
+					}
 				}
+				return true;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				return true;
 			}
-    		return true;
     	}
 
 		private Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
