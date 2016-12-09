@@ -128,7 +128,7 @@ public class ExecutionService extends AbstractSaturnService {
 
 		getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
-		//updateNextFireTimeAndPausePeriodEffected(item);
+		updateNextFireTimeAndPausePeriodEffected(item);
 	}
     
     /**
