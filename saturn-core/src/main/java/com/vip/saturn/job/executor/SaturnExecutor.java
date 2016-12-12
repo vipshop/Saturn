@@ -510,6 +510,8 @@ public class SaturnExecutor {
 					}else{
 						hasRunning = false;
 					}
+				}else{
+					jobScheduler.stopJob(false);
 				}
 			}
 		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
