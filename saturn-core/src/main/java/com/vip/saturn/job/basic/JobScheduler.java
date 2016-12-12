@@ -124,23 +124,18 @@ public class JobScheduler {
 	 * 初始化作业.
 	 */
 	public void init() {
-
-		String currentConfJobName = currentConf.getJobName();
-		log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
-		coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
-
-		startAll();
-
 		try {
+			String currentConfJobName = currentConf.getJobName();
+			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
+			coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
+
+			startAll();
 			job = createJob();
-		} catch (final SchedulerException ex) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, ex.getMessage()), ex);
+			serverService.persistServerOnline();
+		} catch (Throwable t) {
+			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			shutdown(false);
 		}
-
-		// 埋点内容在console都能看到，包括 cron/queue/channel/成功次数/失败次数/分片参数/超时时间/并发线程数，埋毛线啊
-		// HemersCounter.registerHermesMetrics(jobName, configService);
-
-		serverService.persistServerOnline();
 	}
 
 	private void startAll() {

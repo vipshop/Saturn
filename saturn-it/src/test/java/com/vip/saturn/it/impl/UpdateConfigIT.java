@@ -81,7 +81,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
 	    @Test
 	    public void updatePauseDate() throws InterruptedException{
 	    	int shardCount = 1;
-	    	String jobName = "updateConfigITJob";
+	    	String jobName = "updatePauseDate";
 	    	for(int i=0;i<shardCount;i++){
 	    		String key = jobName+"_"+i;
 	        	SimpleJavaJob.statusMap.put(key, 0);
@@ -139,7 +139,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
 	    @Test
 	    public void updateShowNormalLog() throws InterruptedException{
 	    	final int shardCount = 1;
-	    	final String jobName = "updateConfigITJob";
+	    	final String jobName = "updateShowNormalLog";
 	    	
 	    	JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 	    	jobConfiguration.setCron("0/1 * * * * ?");

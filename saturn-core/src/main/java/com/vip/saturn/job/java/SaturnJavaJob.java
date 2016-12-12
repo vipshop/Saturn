@@ -46,7 +46,7 @@ public class SaturnJavaJob extends CrondJob {
 		createJobBusinessInstanceIfNecessary();
 	}
 	
-	private void createJobBusinessInstanceIfNecessary() {
+	private void createJobBusinessInstanceIfNecessary() throws SchedulerException {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (jobClassStr != null && !jobClassStr.trim().isEmpty()) {
@@ -65,7 +65,7 @@ public class SaturnJavaJob extends CrondJob {
 					}catch(Exception ex){//NOSONAR
 						//log.error("",ex);
 					}
-					
+
 					if(jobBusinessInstance == null){
 						jobBusinessInstance = jobClass.newInstance();
 					}
@@ -76,10 +76,14 @@ public class SaturnJavaJob extends CrondJob {
 					JobRegistry.addJobBusinessInstance(executorName, jobName, jobBusinessInstance);
 				} catch (Throwable t) {
 					log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "create job business instance error"), t);
+					throw new SchedulerException(t);
 				} finally {
 					Thread.currentThread().setContextClassLoader(executorClassLoader);
 				}
 			}
+		}
+		if(jobBusinessInstance == null) {
+			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
 		}
 	}
 	
