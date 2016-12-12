@@ -4,6 +4,7 @@
 package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -25,6 +26,9 @@ public class ZkCluster implements Serializable {
 	
 	@JsonIgnore
 	private transient  CuratorFramework curatorFramework;
+	
+	@JsonIgnore
+	private transient ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
 	
 	public ZkCluster(String zkAlias, String zkAddr, CuratorFramework curatorFramework) {
 		this.zkAddr = zkAddr;
@@ -64,12 +68,19 @@ public class ZkCluster implements Serializable {
 		this.curatorFramework = curatorFramework;
 	}
 
+	public ArrayList<RegistryCenterConfiguration> getRegCenterConfList() {
+		return regCenterConfList;
+	}
+
+	public void setRegCenterConfList(
+			ArrayList<RegistryCenterConfiguration> regCenterConfList) {
+		this.regCenterConfList = regCenterConfList;
+	}
+
 	@Override
 	public String toString() {
 		return "ZkCluster [zkAlias=" + zkAlias + ", zkAddr=" + zkAddr
-				+ ", offline=" + offline + "]";
+				+ ", offline=" + offline + ", regCenterConfList="
+				+ regCenterConfList + "]";
 	}
-
-	
-
 }
