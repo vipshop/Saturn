@@ -502,13 +502,21 @@ public class SaturnExecutor {
 			}
 			for(Entry<String, JobScheduler> entry : entries){
 				JobScheduler  jobScheduler = entry.getValue();
-				if("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType())
-					|| ("SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType()) && jobScheduler.getCurrentConf().isEnabled())){
+				if("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType())){
 					if (jobScheduler.getJob().isRunning()) {
 						hasRunning = true;
 						break;
 					}else{
 						hasRunning = false;
+					}
+				}else if("SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType())){
+					if(jobScheduler.getCurrentConf().isEnabled()){
+						if (jobScheduler.getJob().isRunning()) {
+							hasRunning = true;
+							break;
+						}else{
+							hasRunning = false;
+						}
 					}
 				}else{
 					jobScheduler.stopJob(false);
