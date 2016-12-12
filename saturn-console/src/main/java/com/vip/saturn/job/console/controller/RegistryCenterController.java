@@ -66,7 +66,7 @@ public class RegistryCenterController extends AbstractController {
 	@RequestMapping(method = RequestMethod.GET)
 	public Map<?, ?> load(final HttpSession session) {
 		Map<String, Object> model = new HashMap<String, Object>();
-		model.put("configs", RegistryCenterServiceImpl.REGISTRY_CENTER_CONFIGURATION_MAP.get(getCurrentZkAddr(session)));
+		model.put("configs", RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(getCurrentZkAddr(session)).getRegCenterConfList());
 		model.put("currentZk", getCurrentZkAddr(session));
 		return model;
 	}
