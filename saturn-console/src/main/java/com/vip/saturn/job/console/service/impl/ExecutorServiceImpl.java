@@ -236,10 +236,11 @@ public class ExecutorServiceImpl implements ExecutorService {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
 					return SaturnConstants.DEAL_SUCCESS;
 				}
-				// (3)只要该作业没有一个executor在线，那么直接删除作业节点
+				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
 				boolean hasOnlineExecutor = false;
 				for(String executor : executors){
-					if(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))){
+					if(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
+							&& curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "status"))){
 						hasOnlineExecutor = true;
 						break;
 					}
