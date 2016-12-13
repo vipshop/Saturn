@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -251,15 +249,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		registryCenterClient.setConnected(true);
 		registryCenterClient.setCuratorClient(client);
 		NNS_CURATOR_CLIENT_MAP.putIfAbsent(registryCenterClient.getNameAndNamespace(), registryCenterClient);
-	}
-	@Override
-	public RegistryCenterConfiguration findActivatedConfig(HttpSession session) {
-		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) session.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
-		RegistryCenterClient client = RegistryCenterServiceImpl.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
-		if (null == client || !client.isConnected()) {
-			return null;
-		}
-		return findConfig(client.getNameAndNamespace());
 	}
 
 	@Override
