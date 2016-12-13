@@ -17,8 +17,6 @@
 
 package com.vip.saturn.job.console.service;
 
-import javax.servlet.http.HttpSession;
-
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -32,8 +30,6 @@ public interface RegistryCenterService {
     RegistryCenterClient connect(String name);
 
     RegistryCenterClient connectByNamespace(String namespace);
-    
-    RegistryCenterConfiguration findActivatedConfig(HttpSession session);
     
     RegistryCenterConfiguration findConfig(String nameAndNamespace);
 
