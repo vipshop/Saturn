@@ -25,7 +25,7 @@ import java.util.List;
  * @author xiaopeng.he
  */
 @Controller
-@RequestMapping("/v1")
+@RequestMapping("/rest/v1")
 public class RestApiController {
 
     private final static Logger logger = LoggerFactory.getLogger(RestApiController.class);
@@ -33,7 +33,7 @@ public class RestApiController {
     @Resource
     private RestApiService restApiService;
 
-    @RequestMapping(value = "/{namespace}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET)
     public ResponseEntity<String> getJobs(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
