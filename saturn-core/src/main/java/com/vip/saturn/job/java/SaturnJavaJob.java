@@ -45,7 +45,7 @@ public class SaturnJavaJob extends CrondJob {
 		super.init();
 		createJobBusinessInstanceIfNecessary();
 	}
-	
+
 	private void createJobBusinessInstanceIfNecessary() throws SchedulerException {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
@@ -57,16 +57,20 @@ public class SaturnJavaJob extends CrondJob {
 				Thread.currentThread().setContextClassLoader(jobClassLoader);
 				try {
 					Class<?> jobClass = saturnExecutorService.getJobClassLoader().loadClass(currentConf.getJobClass());
-					try{
+					try {
 						Method getObject = jobClass.getMethod("getObject");
-						if(getObject != null){
-							jobBusinessInstance = getObject.invoke(null);
+						if (getObject != null) {
+							try {
+								jobBusinessInstance = getObject.invoke(null);
+							} catch (Throwable t) {
+								log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, jobClassStr + " getObject error"), t);
+							}
 						}
-					}catch(Exception ex){//NOSONAR
+					} catch (Exception ex) {//NOSONAR
 						//log.error("",ex);
 					}
 
-					if(jobBusinessInstance == null){
+					if (jobBusinessInstance == null) {
 						jobBusinessInstance = jobClass.newInstance();
 					}
 					SaturnApi saturnApi = new SaturnApi();
@@ -82,7 +86,7 @@ public class SaturnJavaJob extends CrondJob {
 				}
 			}
 		}
-		if(jobBusinessInstance == null) {
+		if (jobBusinessInstance == null) {
 			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
 		}
 	}
