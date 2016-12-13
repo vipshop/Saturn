@@ -99,6 +99,9 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	@Override
 	public void shutdown() {
+		if(scheduler != null) {
+			scheduler.shutdown();
+		}
 		if (executorService != null && !executorService.isShutdown()) {
 			executorService.shutdown();
 		}

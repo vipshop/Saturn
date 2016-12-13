@@ -130,7 +130,7 @@ public class JobScheduler {
 			coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
 
 			startAll();
-			job = createJob();
+			createJob();
 			serverService.persistServerOnline();
 		} catch (Throwable t) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
@@ -161,31 +161,27 @@ public class JobScheduler {
 		statisticsService.startProcessCountJob();
 	}
 
-	private AbstractElasticJob createJob() throws SchedulerException {
-		AbstractElasticJob jobInstance = null;
-
+	private void createJob() throws SchedulerException {
 		Class<?> jobClass = currentConf.getSaturnJobClass();
 		try {
-			jobInstance = (AbstractElasticJob) jobClass.newInstance();
+			job = (AbstractElasticJob) jobClass.newInstance();
 		} catch (Exception e) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "createJobException:"), e);
 			throw new RuntimeException("can not create job with job type " + currentConf.getJobType());
 		}
-		jobInstance.setJobScheduler(this);
-		jobInstance.setConfigService(configService);
-		jobInstance.setShardingService(shardingService);
-		jobInstance.setExecutionContextService(executionContextService);
-		jobInstance.setExecutionService(executionService);
-		jobInstance.setFailoverService(failoverService);
-		jobInstance.setOffsetService(offsetService);
-		jobInstance.setServerService(serverService);
-		jobInstance.setExecutorName(executorName);
-		jobInstance.setJobName(jobName);
-		jobInstance.setNamespace(coordinatorRegistryCenter.getNamespace());
-		jobInstance.setSaturnExecutorService(saturnExecutorService);
-		jobInstance.init();
-
-		return jobInstance;
+		job.setJobScheduler(this);
+		job.setConfigService(configService);
+		job.setShardingService(shardingService);
+		job.setExecutionContextService(executionContextService);
+		job.setExecutionService(executionService);
+		job.setFailoverService(failoverService);
+		job.setOffsetService(offsetService);
+		job.setServerService(serverService);
+		job.setExecutorName(executorName);
+		job.setJobName(jobName);
+		job.setNamespace(coordinatorRegistryCenter.getNamespace());
+		job.setSaturnExecutorService(saturnExecutorService);
+		job.init();
 	}
 
 	/**
@@ -268,10 +264,10 @@ public class JobScheduler {
 	 */
 	public void shutdown(boolean removejob) {
 		try {
-			if (job.getScheduler() != null) {
-				job.getScheduler().shutdown();
+			if (job != null) {
+				job.shutdown();
+				Thread.sleep(500);
 			}
-			Thread.sleep(500);
 		} catch (final Exception e) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 		}
