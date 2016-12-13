@@ -41,6 +41,8 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 public class FailoverListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(FailoverListenerManager.class);
 
+    private boolean isShutdown = false;
+
     private final ConfigurationService configService;
     
     private final ExecutionService executionService;
@@ -68,8 +70,14 @@ public class FailoverListenerManager extends AbstractListenerManager {
         addDataListener(new FailoverSettingsChangedJobListener(), configService.getJobName());
         addDataListener(new FailoverDisabledJobListener(), configService.getJobName());
     }
-    
-    private synchronized void failover(final Integer item, final TreeCacheEvent event ,final String path) {
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        isShutdown = true;
+    }
+
+    private synchronized void failover(final Integer item, final TreeCacheEvent event , final String path) {
        	if(jobScheduler == null || jobScheduler.getJob() == null){
     		return;
     	}
@@ -117,6 +125,7 @@ public class FailoverListenerManager extends AbstractListenerManager {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+            if(isShutdown) return;
             failover(executionNode.getItemByRunningItemPath(path), event ,path);
         }
     }
@@ -125,6 +134,7 @@ public class FailoverListenerManager extends AbstractListenerManager {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+            if(isShutdown) return;
             failover(failoverNode.getItemByExecutionFailoverPath(path), event , path);
         }
     }
@@ -133,6 +143,7 @@ public class FailoverListenerManager extends AbstractListenerManager {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+            if(isShutdown) return;
             if (ConfigurationNode.isFailoverPath(jobConfiguration.getJobName(), path) && Type.NODE_UPDATED == event.getType()) {
                 if (!Boolean.valueOf(new String(event.getData().getData()))) {
                     failoverService.removeFailoverInfo();
@@ -145,6 +156,7 @@ public class FailoverListenerManager extends AbstractListenerManager {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+            if(isShutdown) return;
             if (path.matches(SaturnExecutorsNode.JOBCONFIG_ENABLE_NODE_PATH_REGEX) && Type.NODE_UPDATED == event.getType()) {
                 if (!Boolean.valueOf(new String(event.getData().getData()))) {
                     failoverService.removeFailoverInfo();// 禁用作业时清除failover标识

@@ -35,6 +35,8 @@ import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 public class JobOperationListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(JobOperationListenerManager.class);
 
+	private boolean isShutdown = false;
+
 	public JobOperationListenerManager(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
@@ -44,6 +46,12 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 		addDataListener(new TriggerJobRunAtOnceListener(), jobName);
 		addDataListener(new JobDeleteListener(), jobName);
 		addDataListener(new JobForcedToStopListener(), jobName);
+	}
+
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		isShutdown = true;
 	}
 
 	/**
@@ -56,6 +64,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+			if(isShutdown) return;
 			if (Type.NODE_ADDED == event.getType() && ServerNode.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
 					log.info("[{}] msg=job run-at-once triggered.", jobName);
@@ -77,6 +86,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
+			if(isShutdown) return;
 			if(ConfigurationNode.isToDeletePath(jobName, path) && Type.NODE_ADDED == event.getType()) {
 				log.info("[{}] msg={} is going to be deleted", jobName, jobName);
 				jobScheduler.shutdown(true);
@@ -93,6 +103,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
+			if(isShutdown) return;
 			if (Type.NODE_ADDED == event.getType() && ServerNode.isStopOneTimePath(jobName, path, executorName)) {
 				try{
 					log.info("[{}] msg={} is going to be stop at once", jobName, jobName);	

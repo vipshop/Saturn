@@ -29,6 +29,8 @@ import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 public class ConfigurationListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ConfigurationListenerManager.class);
 
+	private boolean isShutdown = false;
+
 	private ExecutionContextService executionContextService;
 
 	private ExecutionService executionService;
@@ -47,6 +49,12 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		addDataListener(new EnabledPathListener(), jobName);
 	}
 
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		isShutdown = true;
+	}
+
 	class EnabledPathListener extends AbstractJobListener {
 		/**
 		 * 
@@ -55,6 +63,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		 */
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
+			if(isShutdown) return;
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
@@ -77,6 +86,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
+			if(isShutdown) return;
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				log.info("[{}] msg={} 's cron update", jobName, jobName);
 

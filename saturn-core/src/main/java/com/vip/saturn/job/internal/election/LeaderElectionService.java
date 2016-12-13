@@ -17,6 +17,7 @@
 
 package com.vip.saturn.job.internal.election;
 
+import com.vip.saturn.job.basic.SaturnConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +39,27 @@ public class LeaderElectionService extends AbstractSaturnService{
     public LeaderElectionService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
     }
-    
-    
+
+
     @Override
     public void shutdown() {
-    	isShutdown = true;
+        if(!isShutdown) {
+            isShutdown = true;
+            releaseMyLeader();
+        }
+    }
+
+    /**
+     * Release my leader position
+     */
+    public void releaseMyLeader() {
+        try {
+            if (executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST))) {
+                getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
+            }
+        } catch (Throwable t) {
+            log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "release my leader error"), t);
+        }
     }
     
     /**
