@@ -14,8 +14,8 @@ public class ShardingTreeCache {
 
     private static final Logger logger = LoggerFactory.getLogger(ShardingTreeCache.class);
 
-    private Map<String, TreeCache> treeCacheMap = new HashMap<>();
-    private Map<TreeCache, List<TreeCacheListener>> treeCacheListenerMap = new HashMap<>();
+    private Map<String, TreeCache> treeCacheMap = new HashMap<String, TreeCache>();
+    private Map<TreeCache, List<TreeCacheListener>> treeCacheListenerMap = new HashMap<TreeCache, List<TreeCacheListener>>();
 
     private String getKey(String path, int depth) {
         return path + depth;
@@ -83,7 +83,7 @@ public class ShardingTreeCache {
             TreeCache treeCache = treeCacheMap.get(key);
             if(treeCache != null) {
                 treeCacheListenerMap.remove(treeCache);
-                treeCacheMap.remove(treeCache);
+                treeCacheMap.remove(key);
                 treeCache.close();
                 logger.info("remove TreeCache success, path is {}, depth is {}", path, depth);
             }
