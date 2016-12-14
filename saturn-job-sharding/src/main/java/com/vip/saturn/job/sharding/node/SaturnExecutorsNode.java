@@ -25,7 +25,6 @@ public class SaturnExecutorsNode {
     public static String LEADER_LATCHNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + LATCH;
     public static String SHARDING_CONTENTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT;
     public final static String JOBCONFIG_ENABLE_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "enabled";
-	public final static String JOBCONFIG_FORCESHARD_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "forceShard";
     public static final String EXECUTOR_IPNODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*" + "/" + IP;
     public static final String CONFIG_VERSION_PATH = "/" + $SATURNEXECUTORS + "/config/version";
     
@@ -190,30 +189,6 @@ public class SaturnExecutorsNode {
 	 */
 	public static String getJobConfigForceShardNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "forceShard");
-	}
-    
-	/**
-	 * 从$Jobs/xx/config/enabled中抽取出jobName
-	 * @param path
-	 * @return
-	 */
-    public static String getJobNameByConfigEnabledPath(String path) {
-		int lastIndexOf = path.lastIndexOf("/config/enabled");
-		String substring = path.substring(0, lastIndexOf);
-		int lastIndexOf2 = substring.lastIndexOf('/');
-		return substring.substring(lastIndexOf2 + 1);
-	}
-
-	/**
-	 * 从$Jobs/xx/config/forceShard中抽取出jobName
-	 * @param path
-	 * @return
-	 */
-	public static String getJobNameByConfigForceShardPath(String path) {
-		int lastIndexOf = path.lastIndexOf("/config/forceShard");
-		String substring = path.substring(0, lastIndexOf);
-		int lastIndexOf2 = substring.lastIndexOf('/');
-		return substring.substring(lastIndexOf2 + 1);
 	}
     
     /**

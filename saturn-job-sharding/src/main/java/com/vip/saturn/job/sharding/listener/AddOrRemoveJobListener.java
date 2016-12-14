@@ -1,6 +1,5 @@
 package com.vip.saturn.job.sharding.listener;
 
-import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.AddJobListenersService;
 import org.apache.commons.lang3.StringUtils;
@@ -18,13 +17,9 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	static Logger log = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
 
 	private AddJobListenersService addJobListenersService;
-	private String namespace;
-	private NamespaceShardingManager namespaceShardingManager;
 	
-	public AddOrRemoveJobListener(String namespace, AddJobListenersService addJobListenersService, NamespaceShardingManager namespaceShardingManager) {
+	public AddOrRemoveJobListener(AddJobListenersService addJobListenersService) {
 		this.addJobListenersService = addJobListenersService;
-		this.namespace = namespace;
-		this.namespaceShardingManager = namespaceShardingManager;
 	}
 
 	@Override
@@ -33,12 +28,11 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 			String job = StringUtils.substringAfterLast(path, "/");
 			if (!SaturnExecutorsNode.$JOBS.equals(job)) {
 				if (isAddJob(type)) {
-					log.info("job: {} created, now try to add listeners to its config and servers path.", job);
-					addJobListenersService.addJobConfigPathListener(job);
-					addJobListenersService.addJobServersPathListener(job);
+					log.info("job: {} created", job);
+					addJobListenersService.addJobPathListener(job);
 				} else if (isRemoveJob(type)) {
-					namespaceShardingManager.cleanTreeCache(namespace + path + "/config");
-					namespaceShardingManager.cleanTreeCache(namespace + path + "/servers");
+					log.info("job: {} removed", job);
+					addJobListenersService.removeJobPathTreeCache(job);
 				}
 			}
 		} catch (Exception e) {
