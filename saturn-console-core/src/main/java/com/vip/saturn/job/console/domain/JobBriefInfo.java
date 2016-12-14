@@ -90,7 +90,34 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
         return getJobName().compareTo(o.getJobName());
     }
     
-    public enum JobType {
+    @Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((jobName == null) ? 0 : jobName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		JobBriefInfo other = (JobBriefInfo) obj;
+		if (jobName == null) {
+			if (other.jobName != null)
+				return false;
+		} else if (!jobName.equals(other.jobName))
+			return false;
+		return true;
+	}
+
+
+
+	public enum JobType {
     	JAVA_JOB,
     	MSG_JOB,
     	SHELL_JOB,

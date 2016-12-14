@@ -115,19 +115,24 @@ public class Main {
 
 	private static List<URL> getUrls(File file) throws MalformedURLException {
 		List<URL> urls = new ArrayList<>();
-		if(file.exists()) {
-			if(file.isDirectory()) {
-				if("classes".equals(file.getName())){
-					urls.add(file.toURI().toURL());
-				}else{
-					File[] files = file.listFiles();
-					for(File tmp : files) {
-						urls.addAll(getUrls(tmp));
-					}
-				}
-			} else if(file.isFile()) {
+		if(!file.exists()) {
+			return urls;
+		}
+		if(file.isDirectory()) {
+			if("classes".equals(file.getName())){
 				urls.add(file.toURI().toURL());
+				return urls;
 			}
+			File[] files = file.listFiles();
+			if(files != null && files.length >0){
+				for(File tmp : files) {
+					urls.addAll(getUrls(tmp));
+				}
+			}
+			return urls;
+		}
+		if(file.isFile()) {
+			urls.add(file.toURI().toURL());
 		}
 		return urls;
 	}
