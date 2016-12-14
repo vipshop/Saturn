@@ -82,8 +82,8 @@ public class AddJobListenersService {
 				Thread.sleep(100);
 			}
 
-			shardingTreeCacheService.addTreeCache(path, depth);
-			shardingTreeCacheService.addTreeCacheListener(path, depth, new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
+			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -102,8 +102,8 @@ public class AddJobListenersService {
 				log.error(e.getMessage(), e);
 			}
 
-			shardingTreeCacheService.addTreeCache(path, depth);
-			shardingTreeCacheService.addTreeCacheListener(path, depth, new JobServersTriggerShardingListener(jobName, namespaceShardingService));
+			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobServersTriggerShardingListener(jobName, namespaceShardingService));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

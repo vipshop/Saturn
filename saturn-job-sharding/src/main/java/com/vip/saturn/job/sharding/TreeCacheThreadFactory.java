@@ -13,8 +13,8 @@ public class TreeCacheThreadFactory implements ThreadFactory {
 	private static AtomicInteger threadNumber = new AtomicInteger(1);
 	private String threadName;
 
-	public TreeCacheThreadFactory(String treecachePath) {
-		this.threadName = "treecache-for-" + treecachePath + "-" + threadNumber;
+	public TreeCacheThreadFactory(String path, int depth) {
+		this.threadName = "treecache-for-" + path + "-" + depth + "-" + threadNumber;
 	}
 
 	@Override

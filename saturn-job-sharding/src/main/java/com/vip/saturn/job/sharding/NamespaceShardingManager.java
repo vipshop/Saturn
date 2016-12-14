@@ -53,8 +53,8 @@ public class NamespaceShardingManager {
 	private void addNewOrRemoveJobListener() throws Exception {
 		String path = SaturnExecutorsNode.$JOBSNODE_PATH;
 		int depth = 1;
-		shardingTreeCacheService.addTreeCache(path, depth);
-		shardingTreeCacheService.addTreeCacheListener(path, depth, new AddOrRemoveJobListener(addJobListenersService));
+		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new AddOrRemoveJobListener(addJobListenersService));
 	}
 
 
@@ -64,8 +64,8 @@ public class NamespaceShardingManager {
 	private void addOnlineOfflineListener() throws Exception {
 		String path = SaturnExecutorsNode.EXECUTORSNODE_PATH;
 		int depth = 2;
-		shardingTreeCacheService.addTreeCache(path, depth);
-		shardingTreeCacheService.addTreeCacheListener(path, depth, new ExecutorOnlineOfflineTriggerShardingListener(namespaceShardingService, executorCleanService));
+		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new ExecutorOnlineOfflineTriggerShardingListener(namespaceShardingService, executorCleanService));
 	}
 
 	/**
@@ -74,8 +74,8 @@ public class NamespaceShardingManager {
 	private void addLeaderElectionListener() throws Exception {
 		String path = SaturnExecutorsNode.LEADERNODE_PATH;
 		int depth = 1;
-		shardingTreeCacheService.addTreeCache(path, depth);
-		shardingTreeCacheService.addTreeCacheListener(path, depth, new LeadershipElectionListener(namespaceShardingService));
+		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new LeadershipElectionListener(namespaceShardingService));
 	}
 
 

@@ -83,7 +83,9 @@ public class ShardingTreeCache {
             TreeCache treeCache = treeCacheMap.get(key);
             if(treeCache != null) {
                 treeCacheListenerMap.remove(treeCache);
+                treeCacheMap.remove(treeCache);
                 treeCache.close();
+                logger.info("remove TreeCache success, path is {}, depth is {}", path, depth);
             }
         }
     }

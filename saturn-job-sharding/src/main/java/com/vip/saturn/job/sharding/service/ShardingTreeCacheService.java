@@ -5,8 +5,11 @@ import com.vip.saturn.job.sharding.entity.ShardingTreeCache;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.Executors;
 
 /**
  * @author hebelala
@@ -24,12 +27,13 @@ public class ShardingTreeCacheService {
         this.curatorFramework = curatorFramework;
     }
 
-    public void addTreeCache(String path, int depth) {
+    public void addTreeCacheIfAbsent(String path, int depth) {
         try {
             String fullPath = namespace + path;
             if (!shardingTreeCache.containsTreeCache(path, depth)) {
                 TreeCache treeCache = TreeCache.newBuilder(curatorFramework, path)
-                        .setExecutor(new TreeCacheThreadFactory(fullPath)).setMaxDepth(depth).build();
+                        .setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(fullPath, depth)), true))
+                        .setMaxDepth(depth).build();
                 treeCache.start();
                 TreeCache treeCacheOld = shardingTreeCache.putTreeCacheIfAbsent(path, depth, treeCache);
                 if (treeCacheOld != null) {
@@ -43,7 +47,7 @@ public class ShardingTreeCacheService {
         }
     }
 
-    public void addTreeCacheListener(String path, int depth, TreeCacheListener treeCacheListener) {
+    public void addTreeCacheListenerIfAbsent(String path, int depth, TreeCacheListener treeCacheListener) {
         String fullPath = namespace + path;
         TreeCacheListener treeCacheListenerOld = shardingTreeCache.addTreeCacheListenerIfAbsent(path, depth, treeCacheListener);
         if (treeCacheListenerOld == null) {
