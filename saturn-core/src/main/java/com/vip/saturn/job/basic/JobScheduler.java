@@ -18,6 +18,7 @@ import java.util.Date;
 
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,6 +202,7 @@ public class JobScheduler {
 			return result;
 		}
 		boolean pausePeriodEffected = false;
+		((OperableTrigger) trigger).updateAfterMisfire(null);
 		Date nextFireTime = trigger.getNextFireTime();
 		while (nextFireTime != null && configService.isInPausePeriod(nextFireTime)) {
 			nextFireTime = trigger.getFireTimeAfter(nextFireTime);
