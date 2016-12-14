@@ -154,7 +154,38 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
         return getItem() - o.getItem();
     }
     
-    public enum ExecutionStatus {
+    
+    @Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + item;
+		result = prime * result + ((jobName == null) ? 0 : jobName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ExecutionInfo other = (ExecutionInfo) obj;
+		if (item != other.item)
+			return false;
+		if (jobName == null) {
+			if (other.jobName != null)
+				return false;
+		} else if (!jobName.equals(other.jobName))
+			return false;
+		return true;
+	}
+
+
+
+	public enum ExecutionStatus {
         RUNNING, 
         COMPLETED, 
         //执行失败

@@ -254,7 +254,7 @@ public final class CronExpression implements Serializable, Cloneable {
     public static boolean isValidExpression(String cronExpression) {
         
         try {
-            new CronExpression(cronExpression);
+            new CronExpression(cronExpression);//NOSONAR
         } catch (ParseException pe) {
             return false;
         }
@@ -264,7 +264,7 @@ public final class CronExpression implements Serializable, Cloneable {
 
     public static void validateExpression(String cronExpression) throws ParseException {
         
-        new CronExpression(cronExpression);
+        new CronExpression(cronExpression);//NOSONAR
     }
     
     

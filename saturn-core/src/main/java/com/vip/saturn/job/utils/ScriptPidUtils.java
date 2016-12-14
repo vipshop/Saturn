@@ -177,7 +177,7 @@ public class ScriptPidUtils {
 		}
 		File[] files =  dir.listFiles();
 		
-		if(files.length == 0){
+		if(files == null || files.length == 0){
 			return pids;
 		}
 
@@ -208,7 +208,7 @@ public class ScriptPidUtils {
 		}
 		File[] files =  jobNameFile.listFiles();
 		
-		if(files.length == 0){
+		if(files == null || files.length == 0){
 			return new String[]{};
 		}
 		
