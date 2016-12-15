@@ -101,4 +101,8 @@ public abstract class ShardingConnectionLostListener implements ConnectionStateL
         }
     }
 
+    public void shutdown() {
+        executor.shutdownNow();
+    }
+
 }

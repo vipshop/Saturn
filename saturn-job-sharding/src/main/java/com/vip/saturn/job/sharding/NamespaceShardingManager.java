@@ -138,6 +138,7 @@ public class NamespaceShardingManager {
 			if (isStopped.compareAndSet(false, true)) {
 				stop0();
 				curatorFramework.getConnectionStateListenable().removeListener(shardingConnectionLostListener);
+				shardingConnectionLostListener.shutdown();
 			}
 		}
 	}
