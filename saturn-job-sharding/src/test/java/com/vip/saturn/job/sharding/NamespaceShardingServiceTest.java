@@ -73,6 +73,7 @@ public class NamespaceShardingServiceTest {
 
         // 停止第一个
         namespaceShardingManager1.stop();
+        namespaceShardingManager1.getCuratorFramework().close();
 
         Thread.sleep(1000);
 
@@ -81,6 +82,7 @@ public class NamespaceShardingServiceTest {
 
         // 停止第二个
         namespaceShardingManager2.stop();
+        namespaceShardingManager2.getCuratorFramework().close();
 
         Thread.sleep(1000);
 

@@ -53,7 +53,11 @@ public class NamespaceShardingManager {
 		return namespace;
 	}
 
-	private void start0() throws Exception {
+    public CuratorFramework getCuratorFramework() {
+        return curatorFramework;
+    }
+
+    private void start0() throws Exception {
 		// create ephemeral node $SaturnExecutors/leader/host & $Jobs.
 		namespaceShardingService.leaderElection();
 		addJobListenersService.addExistJobPathListener();
