@@ -1,28 +1,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.vip.saturn.demo</groupId>
-  <artifactId>saturn-example</artifactId>
-  <version>master-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  
-  <name>saturn-example</name>
+	<groupId>com.vip.saturn.demo</groupId>
+	<artifactId>saturn-job-simple-demo</artifactId>
+	<version>master-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-  <properties>
-    <saturn-job.version>master-SNAPSHOT</saturn-job.version>
-  </properties>
+	<name>saturn-job-simple-demo</name>
 
-  <dependencies>
-    
-   	<dependency>
-         <groupId>com.vip.saturn</groupId>
-         <artifactId>saturn-job-api</artifactId>
-         <version>${saturn-job.version}</version>
-     </dependency>    
-     
-  	</dependencies>
-  
+	<properties>
+		<saturn-job.version>master-SNAPSHOT</saturn-job.version>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>com.vip.saturn</groupId>
+			<artifactId>saturn-job-api</artifactId>
+			<version>${saturn-job.version}</version>
+		</dependency>
+
+	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -43,7 +43,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>com.vip.saturn</groupId>
 				<artifactId>saturn-plugin</artifactId>
@@ -51,5 +51,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	  
+
 </project>
