@@ -3,6 +3,7 @@ package com.vip.saturn.job.sharding;
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
+import com.vip.saturn.job.sharding.listener.ShardingConnectionLostListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.AddJobListenersService;
 import com.vip.saturn.job.sharding.service.ExecutorCleanService;
@@ -12,9 +13,11 @@ import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * 
- * @author xiaopeng.he
+ * @author hebelala
  *
  */
 public class NamespaceShardingManager {
@@ -25,26 +28,72 @@ public class NamespaceShardingManager {
 	private CuratorFramework curatorFramework;
 	private AddJobListenersService addJobListenersService;
 
+	private String namespace;
+
 	private ShardingTreeCacheService shardingTreeCacheService;
+
+	private AtomicBoolean isShutdown = new AtomicBoolean(false);
 	
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue) {
 		this.curatorFramework = curatorFramework;
+		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
 		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
 
-	/**
-	 * leadership election, add listeners
-	 */
-	public void start() throws Exception {
+	public boolean isShutdown() {
+		return isShutdown.get();
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	private void start0() throws Exception {
 		// create ephemeral node $SaturnExecutors/leader/host & $Jobs.
 		namespaceShardingService.leaderElection();
 		addJobListenersService.addExistJobPathListener();
 		addOnlineOfflineListener();
 		addLeaderElectionListener();
 		addNewOrRemoveJobListener();
+	}
+
+	private void stop0() {
+		shardingTreeCacheService.shutdown();
+		namespaceShardingService.shutdown();
+	}
+
+	/**
+	 * leadership election, add listeners.<br/>
+	 * if stopped, cannot be restarted
+	 */
+	public void start() throws Exception {
+		if(!isShutdown.get()) {
+			start0();
+			addConnectionLostListener();
+		} else {
+			throw new Exception("The NamespaceShardingManager is already stop, cannot be restart again");
+		}
+	}
+
+	private void addConnectionLostListener() {
+		curatorFramework.getConnectionStateListenable().addListener(new ShardingConnectionLostListener(this) {
+			@Override
+			public void stop() {
+				stop0();
+			}
+
+			@Override
+			public void restart() {
+				try {
+					start0();
+				} catch (Exception e) {
+					log.error("restart " + namespace + "-NamespaceShardingManager error", e);
+				}
+			}
+		});
 	}
 
 	/**
@@ -83,9 +132,10 @@ public class NamespaceShardingManager {
 	 * close listeners, delete leadership, close curatorFramework
 	 */
 	public void stop() {
-		shardingTreeCacheService.shutdown();
-		namespaceShardingService.shutdown();
-		curatorFramework.close();
+		if(isShutdown.compareAndSet(false, true)) {
+			stop0();
+			curatorFramework.close();
+		}
 	}
 	
 }
