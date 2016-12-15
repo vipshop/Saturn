@@ -70,7 +70,7 @@ public abstract class ShardingConnectionLostListener implements ConnectionStateL
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                         }
-                        if (namespaceShardingManager.isShutdown()) {
+                        if (namespaceShardingManager.isStopped()) {
                             return;
                         }
                         long newSessionId = getSessionId(client);
@@ -80,7 +80,7 @@ public abstract class ShardingConnectionLostListener implements ConnectionStateL
                             stopped.set(true);
                             return;
                         }
-                    } while (!namespaceShardingManager.isShutdown() && !connected.get());
+                    } while (!namespaceShardingManager.isStopped() && !connected.get());
                 }
             });
 

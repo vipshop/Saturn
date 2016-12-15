@@ -32,7 +32,9 @@ public class NamespaceShardingManager {
 
 	private ShardingTreeCacheService shardingTreeCacheService;
 
-	private AtomicBoolean isShutdown = new AtomicBoolean(false);
+	private AtomicBoolean isStopped = new AtomicBoolean(true);
+
+	private ShardingConnectionLostListener shardingConnectionLostListener;
 	
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue) {
 		this.curatorFramework = curatorFramework;
@@ -43,8 +45,8 @@ public class NamespaceShardingManager {
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
 
-	public boolean isShutdown() {
-		return isShutdown.get();
+	public boolean isStopped() {
+		return isStopped.get();
 	}
 
 	public String getNamespace() {
@@ -66,20 +68,19 @@ public class NamespaceShardingManager {
 	}
 
 	/**
-	 * leadership election, add listeners.<br/>
-	 * if stopped, cannot be restarted
+	 * leadership election, add listeners
 	 */
 	public void start() throws Exception {
-		if(!isShutdown.get()) {
-			start0();
-			addConnectionLostListener();
-		} else {
-			throw new Exception("The NamespaceShardingManager is already stop, cannot be restart again");
+		synchronized (isStopped) {
+			if (isStopped.compareAndSet(true, false)) {
+				start0();
+				addConnectionLostListener();
+			}
 		}
 	}
 
 	private void addConnectionLostListener() {
-		curatorFramework.getConnectionStateListenable().addListener(new ShardingConnectionLostListener(this) {
+		shardingConnectionLostListener = new ShardingConnectionLostListener(this) {
 			@Override
 			public void stop() {
 				stop0();
@@ -93,7 +94,8 @@ public class NamespaceShardingManager {
 					log.error("restart " + namespace + "-NamespaceShardingManager error", e);
 				}
 			}
-		});
+		};
+		curatorFramework.getConnectionStateListenable().addListener(shardingConnectionLostListener);
 	}
 
 	/**
@@ -129,12 +131,14 @@ public class NamespaceShardingManager {
 
 
 	/**
-	 * close listeners, delete leadership, close curatorFramework
+	 * close listeners, delete leadership
 	 */
 	public void stop() {
-		if(isShutdown.compareAndSet(false, true)) {
-			stop0();
-			curatorFramework.close();
+		synchronized (isStopped) {
+			if (isStopped.compareAndSet(false, true)) {
+				stop0();
+				curatorFramework.getConnectionStateListenable().removeListener(shardingConnectionLostListener);
+			}
 		}
 	}
 	
