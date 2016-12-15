@@ -1,11 +1,8 @@
 package com.vip.saturn.demo.test;
 
-import java.net.URL;
-
 import com.vip.saturn.embed.SaturnEmbed;
 
 /**
- * @author dylan.xue
  * 嵌入式运行saturn executor(！仅用于测试和调试目的)
  * 
  * 运行步骤：
@@ -51,7 +48,7 @@ public class EmbedDemo {
 	}
 	
 	public static void main(String[] args){
-		//demo2(args);
+		//demo1(args);
 		demo2(args);
 	}
 }
