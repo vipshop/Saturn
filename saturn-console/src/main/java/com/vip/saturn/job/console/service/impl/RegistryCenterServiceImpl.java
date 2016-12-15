@@ -35,7 +35,6 @@ import javax.annotation.Resource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.CloseableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -118,7 +117,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					break;
 				}
 			}
-			if(!find) {
+			// 防止zk抖动，不stop不移除
+			/*if(!find) {
 				namespaceShardingManager.stop();
 				iterator.remove();
 				// clear NNS_CURATOR_CLIENT_MAP
@@ -127,7 +127,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					log.info("close zk client in NNS_CURATOR_CLIENT_MAP, nns: {}");
 					CloseableUtils.closeQuietly(registryCenterClient.getCuratorClient());
 				}
-			}
+			}*/
 		}
 	}
 
