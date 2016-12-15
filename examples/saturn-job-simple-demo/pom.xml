@@ -6,7 +6,6 @@
 	<artifactId>saturn-job-simple-demo</artifactId>
 	<version>master-SNAPSHOT</version>
 	<packaging>jar</packaging>
-
 	<name>saturn-job-simple-demo</name>
 
 	<properties>
@@ -14,13 +13,11 @@
 	</properties>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<artifactId>saturn-job-api</artifactId>
 			<version>${saturn-job.version}</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>

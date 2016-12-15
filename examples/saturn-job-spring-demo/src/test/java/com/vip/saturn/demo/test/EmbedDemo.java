@@ -19,7 +19,6 @@ public class EmbedDemo {
 	 * SATURN_HOME或者SATURN_ZIP_FILE
 	 * SATURN_APP_NAMESPACE
 	 * SATURN_APP_EXECUTOR_NAME
-	 * @param args
 	 */
 	public static void demo1(String[] args){
 		try {
@@ -29,14 +28,15 @@ public class EmbedDemo {
 		}
 	}
 	
+	/**
+	 * 使用-Dsaturn.zipfile会覆盖环境变量SATURN_ZIP_FILE
+	 * 使用-Dsaturn.home会覆盖环境变量SATURN_HOME
+	 * 使用-Dsaturn.app.namespace会覆盖环境变量SATURN_APP_NAMESPACE
+	 * 使用-Dsaturn.app.executorName会覆盖环境变量SATURN_APP_EXECUTOR_NAME
+	 */
 	public static void demo2(String[] args){
 		try {
-		/**
-		 * 使用-Dsaturn.zipfile会覆盖环境变量SATURN_ZIP_FILE
-		 * 使用-Dsaturn.home会覆盖环境变量SATURN_HOME
-		 * 使用-Dsaturn.app.namespace会覆盖环境变量SATURN_APP_NAMESPACE
-		 *  使用-Dsaturn.app.executorName会覆盖环境变量SATURN_APP_EXECUTOR_NAME
-		 */
+	
 			//System.setProperty("saturn.home","d:/saturn");//saturn.home和saturn.zipfile有一个即可
 			System.setProperty("saturn.zipfile","d:/saturn-job-executor-1.1.1-zip.zip");
 			System.setProperty("saturn.app.namespace","saturn-it.vip.com");

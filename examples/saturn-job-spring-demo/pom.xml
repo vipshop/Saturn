@@ -4,21 +4,27 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.vip.saturn</groupId>
-	<artifactId>saturn-job-demo-with-spring</artifactId>
+	<artifactId>saturn-job-spring-demo</artifactId>
 	<version>1.0-SNAPSHOT</version>
+	<name>saturn-job-spring-demo</name>
+
+	<properties>
+		<saturn-job.version>master-SNAPSHOT</saturn-job.version>
+	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<artifactId>saturn-job-api</artifactId>
-			<version>master-SNAPSHOT</version>
+			<version>${saturn-job.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<artifactId>saturn-job-embed</artifactId>
-			<version>master-SNAPSHOT</version>
+			<version>${saturn-job.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
