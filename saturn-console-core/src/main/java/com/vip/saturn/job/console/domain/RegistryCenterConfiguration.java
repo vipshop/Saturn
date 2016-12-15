@@ -153,6 +153,8 @@ public class RegistryCenterConfiguration implements Serializable {
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
+		if (o == null)
+			return false;
 		if (this.getClass() != o.getClass())
 			return false;
 		RegistryCenterConfiguration other = (RegistryCenterConfiguration) o;
