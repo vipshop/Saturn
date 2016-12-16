@@ -14,7 +14,6 @@ The VIP's distributed job schedule platform. It supports java and shell jobs wit
 
 ### 1.1 Feature Map
 
-- see [Feature Map](https://github.com/vipshop/Saturn/wiki/Saturn-Feature-List-Map---Chinese-Version)
 - see [Amazing Feature Destription](https://github.com/vipshop/Saturn/wiki/Saturn-Amazing-Feature-Description)
 
 ### 1.2 User Guide
