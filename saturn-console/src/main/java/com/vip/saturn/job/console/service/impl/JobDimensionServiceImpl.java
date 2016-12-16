@@ -71,7 +71,38 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
     @Resource
     private RegistryCenterService registryCenterService;
-
+    
+    private JobBriefInfo genJobBriefInfo4tree(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+    	JobBriefInfo jobBriefInfo = new JobBriefInfo();
+		jobBriefInfo.setJobName(jobName);
+		jobBriefInfo.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
+		jobBriefInfo.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		jobBriefInfo.setJobType(JobType.getJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
+		if (JobType.UNKOWN_JOB.equals(jobBriefInfo.getJobType())) {
+			if (jobBriefInfo.getJobClass() != null && jobBriefInfo.getJobClass().indexOf("SaturnScriptJob") != -1) {
+				jobBriefInfo.setJobType(JobType.SHELL_JOB);
+			} else {
+				jobBriefInfo.setJobType(JobType.JAVA_JOB);
+			}
+		}
+		return jobBriefInfo;
+    }
+    
+    @Override
+    public Collection<JobBriefInfo> getAllJobsBriefInfo4Tree() {
+    	CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+        List<String> jobNames = CommonUtils.getJobNames(curatorFrameworkOp);
+        List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
+        for (String jobName : jobNames) {
+            try {
+            	JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
+            	result.add(jobBriefInfo);
+            } catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+        }
+        return result;
+    }
     @Override
     public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionZkKey, String namespace) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
@@ -79,10 +110,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
         for (String jobName : jobNames) {
         	try{
-	            JobBriefInfo jobBriefInfo = new JobBriefInfo();
-	            jobBriefInfo.setJobName(jobName);
+        		JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
 	            jobBriefInfo.setIsJobEnabled(isJobEnabled(jobName));
-	            jobBriefInfo.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
 	            jobBriefInfo.setStatus(getJobStatus(jobName));
 	            jobBriefInfo.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
 	            jobBriefInfo.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
@@ -121,15 +150,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					}
 				}
 	            jobBriefInfo.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
-	            jobBriefInfo.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
-	            jobBriefInfo.setJobType(JobType.getJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
-	            if(JobType.UNKOWN_JOB.equals(jobBriefInfo.getJobType())) {
-	            	if (jobBriefInfo.getJobClass() != null && jobBriefInfo.getJobClass().indexOf("SaturnScriptJob") != -1) {
-	            		jobBriefInfo.setJobType(JobType.SHELL_JOB);
-	    			} else {
-	    				jobBriefInfo.setJobType(JobType.JAVA_JOB);
-	    			}
-	            }
+	            
 	            if(!JobStatus.STOPPED.equals(jobBriefInfo.getStatus())){// 作业如果是STOPPED状态，不需要显示已分配的executor
 	            	String executorsPath = JobNodePath.getServerNodePath(jobName);
 	            	if(curatorFrameworkOp.checkExists(executorsPath)) {
