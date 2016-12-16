@@ -55,7 +55,7 @@ public class JobController extends AbstractController {
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)
 	public Collection<JobBriefInfo> getAllJobsBriefInfo(final ModelMap model, HttpServletRequest request) {
-		return jobDimensionService.getAllJobsBriefInfo();
+		return jobDimensionService.getAllJobsBriefInfo(null,null);
 	}
 
 	@RequestMapping(value = "settings", method = RequestMethod.GET)

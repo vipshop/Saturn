@@ -17,17 +17,24 @@
 
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.*;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-
 import java.util.Collection;
 import java.util.List;
+
+import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.HealthCheckJobServer;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
 public interface JobDimensionService {
 	
 	JobStatus getJobStatus(final String jobName);
 	
-    Collection<JobBriefInfo> getAllJobsBriefInfo();
+    Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace);
     
     String geJobRunningInfo(final String jobName);
     
@@ -74,4 +81,6 @@ public interface JobDimensionService {
     JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
 
     void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
+
+	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
 }

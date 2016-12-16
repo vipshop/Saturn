@@ -111,7 +111,7 @@ public class RegistryCenterController extends AbstractController {
 			return null;
 		}
 		ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
-		Collection<JobBriefInfo> jobs = jobDimensionService.getAllJobsBriefInfo();
+		Collection<JobBriefInfo> jobs = jobDimensionService.getAllJobsBriefInfo(null,null);
 		List<TreeNode> nodes = new ArrayList<>();
 		for (Iterator<JobBriefInfo> iterator = jobs.iterator(); iterator.hasNext();) {
 			JobBriefInfo jobBriefInfo = (JobBriefInfo) iterator.next();
@@ -145,7 +145,7 @@ public class RegistryCenterController extends AbstractController {
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)
 	public Collection<JobBriefInfo> getAllJobsBriefInfo() {
-		return jobDimensionService.getAllJobsBriefInfo();
+		return jobDimensionService.getAllJobsBriefInfo(null,null);
 	}
 
 }
