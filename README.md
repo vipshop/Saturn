@@ -38,6 +38,10 @@ see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%
 - see [Development Guide for Java CN](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8Bjava)
 - see [Development Guide for Shell CN](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8Bshell)
 
-## 4 The team
+## 4 Operation
+### 4.1 Gray Upgrade
+- see [Gray Upgrade Process](https://github.com/vipshop/Saturn/wiki/Saturn-Job-Gray-Upgrade-Process)
+
+## 5 The team
 
 [The Saturn Wow Team](https://github.com/vipshop/Saturn/wiki/Saturn's-Wow-Team)
