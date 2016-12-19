@@ -62,12 +62,8 @@ public class ShardingTreeCacheService {
         shardingTreeCache.removeTreeCache(path, depth);
     }
 
-    public ExecutorService newSingleThreadExecutor() {
-        return Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(namespace));
-    }
-
     public void start() {
-        executorService = newSingleThreadExecutor();
+        executorService = Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(namespace));
     }
 
     public void shutdown() {
