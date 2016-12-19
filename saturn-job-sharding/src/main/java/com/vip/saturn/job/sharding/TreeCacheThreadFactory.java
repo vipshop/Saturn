@@ -1,7 +1,6 @@
 package com.vip.saturn.job.sharding;
 
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * zk treecache的线程Factory
@@ -10,11 +9,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class TreeCacheThreadFactory implements ThreadFactory {
-	private static AtomicInteger threadNumber = new AtomicInteger(1);
+
 	private String threadName;
 
-	public TreeCacheThreadFactory(String path, int depth) {
-		this.threadName = "treecache-for-" + path + "-" + depth + "-" + threadNumber;
+	public TreeCacheThreadFactory(String threadName) {
+		this.threadName = "treecache-for-" + threadName;
 	}
 
 	@Override

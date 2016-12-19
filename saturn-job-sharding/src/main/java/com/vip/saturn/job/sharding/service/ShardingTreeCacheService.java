@@ -9,6 +9,7 @@ import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -20,11 +21,13 @@ public class ShardingTreeCacheService {
 
     private String namespace;
     private CuratorFramework curatorFramework;
-    private ShardingTreeCache shardingTreeCache = new ShardingTreeCache();
+    private ShardingTreeCache shardingTreeCache;
+    private ExecutorService executorService;
 
     public ShardingTreeCacheService(String namespace, CuratorFramework curatorFramework) {
         this.namespace = namespace;
         this.curatorFramework = curatorFramework;
+        this.shardingTreeCache = new ShardingTreeCache();
     }
 
     public void addTreeCacheIfAbsent(String path, int depth) {
@@ -32,7 +35,7 @@ public class ShardingTreeCacheService {
             String fullPath = namespace + path;
             if (!shardingTreeCache.containsTreeCache(path, depth)) {
                 TreeCache treeCache = TreeCache.newBuilder(curatorFramework, path)
-                        .setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(fullPath, depth)), true))
+                        .setExecutor(new CloseableExecutorService(executorService, false))
                         .setMaxDepth(depth).build();
                 treeCache.start();
                 TreeCache treeCacheOld = shardingTreeCache.putTreeCacheIfAbsent(path, depth, treeCache);
@@ -59,8 +62,19 @@ public class ShardingTreeCacheService {
         shardingTreeCache.removeTreeCache(path, depth);
     }
 
+    public ExecutorService newSingleThreadExecutor() {
+        return Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(namespace));
+    }
+
+    public void start() {
+        executorService = newSingleThreadExecutor();
+    }
+
     public void shutdown() {
         shardingTreeCache.shutdown();
+        if(executorService != null) {
+            executorService.shutdownNow();
+        }
     }
 
 }

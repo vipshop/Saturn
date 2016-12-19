@@ -58,6 +58,7 @@ public class NamespaceShardingManager {
     }
 
     private void start0() throws Exception {
+		shardingTreeCacheService.start();
 		// create ephemeral node $SaturnExecutors/leader/host & $Jobs.
 		namespaceShardingService.leaderElection();
 		addJobListenersService.addExistJobPathListener();
