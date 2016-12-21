@@ -28,7 +28,7 @@ public class MsgHolder  implements Serializable{
 		this.messageId = messageId;
 	}
 
-	public MsgHolder(byte[] payloadBytes, Set<Entry<String, Object>> prop, String messageId){
+	public MsgHolder(byte[] payloadBytes, Set<Entry<String, Object>> prop, String messageId){//NOSONAR
 		this.payloadBytes = payloadBytes;
 		this.prop = prop;
 		this.messageId = messageId;
