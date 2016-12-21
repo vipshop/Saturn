@@ -21,9 +21,6 @@ The VIP's distributed job schedule platform. It supports java and shell jobs wit
 - see [Quick Start with Docker Container](https://github.com/vipshop/Saturn/wiki/Quick-Start---Docker)
 - see [User Guide CN](https://github.com/vipshop/Saturn/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%BC%95(%E5%AE%8C%E6%95%B4))
 
-### 1.3 Deployment Guide
-- see [Console Deployment](https://github.com/vipshop/Saturn/wiki/saturn部署文档之console)
-- see [Executor Deployment](https://github.com/vipshop/Saturn/wiki/Saturn部署文档之executor)
 
 ## 2 System Design
 
@@ -41,6 +38,10 @@ see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%
 ## 4 Operation
 ### 4.1 Gray Upgrade
 - see [Gray Upgrade Process](https://github.com/vipshop/Saturn/wiki/Saturn-Job-Gray-Upgrade-Process)
+
+### 4.2 Production Deployment Guide
+- see [Console Deployment](https://github.com/vipshop/Saturn/wiki/saturn部署文档之console)
+- see [Executor Deployment](https://github.com/vipshop/Saturn/wiki/Saturn部署文档之executor)
 
 ## 5 The team
 
