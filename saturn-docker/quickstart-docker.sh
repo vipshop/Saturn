@@ -3,8 +3,13 @@
 \cp ../quickstart/demo-java-job.jar ./demo/
 
 #get the latest snapshot version
-VERSION=LATEST
-REPO=snapshots
+#VERSION=LATEST
+#REPO=snapshots
+
+#get the 2.0.0 release
+VERSION=2.0.0
+REPO=releases
+
 
 EXECUTOR_DL_URL=https://oss.sonatype.org/service/local/artifact/maven/content?r=${REPO}&g=com.vip.saturn&a=saturn-executor&v=${VERSION}&e=zip&c=zip
 CONSOLE_DL_URL=https://oss.sonatype.org/service/local/artifact/maven/content?r=${REPO}&g=com.vip.saturn&a=saturn-console&v=${VERSION}
