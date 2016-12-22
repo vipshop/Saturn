@@ -1,23 +1,30 @@
 package com.vip.saturn.job.console.service.impl;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.*;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.utils.JobNodePath;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.RestApiJobConfig;
+import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.utils.JobNodePath;
 
 /**
  * @author xiaopeng.he
@@ -123,7 +130,8 @@ public class RestApiServiceImpl implements RestApiService {
             restApiJobConfig.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
             restApiJobConfig.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
             restApiJobConfig.setLoadLevel(Integer.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"))));
-
+            restApiJobConfig.setJobDegree(Integer.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
+            
             restApiJobConfig.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
             restApiJobConfig.setUseDispreferList(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"))));
             restApiJobConfig.setLocalMode(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));

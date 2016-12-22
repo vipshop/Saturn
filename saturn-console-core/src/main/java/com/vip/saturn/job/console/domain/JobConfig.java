@@ -77,6 +77,8 @@ public class JobConfig implements Serializable {
     private String zkList;
     
     private Integer loadLevel;
+    /** 作业重要等级*/
+    private Integer jobDegree;
     /** 作业的配置状态：true表示启用，false表示禁用，默认是禁用的*/
     private Boolean enabled;
     /** 从zk的config中读取到的已配置的预分配列表*/
@@ -302,6 +304,14 @@ public class JobConfig implements Serializable {
 
 	public void setLoadLevel(Integer loadLevel) {
 		this.loadLevel = loadLevel;
+	}
+
+	public Integer getJobDegree() {
+		return jobDegree;
+	}
+
+	public void setJobDegree(Integer jobDegree) {
+		this.jobDegree = jobDegree;
 	}
 
 	public Boolean getEnabled() {

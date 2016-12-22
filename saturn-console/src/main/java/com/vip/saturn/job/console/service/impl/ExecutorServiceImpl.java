@@ -1,5 +1,30 @@
 package com.vip.saturn.job.console.service.impl;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableCell;
+import jxl.write.WritableCellFeatures;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.constants.SaturnConstants;
@@ -14,21 +39,6 @@ import com.vip.saturn.job.console.utils.CommonUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
-import jxl.Workbook;
-import jxl.write.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import java.io.File;
-import java.lang.Boolean;
-import java.lang.reflect.Field;
-import java.util.*;
 
 /**
  * 
@@ -154,6 +164,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"), jobConfig.getShardingTotalCount());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "showNormalLog"), jobConfig.getShowNormalLog());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "loadLevel"), jobConfig.getLoadLevel());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobDegree"), jobConfig.getJobDegree());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "preferList"), jobConfig.getPreferList());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useDispreferList"), jobConfig.getUseDispreferList());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "localMode"), jobConfig.getLocalMode());
@@ -337,6 +348,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 				sheet1.addCell(new Label(17, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
 				sheet1.addCell(new Label(18, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
 				sheet1.addCell(new Label(19, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+				sheet1.addCell(new Label(20, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
 			}
 
 			writableWorkbook.write();

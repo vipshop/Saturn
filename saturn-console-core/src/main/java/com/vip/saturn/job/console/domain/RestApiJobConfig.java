@@ -17,6 +17,7 @@ public class RestApiJobConfig {
     private String channelName;
     private String queueName;
     private Integer loadLevel;
+    private Integer jobDegree;
     private String preferList;
     private Boolean useDispreferList;
     private Boolean localMode;
@@ -117,8 +118,16 @@ public class RestApiJobConfig {
     public void setLoadLevel(Integer loadLevel) {
         this.loadLevel = loadLevel;
     }
+    
+    public Integer getJobDegree() {
+		return jobDegree;
+	}
 
-    public String getPreferList() {
+	public void setJobDegree(Integer jobDegree) {
+		this.jobDegree = jobDegree;
+	}
+
+	public String getPreferList() {
         return preferList;
     }
 

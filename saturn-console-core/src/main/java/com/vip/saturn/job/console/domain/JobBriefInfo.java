@@ -47,6 +47,8 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     
     private String loadLevel;
     
+    private String jobDegree;
+    
     private String shardingTotalCount;
     
     private String preferList;
@@ -211,6 +213,14 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 
 	public void setLoadLevel(String loadLevel) {
 		this.loadLevel = loadLevel;
+	}
+	
+	public String getJobDegree() {
+		return jobDegree;
+	}
+
+	public void setJobDegree(String jobDegree) {
+		this.jobDegree = jobDegree;
 	}
 
 	public String getShardingTotalCount() {

@@ -118,6 +118,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	            jobBriefInfo.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
 	            jobBriefInfo.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
 	            jobBriefInfo.setLoadLevel(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel")));
+	            jobBriefInfo.setJobDegree(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree")));
 	            jobBriefInfo.setShardingTotalCount(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")));
 	            jobBriefInfo.setTimeoutSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
 	            jobBriefInfo.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
@@ -319,6 +320,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         } else {
             result.setLoadLevel(Integer.parseInt(lv));
         }
+        String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
+        if (Strings.isNullOrEmpty(jobDegree)) {
+       	 	result.setJobDegree(0);
+        } else {
+            result.setJobDegree(Integer.parseInt(jobDegree));
+        }
         result.setEnabled(Boolean.valueOf(JobNodePath.getConfigNodePath(jobName, "enabled")));//默认是禁用的
         result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
         result.setPreferListCandidate(getAllExecutors(jobName));
@@ -360,6 +367,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			curatorFrameworkOp.inTransaction()
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingTotalCount"), jobSettings.getShardingTotalCount(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"), jobSettings.getLoadLevel(), bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"), jobSettings.getJobDegree(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "cron"), StringUtils.trim(jobSettings.getCron()), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodDate"), jobSettings.getPausePeriodDate(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodTime"), jobSettings.getPausePeriodTime(), bw)
