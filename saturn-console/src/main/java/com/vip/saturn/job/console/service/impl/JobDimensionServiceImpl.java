@@ -566,6 +566,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	 */
 	public String getAllExecutors(String jobName) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		return getAllExecutors(jobName, curatorFrameworkOp);
+	}
+
+	@Override
+	public String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
 		if(!curatorFrameworkOp.checkExists(executorsNodePath)) {
 			return null;

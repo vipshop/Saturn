@@ -29,6 +29,7 @@ import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.JobStatus;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
 public interface JobDimensionService {
 	
@@ -77,6 +78,8 @@ public interface JobDimensionService {
     int isNewSaturn(String version);
     
     String getAllExecutors(String jobName);
+    
+    String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
     JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
 
