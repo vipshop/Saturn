@@ -348,7 +348,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 				sheet1.addCell(new Label(17, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
 				sheet1.addCell(new Label(18, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
 				sheet1.addCell(new Label(19, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
-				sheet1.addCell(new Label(20, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
 			}
 
 			writableWorkbook.write();
