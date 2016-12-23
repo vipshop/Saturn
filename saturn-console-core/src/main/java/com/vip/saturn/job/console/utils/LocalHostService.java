@@ -61,7 +61,7 @@ public class LocalHostService {
 						ni = NetworkInterface.getByName("eth0");
 					}
 					if (ni == null) {
-						throw new Exception("wrong with get ip cause by could not read any info from local host, bond0 and eth0");
+						throw new Exception("failed in getting ip from local host, bond0 and eth0");
 					}
 	
 					Enumeration<InetAddress> ips = ni.getInetAddresses();
