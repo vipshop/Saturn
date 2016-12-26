@@ -314,4 +314,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return NNS_CURATOR_CLIENT_MAP.get(nameAndNamespace);
 	}
 
+	/** 
+	 * 
+	 * @see com.vip.saturn.job.console.service.RegistryCenterService#shardAllAtOnce(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public RequestResult shardAllAtOnce(String nameAndNamespace, String currentZkBsKey) throws Exception {
+		return null;
+	}
+
 }

@@ -1,5 +1,11 @@
 package com.vip.saturn.job.sharding;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
@@ -9,11 +15,6 @@ import com.vip.saturn.job.sharding.service.AddJobListenersService;
 import com.vip.saturn.job.sharding.service.ExecutorCleanService;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 
@@ -146,6 +147,10 @@ public class NamespaceShardingManager {
 				shardingConnectionLostListener.shutdown();
 			}
 		}
+	}
+
+	public NamespaceShardingService getNamespaceShardingService() {
+		return namespaceShardingService;
 	}
 	
 }

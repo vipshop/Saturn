@@ -1,8 +1,20 @@
 package com.vip.saturn.job.sharding.service;
 
-import com.vip.saturn.job.sharding.entity.Executor;
-import com.vip.saturn.job.sharding.entity.Shard;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -10,14 +22,9 @@ import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.vip.saturn.job.sharding.entity.Executor;
+import com.vip.saturn.job.sharding.entity.Shard;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 
 /**
  *
@@ -1244,6 +1251,19 @@ public class NamespaceShardingService {
 
     }
 
+    /**
+     * 进行全量分片
+     * @param executorName
+     * @throws Exception
+     */
+	public void asyncShardingWhenExecutorAll() throws Exception {
+		if(isLeadership()) {
+			needAllSharding.set(true);
+			shardingCount.incrementAndGet();
+			executorService.submit(new ExecuteAllShardingTask());
+		}
+	}
+	
     /**
      * 结点上线处理
      * @param executorName
