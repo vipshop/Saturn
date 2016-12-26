@@ -251,7 +251,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 				boolean hasOnlineExecutor = false;
 				for(String executor : executors){
 					if(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
-							&& curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "status"))){
+							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))){
 						hasOnlineExecutor = true;
 						break;
 					}
