@@ -93,7 +93,7 @@ public class NamespaceShardingService {
 				List<Executor> lastOnlineExecutorList = getLastOnlineExecutorList();
 				List<Shard> shardList = new ArrayList<>();
 				// 摘取
-				if(pick(allEnableJobs, shardList, lastOnlineExecutorList)) {
+				if(pick(allJobs, allEnableJobs, shardList, lastOnlineExecutorList)) {
 					// 放回
 					putBackBalancing(allEnableJobs, shardList, lastOnlineExecutorList);
 					// 如果当前变为非leader，则返回
@@ -120,6 +120,33 @@ public class NamespaceShardingService {
 				}
 				shardingCount.decrementAndGet();
 			}
+		}
+
+		/**
+		 * 修正lastOnlineExecutorList中的jobNameList
+		 */
+		protected boolean fixJobNameList(List<Executor> lastOnlineExecutorList, String jobName) throws Exception {
+			boolean fixed = false;
+			for(int i=0; i<lastOnlineExecutorList.size(); i++) {
+				Executor executor = lastOnlineExecutorList.get(i);
+				if (executor.getJobNameList() == null) {
+					executor.setJobNameList(new ArrayList<String>());
+				}
+				List<String> jobNameList = executor.getJobNameList();
+				String jobServersExecutorStatusNodePath = SaturnExecutorsNode.getJobServersExecutorStatusNodePath(jobName, executor.getExecutorName());
+				if (curatorFramework.checkExists().forPath(jobServersExecutorStatusNodePath) != null) {
+					if (!jobNameList.contains(jobName)) {
+						jobNameList.add(jobName);
+						fixed = true;
+					}
+				} else {
+					if (jobNameList.contains(jobName)) {
+						jobNameList.remove(jobName);
+						fixed = true;
+					}
+				}
+			}
+			return fixed;
 		}
 
 		private void increaseShardingCount() throws Exception {
@@ -212,12 +239,13 @@ public class NamespaceShardingService {
 
     	/**
     	 * 摘取
+		 * @param allJobs 该域下所有作业
     	 * @param allEnableJobs 该域下所有启用的作业
     	 * @param shardList 默认为空集合
     	 * @param lastOnlineExecutorList 默认为当前存储的数据，如果不想使用存储数据，请重写{@link #getLastOnlineExecutorList()}}方法
     	 * @return true摘取成功；false摘取失败，不需要继续下面的逻辑
     	 */
-    	protected abstract boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception;
+    	protected abstract boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception;
 
     	/**
     	 * 按照loadLevel降序排序，如果loadLevel相同，按照作业名降序排序
@@ -560,7 +588,7 @@ public class NamespaceShardingService {
 			return preferListOnlineByJob;
 		}
 
-		private List<Shard> createShards(String jobName,  int number, int loadLevel) {
+		private List<Shard> createShards(String jobName, int number, int loadLevel) {
 			List<Shard> shards = new ArrayList<>();
 			for(int i=0; i<number; i++) {
 				Shard shard = new Shard();
@@ -611,8 +639,25 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected boolean pick(List<String> allEnableJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+		protected boolean pick(List<String> allJobs, List<String> allEnableJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+			// 修正所有executor对所有作业的jobNameList
+			for(int j=0; j<allJobs.size(); j++) {
+				fixJobNameList(lastOnlineExecutorList, allJobs.get(j));
+			}
+
+			// 获取该域下所有enable作业的所有分片
+			for(int i=0; i<allEnableJob.size(); i++) {
+				String jobName = allEnableJob.get(i);
+				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
+			}
+
+			return true;
+		}
+
+		@Override
+		protected List<Executor> getLastOnlineExecutorList() throws Exception {
 			// 从$SaturnExecutors节点下，获取所有正在运行的Executor
+			List<Executor> lastOnlineExecutorList = new ArrayList<>();
 			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorsNodePath()) != null) {
 				List<String> zkExecutors = curatorFramework.getChildren().forPath(SaturnExecutorsNode.getExecutorsNodePath());
 				if(zkExecutors != null) {
@@ -625,39 +670,14 @@ public class NamespaceShardingService {
 								executor.setExecutorName(zkExecutor);
 								executor.setIp(new String(ipData, "UTF-8"));
 								executor.setShardList(new ArrayList<Shard>());
-                                executor.setJobNameList(getJobNameListSupportedByExecutor(zkExecutor, allEnableJob));
+								executor.setJobNameList(new ArrayList<String>());
 								lastOnlineExecutorList.add(executor);
 							}
 						}
 					}
 				}
 			}
-			// 获取该域下所有作业的所有分片
-			for(int i=0; i<allEnableJob.size(); i++) {
-				String jobName = allEnableJob.get(i);
-				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
-			}
-
-			return true;
-		}
-
-		private List<String> getJobNameListSupportedByExecutor(String executorName, List<String> allEnableJob) throws Exception {
-            List<String> jobNameList = new ArrayList<>();
-            for(int i=0; i<allEnableJob.size(); i++) {
-                String jobName = allEnableJob.get(i);
-                String jobServersExecutorStatusNodePath = SaturnExecutorsNode.getJobServersExecutorStatusNodePath(jobName, executorName);
-                if(curatorFramework.checkExists().forPath(jobServersExecutorStatusNodePath) != null) {
-                    if(!jobNameList.contains(jobName)) {
-                        jobNameList.add(jobName);
-                    }
-                }
-            }
-            return jobNameList;
-        }
-
-		@Override
-		protected List<Executor> getLastOnlineExecutorList() {
-			return new ArrayList<>();
+			return lastOnlineExecutorList;
 		}
 
 	}
@@ -682,7 +702,7 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {//NOSONAR
+		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {//NOSONAR
 			// 如果没有Executor在运行，则需要进行全量分片
 			if(lastOnlineExecutorList.isEmpty()) {
 				log.warn("There are no running executors, need all sharding");
@@ -692,25 +712,23 @@ public class NamespaceShardingService {
 				return false;
 			}
 
-			Executor executor = null;
-			boolean included = false;
+			Executor theExecutor = null;
             for(int i=0; i< lastOnlineExecutorList.size(); i++) {
 				Executor tmp = lastOnlineExecutorList.get(i);
 				if(tmp.getExecutorName().equals(executorName)) {
-                    included = true;
-					executor = tmp;
+					theExecutor = tmp;
                     break;
                 }
             }
-            if(!included) {
-                executor = new Executor();
-                executor.setExecutorName(executorName);
-                executor.setIp(ip);
-                executor.setShardList(new ArrayList<Shard>());
-                executor.setJobNameList(new ArrayList<String>());
-                lastOnlineExecutorList.add(executor);
+            if(theExecutor == null) {
+                theExecutor = new Executor();
+                theExecutor.setExecutorName(executorName);
+                theExecutor.setIp(ip);
+                theExecutor.setShardList(new ArrayList<Shard>());
+                theExecutor.setJobNameList(new ArrayList<String>());
+                lastOnlineExecutorList.add(theExecutor);
             } else { // 重新设置下ip
-				executor.setIp(ip);
+				theExecutor.setIp(ip);
 			}
 
 			return true;
@@ -735,7 +753,7 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			/**
 			 * 摘取下线的executor全部Shard
 			 */
@@ -787,7 +805,7 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
 			boolean hasRemove = false;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
@@ -802,6 +820,9 @@ public class NamespaceShardingService {
 					}
 				}
 			}
+
+			// 修正该所有executor的对该作业的jobNameList
+			fixJobNameList(lastOnlineExecutorList, jobName);
 
 			// 获取该作业的Shard
 			shardList.addAll(createShards(jobName, lastOnlineExecutorList));
@@ -833,7 +854,7 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) {
+		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) {
 			// 摘取所有该作业的Shard
 			for(int i=0; i< lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
@@ -900,7 +921,7 @@ public class NamespaceShardingService {
         }
 
 		@Override
-		protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
 			boolean hasRemove = false;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
@@ -915,12 +936,14 @@ public class NamespaceShardingService {
 					}
 				}
 			}
+			// 修正所有executor对该作业的jobNameList
+			boolean fixed = fixJobNameList(lastOnlineExecutorList, jobName);
+			// 如果该作业是启用状态，则创建该作业的Shard
 			if(allEnableJobs.contains(jobName)) {
-				// 获取该作业的Shard
 				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
 			}
-			// 如果shardList为空，并且没有移除shard，则没必要再进行放回等操作，摘取失败
-			if (shardList.isEmpty() && !hasRemove) {
+			// 如果shardList为空，并且没有移除shard，并且没有修正jobNameList，则没必要再进行放回等操作，摘取失败
+			if (shardList.isEmpty() && !hasRemove && !fixed) {
 				return false;
 			}
 			return true;
@@ -1115,7 +1138,7 @@ public class NamespaceShardingService {
 		}
 
         @Override
-        protected boolean pick(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+        protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			boolean preferListIsConfigured = preferListIsConfigured(jobName); // 是否配置了preferList
 			boolean useDispreferList = useDispreferList(jobName); // 是否useDispreferList
 			List<String> preferListConfigured = getPreferListConfigured(jobName); // 配置态的preferList
@@ -1224,7 +1247,7 @@ public class NamespaceShardingService {
         }
 
         @Override
-        protected boolean pick(List<String> allJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
+        protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			boolean localMode = isLocalMode(jobName);
 
 			boolean find = false;
@@ -1242,7 +1265,7 @@ public class NamespaceShardingService {
 							iterator.remove();
 						}
 					}
-					find = find || executor.getJobNameList().remove(jobName);
+					find = executor.getJobNameList().remove(jobName) || find;
 					break;
 				}
 			}

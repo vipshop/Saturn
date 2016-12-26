@@ -46,7 +46,6 @@ public class SaturnAutoBasic {
     protected static final String NAMESPACE = "it-saturn-java.vip.vip.com";
     protected static Logger log;
     protected static ZookeeperRegistryCenter regCenter;
-    protected static ZookeeperRegistryCenter shardingRegCenter;
 
     protected static NestedZkUtils nestedZkUtils;
 
@@ -154,7 +153,7 @@ public class SaturnAutoBasic {
     public static void startNamespaceShardingManagerList(int count) throws Exception {
         assertThat(nestedZkUtils.isStarted());
         for (int i = 0; i < count; i++) {
-            shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(-1, nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
+            ZookeeperRegistryCenter shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(-1, nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
             shardingRegCenter.init();
             NamespaceShardingManager namespaceShardingManager = new NamespaceShardingManager((CuratorFramework) shardingRegCenter.getRawClient(),NAMESPACE, "127.0.0.1-" + i);
             namespaceShardingManager.start();
