@@ -61,6 +61,9 @@ public class AbstractController {
 	public void setSession(final RegistryCenterClient client, final HttpSession session) {
 		 ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
          RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
+         if(conf == null){
+        	 return;
+         }
          session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
          setCurrentZkAddr(conf.getZkAddressList(), session);
 	}
