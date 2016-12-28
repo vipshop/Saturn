@@ -24,7 +24,7 @@ public abstract class CrondJob extends AbstractSaturnJob{
 	@Override
 	public void enableJob() {
 		String cronFromZk = configService.getCron();
-		if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
+		if (jobScheduler.getPreviousConf().getCron() != null && !jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
 			jobScheduler.getPreviousConf().setCron(cronFromZk);
 			jobScheduler.rescheduleJob(cronFromZk);
 			executionService.updateNextFireTimeAndPausePeriodEffected(executionContextService.getShardingItems());
