@@ -22,6 +22,7 @@ public class SaturnExecutorsNode {
 	public final static String LEADER_HOSTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + HOST;
 	public final static String LEADERNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER;
 	public final static String EXECUTORSNODE_PATH = "/" + $SATURNEXECUTORS + "/" + EXECUTORS;
+	public final static String SHARDINGNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING;
     public static String LEADER_LATCHNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + LATCH;
     public static String SHARDING_CONTENTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT;
     public final static String JOBCONFIG_ENABLE_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "enabled";
@@ -103,6 +104,15 @@ public class SaturnExecutorsNode {
 		return substring.substring(lastIndexOf2 + 1);
 	}
 
+	/**
+	 * 获取$SaturnExecutors/sharding结点完整路径
+	 * @param nodeName
+	 * @return
+	 */
+    public static String getExecutorShardingNodePath(String nodeName) {
+		return "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + nodeName;
+	}
+    
 	/**
 	 * 获取$SaturnExecutors/sharding/content结点完整路径
 	 * @param element

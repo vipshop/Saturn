@@ -21,5 +21,7 @@ public interface ExecutorService {
 	String removeJob(String jobName);
 
 	File getExportJobFile() throws SaturnJobConsoleException;
+
+	RequestResult shardAllAtOnce() throws SaturnJobConsoleException;
 	
 }

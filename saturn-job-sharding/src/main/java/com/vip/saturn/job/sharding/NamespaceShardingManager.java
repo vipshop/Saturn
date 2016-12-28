@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
+import com.vip.saturn.job.sharding.listener.ExecutorTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
 import com.vip.saturn.job.sharding.listener.ShardingConnectionLostListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -64,6 +65,7 @@ public class NamespaceShardingManager {
 		namespaceShardingService.leaderElection();
 		addJobListenersService.addExistJobPathListener();
 		addOnlineOfflineListener();
+		addExecutorShardingListener();
 		addLeaderElectionListener();
 		addNewOrRemoveJobListener();
 	}
@@ -124,6 +126,16 @@ public class NamespaceShardingManager {
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new ExecutorOnlineOfflineTriggerShardingListener(namespaceShardingService, executorCleanService));
 	}
+	
+	/**
+	 *  watch 1-level-depth of the children of /$SaturnExecutors/sharding
+	 */
+	private void addExecutorShardingListener() throws Exception {
+		String path = SaturnExecutorsNode.SHARDINGNODE_PATH;
+		int depth = 1;
+		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new ExecutorTriggerShardingListener(namespaceShardingService, executorCleanService));
+	}
 
 	/**
 	 * watch 1-level-depth of the children of /$SaturnExecutors/leader  
@@ -149,8 +161,4 @@ public class NamespaceShardingManager {
 		}
 	}
 
-	public NamespaceShardingService getNamespaceShardingService() {
-		return namespaceShardingService;
-	}
-	
 }

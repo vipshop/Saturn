@@ -35,6 +35,4 @@ public interface RegistryCenterService {
 
     RegistryCenterConfiguration findConfigByNamespace(String namespace);
 
-	RequestResult shardAllAtOnce(String nameAndNamespace, String currentZkBsKey) throws Exception;
-
 }

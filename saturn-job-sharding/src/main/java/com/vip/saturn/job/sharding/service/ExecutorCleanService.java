@@ -150,4 +150,14 @@ public class ExecutorCleanService {
         }
     }
 
+    public void deleteIfExists(String path) {
+        try {
+            if (curatorFramework.checkExists().forPath(path) != null) {
+                curatorFramework.delete().deletingChildrenIfNeeded().forPath(path);
+            }
+        } catch (Exception e) {
+            log.error("deleteIfExists exception:", e);
+        }
+    }
+
 }

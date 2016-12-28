@@ -14,6 +14,8 @@ public class ExecutorNodePath {
 
 	public static final String $EXECUTOR_NODE_NAME = "$SaturnExecutors";
 	
+	public static final String SHARDING_NODE_NAME = "/" + $EXECUTOR_NODE_NAME + "/sharding";
+	
 	public static final String SHARDING_COUNT_PATH = "/" + $EXECUTOR_NODE_NAME + "/sharding/count";
 	
     private ExecutorNodePath() {
@@ -46,6 +48,10 @@ public class ExecutorNodePath {
     public static String getExecutorIpNodePath(final String executorName) {
         return getExecutorNodePath(executorName, "ip");
     } 
+    
+    public static String getExecutorShardingNodePath(final String nodeName) {
+        return String.format("%s/%s", SHARDING_NODE_NAME, nodeName);
+    }
     
 }
   
