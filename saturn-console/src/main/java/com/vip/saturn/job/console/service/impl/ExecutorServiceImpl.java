@@ -366,9 +366,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		cell.setCellFeatures(cellFeatures);
 	}
 
-	/** 
-	 * @see com.vip.saturn.job.console.service.ExecutorService#shardAllAtOnce()
-	 */
 	@Override
 	public RequestResult shardAllAtOnce() throws SaturnJobConsoleException {
 		return null;
