@@ -161,4 +161,8 @@ public class NamespaceShardingManager {
 		}
 	}
 
+	public NamespaceShardingService getNamespaceShardingService() {
+		return namespaceShardingService;
+	}
+
 }

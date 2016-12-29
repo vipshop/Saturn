@@ -1441,4 +1441,8 @@ public class NamespaceShardingService {
 		}
 	}
 
+	public NamespaceShardingContentService getNamespaceShardingContentService() {
+		return namespaceShardingContentService;
+	}
+	
 }

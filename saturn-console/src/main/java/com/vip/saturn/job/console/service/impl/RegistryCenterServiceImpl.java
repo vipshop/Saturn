@@ -314,4 +314,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return NNS_CURATOR_CLIENT_MAP.get(nameAndNamespace);
 	}
 
+	/** 
+	 * @see com.vip.saturn.job.console.service.RegistryCenterService#findShardingManagerByNamespace(java.lang.String)
+	 */
+	@Override
+	public NamespaceShardingManager findShardingManagerByNamespace(String namespace) {
+		return null;
+	}
+
 }

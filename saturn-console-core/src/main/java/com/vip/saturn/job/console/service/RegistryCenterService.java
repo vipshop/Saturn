@@ -20,6 +20,7 @@ package com.vip.saturn.job.console.service;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.sharding.NamespaceShardingManager;
 
 public interface RegistryCenterService {
 	
@@ -34,5 +35,7 @@ public interface RegistryCenterService {
     RegistryCenterConfiguration findConfig(String nameAndNamespace);
 
     RegistryCenterConfiguration findConfigByNamespace(String namespace);
+    
+    NamespaceShardingManager findShardingManagerByNamespace(String namespace);
 
 }
