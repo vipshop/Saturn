@@ -103,7 +103,7 @@ public final class ExecutionNode {
         return String.format(JOB_LOG, item);
     }
     
-    static String getLastBeginTimeNode(final int item) {
+    public static String getLastBeginTimeNode(final int item) {
         return String.format(LAST_BEGIN_TIME, item);
     }
     
@@ -116,7 +116,7 @@ public final class ExecutionNode {
     	return String.format(PAUSE_PERIOD_EFFECTED, item);
     }
     
-    static String getLastCompleteTimeNode(final int item) {
+    public static String getLastCompleteTimeNode(final int item) {
         return String.format(LAST_COMPLETE_TIME, item);
     }
     

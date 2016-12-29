@@ -596,8 +596,10 @@ $(function() {
             	var jobName = list[i].jobName;
             	jobNameSelectValues.push(jobName);
                 var status = list[i].status;
-                var nextFireTime = (null == list[i].nextFireTime ? "-" : list[i].nextFireTime);
-                var lastBeginTime = list[i].lastBeginTime;
+                var nextFireTime = "-";
+                if (null != list[i].nextFireTime && '' != list[i].nextFireTime) {
+                	nextFireTime = new Date(parseInt(list[i].nextFireTime)).format("yyyy-MM-dd HH:mm:ss");
+                }
                 var loadLevel = list[i].loadLevel;
                 var shardingTotalCount = list[i].shardingTotalCount;
                 if(list[i].localMode == true){
@@ -632,7 +634,6 @@ $(function() {
                 	+ "<td id='showPreferList_"+i+"' style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + preferList + "</td>"
                 	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
-                	+ "<td>" + lastBeginTime + " - " + list[i].lastCompleteTime + "</td>" 
                 	+ "<td>" + nextFireTime + "</td>" 
                 	+ "<td id='showDescription_"+i+"'></td>";
                 var trClass = "";
@@ -687,7 +688,6 @@ $(function() {
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": []  },
 					{ "asSorting": []  },
-					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": []} 
 				]});

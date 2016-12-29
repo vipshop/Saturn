@@ -15,7 +15,6 @@
 package com.vip.saturn.job.basic;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
+import com.vip.saturn.job.internal.control.ControlService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.execution.ExecutionService;
@@ -83,6 +83,8 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected JobScheduler jobScheduler;
 
 	protected SaturnExecutorService saturnExecutorService;
+	
+	protected ControlService controlService;
 	
 
 	/**
@@ -264,6 +266,10 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	protected void setServerService(ServerService serverService) {
 		this.serverService = serverService;
+	}
+	
+	protected void setControlService(ControlService controlService) {
+		this.controlService = controlService;
 	}
 
 	/**

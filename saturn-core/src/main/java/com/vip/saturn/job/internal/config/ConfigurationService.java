@@ -42,7 +42,7 @@ import com.vip.saturn.job.utils.JsonUtils;
  * 
  * 
  */
-public class ConfigurationService extends AbstractSaturnService{
+public class ConfigurationService extends AbstractSaturnService {
 	
 	private static final String DOUBLE_QUOTE = "\"";
 	

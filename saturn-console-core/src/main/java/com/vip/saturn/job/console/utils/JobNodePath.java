@@ -24,6 +24,10 @@ public final class JobNodePath {
     private JobNodePath() {
     }
 
+    public static String getReportPath(String jobName) {
+    	return String.format("/%s/%s/control/report", $JOBS_NODE_NAME, jobName); 
+    }
+    
     public static String getAnalyseResetPath(String jobName) {
     	return String.format("/%s/%s/analyse/reset", $JOBS_NODE_NAME, jobName); 
     }

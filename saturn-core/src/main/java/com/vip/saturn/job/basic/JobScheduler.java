@@ -28,6 +28,7 @@ import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.analyse.AnalyseService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.control.ControlService;
 import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
@@ -69,6 +70,8 @@ public class JobScheduler {
 	private final LeaderElectionService leaderElectionService;
 
 	private final ServerService serverService;
+	
+	private final ControlService controlService;
 
 	private final ShardingService shardingService;
 
@@ -113,6 +116,7 @@ public class JobScheduler {
 		analyseService = new AnalyseService(this);
 		limitMaxJobsService = new LimitMaxJobsService(this);
 		listenerManager = new ListenerManager(this);
+		controlService = new ControlService(this);
 
 		// see EnabledPathListener.java, only these values are supposed to be watched.
 		previousConf.setCron(jobConfiguration.getCron());
@@ -179,6 +183,7 @@ public class JobScheduler {
 		job.setOffsetService(offsetService);
 		job.setServerService(serverService);
 		job.setExecutorName(executorName);
+		job.setControlService(controlService);
 		job.setJobName(jobName);
 		job.setNamespace(coordinatorRegistryCenter.getNamespace());
 		job.setSaturnExecutorService(saturnExecutorService);
@@ -376,6 +381,10 @@ public class JobScheduler {
 
 	public ConfigurationService getConfigService() {
 		return configService;
+	}
+	
+	public ControlService getControlService() {
+		return controlService;
 	}
 
 	public LeaderElectionService getLeaderElectionService() {

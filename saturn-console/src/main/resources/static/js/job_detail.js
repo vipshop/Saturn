@@ -2,7 +2,7 @@ $(function() {
 	var jobName = $("#job-name").text(), $loading = $(".loading"), jobTypeStr = $("#jobTypeFromController").val(),
 				$historyConfig = $("#history-config"),$settingsForm = $("#job-settings-form"), $historyConfigTable, 
 				detailTmp = $("#detail-block-template").html(), $operationDiv = $("#operation-div"), 
-				isJobEnabledVal = $("#isJobEnabledVal").val(), 
+				isJobEnabledVal = $("#isJobEnabledVal").val(), loadingExecution = false,
 				jobStatus = $("#jobStatus").val(), $jobstatusSpan = $("#job-status-span"),confirmDialogMsg = undefined,
 				confirmOps,jobConfigShardingTotalCount, regName = $("#regNameFromServer").val();
 	$("[data-toggle='tooltip']").tooltip();
@@ -526,6 +526,11 @@ $(function() {
 
 	/** [作业运行状态] Tab*/
 	function renderExecution() {
+		if (loadingExecution) {
+			return;
+		}
+		loadingExecution = true;
+		
 	    $.get("job/execution", {jobName : jobName,nns:regName}, function (data) {
 	        $("#execution tbody").empty();
 	        for (var i = 0;i < data.length;i++) {
@@ -577,7 +582,7 @@ $(function() {
 		        	$(".hide-when-is-msg-job").hide();
 		    	}
 	        }
-	    }).always(function() { $loading.hide(); });
+	    }).always(function() {loadingExecution = false; $loading.hide(); });
 	}
 	/** history config 按钮*/
 	function bindHistoryConfigButton() {

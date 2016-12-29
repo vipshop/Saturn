@@ -31,6 +31,8 @@ import com.vip.saturn.job.basic.JobExecutionMultipleShardingContext;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.internal.config.ConfigurationService;
+import com.vip.saturn.job.internal.control.ControlService;
+import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.failover.FailoverNode;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.server.ServerStatus;
@@ -40,11 +42,16 @@ import com.vip.saturn.job.internal.server.ServerStatus;
  * @author dylan.xue
  */
 public class ExecutionService extends AbstractSaturnService {
+	
+	private static final String NO_RETURN_VALUE = "No return value.";
+
 	static Logger log = LoggerFactory.getLogger(ExecutionService.class);
 
     private ConfigurationService configService;
     
     private ServerService serverService;
+
+	private ControlService controlService;
     
 	public ExecutionService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
@@ -54,6 +61,7 @@ public class ExecutionService extends AbstractSaturnService {
 	public void start(){
 		configService = jobScheduler.getConfigService();
         serverService = jobScheduler.getServerService();
+        controlService = jobScheduler.getControlService();
 	}
 	
     /**
@@ -95,9 +103,9 @@ public class ExecutionService extends AbstractSaturnService {
         }
         NextFireTimePausePeriodEffected nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
         if (null != nextFireTimePausePeriodEffected && null != nextFireTimePausePeriodEffected.getNextFireTime()) {
-        	String pausePeriodEffectedNode = ExecutionNode.getPausePeriodEffectedNode(item);
+        	//String pausePeriodEffectedNode = ExecutionNode.getPausePeriodEffectedNode(item);
             getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), nextFireTimePausePeriodEffected.getNextFireTime().getTime());
-            getJobNodeStorage().replaceJobNode(pausePeriodEffectedNode, nextFireTimePausePeriodEffected.isPausePeriodEffected());
+            //getJobNodeStorage().replaceJobNode(pausePeriodEffectedNode, nextFireTimePausePeriodEffected.isPausePeriodEffected());
         }
     }
     
@@ -110,8 +118,10 @@ public class ExecutionService extends AbstractSaturnService {
 		List<Integer> shardingItems = jobExecutionShardingContext.getShardingItems();
 		if (!shardingItems.isEmpty()) {
 			serverService.updateServerStatus(ServerStatus.RUNNING);
+			controlService.clearInfoMap();
 			for (int item : shardingItems) {
 				registerJobBeginByItem(jobExecutionShardingContext, item);
+				controlService.initInfoOnBegin(item);
 			}
 		}
 	}
@@ -126,7 +136,7 @@ public class ExecutionService extends AbstractSaturnService {
 		// 清除完成状态timeout等信息
 		cleanSaturnNode(item);
 
-		getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
+		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
 		updateNextFireTimeAndPausePeriodEffected(item);
 	}
@@ -142,8 +152,10 @@ public class ExecutionService extends AbstractSaturnService {
     }
     
 	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
-		if(log.isDebugEnabled()){
-			log.debug("registerJobCompletedByItem: " + item);
+		ExecutionInfo info = controlService.getInfoByItem(item);
+		// old data has been flushed to zk.
+		if (info == null) {
+			info = new ExecutionInfo(item);
 		}
 		if (jobExecutionShardingContext instanceof SaturnExecutionContext) {
 			// 为了展现分片处理失败的状态
@@ -152,34 +164,41 @@ public class ExecutionService extends AbstractSaturnService {
 				SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
 				if(jobRet != null) {
 					int errorGroup = jobRet.getErrorGroup();
+					info.setJobLog(saturnContext.getJobLog(item));
+					info.setJobMsg(jobRet.getReturnMsg());
 					if(errorGroup == SaturnSystemErrorGroup.SUCCESS) {
-    					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
-    					if (configService.showNormalLog()) {
+    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
+    					if (!configService.showNormalLog()) {
+    						info.setJobLog(null);
     						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    						getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
+    						//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 						} 
 					} else if(errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
     					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
-    					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
+    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
 						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
+    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 					} else {
     					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
-    					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
+    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
 						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
+    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 					}
+					
 				} else { // if there is no jobReturn, don't save empty content to redis.
+					info.setJobMsg(NO_RETURN_VALUE);
 					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
-					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), "执行Job没有返回值");
-					getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), "");
+					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), "执行Job没有返回值");
+					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), "");
 				}
 			}
 		}
 		updateNextFireTimeAndPausePeriodEffected(item);
 		getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
 		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
-		getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), System.currentTimeMillis());
+		info.setLastCompleteTime(System.currentTimeMillis());
+		controlService.fillInfoOnAfter(info);
+		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), System.currentTimeMillis());
 	}
     
     /**
@@ -268,8 +287,8 @@ public class ExecutionService extends AbstractSaturnService {
     private void cleanSaturnNode(int item){
         getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getFailedNode(item));
         getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getTimeoutNode(item));
-        getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getJobMsg(item));
-        getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getJobLog(item));
+//        getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getJobMsg(item));
+//        getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getJobLog(item));
     }
     
 }

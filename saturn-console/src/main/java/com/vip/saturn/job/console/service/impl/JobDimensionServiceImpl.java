@@ -110,6 +110,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
         for (String jobName : jobNames) {
         	try{
+        		if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
+        			continue;
+        		}
         		JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
 	            jobBriefInfo.setIsJobEnabled(isJobEnabled(jobName));
 	            jobBriefInfo.setStatus(getJobStatus(jobName));
@@ -170,51 +173,17 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	            		}
 	            	}
 	            }
-	            // set nextfire time
-	            String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
-	            if (curatorFrameworkOp.checkExists(executionRootpath)) {
-	            	List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
-	            	if (items != null && !items.isEmpty()) {
-	            		List<String> lastBeginTimeList = new ArrayList<>();
-	                	List<String> lastCompleteTimeList = new ArrayList<>();
-	                	List<String> nextFireTimeList = new ArrayList<>();
-	                	int runningItemSize = 0;
-	            		for(String item : items){
-	            			if(getRunningIP(item, jobName) == null) {
-	            				continue;
-	                        }
-	            			++runningItemSize;
-	            			String lastBeginTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
-	            			if(null != lastBeginTime){
-	            				lastBeginTimeList.add(lastBeginTime);
-	            			}
-	            			String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
-	            			if(null != lastCompleteTime){
-	            				boolean isItemCompleted = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
-	            				boolean isItemRunning = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
-	            	    		if(isItemCompleted && !isItemRunning){// 如果作业分片已执行完毕，则添加该完成时间到集合中进行排序
-	            	    			lastCompleteTimeList.add(lastCompleteTime);
-	            	    		}
-	            			}
-	            			String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
-	            			if(null != nextFireTime){
-	            				nextFireTimeList.add(nextFireTime);
-	            			}
-	            		}
-	            		if(!CollectionUtils.isEmpty(lastBeginTimeList)){
-	                		Collections.sort(lastBeginTimeList);// 对时间戳进行排序
-	                		jobBriefInfo.setLastBeginTime(dateFormat.format(new Date(Long.parseLong(lastBeginTimeList.get(0)))));// 所有分片中最近最早的开始时间
-	                	}
-	                	if(!CollectionUtils.isEmpty(lastCompleteTimeList) && lastCompleteTimeList.size() == runningItemSize){// 所有分配都完成才显示最近最晚的完成时间
-	                		Collections.sort(lastCompleteTimeList);// 对时间戳进行排序
-	                		jobBriefInfo.setLastCompleteTime(dateFormat.format(new Date(Long.parseLong(lastCompleteTimeList.get(lastCompleteTimeList.size() - 1)))));// 所有分片中最近最晚的完成时间
-	                	}
-	                	if(!CollectionUtils.isEmpty(nextFireTimeList)){
-	                		Collections.sort(nextFireTimeList);// 对时间戳进行排序
-	                		jobBriefInfo.setNextFireTime(dateFormat.format(new Date(Long.parseLong(nextFireTimeList.get(0)))));// 所有分片中下次最早的开始时间
-	                	}
-					}
-	            }
+	         // set nextfireTime
+                String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
+                if (curatorFrameworkOp.checkExists(executionRootpath)) {
+                    List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
+                    if (items != null && !items.isEmpty()) {
+                    	String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, "0", "nextFireTime"));
+                    	if (nextFireTime != null) {
+                    		jobBriefInfo.setNextFireTime(nextFireTime);
+                    	}
+                    }
+                }
 	            result.add(jobBriefInfo);
         	}catch(Exception e){
         		log.error(e.getMessage(), e);
@@ -468,6 +437,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         if (!curatorFrameworkOp.checkExists(executionRootpath)) {
             return Collections.emptyList();
         }
+        // update report node
+        curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
+        
         List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
         List<ExecutionInfo> result = new ArrayList<>(items.size());
         for (String each : items) {

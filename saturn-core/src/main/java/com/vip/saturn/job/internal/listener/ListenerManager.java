@@ -21,6 +21,7 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.Shutdownable;
 import com.vip.saturn.job.internal.analyse.AnalyseResetListenerManager;
 import com.vip.saturn.job.internal.config.ConfigurationListenerManager;
+import com.vip.saturn.job.internal.control.ControlListenerManager;
 import com.vip.saturn.job.internal.election.ElectionListenerManager;
 import com.vip.saturn.job.internal.failover.FailoverListenerManager;
 import com.vip.saturn.job.internal.server.JobOperationListenerManager;
@@ -44,6 +45,8 @@ public class ListenerManager  extends AbstractListenerManager implements Shutdow
     private ShardingListenerManager shardingListenerManager;
     
     private AnalyseResetListenerManager analyseResetListenerManager;
+    
+    private ControlListenerManager controlListenerManager;
 
     
     public ListenerManager(final JobScheduler jobScheduler) {
@@ -61,6 +64,7 @@ public class ListenerManager  extends AbstractListenerManager implements Shutdow
         configurationListenerManager = new ConfigurationListenerManager(jobScheduler);
         shardingListenerManager = new ShardingListenerManager(jobScheduler);
         analyseResetListenerManager =  new AnalyseResetListenerManager(jobScheduler);
+        controlListenerManager = new ControlListenerManager(jobScheduler);
         
         electionListenerManager.start();
         failoverListenerManager.start();
@@ -68,6 +72,7 @@ public class ListenerManager  extends AbstractListenerManager implements Shutdow
         configurationListenerManager.start();
         shardingListenerManager.start();
         analyseResetListenerManager.start();
+        controlListenerManager.start();
     }
 
 	@Override
@@ -78,5 +83,6 @@ public class ListenerManager  extends AbstractListenerManager implements Shutdow
         configurationListenerManager.shutdown();
         shardingListenerManager.shutdown();
         analyseResetListenerManager.shutdown();
+        controlListenerManager.shutdown();
 	}
 }
