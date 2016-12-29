@@ -1,13 +1,12 @@
 package com.vip.saturn.job.sharding.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by xiaopeng.he on 2016/8/22.
@@ -147,16 +146,6 @@ public class ExecutorCleanService {
             }
         } catch (Exception e) {
             log.error("Clean the executor, deleteJobConfigPreferListContentAboutXxx(" + jobName + ", " + executorName + ") error", e);
-        }
-    }
-
-    public void deleteIfExists(String path) {
-        try {
-            if (curatorFramework.checkExists().forPath(path) != null) {
-                curatorFramework.delete().deletingChildrenIfNeeded().forPath(path);
-            }
-        } catch (Exception e) {
-            log.error("deleteIfExists exception:", e);
         }
     }
 

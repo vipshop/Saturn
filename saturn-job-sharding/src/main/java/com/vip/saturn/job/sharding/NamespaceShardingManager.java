@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
-import com.vip.saturn.job.sharding.listener.ExecutorTriggerShardingListener;
+import com.vip.saturn.job.sharding.listener.SaturnExecutorsShardingTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
 import com.vip.saturn.job.sharding.listener.ShardingConnectionLostListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -112,6 +112,7 @@ public class NamespaceShardingManager {
 	private void addNewOrRemoveJobListener() throws Exception {
 		String path = SaturnExecutorsNode.$JOBSNODE_PATH;
 		int depth = 1;
+		createNodePathIfNotExists(path);
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new AddOrRemoveJobListener(addJobListenersService));
 	}
@@ -123,6 +124,7 @@ public class NamespaceShardingManager {
 	private void addOnlineOfflineListener() throws Exception {
 		String path = SaturnExecutorsNode.EXECUTORSNODE_PATH;
 		int depth = 2;
+		createNodePathIfNotExists(path);
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new ExecutorOnlineOfflineTriggerShardingListener(namespaceShardingService, executorCleanService));
 	}
@@ -133,8 +135,9 @@ public class NamespaceShardingManager {
 	private void addExecutorShardingListener() throws Exception {
 		String path = SaturnExecutorsNode.SHARDINGNODE_PATH;
 		int depth = 1;
+		createNodePathIfNotExists(path);
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
-		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new ExecutorTriggerShardingListener(namespaceShardingService, executorCleanService));
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new SaturnExecutorsShardingTriggerShardingListener(namespaceShardingService));
 	}
 
 	/**
@@ -143,10 +146,20 @@ public class NamespaceShardingManager {
 	private void addLeaderElectionListener() throws Exception {
 		String path = SaturnExecutorsNode.LEADERNODE_PATH;
 		int depth = 1;
+		createNodePathIfNotExists(path);
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new LeadershipElectionListener(namespaceShardingService));
 	}
 
+	private void createNodePathIfNotExists(String path) {
+		try {
+			if (curatorFramework.checkExists().forPath(path) == null) {
+				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
 
 	/**
 	 * close listeners, delete leadership

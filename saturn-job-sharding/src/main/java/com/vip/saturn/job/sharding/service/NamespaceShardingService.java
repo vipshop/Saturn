@@ -1276,7 +1276,6 @@ public class NamespaceShardingService {
 
     /**
      * 进行全量分片
-     * @param executorName
      * @throws Exception
      */
 	public void asyncShardingWhenExecutorAll() throws Exception {
@@ -1284,6 +1283,14 @@ public class NamespaceShardingService {
 			needAllSharding.set(true);
 			shardingCount.incrementAndGet();
 			executorService.submit(new ExecuteAllShardingTask());
+			try {
+				String shardAllAtOnce = SaturnExecutorsNode.getExecutorShardingNodePath("shardAllAtOnce");
+				if (curatorFramework.checkExists().forPath(shardAllAtOnce) != null) {
+					curatorFramework.delete().deletingChildrenIfNeeded().forPath(shardAllAtOnce);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 	}
 	
