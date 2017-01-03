@@ -76,6 +76,10 @@ public class ExecutorController extends AbstractController {
 		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
 			throw new SaturnJobConsoleException("作业名必填");
 		}
+		// 作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_
+		if(!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
+			throw new SaturnJobConsoleException("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
+		}
 		// 作业类型必填
 		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
 			throw new SaturnJobConsoleException("作业类型必填");
@@ -232,6 +236,9 @@ public class ExecutorController extends AbstractController {
 		String jobName = getContents(rowCells, 0);
 		if (jobName == null || jobName.trim().isEmpty()) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名必填。"));
+		}
+		if(!jobName.matches("[0-9a-zA-Z_]*")) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
 		}
 		jobConfig.setJobName(jobName);
 
