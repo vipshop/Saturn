@@ -421,7 +421,7 @@ $(function() {
 					alert("作业分片参数有误，作业默认不是本地模式，不能用“*=”，如需要修改成本地模式，请到设置页进行修改");
 					$("#shardingItemParameters").focus();
 					$btn.button('reset');
-					return;
+					return false;
 				}
 			}
         	var shardingItemStr = "";
@@ -429,13 +429,16 @@ $(function() {
         		var kvPare = shardingItemParametersArr[i].split("=");
         		if (kvPare.length < 2) {
         			alert("作业分片参数有误，必需是key=value的形式");
-		        	return;
+		        	$("#shardingItemParameters").focus();
+                    $btn.button('reset');
+                    return false;
         		}
         		var shardingItem = kvPare[0];
         		if(shardingItemStr.indexOf(shardingItem) != -1){
-        			showFailureDialogWithMsg("update-failure-dialog", "作业分片参数有误，分片号不能相同");
+        			alert("作业分片参数有误，分片号不能相同");
 	        		$("#shardingItemParameters").focus();
-        			return;
+                    $btn.button('reset');
+                    return false;
         		}
 				shardingItemStr += shardingItem + ",";
         	}
