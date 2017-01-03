@@ -104,6 +104,7 @@ public class JobConfig implements Serializable {
         useDispreferList = useDispreferList == null ? true : useDispreferList;
         localMode = localMode == null ? false : localMode;
         useSerial = useSerial == null ? false : useSerial;
+        jobDegree = jobDegree == null ? 0 : jobDegree;
     }
 
 	public Integer getRownum() {
@@ -377,5 +378,5 @@ public class JobConfig implements Serializable {
 	public void setOriginJobName(String originJobName) {
 		this.originJobName = originJobName;
 	}
-    
+    	
 }
