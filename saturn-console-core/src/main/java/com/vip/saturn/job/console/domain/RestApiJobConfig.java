@@ -18,6 +18,7 @@ public class RestApiJobConfig {
     private String queueName;
     private Integer loadLevel;
     private Integer jobDegree;
+    private Boolean enabledReport;
     private String preferList;
     private Boolean useDispreferList;
     private Boolean localMode;
@@ -158,5 +159,13 @@ public class RestApiJobConfig {
     public void setUseSerial(Boolean useSerial) {
         this.useSerial = useSerial;
     }
+
+	public Boolean getEnabledReport() {
+		return enabledReport;
+	}
+
+	public void setEnabledReport(Boolean enabledReport) {
+		this.enabledReport = enabledReport;
+	}
 
 }

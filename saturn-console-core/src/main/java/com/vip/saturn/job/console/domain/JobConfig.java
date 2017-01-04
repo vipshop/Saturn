@@ -20,6 +20,8 @@ package com.vip.saturn.job.console.domain;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+
 /**
  * @author chembo.huang
  *
@@ -79,6 +81,8 @@ public class JobConfig implements Serializable {
     private Integer loadLevel;
     /** 作业重要等级*/
     private Integer jobDegree;
+    /** 作业是否上报执行信息：true表示启用，false表示禁用，对于定时作业默认是启用，对于消息作业默认是禁用*/
+    private Boolean enabledReport;
     /** 作业的配置状态：true表示启用，false表示禁用，默认是禁用的*/
     private Boolean enabled;
     /** 从zk的config中读取到的已配置的预分配列表*/
@@ -105,6 +109,13 @@ public class JobConfig implements Serializable {
         localMode = localMode == null ? false : localMode;
         useSerial = useSerial == null ? false : useSerial;
         jobDegree = jobDegree == null ? 0 : jobDegree;
+        if(enabledReport == null){
+        	if(JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)){
+        		enabledReport = true;
+        	}else{
+        		enabledReport = false;
+        	}
+        }
     }
 
 	public Integer getRownum() {
@@ -378,5 +389,13 @@ public class JobConfig implements Serializable {
 	public void setOriginJobName(String originJobName) {
 		this.originJobName = originJobName;
 	}
-    	
+
+	public Boolean getEnabledReport() {
+		return enabledReport;
+	}
+
+	public void setEnabledReport(Boolean enabledReport) {
+		this.enabledReport = enabledReport;
+	}
+	
 }

@@ -49,6 +49,8 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     
     private String jobDegree;
     
+    private Boolean enabledReport;// 点分片页签时，控制信息是否上报
+    
     private String shardingTotalCount;
     
     private String preferList;
@@ -373,5 +375,13 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 
 	public void setMigrateEnabled(Boolean migrateEnabled) {
 		this.migrateEnabled = migrateEnabled;
+	}
+
+	public Boolean getEnabledReport() {
+		return enabledReport;
+	}
+
+	public void setEnabledReport(Boolean enabledReport) {
+		this.enabledReport = enabledReport;
 	}
 }
