@@ -104,7 +104,7 @@ public final class ExecutionNode {
         return String.format(LAST_BEGIN_TIME, item);
     }
     
-    static String getNextFireTimeNode(final int item) {
+    public static String getNextFireTimeNode(final int item) {
         return String.format(NEXT_FIRE_TIME, item);
     }
     

@@ -31,10 +31,20 @@ public final class ExecutionInfo implements Serializable {
     
     private Long lastCompleteTime;
     
+    private Long nextFireTime;
+    
     /** 作业分片运行日志 */
     private String jobLog;
     
-    public ExecutionInfo(int item, Long lastBeginTime) {
+    public Long getNextFireTime() {
+		return nextFireTime;
+	}
+
+	public void setNextFireTime(Long nextFireTime) {
+		this.nextFireTime = nextFireTime;
+	}
+
+	public ExecutionInfo(int item, Long lastBeginTime) {
     	this.item = item;
     	this.lastBeginTime = lastBeginTime;
     }

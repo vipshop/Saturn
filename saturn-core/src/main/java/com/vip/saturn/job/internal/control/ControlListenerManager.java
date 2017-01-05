@@ -33,11 +33,11 @@ public class ControlListenerManager extends AbstractListenerManager {
 
 	private boolean isShutdown = false;
 
-	private ControlService controlService;
+	private ReportService reportService;
 
 	public ControlListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
-        controlService = jobScheduler.getControlService();
+        reportService = jobScheduler.getReportService();
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class ControlListenerManager extends AbstractListenerManager {
 			if(isShutdown) return;
 			if (ControlNode.isReportPath(jobName, path) && (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
 				log.info("[{}] msg={} received report event from console, start to flush data to zk.", jobName, jobName);
-				controlService.reportData2Zk();
+				reportService.reportData2Zk();
 			}
 		}
 	}
