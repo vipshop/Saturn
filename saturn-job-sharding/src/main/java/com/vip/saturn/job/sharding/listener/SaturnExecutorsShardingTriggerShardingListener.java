@@ -39,7 +39,7 @@ public class SaturnExecutorsShardingTriggerShardingListener extends AbstractTree
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
 		if(isShardAllAtOnce(type,path)) {
-			log.info("[] msg=shard-all-at-once triggered.");
+			log.info("msg=shard-all-at-once triggered.");
         	namespaceShardingService.asyncShardingWhenExecutorAll();
         }
 	}
