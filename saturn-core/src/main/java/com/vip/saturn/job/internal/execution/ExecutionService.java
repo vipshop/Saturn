@@ -65,39 +65,19 @@ public class ExecutionService extends AbstractSaturnService {
 	}
 	
     /**
-     * 更新当前作业服务器运行时分片的nextFireTime和pausePeriodEffected，如果pausePeriodEffected为false。
+     * 更新当前作业服务器运行时分片的nextFireTime。
      * 
      * @param shardingItems 作业运行时分片上下文
      */
-    public void updateNextFireTimeAndPausePeriodEffectedIfNecessary(final List<Integer> shardingItems) {
+    public void updateNextFireTime(final List<Integer> shardingItems) {
     	if (!shardingItems.isEmpty()) {
     		for (int item : shardingItems) {
-    			updateNextFireTimeAndPausePeriodEffectedIfNecessary(item);
+    			updateNextFireTime(item);
     		}
     	}
     }
     
-    /**
-     * 更新当前作业服务器运行时分片的nextFireTime和pausePeriodEffected。
-     * 
-     * @param shardingItems 作业运行时分片上下文
-     */
-    public void updateNextFireTimeAndPausePeriodEffected(final List<Integer> shardingItems) {
-    	if (!shardingItems.isEmpty()) {
-    		for (int item : shardingItems) {
-    			updateNextFireTimeAndPausePeriodEffected(item);
-    		}
-    	}
-    }
-    
-    private void updateNextFireTimeAndPausePeriodEffectedIfNecessary(int item) {
-		String pausePeriodEffectedNode = ExecutionNode.getPausePeriodEffectedNode(item);
-		if(!getJobNodeStorage().isJobNodeExisted(pausePeriodEffectedNode) || !Boolean.parseBoolean(getJobNodeStorage().getJobNodeDataDirectly(pausePeriodEffectedNode))) {
-			updateNextFireTimeAndPausePeriodEffected(item);
-		}
-    }
-    
-    private void updateNextFireTimeAndPausePeriodEffected(int item) {
+    private void updateNextFireTime(int item) {
         if (null == jobScheduler) {
             return;
         }
@@ -144,7 +124,7 @@ public class ExecutionService extends AbstractSaturnService {
 
 		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
-		updateNextFireTimeAndPausePeriodEffected(item);
+		updateNextFireTime(item);
 	}
     
     /**
@@ -217,7 +197,7 @@ public class ExecutionService extends AbstractSaturnService {
 				}
 			}
 		}
-		updateNextFireTimeAndPausePeriodEffected(item);
+		updateNextFireTime(item);
 		if(jobConfiguration.isEnabledReport() == null){
 			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
 				getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));

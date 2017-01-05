@@ -157,8 +157,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			if (configService.isInPausePeriod()) {
 				log.info("the job {} current running time is in pausePeriod, do nothing about business.", jobName);
-				executionService
-						.updateNextFireTimeAndPausePeriodEffectedIfNecessary(shardingContext.getShardingItems());
+				executionService.updateNextFireTime(shardingContext.getShardingItems());
 				return;
 			}
 			executeJobInternal(shardingContext);

@@ -490,8 +490,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setLastBeginTime(null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
         String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
         result.setNextFireTime(null == nextFireTime ? null : dateFormat.format(new Date(Long.parseLong(nextFireTime))));
-        String pausePeriodEffected = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "pausePeriodEffected"));
-        result.setPausePeriodEffected(Boolean.parseBoolean(pausePeriodEffected));
         String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
     	result.setLastCompleteTime(null == lastCompleteTime ? null : dateFormat.format(new Date(Long.parseLong(lastCompleteTime))));
         if( result.getStatus().equals(ExecutionStatus.RUNNING) ) {

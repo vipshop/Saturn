@@ -206,22 +206,17 @@ public class JobScheduler {
 		if (trigger == null) {
 			return result;
 		}
-		boolean pausePeriodEffected = false;
 		((OperableTrigger) trigger).updateAfterMisfire(null);
 		Date nextFireTime = trigger.getNextFireTime();
 		while (nextFireTime != null && configService.isInPausePeriod(nextFireTime)) {
 			nextFireTime = trigger.getFireTimeAfter(nextFireTime);
-			pausePeriodEffected = true;
 		}
 		if (null == nextFireTime) {
-			pausePeriodEffected = false;
 			return result;
 		}
 		if (null == result.getNextFireTime() || nextFireTime.getTime() < result.getNextFireTime().getTime()) {
 			result.setNextFireTime(nextFireTime);
-			result.setPausePeriodEffected(pausePeriodEffected);
 		}
-		pausePeriodEffected = false;
 		return result;
 	}
 

@@ -546,7 +546,6 @@ $(function() {
 	            	executionTime = lastBeginTime+ " - " + data[i].lastCompleteTime;
 	            }
 	            var nextFireTime = null == data[i].nextFireTime ? "-" : data[i].nextFireTime;
-	            var pausePeriodEffected = new Boolean(data[i].pausePeriodEffected);
 	            var trClass = "";
 	            if ("RUNNING" === status) {
 	                trClass = "success";
@@ -560,7 +559,6 @@ $(function() {
 	            	trClass = "info";
 	            	status = "<span title='您已关闭了本作业上报执行信息，不会上报实时状态'>-</span>";
 	            }
-	            var nextFireTimeStr = (pausePeriodEffected == true ? "<font color='red' title='被暂停时间段所影响'>": "") + nextFireTime + (pausePeriodEffected == true ? "</font>" : "");
 	            if( data[i].timeConsumed >= 60) {
 	            	trClass = "danger";
 	            	var baseTd = "<td><span class='glyphicon glyphicon-exclamation-sign red-color' >" + data[i].item + "</span></td>" 
@@ -568,7 +566,7 @@ $(function() {
 	            		+ "<td>" + jobMsg + "</td>" 
 	            		+ "<td>" + runningIp + "</td>" 
 	            		+ "<td>" + executionTime + "</td>" 
-	            		+ "<td class='hide-when-is-msg-job'>" + nextFireTimeStr + "</td>" 
+	            		+ "<td class='hide-when-is-msg-job'>" + nextFireTime + "</td>" 
 	            		+ "<td><button class='logBtn btn btn-info' + jobItem='" + data[i].item + "' title='查看作业分片日志'>查看" + "</button></td>";
 	            	$("#execution tbody").append("<tr  title='该任务已运行" + data[i].timeConsumed + "秒。' class='" + trClass + "'>" + baseTd + "</tr>");
 	            } else {
@@ -577,7 +575,7 @@ $(function() {
 	            		+ "<td>" + jobMsg + "</td>" 
 	            		+ "<td>" + runningIp + "</td>"
 	            		+ "<td>" + executionTime + "</td>" 
-	            		+ "<td class='hide-when-is-msg-job'>"+ nextFireTimeStr + "</td>" 
+	            		+ "<td class='hide-when-is-msg-job'>"+ nextFireTime + "</td>" 
 	                	+ "<td><button class='logBtn btn btn-info' + jobItem='" + data[i].item + "' title='查看作业分片日志'>查看" + "</button></td>";
 	            	$("#execution tbody").append("<tr class='" + trClass + "'>" + baseTd + "</tr>");
 	            }
