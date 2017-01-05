@@ -57,6 +57,8 @@ public final class ConfigurationNode {
     public static final String LOAD_LEVEL = ROOT + "/loadLevel";
 	
     public static final String ENABLED = ROOT + "/enabled";
+    
+    public static final String ENABLED_REPORT = ROOT + "/enabledReport";
 	
     public static final String TO_DELETE = ROOT + "/toDelete";
     

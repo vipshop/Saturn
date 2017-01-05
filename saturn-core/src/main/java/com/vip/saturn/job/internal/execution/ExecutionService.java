@@ -131,7 +131,13 @@ public class ExecutionService extends AbstractSaturnService {
 			log.debug("registerJobBeginByItem: " + item);
 		}
 		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
-		getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+		if(jobConfiguration.isEnabledReport() == null){
+			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+				getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+			}
+		}else if(jobConfiguration.isEnabledReport()){
+			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+		}
 
 		// 清除完成状态timeout等信息
 		cleanSaturnNode(item);
@@ -174,12 +180,24 @@ public class ExecutionService extends AbstractSaturnService {
     						//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 						} 
 					} else if(errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
-    					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
+						if(jobConfiguration.isEnabledReport() == null){
+							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+								getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
+							}
+						}else if(jobConfiguration.isEnabledReport()){
+							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
+						}
     					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
 						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
     					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 					} else {
-    					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+						if(jobConfiguration.isEnabledReport() == null){
+							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+								getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+							}
+						}else if(jobConfiguration.isEnabledReport()){
+							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+						}
     					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
 						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
     					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
@@ -187,14 +205,26 @@ public class ExecutionService extends AbstractSaturnService {
 					
 				} else { // if there is no jobReturn, don't save empty content to redis.
 					info.setJobMsg(NO_RETURN_VALUE);
-					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+					if(jobConfiguration.isEnabledReport() == null){
+						if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+						}
+					}else if(jobConfiguration.isEnabledReport()){
+						getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
+					}
 					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), "执行Job没有返回值");
 					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), "");
 				}
 			}
 		}
 		updateNextFireTimeAndPausePeriodEffected(item);
-		getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+		if(jobConfiguration.isEnabledReport() == null){
+			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+				getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+			}
+		}else if(jobConfiguration.isEnabledReport()){
+			getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+		}
 		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 		info.setLastCompleteTime(System.currentTimeMillis());
 		controlService.fillInfoOnAfter(info);

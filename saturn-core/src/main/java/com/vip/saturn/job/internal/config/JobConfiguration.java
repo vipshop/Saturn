@@ -179,6 +179,11 @@ public class JobConfiguration {
     private String preferList = "";
     
     /**
+     * 是否上报执行信息（上报状态信息如completed，running，timeout）
+     */
+    private Boolean enabledReport = null;
+    
+    /**
      * 是否启用本地模式
      */
     private boolean localMode = false;
@@ -238,6 +243,12 @@ public class JobConfiguration {
 		}
 		
 		preferList = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.PREFER_LIST));
+		
+		String enabledReportStr = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED_REPORT));
+		if(!Strings.isNullOrEmpty(enabledReportStr)){
+			enabledReport = Boolean.valueOf(enabledReportStr); 
+		}
+		
 		localMode =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
 		useSerial =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
 		useDispreferList =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
@@ -443,6 +454,12 @@ public class JobConfiguration {
 	public void setUseDispreferList(boolean useDispreferList) {
 		this.useDispreferList = useDispreferList;
 	}
-	
-	
+
+	public Boolean isEnabledReport() {
+		return enabledReport;
+	}
+
+	public void setEnabledReport(Boolean enabledReport) {
+		this.enabledReport = enabledReport;
+	}
 }

@@ -192,10 +192,11 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
         FAILED,
         //执行超时
         TIMEOUT,
-        PENDING;
+        PENDING,
+        BLANK;
         
 		public static ExecutionStatus getExecutionStatus(final boolean running, final boolean completed,
-				boolean failed, boolean timeout) {
+				boolean failed, boolean timeout, boolean isEnabledReport) {
 			if (running) {
 				return ExecutionStatus.RUNNING;
 			}
@@ -207,6 +208,9 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 				}else {
 					return ExecutionStatus.COMPLETED;
 				}
+			}
+			if (!isEnabledReport) {
+				return ExecutionStatus.BLANK;
 			}
 			return ExecutionStatus.PENDING;
 		}

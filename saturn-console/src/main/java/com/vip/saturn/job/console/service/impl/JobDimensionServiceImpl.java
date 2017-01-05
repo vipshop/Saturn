@@ -470,7 +470,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         boolean failed = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failed"));
         boolean timeout = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "timeout"));
 
-        result.setStatus(ExecutionStatus.getExecutionStatus(running, completed, failed, timeout));
+        String enabledReportNodePath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
+        boolean isEnabledReport = true;
+        if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
+        	isEnabledReport = Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
+        }
+        result.setStatus(ExecutionStatus.getExecutionStatus(running, completed, failed, timeout, isEnabledReport));
 
         String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "jobMsg"));
         result.setJobMsg(jobMsg);

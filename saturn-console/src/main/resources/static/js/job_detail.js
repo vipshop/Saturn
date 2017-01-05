@@ -556,6 +556,9 @@ $(function() {
 	                trClass = "warning";
 	            } else if ("FAILED" === status) {
 	                trClass = "danger";
+	            } else if ("BLANK" === status) {
+	            	trClass = "info";
+	            	status = "<span title='您已关闭了本作业上报执行信息，不会上报实时状态'>-</span>";
 	            }
 	            var nextFireTimeStr = (pausePeriodEffected == true ? "<font color='red' title='被暂停时间段所影响'>": "") + nextFireTime + (pausePeriodEffected == true ? "</font>" : "");
 	            if( data[i].timeConsumed >= 60) {
