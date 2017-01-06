@@ -5,8 +5,6 @@ import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-
 /**
  * 
  * @author xiaopeng.he
@@ -19,8 +17,6 @@ public final class SaturnEnvProperties {
 	
 	/** zk注册中心	 */
 	public static String VIP_SATURN_ZK_CONNECTION;
-
-	public static int MAX_NUMBER_OF_JOBS = 500;
 	
 	/** 指定注册中心地址*/
 	public static String REG_CENTER_VALUE;
@@ -37,14 +33,5 @@ public final class SaturnEnvProperties {
 			REG_CENTER_VALUE = new String(REG_CENTER_VALUE.getBytes(), Charset.forName("UTF-8"));
 		}
 		VIP_SATURN_ZK_CONNECTION = System.getProperty("VIP_SATURN_ZK_CONNECTION", System.getenv("VIP_SATURN_ZK_CONNECTION"));
-
-		String maxNumberOfJobs = System.getProperty("VIP_SATURN_MAX_NUMBER_OF_JOBS", System.getenv("VIP_SATURN_MAX_NUMBER_OF_JOBS"));
-		if(!Strings.isNullOrEmpty(maxNumberOfJobs)) {
-			try {
-				MAX_NUMBER_OF_JOBS = Integer.valueOf(maxNumberOfJobs);
-			} catch (Throwable t) {
-				log.error(t.getMessage(), t);
-			}
-		}
 	}
 }

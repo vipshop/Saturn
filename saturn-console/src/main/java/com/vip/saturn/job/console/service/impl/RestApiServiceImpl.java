@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.service.JobDimensionService;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class RestApiServiceImpl implements RestApiService {
     @Resource
     private CuratorRepository curatorRepository;
 
+    @Resource
+    private JobDimensionService jobDimensionService;
+
     @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
         List<RestApiJobInfo> restApiJobInfos = new ArrayList<>();
@@ -52,8 +56,7 @@ public class RestApiServiceImpl implements RestApiService {
             if (registryCenterClient != null && registryCenterClient.isConnected()) {
                 CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
                 CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-                String $JobsNodePath = JobNodePath.get$JobsNodePath();
-                List<String> jobs = curatorFrameworkOp.getChildren($JobsNodePath);
+                List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
                 if (jobs != null) {
                     for (String job : jobs) {
                         RestApiJobInfo restApiJobInfo = new RestApiJobInfo();

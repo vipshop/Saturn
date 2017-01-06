@@ -86,4 +86,9 @@ public interface JobDimensionService {
     void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
+
+    List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
+    List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
 }

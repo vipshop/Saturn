@@ -19,15 +19,11 @@ package com.vip.saturn.job.console.service.impl;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.domain.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,26 +33,17 @@ import org.springframework.util.CollectionUtils;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.constants.SaturnConstants;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobMigrateInfo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.BooleanWrapper;
-import com.vip.saturn.job.console.utils.CommonUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
 
@@ -91,7 +78,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
     @Override
     public Collection<JobBriefInfo> getAllJobsBriefInfo4Tree() {
     	CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        List<String> jobNames = CommonUtils.getJobNames(curatorFrameworkOp);
+		List<String> jobNames = new ArrayList<>();
+		try {
+			jobNames = getAllUnSystemJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
         List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
         for (String jobName : jobNames) {
             try {
@@ -103,10 +95,53 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         }
         return result;
     }
-    @Override
+
+	@Override
+	public List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		List<String> allJobs = new ArrayList<>();
+		if(curatorFrameworkOp == null) {
+			curatorFrameworkOp = curatorRepository.inSessionClient();
+		}
+		String jobsNodePath = JobNodePath.get$JobsNodePath();
+		if (curatorFrameworkOp.checkExists(jobsNodePath)) {
+			List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
+			if (jobs != null) {
+				allJobs.addAll(jobs);
+			}
+		}
+		Collections.sort(allJobs);
+		return allJobs;
+	}
+
+	@Override
+	public List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		if(curatorFrameworkOp == null) {
+			curatorFrameworkOp = curatorRepository.inSessionClient();
+		}
+		List<String> allJobs = getAllJobs(curatorFrameworkOp);
+		Iterator<String> iterator = allJobs.iterator();
+		while(iterator.hasNext()) {
+			String job = iterator.next();
+			String jobMode = JobNodePath.getConfigNodePath(job, "jobMode");
+			if(curatorFrameworkOp.checkExists(jobMode)) {
+				String data = curatorFrameworkOp.getData(jobMode);
+				if(data != null && data.startsWith(JobMode.SYSTEM_PREFIX)) {
+					iterator.remove();
+				}
+			}
+		}
+		return allJobs;
+	}
+
+	@Override
     public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionZkKey, String namespace) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		List<String> jobNames = CommonUtils.getJobNames(curatorFrameworkOp);
+		List<String> jobNames = new ArrayList<>();
+		try {
+			jobNames = getAllUnSystemJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
         for (String jobName : jobNames) {
         	try{

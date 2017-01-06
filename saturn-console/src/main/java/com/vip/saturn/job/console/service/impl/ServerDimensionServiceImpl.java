@@ -18,15 +18,11 @@
 package com.vip.saturn.job.console.service.impl;
 
 import java.text.DateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,7 +35,6 @@ import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
-import com.vip.saturn.job.console.utils.CommonUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 
@@ -47,6 +42,7 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 public class ServerDimensionServiceImpl implements ServerDimensionService {
 	
 	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
+	private static final Logger logger = LoggerFactory.getLogger(ServerDimensionServiceImpl.class);
 	
 	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, Locale.SIMPLIFIED_CHINESE);
     @Resource
@@ -59,7 +55,12 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
     	HashMap<String,Object> model = new HashMap<String,Object>();
     	Map<String,ServerBriefInfo> sbfMap = new LinkedHashMap<String,ServerBriefInfo>();
-        List<String> jobs = CommonUtils.getJobNames(curatorFrameworkOp);
+		List<String> jobs = new ArrayList<>();
+		try {
+			jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			logger.error(e.getMessage(), e);
+		}
 
         Map<String, Map<String, Integer>> jobNameExecutorNameTotalLevel = new HashMap<>();
     	String executorNodePath = ExecutorNodePath.getExecutorNodePath();
@@ -150,17 +151,22 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 	public void removeOffLineExecutor(String executor) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNodePath(executor));
-		 List<String> jobNames = CommonUtils.getJobNames(curatorFrameworkOp);
-		 if(CollectionUtils.isEmpty(jobNames)){
-			 return;
-		 }
-		 for(String jobName : jobNames){
-			 String executorNode = JobNodePath.getServerNodePath(jobName, executor);
-			 if(!curatorFrameworkOp.checkExists(executorNode)){
-				 continue;
-			 }
-			 curatorFrameworkOp.deleteRecursive(executorNode);
-		 }
+		List<String> jobNames = new ArrayList<>();
+		try {
+			jobNames = jobDimensionService.getAllJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			logger.error(e.getMessage(), e);
+		}
+		if (CollectionUtils.isEmpty(jobNames)) {
+			return;
+		}
+		for (String jobName : jobNames) {
+			String executorNode = JobNodePath.getServerNodePath(jobName, executor);
+			if (!curatorFrameworkOp.checkExists(executorNode)) {
+				continue;
+			}
+			curatorFrameworkOp.deleteRecursive(executorNode);
+		}
 	}
 
 	@Override

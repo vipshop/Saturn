@@ -3,10 +3,8 @@ package com.vip.saturn.job.console.service.impl;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -26,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.constants.SaturnConstants;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.JobConfig;
@@ -35,7 +32,6 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.utils.CommonUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
@@ -86,31 +82,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return null;
 	}
 	
-	/**
-	 * 如果当前有新增作业，而且新增后超出该域最大作业数量限制，返回false；否则返回true。
-	 * @param jobNames 新增作业
-	 * @return 是否超出
-	 */
-	public boolean check(List<String> jobNames) {
-		List<String> children = CommonUtils.getJobNames(curatorRepository.inSessionClient());
-		Set<String> set = new HashSet<>();
-		if(children != null && !children.isEmpty()) {
-			for(String tmp : children) {
-				set.add(tmp);
-			}
-		}
-		boolean hasNew = false;
-		if(jobNames != null && !jobNames.isEmpty()) {
-			for(String tmp : jobNames) {
-				if(!set.contains(tmp)) {
-					hasNew = true;
-					set.add(tmp);
-				}
-			}
-		}
-		return !(hasNew && set.size() > SaturnEnvProperties.MAX_NUMBER_OF_JOBS);
-	}
-	
 	@Override
 	public RequestResult addJobs(JobConfig jobConfig) {
 		RequestResult requestResult = new RequestResult();
@@ -143,6 +114,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobType"), jobConfig.getJobType());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobMode"), jobConfig.getJobMode());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"), jobConfig.getShardingItemParameters());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobParameter"), jobConfig.getJobParameter());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "queueName"), jobConfig.getQueueName());
@@ -321,7 +293,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 			sheet1.addCell(useSerialLabel);
 
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-			List<String> jobNames = CommonUtils.getJobNames(curatorFrameworkOp);
+			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
 				String jobName = jobNames.get(i);
 				sheet1.addCell(new Label(0, i + 1, jobName));
