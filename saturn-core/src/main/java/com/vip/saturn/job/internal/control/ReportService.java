@@ -19,6 +19,7 @@ package com.vip.saturn.job.internal.control;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -45,25 +46,32 @@ public class ReportService extends AbstractSaturnService {
     
     public void reportData2Zk() {
     	synchronized (infoMap) {
-    		Iterator<Entry<Integer,ExecutionInfo>> iterator = infoMap.entrySet().iterator();
-    		while(iterator.hasNext()) {
-    			Entry<Integer, ExecutionInfo> next = iterator.next();
-    			Integer item = next.getKey();
-    			ExecutionInfo info = next.getValue();
-    			if (info.getLastBeginTime() != null) {
-    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), info.getLastBeginTime());
-    			}
-    			if (info.getLastCompleteTime() != null) {
-    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), info.getLastCompleteTime());
-				}
-    			if (info.getNextFireTime() != null) {
-    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), info.getNextFireTime());
-				}
-    			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), (info.getJobLog() == null?"":info.getJobLog()));
-    			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), (info.getJobMsg() == null?"":info.getJobMsg()));
-    			log.info("done flushing {} to zk.", info);
-    		}
-    		infoMap.clear();
+    		if (infoMap.size() != 0) {
+	    		List<Integer> shardingItems = jobScheduler.getExecutionContextService().getShardingItems();
+	    		Iterator<Entry<Integer,ExecutionInfo>> iterator = infoMap.entrySet().iterator();
+	    		while(iterator.hasNext()) {
+	    			Entry<Integer, ExecutionInfo> next = iterator.next();
+	    			Integer item = next.getKey();
+	    			ExecutionInfo info = next.getValue();
+	    			if (!shardingItems.contains(item)) {
+	    				log.info("sharding items don't have such item: {}, reporter is going to ignore this executionInfo: {}", item, info);
+	    				continue;
+	    			}
+	    			if (info.getLastBeginTime() != null) {
+	    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), info.getLastBeginTime());
+	    			}
+	    			if (info.getLastCompleteTime() != null) {
+	    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), info.getLastCompleteTime());
+					}
+	    			if (info.getNextFireTime() != null) {
+	    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), info.getNextFireTime());
+					}
+	    			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), (info.getJobLog() == null?"":info.getJobLog()));
+	    			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), (info.getJobMsg() == null?"":info.getJobMsg()));
+	    			log.info("done flushed {} to zk.", info);
+	    		}
+	    		infoMap.clear();
+	    	}
     	}
     }
     
