@@ -542,6 +542,7 @@ $(function() {
 	            var executionTime;
 	            if(!data[i].lastCompleteTime || status === "RUNNING"){
 	            	executionTime = lastBeginTime + " - ";
+	            	jobMsg = "";
 	            }else{
 	            	executionTime = lastBeginTime+ " - " + data[i].lastCompleteTime;
 	            }
