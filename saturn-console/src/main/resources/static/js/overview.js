@@ -599,10 +599,6 @@ $(function() {
             	var jobName = list[i].jobName;
             	jobNameSelectValues.push(jobName);
                 var status = list[i].status;
-                var nextFireTime = "-";
-                if (null != list[i].nextFireTime && '' != list[i].nextFireTime) {
-                	nextFireTime = new Date(parseInt(list[i].nextFireTime)).format("yyyy-MM-dd HH:mm:ss");
-                }
                 var loadLevel = list[i].loadLevel;
                 var shardingTotalCount = list[i].shardingTotalCount;
                 if(list[i].localMode == true){
@@ -637,7 +633,7 @@ $(function() {
                 	+ "<td id='showPreferList_"+i+"' style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + preferList + "</td>"
                 	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
-                	+ "<td>" + nextFireTime + "</td>" 
+                	+ "<td class='nft'> - </td>" 
                 	+ "<td id='showDescription_"+i+"'></td>";
                 var trClass = "";
                 var operationBtn = "启用";
@@ -677,6 +673,16 @@ $(function() {
                         regex =  term ;
                 		jobsViewDataTable.columns(1).search(regex, true, false).draw();
                 	});
+                },
+                "createdRow": function( row, data, dataIndex ) {
+                    var jobName = list[dataIndex].jobName;
+                    $.get("job/getJobNextFireTime", {nns:regName, jobName:jobName}, function(data) {
+                    	var nextFireTime = "-";
+                        if (data != '0') {
+                        	nextFireTime = new Date(parseInt(data)).format("yyyy-MM-dd HH:mm:ss");
+                        }
+                    	$(row).find(".nft").html(nextFireTime);
+                    });
                 },
             	"columnDefs": [{ "type": "zn-datetime", targets: 10 }],
             	"order": [[5, "desc" ]], 

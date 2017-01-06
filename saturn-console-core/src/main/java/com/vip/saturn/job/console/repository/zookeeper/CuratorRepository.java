@@ -17,12 +17,13 @@
 
 package com.vip.saturn.job.console.repository.zookeeper;
 
-import com.vip.saturn.job.console.utils.BooleanWrapper;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 
-import java.util.Collection;
-import java.util.List;
+import com.vip.saturn.job.console.utils.BooleanWrapper;
 
 public interface CuratorRepository {
 
@@ -48,8 +49,11 @@ public interface CuratorRepository {
 
         void fillJobNodeIfNotExist(String node, Object value);
 
+        long getMtime(String node);
 
         CuratorTransactionOp inTransaction();
+        
+        CuratorFramework getCuratorFramework();
 
         interface CuratorTransactionOp {
 

@@ -17,11 +17,11 @@
 
 package com.vip.saturn.job.console.repository.zookeeper.impl;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.exception.JobConsoleException;
-import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.utils.BooleanWrapper;
-import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
@@ -34,14 +34,16 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Strings;
+import com.vip.saturn.job.console.exception.JobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.utils.BooleanWrapper;
+import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 @Repository
 public class CuratorRepositoryImpl implements CuratorRepository {
@@ -321,6 +323,26 @@ public class CuratorRepositoryImpl implements CuratorRepository {
                 return curatorTransactionFinal.commit();
             }
         }
+
+        @Override
+		public long getMtime(String node) {
+			try {
+				Stat stat = curatorFramework.checkExists().forPath(node);
+				if (stat != null) {
+					return stat.getMtime();
+				} else {
+					return 0l;
+				}
+			} catch (final Exception ex) {
+				// CHECKSTYLE:ON
+				throw new JobConsoleException(ex);
+			}
+		}
+
+        @Override
+		public CuratorFramework getCuratorFramework() {
+			return curatorFramework;
+		}
 
     }
 

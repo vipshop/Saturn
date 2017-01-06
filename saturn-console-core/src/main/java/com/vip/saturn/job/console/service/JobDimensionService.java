@@ -86,4 +86,8 @@ public interface JobDimensionService {
     void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
+	
+	Long calculateJobNextTime(String jobName);
+
+	Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 }

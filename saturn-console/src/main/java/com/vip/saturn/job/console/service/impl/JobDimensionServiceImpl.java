@@ -19,7 +19,9 @@ package com.vip.saturn.job.console.service.impl;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -54,6 +56,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.BooleanWrapper;
 import com.vip.saturn.job.console.utils.CommonUtils;
+import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -725,5 +728,209 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			return 1;
 		}
 		return -1;// 1.0.0 < 1.0.0.1
+	}
+
+	@Override
+	public Long calculateJobNextTime(String jobName) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		try {
+			// 计算异常作业,根据$Jobs/jobName/execution/item/nextFireTime，如果小于当前时间且作业不在running，则为异常
+			// 只有java/shell作业有cron
+			String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
+				// enabled 的作业才需要判断
+				String enabledPath = JobNodePath.getConfigNodePath(jobName, "enabled");
+				if (Boolean.valueOf(curatorFrameworkOp.getData(enabledPath))) {
+					String enabledReportPath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
+					String enabledReportVal = curatorFrameworkOp.getData(enabledReportPath);
+					// 开启上报运行信息
+					if (enabledReportVal == null || "true".equals(enabledReportVal)) {
+						long nextFireTimeAfterThis = 0l;
+						String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
+						// 有execution节点
+			            if (curatorFrameworkOp.checkExists(executionRootpath)) {
+			            	List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
+			            	// 有分片
+			            	if (items != null && !items.isEmpty()) {
+            					for (String itemStr : items) {
+    					    		// 针对stock-update域的不上报节点信息但又有分片残留的情况
+    					    		List<String> itemChildren = curatorFrameworkOp.getChildren(JobNodePath.getExecutionItemNodePath(jobName, itemStr));
+        				    		if (itemChildren.size() == 2) {
+        					    		return null;
+        				    		} else {
+        				    			String runningNodePath = JobNodePath.getExecutionNodePath(jobName, itemStr, "running");
+        					    		boolean isItemRunning = curatorFrameworkOp.checkExists(runningNodePath);
+        					    		if (isItemRunning) {
+        					    			try { // 以防节点不存在
+        					    				return curatorFrameworkOp.getMtime(runningNodePath);
+        					    			} catch (Exception e) {
+        					    				log.error(e.getMessage(), e);
+        					    			}
+        					    		}
+        				    			String completedPath = JobNodePath.getExecutionNodePath(jobName, itemStr, "completed");
+        				    			boolean isItemCompleted = curatorFrameworkOp.checkExists(completedPath);
+        				    			if (isItemCompleted) {
+	        					    		long thisCompleteMtime = curatorFrameworkOp.getMtime(completedPath);
+	        					    		if (thisCompleteMtime > nextFireTimeAfterThis) {
+	        					    			nextFireTimeAfterThis = thisCompleteMtime;
+	        					    		}
+        				    			}
+        				    		}
+    				    		}
+			            	} 
+			            }
+			            // 对比enabled's mtime 和 completed's mtime
+			    		long enabledMtime = curatorFrameworkOp.getMtime(enabledPath);
+			    		if (enabledMtime > nextFireTimeAfterThis) {
+			    			nextFireTimeAfterThis = enabledMtime;
+			    		}
+			    		return getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, jobName, curatorFrameworkOp);
+					} else {
+						// 关闭上报视为正常
+						return null;
+					}
+				}
+				return null;
+			}
+			// 非java/shell job视为正常
+			return null;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return null;
+		}
+	}
+	
+	/**
+     * 该时间是否在作业暂停时间段范围内。
+     * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+     * 
+     * @param date 时间
+     * 
+     * @return 该时间是否在作业暂停时间段范围内。
+     */
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
+		int d = calendar.get(Calendar.DAY_OF_MONTH);
+		int h = calendar.get(Calendar.HOUR_OF_DAY);
+		int m = calendar.get(Calendar.MINUTE);
+
+		boolean dateIn = false;
+		boolean pausePeriodDateIsEmpty = (pausePeriodDate==null || pausePeriodDate.trim().isEmpty());
+		if(!pausePeriodDateIsEmpty){
+			String[] periodsDate = pausePeriodDate.split(",");
+			if (periodsDate != null) {
+				for (String period : periodsDate) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] MdLeft = left.split("/");
+						String[] MdRight = right.split("/");
+						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
+							try {
+								int MLeft = Integer.parseInt(MdLeft[0]);
+								int dLeft = Integer.parseInt(MdLeft[1]);
+								int MRight = Integer.parseInt(MdRight[0]);
+								int dRight = Integer.parseInt(MdRight[1]);
+								dateIn = (M > MLeft || M == MLeft && d >= dLeft) && (M < MRight || M == MRight && d <= dRight);//NOSONAR
+								if (dateIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								dateIn = false;
+								break;
+							}
+						} else {
+							dateIn = false;
+							break;
+						}
+					} else {
+						dateIn = false;
+						break;
+					}
+				}
+			}
+		}
+		boolean timeIn = false;
+		boolean pausePeriodTimeIsEmpty = (pausePeriodTime==null||pausePeriodTime.trim().isEmpty());
+		if(!pausePeriodTimeIsEmpty){
+			String[] periodsTime = pausePeriodTime.split(",");
+			if (periodsTime != null) {
+				for (String period : periodsTime) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] hmLeft = left.split(":");
+						String[] hmRight = right.split(":");
+						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
+							try {
+								int hLeft = Integer.parseInt(hmLeft[0]);
+								int mLeft = Integer.parseInt(hmLeft[1]);
+								int hRight = Integer.parseInt(hmRight[0]);
+								int mRight = Integer.parseInt(hmRight[1]);
+								timeIn = (h > hLeft || h == hLeft && m >= mLeft) && (h < hRight || h == hRight && m <= mRight);//NOSONAR
+								if (timeIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								timeIn = false;
+								break;
+							}
+						} else {
+							timeIn = false;
+							break;
+						}
+					} else {
+						timeIn = false;
+						break;
+					}
+				}
+			}
+		}
+		
+		
+		if(pausePeriodDateIsEmpty) {
+			if(pausePeriodTimeIsEmpty) {
+				return false;
+			} else {
+				return timeIn;
+			}
+		} else {
+			if(pausePeriodTimeIsEmpty) {
+				return dateIn;
+			} else {
+				return dateIn && timeIn;
+			}
+		}
+	}
+	
+	@Override
+	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
+		String cronVal = curatorFrameworkOp.getData(cronPath);
+		CronExpression cronExpression = null;
+		try {
+			cronExpression = new CronExpression(cronVal);
+		} catch (ParseException e) {
+			log.error(e.getMessage(), e);
+			return null;
+		}
+
+		Date nextFireTime = cronExpression.getTimeAfter(new Date(nextFireTimeAfterThis));
+		String pausePeriodDatePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodDate");
+		String pausePeriodDate =  curatorFrameworkOp.getData(pausePeriodDatePath);
+		String pausePeriodTimePath =  JobNodePath.getConfigNodePath(jobName, "pausePeriodTime");
+		String pausePeriodTime = curatorFrameworkOp.getData(pausePeriodTimePath);
+		
+		while (nextFireTime != null && isInPausePeriod(nextFireTime,pausePeriodDate, pausePeriodTime)) {
+			nextFireTime = cronExpression.getTimeAfter(nextFireTime);
+		}
+		if (null == nextFireTime) {
+			return null;
+		}
+		return nextFireTime.getTime();
 	}
 }

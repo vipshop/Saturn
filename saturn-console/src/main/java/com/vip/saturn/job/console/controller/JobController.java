@@ -159,4 +159,10 @@ public class JobController extends AbstractController {
 		ExecutionInfo info = jobDimensionService.getExecutionJobLog(config.getJobName(), config.getItem());
 		return info;
 	}
+	
+	@RequestMapping(value = "getJobNextFireTime", method = RequestMethod.GET)
+    public long getJobNextFireTime(String jobName) {
+    	Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
+        return calculateJobNextTime == null?0l:calculateJobNextTime;
+    }
 }
