@@ -100,7 +100,8 @@ public final class ExecutionInfo implements Serializable {
 	public String toString() {
 		return "ExecutionInfo [item=" + item + ", jobMsg=" + jobMsg
 				+ ", lastBeginTime=" + lastBeginTime + ", lastCompleteTime="
-				+ lastCompleteTime + ", jobLog=" + jobLog + "]";
+				+ lastCompleteTime + ", nextFireTime=" + nextFireTime
+				+ ", jobLog=" + jobLog + "]";
 	}
 	
 }
