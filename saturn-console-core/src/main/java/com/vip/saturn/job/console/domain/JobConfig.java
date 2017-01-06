@@ -100,6 +100,8 @@ public class JobConfig implements Serializable {
     
     private String originJobName;
 
+	private String jobMode;
+
     public void setDefaultValues() {
         timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
         processCountIntervalSeconds = processCountIntervalSeconds == null ? 300 : processCountIntervalSeconds;
@@ -397,5 +399,12 @@ public class JobConfig implements Serializable {
 	public void setEnabledReport(Boolean enabledReport) {
 		this.enabledReport = enabledReport;
 	}
-	
+
+	public String getJobMode() {
+		return jobMode;
+	}
+
+	public void setJobMode(String jobMode) {
+		this.jobMode = jobMode;
+	}
 }

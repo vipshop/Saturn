@@ -35,6 +35,14 @@ public class ContainerNodePath {
         return String.format("%s/config", getDcosTaskIdNodePath(taskId));
     }
 
+    public static String getDcosTaskElasticInstanceJobsNodePath(final String taskId) {
+        return String.format("%s/elasticInstanceJobs", getDcosTaskIdNodePath(taskId));
+    }
+
+    public static String getDcosTaskElasticInstanceJobNodePath(final String taskId, final String jobName) {
+        return String.format("%s/elasticInstanceJobs/%s", getDcosTaskIdNodePath(taskId), jobName);
+    }
+
     public static String getDcosConfigTokenNodePath() {
         return String.format("%s/config/token", get$ContainerNodePath());
     }
