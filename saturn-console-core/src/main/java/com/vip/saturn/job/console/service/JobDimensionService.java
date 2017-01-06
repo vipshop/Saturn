@@ -87,6 +87,10 @@ public interface JobDimensionService {
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
 
+	Long calculateJobNextTime(String jobName);
+
+	Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
     List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
     List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;

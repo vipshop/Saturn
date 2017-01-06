@@ -94,8 +94,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
 					jobScheduler.getPreviousConf().setCron(cronFromZk);
 					jobScheduler.rescheduleJob(cronFromZk);
-					executionService
-							.updateNextFireTimeAndPausePeriodEffected(executionContextService.getShardingItems());
+					executionService.updateNextFireTime(executionContextService.getShardingItems());
 				}
 			}
 		}

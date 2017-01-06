@@ -17,6 +17,7 @@
 
 package com.vip.saturn.job.internal.execution;
 
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -31,8 +32,8 @@ import com.vip.saturn.job.basic.JobExecutionMultipleShardingContext;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.internal.config.ConfigurationService;
-import com.vip.saturn.job.internal.control.ControlService;
 import com.vip.saturn.job.internal.control.ExecutionInfo;
+import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.server.ServerStatus;
@@ -51,7 +52,7 @@ public class ExecutionService extends AbstractSaturnService {
     
     private ServerService serverService;
 
-	private ControlService controlService;
+	private ReportService reportService;
     
 	public ExecutionService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
@@ -61,50 +62,30 @@ public class ExecutionService extends AbstractSaturnService {
 	public void start(){
 		configService = jobScheduler.getConfigService();
         serverService = jobScheduler.getServerService();
-        controlService = jobScheduler.getControlService();
+        reportService = jobScheduler.getReportService();
 	}
 	
     /**
-     * 更新当前作业服务器运行时分片的nextFireTime和pausePeriodEffected，如果pausePeriodEffected为false。
+     * 更新当前作业服务器运行时分片的nextFireTime。
      * 
      * @param shardingItems 作业运行时分片上下文
      */
-    public void updateNextFireTimeAndPausePeriodEffectedIfNecessary(final List<Integer> shardingItems) {
+    public void updateNextFireTime(final List<Integer> shardingItems) {
     	if (!shardingItems.isEmpty()) {
     		for (int item : shardingItems) {
-    			updateNextFireTimeAndPausePeriodEffectedIfNecessary(item);
+    			updateNextFireTimeByItem(item);
     		}
     	}
     }
     
-    /**
-     * 更新当前作业服务器运行时分片的nextFireTime和pausePeriodEffected。
-     * 
-     * @param shardingItems 作业运行时分片上下文
-     */
-    public void updateNextFireTimeAndPausePeriodEffected(final List<Integer> shardingItems) {
-    	if (!shardingItems.isEmpty()) {
-    		for (int item : shardingItems) {
-    			updateNextFireTimeAndPausePeriodEffected(item);
-    		}
-    	}
-    }
-    
-    private void updateNextFireTimeAndPausePeriodEffectedIfNecessary(int item) {
-		String pausePeriodEffectedNode = ExecutionNode.getPausePeriodEffectedNode(item);
-		if(!getJobNodeStorage().isJobNodeExisted(pausePeriodEffectedNode) || !Boolean.parseBoolean(getJobNodeStorage().getJobNodeDataDirectly(pausePeriodEffectedNode))) {
-			updateNextFireTimeAndPausePeriodEffected(item);
-		}
-    }
-    
-    private void updateNextFireTimeAndPausePeriodEffected(int item) {
+    private void updateNextFireTimeByItem(int item) {
         if (null == jobScheduler) {
             return;
         }
-        NextFireTimePausePeriodEffected nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
-        if (null != nextFireTimePausePeriodEffected && null != nextFireTimePausePeriodEffected.getNextFireTime()) {
+        Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+        if (null != nextFireTimePausePeriodEffected) {
         	//String pausePeriodEffectedNode = ExecutionNode.getPausePeriodEffectedNode(item);
-            getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), nextFireTimePausePeriodEffected.getNextFireTime().getTime());
+            getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), nextFireTimePausePeriodEffected.getTime());
             //getJobNodeStorage().replaceJobNode(pausePeriodEffectedNode, nextFireTimePausePeriodEffected.isPausePeriodEffected());
         }
     }
@@ -118,10 +99,12 @@ public class ExecutionService extends AbstractSaturnService {
 		List<Integer> shardingItems = jobExecutionShardingContext.getShardingItems();
 		if (!shardingItems.isEmpty()) {
 			serverService.updateServerStatus(ServerStatus.RUNNING);
-			controlService.clearInfoMap();
+			reportService.clearInfoMap();
+			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+			Long nextFireTime = nextFireTimePausePeriodEffected == null?null:nextFireTimePausePeriodEffected.getTime();
 			for (int item : shardingItems) {
 				registerJobBeginByItem(jobExecutionShardingContext, item);
-				controlService.initInfoOnBegin(item);
+				reportService.initInfoOnBegin(item, nextFireTime);
 			}
 		}
 	}
@@ -130,37 +113,32 @@ public class ExecutionService extends AbstractSaturnService {
 		if(log.isDebugEnabled()){
 			log.debug("registerJobBeginByItem: " + item);
 		}
-		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 		if(jobConfiguration.isEnabledReport() == null){
 			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 				getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+				// 清除完成状态timeout等信息
+				cleanSaturnNode(item);
 			}
 		}else if(jobConfiguration.isEnabledReport()){
+			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+			// 清除完成状态timeout等信息
+			cleanSaturnNode(item);
 		}
-
-		// 清除完成状态timeout等信息
-		cleanSaturnNode(item);
 
 		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
-		updateNextFireTimeAndPausePeriodEffected(item);
+		//updateNextFireTimeAndPausePeriodEffected(item);
 	}
     
     /**
      * 注册作业完成信息.
      * 
-     * @param jobExecutionShardingContext 作业运行时分片上下文
-     * @param item 分片项
      */
-    public void registerJobCompleted(final JobExecutionMultipleShardingContext jobExecutionShardingContext,Integer item) {
-		registerJobCompletedByItem(jobExecutionShardingContext, item);
-    }
-    
 	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
-		ExecutionInfo info = controlService.getInfoByItem(item);
-		// old data has been flushed to zk.
-		if (info == null) {
+		ExecutionInfo info = reportService.getInfoByItem(item);
+		if (info == null) { // old data has been flushed to zk.
 			info = new ExecutionInfo(item);
 		}
 		if (jobExecutionShardingContext instanceof SaturnExecutionContext) {
@@ -217,17 +195,24 @@ public class ExecutionService extends AbstractSaturnService {
 				}
 			}
 		}
-		updateNextFireTimeAndPausePeriodEffected(item);
+		//updateNextFireTimeAndPausePeriodEffected(item);
 		if(jobConfiguration.isEnabledReport() == null){
 			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
 				getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 			}
 		}else if(jobConfiguration.isEnabledReport()){
 			getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 		}
-		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
+		
+		Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+        if (null != nextFireTimePausePeriodEffected) {
+        	info.setNextFireTime(nextFireTimePausePeriodEffected.getTime());
+        }
+        
 		info.setLastCompleteTime(System.currentTimeMillis());
-		controlService.fillInfoOnAfter(info);
+		reportService.fillInfoOnAfter(info);
 		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), System.currentTimeMillis());
 	}
     

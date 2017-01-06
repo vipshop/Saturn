@@ -113,7 +113,9 @@ public class ScriptJobRunner {
                 log.info("[{}] msg=Job {} enable timeout control : {} s ", jobName, jobName, timeoutSeconds);
             } else {  //需要指定超时值，才会启用watchdog: 强行指定为5年
                 watchdog = new SaturnExecuteWatchdog(5L * 365 * 24 * 3600 * 1000, jobName, item, itemValue);
-                log.info("[{}] msg=Job {} disable timeout control", jobName, jobName);
+                if(log.isDebugEnabled()){
+                	log.debug("[{}] msg=Job {} disable timeout control", jobName, jobName);
+                }
             }
             watchdog.setExecutorName(job.getExecutorName());
         }

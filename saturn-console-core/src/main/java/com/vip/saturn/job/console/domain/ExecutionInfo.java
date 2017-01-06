@@ -37,8 +37,6 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
     
     private String nextFireTime;
     
-    private boolean pausePeriodEffected;
-    
     private String lastCompleteTime;
     /**
      * 作业运行时间，与zk lastCompleteTime比较
@@ -107,14 +105,6 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 
 	public void setNextFireTime(String nextFireTime) {
 		this.nextFireTime = nextFireTime;
-	}
-
-	public boolean isPausePeriodEffected() {
-		return pausePeriodEffected;
-	}
-
-	public void setPausePeriodEffected(boolean pausePeriodEffected) {
-		this.pausePeriodEffected = pausePeriodEffected;
 	}
 
 	public String getLastCompleteTime() {

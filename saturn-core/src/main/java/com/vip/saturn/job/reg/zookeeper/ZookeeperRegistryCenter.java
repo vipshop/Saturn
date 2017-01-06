@@ -204,7 +204,11 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     @Override
     public String getDirectly(final String key) {
         try {
-            return new String(client.getData().forPath(key), Charset.forName("UTF-8"));
+        	byte[] getZnodeData = client.getData().forPath(key);
+        	if (getZnodeData == null) {
+                return "";
+            }
+            return new String(getZnodeData, Charset.forName("UTF-8"));
         //CHECKSTYLE:OFF
         } catch (final Exception ex) {
         //CHECKSTYLE:ON

@@ -27,7 +27,7 @@ public abstract class CrondJob extends AbstractSaturnJob{
 		if (jobScheduler.getPreviousConf().getCron() != null && !jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
 			jobScheduler.getPreviousConf().setCron(cronFromZk);
 			jobScheduler.rescheduleJob(cronFromZk);
-			executionService.updateNextFireTimeAndPausePeriodEffected(executionContextService.getShardingItems());
+			executionService.updateNextFireTime(executionContextService.getShardingItems());
 		}
 		// if PausePeriodDatePath or pausePeriodTime changed.
 		String prePauseDate = jobScheduler.getPreviousConf().getPausePeriodDate();
@@ -39,7 +39,7 @@ public abstract class CrondJob extends AbstractSaturnJob{
 		boolean updatePauseConditionThird = (prePauseTime != null && !prePauseTime.equals(pauseTime));
 		boolean updatePauseConditionFourth = (prePauseTime == null && pauseTime != null);
 		if (updatePauseConditionFirst || updatePauseConditionSecond || updatePauseConditionThird || updatePauseConditionFourth) {
-			executionService.updateNextFireTimeAndPausePeriodEffected(executionContextService.getShardingItems());
+			executionService.updateNextFireTime(executionContextService.getShardingItems());
 		}
 
 	    int countTime =  configService.getJobConfiguration().getProcessCountIntervalSeconds();

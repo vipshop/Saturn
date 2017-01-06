@@ -56,9 +56,6 @@ public final class ExecutionNode {
     
     public static final String NEXT_FIRE_TIME = ROOT + "/%s/nextFireTime";
     
-    /** nextFireTime被pausePeriod影响了的标识*/
-    public static final String PAUSE_PERIOD_EFFECTED = ROOT + "/%s/pausePeriodEffected";
-    
     public static final String LAST_COMPLETE_TIME = ROOT + "/%s/lastCompleteTime";
     
     public static final String LEADER_ROOT = ElectionNode.ROOT + "/" + ROOT;
@@ -107,13 +104,8 @@ public final class ExecutionNode {
         return String.format(LAST_BEGIN_TIME, item);
     }
     
-    static String getNextFireTimeNode(final int item) {
+    public static String getNextFireTimeNode(final int item) {
         return String.format(NEXT_FIRE_TIME, item);
-    }
-    
-    /** nextFireTime被pausePeriod影响了的标识*/
-    static String getPausePeriodEffectedNode(final int item) {
-    	return String.format(PAUSE_PERIOD_EFFECTED, item);
     }
     
     public static String getLastCompleteTimeNode(final int item) {

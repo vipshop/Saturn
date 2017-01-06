@@ -17,10 +17,10 @@
 
 package com.vip.saturn.job.internal.control;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,13 +33,13 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
  * @author chembo.huang
  *
  */
-public class ControlService extends AbstractSaturnService {
+public class ReportService extends AbstractSaturnService {
 
-	static Logger log = LoggerFactory.getLogger(ControlService.class);
+	static Logger log = LoggerFactory.getLogger(ReportService.class);
 	
-	public Map<Integer,ExecutionInfo> infoMap = new ConcurrentHashMap<>();
+	public Map<Integer, ExecutionInfo> infoMap = new HashMap<>();
 	
-    public ControlService(JobScheduler jobScheduler) {
+    public ReportService(JobScheduler jobScheduler) {
         super(jobScheduler);
     }
     
@@ -56,6 +56,9 @@ public class ControlService extends AbstractSaturnService {
     			if (info.getLastCompleteTime() != null) {
     				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), info.getLastCompleteTime());
 				}
+    			if (info.getNextFireTime() != null) {
+    				jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item), info.getNextFireTime());
+				}
     			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), (info.getJobLog() == null?"":info.getJobLog()));
     			jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), (info.getJobMsg() == null?"":info.getJobMsg()));
     			log.info("done flushing {} to zk.", info);
@@ -70,9 +73,12 @@ public class ControlService extends AbstractSaturnService {
 		}
     }
     
-    public void initInfoOnBegin(int item) {
+    public void initInfoOnBegin(int item, Long nextFireTime) {
     	synchronized (infoMap) {
     		ExecutionInfo info = new ExecutionInfo(item, System.currentTimeMillis());
+    		if (nextFireTime != null) {
+    			info.setNextFireTime(nextFireTime);
+    		}
     		infoMap.put(item, info);
     	}
     }

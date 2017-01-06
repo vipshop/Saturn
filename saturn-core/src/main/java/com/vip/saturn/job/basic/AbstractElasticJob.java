@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
-import com.vip.saturn.job.internal.control.ControlService;
+import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.execution.ExecutionService;
@@ -84,7 +84,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	protected SaturnExecutorService saturnExecutorService;
 	
-	protected ControlService controlService;
+	protected ReportService reportService;
 	
 
 	/**
@@ -157,8 +157,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			if (configService.isInPausePeriod()) {
 				log.info("the job {} current running time is in pausePeriod, do nothing about business.", jobName);
-				executionService
-						.updateNextFireTimeAndPausePeriodEffectedIfNecessary(shardingContext.getShardingItems());
+				//executionService.updateNextFireTime(shardingContext.getShardingItems());
 				return;
 			}
 			executeJobInternal(shardingContext);
@@ -194,7 +193,7 @@ public abstract class AbstractElasticJob implements Stopable {
 						serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
 						updateServerStatus = true;
 					}
-					executionService.registerJobCompleted(shardingContext, item);
+					executionService.registerJobCompletedByItem(shardingContext, item);
 				}
 				if (isFailoverSupported() && configService.isFailover()) {
 					failoverService.updateFailoverComplete(item);
@@ -268,8 +267,8 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.serverService = serverService;
 	}
 	
-	protected void setControlService(ControlService controlService) {
-		this.controlService = controlService;
+	protected void setReportService(ReportService reportService) {
+		this.reportService = reportService;
 	}
 
 	/**
