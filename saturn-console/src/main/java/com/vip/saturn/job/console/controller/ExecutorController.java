@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.vip.saturn.job.console.domain.JobMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -374,6 +375,12 @@ public class ExecutorController extends AbstractController {
 		jobConfig.setPausePeriodTime(getContents(rowCells, 18));
 
 		jobConfig.setUseSerial(Boolean.valueOf(getContents(rowCells, 19)));
+
+		String jobMode = getContents(rowCells, 22);;
+		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 22, "作业模式有误，不能添加系统作业"));
+		}
+		jobConfig.setJobMode(jobMode == null ? "" : jobMode);
 
 		return jobConfig;
 	}
