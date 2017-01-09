@@ -85,7 +85,7 @@ public class JobController extends AbstractController {
 				}
 				if (sb.length() == 0) {
 					result.setSuccess(true);
-					result.setMessage("Cron表达式描述可能是过去的时刻，作业永远不会被触发执行");
+					result.setMessage("Cron maybe describe the past time, the job will never be executed");
 				} else {
 					sb.append("......");
 					result.setSuccess(true);
@@ -97,8 +97,8 @@ public class JobController extends AbstractController {
 				return result;
 			}
 		} else {
-			result.setSuccess(true);
-			result.setMessage("Cron表达式为空，表示永远不会执行");
+            result.setSuccess(false);
+            result.setMessage("Cron cannot be null or empty");
 		}
 		return result;
 	}
@@ -108,7 +108,7 @@ public class JobController extends AbstractController {
 		RequestResult result = new RequestResult();
 		if (!JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobSettings.getJobName()))) {
 			result.setSuccess(false);
-			result.setMessage("job不是stopped状态，不可修改；");
+			result.setMessage("The job is not stopped, cannot update it's settings");
 			return result;
 		}
 
@@ -121,6 +121,14 @@ public class JobController extends AbstractController {
 				result.setMessage("Cron expression is not valid");
 				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(),
 						getActivatedConfigInSession(request.getSession())));
+				return result;
+			}
+		} else{
+			JobBriefInfo.JobType jobType = JobBriefInfo.JobType.getJobType(jobSettings.getJobType());
+			if(jobType == JobBriefInfo.JobType.JAVA_JOB || jobType == JobBriefInfo.JobType.SHELL_JOB) {
+				result.setSuccess(false);
+				result.setMessage("The cron cannot be null or empty for cron-job");
+				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(), getActivatedConfigInSession(request.getSession())));
 				return result;
 			}
 		}
