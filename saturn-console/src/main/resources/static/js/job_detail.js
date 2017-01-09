@@ -408,7 +408,7 @@ $(function() {
 	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
-	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description,
+	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description, jobType: jobTypeStr,
 	        	timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
 		            	showSuccessDialog();
