@@ -176,9 +176,8 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext)
 			throws JobExecutionException {
-		if (shouldUploadRunningData()) {
-			executionService.registerJobBegin(shardingContext);
-		}
+		
+		executionService.registerJobBegin(shardingContext);
 
 		try {
 			executeJob(shardingContext);
@@ -188,7 +187,7 @@ public abstract class AbstractElasticJob implements Stopable {
 				if (!continueAfterExecution(item)) {
 					continue;// NOSONAR
 				}
-				if (shouldUploadRunningData() && !aborted) {
+				if (!aborted) {
 					if (!updateServerStatus) {
 						serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
 						updateServerStatus = true;
@@ -365,8 +364,6 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	public void callbackWhenShardingItemIsEmpty(final JobExecutionMultipleShardingContext shardingContext) {
 	}
-
-	public abstract boolean shouldUploadRunningData();
 
 	public abstract boolean isFailoverSupported();
 

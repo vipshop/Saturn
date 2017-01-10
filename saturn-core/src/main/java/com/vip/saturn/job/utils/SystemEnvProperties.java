@@ -14,13 +14,6 @@ public class SystemEnvProperties {
 	 */
 	public static String VIP_SATURN_ZK_CONNECTION = trim(System.getProperty(SystemEnvProperties.NAME_VIP_SATURN_ZK_CONNECTION, System.getenv(SystemEnvProperties.NAME_VIP_SATURN_ZK_CONNECTION)));
 
-	private static String NAME_VIP_SATURN_IS_CRON_JOB_LOG = "VIP_SATURN_IS_CRON_LOG";
-	/**
-	 * 是否记录定时作业(Java/Shell)实时日志到ZK: 默认打开
-	 */
-	public static boolean VIP_SATURN_IS_CRON_JOB_LOG = true;
-	
-
 	private static String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";	
 	/**
 	 * 每个域最大作业数量
@@ -58,20 +51,6 @@ public class SystemEnvProperties {
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 
 	static {
-		
-		//定时任务(Java/Shell)实时日志开关
-		String isCronLog = System.getProperty(NAME_VIP_SATURN_IS_CRON_JOB_LOG, System.getenv(NAME_VIP_SATURN_IS_CRON_JOB_LOG));
-		if (!Strings.isNullOrEmpty(isCronLog)) {
-			VIP_SATURN_IS_CRON_JOB_LOG = Boolean.valueOf(isCronLog);
-		}
-
-		if (VIP_SATURN_IS_CRON_JOB_LOG) {
-			log.warn("Cron Log is opened.");
-		} else {
-			log.warn("Cron Log is closed.");
-		}
-		
-		
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS, System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
 		if(!Strings.isNullOrEmpty(maxNumberOfJobs)) {
 			try {
