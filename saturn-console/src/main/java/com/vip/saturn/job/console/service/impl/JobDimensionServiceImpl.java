@@ -487,12 +487,17 @@ public class JobDimensionServiceImpl implements JobDimensionService {
     	if(JobStatus.STOPPED.equals(getJobStatus(jobName))){
     		return Collections.emptyList();
     	}
+        // update report node
+        curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
+        try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			log.error(e.getMessage(), e);
+		}
         String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
         if (!curatorFrameworkOp.checkExists(executionRootpath)) {
             return Collections.emptyList();
         }
-        // update report node
-        curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
         
         List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
         List<ExecutionInfo> result = new ArrayList<>(items.size());
