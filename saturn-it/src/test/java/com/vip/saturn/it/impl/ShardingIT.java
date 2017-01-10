@@ -1,25 +1,26 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
+import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.it.utils.LogbackListAppender;
+import com.vip.saturn.job.executor.Main;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.sharding.ShardingNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.sharding.service.NamespaceShardingService;
+import com.vip.saturn.job.utils.ItemUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.sharding.ShardingNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.utils.ItemUtils;
-import com.vip.saturn.job.utils.SystemEnvProperties;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShardingIT extends AbstractSaturnIT {
@@ -961,15 +962,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(1);
-			// 等待sharding分片完成
-			waitForFinish(new FinishCheck() {
-				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
-				}
-			}, 10);
-			runAtOnce(jobName);
-			// 等待拿走分片
+			// 无需re-sharding
+			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1055,15 +1049,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 等待sharding分片完成
-			waitForFinish(new FinishCheck() {
-				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
-				}
-			}, 10);
-			runAtOnce(jobName);
-			// 等待拿走分片
+			// 无需re-sharding
+			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1087,7 +1074,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	 * preferList配置了无效物理资源，并且useDispreferList为true。先添加作业，启用作业，再启动容器，再启动物理机。则物理资源会得到分片。
 	 */
 	@Test
-	public void test_L_UseDispreferList_ButInvalidLogicPreferList() throws Exception {
+	public void test_M_UseDispreferList_ButInvalidLogicPreferList() throws Exception {
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
 		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
 		try {
@@ -1149,15 +1136,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 等待sharding分片完成
-			waitForFinish(new FinishCheck() {
-				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
-				}
-			}, 10);
-			runAtOnce(jobName);
-			// 等待拿走分片
+			// 无需re-sharding
+			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1175,6 +1155,84 @@ public class ShardingIT extends AbstractSaturnIT {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
 		}
+	}
+
+	/**
+	 * sharding仅仅通知分片信息改变的作业
+	 */
+	@Test
+	public void test_N_NotifyNecessaryJobs() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(NamespaceShardingService.class);
+		logbackListAppender.start();
+
+		// 启动1个容器executor
+		Main executor1 = startOneNewExecutorList();
+		Thread.sleep(1000);
+
+		// 启动第一个作业
+		Thread.sleep(1000);
+		String jobName1 = "test_M_NotifyNecessaryJobs_job1";
+		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
+		jobConfiguration1.setCron("* * 1 * * ?");
+		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration1.setShardingTotalCount(1);
+		jobConfiguration1.setShardingItemParameters("0=0");
+		addJob(jobConfiguration1);
+		Thread.sleep(1000);
+		enableJob(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+		runAtOnce(jobName1);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		// 启动第二个作业
+		Thread.sleep(1000);
+		String jobName2 = "test_M_NotifyNecessaryJobs_job2";
+		final JobConfiguration jobConfiguration2 = new JobConfiguration(jobName2);
+		jobConfiguration2.setCron("* * 1 * * ?");
+		jobConfiguration2.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration2.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration2.setShardingTotalCount(1);
+		jobConfiguration2.setShardingItemParameters("0=0");
+
+		addJob(jobConfiguration2);
+		// job1和job2均无需re-sharding
+		Thread.sleep(1000);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1) && !isNeedSharding(jobConfiguration2);
+			}
+		}, 10);
+		assertThat(logbackListAppender.getLastMessage()).contains("notify jobs sharding necessary, jobs is []");
+
+		enableJob(jobName2);
+		// job1无需re-sharding
+		Thread.sleep(1000);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+		assertThat(logbackListAppender.getLastMessage()).contains("notify jobs sharding necessary, jobs is [" + jobName2 + "]");
+
+		stopExecutorList();
+		forceRemoveJob(jobName1);
+		forceRemoveJob(jobName2);
+		logbackListAppender.stop();
 	}
 
 }

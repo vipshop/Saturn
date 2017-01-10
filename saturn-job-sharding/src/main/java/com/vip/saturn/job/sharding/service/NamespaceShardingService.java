@@ -90,7 +90,8 @@ public class NamespaceShardingService {
 
 				List<String> allJobs = getAllJobs();
 				List<String> allEnableJobs = getAllEnableJobs(allJobs);
-				List<Executor> lastOnlineExecutorList = getLastOnlineExecutorList();
+				List<Executor> oldOnlineExecutorList = getLastOnlineExecutorList();
+				List<Executor> lastOnlineExecutorList = isAllShardingTask ? oldOnlineExecutorList : copyOnlineExecutorList(oldOnlineExecutorList); // if all-shard-task, unnecessary to copy
 				List<Shard> shardList = new ArrayList<>();
 				// 摘取
 				if(pick(allJobs, allEnableJobs, shardList, lastOnlineExecutorList)) {
@@ -102,8 +103,8 @@ public class NamespaceShardingService {
 					}
 					// 持久化分片结果
 					namespaceShardingContentService.persistDirectly(lastOnlineExecutorList);
-					// fix, notify all enable jobs whatever.
-					notifyJobShardingNecessary(allEnableJobs);
+					// fix, notify the shards-changed jobs of all enable jobs.
+					notifyJobShardingNecessary(getEnabledAndShardsChangedJobs(isAllShardingTask, allEnableJobs, oldOnlineExecutorList, lastOnlineExecutorList));
 					// sharding count ++
 					increaseShardingCount();
 				}
@@ -120,6 +121,34 @@ public class NamespaceShardingService {
 				}
 				shardingCount.decrementAndGet();
 			}
+		}
+
+		private List<Executor> copyOnlineExecutorList(List<Executor> oldOnlineExecutorList) {
+			List<Executor> newOnlineExecutorList = new ArrayList<>();
+			for (Executor oldExecutor : oldOnlineExecutorList) {
+				Executor newExecutor = new Executor();
+				newExecutor.setTotalLoadLevel(oldExecutor.getTotalLoadLevel());
+				newExecutor.setIp(oldExecutor.getIp());
+				newExecutor.setExecutorName(oldExecutor.getExecutorName());
+				if (oldExecutor.getJobNameList() != null) {
+					newExecutor.setJobNameList(new ArrayList<String>());
+					for (String jobName : oldExecutor.getJobNameList()) {
+						newExecutor.getJobNameList().add(jobName);
+					}
+				}
+				if (oldExecutor.getShardList() != null) {
+					newExecutor.setShardList(new ArrayList<Shard>());
+					for (Shard oldShard : oldExecutor.getShardList()) {
+						Shard newShard = new Shard();
+						newShard.setItem(oldShard.getItem());
+						newShard.setJobName(oldShard.getJobName());
+						newShard.setLoadLevel(oldShard.getLoadLevel());
+						newExecutor.getShardList().add(newShard);
+					}
+				}
+				newOnlineExecutorList.add(newExecutor);
+			}
+			return newOnlineExecutorList;
 		}
 
 		/**
@@ -166,10 +195,75 @@ public class NamespaceShardingService {
 			}
 		}
 
-    	private void notifyJobShardingNecessary(List<String> allEnableJobs) throws Exception {
+		/**
+		 * Get the jobs, that are enabled, and whose shards are changed. Specially, return all enabled jobs when the current thread is all-shard-task
+		 */
+		private List<String> getEnabledAndShardsChangedJobs(boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList, List<Executor> lastOnlineExecutorList) throws Exception {
+			if (isAllShardingTask) {
+				return allEnableJobs;
+			}
+			List<String> enabledAndShardsChangedJobs = new ArrayList<>();
+			for (String enableJob : allEnableJobs) {
+				Map<String, List<Integer>> oldShardingItems = namespaceShardingContentService.getShardingItems(oldOnlineExecutorList, enableJob);
+				Map<String, List<Integer>> lastShardingItems = namespaceShardingContentService.getShardingItems(lastOnlineExecutorList, enableJob);
+				// just compare executorName's shardList
+				boolean isChanged = false;
+				Iterator<Map.Entry<String, List<Integer>>> oldIterator = oldShardingItems.entrySet().iterator();
+				wl_loop:
+				while (oldIterator.hasNext()) {
+					Map.Entry<String, List<Integer>> next = oldIterator.next();
+					String executorName = next.getKey();
+					List<Integer> shards = next.getValue();
+					List<Integer> newShard = lastShardingItems.get(executorName);
+					if ((shards == null || shards.isEmpty()) && (newShard != null && !newShard.isEmpty())
+							|| (shards != null && !shards.isEmpty()) && (newShard == null || newShard.isEmpty())) {
+						isChanged = true;
+						break;
+					}
+					if (shards != null && newShard != null) {
+						for (Integer shard : shards) {
+							if (!newShard.contains(shard)) {
+								isChanged = true;
+								break wl_loop;
+							}
+						}
+					}
+				}
+				if (!isChanged) {
+					Iterator<Map.Entry<String, List<Integer>>> newIterator = lastShardingItems.entrySet().iterator();
+					wl_loop2:
+					while (newIterator.hasNext()) {
+						Map.Entry<String, List<Integer>> next = newIterator.next();
+						String executorName = next.getKey();
+						List<Integer> shards = next.getValue();
+						List<Integer> oldShard = oldShardingItems.get(executorName);
+						if ((shards == null || shards.isEmpty()) && (oldShard != null && !oldShard.isEmpty())
+								|| (shards != null && !shards.isEmpty()) && (oldShard == null || oldShard.isEmpty())) {
+							isChanged = true;
+							break;
+						}
+						if (shards != null && oldShard != null) {
+							for (Integer shard : shards) {
+								if (!oldShard.contains(shard)) {
+									isChanged = true;
+									break wl_loop2;
+								}
+							}
+						}
+					}
+				}
+				if (isChanged) {
+					enabledAndShardsChangedJobs.add(enableJob);
+				}
+			}
+			return enabledAndShardsChangedJobs;
+		}
+
+    	private void notifyJobShardingNecessary(List<String> enabledAndShardsChangedJobs) throws Exception {
+			log.info("notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
     		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
-    		for(int i=0; i<allEnableJobs.size(); i++) {
-    			String jobName =allEnableJobs.get(i);
+    		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
+    			String jobName =enabledAndShardsChangedJobs.get(i);
     			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName)) == null) {
     				curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName));
     			}
@@ -1172,7 +1266,9 @@ public class NamespaceShardingService {
 
 			if(localMode) {
 				if(!preferListIsConfigured || preferListConfigured.contains(executorName)) {
-					shardList.add(createLocalShard(lastOnlineExecutorList, loadLevel));
+					if(allEnableJobs.contains(jobName)) {
+						shardList.add(createLocalShard(lastOnlineExecutorList, loadLevel));
+					}
 				}
 			} else {
 				boolean hasShardRunning = hasShardRunning(lastOnlineExecutorList);

@@ -64,13 +64,8 @@ public class NamespaceShardingContentService {
         }
     }
 
-    /**
-     * @param jobName 作业名
-     * @return 返回Map数据，key值为executorName, value为分片项集合
-     */
-    public Map<String, List<Integer>> getShardingItems(String jobName) throws Exception {
+    public Map<String, List<Integer>> getShardingItems(List<Executor> executorList, String jobName) throws Exception {
         Map<String, List<Integer>> shardingItems = new HashMap<>();
-        List<Executor> executorList = getExecutorList();
         if(executorList != null && executorList.size()>0){
             for(Executor tmp : executorList) {
                 List<Integer> items = new ArrayList<>();
@@ -83,6 +78,15 @@ public class NamespaceShardingContentService {
             }
         }
         return shardingItems;
+    }
+
+    /**
+     * @param jobName 作业名
+     * @return 返回Map数据，key值为executorName, value为分片项集合
+     */
+    public Map<String, List<Integer>> getShardingItems(String jobName) throws Exception {
+        List<Executor> executorList = getExecutorList();
+        return getShardingItems(executorList, jobName);
     }
 
     /**
