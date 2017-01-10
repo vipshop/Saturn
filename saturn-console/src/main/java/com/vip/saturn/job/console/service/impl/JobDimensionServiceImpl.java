@@ -558,10 +558,18 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setLastBeginTime(null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
         String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
         result.setNextFireTime(null == nextFireTime ? null : dateFormat.format(new Date(Long.parseLong(nextFireTime))));
-        if (completed) {
-       	 	String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
-            result.setLastCompleteTime(null == lastCompleteTime ? null : dateFormat.format(new Date(Long.parseLong(lastCompleteTime))));
-        }
+        String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
+		if (lastCompleteTime != null) {
+			long lastCompleteTimeLong = Long.parseLong(lastCompleteTime);
+			if (lastBeginTime == null) {
+				result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
+			} else {
+				long lastBeginTimeLong = Long.parseLong(lastBeginTime);
+				if (lastCompleteTimeLong > lastBeginTimeLong) {
+					result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
+				}
+			}
+		}
         if (running) {
         	long mtime = curatorFrameworkOp.getMtime(JobNodePath.getExecutionNodePath(jobName, item, "running"));
             result.setTimeConsumed( (new Date().getTime() - mtime)/1000 );
