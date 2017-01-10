@@ -1,4 +1,4 @@
 #!/bin/sh
 echo "begin sleeping 60 seconds. \n"
-sleep 60s
+sleep 60
 echo "end sleeping 60 seconds \n"

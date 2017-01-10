@@ -2,7 +2,6 @@ package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.trigger.CrondTrigger;
 import com.vip.saturn.job.trigger.SaturnTrigger;
-import com.vip.saturn.job.utils.SystemEnvProperties;
 
 public abstract class CrondJob extends AbstractSaturnJob{
 
@@ -11,11 +10,6 @@ public abstract class CrondJob extends AbstractSaturnJob{
 		return new CrondTrigger();
 	}
 
-	@Override
-	public boolean shouldUploadRunningData() {
-		return SystemEnvProperties.VIP_SATURN_IS_CRON_JOB_LOG;
-	}
-	
 	@Override
 	public boolean isFailoverSupported() {
 		return true;

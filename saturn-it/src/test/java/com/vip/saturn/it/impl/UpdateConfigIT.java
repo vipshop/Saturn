@@ -162,9 +162,12 @@ public class UpdateConfigIT extends AbstractSaturnIT {
 
 	    	updateJobNode(jobConfiguration, "config/showNormalLog", "true");
 	    	
+	    	Thread.sleep(1*1000);
 	    	enableJob(jobConfiguration.getJobName());    	
-	    	Thread.sleep(1000);
+	    	Thread.sleep(2000);
 	    	
+	    	doReport(jobConfiguration);
+	
 	    	try {
 				waitForFinish(new FinishCheck(){
 

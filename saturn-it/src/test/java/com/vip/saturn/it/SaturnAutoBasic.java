@@ -270,6 +270,13 @@ public class SaturnAutoBasic {
         return jobNodeStorage.getJobNodeData(node);
     }
 
+    protected static void doReport(JobConfiguration jobConfiguration) {
+        JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
+        jobNodeStorage.fillJobNodeIfNullOrOverwrite("control", "");
+        jobNodeStorage.fillJobNodeIfNullOrOverwrite("control/report", "");
+    }
+
+    
     protected static void addJob(JobConfiguration jobConfiguration) {
         JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_TYPE, jobConfiguration.getJobType());

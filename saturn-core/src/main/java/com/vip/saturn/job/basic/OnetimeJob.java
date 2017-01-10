@@ -11,11 +11,6 @@ public abstract class OnetimeJob extends AbstractSaturnJob{
 	}
 
 	@Override
-	public boolean shouldUploadRunningData() {
-		return false;
-	}
-	
-	@Override
 	public boolean isFailoverSupported() {
 		return false;
 	}
