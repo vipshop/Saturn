@@ -98,7 +98,13 @@ public class ExecutionService extends AbstractSaturnService {
 	public void registerJobBegin(final JobExecutionMultipleShardingContext jobExecutionShardingContext) {
 		List<Integer> shardingItems = jobExecutionShardingContext.getShardingItems();
 		if (!shardingItems.isEmpty()) {
-			serverService.updateServerStatus(ServerStatus.RUNNING);
+			if (jobConfiguration.isEnabledReport() == null) {
+				if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+					serverService.updateServerStatus(ServerStatus.RUNNING);
+				}
+			} else if (jobConfiguration.isEnabledReport()) {
+				serverService.updateServerStatus(ServerStatus.RUNNING);
+			}
 			reportService.clearInfoMap();
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			Long nextFireTime = nextFireTimePausePeriodEffected == null?null:nextFireTimePausePeriodEffected.getTime();

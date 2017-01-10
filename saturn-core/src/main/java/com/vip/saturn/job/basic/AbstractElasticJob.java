@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
+import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
@@ -189,7 +190,14 @@ public abstract class AbstractElasticJob implements Stopable {
 				}
 				if (!aborted) {
 					if (!updateServerStatus) {
-						serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
+						JobConfiguration jobConfiguration = getJobScheduler().getCurrentConf();
+						if (jobConfiguration.isEnabledReport() == null) {
+							if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+								serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
+							}
+						} else if (jobConfiguration.isEnabledReport()) {
+							serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
+						}
 						updateServerStatus = true;
 					}
 					executionService.registerJobCompletedByItem(shardingContext, item);
