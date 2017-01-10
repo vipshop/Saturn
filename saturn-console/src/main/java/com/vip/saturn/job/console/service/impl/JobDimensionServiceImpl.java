@@ -123,8 +123,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		String jobsNodePath = JobNodePath.get$JobsNodePath();
 		if (curatorFrameworkOp.checkExists(jobsNodePath)) {
 			List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
-			if (jobs != null) {
-				allJobs.addAll(jobs);
+			if (jobs != null && jobs.size() > 0) {
+				for (String job : jobs) {
+					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
+						allJobs.add(job);
+					}
+				}
 			}
 		}
 		Collections.sort(allJobs);

@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import com.vip.saturn.job.console.service.JobDimensionService;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +22,7 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.domain.RestApiJobStatistics;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.JobNodePath;
@@ -59,18 +59,23 @@ public class RestApiServiceImpl implements RestApiService {
                 List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
                 if (jobs != null) {
                     for (String job : jobs) {
-                        RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
-                        restApiJobInfo.setJobName(job);
-                        // 设置作业配置信息
-                        setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
-                        // 设置运行状态
-                        setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
-                        // 设置统计信息
-                        RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
-                        setStatics(curatorFrameworkOp, restApiJobStatistics, job);
-                        restApiJobInfo.setStatistics(restApiJobStatistics);
-
-                        restApiJobInfos.add(restApiJobInfo);
+                    	try{
+	                        RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
+	                        restApiJobInfo.setJobName(job);
+	                        // 设置作业配置信息
+	                        setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
+	                        // 设置运行状态
+	                        setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
+	                        // 设置统计信息
+	                        RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
+	                        setStatics(curatorFrameworkOp, restApiJobStatistics, job);
+	                        restApiJobInfo.setStatistics(restApiJobStatistics);
+	
+	                        restApiJobInfos.add(restApiJobInfo);
+	                    } catch (Exception e) {
+	                		logger.error("getRestApiJobInfos exception:", e);
+	                		continue;
+	                    }
                     }
                 }
             } else {
