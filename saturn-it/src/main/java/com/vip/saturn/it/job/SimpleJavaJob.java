@@ -27,6 +27,6 @@ public class SimpleJavaJob extends AbstractSaturnJavaJob {
 		String key = jobName+"_"+shardItem;
 		System.out.println(new Date() + " running:"+jobName+"; "+shardItem +";"+ shardParam);
 		countInc(key);
-		return new SaturnJobReturn();
+		return new SaturnJobReturn(" result:"+jobName+"; "+shardItem +";"+ shardParam);
 	}
 }
