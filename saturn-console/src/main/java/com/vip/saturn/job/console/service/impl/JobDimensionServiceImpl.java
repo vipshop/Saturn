@@ -558,8 +558,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
        	 	String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
             result.setLastCompleteTime(null == lastCompleteTime ? null : dateFormat.format(new Date(Long.parseLong(lastCompleteTime))));
         }
-        if( result.getStatus().equals(ExecutionStatus.RUNNING) ) {
-            result.setTimeConsumed( (new Date().getTime() - Long.parseLong(lastBeginTime))/1000 );
+        if (running) {
+        	long mtime = curatorFrameworkOp.getMtime(JobNodePath.getExecutionNodePath(jobName, item, "running"));
+            result.setTimeConsumed( (new Date().getTime() - mtime)/1000 );
         }
         return result;
     }
