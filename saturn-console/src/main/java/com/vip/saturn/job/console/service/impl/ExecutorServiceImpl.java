@@ -157,6 +157,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 			return;
 		}
 		Class<?> cls = jobConfig.getClass();
+		String jobClassPath = "";
+		String jobClassValue = "";
 		for(String jobConfigNode : jobConfigNodes){
 			String jobConfigPath = JobNodePath.getConfigNodePath(originJobName, jobConfigNode);
 			String jobConfigValue = curatorFrameworkOp.getData(jobConfigPath);
@@ -177,12 +179,21 @@ public class ExecutorServiceImpl implements ExecutorService {
 				if(fieldValue != null){
 					jobConfigValue = fieldValue.toString();
 				}
+				if("jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					jobClassPath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					jobClassValue = jobConfigValue;
+				}
 			}catch(NoSuchFieldException e){// 即使JobConfig类中不存在该属性也复制（一般是旧版作业的一些节点，可以在旧版Executor上运行）
 				continue;
 			}finally{
-				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
+				if(!"jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
+				}
 			}
+		}
+		if(!Strings.isNullOrEmpty(jobClassPath)){
+			curatorFrameworkOp.fillJobNodeIfNotExist(jobClassPath,jobClassValue);
 		}
 	}
 	
