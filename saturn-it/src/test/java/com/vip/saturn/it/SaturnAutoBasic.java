@@ -270,10 +270,14 @@ public class SaturnAutoBasic {
         return jobNodeStorage.getJobNodeData(node);
     }
 
+    protected static void removeJobNode(JobConfiguration jobConfiguration, String node) {
+        JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
+        jobNodeStorage.removeJobNodeIfExisted(node);
+    }
+
     protected static void doReport(JobConfiguration jobConfiguration) {
         JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
-        jobNodeStorage.fillJobNodeIfNullOrOverwrite("control", "");
-        jobNodeStorage.fillJobNodeIfNullOrOverwrite("control/report", "");
+        jobNodeStorage.fillJobNodeIfNullOrOverwrite("control/report", System.currentTimeMillis());
     }
 
     

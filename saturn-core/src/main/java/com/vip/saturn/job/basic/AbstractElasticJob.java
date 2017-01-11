@@ -14,6 +14,7 @@
 
 package com.vip.saturn.job.basic;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -184,7 +185,9 @@ public abstract class AbstractElasticJob implements Stopable {
 			executeJob(shardingContext);
 		} finally {
 			boolean updateServerStatus = false;
+			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			for (int item : shardingContext.getShardingItems()) {
+				executionService.registerJobCompletedReportInfoByItem(shardingContext, item, nextFireTimePausePeriodEffected);
 				if (!continueAfterExecution(item)) {
 					continue;// NOSONAR
 				}
@@ -200,7 +203,7 @@ public abstract class AbstractElasticJob implements Stopable {
 						}
 						updateServerStatus = true;
 					}
-					executionService.registerJobCompletedByItem(shardingContext, item);
+					executionService.registerJobCompletedControlInfoByItem(shardingContext, item);
 				}
 				if (isFailoverSupported() && configService.isFailover()) {
 					failoverService.updateFailoverComplete(item);

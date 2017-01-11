@@ -138,11 +138,7 @@ public class ExecutionService extends AbstractSaturnService {
 		//updateNextFireTimeAndPausePeriodEffected(item);
 	}
     
-    /**
-     * 注册作业完成信息.
-     * 
-     */
-	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
+	public void registerJobCompletedReportInfoByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item, Date nextFireTimePausePeriodEffected) {
 		ExecutionInfo info = reportService.getInfoByItem(item);
 		if (info == null) { // old data has been flushed to zk.
 			info = new ExecutionInfo(item);
@@ -157,13 +153,37 @@ public class ExecutionService extends AbstractSaturnService {
 					info.setJobLog(saturnContext.getJobLog(item));
 					info.setJobMsg(jobRet.getReturnMsg());
 					if(errorGroup == SaturnSystemErrorGroup.SUCCESS) {
-    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
     					if (!configService.showNormalLog()) {
     						info.setJobLog(null);
-    						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    						//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 						} 
-					} else if(errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
+					}
+				} else {
+					info.setJobMsg(NO_RETURN_VALUE);
+				}
+			}
+		}
+		//Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+        if (null != nextFireTimePausePeriodEffected) {
+        	info.setNextFireTime(nextFireTimePausePeriodEffected.getTime());
+        }
+        
+		info.setLastCompleteTime(System.currentTimeMillis());
+		reportService.fillInfoOnAfter(info);
+	}
+	
+    /**
+     * 注册作业完成信息.
+     * 
+     */
+	public void registerJobCompletedControlInfoByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
+		if (jobExecutionShardingContext instanceof SaturnExecutionContext) {
+			// 为了展现分片处理失败的状态
+			SaturnExecutionContext saturnContext = (SaturnExecutionContext) jobExecutionShardingContext;
+			if (saturnContext.isSaturnJob()) {
+				SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
+				if(jobRet != null) {
+					int errorGroup = jobRet.getErrorGroup();
+					if(errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
 						if(jobConfiguration.isEnabledReport() == null){
 							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
 								getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
@@ -171,9 +191,6 @@ public class ExecutionService extends AbstractSaturnService {
 						}else if(jobConfiguration.isEnabledReport()){
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
 						}
-    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
-						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 					} else {
 						if(jobConfiguration.isEnabledReport() == null){
 							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
@@ -182,13 +199,9 @@ public class ExecutionService extends AbstractSaturnService {
 						}else if(jobConfiguration.isEnabledReport()){
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 						}
-    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), jobRet.getReturnMsg() == null ? "" : jobRet.getReturnMsg());
-						//saturnTemplate.opsForZSet().add(redisKey, jobLogMap, createdTimestamp);
-    					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), saturnContext.getJobLog(item) == null ? "" : saturnContext.getJobLog(item));
 					}
 					
-				} else { // if there is no jobReturn, don't save empty content to redis.
-					info.setJobMsg(NO_RETURN_VALUE);
+				} else {
 					if(jobConfiguration.isEnabledReport() == null){
 						if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
@@ -196,8 +209,6 @@ public class ExecutionService extends AbstractSaturnService {
 					}else if(jobConfiguration.isEnabledReport()){
 						getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 					}
-					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item), "执行Job没有返回值");
-					//getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item), "");
 				}
 			}
 		}
@@ -212,14 +223,6 @@ public class ExecutionService extends AbstractSaturnService {
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 		}
 		
-		Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
-        if (null != nextFireTimePausePeriodEffected) {
-        	info.setNextFireTime(nextFireTimePausePeriodEffected.getTime());
-        }
-        
-		info.setLastCompleteTime(System.currentTimeMillis());
-		reportService.fillInfoOnAfter(info);
-		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item), System.currentTimeMillis());
 	}
     
     /**
