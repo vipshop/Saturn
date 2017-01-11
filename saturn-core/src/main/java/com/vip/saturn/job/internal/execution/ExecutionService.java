@@ -109,30 +109,30 @@ public class ExecutionService extends AbstractSaturnService {
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			Long nextFireTime = nextFireTimePausePeriodEffected == null?null:nextFireTimePausePeriodEffected.getTime();
 			for (int item : shardingItems) {
-				registerJobBeginByItem(jobExecutionShardingContext, item);
-				reportService.initInfoOnBegin(item, nextFireTime);
+				registerJobBeginByItem(jobExecutionShardingContext, item, nextFireTime);
 			}
 		}
 	}
 	
-	public void registerJobBeginByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
-		if(log.isDebugEnabled()){
+	public void registerJobBeginByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item, Long nextFireTime) {
+		if (log.isDebugEnabled()) {
 			log.debug("registerJobBeginByItem: " + item);
 		}
-		if(jobConfiguration.isEnabledReport() == null){
-			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+		if (jobConfiguration.isEnabledReport() == null){
+			if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 				getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
 				// 清除完成状态timeout等信息
 				cleanSaturnNode(item);
 			}
-		}else if(jobConfiguration.isEnabledReport()){
+		} else if (jobConfiguration.isEnabledReport()) {
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
 			// 清除完成状态timeout等信息
 			cleanSaturnNode(item);
 		}
 
+		reportService.initInfoOnBegin(item, nextFireTime);
 		//getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), System.currentTimeMillis());
 
 		//updateNextFireTimeAndPausePeriodEffected(item);
