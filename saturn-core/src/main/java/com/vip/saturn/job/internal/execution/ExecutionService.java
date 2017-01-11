@@ -137,7 +137,12 @@ public class ExecutionService extends AbstractSaturnService {
 
 		//updateNextFireTimeAndPausePeriodEffected(item);
 	}
-    
+	
+	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item, Date nextFireTimePausePeriodEffected) {
+		registerJobCompletedControlInfoByItem(jobExecutionShardingContext, item);
+		registerJobCompletedReportInfoByItem(jobExecutionShardingContext, item, nextFireTimePausePeriodEffected);
+	}
+	
 	public void registerJobCompletedReportInfoByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item, Date nextFireTimePausePeriodEffected) {
 		ExecutionInfo info = reportService.getInfoByItem(item);
 		if (info == null) { // old data has been flushed to zk.
