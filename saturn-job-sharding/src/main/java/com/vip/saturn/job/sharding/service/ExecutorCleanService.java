@@ -1,12 +1,14 @@
 package com.vip.saturn.job.sharding.service;
 
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 
 /**
  * Created by xiaopeng.he on 2016/8/22.
@@ -50,6 +52,8 @@ public class ExecutorCleanService {
                     }
                 }
             }
+        } catch (NoNodeException ex) {
+            //CHECKSTYLE:OFF
         } catch (Exception e) {
             log.error("Clean the executor " + executorName + " error", e);
         }
