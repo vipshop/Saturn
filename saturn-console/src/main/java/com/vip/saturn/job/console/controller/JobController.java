@@ -111,21 +111,20 @@ public class JobController extends AbstractController {
 			result.setMessage("The job is not stopped, cannot update it's settings");
 			return result;
 		}
-
-		String cron = jobSettings.getCron();
-		if (cron != null && !cron.trim().isEmpty()) {
-			try {
-				CronExpression.validateExpression(cron.trim());
-			} catch (ParseException e) {
-				result.setSuccess(false);
-				result.setMessage("Cron expression is not valid");
-				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(),
-						getActivatedConfigInSession(request.getSession())));
-				return result;
-			}
-		} else{
-			JobBriefInfo.JobType jobType = JobBriefInfo.JobType.getJobType(jobSettings.getJobType());
-			if(jobType == JobBriefInfo.JobType.JAVA_JOB || jobType == JobBriefInfo.JobType.SHELL_JOB) {
+		JobBriefInfo.JobType jobType = JobBriefInfo.JobType.getJobType(jobSettings.getJobType());
+		if(jobType == JobBriefInfo.JobType.JAVA_JOB || jobType == JobBriefInfo.JobType.SHELL_JOB) {
+			String cron = jobSettings.getCron();
+			if (cron != null && !cron.trim().isEmpty()) {
+				try {
+					CronExpression.validateExpression(cron.trim());
+				} catch (ParseException e) {
+					result.setSuccess(false);
+					result.setMessage("Cron expression is not valid");
+					result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(),
+							getActivatedConfigInSession(request.getSession())));
+					return result;
+				}
+			} else {
 				result.setSuccess(false);
 				result.setMessage("The cron cannot be null or empty for cron-job");
 				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(), getActivatedConfigInSession(request.getSession())));

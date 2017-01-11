@@ -260,7 +260,9 @@ public class NamespaceShardingService {
 		}
 
     	private void notifyJobShardingNecessary(List<String> enabledAndShardsChangedJobs) throws Exception {
-			log.info("notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
+			if(enabledAndShardsChangedJobs != null && !enabledAndShardsChangedJobs.isEmpty()) {
+				log.info("notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
+			}
     		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
     		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
     			String jobName =enabledAndShardsChangedJobs.get(i);
