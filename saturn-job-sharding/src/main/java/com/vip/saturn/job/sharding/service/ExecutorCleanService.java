@@ -53,7 +53,7 @@ public class ExecutorCleanService {
                 }
             }
         } catch (NoNodeException ex) {
-            //CHECKSTYLE:OFF
+        	ex.printStackTrace();
         } catch (Exception e) {
             log.error("Clean the executor " + executorName + " error", e);
         }
@@ -69,6 +69,8 @@ public class ExecutorCleanService {
                     jobList.addAll(tmp);
                 }
             }
+        } catch (NoNodeException ex) {
+            ex.printStackTrace();
         } catch (Exception e) {
             log.error("Clean the executor, getJobList error", e);
         }
@@ -88,6 +90,8 @@ public class ExecutorCleanService {
                     for (String tmp : executorChildren) {
                         try {
                             curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath + "/" + tmp);
+                        } catch (NoNodeException ex) {
+                            ex.printStackTrace();
                         } catch (Exception e) {
                             log.error("Clean the executor " + executorName + " error", e);
                         }
@@ -95,6 +99,8 @@ public class ExecutorCleanService {
                 }
                 curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath);
             }
+        } catch (NoNodeException ex) {
+            ex.printStackTrace();
         } catch (Exception e) {
             log.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
         }
@@ -113,6 +119,8 @@ public class ExecutorCleanService {
                     for (String tmp : jobServersChildren) {
                         try {
                             curatorFramework.delete().deletingChildrenIfNeeded().forPath(jobServersExecutorNodePath + "/" + tmp);
+                        } catch (NoNodeException ex) {
+                            ex.printStackTrace();
                         } catch (Exception e) {
                             log.error("Clean the executor " + executorName + " error", e);
                         }
@@ -120,6 +128,8 @@ public class ExecutorCleanService {
                 }
                 curatorFramework.delete().deletingChildrenIfNeeded().forPath(jobServersExecutorNodePath);
             }
+        } catch (NoNodeException ex) {
+            ex.printStackTrace();
         } catch (Exception e) {
             log.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
         }
@@ -148,6 +158,8 @@ public class ExecutorCleanService {
                     curatorFramework.setData().forPath(jobConfigPreferListNodePath, sb.toString().getBytes("UTF-8"));
                 }
             }
+        } catch (NoNodeException ex) {
+            ex.printStackTrace();
         } catch (Exception e) {
             log.error("Clean the executor, deleteJobConfigPreferListContentAboutXxx(" + jobName + ", " + executorName + ") error", e);
         }
