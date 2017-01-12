@@ -14,6 +14,7 @@
 
 package com.vip.saturn.job.basic;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -184,8 +185,9 @@ public abstract class AbstractElasticJob implements Stopable {
 			executeJob(shardingContext);
 		} finally {
 			boolean updateServerStatus = false;
+			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			for (int item : shardingContext.getShardingItems()) {
-				if (!continueAfterExecution(item)) {
+				if (!checkIfZkLostAfterExecution(item)) {
 					continue;// NOSONAR
 				}
 				if (!aborted) {
@@ -200,7 +202,7 @@ public abstract class AbstractElasticJob implements Stopable {
 						}
 						updateServerStatus = true;
 					}
-					executionService.registerJobCompletedByItem(shardingContext, item);
+					executionService.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
 				}
 				if (isFailoverSupported() && configService.isFailover()) {
 					failoverService.updateFailoverComplete(item);
@@ -211,11 +213,11 @@ public abstract class AbstractElasticJob implements Stopable {
 	}
 
 	/**
-	 * 如果不存在该分片的running节点，不继续执行；如果所有该executor分片running节点属于当前zk，继续执行；
+	 * 如果不存在该分片的running节点，又不是关闭了enabledReport的话，不继续执行；如果所有该executor分片running节点属于当前zk，继续执行；
 	 * @param item 分片信息
 	 * @return 是否继续执行完complete节点，清空failover信息
 	 */
-	private boolean continueAfterExecution(final Integer item) {
+	private boolean checkIfZkLostAfterExecution(final Integer item) {
 		// 如果zk disconnected, 直接返回false；即不属于当前zk创建的
 		if (!((CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient()).getZookeeperClient()
 				.isConnected()) {
@@ -235,9 +237,14 @@ public abstract class AbstractElasticJob implements Stopable {
 					return false;
 				}
 			} else {
-				// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
-				log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
-				return false;
+				JobConfiguration currentConf = jobScheduler.getCurrentConf();
+				// 没有配enabledReport，java/shell作业默认为开启；
+				if ((currentConf.isEnabledReport() == null && ("JAVA_JOB".equals(currentConf.getJobType()) || "SHELL_JOB".equals(currentConf.getJobType())))
+						|| currentConf.isEnabledReport()) {
+					// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
+					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+					return false;
+				}
 			}
 			return true;
 		} catch (Exception e) {
