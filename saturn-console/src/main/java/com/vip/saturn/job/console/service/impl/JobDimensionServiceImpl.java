@@ -565,7 +565,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
 			} else {
 				long lastBeginTimeLong = Long.parseLong(lastBeginTime);
-				if (lastCompleteTimeLong > lastBeginTimeLong) {
+				if (lastCompleteTimeLong >= lastBeginTimeLong) {
 					result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
 				}
 			}
