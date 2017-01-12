@@ -67,7 +67,7 @@ public class ShardingTreeCache {
                     }
                 }
                 if(included) {
-                    logger.error("The TreeCache has already included the instance of listener, will not be added, path is {}, depth is {}, listener is {}", path, depth,  treeCacheListener.getClass());
+                    logger.info("The TreeCache has already included the instance of listener, will not be added, path is {}, depth is {}, listener is {}", path, depth,  treeCacheListener.getClass());
                 } else {
                     treeCacheListeners.add(treeCacheListener);
                     treeCache.getListenable().addListener(treeCacheListener);
