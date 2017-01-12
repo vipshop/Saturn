@@ -262,21 +262,21 @@ public class NamespaceShardingService {
     	private void notifyJobShardingNecessary(List<String> enabledAndShardsChangedJobs) throws Exception {
 			if(enabledAndShardsChangedJobs != null && !enabledAndShardsChangedJobs.isEmpty()) {
 				log.info("notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
-			}
-    		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
-    		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
-    			String jobName =enabledAndShardsChangedJobs.get(i);
-    			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName)) == null) {
-    				curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName));
-    			}
-				byte[] necessaryData = generateShardingNecessaryData();
-				if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName)) == null) {
-					curatorTransactionFinal.create().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
-				} else {
-					curatorTransactionFinal.setData().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
+	    		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
+	    		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
+	    			String jobName =enabledAndShardsChangedJobs.get(i);
+	    			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName)) == null) {
+	    				curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName));
+	    			}
+					byte[] necessaryData = generateShardingNecessaryData();
+					if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName)) == null) {
+						curatorTransactionFinal.create().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
+					} else {
+						curatorTransactionFinal.setData().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
+					}
 				}
+	    		curatorTransactionFinal.commit();
 			}
-    		curatorTransactionFinal.commit();
     	}
 
 		private byte[] generateShardingNecessaryData() throws UnsupportedEncodingException {
