@@ -50,7 +50,7 @@ public class LeaderElectionService extends AbstractSaturnService{
                 try { // Release my leader position
                     if (executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST))) {
                         getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
-                        log.info("[{}] msg=I'm {} that was {}'s leader, I have released myself", executorName, jobName);
+                        log.info("[{}] msg=I'm {} that was {}'s leader, I have released myself", jobName, executorName, jobName);
                     }
                 } catch (Throwable t) {
                     log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "release my leader error"), t);
