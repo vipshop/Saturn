@@ -70,6 +70,9 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
 					if(jobScheduler != null && jobScheduler.getJob() != null){
+						if (jobScheduler.getReportService() != null) {
+							jobScheduler.getReportService().clearInfoMap();
+						}
 						jobScheduler.getJob().enableJob();
 					}					
 				} else {
