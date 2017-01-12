@@ -391,7 +391,19 @@ public class ExecutorController extends AbstractController {
 		}
 		jobConfig.setJobDegree(jobDegree);
 
-		jobConfig.setEnabledReport(Boolean.valueOf(getContents(rowCells, 21)));
+		// 对于定时作业，默认为true；对于消息作业，默认为false
+		boolean enabledReport;
+		String enabledReportStr = getContents(rowCells, 21);
+		if(enabledReportStr == null || enabledReportStr.trim().isEmpty()) {
+			if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+				enabledReport = true;
+			} else {
+				enabledReport = false;
+			}
+		} else {
+			enabledReport = Boolean.valueOf(enabledReportStr);
+		}
+		jobConfig.setEnabledReport(enabledReport);
 
 		String jobMode = getContents(rowCells, 22);;
 		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
