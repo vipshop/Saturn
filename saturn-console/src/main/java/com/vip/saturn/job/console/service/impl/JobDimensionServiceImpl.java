@@ -391,7 +391,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
     	try {
 			curatorFrameworkOp.inTransaction()
-				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobMode"), "", bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobMode"), jobSettings.getJobMode(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingTotalCount"), jobSettings.getShardingTotalCount(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"), jobSettings.getLoadLevel(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"), jobSettings.getJobDegree(), bw)

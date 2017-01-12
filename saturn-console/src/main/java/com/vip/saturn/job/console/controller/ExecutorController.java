@@ -144,6 +144,10 @@ public class ExecutorController extends AbstractController {
 				}
 			}
 		}
+		// 不能添加系统作业
+		if(jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
+			throw new SaturnJobConsoleException("作业模式有误，不能添加系统作业");
+		}
 	}
 
 	@RequestMapping(value = "batchAddJobs", method = RequestMethod.POST)
@@ -380,7 +384,6 @@ public class ExecutorController extends AbstractController {
 		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 22, "作业模式有误，不能添加系统作业"));
 		}
-		jobConfig.setJobMode(jobMode == null ? "" : jobMode);
 
 		return jobConfig;
 	}

@@ -118,6 +118,7 @@ public class JobConfig implements Serializable {
         		enabledReport = false;
         	}
         }
+		jobMode = jobMode == null ? "" : jobMode;
     }
 
 	public Integer getRownum() {
