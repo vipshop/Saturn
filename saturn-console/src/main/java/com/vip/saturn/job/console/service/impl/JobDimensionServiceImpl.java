@@ -231,7 +231,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	            	}
 	            }
 	         // set nextfireTime
-                String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
+                /*String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
                 if (curatorFrameworkOp.checkExists(executionRootpath)) {
                     List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
                     if (items != null && !items.isEmpty()) {
@@ -240,7 +240,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
                     		jobBriefInfo.setNextFireTime(nextFireTime);
                     	}
                     }
-                }
+                }*/
 	            result.add(jobBriefInfo);
         	}catch(Exception e){
         		log.error(e.getMessage(), e);
