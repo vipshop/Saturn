@@ -26,6 +26,8 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 import com.vip.saturn.job.utils.BlockUtils;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * 选举主节点的服务.
  * 
@@ -34,7 +36,7 @@ import com.vip.saturn.job.utils.BlockUtils;
 public class LeaderElectionService extends AbstractSaturnService{
 	static Logger log = LoggerFactory.getLogger(LeaderElectionService.class);
 
-    private boolean isShutdown;
+    private AtomicBoolean isShutdown = new AtomicBoolean(false);
     
     public LeaderElectionService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
@@ -43,22 +45,17 @@ public class LeaderElectionService extends AbstractSaturnService{
 
     @Override
     public void shutdown() {
-        if(!isShutdown) {
-            isShutdown = true;
-            releaseMyLeader();
-        }
-    }
-
-    /**
-     * Release my leader position
-     */
-    public void releaseMyLeader() {
-        try {
-            if (executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST))) {
-                getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
+        synchronized (isShutdown) {
+            if(isShutdown.compareAndSet(false, true)) {
+                try { // Release my leader position
+                    if (executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST))) {
+                        getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
+                        log.info("[{}] msg=I'm {} that was {}'s leader, I have released myself", executorName, jobName);
+                    }
+                } catch (Throwable t) {
+                    log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "release my leader error"), t);
+                }
             }
-        } catch (Throwable t) {
-            log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "release my leader error"), t);
         }
     }
     
@@ -79,7 +76,7 @@ public class LeaderElectionService extends AbstractSaturnService{
      * @return 当前节点是否是主节点
      */
     public Boolean isLeader() {
-        while (!isShutdown && !hasLeader()) {
+        while (!isShutdown.get() && !hasLeader()) {
             log.info("[{}] msg=Elastic job: {} leader node is electing, waiting for 100 ms at executor '{}'", jobName, jobName, executorName);
             BlockUtils.waitingShortTime();
         }
@@ -104,9 +101,14 @@ public class LeaderElectionService extends AbstractSaturnService{
         
         @Override
         public void execute() {
-        	if(isShutdown) return;
-            if (!getJobNodeStorage().isJobNodeExisted(ElectionNode.LEADER_HOST)) {
-                getJobNodeStorage().fillEphemeralJobNode(ElectionNode.LEADER_HOST, executorName);
+            synchronized (isShutdown) {
+                if(isShutdown.get()) {
+                    return;
+                }
+                if (!getJobNodeStorage().isJobNodeExisted(ElectionNode.LEADER_HOST)) {
+                    getJobNodeStorage().fillEphemeralJobNode(ElectionNode.LEADER_HOST, executorName);
+                    log.info("[{}] msg=executor {} become job {}'s leader", jobName, executorName, jobName);
+                }
             }
         }
     }
