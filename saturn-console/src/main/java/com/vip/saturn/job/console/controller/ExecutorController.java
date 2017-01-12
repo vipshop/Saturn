@@ -380,10 +380,24 @@ public class ExecutorController extends AbstractController {
 
 		jobConfig.setUseSerial(Boolean.valueOf(getContents(rowCells, 19)));
 
+		int jobDegree = 0;
+		try {
+			String tmp = getContents(rowCells, 20);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				jobDegree = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 20, "作业重要等级有误，" + e.toString()));
+		}
+		jobConfig.setJobDegree(jobDegree);
+
+		jobConfig.setEnabledReport(Boolean.valueOf(getContents(rowCells, 21)));
+
 		String jobMode = getContents(rowCells, 22);;
 		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 22, "作业模式有误，不能添加系统作业"));
 		}
+		jobConfig.setJobMode(jobMode);
 
 		return jobConfig;
 	}

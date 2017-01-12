@@ -303,6 +303,18 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(useSerialLabel, "默认为false");
 			sheet1.addCell(useSerialLabel);
 
+			Label jobDegreeLabel = new Label(20, 0, "作业重要等级");
+			setCellComment(jobDegreeLabel, "0:没有定义,1:非线上业务,2:简单业务,3:一般业务,4:重要业务,5:核心业务");
+			sheet1.addCell(jobDegreeLabel);
+
+			Label enabledReportLabel = new Label(21, 0, "上报执行信息");
+			setCellComment(enabledReportLabel, "对于定时作业，默认为true；对于消息作业，默认为false");
+			sheet1.addCell(enabledReportLabel);
+
+			Label jobModeLabel = new Label(22, 0, "作业模式");
+			setCellComment(jobModeLabel, "用户不能添加系统作业");
+			sheet1.addCell(jobModeLabel);
+
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
@@ -332,6 +344,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 					sheet1.addCell(new Label(17, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
 					sheet1.addCell(new Label(18, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
 					sheet1.addCell(new Label(19, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+					sheet1.addCell(new Label(20, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
+					sheet1.addCell(new Label(21, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
 					sheet1.addCell(new Label(22, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
