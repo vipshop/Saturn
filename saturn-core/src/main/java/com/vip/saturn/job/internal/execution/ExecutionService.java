@@ -186,32 +186,32 @@ public class ExecutionService extends AbstractSaturnService {
 			SaturnExecutionContext saturnContext = (SaturnExecutionContext) jobExecutionShardingContext;
 			if (saturnContext.isSaturnJob()) {
 				SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
-				if(jobRet != null) {
+				if (jobRet != null) {
 					int errorGroup = jobRet.getErrorGroup();
-					if(errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
-						if(jobConfiguration.isEnabledReport() == null){
-							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+					if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) { 
+						if (jobConfiguration.isEnabledReport() == null) {
+							if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 								getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
 							}
-						}else if(jobConfiguration.isEnabledReport()){
+						} else if (jobConfiguration.isEnabledReport()) {
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
 						}
-					} else {
-						if(jobConfiguration.isEnabledReport() == null){
-							if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+					} else if (errorGroup == SaturnSystemErrorGroup.FAIL) {
+						if (jobConfiguration.isEnabledReport() == null) {
+							if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 								getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 							}
-						}else if(jobConfiguration.isEnabledReport()){
+						} else if (jobConfiguration.isEnabledReport()) {
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 						}
 					}
 					
 				} else {
-					if(jobConfiguration.isEnabledReport() == null){
-						if("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())){
+					if (jobConfiguration.isEnabledReport() == null){
+						if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 							getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 						}
-					}else if(jobConfiguration.isEnabledReport()){
+					} else if (jobConfiguration.isEnabledReport()) {
 						getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 					}
 				}
