@@ -957,11 +957,7 @@ public class NamespaceShardingService {
 			// 获取该作业的Shard
 			shardList.addAll(createShards(jobName, lastOnlineExecutorList));
 
-			// 如果shardList为空，并且没有移除shard，则没必要再进行放回等操作，摘取失败
-			if (shardList.isEmpty() && !hasRemove) {
-				return false;
-			}
-
+			// need notify this job, so return true
 			return true;
 		}
 
@@ -1065,7 +1061,6 @@ public class NamespaceShardingService {
 		@Override
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
-			boolean hasRemove = false;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
 				Iterator<Shard> iterator = executor.getShardList().iterator();
@@ -1074,20 +1069,16 @@ public class NamespaceShardingService {
 					if (jobName.equals(shard.getJobName())) {
 						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
 						iterator.remove();
-						hasRemove = true;
 					}
 				}
 			}
 			// 修正所有executor对该作业的jobNameList
-			boolean fixed = fixJobNameList(lastOnlineExecutorList, jobName);
+			fixJobNameList(lastOnlineExecutorList, jobName);
 			// 如果该作业是启用状态，则创建该作业的Shard
 			if(allEnableJobs.contains(jobName)) {
 				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
 			}
-			// 如果shardList为空，并且没有移除shard，并且没有修正jobNameList，则没必要再进行放回等操作，摘取失败
-			if (shardList.isEmpty() && !hasRemove && !fixed) {
-				return false;
-			}
+			// need notify this enabled job, so return true
 			return true;
 		}
 	}
@@ -1408,7 +1399,6 @@ public class NamespaceShardingService {
         protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			boolean localMode = isLocalMode(jobName);
 
-			boolean find = false;
 			for(int i=0; i<lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
 				if(executor.getExecutorName().equals(executorName)) {
@@ -1416,18 +1406,18 @@ public class NamespaceShardingService {
 					while(iterator.hasNext()) {
 						Shard shard = iterator.next();
 						if(shard.getJobName().equals(jobName)) {
-							find = true;
 							if(!localMode) {
 								shardList.add(shard);
 							}
 							iterator.remove();
 						}
 					}
-					find = executor.getJobNameList().remove(jobName) || find;
+					executor.getJobNameList().remove(jobName);
 					break;
 				}
 			}
-			return find;
+			// need notify this enabled job, so return true
+			return true;
         }
 
     }

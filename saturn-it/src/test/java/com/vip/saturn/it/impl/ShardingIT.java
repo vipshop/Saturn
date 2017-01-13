@@ -962,12 +962,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(1);
-			// 无需re-sharding
+			// 需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+					return isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
@@ -1049,12 +1049,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 无需re-sharding
+			// 需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+					return isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
@@ -1136,12 +1136,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 无需re-sharding
+			// 需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+					return isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
@@ -1162,10 +1162,6 @@ public class ShardingIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_N_NotifyNecessaryJobs() throws Exception {
-		LogbackListAppender logbackListAppender = new LogbackListAppender();
-		logbackListAppender.addToLogger(NamespaceShardingService.class);
-		logbackListAppender.start();
-
 		// 启动1个容器executor
 		Main executor1 = startOneNewExecutorList();
 		Thread.sleep(1000);
@@ -1216,7 +1212,6 @@ public class ShardingIT extends AbstractSaturnIT {
 				return !isNeedSharding(jobConfiguration1) && !isNeedSharding(jobConfiguration2);
 			}
 		}, 10);
-		//assertThat(logbackListAppender.getLastMessage()).contains("notify jobs sharding necessary, jobs is []");
 
 		enableJob(jobName2);
 		// job1无需re-sharding
@@ -1227,12 +1222,71 @@ public class ShardingIT extends AbstractSaturnIT {
 				return !isNeedSharding(jobConfiguration1);
 			}
 		}, 10);
-		//assertThat(logbackListAppender.getLastMessage()).contains("notify jobs sharding necessary, jobs is [" + jobName2 + "]");
 
 		stopExecutorList();
 		forceRemoveJob(jobName1);
 		forceRemoveJob(jobName2);
-		logbackListAppender.stop();
+	}
+
+	/**
+	 * sharding仅仅通知分片信息改变的作业
+	 * test the fix: https://github.com/vipshop/Saturn/commit/9b64dfe50c21c1b4f3e3f781d5281be06a0a8d08
+	 */
+	@Test
+	public void test_O_NotifyNecessaryJobsPrior() throws Exception {
+		// 启动1个容器executor
+		Main executor1 = startOneNewExecutorList();
+		Thread.sleep(1000);
+
+		// 启动第一个作业
+		Thread.sleep(1000);
+		String jobName1 = "test_M_NotifyNecessaryJobs_job1";
+		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
+		jobConfiguration1.setCron("* * 1 * * ?");
+		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration1.setShardingTotalCount(1);
+		jobConfiguration1.setShardingItemParameters("0=0");
+		addJob(jobConfiguration1);
+		Thread.sleep(1000);
+		enableJob(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+		runAtOnce(jobName1);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		// 禁用作业
+		Thread.sleep(1000);
+		disableJob(jobName1);
+
+		// 设置preferList为一个无效的executor，并且设置useDispreferList为false
+		configJob(jobName1, "config/preferList", "abc");
+		configJob(jobName1, "config/useDispreferList", "false");
+
+		// 启用作业
+		Thread.sleep(500);
+		enableJob(jobName1);
+
+		// job1需re-sharding
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		stopExecutorList();
+		forceRemoveJob(jobName1);
 	}
 
 }
