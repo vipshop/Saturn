@@ -286,8 +286,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			return "";
 		}
 		NumberFormat numberFormat = NumberFormat.getInstance();
-		// 设置精确到小数点后2位
-		numberFormat.setMaximumFractionDigits(2);
+		// 设置精确到小数点后4位
+		numberFormat.setMaximumFractionDigits(4);
 		String result = numberFormat.format((float) count / (float) total * 100);
 		return result + "%";
 	}
