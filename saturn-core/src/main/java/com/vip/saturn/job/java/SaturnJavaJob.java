@@ -172,11 +172,6 @@ public class SaturnJavaJob extends CrondJob {
 						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
 					}
 				}
-
-				ExecutorService executor = getCurrentExecutorService();
-				if(executor != null){
-					executor.shutdown();
-				}
 			}
 		}
 	}

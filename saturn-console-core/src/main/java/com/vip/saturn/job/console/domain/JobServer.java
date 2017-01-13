@@ -18,6 +18,7 @@
 package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 
 /**
@@ -57,8 +58,9 @@ public final class JobServer implements Serializable {
 			return "";
 		}
 		NumberFormat numberFormat = NumberFormat.getInstance();
-		// 设置精确到小数点后4位
-		numberFormat.setMaximumFractionDigits(4);
+		// 设置精确到小数点后2位
+		numberFormat.setMaximumFractionDigits(2);
+		numberFormat.setRoundingMode(RoundingMode.FLOOR);
 		String result = numberFormat.format((double) count / (double) total * 100);
 		return result + "%";
 	}
