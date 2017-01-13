@@ -96,10 +96,9 @@ public class AddJobListenersService {
 			try {
 				// create servers if not exists
 				if (curatorFramework.checkExists().forPath(path) == null) {
-					curatorFramework.create().forPath(path);
+					curatorFramework.create().creatingParentsIfNeeded().forPath(path);
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+			} catch (Exception e) { //NOSONAR
 			}
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
