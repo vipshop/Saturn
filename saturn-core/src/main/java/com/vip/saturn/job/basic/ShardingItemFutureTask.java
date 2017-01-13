@@ -131,7 +131,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 						break;
 					}
 				}
-				shardingItemFutureTask.getCallFuture().cancel(true);
+				
 			} catch (InterruptedException e) {// NOSONAR
 			}
 		}
