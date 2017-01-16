@@ -97,6 +97,19 @@ layout:decorator="frame-layout">
 							                        <input type="checkbox" id="onlyUsePreferList" name="onlyUsePreferList" style="height:28px;" data-toggle="tooltip" title="当没有可用的优先Executor后，不允许把分片迁移到非优先Executor" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
+							                    
+							                    <label for="jobDegree" class="col-sm-2 control-label">作业重要等级</label>
+							                    <div class="col-sm-2">
+							                        <select id="jobDegree" class="form-control">
+							                        	<option selected="selected" value="0" title="0:没有定义">没有定义</option>
+							                        	<option value="1" title="1:非线上业务">非线上业务</option>
+							                        	<option value="2" title="2:简单业务">简单业务</option>
+							                        	<option value="3" title="3:一般业务">一般业务</option>
+							                        	<option value="4" title="4:重要业务">重要业务</option>
+							                        	<option value="5" title="5:核心业务">核心业务</option>
+							                        </select>
+							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+							                    </div>
 							                </div>
 							                
 							                <div class="form-group">
@@ -295,6 +308,7 @@ layout:decorator="frame-layout">
 				<span><strong>上报运行状态:</strong>{{enabledReport}}<br /></span>
 		        <span><strong>自定义参数:</strong>{{jobParameter}}<br /></span>
 		        <span><strong>分片序列号/参数对照表:</strong>{{shardingItemParameters}}<br /></span>
+				<span><strong>作业重要等级:</strong>{{jobDegree}}<br /></span>
 		        <span><strong>作业描述信息:</strong>{{description}}<br /></span>
 		        <span><strong>zk地址:</strong>{{zkList}}<br /></span>
 		        <span><strong>命名空间:</strong>{{namespace}}<br /></span>

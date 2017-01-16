@@ -297,7 +297,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 			sheet1.addCell(new Label(14, 0, "统计处理数据量的间隔秒数"));
 			sheet1.addCell(new Label(15, 0, "负荷"));
-			sheet1.addCell(new Label(16, 0, "显示正常日志"));
+			sheet1.addCell(new Label(16, 0, "显示控制台输出日志"));
 			sheet1.addCell(new Label(17, 0, "暂停日期段"));
 			sheet1.addCell(new Label(18, 0, "暂停时间段"));
 

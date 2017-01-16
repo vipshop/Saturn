@@ -211,6 +211,11 @@ $(function() {
 	    	jobConfigShardingTotalCount = jobConfig.shardingTotalCount;
 	        $("#processCountIntervalSeconds").val(jobConfig.processCountIntervalSeconds);
 	        $("#loadLevel").val(jobConfig.loadLevel);
+	        if($.trim(jobConfig.jobDegree) == ""){
+    			$("#jobDegree").val("0");
+        	}else{
+        		$("#jobDegree").val(jobConfig.jobDegree);
+        	}
 	        if(jobConfig.localMode == true){
 	        	$("#localMode").prop("checked",true);
 	        	$("#shardingTotalCount").attr("disabled",true).addClass("disabled");
@@ -391,6 +396,7 @@ $(function() {
 	        	return;
 	        }
 	        var loadLevel = $("#loadLevel").val();
+	        var jobDegree = $("#jobDegree").val();
 	        var cron = $("#cron").val();
 	        var jobClass = $("#jobClass").val();
 	        var jobParameter = $("#jobParameter").val().trim();
@@ -407,7 +413,7 @@ $(function() {
 	        var queueName = $("#queueName").val();
 	        var channelName = $("#channelName").val();
 	        var preferList = preferSelectSumo.getSelStr();
-	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
+	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel,jobDegree:jobDegree, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
 	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description, enabledReport: enabledReport, jobType: jobTypeStr,

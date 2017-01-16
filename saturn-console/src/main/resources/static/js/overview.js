@@ -656,6 +656,7 @@ $(function() {
                 	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
                 	+ "<td class='nft'> - </td>" 
+                	+ "<td>" + degreeMap[list[i].jobDegree] + "</td>"
                 	+ "<td id='showDescription_"+i+"'></td>";
                 var trClass = "";
                 var operationBtn = "启用";
@@ -718,7 +719,8 @@ $(function() {
 					{ "asSorting": [ "desc", "asc"]  },  
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": []  },
-					{ "asSorting": []  },
+					{ "asSorting": [ "desc", "asc"]  },
+					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": []} 
 				]});
