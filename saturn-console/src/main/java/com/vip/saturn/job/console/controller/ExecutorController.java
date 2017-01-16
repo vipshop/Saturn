@@ -15,8 +15,14 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-import com.vip.saturn.job.console.domain.JobMode;
+import jxl.Cell;
+import jxl.CellType;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.write.WriteException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,17 +33,12 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.utils.CronExpression;
-
-import jxl.Cell;
-import jxl.CellType;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.write.WriteException;
 
 /**
  * @author xiaopeng.he
@@ -46,7 +47,7 @@ import jxl.write.WriteException;
 @RequestMapping("executor")
 public class ExecutorController extends AbstractController {
 
-	protected static Logger log = LoggerFactory.getLogger(ExecutorController.class);
+	protected static Logger LOGGER = LoggerFactory.getLogger(ExecutorController.class);
 
 	@Resource
 	private ExecutorService executorService;
@@ -67,7 +68,7 @@ public class ExecutorController extends AbstractController {
 		} catch (Throwable t) {
 			requestResult.setSuccess(false);
 			requestResult.setMessage(t.toString());
-			log.error("checkAndAddJobs exception:", t);
+			LOGGER.error("checkAndAddJobs exception:", t);
 		}
 		return requestResult;
 	}
@@ -463,5 +464,22 @@ public class ExecutorController extends AbstractController {
 				.append("</script>");
 		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
+	
+	@RequestMapping(value = "shardAllAtOnce", method = RequestMethod.POST)
+    public RequestResult shardAllAtOnce(String nns,HttpServletRequest request,HttpSession httpSession) {
+        RequestResult requestResult = new RequestResult();
+        LOGGER.info("[tries to sharding all at once.]");
+        try {
+            requestResult = executorService.shardAllAtOnce();
+        } catch (SaturnJobConsoleException e) {
+            requestResult.setSuccess(false);
+            requestResult.setMessage(e.getMessage());
+        } catch (Throwable t) {
+            requestResult.setSuccess(false);
+            requestResult.setMessage(t.toString());
+            LOGGER.error("shardingAllAtOnce exception:",t);
+        }
+        return requestResult;
+    }
 
 }

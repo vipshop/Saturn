@@ -30,6 +30,7 @@ import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
@@ -372,7 +373,21 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	@Override
 	public RequestResult shardAllAtOnce() throws SaturnJobConsoleException {
-		return null;
+		try{
+			RequestResult requestResult = new RequestResult();
+			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+			String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
+			if(curatorFrameworkOp.checkExists(shardAllAtOnceNodePath)){
+				curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
+			}
+			curatorFrameworkOp.create(shardAllAtOnceNodePath);
+			requestResult.setMessage("");
+			requestResult.setSuccess(true);
+			return requestResult;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleException(e);
+		}
 	}
 
 }

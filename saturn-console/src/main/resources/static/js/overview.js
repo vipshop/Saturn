@@ -8,7 +8,9 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
                	'<button class="btn btn-info" id="batch-add-job" title="点击进行导入作业">导入作业</button>&nbsp;&nbsp;' +
                	'<a class="btn btn-info" id="export-job" href="executor/exportJob?nns='+regName+'" title="点击进行导出全域作业" target="_self">导出全域作业</a>&nbsp;&nbsp;' +
                	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>',
-	executorOperation = '<div id="serverviews-status-showall"><button class="btn btn-danger" id="batch-remove-executor" title="点击进行批量删除Executor">删除Executor</button>&nbsp;&nbsp;</div>';
+	executorOperation = '<div id="serverviews-status-showall">' +
+		'<button class="btn btn-info" id="shard-all-at-once" title="点击进行一键重排？（即把当前域下所有分片按照作业负荷以及优先Executor等作业配置重新进行排序。注：重排可能导致分片分布剧烈动荡，请谨慎操作！另外在操作本功能时，请尽量避免同时操作Executor上下线或启用禁用作业，以免影响到重排的均衡效果！）">一键重排</button>&nbsp;&nbsp;'+
+		'<button class="btn btn-danger" id="batch-remove-executor" title="点击进行批量删除Executor">删除Executor</button>&nbsp;&nbsp;</div>';
 
 
 $(function() {
@@ -316,6 +318,10 @@ $(function() {
     	$("#remove-executor-confirm-dialog").modal("show",executorNames);
 	});
     
+    $(document).on("click", "#shard-all-at-once", function(event) {
+    	$("#shard-all-at-once-confirm-dialog").modal("show");
+	});
+    
     $(document).on("click", ".change-jobStatus-batch-job", function(event) {
     	var targetButtonId = event.target.id;
     	var isEnableButton = false;
@@ -459,6 +465,22 @@ $(function() {
 	        }
 		}).always(function() { $btn.button('reset'); });
 		return false;
+    });
+    
+    $("#shard-all-at-once-confirm-dialog").on("shown.bs.modal", function (event) {
+    	$("#shard-all-at-once-confirm-dialog-confirm-btn").unbind('click').click(function() {
+    		var $btn = $(this).button('loading');
+    		$.post("executor/shardAllAtOnce", {nns:regName}, function (data) {
+    			$("#shard-all-at-once-confirm-dialog").modal("hide");
+    			if(data.success == true) {
+    				showSuccessDialogWithCallback(function(){location.reload(true);});
+    			} else {
+    				$("#failure-dialog .fail-reason").text(data.object.message);
+	            	showFailureDialog("failure-dialog");
+    			}
+    		}).always(function() { $btn.button('reset'); });
+    		return false;
+    	});
     });
 
 	$("#batch-add-job-dialog-confirm-btn").on('click', function(event) {
