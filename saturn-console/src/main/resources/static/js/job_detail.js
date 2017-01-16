@@ -286,6 +286,7 @@ $(function() {
 	        $("#jobParameter").val(jobConfig.jobParameter);
 	        $("#timeoutSeconds").val(jobConfig.timeoutSeconds);
 	        $("#showNormalLog").prop("checked", jobConfig.showNormalLog);
+	        $("#enabledReport").prop("checked", jobConfig.enabledReport);
 	        $("#description").val(jobConfig.description);
 	        $("#queueName").val(jobConfig.queueName);
         	$("#channelName").val(jobConfig.channelName);
@@ -402,13 +403,14 @@ $(function() {
 	        var description = $("#description").val();
 	        var timeoutSeconds = $("#timeoutSeconds").val();
 	        var showNormalLog = $("#showNormalLog").prop("checked");
+	        var enabledReport = $("#enabledReport").prop("checked");
 	        var queueName = $("#queueName").val();
 	        var channelName = $("#channelName").val();
 	        var preferList = preferSelectSumo.getSelStr();
 	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
-	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description, jobType: jobTypeStr,
+	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
 	        	timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
 		            	showSuccessDialog();
@@ -558,7 +560,7 @@ $(function() {
 	                trClass = "danger";
 	            } else if ("BLANK" === status) {
 	            	trClass = "info";
-	            	status = "<span title='您已关闭了本作业上报执行信息，不会上报实时状态'>-</span>";
+	            	status = "<span title='您已关闭了本作业上报运行状态，不会上报实时状态'>-</span>";
 	            }
 	            if( data[i].timeConsumed >= 60) {
 	            	trClass = "danger";

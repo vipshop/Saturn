@@ -369,7 +369,18 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName, "showNormalLog")) == false) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, "showNormalLog"));
 		}
-        result.setJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType")));
+		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+        result.setJobType(jobType);
+        String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
+        Boolean enabledReportValue = Boolean.valueOf(enabledReport);
+        if (Strings.isNullOrEmpty(enabledReport)) {
+        	if(JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)){
+        		enabledReportValue = true;
+        	}else{
+        		enabledReportValue = false;
+        	}
+        }
+        result.setEnabledReport(enabledReportValue);
         // 兼容旧版没有msg_job。
         if (StringUtils.isBlank(result.getJobType())) {
 			if (result.getJobClass().indexOf("script") > 0) {
@@ -394,6 +405,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingTotalCount"), jobSettings.getShardingTotalCount(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"), jobSettings.getLoadLevel(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"), jobSettings.getJobDegree(), bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "enabledReport"), jobSettings.getEnabledReport(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "cron"), StringUtils.trim(jobSettings.getCron()), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodDate"), jobSettings.getPausePeriodDate(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodTime"), jobSettings.getPausePeriodTime(), bw)
@@ -411,6 +423,13 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "localMode"), jobSettings.getLocalMode(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useSerial"), jobSettings.getUseSerial(), bw)
 				.commit();
+			if(jobSettings.getEnabledReport() != null && !jobSettings.getEnabledReport()){// 当enabledReport关闭上报时，要清理execution节点
+            	log.info("the switch of enabledReport set to false, now delete the execution zk node");
+            	String executionNodePath = JobNodePath.getExecutionNodePath(jobSettings.getJobName());
+            	if(curatorFrameworkOp.checkExists(executionNodePath)){
+            		curatorFrameworkOp.deleteRecursive(executionNodePath);
+            	}
+            }
 		} catch (Exception e) {
 			log.error("update settings to zk failed: {}", e.getMessage());
 			log.error(e.getMessage(),e);

@@ -308,7 +308,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(jobDegreeLabel, "0:没有定义,1:非线上业务,2:简单业务,3:一般业务,4:重要业务,5:核心业务");
 			sheet1.addCell(jobDegreeLabel);
 
-			Label enabledReportLabel = new Label(21, 0, "上报执行信息");
+			Label enabledReportLabel = new Label(21, 0, "上报运行状态");
 			setCellComment(enabledReportLabel, "对于定时作业，默认为true；对于消息作业，默认为false");
 			sheet1.addCell(enabledReportLabel);
 

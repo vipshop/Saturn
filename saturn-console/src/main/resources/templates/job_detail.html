@@ -167,6 +167,12 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    
+							                    <label for="enabledReport" class="col-sm-2 control-label">上报运行状态</label>
+							                    <div class="col-sm-1">
+							                        <input type="checkbox" id="enabledReport" name="enabledReport" data-toggle="tooltip" data-placement="bottom" title="对于定时作业，默认开启上报；对于消息作业，默认不开启上报（注：由于TPS高的作业开启上报会加强对zkServer的压力，建议对消息作业不开启上报；而如果不开启上报运行状态，又会丧失作业运行状态相关的管理功能，建议对TPS低的作业开启上报，如非秒级的定时作业。仅支持2.0.3及其以上的Executor，请谨慎操作！）" />
+							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+							                    </div>
+							                    
 							                    <label for="useSerial" class="col-sm-2 control-label show-when-is-msg-job">串行消费</label>
 							                    <div class="col-sm-1 show-when-is-msg-job">
 							                        <input type="checkbox" id="useSerial" name="useSerial" data-toggle="tooltip" data-placement="bottom" title="默认不开启串行消费（即默认为并行消费），另外串行消费只支持单分片场景；" />
@@ -286,6 +292,7 @@ layout:decorator="frame-layout">
 		        <span class="hide-when-is-msg-job-in-history"><strong>暂停日期段:</strong>{{pausePeriodDate}}<br /></span>
 		        <span class="hide-when-is-msg-job-in-history"><strong>暂停时间段:</strong>{{pausePeriodTime}}<br /></span>
 				<span><strong>显示正常作业执行日志:</strong>{{showNormalLog}}<br /></span>
+				<span><strong>上报运行状态:</strong>{{enabledReport}}<br /></span>
 		        <span><strong>自定义参数:</strong>{{jobParameter}}<br /></span>
 		        <span><strong>分片序列号/参数对照表:</strong>{{shardingItemParameters}}<br /></span>
 		        <span><strong>作业描述信息:</strong>{{description}}<br /></span>
