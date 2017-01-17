@@ -48,11 +48,7 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	
 	protected static Logger log = LoggerFactory.getLogger(SaturnJunkDataServiceImpl.class);
-	
-	/** 
-	 * 
-	 * @see com.vip.saturn.job.console.mybatis.service.SaturnJunkDataService#getJunkData(java.lang.String)
-	 */
+
 	@Override
 	public Collection<SaturnJunkData> getJunkData(String zkAddr) {
 		ArrayList<RegistryCenterConfiguration> registryCenterList = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkAddr).getRegCenterConfList();
@@ -173,10 +169,6 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 		}
 	}
 
-	/** 
-	 * 
-	 * @see com.vip.saturn.job.console.mybatis.service.SaturnJunkDataService#removeSaturnJunkData(com.vip.saturn.job.console.domain.SaturnJunkData)
-	 */
 	@Override
 	public String removeSaturnJunkData(SaturnJunkData saturnJunkData) {
 		try{
