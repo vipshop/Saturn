@@ -47,8 +47,7 @@ public class SaturnWorker implements Runnable {
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
 		if (ft == null) {
-			throw new SchedulerException(
-					"Based on configured schedule, the given trigger '" + trigger.getKey() + "' will never fire.");
+			log.warn("Based on configured schedule, the given trigger '" + trigger.getKey() + "' will never fire.");
 		}
 	}
 	
@@ -97,7 +96,11 @@ public class SaturnWorker implements Runnable {
 				if(triggerObj != null){
 					triggerObj.updateAfterMisfire(null);
 					long now = System.currentTimeMillis();
-					long triggerTime = triggerObj.getNextFireTime().getTime();
+					Date nextFireTime = triggerObj.getNextFireTime();
+					if(nextFireTime == null) {
+						continue;
+					}
+					long triggerTime = nextFireTime.getTime();
 					timeUntilTrigger = triggerTime - now;
 				}
 				
