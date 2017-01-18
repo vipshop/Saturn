@@ -12,6 +12,7 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import com.vip.saturn.job.utils.ItemUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -1284,6 +1285,66 @@ public class ShardingIT extends AbstractSaturnIT {
 				return isNeedSharding(jobConfiguration1);
 			}
 		}, 10);
+
+		stopExecutorList();
+		forceRemoveJob(jobName1);
+	}
+
+	/**
+	 * NamespaceShardingService is not necessary to persist the sharding result content that is not changed<br/>
+	 * https://github.com/vipshop/Saturn/issues/88
+	 */
+	@Test
+	public void test_P_PersistShardingContentIfNecessary() throws Exception {
+		// 启动1个容器executor
+		Main executor1 = startOneNewExecutorList();
+		Thread.sleep(1000);
+
+		// 启动第一个作业
+		Thread.sleep(1000);
+		String jobName1 = "test_P_PersistShardingContentIfNecessary";
+		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
+		jobConfiguration1.setCron("* * 1 * * ?");
+		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration1.setShardingTotalCount(1);
+		jobConfiguration1.setShardingItemParameters("0=0");
+		jobConfiguration1.setPreferList("abc");
+		jobConfiguration1.setUseDispreferList(false);
+		addJob(jobConfiguration1);
+		Thread.sleep(1000);
+		enableJob(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+		runAtOnce(jobName1);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+		long mtime = ((CuratorFramework) regCenter.getRawClient()).checkExists().forPath(SaturnExecutorsNode.getShardingContentElementNodePath("0")).getMtime();
+
+		// 禁用作业
+		Thread.sleep(1000);
+		disableJob(jobName1);
+
+		Thread.sleep(1000);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		long mtime2 = ((CuratorFramework) regCenter.getRawClient()).checkExists().forPath(SaturnExecutorsNode.getShardingContentElementNodePath("0")).getMtime();
+
+		assertThat(mtime).isEqualTo(mtime2);
 
 		stopExecutorList();
 		forceRemoveJob(jobName1);

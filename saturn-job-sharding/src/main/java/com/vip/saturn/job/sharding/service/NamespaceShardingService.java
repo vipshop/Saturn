@@ -99,7 +99,8 @@ public class NamespaceShardingService {
 				List<String> allJobs = getAllJobs();
 				List<String> allEnableJobs = getAllEnableJobs(allJobs);
 				List<Executor> oldOnlineExecutorList = getLastOnlineExecutorList();
-				List<Executor> lastOnlineExecutorList = isAllShardingTask ? oldOnlineExecutorList : copyOnlineExecutorList(oldOnlineExecutorList); // if all-shard-task, unnecessary to copy
+				List<Executor> customLastOnlineExecutorList = customLastOnlineExecutorList();
+				List<Executor> lastOnlineExecutorList = customLastOnlineExecutorList == null ? copyOnlineExecutorList(oldOnlineExecutorList) : customLastOnlineExecutorList;
 				List<Shard> shardList = new ArrayList<>();
 				// 摘取
 				if(pick(allJobs, allEnableJobs, shardList, lastOnlineExecutorList)) {
@@ -110,8 +111,10 @@ public class NamespaceShardingService {
 						return;
 					}
 					// 持久化分片结果
-					namespaceShardingContentService.persistDirectly(lastOnlineExecutorList);
-					// fix, notify the shards-changed jobs of all enable jobs.
+					if(shardingContentIsChanged(oldOnlineExecutorList, lastOnlineExecutorList)) {
+						namespaceShardingContentService.persistDirectly(lastOnlineExecutorList);
+					}
+					// notify the shards-changed jobs of all enable jobs.
 					notifyJobShardingNecessary(getEnabledAndShardsChangedJobs(isAllShardingTask, allEnableJobs, oldOnlineExecutorList, lastOnlineExecutorList));
 					// sharding count ++
 					increaseShardingCount();
@@ -129,6 +132,10 @@ public class NamespaceShardingService {
 				}
 				shardingCount.decrementAndGet();
 			}
+		}
+
+		private boolean shardingContentIsChanged(List<Executor> oldOnlineExecutorList, List<Executor> lastOnlineExecutorList) {
+			return !namespaceShardingContentService.toShardingContent(oldOnlineExecutorList).equals(namespaceShardingContentService.toShardingContent(lastOnlineExecutorList));
 		}
 
 		private List<Executor> copyOnlineExecutorList(List<Executor> oldOnlineExecutorList) {
@@ -197,9 +204,9 @@ public class NamespaceShardingService {
 						log.error(e.getMessage(), e);
 					}
 				}
-				curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes());
+				curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes("UTF-8"));
 			} else {
-				curatorFramework.create().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes());
+				curatorFramework.create().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes("UTF-8"));
 			}
 		}
 
@@ -275,7 +282,7 @@ public class NamespaceShardingService {
 
     	private void notifyJobShardingNecessary(List<String> enabledAndShardsChangedJobs) throws Exception {
 			if(enabledAndShardsChangedJobs != null && !enabledAndShardsChangedJobs.isEmpty()) {
-				log.info("notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
+				log.info("Notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
 	    		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
 	    		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
 	    			String jobName =enabledAndShardsChangedJobs.get(i);
@@ -343,8 +350,15 @@ public class NamespaceShardingService {
 		/**
 		 * 获取Executor集合，默认从sharding/content获取
 		 */
-		protected List<Executor> getLastOnlineExecutorList() throws Exception {
+		private List<Executor> getLastOnlineExecutorList() throws Exception {
 			return namespaceShardingContentService.getExecutorList();
+		}
+
+		/**
+		 * Custom the lastOnlineExecutorList, attention, cannot return null
+		 */
+		protected List<Executor> customLastOnlineExecutorList() throws Exception {
+			return null;
 		}
 
     	/**
@@ -352,7 +366,7 @@ public class NamespaceShardingService {
 		 * @param allJobs 该域下所有作业
     	 * @param allEnableJobs 该域下所有启用的作业
     	 * @param shardList 默认为空集合
-    	 * @param lastOnlineExecutorList 默认为当前存储的数据，如果不想使用存储数据，请重写{@link #getLastOnlineExecutorList()}}方法
+    	 * @param lastOnlineExecutorList 默认为当前存储的数据，如果不想使用存储数据，请重写{@link #customLastOnlineExecutorList()}}方法
     	 * @return true摘取成功；false摘取失败，不需要继续下面的逻辑
     	 */
     	protected abstract boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception;
@@ -765,7 +779,7 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected List<Executor> getLastOnlineExecutorList() throws Exception {
+		protected List<Executor> customLastOnlineExecutorList() throws Exception {
 			// 从$SaturnExecutors节点下，获取所有正在运行的Executor
 			List<Executor> lastOnlineExecutorList = new ArrayList<>();
 			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorsNodePath()) != null) {

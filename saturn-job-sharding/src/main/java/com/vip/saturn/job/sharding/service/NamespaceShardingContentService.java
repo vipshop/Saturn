@@ -46,7 +46,7 @@ public class NamespaceShardingContentService {
         }
 
         // 持久化新的内容
-        String shardingContentStr = gson.toJson(executorList);
+        String shardingContentStr = toShardingContent(executorList);
         log.info("Persisit sharding content: {}", shardingContentStr);
         // 如果内容过大，分开节点存储。不能使用事务提交，因为即使使用事务、写多个节点，但是提交事务时，仍然会报长度过长的错误。
         int sliceLength = 1024 * 1023; // 每段的最大长度，小于1M。 最大长度见NIOServerCnxn.readLength()
@@ -122,6 +122,10 @@ public class NamespaceShardingContentService {
             }
         }
         return executorList;
+    }
+
+    public String toShardingContent(List<Executor> executorList) {
+        return gson.toJson(executorList);
     }
 
 }
