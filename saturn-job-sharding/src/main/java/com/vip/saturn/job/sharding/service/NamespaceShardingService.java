@@ -76,7 +76,9 @@ public class NamespaceShardingService {
 		 * Special enable jobs that need to be notified prior, not consider whether whose shards are changed.<br/>
 		 * By default, notify enable jobs whose shards are changed.
 		 */
-		protected abstract List<String> notifyEnableJobsPrior();
+		protected List<String> notifyEnableJobsPrior() {
+			return null;
+		}
 
 		@Override
 		public void run() {
@@ -747,11 +749,6 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			return null;
-		}
-
-		@Override
 		protected boolean pick(List<String> allJobs, List<String> allEnableJob, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 修正所有executor对所有作业的jobNameList
 			for(int j=0; j<allJobs.size(); j++) {
@@ -815,11 +812,6 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			return null;
-		}
-
-		@Override
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {//NOSONAR
 			// 如果没有Executor在运行，则需要进行全量分片
 			if(lastOnlineExecutorList.isEmpty()) {
@@ -868,11 +860,6 @@ public class NamespaceShardingService {
 		@Override
 		protected void logStartInfo() {
 			log.info("Execute the {} with {} offline", this.getClass().getSimpleName(), executorName);
-		}
-
-		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			return null;
 		}
 
 		@Override
@@ -937,7 +924,6 @@ public class NamespaceShardingService {
 		@Override
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
-			boolean hasRemove = false;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
 				Iterator<Shard> iterator = executor.getShardList().iterator();
@@ -946,7 +932,6 @@ public class NamespaceShardingService {
 					if (jobName.equals(shard.getJobName())) {
 						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
 						iterator.remove();
-						hasRemove = true;
 					}
 				}
 			}
@@ -957,7 +942,6 @@ public class NamespaceShardingService {
 			// 获取该作业的Shard
 			shardList.addAll(createShards(jobName, lastOnlineExecutorList));
 
-			// need notify this job, so return true
 			return true;
 		}
 
@@ -977,11 +961,6 @@ public class NamespaceShardingService {
 		@Override
 		protected void logStartInfo() {
 			log.info("Execute the {} with {} disable", this.getClass().getSimpleName(), jobName);
-		}
-
-		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			return null;
 		}
 
 		@Override
@@ -1032,13 +1011,6 @@ public class NamespaceShardingService {
 		}
 
 		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			List<String> notifyEnableJobsPrior = new ArrayList<>();
-			notifyEnableJobsPrior.add(jobName);
-			return notifyEnableJobsPrior;
-		}
-
-		@Override
         public void run() {
             try {
                 super.run();
@@ -1078,7 +1050,7 @@ public class NamespaceShardingService {
 			if(allEnableJobs.contains(jobName)) {
 				shardList.addAll(createShards(jobName, lastOnlineExecutorList));
 			}
-			// need notify this enabled job, so return true
+
 			return true;
 		}
 	}
@@ -1099,13 +1071,6 @@ public class NamespaceShardingService {
 		@Override
 		protected void logStartInfo() {
 			log.info("Execute the {}, jobName is {}, executorName is {}", this.getClass().getSimpleName(), jobName, executorName);
-		}
-
-		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			List<String> notifyEnableJobsPrior = new ArrayList<>();
-			notifyEnableJobsPrior.add(jobName);
-			return notifyEnableJobsPrior;
 		}
 
 		private String getExecutorIp() {
@@ -1383,13 +1348,6 @@ public class NamespaceShardingService {
 			log.info("Execute the {}, jobName is {}, executorName is {}", this.getClass().getSimpleName(), jobName, executorName);
 		}
 
-		@Override
-		protected List<String> notifyEnableJobsPrior() {
-			List<String> notifyEnableJobsPrior = new ArrayList<>();
-			notifyEnableJobsPrior.add(jobName);
-			return notifyEnableJobsPrior;
-		}
-
 		public ExecuteJobServerOfflineShardingTask(String jobName, String executorName) {
             this.jobName = jobName;
             this.executorName = executorName;
@@ -1416,7 +1374,7 @@ public class NamespaceShardingService {
 					break;
 				}
 			}
-			// need notify this enabled job, so return true
+
 			return true;
         }
 

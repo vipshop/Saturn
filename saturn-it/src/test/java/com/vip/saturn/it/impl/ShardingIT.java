@@ -962,12 +962,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(1);
-			// 需re-sharding
+			// 无需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+					return !isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
@@ -1049,12 +1049,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 需re-sharding
+			// 无需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+					return !isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
@@ -1136,12 +1136,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 需re-sharding
+			// 无需re-sharding
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+					return !isNeedSharding(jobConfiguration);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
