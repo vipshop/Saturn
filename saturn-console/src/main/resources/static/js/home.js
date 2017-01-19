@@ -152,14 +152,15 @@ function collapseTree () {
         }
     });
 }*/
-
 function reloadTreeAndExpandJob() {
-	var regName = $("#activated-reg-center").text();
-	var node = tree.findFirst(regName);
-	if (node) {
-		node.resetLazy();
+	if (tree.activeNode == null) {
+		var regName = $("#activated-reg-center").text();
+		var node = tree.findFirst(regName);
+		if (node) {
+			node.resetLazy();
+		}
+		expandJobs(tree, regName);
 	}
-	expandJobs(tree, regName);
 }
 
 function focusAndActiveJob(jobName) {
