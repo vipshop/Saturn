@@ -101,9 +101,6 @@ public class AbstractController {
 		model.put("isEnabled", jobDimensionService.isJobEnabled(jobName));
 	}
 
-	/**
-	 * 获取当前session连接的域名
-	 */
 	public String getNamespace() {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 		RegistryCenterConfiguration configuration = (RegistryCenterConfiguration) request.getSession().getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);

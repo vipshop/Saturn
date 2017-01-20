@@ -37,6 +37,8 @@ public class SaturnJunkData implements Serializable {
 	private String type;
 	
 	private String bootstrapKey;
+	
+	private String zkAddr;
 
 	public String getPath() {
 		return path;
@@ -76,6 +78,14 @@ public class SaturnJunkData implements Serializable {
 
 	public void setBootstrapKey(String bootstrapKey) {
 		this.bootstrapKey = bootstrapKey;
+	}
+	
+	public String getZkAddr() {
+		return zkAddr;
+	}
+
+	public void setZkAddr(String zkAddr) {
+		this.zkAddr = zkAddr;
 	}
 
 	public String toString() {

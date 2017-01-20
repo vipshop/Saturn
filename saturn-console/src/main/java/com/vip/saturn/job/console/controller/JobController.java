@@ -14,11 +14,15 @@
 
 package com.vip.saturn.job.console.controller;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.*;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.utils.CronExpression;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.ModelMap;
@@ -26,13 +30,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
+import com.google.common.base.Strings;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.utils.CronExpression;
 
 @RestController
 @RequestMapping("job")
@@ -76,12 +84,13 @@ public class JobController extends AbstractController {
 						date = next;
 					}
 				}
+				result.setSuccess(true);
 				if (sb.length() == 0) {
-					result.setSuccess(true);
 					result.setMessage("Cron maybe describe the past time, the job will never be executed");
 				} else {
-					sb.append("......");
-					result.setSuccess(true);
+					if (sb.toString().split("<br>") != null && sb.toString().split("<br>").length >= 10) {
+						sb.append("......");
+					}
 					result.setMessage(sb.toString());
 				}
 			} catch (ParseException e) {

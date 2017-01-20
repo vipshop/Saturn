@@ -47,8 +47,7 @@ public class SaturnWorker implements Runnable {
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
 		if (ft == null) {
-			throw new SchedulerException(
-					"Based on configured schedule, the given trigger '" + trigger.getKey() + "' will never fire.");
+			log.warn("[{}] msg=Based on configured schedule, the given trigger '" + trigger.getKey() + "' will never fire.", job.getJobName());
 		}
 	}
 	
@@ -93,15 +92,20 @@ public class SaturnWorker implements Runnable {
 						break;
 					}
 				}
+				boolean noFireTime = false; // 没有下次执行时间，初始化为false
 				long timeUntilTrigger = 1000;
 				if(triggerObj != null){
 					triggerObj.updateAfterMisfire(null);
 					long now = System.currentTimeMillis();
-					long triggerTime = triggerObj.getNextFireTime().getTime();
-					timeUntilTrigger = triggerTime - now;
+					Date nextFireTime = triggerObj.getNextFireTime();
+					if(nextFireTime != null) {
+                        timeUntilTrigger = nextFireTime.getTime() - now;
+                    } else {
+                        noFireTime = true;
+                    }
 				}
 				
-				while (timeUntilTrigger > 2) {
+				while (!noFireTime && timeUntilTrigger > 2) {
 					synchronized (sigLock) {
 						if (halted.get()) {
 							break;
@@ -117,21 +121,28 @@ public class SaturnWorker implements Runnable {
 						
 						if(triggerObj != null){
 							long now = System.currentTimeMillis();
-							timeUntilTrigger = triggerObj.getNextFireTime().getTime() - now;
+                            Date nextFireTime = triggerObj.getNextFireTime();
+                            if(nextFireTime != null) {
+                                timeUntilTrigger = nextFireTime.getTime() - now;
+                            } else {
+                                noFireTime = true;
+                            }
 						}
 					}
 				}
-				boolean goAhead = true;
+				boolean goAhead;
 				// 触发执行只有两个条件：1.时间到了；2。点立即执行；
 				synchronized (sigLock) {
 					goAhead = !halted.get() && !paused;
 					// 重置立即执行标志；
 					if (triggered) {
 						triggered = false;
-					} else	if (goAhead && triggerObj != null) {
-						// 更新执行时间
-						triggerObj.triggered(null);
-					}
+					} else { // 非立即执行。即，执行时间到了，或者没有下次执行时间。
+                        goAhead = goAhead && !noFireTime;
+                        if(goAhead && triggerObj != null) { // 执行时间到了，更新执行时间；没有下次执行时间，不更新时间，并且不执行作业
+                            triggerObj.triggered(null);
+                        }
+                    }
 				}
 				if (goAhead) {
 					job.execute();
