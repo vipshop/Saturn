@@ -114,6 +114,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		String jobName = jobConfig.getJobName();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"), jobConfig.getDescription());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobType"), jobConfig.getJobType());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobMode"), jobConfig.getJobMode());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"), jobConfig.getShardingItemParameters());
@@ -143,12 +144,12 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useDispreferList"), jobConfig.getUseDispreferList());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "localMode"), jobConfig.getLocalMode());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useSerial"), jobConfig.getUseSerial());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "dependencies"), jobConfig.getDependencies());
 		if(JobType.SHELL_JOB.name().equals(jobConfig.getJobType())){
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
 		}else{
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
 		}
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"), jobConfig.getDescription());
 	}
 	
 	private void copyAndPersisJobJobConfig(JobConfig jobConfig) throws Exception {
@@ -317,6 +318,10 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(jobModeLabel, "用户不能添加系统作业");
 			sheet1.addCell(jobModeLabel);
 
+			Label dependenciesLabel = new Label(23, 0, "依赖的作业");
+			setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
+			sheet1.addCell(dependenciesLabel);
+
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
@@ -349,6 +354,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					sheet1.addCell(new Label(20, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
 					sheet1.addCell(new Label(21, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
 					sheet1.addCell(new Label(22, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
+					sheet1.addCell(new Label(23, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
 					continue;

@@ -23,6 +23,7 @@ public class RestApiJobConfig {
     private Boolean useDispreferList;
     private Boolean localMode;
     private Boolean useSerial;
+    private String dependencies;
 
     public String getJobClass() {
         return jobClass;
@@ -168,4 +169,11 @@ public class RestApiJobConfig {
 		this.enabledReport = enabledReport;
 	}
 
+    public String getDependencies() {
+        return dependencies;
+    }
+
+    public void setDependencies(String dependencies) {
+        this.dependencies = dependencies;
+    }
 }

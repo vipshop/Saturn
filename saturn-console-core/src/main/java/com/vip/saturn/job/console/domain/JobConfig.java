@@ -19,6 +19,7 @@ package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 
@@ -102,6 +103,10 @@ public class JobConfig implements Serializable {
 
 	private String jobMode;
 
+	private String dependencies;
+
+	private List<String> dependenciesProvided;
+
     public void setDefaultValues() {
         timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
         processCountIntervalSeconds = processCountIntervalSeconds == null ? 300 : processCountIntervalSeconds;
@@ -119,6 +124,7 @@ public class JobConfig implements Serializable {
         	}
         }
 		jobMode = jobMode == null ? "" : jobMode;
+		dependencies = dependencies == null ? "" : dependencies;
     }
 
 	public Integer getRownum() {
@@ -407,5 +413,21 @@ public class JobConfig implements Serializable {
 
 	public void setJobMode(String jobMode) {
 		this.jobMode = jobMode;
+	}
+
+	public String getDependencies() {
+		return dependencies;
+	}
+
+	public void setDependencies(String dependencies) {
+		this.dependencies = dependencies;
+	}
+
+	public List<String> getDependenciesProvided() {
+		return dependenciesProvided;
+	}
+
+	public void setDependenciesProvided(List<String> dependenciesProvided) {
+		this.dependenciesProvided = dependenciesProvided;
 	}
 }

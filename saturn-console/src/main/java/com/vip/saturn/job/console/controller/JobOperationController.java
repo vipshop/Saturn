@@ -18,10 +18,13 @@
 package com.vip.saturn.job.console.controller;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.constants.SaturnConstants;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
@@ -66,17 +65,68 @@ public class JobOperationController extends AbstractController {
     private RegistryCenterService registryCenterService;
     
     @RequestMapping(value = "toggleJobEnabledState", method = RequestMethod.POST)
-    @ResponseBody
-  	public String toggleJobEnabledState(HttpServletRequest request, String jobName,Boolean state) {
+  	public RequestResult toggleJobEnabledState(HttpServletRequest request, String jobName, Boolean state, Boolean confirmed) {
+		RequestResult requestResult = new RequestResult();
     	if(state == null) {
-			return "更改的状态有误。";
+			requestResult.setSuccess(false);
+			requestResult.setMessage("更改的状态有误。");
+			return requestResult;
 		}
 		Boolean isJobEnabled = jobDimensionService.isJobEnabled(jobName);
 		if (isJobEnabled == state) {
 			if (state) {
-				return "作业已经是启动状态。";
+				requestResult.setSuccess(false);
+				requestResult.setMessage("作业已经是启动状态。");
+				return requestResult;
 			} else {
-				return "作业已经是禁用状态。";
+				requestResult.setSuccess(false);
+				requestResult.setMessage("作业已经是禁用状态。");
+				return requestResult;
+			}
+		}
+		if(confirmed != null && !confirmed) {
+			try {
+				if (state) { // 启用时，检查其依赖的作业是否已经启动
+					List<JobConfig> dependentJobsStatus = jobDimensionService.getDependentJobsStatus(jobName);
+					if (dependentJobsStatus != null) {
+						String unableJobs = "";
+						for (JobConfig jobConfig : dependentJobsStatus) {
+							if (!jobConfig.getEnabled()) {
+								unableJobs += jobConfig.getJobName() + ",";
+							}
+						}
+						if (!unableJobs.equals("")) {
+							requestResult.setSuccess(false);
+							requestResult.setMessage("该作业依赖的作业（" + unableJobs.substring(0, unableJobs.length() - 1) + "）不处于启用状态，是否继续启用该作业？");
+							requestResult.setObj("confirmDependencies");
+							return requestResult;
+						}
+					}
+				} else { // 禁用时，检查依赖它的作业是否已经禁用
+					List<JobConfig> dependedJobsStatus = jobDimensionService.getDependedJobsStatus(jobName);
+					if (dependedJobsStatus != null) {
+						String enableJobs = "";
+						for (JobConfig jobConfig : dependedJobsStatus) {
+							if (jobConfig.getEnabled()) {
+								enableJobs += jobConfig.getJobName() + ",";
+							}
+						}
+						if (!enableJobs.equals("")) {
+							requestResult.setSuccess(false);
+							requestResult.setMessage("依赖该作业的作业（" + enableJobs.substring(0, enableJobs.length() - 1) + "）不处于禁用状态，是否继续禁用作业？");
+							requestResult.setObj("confirmDependencies");
+							return requestResult;
+						}
+					}
+				}
+			} catch (SaturnJobConsoleException e) {
+				requestResult.setSuccess(false);
+				requestResult.setMessage(e.getMessage());
+				return requestResult;
+			} catch (Exception e) {
+				requestResult.setSuccess(false);
+				requestResult.setMessage(e.toString());
+				return requestResult;
 			}
 		}
 		JobStatus js = jobDimensionService.getJobStatus(jobName);
@@ -84,29 +134,89 @@ public class JobOperationController extends AbstractController {
 		if (state) {
 			if (JobStatus.STOPPED.equals(js)) {
 				jobOperationService.setJobEnabledState(jobName, state);
-				return SaturnConstants.DEAL_SUCCESS;
+				requestResult.setSuccess(true);
+				return requestResult;
 			} else {
-				return "作业不处于stopped状态，不能启用。";
+				requestResult.setSuccess(false);
+				requestResult.setMessage("作业不处于stopped状态，不能启用。");
+				return requestResult;
 			}
 		} else {
 			if (JobStatus.RUNNING.equals(js) || JobStatus.READY.equals(js)) {
 				jobOperationService.setJobEnabledState(jobName, state);
-				return SaturnConstants.DEAL_SUCCESS;
+				requestResult.setSuccess(true);
+				return requestResult;
 			} else {
-				return "作业不处于running或ready状态，不能禁用。";
+				requestResult.setSuccess(false);
+				requestResult.setMessage("作业不处于running或ready状态，不能禁用。");
+				return requestResult;
 			}
 		}
       }
     
     @RequestMapping(value = "batchToggleJobEnabledState", method = RequestMethod.POST)
-    @ResponseBody
-  	public String batchToggleJobEnabledState(HttpServletRequest request, String jobNames,Boolean state) {
+  	public RequestResult batchToggleJobEnabledState(HttpServletRequest request, String jobNames,Boolean state, Boolean confirmed) {
+		RequestResult requestResult = new RequestResult();
     	if(state == null) {
-			return "更改的状态有误。";
+			requestResult.setSuccess(false);
+			requestResult.setMessage("更改的状态有误。");
+			return requestResult;
 		}
 		String[] jobNameArr = jobNames.split(",");
 		if(jobNameArr == null || jobNameArr.length == 0){
-			return "没有选中任何要操作的作业。";
+			requestResult.setSuccess(false);
+			requestResult.setMessage("没有选中任何要操作的作业。");
+			return requestResult;
+		}
+		if(confirmed != null && !confirmed) {
+			for(String jobName : jobNameArr) {
+				if(jobName != null && jobName.trim().length() > 0) {
+					jobName = jobName.trim();
+					try {
+						if (state) { // 启用时，检查其依赖的作业是否已经启动
+							List<JobConfig> dependentJobsStatus = jobDimensionService.getDependentJobsStatus(jobName);
+							if (dependentJobsStatus != null) {
+								String unableJobs = "";
+								for (JobConfig jobConfig : dependentJobsStatus) {
+									if (!jobConfig.getEnabled()) {
+										unableJobs += jobConfig.getJobName() + ",";
+									}
+								}
+								if (!unableJobs.equals("")) {
+									requestResult.setSuccess(false);
+									requestResult.setMessage("有作业依赖的作业还没启用，是否继续批量启用作业？");
+									requestResult.setObj("confirmDependencies");
+									return requestResult;
+								}
+							}
+						} else { // 禁用时，检查依赖它的作业是否已经禁用
+							List<JobConfig> dependedJobsStatus = jobDimensionService.getDependedJobsStatus(jobName);
+							if (dependedJobsStatus != null) {
+								String enableJobs = "";
+								for (JobConfig jobConfig : dependedJobsStatus) {
+									if (jobConfig.getEnabled()) {
+										enableJobs += jobConfig.getJobName();
+									}
+								}
+								if (!enableJobs.equals("")) {
+									requestResult.setSuccess(false);
+									requestResult.setMessage("有作业被依赖的作业还没禁用，是否继续批量禁用作业？");
+									requestResult.setObj("confirmDependencies");
+									return requestResult;
+								}
+							}
+						}
+					} catch (SaturnJobConsoleException e) {
+						requestResult.setSuccess(false);
+						requestResult.setMessage(e.getMessage());
+						return requestResult;
+					} catch (Exception e) {
+						requestResult.setSuccess(false);
+						requestResult.setMessage(e.toString());
+						return requestResult;
+					}
+				}
+			}
 		}
 		StringBuilder messageSbf = new StringBuilder();
 		for(String jobName : jobNameArr){
@@ -141,9 +251,13 @@ public class JobOperationController extends AbstractController {
 			}
 		}
 		if(messageSbf.length() == 0){
-			return SaturnConstants.DEAL_SUCCESS;
+			requestResult.setSuccess(true);
+			return requestResult;
+		} else {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(messageSbf.substring(0, messageSbf.length() - 1)); //去掉最后一个逗号
+			return requestResult;
 		}
-		return messageSbf.substring(0,messageSbf.length()-1);//去掉最后一个逗号
       }
 
     @RequestMapping(value = "remove/executor", method = RequestMethod.POST)
@@ -176,13 +290,25 @@ public class JobOperationController extends AbstractController {
 		return SaturnConstants.DEAL_SUCCESS;
 	}
     @RequestMapping(value = "remove/job", method = RequestMethod.POST)
-	public String removeStoppedJob(final JobServer jobServer, HttpServletRequest request) throws InterruptedException {
-    	JobStatus jobStatus = jobDimensionService.getJobStatus(jobServer.getJobName());
+	public RequestResult removeStoppedJob(String jobName, HttpServletRequest request) throws InterruptedException {
+		RequestResult requestResult = new RequestResult();
+    	JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
 		if (JobStatus.STOPPED.equals(jobStatus)) {
-			return executorService.removeJob(jobServer.getJobName());
+			String result = executorService.removeJob(jobName);
+			if(SaturnConstants.DEAL_SUCCESS.equals(result)) {
+				requestResult.setSuccess(true);
+				return requestResult;
+			} else {
+				requestResult.setSuccess(false);
+				requestResult.setMessage(result);
+				return requestResult;
+			}
 			// let zk and the watchers update theirselves.
+		} else {
+			requestResult.setSuccess(false);
+			requestResult.setMessage("作业【"+jobName+ "】不处于STOPPED状态，不能删除.");
+			return requestResult;
 		}
-		return "作业【"+jobServer.getJobName()+ "】不处于STOPPED状态，不能删除.";
     }
     
     @RequestMapping(value = "batchRemove/jobs", method = RequestMethod.POST)

@@ -78,40 +78,70 @@ $(function() {
 		confirmDialogMsg = undefined; 
 	}
 	$("#toggleEnabled-confirm-dialog").on('shown.bs.modal', function (event) {
-		  var button = $(event.relatedTarget);
-		  var msg = button.data('msg') || confirmDialogMsg;
-		  $("#toggleEnabled-confirm-dialog .confirm-reason").html(msg);
-		  $("#toggleEnabled-confirm-dialog-confirm-btn").unbind('click').click(function() {
-			  var $btn = $(this).button('loading');
-				  $.post("job/toggleJobEnabledState", {jobName : jobName, state: !(isJobEnabledVal == 'true'),nns:regName},function (data) {
-		        		$("#toggleEnabled-confirm-dialog").modal("hide");
-				  		if (data == "ok") {
-				  			showSuccessDialogWithCallback(function() {location.reload(true);});
-				  		} else {
-				  			showFailureDialogWithMsg("update-failure-dialog", data);
-				  		}
-				  }).always(function() {cleanConfirmInfo(); $btn.button('reset'); });
-			  return false;
-		  });
-	});
+        var button = $(event.relatedTarget);
+        var msg = button.data('msg') || confirmDialogMsg;
+        $("#toggleEnabled-confirm-dialog .confirm-reason").html(msg);
+        $("#toggleEnabled-confirm-dialog-confirm-btn").unbind('click').click(function() {
+            var $btn = $(this).button('loading');
+            var state = !(isJobEnabledVal == 'true');
+            $.post("job/toggleJobEnabledState", {jobName : jobName, state: state, confirmed: false, nns:regName},function (data) {
+                $("#toggleEnabled-confirm-dialog").modal("hide");
+                if (data.success) {
+                    showSuccessDialogWithCallback(function() {location.reload(true);});
+                } else {
+                    if(data.obj == "confirmDependencies") {
+                        $("#confirmDependencies-confirm-dialog .confirm-reason").html(data.message);
+                        $("#confirmDependencies-confirm-dialog").attr("operation", "toggleJobEnabledState");
+                        $("#confirmDependencies-confirm-dialog").attr("jobName", jobName);
+                        $("#confirmDependencies-confirm-dialog").attr("state", state.toString());
+                        $("#confirmDependencies-confirm-dialog").modal("show");
+                    } else {
+                        showFailureDialogWithMsg("update-failure-dialog", data.message);
+                    }
+                }
+            }).always(function() {
+                cleanConfirmInfo();
+                $btn.button('reset');
+            });
+            return false;
+        });
+    });
+
+    $("#confirmDependencies-confirm-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var operation = $("#confirmDependencies-confirm-dialog").attr("operation");
+        if(operation == "toggleJobEnabledState") {
+            var jobName = $("#confirmDependencies-confirm-dialog").attr("jobName");
+            var state = $("#confirmDependencies-confirm-dialog").attr("state");
+            $.post("job/toggleJobEnabledState", {jobName : jobName, state: state, confirmed: true, nns:regName},function (data) {
+                $("#confirmDependencies-confirm-dialog").modal("hide");
+                if (data.success) {
+                    showSuccessDialogWithCallback(function() {location.reload(true);});
+                } else {
+                    showFailureDialogWithMsg("update-failure-dialog", data.message);
+                }
+            }).always(function() { $btn.button('reset'); });
+        }
+        return false;
+    });
 	
 	$("#remove-job-confirm-dialog").on('shown.bs.modal', function (event) {
-		  var button = $(event.relatedTarget);
-		  var msg = button.data('msg') || confirmDialogMsg;
-		  $("#remove-job-confirm-dialog .confirm-reason").html(msg);
-		  $("#remove-job-confirm-dialog-confirm-btn").unbind('click').click(function() {
-			  var $btn = $(this).button('loading');
-			  $.post("job/remove/job", {jobName : jobName,nns:regName}, function (data) {
-		        	$("#remove-job-confirm-dialog").modal("hide");
-		        	if (data == "ok") {
-		        		showSuccessDialogWithCallback(function() {window.parent.reloadJobsAfterRemove();window.location = "overview";});
-			  		} else {
-			  			showFailureDialogWithMsg("update-failure-dialog", data);
-			  		}
-			  }).always(function() {cleanConfirmInfo(); $btn.button('reset'); });
-			  return false;
-		  });
-	});
+          var button = $(event.relatedTarget);
+          var msg = button.data('msg') || confirmDialogMsg;
+          $("#remove-job-confirm-dialog .confirm-reason").html(msg);
+          $("#remove-job-confirm-dialog-confirm-btn").unbind('click').click(function() {
+              var $btn = $(this).button('loading');
+              $.post("job/remove/job", {jobName : jobName, nns:regName}, function (data) {
+                    $("#remove-job-confirm-dialog").modal("hide");
+                    if (data.success) {
+                        showSuccessDialogWithCallback(function() {window.parent.reloadJobsAfterRemove();window.location = "overview";});
+                    } else {
+                        showFailureDialogWithMsg("update-failure-dialog", data.message);
+                    }
+              }).always(function() {cleanConfirmInfo(); $btn.button('reset'); });
+              return false;
+          });
+    });
 	
 	$("#stop-at-once-confirm-dialog").on('shown.bs.modal', function (event) {
 		  $("#stop-at-once-confirm-dialog-confirm-btn").unbind('click').click(function() {
@@ -286,6 +316,35 @@ $(function() {
                 	}
                 }
         	}
+
+        	$("#dependencies").empty();
+            var dependencies = new Array();
+            if(jobConfig.dependencies && jobConfig.dependencies.length > 0) {
+                var split = jobConfig.dependencies.split(",");
+                if(split && split instanceof Array) {
+                    for(var i=0; i<split.length; i++) {
+                        var dependency = split[i];
+                        if(dependency) {
+                            dependency = dependency.trim();
+                            if(dependency.length > 0) {
+                                dependencies[dependency] = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if(jobConfig.dependenciesProvided && jobConfig.dependenciesProvided instanceof Array) {
+                for(var i=0; i<jobConfig.dependenciesProvided.length; i++) {
+                    var dependency = jobConfig.dependenciesProvided[i];
+                    var option = "<option value='" + dependency + "'";
+                    if(dependencies[dependency] == true) {
+                        option = option + " selected";
+                    }
+                    option = option + ">" + dependency + "</option>";
+                    $("#dependencies").append(option);
+                }
+            }
+            $('#dependencies').selectpicker('refresh');
         	
 	        $("#shardingItemParameters").val(jobConfig.shardingItemParameters);
 	        $("#jobParameter").val(jobConfig.jobParameter);
@@ -413,10 +472,14 @@ $(function() {
 	        var queueName = $("#queueName").val();
 	        var channelName = $("#channelName").val();
 	        var preferList = preferSelectSumo.getSelStr();
+	        var dependencies = "";
+            if($("#dependencies").val() != null) {
+                dependencies = $("#dependencies").val().toString();
+            }
 	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel,jobDegree:jobDegree, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
-	        	failover: failover, shardingItemParameters: shardingItemParameters, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
+	        	failover: failover, shardingItemParameters: shardingItemParameters, dependencies: dependencies, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
 	        	timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
 		            	showSuccessDialog();

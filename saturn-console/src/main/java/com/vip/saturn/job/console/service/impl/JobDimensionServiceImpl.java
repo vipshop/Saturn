@@ -31,6 +31,7 @@ import java.util.Locale;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.domain.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,18 +41,8 @@ import org.springframework.util.CollectionUtils;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.constants.SaturnConstants;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobMigrateInfo;
-import com.vip.saturn.job.console.domain.JobMode;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
@@ -153,6 +144,65 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
 		return allJobs;
+	}
+
+	@Override
+	public List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException {
+		List<JobConfig> jobConfigs = new ArrayList<>();
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		String dependencies = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"));
+		if(dependencies != null) {
+			List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
+			String[] split = dependencies.split(",");
+			if(split != null) {
+				for(String tmp : split) {
+					if(tmp != null) {
+						String dependency = tmp.trim();
+						if(dependency.length() > 0) {
+							if(!dependency.equals(jobName) && allUnSystemJobs.contains(dependency)) {
+								JobConfig jobConfig = new JobConfig();
+								jobConfig.setJobName(dependency);
+								jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(dependency, "enabled"))));
+								jobConfigs.add(jobConfig);
+							}
+						}
+					}
+				}
+			}
+		}
+		return jobConfigs;
+	}
+
+	@Override
+	public List<JobConfig> getDependedJobsStatus(String jobName) throws SaturnJobConsoleException {
+		List<JobConfig> jobConfigs = new ArrayList<>();
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
+		if(allUnSystemJobs != null) {
+			for(String job : allUnSystemJobs) {
+				if(!job.equals(jobName)) {
+					String dependencies = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "dependencies"));
+					if (dependencies != null) {
+						String[] split = dependencies.split(",");
+						if (split != null) {
+							for (String tmp : split) {
+								if (tmp != null) {
+									String dependency = tmp.trim();
+									if (dependency.equals(jobName)) {
+										JobConfig jobConfig = new JobConfig();
+										jobConfig.setJobName(job);
+										jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "enabled"))));
+										jobConfigs.add(jobConfig);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return jobConfigs;
 	}
 
 	@Override
@@ -367,6 +417,16 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setUseSerial(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
         result.setLocalMode(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
         // result.setFailover(Boolean.valueOf(curatorRepository.getData(JobNodePath.getConfigNodePath(jobName, "failover"))));
+		result.setDependencies(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies")));
+		try {
+			List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
+			if(allUnSystemJobs != null) {
+				allUnSystemJobs.remove(jobName);
+				result.setDependenciesProvided(allUnSystemJobs);
+			}
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
         result.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
         result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
         result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
@@ -397,6 +457,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         return result;
     }
 
+	@Override
+	public JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException {
+		return null;
+	}
+
     @Override
     public String updateJobSettings(final JobSettings jobSettings, RegistryCenterConfiguration configInSession) {
     	// Modify JobSettings.updateFields() sync, if the update fields changed.
@@ -417,6 +482,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobParameter"), jobSettings.getJobParameter(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "processCountIntervalSeconds"), jobSettings.getProcessCountIntervalSeconds(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeoutSeconds"), jobSettings.getTimeoutSeconds(), bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "dependencies"), jobSettings.getDependencies(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "description"), jobSettings.getDescription(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "channelName"), StringUtils.trim(jobSettings.getChannelName()), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "queueName"), StringUtils.trim(jobSettings.getQueueName()), bw)

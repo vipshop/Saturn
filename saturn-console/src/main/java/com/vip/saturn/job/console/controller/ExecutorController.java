@@ -82,6 +82,10 @@ public class ExecutorController extends AbstractController {
 		if(!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
 			throw new SaturnJobConsoleException("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
 		}
+		// 依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,
+		if(jobConfig.getDependencies() != null && !jobConfig.getDependencies().matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException("依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
+		}
 		// 作业类型必填
 		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
 			throw new SaturnJobConsoleException("作业类型必填");
@@ -411,6 +415,12 @@ public class ExecutorController extends AbstractController {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 22, "作业模式有误，不能添加系统作业"));
 		}
 		jobConfig.setJobMode(jobMode);
+
+		String dependencies = getContents(rowCells, 23);;
+		if(dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+		}
+		jobConfig.setDependencies(dependencies);
 
 		return jobConfig;
 	}

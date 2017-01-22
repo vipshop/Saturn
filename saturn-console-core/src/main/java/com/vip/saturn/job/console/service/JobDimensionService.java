@@ -20,14 +20,7 @@ package com.vip.saturn.job.console.service;
 import java.util.Collection;
 import java.util.List;
 
-import com.vip.saturn.job.console.domain.ExecutionInfo;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobMigrateInfo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
@@ -42,6 +35,8 @@ public interface JobDimensionService {
     String getJobType(final String jobName);
     
     JobSettings getJobSettings(String jobName, RegistryCenterConfiguration configInSession);
+
+    JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException;
     
     String updateJobSettings(JobSettings jobSettings, RegistryCenterConfiguration configInSession);
     
@@ -94,5 +89,9 @@ public interface JobDimensionService {
     List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
     List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
+    List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException;
+
+    List<JobConfig> getDependedJobsStatus(String jobName) throws SaturnJobConsoleException;
 
 }
