@@ -1,6 +1,8 @@
 package com.vip.saturn.job.basic;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
@@ -26,6 +28,16 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 	private Future<?> callFuture;
 
 	private boolean done = false; //NOSONAR
+	
+	private ExecutorService executorService;
+		
+	public ExecutorService getExecutorService() {
+		return executorService;
+	}
+
+	public void setExecutorService(ExecutorService executorService) {
+		this.executorService = executorService;
+	}
 
 	public Future<?> getCallFuture() {
 		return callFuture;
@@ -67,6 +79,22 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 
 	@Override
 	public SaturnJobReturn call() throws Exception {
+		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler(){
+
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+				if(e instanceof IllegalMonitorStateException || e instanceof ThreadDeath){			
+					if(callFuture != null){
+						callFuture.cancel(false);
+					}
+					
+					if(executorService != null){
+						executorService.shutdown();
+					}
+				}
+			}
+			
+		});
 		try {
 			SaturnJobReturn ret = callable.call();
 			return ret;

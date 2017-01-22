@@ -111,7 +111,7 @@ public abstract class AbstractElasticJob implements Stopable {
 		}
 	}
 	
-	protected ExecutorService getExecutorService() {
+	public ExecutorService getExecutorService() {
 		if (executorService != null && !executorService.isShutdown()) {
 			return executorService;
 		}

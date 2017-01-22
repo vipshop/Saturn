@@ -6,8 +6,8 @@
 #VERSION=LATEST
 #REPO=snapshots
 
-#get the 2.0.0 release
-VERSION=2.0.0
+#get the 2.0.3 release
+VERSION=2.0.3
 REPO=releases
 
 

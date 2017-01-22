@@ -115,7 +115,8 @@ public class SaturnJavaJob extends CrondJob {
 				final String itemVal = getRealItemValue(jobParameter, jobValue); // 作业分片的对应值
 
 				ShardingItemFutureTask shardingItemFutureTask = new ShardingItemFutureTask(createCallable(jobName, key, itemVal,
-						timeoutSeconds, shardingContext, this),null);				
+						timeoutSeconds, shardingContext, this),null);		
+				shardingItemFutureTask.setExecutorService(executorService);
 				Future<?> callFuture = executorService.submit(shardingItemFutureTask);
 				if (timeoutSeconds > 0) {
 					TimeoutSchedulerExecutor.scheduleTimeoutJob(shardingContext.getExecutorName(), timeoutSeconds,
