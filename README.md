@@ -48,3 +48,7 @@ see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%
 ## 5 The team
 
 [The Saturn Wow Team](https://github.com/vipshop/Saturn/wiki/Saturn's-Wow-Team)
+
+## 6 Powered by Saturn
+
+[Organizations using Saturn]()
