@@ -51,4 +51,4 @@ see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%
 
 ## 6 Powered by Saturn
 
-[Organizations using Saturn]()
+[Organizations using Saturn](https://github.com/vipshop/Saturn/wiki/Organizations-using-Saturn)
