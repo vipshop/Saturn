@@ -24,6 +24,7 @@ public class RestApiJobConfig {
     private Boolean localMode;
     private Boolean useSerial;
     private String dependencies;
+    private String groups;
 
     public String getJobClass() {
         return jobClass;
@@ -176,4 +177,13 @@ public class RestApiJobConfig {
     public void setDependencies(String dependencies) {
         this.dependencies = dependencies;
     }
+
+	public String getGroups() {
+		return groups;
+	}
+
+	public void setGroups(String groups) {
+		this.groups = groups;
+	}
+    
 }

@@ -104,6 +104,8 @@ public class JobConfig implements Serializable {
 	private String jobMode;
 
 	private String dependencies;
+	
+	private String groups;
 
 	private List<String> dependenciesProvided;
 
@@ -125,6 +127,7 @@ public class JobConfig implements Serializable {
         }
 		jobMode = jobMode == null ? "" : jobMode;
 		dependencies = dependencies == null ? "" : dependencies;
+		groups = groups == null ? "" : groups;
     }
 
 	public Integer getRownum() {
@@ -430,4 +433,13 @@ public class JobConfig implements Serializable {
 	public void setDependenciesProvided(List<String> dependenciesProvided) {
 		this.dependenciesProvided = dependenciesProvided;
 	}
+
+	public String getGroups() {
+		return groups;
+	}
+
+	public void setGroups(String groups) {
+		this.groups = groups;
+	}
+	
 }

@@ -42,6 +42,7 @@ public final class JobSettings extends JobConfig {
     		.append("timeoutSeconds=").append(getTimeoutSeconds()).append(", ")
     		.append("failover=").append(getFailover()).append(", ")
 			.append("dependencies=").append(getDependencies()).append(", ")
+			.append("groups=").append(getGroups()).append(", ")
     		.append("description=").append(getDescription()).append(", ")
     		.append("channelName=").append(getChannelName()).append(", ")
     		.append("queueName=").append(getQueueName()).append(", ")

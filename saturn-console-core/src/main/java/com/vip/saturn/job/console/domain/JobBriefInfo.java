@@ -88,6 +88,8 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     private String jobRate;
 
 	private Boolean migrateEnabled;
+	
+	private String groups;
     
     @Override
     public int compareTo(final JobBriefInfo o) {
@@ -384,4 +386,13 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 	public void setEnabledReport(Boolean enabledReport) {
 		this.enabledReport = enabledReport;
 	}
+
+	public String getGroups() {
+		return groups;
+	}
+
+	public void setGroups(String groups) {
+		this.groups = groups;
+	}
+	
 }
