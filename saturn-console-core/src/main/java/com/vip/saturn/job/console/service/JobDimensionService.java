@@ -20,7 +20,15 @@ package com.vip.saturn.job.console.service;
 import java.util.Collection;
 import java.util.List;
 
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.HealthCheckJobServer;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
@@ -93,5 +101,7 @@ public interface JobDimensionService {
     List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException;
 
     List<JobConfig> getDependedJobsStatus(String jobName) throws SaturnJobConsoleException;
+
+    List<String> getAllJobGroups();
 
 }
