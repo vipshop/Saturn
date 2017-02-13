@@ -145,6 +145,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "localMode"), jobConfig.getLocalMode());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useSerial"), jobConfig.getUseSerial());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "dependencies"), jobConfig.getDependencies());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "groups"), jobConfig.getGroups());
 		if(JobType.SHELL_JOB.name().equals(jobConfig.getJobType())){
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
 		}else{
@@ -322,6 +323,10 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
 			sheet1.addCell(dependenciesLabel);
 
+			Label groupsLabel = new Label(24, 0, "所属分组");
+			setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
+			sheet1.addCell(groupsLabel);
+			
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
@@ -355,6 +360,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					sheet1.addCell(new Label(21, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
 					sheet1.addCell(new Label(22, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
 					sheet1.addCell(new Label(23, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
+					sheet1.addCell(new Label(24, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
 					continue;

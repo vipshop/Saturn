@@ -19,6 +19,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -179,5 +180,13 @@ public class JobController extends AbstractController {
     public long getJobNextFireTime(String jobName) {
     	Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
         return calculateJobNextTime == null?0l:calculateJobNextTime;
+    }
+	
+	 /**
+     * 获取所有作业的分组列表
+     */
+    @RequestMapping(value = "getAllJobGroups", method = RequestMethod.GET)
+    public List<String> getAllJobGroups() {
+        return jobDimensionService.getAllJobGroups();
     }
 }

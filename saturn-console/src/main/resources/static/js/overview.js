@@ -5,9 +5,10 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
                	'<button class="btn btn-warning change-jobStatus-batch-job" id="batch-disable-job" title="点击进行批量禁用作业">禁用作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-danger" id="batch-remove-job" title="点击进行批量删除作业">删除作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="add-job" title="点击进行添加作业">添加作业</button>&nbsp;&nbsp;' +
+               	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>' +
                	'<button class="btn btn-info" id="batch-add-job" title="点击进行导入作业">导入作业</button>&nbsp;&nbsp;' +
                	'<a class="btn btn-info" id="export-job" href="executor/exportJob?nns='+regName+'" title="点击进行导出全域作业" target="_self">导出全域作业</a>&nbsp;&nbsp;' +
-               	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>',
+               	'<label>分组 <select id="groupSelect" title="选择作业分组" class="form-control"><option value="">全部分组</option></select></label>';
 	executorOperation = '<div id="serverviews-status-showall">' +
 		'<button class="btn btn-info" id="shard-all-at-once" title="点击进行一键重排？（即把当前域下所有分片按照作业负荷以及优先Executor等作业配置重新进行排序。注：重排可能导致分片分布剧烈动荡，请谨慎操作！另外在操作本功能时，请尽量避免同时操作Executor上下线或启用禁用作业，以免影响到重排的均衡效果！）">一键重排</button>&nbsp;&nbsp;'+
 		'<button class="btn btn-danger" id="batch-remove-executor" title="点击进行批量删除Executor">删除Executor</button>&nbsp;&nbsp;</div>';
@@ -253,6 +254,12 @@ $(function() {
     		}).always(function() { $btn.button('reset'); });
     		return false;
     	});
+    });
+    
+    $(document).on("change", "#groupSelect", function(event) {
+    	var term = $(this).val();
+        regex =  term ;
+		jobsViewDataTable.columns(11).search(regex, true, false).draw();
     });
     
     $(document).on("click", "#add-job", function(event) {
@@ -700,6 +707,7 @@ $(function() {
                 	+ "<td>" + cron + "</td>" 
                 	+ "<td class='nft'> - </td>" 
                 	+ "<td>" + degreeMap[list[i].jobDegree] + "</td>"
+                	+ "<td>" + list[i].groups + "</td>"
                 	+ "<td id='showDescription_"+i+"'></td>";
                 var trClass = "";
                 var operationBtn = "启用";
@@ -764,10 +772,24 @@ $(function() {
 					{ "asSorting": []  },
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": [ "desc", "asc"]  },
+					{ "asSorting": [ "desc", "asc"] },
 					{ "asSorting": [ "desc", "asc"]  },
 					{ "asSorting": []} 
 				]});
             $("#jobs-overview-tbl_filter label").before(jobOperation);
+            
+            $.get("job/getAllJobGroups", {}, function (data) {
+        		if(!data){
+        			return;
+        		}
+        		var options = "";
+        		for(var i=0;i<data.length;i++) {
+        			var groups = data[i];
+        			options += "<option value='"+groups+"'>" + groups + "</option>";
+        		}
+        		$("#groupSelect").append(options);
+            }).always(function() {});
+            
         	$("#add-job").attr("title","点击进行添加作业");
         	$("#add-job").removeAttr("disabled");
 			$("#batch-add-job").removeAttr("disabled");

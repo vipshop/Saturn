@@ -354,6 +354,7 @@ $(function() {
 	        $("#description").val(jobConfig.description);
 	        $("#queueName").val(jobConfig.queueName);
         	$("#channelName").val(jobConfig.channelName);
+        	$("#groups").val(jobConfig.groups);
 
         	if(jobConfig.pausePeriodDate){
         		$('#pausePeriodDate').tagsInput({width:'auto', defaultText:""});
@@ -476,10 +477,11 @@ $(function() {
             if($("#dependencies").val() != null) {
                 dependencies = $("#dependencies").val().toString();
             }
+            var groups = $("#groups").val().trim();
 	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel,jobDegree:jobDegree, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
-	        	failover: failover, shardingItemParameters: shardingItemParameters, dependencies: dependencies, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
+	        	failover: failover, shardingItemParameters: shardingItemParameters, dependencies: dependencies, groups: groups, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
 	        	timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
 		            	showSuccessDialog();
