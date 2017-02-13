@@ -421,6 +421,8 @@ public class ExecutorController extends AbstractController {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
 		}
 		jobConfig.setDependencies(dependencies);
+		
+		jobConfig.setGroups(getContents(rowCells, 24));
 
 		return jobConfig;
 	}

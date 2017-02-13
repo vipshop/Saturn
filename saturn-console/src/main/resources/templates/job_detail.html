@@ -165,6 +165,15 @@ layout:decorator="frame-layout">
 									</div>
 									<div id="advanced-config-body" class="panel-collapse collapse">
 										<div class="panel-body">
+											<div class="form-group">
+							                    <label for="group" class="col-sm-2 control-label">所属分组</label>
+							                    <div class="col-sm-9">
+							                        <input type="text" id="groups" name="groups" class="form-control" data-toggle="tooltip" 
+							                        data-placement="bottom" title="作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业" />
+							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+							                    </div>
+							                </div>
+							                
 											<!--  
 											<div class="form-group hide-when-is-script-job-but-show-when-is-vshell-job">
 							                    <label for="cron" class="col-sm-2 control-label">执行结果发送的Channel名</label>
