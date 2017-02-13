@@ -47,8 +47,12 @@ public class ExecutorNodePath {
 
     public static String getExecutorIpNodePath(final String executorName) {
         return getExecutorNodePath(executorName, "ip");
-    } 
-    
+    }
+
+    public static String getExecutorVersionNodePath(final String executorName) {
+        return getExecutorNodePath(executorName, "version");
+    }
+
     public static String getExecutorShardingNodePath(final String nodeName) {
         return String.format("%s/%s", SHARDING_NODE_NAME, nodeName);
     }
