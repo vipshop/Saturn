@@ -20,18 +20,15 @@ package com.vip.saturn.job.console.service.impl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -161,6 +158,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					throw new IllegalArgumentException();
 				}
 				cluster.setOffline(false);
+				conf.setVersion(getVersion(conf.getNamespace(), cluster.getCuratorFramework()));
 				cluster.getRegCenterConfList().add(conf);
 			} catch (Exception e) {
 				log.error("found an offline zkCluster: {}", conf);
@@ -172,6 +170,46 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		shutdownZkClientInZkClusterMap();
 		ZKADDR_TO_ZKCLUSTER_MAP = newClusterMap;
+	}
+
+	private String getVersion(String namespace, CuratorFramework curatorFramework) {
+		try {
+			List<String> versionList = new ArrayList<>();
+			String executorsPath = "/" + namespace + ExecutorNodePath.getExecutorNodePath();
+			if (curatorFramework.checkExists().forPath(executorsPath) != null) {
+				List<String> executors = curatorFramework.getChildren().forPath(executorsPath);
+				if (executors != null && !executors.isEmpty()) {
+					for (String exe : executors) {
+						String versionPath = executorsPath + "/" + exe + "/version";
+						if (curatorFramework.checkExists().forPath(versionPath) != null) {
+							byte[] bs = curatorFramework.getData().forPath(versionPath);
+							if (bs != null) {
+								String version = new String(bs, "UTF-8");
+								if (version != null && !version.trim().isEmpty()) {
+									String tmp = version.trim();
+									if (!versionList.contains(tmp)) {
+										versionList.add(tmp);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			Collections.sort(versionList);
+			String versionStr = "";
+			for (int i = 0; i < versionList.size(); i++) {
+				String version = versionList.get(i);
+				versionStr = versionStr + version;
+				if (i < versionList.size() - 1) {
+					versionStr = versionStr + ", ";
+				}
+			}
+			return versionStr;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return "";
+		}
 	}
 	
 	private static void shutdownZkClientInZkClusterMap() {

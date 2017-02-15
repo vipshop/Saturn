@@ -53,6 +53,8 @@ public class RegistryCenterConfiguration implements Serializable {
     
     /** 系统重要程度 **/
     private String degree;
+
+	private String version;
     
     public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
         this.name = name;
@@ -150,6 +152,14 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.degree = degree;
 	}
 
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
@@ -212,7 +222,7 @@ public class RegistryCenterConfiguration implements Serializable {
 				+ zkAlias + ", bootstrapKey=" + bootstrapKey + ", digest="
 				+ digest + ", nameAndNamespace=" + nameAndNamespace
 				+ ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
-				+ ", degree=" + degree + "]";
+				+ ", degree=" + degree + ", version=" + version + "]";
 	}
 	
 }

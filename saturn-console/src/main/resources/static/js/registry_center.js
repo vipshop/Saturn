@@ -10,7 +10,7 @@ function renderRegCenters() {
         var activedNameAndNamespace = data.actived;
         for (var i = 0;i < data.configs.length;i++) {
             var baseTd = "<td><a href='overview?name=" + data.configs[i].name + "/" + data.configs[i].namespace + "'>" + data.configs[i].namespace + "</a></td><td>" 
-            	+ data.configs[i].name + "</td><td>" + data.configs[i].zkAddressList + "</td>";
+            	+ data.configs[i].name + "</td><td>" + data.configs[i].version + "</td><td>" + data.configs[i].zkAddressList + "</td>";
             if (data.configs[i].nameAndNamespace === activedNameAndNamespace) {
                 $("#activated-reg-center").text(data.configs[i].name);
             	window.parent.setRegName(data.configs[i].name, data.configs[i].namespace);
