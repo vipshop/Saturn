@@ -155,7 +155,7 @@ public class NamespaceShardingContentService {
             }.getType());
             shardContent.putAll(obj);
         } catch (Exception e) {
-            log.warn(e.getMessage(), e);
+            log.warn("get " + jobName + "'s shards from necessary failed, will try to get shards from sharding/content", e);
             shardContent.putAll(getShardingItems(jobName));
         }
         return shardContent;
