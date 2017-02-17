@@ -155,7 +155,7 @@ public class SaturnAutoBasic {
         for (int i = 0; i < count; i++) {
             ZookeeperRegistryCenter shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(-1, nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
             shardingRegCenter.init();
-            NamespaceShardingManager namespaceShardingManager = new NamespaceShardingManager((CuratorFramework) shardingRegCenter.getRawClient(),NAMESPACE, "127.0.0.1-" + i);
+            NamespaceShardingManager namespaceShardingManager = new NamespaceShardingManager((CuratorFramework) shardingRegCenter.getRawClient(),NAMESPACE, "127.0.0.1-" + i, null);
             namespaceShardingManager.start();
             namespaceShardingManagerList.add(namespaceShardingManager);
         }

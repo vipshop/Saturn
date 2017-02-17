@@ -29,6 +29,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -53,8 +54,12 @@ import com.vip.saturn.job.sharding.NamespaceShardingManager;
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	protected static Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
+
 	@Resource
 	private CuratorRepository curatorRepository;
+
+	@Resource
+	private ReportAlarmService reportAlarmService;
 
 	public static ConcurrentHashMap<String /** nns */, RegistryCenterClient> NNS_CURATOR_CLIENT_MAP = new ConcurrentHashMap<>();
 	
@@ -84,7 +89,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					// client 从缓存取，不再新建也就不需要关闭
 					try {
 						CuratorFramework client = connect(conf.getNameAndNamespace()).getCuratorClient();
-						NamespaceShardingManager newObj = new NamespaceShardingManager(client, conf.getNamespace(), generateShardingLeadershipHostValue());
+						NamespaceShardingManager newObj = new NamespaceShardingManager(client, conf.getNamespace(), generateShardingLeadershipHostValue(), reportAlarmService);
 						if (namespaceShardingListenerManagerMap.putIfAbsent(nns, newObj) == null) {
 							log.info("start NamespaceShardingManager {}", nns);
 							newObj.start();

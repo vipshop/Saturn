@@ -110,7 +110,7 @@ public class ShardingService extends AbstractSaturnService {
                 int retry = 3;
                 while (retry-- > 0) {
                     try {
-                        shardingItems = namespaceShardingContentService.getShardingItems(jobName);
+                        shardingItems = namespaceShardingContentService.getShardContent(jobName, preNecessaryData);
                         break;
                     } catch (Exception e) {//NOSONAR
                     	log.debug("Saturn job:{} retry sharding remains:{} time",jobName,retry);

@@ -2,6 +2,7 @@ package com.vip.saturn.job.sharding;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +39,11 @@ public class NamespaceShardingManager {
 
 	private ShardingConnectionLostListener shardingConnectionLostListener;
 	
-	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue) {
+	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmService reportAlarmService) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
-		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue);
+		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue, reportAlarmService);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}

@@ -23,6 +23,7 @@
 		<module>saturn-executor</module>
 		<module>saturn-plugin</module>
 		<module>saturn-embed</module>
+		<module>saturn-integrate</module>
 		<module>saturn-it</module>
 	</modules>
 

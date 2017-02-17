@@ -1,7 +1,6 @@
 package com.vip.saturn.job.sharding.service;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,8 +14,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
@@ -49,9 +48,14 @@ public class NamespaceShardingService {
 
 	private NamespaceShardingContentService namespaceShardingContentService;
 
-    public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue) {
+	private ReportAlarmService reportAlarmService;
+
+	private Object shutdownLock = new Object();
+
+    public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmService reportAlarmService) {
     	this.curatorFramework = curatorFramework;
 		this.hostValue = hostValue;
+		this.reportAlarmService = reportAlarmService;
     	this.shardingCount = new AtomicInteger(0);
     	this.needAllSharding = new AtomicBoolean(false);
     	this.executorService = newSingleThreadExecutor();
@@ -59,7 +63,7 @@ public class NamespaceShardingService {
 		this.namespaceShardingContentService = new NamespaceShardingContentService(curatorFramework);
     }
 
-    private ExecutorService newSingleThreadExecutor() {
+	private ExecutorService newSingleThreadExecutor() {
     	return Executors.newSingleThreadExecutor(new ThreadFactory() {
     		@Override
     		public Thread newThread(Runnable r) {
@@ -115,16 +119,34 @@ public class NamespaceShardingService {
 						namespaceShardingContentService.persistDirectly(lastOnlineExecutorList);
 					}
 					// notify the shards-changed jobs of all enable jobs.
-					notifyJobShardingNecessary(getEnabledAndShardsChangedJobs(isAllShardingTask, allEnableJobs, oldOnlineExecutorList, lastOnlineExecutorList));
+					Map<String, Map<String, List<Integer>>> enabledAndShardsChangedJobShardContent = getEnabledAndShardsChangedJobShardContent(isAllShardingTask, allEnableJobs, oldOnlineExecutorList, lastOnlineExecutorList);
+					namespaceShardingContentService.persistJobsNecessaryInTransaction(enabledAndShardsChangedJobShardContent);
 					// sharding count ++
 					increaseShardingCount();
 				}
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
-				if(!isAllShardingTask) { // 如果当前不是全量分片，则需要全量分片来拯救异常； 如果当前是全量分片，不再全量分片
+				if(!isAllShardingTask) { // 如果当前不是全量分片，则需要全量分片来拯救异常
 					needAllSharding.set(true);
 					shardingCount.incrementAndGet();
 					executorService.submit(new ExecuteAllShardingTask());
+				} else { // 如果当前是全量分片，则告警并关闭当前服务，重选leader来做事情
+					if(reportAlarmService != null) {
+						Map<String, String> alarmData = new HashMap<>();
+						alarmData.put("eventType", "SHARDING_ALLSHARDING_EXCEPTION");
+						alarmData.put("domain", namespace);
+						alarmData.put("hostValue", hostValue);
+						try {
+							reportAlarmService.reportWarningAlarm(alarmData);
+						} catch (Throwable t2) {
+							log.error(t2.getMessage(), t2);
+						}
+					}
+					try {
+						shutdown();
+					} catch (Throwable t3) {
+						log.error(t3.getMessage(), t3);
+					}
 				}
 			} finally {
 				if(isAllShardingTask) { // 如果是全量分片，不再进行全量分片
@@ -211,22 +233,27 @@ public class NamespaceShardingService {
 		}
 
 		/**
-		 * Get the jobs, that are enabled, and whose shards are changed. Specially, return all enabled jobs when the current thread is all-shard-task
+		 * Get the jobs, that are enabled, and whose shards are changed. Specially, return all enabled jobs when the current thread is all-shard-task<br/>
+		 * Return the jobs and their shardContent.
 		 */
-		private List<String> getEnabledAndShardsChangedJobs(boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList, List<Executor> lastOnlineExecutorList) throws Exception {
+		private Map<String, Map<String, List<Integer>>> getEnabledAndShardsChangedJobShardContent(boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList, List<Executor> lastOnlineExecutorList) throws Exception {
+			Map<String, Map<String, List<Integer>>> jobShardContent = new HashMap<>();
 			if (isAllShardingTask) {
-				return allEnableJobs;
+				for (String enableJob : allEnableJobs) {
+					Map<String, List<Integer>> lastShardingItems = namespaceShardingContentService.getShardingItems(lastOnlineExecutorList, enableJob);
+					jobShardContent.put(enableJob, lastShardingItems);
+				}
+				return jobShardContent;
 			}
-			List<String> enabledAndShardsChangedJobs = new ArrayList<>();
 			List<String> enableJobsPrior = notifyEnableJobsPrior();
 			for (String enableJob : allEnableJobs) {
+				Map<String, List<Integer>> lastShardingItems = namespaceShardingContentService.getShardingItems(lastOnlineExecutorList, enableJob);
 				// notify prior jobs that are in all enable jobs
 				if(enableJobsPrior != null && enableJobsPrior.contains(enableJob)) {
-					enabledAndShardsChangedJobs.add(enableJob);
+					jobShardContent.put(enableJob, lastShardingItems);
 					continue;
 				}
 				Map<String, List<Integer>> oldShardingItems = namespaceShardingContentService.getShardingItems(oldOnlineExecutorList, enableJob);
-				Map<String, List<Integer>> lastShardingItems = namespaceShardingContentService.getShardingItems(lastOnlineExecutorList, enableJob);
 				// just compare executorName's shardList
 				boolean isChanged = false;
 				Iterator<Map.Entry<String, List<Integer>>> oldIterator = oldShardingItems.entrySet().iterator();
@@ -274,34 +301,10 @@ public class NamespaceShardingService {
 					}
 				}
 				if (isChanged) {
-					enabledAndShardsChangedJobs.add(enableJob);
+					jobShardContent.put(enableJob, lastShardingItems);
 				}
 			}
-			return enabledAndShardsChangedJobs;
-		}
-
-    	private void notifyJobShardingNecessary(List<String> enabledAndShardsChangedJobs) throws Exception {
-			if(enabledAndShardsChangedJobs != null && !enabledAndShardsChangedJobs.isEmpty()) {
-				log.info("Notify jobs sharding necessary, jobs is {}", enabledAndShardsChangedJobs);
-	    		CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
-	    		for(int i=0; i<enabledAndShardsChangedJobs.size(); i++) {
-	    			String jobName =enabledAndShardsChangedJobs.get(i);
-	    			if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName)) == null) {
-	    				curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName));
-	    			}
-					byte[] necessaryData = generateShardingNecessaryData();
-					if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName)) == null) {
-						curatorTransactionFinal.create().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
-					} else {
-						curatorTransactionFinal.setData().forPath(SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName), necessaryData).and();
-					}
-				}
-	    		curatorTransactionFinal.commit();
-			}
-    	}
-
-		private byte[] generateShardingNecessaryData() throws UnsupportedEncodingException {
-			return (hostValue + "-" + System.currentTimeMillis()).getBytes("UTF-8");
+			return jobShardContent;
 		}
 
 		protected boolean isLocalMode(String jobName) throws Exception {
@@ -1497,40 +1500,42 @@ public class NamespaceShardingService {
 	 * @throws Exception
 	 */
 	public void leaderElection() throws Exception {
-		log.info("{}-{} leadership election", namespace, hostValue);
-		LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH);
-		try {
-			leaderLatch.start();
-			leaderLatch.await();
-			if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH) == null) {
-				// 持久化$Jobs节点
-				if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
-	    			curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
-	    		}
-				// 持久化LeaderValue
-				curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
-				// 清理、重置变量
-				executorService.shutdownNow();
-				while(!executorService.isTerminated()) { // 等待全部任务已经退出
-					Thread.sleep(200);
-				}
-				needAllSharding.set(false);
-				shardingCount.set(0);
-				executorService = newSingleThreadExecutor();
-				// 提交全量分片线程
-				needAllSharding.set(true);
-				shardingCount.incrementAndGet();
-				executorService.submit(new ExecuteAllShardingTask());
-				log.info("{}-{} become leadership", namespace, hostValue);
-			}
-		} catch (Exception e) {
-			log.error(namespace + "-" + hostValue + " leadership election failed", e);
-			throw e;
-		} finally {
+		synchronized (shutdownLock) {
+			log.info("{}-{} leadership election", namespace, hostValue);
+			LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH);
 			try {
-				leaderLatch.close();
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
+				leaderLatch.start();
+				leaderLatch.await();
+				if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH) == null) {
+					// 持久化$Jobs节点
+					if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
+						curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+					}
+					// 持久化LeaderValue
+					curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
+					// 清理、重置变量
+					executorService.shutdownNow();
+					while (!executorService.isTerminated()) { // 等待全部任务已经退出
+						Thread.sleep(200);
+					}
+					needAllSharding.set(false);
+					shardingCount.set(0);
+					executorService = newSingleThreadExecutor();
+					// 提交全量分片线程
+					needAllSharding.set(true);
+					shardingCount.incrementAndGet();
+					executorService.submit(new ExecuteAllShardingTask());
+					log.info("{}-{} become leadership", namespace, hostValue);
+				}
+			} catch (Exception e) {
+				log.error(namespace + "-" + hostValue + " leadership election failed", e);
+				throw e;
+			} finally {
+				try {
+					leaderLatch.close();
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
 			}
 		}
 	}
@@ -1546,8 +1551,16 @@ public class NamespaceShardingService {
 		return new String(curatorFramework.getData().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH), "UTF-8").equals(hostValue);
 	}
 
-	private void deleteLeadership() throws Exception {
-		if(isLeadership()) {
+	private boolean isLeadershipOnly() throws Exception {
+		if(hasLeadership()) {
+			return new String(curatorFramework.getData().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH), "UTF-8").equals(hostValue);
+		} else {
+			return false;
+		}
+	}
+
+	private void releaseMyLeadership() throws Exception {
+		if(isLeadershipOnly()) {
 			curatorFramework.delete().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
 		}
 	}
@@ -1556,15 +1569,17 @@ public class NamespaceShardingService {
 	 * 关闭
 	 */
 	public void shutdown() {
-		try {
-			if(curatorFramework.getZookeeperClient().isConnected()){
-				deleteLeadership();
+		synchronized (shutdownLock) {
+			try {
+				if (curatorFramework.getZookeeperClient().isConnected()) {
+					releaseMyLeadership();
+				}
+			} catch (Exception e) {
+				log.error("delete leadership failed", e);
 			}
-		} catch (Exception e) {
-			log.error("delete leadership failed", e);
-		}
-		if(executorService != null) {
-			executorService.shutdownNow();
+			if (executorService != null) {
+				executorService.shutdownNow();
+			}
 		}
 	}
 
