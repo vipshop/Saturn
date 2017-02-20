@@ -235,6 +235,7 @@ public class JobNodeStorage {
         //CHECKSTYLE:OFF
         } catch (final Exception ex) {
         //CHECKSTYLE:ON
+            log.error(callback.getClass() + " error", ex);
             RegExceptionHandler.handleException(ex);
         }
     }
