@@ -285,6 +285,7 @@ public class SaturnExecutor {
 							// clear the Executor ip, make sure it can restart properly.
 							String ipNode = saturnExecutorService.getIpNode();
 							if (regCenter != null && ipNode != null && regCenter.isConnected()) {
+								log.info(" {} is going to delete its ip node {}", executorName, ipNode);
 								regCenter.remove(ipNode);
 							}
 							restart();
