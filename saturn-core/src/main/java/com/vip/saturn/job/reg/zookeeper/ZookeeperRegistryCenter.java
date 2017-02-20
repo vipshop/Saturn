@@ -21,11 +21,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -62,7 +62,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
     private ZookeeperConfiguration zkConfig;
     
-    private final Map<String, TreeCache> caches = new HashMap<>();
+    private final Map<String, TreeCache> caches = new ConcurrentHashMap<>();
     
     private CuratorFramework client;
     
