@@ -83,7 +83,9 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
-				if(e instanceof IllegalMonitorStateException || e instanceof ThreadDeath){			
+				if(e instanceof IllegalMonitorStateException || e instanceof ThreadDeath){		
+					log.error("uncaught:"+e.getMessage());
+					
 					if(callFuture != null){
 						callFuture.cancel(false);
 					}
