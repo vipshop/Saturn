@@ -78,11 +78,18 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	private int sessionTimeout = SESSION_TIMEOUT;
 	
 	private String executorName;
+
+	private MonitorService monitorService;
 	
     public ZookeeperRegistryCenter(final ZookeeperConfiguration zkConfig) {
         this.zkConfig = zkConfig;
     }
     
+    public void closeMonitorService() {
+    	if (monitorService != null) {
+    		monitorService.close();
+    	}
+    }
     
     public ZookeeperConfiguration getZkConfig() {
 		return zkConfig;
@@ -147,7 +154,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
 		// start monitor.
 		if (zkConfig.getMonitorPort() > 0) {
-			MonitorService monitorService = new MonitorService(this, zkConfig.getMonitorPort());
+			monitorService = new MonitorService(this, zkConfig.getMonitorPort());
 			monitorService.listen();
 			log.info("msg=zk monitor port starts at {}. usage: telnet {jobServerIP} {} and execute dump {jobName}", zkConfig.getMonitorPort(), zkConfig.getMonitorPort());
 		}

@@ -282,6 +282,11 @@ public class SaturnExecutor {
 
 						if (stoped.compareAndSet(true, false)) {
 							log.info(" {} is going to restart for zk reconnected", executorName);
+							// clear the Executor ip, make sure it can restart properly.
+							String ipNode = saturnExecutorService.getIpNode();
+							if (regCenter != null && ipNode != null && regCenter.isConnected()) {
+								regCenter.remove(ipNode);
+							}
 							restart();
 						}
 
@@ -443,6 +448,8 @@ public class SaturnExecutor {
 			resetCountService.shutdownRestCountTimer();
 			// shutdown timeout-watchdog-threadpool
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
+			// close zk-dump socket.
+			regCenter.closeMonitorService();
 		}
 	}
 	
