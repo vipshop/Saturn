@@ -450,7 +450,9 @@ public class SaturnExecutor {
 			// shutdown timeout-watchdog-threadpool
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
 			// close zk-dump socket.
-			regCenter.closeMonitorService();
+			if(regCenter != null) {
+				regCenter.closeMonitorService();
+			}
 		}
 	}
 	
