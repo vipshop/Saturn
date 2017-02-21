@@ -100,7 +100,7 @@ public class ShardingService extends AbstractSaturnService {
         	return;
         }
 		waitingOtherJobCompleted();
-        log.info("Saturn job: {} sharding begin.", jobName);
+        log.debug("Saturn job: {} sharding begin.", jobName);
         getJobNodeStorage().fillEphemeralJobNode(ShardingNode.PROCESSING, "");
         clearShardingInfo();
         Map<String, List<Integer>> shardingItems = new LinkedHashMap<>();
@@ -113,7 +113,7 @@ public class ShardingService extends AbstractSaturnService {
                         shardingItems = namespaceShardingContentService.getShardContent(jobName, preNecessaryData);
                         break;
                     } catch (Exception e) {//NOSONAR
-                    	log.error("Saturn job:{} retry sharding remains:{} time",jobName,retry);
+                    	log.debug("Saturn job:{} retry sharding remains:{} time",jobName,retry);
                     }
                 }
                 // 是否需要重拿分片
@@ -129,10 +129,10 @@ public class ShardingService extends AbstractSaturnService {
         	log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
         	throw new JobExecutionException(e);
         } finally {
-            log.info("Saturn job: {} sharding get sharding content: {}", jobName, shardingItems);
+            log.debug("Saturn job: {} sharding get sharding content: {}", jobName, shardingItems);
         	// 清除leader/sharding/necessary节点，避免msgJob无法触发msgService.reExecuteJob()
         	getJobNodeStorage().executeInTransaction(new PersistShardingInfoTransactionExecutionCallback(shardingItems));
-            log.info("Saturn job: {} sharding completed.", jobName);
+            log.debug("Saturn job: {} sharding completed.", jobName);
         }
     }
     
