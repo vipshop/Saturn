@@ -5,7 +5,10 @@ package com.vip.saturn.job.integrate.exception;
  */
 public class ReportAlarmException extends Exception {
 
-    public ReportAlarmException() {
+	private static final long serialVersionUID = -6687479332667465829L;
+
+	public ReportAlarmException() {
+		super();
     }
 
     public ReportAlarmException(String message) {

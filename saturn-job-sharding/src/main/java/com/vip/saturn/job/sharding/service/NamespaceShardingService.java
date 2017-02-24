@@ -264,7 +264,7 @@ public class NamespaceShardingService {
 					List<Integer> shards = next.getValue();
 					List<Integer> newShard = lastShardingItems.get(executorName);
 					if ((shards == null || shards.isEmpty()) && (newShard != null && !newShard.isEmpty())
-							|| (shards != null && !shards.isEmpty()) && (newShard == null || newShard.isEmpty())) {
+							|| (shards != null && !shards.isEmpty()) && (newShard == null || newShard.isEmpty())) { // NOSONAR
 						isChanged = true;
 						break;
 					}
@@ -286,7 +286,7 @@ public class NamespaceShardingService {
 						List<Integer> shards = next.getValue();
 						List<Integer> oldShard = oldShardingItems.get(executorName);
 						if ((shards == null || shards.isEmpty()) && (oldShard != null && !oldShard.isEmpty())
-								|| (shards != null && !shards.isEmpty()) && (oldShard == null || oldShard.isEmpty())) {
+								|| (shards != null && !shards.isEmpty()) && (oldShard == null || oldShard.isEmpty())) { // NOSONAR
 							isChanged = true;
 							break;
 						}
@@ -1107,7 +1107,6 @@ public class NamespaceShardingService {
 		}
 
 		private Shard createLocalShard(List<Executor> lastOnlineExecutorList, int loadLevel) {
-			Shard shard = null;
 			List<Integer> itemList = new ArrayList<>();
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 				List<Shard> shardList = lastOnlineExecutorList.get(i).getShardList();
@@ -1137,7 +1136,7 @@ public class NamespaceShardingService {
 					}
 				}
 			}
-			shard = new Shard();
+			Shard shard = new Shard();
 			shard.setJobName(jobName);
 			shard.setItem(item);
 			shard.setLoadLevel(loadLevel);
@@ -1516,7 +1515,7 @@ public class NamespaceShardingService {
 					// 清理、重置变量
 					executorService.shutdownNow();
 					while (!executorService.isTerminated()) { // 等待全部任务已经退出
-						Thread.sleep(200);
+						Thread.sleep(200); //NOSONARA
 					}
 					needAllSharding.set(false);
 					shardingCount.set(0);

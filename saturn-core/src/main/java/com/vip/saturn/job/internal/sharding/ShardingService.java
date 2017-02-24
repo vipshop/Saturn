@@ -159,7 +159,7 @@ public class ShardingService extends AbstractSaturnService {
     
     private void waitingOtherJobCompleted() {
         while (!isShutdown && executionService.hasRunningItems()) {
-            log.debug("Elastic job: sleep short time until other job completed.");
+            log.info("Elastic job: sleep short time until other job completed.");
             BlockUtils.waitingShortTime();
         }
     }
