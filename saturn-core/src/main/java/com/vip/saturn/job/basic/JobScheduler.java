@@ -15,7 +15,11 @@
 package com.vip.saturn.job.basic;
 
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
@@ -38,9 +42,12 @@ import com.vip.saturn.job.internal.offset.OffsetService;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.statistics.StatisticsService;
-import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.internal.storage.JobNodeStorage;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import com.vip.saturn.job.reg.zookeeper.ZkCacheManager;
+import com.vip.saturn.job.threads.ExtendableThreadPoolExecutor;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 
 /**
@@ -89,6 +96,10 @@ public class JobScheduler {
 	private final LimitMaxJobsService limitMaxJobsService;
 
 	private final JobNodeStorage jobNodeStorage;
+	
+	private final ZkCacheManager zkCacheManager;
+	
+	private ExecutorService executorService;
 
 	private AbstractElasticJob job;
 
@@ -101,8 +112,10 @@ public class JobScheduler {
 		this.currentConf = jobConfiguration;
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
 		this.jobNodeStorage = new JobNodeStorage(coordinatorRegistryCenter, jobConfiguration);
+		initExecutorService();
 		JobRegistry.addJobScheduler(executorName, jobName, this);
-
+		
+		zkCacheManager = new ZkCacheManager((CuratorFramework) coordinatorRegistryCenter.getRawClient(), jobName, executorName);
 		configService = new ConfigurationService(this);
 		leaderElectionService = new LeaderElectionService(this);
 		serverService = new ServerService(this);
@@ -131,7 +144,7 @@ public class JobScheduler {
 		try {
 			String currentConfJobName = currentConf.getJobName();
 			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
-			coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
+			// coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
 
 			startAll();
 			createJob();
@@ -187,6 +200,11 @@ public class JobScheduler {
 		job.setNamespace(coordinatorRegistryCenter.getNamespace());
 		job.setSaturnExecutorService(saturnExecutorService);
 		job.init();
+	}
+	
+	private void initExecutorService() {
+		ThreadFactory factory = new SaturnThreadFactory(jobName);
+		executorService = new ExtendableThreadPoolExecutor(0, 100, 2, TimeUnit.MINUTES, new TaskQueue(), factory);
 	}
 
 	/**
@@ -283,7 +301,7 @@ public class JobScheduler {
 		analyseService.shutdown();
 		limitMaxJobsService.shutdown();
 
-		coordinatorRegistryCenter.closeTreeCache(JobNodePath.getJobNameFullPath(jobName));
+		// coordinatorRegistryCenter.closeTreeCache(JobNodePath.getJobNameFullPath(jobName));
 		try {
 			Thread.sleep(500);
 		} catch (InterruptedException e) {
@@ -293,6 +311,9 @@ public class JobScheduler {
 		}
 
 		JobRegistry.clearJob(executorName, jobName);
+		if (executorService != null && !executorService.isShutdown()) {
+			executorService.shutdown();
+		}
 	}
 
 	/**
@@ -421,4 +442,13 @@ public class JobScheduler {
 	public JobNodeStorage getJobNodeStorage() {
 		return jobNodeStorage;
 	}
+	
+	public ZkCacheManager getZkCacheManager() {
+		return zkCacheManager;
+	}
+
+	public ExecutorService getExecutorService() {
+		return executorService;
+	}
+	
 }

@@ -17,15 +17,13 @@
 
 package com.vip.saturn.job.internal.election;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 /**
  * 主节点选举监听管理器.
@@ -37,37 +35,35 @@ public class ElectionListenerManager extends AbstractListenerManager {
 
     private final LeaderElectionService leaderElectionService;
     
-    private final ElectionNode electionNode;
-    
     private boolean isShutdown;
 
 	public ElectionListenerManager(final JobScheduler jobScheduler) {
         super(jobScheduler);
         leaderElectionService = new LeaderElectionService(jobScheduler);
-        electionNode = new ElectionNode(jobName);
     }
     
     @Override
     public void start() {
-        addDataListener(new LeaderElectionJobListener(), jobConfiguration.getJobName());
+        // addDataListener(new LeaderElectionJobListener(), jobConfiguration.getJobName());
+        zkCacheManager.addNodeCacheListener(new LeaderElectionJobListener(), JobNodePath.getNodeFullPath(jobName, ElectionNode.LEADER_HOST));
     }
     
     @Override
     public void shutdown() {
     	isShutdown = true;
     	leaderElectionService.shutdown();
+    	zkCacheManager.closeNodeCache(JobNodePath.getNodeFullPath(jobName, ElectionNode.LEADER_HOST));
     }
     
-    class LeaderElectionJobListener extends AbstractJobListener {
-        
-        @Override
-        protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
-        	if(isShutdown) return;
-            if (electionNode.isLeaderHostPath(path) && Type.NODE_REMOVED == event.getType() && !leaderElectionService.hasLeader()) {
-                log.info("[{}] msg=Elastic job: leader crashed, elect a new leader now.",jobName);
-                leaderElectionService.leaderElection();
-                log.info("[{}] msg=Elastic job: leader election completed.",jobName);
-            }
-        }
+    class LeaderElectionJobListener implements NodeCacheListener {
+       @Override
+	    public void nodeChanged() throws Exception {
+    	   if (isShutdown) return;
+           if (!leaderElectionService.hasLeader()) {
+               log.info("[{}] msg=Elastic job: leader crashed, elect a new leader now.", jobName);
+               leaderElectionService.leaderElection();
+               log.info("[{}] msg=Elastic job: leader election completed.", jobName);
+           }
+	    }
     }
 }

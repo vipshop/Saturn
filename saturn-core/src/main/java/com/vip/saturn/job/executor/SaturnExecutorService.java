@@ -16,6 +16,7 @@ import com.vip.saturn.job.exception.TimeDiffIntolerableException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import com.vip.saturn.job.reg.zookeeper.ZkCacheManager;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -142,9 +143,7 @@ public class SaturnExecutorService {
 	}
 
 	public void addNewJobListenerCallback(final ScheduleNewJobCallback callback) throws Exception {
-		treeCache = new TreeCache((CuratorFramework) coordinatorRegistryCenter.getRawClient(),
-				"/" + JobNodePath.$JOBS_NODE_NAME);
-		treeCache.start();
+		treeCache = ZkCacheManager.buildAndStart$JobsTreeCache((CuratorFramework) coordinatorRegistryCenter.getRawClient());
 		treeCache.getListenable().addListener(new TreeCacheListener() {
 			@Override
 			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {

@@ -33,7 +33,7 @@ public final class ElectionNode {
     
     static final String ELECTION_ROOT = ROOT + "/election";
     
-    static final String LEADER_HOST = ELECTION_ROOT + "/host";
+    public static final String LEADER_HOST = ELECTION_ROOT + "/host";
     
     static final String LATCH = ELECTION_ROOT + "/latch";
     
@@ -46,4 +46,5 @@ public final class ElectionNode {
     boolean isLeaderHostPath(final String path) {
         return JobNodePath.getNodeFullPath(jobName, LEADER_HOST).equals(path);
     }
+    
 }

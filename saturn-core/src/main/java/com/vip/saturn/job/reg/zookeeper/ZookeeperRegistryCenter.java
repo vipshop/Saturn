@@ -18,22 +18,14 @@
 package com.vip.saturn.job.reg.zookeeper;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import org.apache.curator.framework.api.ACLProvider;
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
@@ -46,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.internal.monitor.MonitorService;
-import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 
@@ -61,8 +52,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     private static final String SLASH_CONSTNAT = "/";
 
     private ZookeeperConfiguration zkConfig;
-    
-    private final Map<String, TreeCache> caches = new ConcurrentHashMap<>();
     
     private CuratorFramework client;
     
@@ -162,33 +151,18 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     
     @Override
     public void close() {
-        for (Entry<String, TreeCache> each : caches.entrySet()) {
-            each.getValue().close();
-            
-        }
-        waitForCacheClose();
+       
         CloseableUtils.closeQuietly(client);
         if (zkConfig.isUseNestedZookeeper()) {
             NestedZookeeperServers.getInstance().closeServer(zkConfig.getNestedPort());
         }
     }
     
-    /* TODO 等待500ms, cache先关闭再关闭client, 否则会抛异常
-     * 因为异步处理, 可能会导致client先关闭而cache还未关闭结束.
-     * 等待Curator新版本解决这个bug.
-     * BUG地址：https://issues.apache.org/jira/browse/CURATOR-157
-     */
-    private void waitForCacheClose() {
-        try {
-            Thread.sleep(500L);
-        } catch (final InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-    }
     
     @Override
     public String get(final String key) {
-        TreeCache cache = findTreeCache(key);
+    	 return getDirectly(key);
+    	/* TreeCache cache = findTreeCache(key);
         if (null == cache) {
             return getDirectly(key);
         }
@@ -196,16 +170,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         if (null != resultIncache) {
             return null == resultIncache.getData() ? null : new String(resultIncache.getData(), Charset.forName("UTF-8"));
         }
-        return null;
-    }
-    
-    private TreeCache findTreeCache(final String key) {
-        for (Entry<String, TreeCache> entry : caches.entrySet()) {
-            if (key.startsWith(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-        return null;
+        return null;*/
     }
     
     @Override
@@ -227,20 +192,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     @Override
     public List<String> getChildrenKeys(final String key) {
     	List<String> result = null;
-		TreeCache cache = findTreeCache(key);
-		if (null != cache) {
-			Map<String, ChildData> resultIncache = cache.getCurrentChildren(key);
-			if (null != resultIncache) {
-				result = new ArrayList<String>();
-				Set<String> names = resultIncache.keySet();
-				result.addAll(names);
-			}
-		}
-
 		try {
-			if(result == null){
-				result = client.getChildren().forPath(key);
-			}		
+			result = client.getChildren().forPath(key);
 			Collections.sort(result, new Comparator<String>() {
 
 				@Override
@@ -259,14 +212,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     
     @Override
     public boolean isExisted(final String key) {
-		TreeCache cache = findTreeCache(key);
-		if (null != cache) {
-			ChildData dt = cache.getCurrentData(key);
-			if(dt != null){
-				return true;
-			}
-		}
-		
 		try {
 			return null != client.checkExists().forPath(key);
 			// CHECKSTYLE:OFF
@@ -359,50 +304,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         return client;
     }
     
-    /**
-     * 注册数据监听器.
-     * @param listener 连接状态监听器
-     */
-    @Override
-    public void addTreeCacheListener(final TreeCacheListener listener, String jobName) {
-    	String fullPath = JobNodePath.getJobNameFullPath(jobName);
-    	TreeCache cache = getRawCache(fullPath);
-    	if (cache == null) {
-			log.error("[{}] msg=no tree cache for {}, add Listner {} failed.", jobName, fullPath, listener);
-		} else {
-            cache.getListenable().addListener(listener);
-        }
-    }
-    @Override
-    public void addCacheData(final String cachePath) {
-    	final TreeCache cache = new TreeCache(client, cachePath);
-        try {
-            cache.start();
-            log.info("msg=treecache for:{} started.", cachePath);
-        //CHECKSTYLE:OFF
-        } catch (final Exception ex) {
-        //CHECKSTYLE:ON
-            RegExceptionHandler.handleException(ex);
-        }
-        caches.put(cachePath + SLASH_CONSTNAT, cache);
-    }
-    
-    /**
-     * 清除本job注册的全部监听器
-     */
-    @Override
-    public void closeTreeCache(final String cachePath){
-    	TreeCache cache = getRawCache(cachePath);
-    	if (cache != null) {
-            cache.close();
-            log.info("msg=treecache for:{} closed.", cachePath);
-            caches.remove(cachePath + SLASH_CONSTNAT);
-        }
-    }
-    @Override
-    public TreeCache getRawCache(final String cachePath) {
-        return caches.get(cachePath + SLASH_CONSTNAT);
-    }
     
     @Override
     public void addConnectionStateListener(final ConnectionStateListener listener) {

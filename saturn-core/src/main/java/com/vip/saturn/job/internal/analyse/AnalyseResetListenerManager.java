@@ -40,7 +40,8 @@ public class AnalyseResetListenerManager extends AbstractListenerManager {
 	
 	@Override
 	public void start() {
-		addDataListener(new AnalyseResetPathListener(), jobName);
+		// addDataListener(new AnalyseResetPathListener(), jobName);
+		zkCacheManager.addTreeCacheListener(new AnalyseResetPathListener(), JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET), 0);
 	}
 
 	class AnalyseResetPathListener extends AbstractJobListener {
@@ -64,6 +65,7 @@ public class AnalyseResetListenerManager extends AbstractListenerManager {
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET), 0);
 	}
 
 }

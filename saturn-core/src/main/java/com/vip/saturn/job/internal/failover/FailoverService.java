@@ -25,7 +25,6 @@ import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
-import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 
 /**
@@ -35,15 +34,12 @@ import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 public class FailoverService extends AbstractSaturnService {
 	static Logger log = LoggerFactory.getLogger(FailoverService.class);
 
-	private ServerService serverService;
-
 	public FailoverService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
 	
 	@Override
 	public void start(){
-		serverService = jobScheduler.getServerService();
 	}
 	/**
 	 * 设置失效的分片项标记.

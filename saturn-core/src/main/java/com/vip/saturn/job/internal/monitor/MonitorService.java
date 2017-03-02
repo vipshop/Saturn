@@ -27,8 +27,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,8 +98,7 @@ public class MonitorService {
                 if (cmds.length == 2) {
                 	List<String> result = new ArrayList<>();
                 	String jobName = cmds[1];
-                    TreeCache treeCache = (TreeCache) coordinatorRegistryCenter.getRawCache(JobNodePath.getJobNameFullPath(jobName));
-                    dumpDirectly(JobNodePath.getJobNameFullPath(jobName), treeCache, result);
+                    dumpDirectly(JobNodePath.getJobNameFullPath(jobName), result);
                     outputMessage(writer, Joiner.on("\n").join(SensitiveInfoUtils.filterSenstiveIps(result)) + "\n");
                 }
             }
@@ -110,19 +107,12 @@ public class MonitorService {
         }
     }
     
-    private void dumpDirectly(final String path, final TreeCache treeCache, final List<String> result) {
+    private void dumpDirectly(final String path, final List<String> result) {
         for (String each : coordinatorRegistryCenter.getChildrenKeys(path)) {
             String zkPath = path + "/" + each;
             String zkValue = coordinatorRegistryCenter.get(zkPath);
-            ChildData treeCacheData = treeCache.getCurrentData(zkPath);
-            String treeCachePath =  null == treeCacheData ? "" : treeCacheData.getPath();
-            String treeCacheValue = null == treeCacheData ? "" : new String(treeCacheData.getData());
-            if (zkValue.equals(treeCacheValue) && zkPath.equals(treeCachePath)) {
-                result.add(Joiner.on(" | ").join(zkPath, zkValue));
-            } else {
-                result.add(Joiner.on(" | ").join(zkPath, zkValue, treeCachePath, treeCacheValue));
-            }
-            dumpDirectly(zkPath, treeCache, result);
+            result.add(Joiner.on(" | ").join(zkPath, zkValue));
+            dumpDirectly(zkPath, result);
         }
     }
     
