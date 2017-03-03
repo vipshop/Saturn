@@ -292,7 +292,11 @@ $(function() {
     $(document).on("change", "#groupSelect", function(event) {
     	var term = $(this).val();
         regex =  term ;
-		jobsViewDataTable.columns(11).search(regex, true, false).draw();
+        if (regex == "") {
+    		jobsViewDataTable.columns(11).search(regex, true, false).draw();
+        } else {
+    		jobsViewDataTable.columns(11).search("^" + regex + "$", true, false).draw();
+        }
     });
     
     $(document).on("click", "#add-job", function(event) {
