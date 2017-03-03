@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 	<body>
 
-		<div th:id="${id}" th:fragment="confirm-dialog" class="modal fade">
+		<div th:id="${id}" th:fragment="confirm-dialog" class="modal fade" style="z-index:10000">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -26,7 +26,7 @@
 			</div>
 		</div>
 
-		<div th:id="${id}" th:fragment="failure-dialog" class="modal fade">
+		<div th:id="${id}" th:fragment="failure-dialog" class="modal fade" style="z-index:10001">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -47,7 +47,7 @@
 			</div>
 		</div>
 
-		<div th:id="${id}" th:fragment="prompt-dialog" class="modal fade">
+		<div th:id="${id}" th:fragment="prompt-dialog" class="modal fade" style="z-index:10003">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -68,7 +68,7 @@
 			</div>
 		</div>
 
-		<div th:id="${id}?${id}:success-dialog" th:fragment="success-dialog" class="modal fade">
+		<div th:id="${id}?${id}:success-dialog" th:fragment="success-dialog" class="modal fade" style="z-index:10004">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">

@@ -8,7 +8,6 @@ $(function() {
 	$("[data-toggle='tooltip']").tooltip();
 	window.parent.setRegName(regName, $("#namespace").val());
 	window.parent.reloadTreeAndExpandJob(regName);
-	var preferSelectSumo = $('.preferListSelect').SumoSelect({selectAll:true,csvDispCount:10}).sumo;
 	
    
     
@@ -213,6 +212,41 @@ $(function() {
 			$("#onlyUsePreferListLabel").show();
 		}
 	});
+
+    function onPreferListChanged() {
+        var containerSelected = false;
+        var options = $("#preferList").find("option");
+        if(options) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.selected && option.value && option.value[0] == "@") {
+                    containerSelected = true;
+                    break;
+                }
+            }
+        }
+        if(containerSelected) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(!(option.selected) && option.value && option.value[0] == "@") {
+                    $(option).attr("disabled", "disabled");
+                }
+            }
+        } else {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.value && option.value[0] == "@") {
+                    $(option).removeAttr("disabled");
+                }
+            }
+        }
+        $("#preferList").selectpicker('refresh');
+    }
+
+	$('#preferList').on('changed.bs.select', function (e) {
+        onPreferListChanged();
+    });
+
 	/** [作业设置] Tab*/
 	function renderSettings(historyId) {
 	    $.get("job/settings", {jobName : jobName,nns:regName}, function (data) {
@@ -273,48 +307,39 @@ $(function() {
 	        	$("#onlyUsePreferList").prop("checked",false);
 	        }
 	        $("#cron").val(jobConfig.cron);
-	        if(jobConfig.disabled == false){// 启用状态的作业不可编辑（不可调整prefer list)
-	        	$(".preferListSelect").attr("disabled", true).addClass("disabled");
-	        }else{
-	        	$(".preferListSelect").removeAttr("disabled");
-	        }
         	var preferListCandidate = jobConfig.preferListCandidate;
         	var preferList = jobConfig.preferList;
         	var hasPreferList = (typeof preferList == "string");
         	if(typeof preferListCandidate == "string"){
-        		$(".preferListSelect").empty();// 清空options
-        		preferSelectSumo.ul.empty();// 清空select下拉显示的ul
-        		preferSelectSumo.caption.html("请选择优先Executor");// 重置复选框显示问题
-        		preferSelectSumo.caption.addClass('placeholder');
-        		var deletePreferExecutor = "";
-        		var preferListCandidateArr = preferListCandidate.split(",");
+        	    $("#preferList").empty();
+        	    var preferListArr = preferList.split(",");
+                var preferListCandidateArr = preferListCandidate.split(",");
                 for (var i = 0; i < preferListCandidateArr.length; i++) {
                     var preferExecutorCandidate = preferListCandidateArr[i];
                     if(!preferExecutorCandidate){
-                    	continue;
-                    }
-                    if(preferExecutorCandidate.indexOf("已删除") != -1){
-                    	deletePreferExecutor += preferExecutorCandidate + ", ";
-                    	continue;
+                        continue;
                     }
                     var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
-                    var preferExecutorShow = preferExecutorCandidateArr[0]; 
-                    preferSelectSumo.add(preferExecutorShow,preferExecutorCandidate,i);// 往preferListSelect添加option
-                    if(hasPreferList && preferList.indexOf(preferExecutorShow) != -1){
-                    	preferSelectSumo.selectItem(i);// 勾选option
+                    var preferExecutorValue = preferExecutorCandidateArr[0];
+                    var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
+                    if(isContainer){
+                        preferExecutorValue = "@"+preferExecutorValue;
                     }
+                    var selected = false;
+                    $.each(preferListArr, function(index, preferValue) {
+                        if(preferValue == preferExecutorValue){
+                            selected = true;
+                        }
+                    });
+                    var option = "<option value='" + preferExecutorValue + "'";
+                    if(selected) {
+                        option = option + " selected";
+                    }
+                    option = option + ">" + preferExecutorCandidate + "</option>";
+                    $("#preferList").append(option);
                 }
-                preferSelectSumo.selAllState();// 调整selectAll和select的勾选状态
-                if(deletePreferExecutor){
-                	var deletePreferExecutorStr = deletePreferExecutor.substring(0,deletePreferExecutor.length-2);// 去掉末尾的2个字符逗号和空格", "
-                	var preferSelect = preferSelectSumo.E.find(':selected').not(':disabled').text();
-                	if(preferSelect){
-                		preferSelectSumo.caption.html(preferSelect + ", " + deletePreferExecutorStr);
-                	}else{
-                		preferSelectSumo.caption.html(deletePreferExecutorStr);
-                		preferSelectSumo.caption.removeClass('placeholder');
-                	}
-                }
+                $("#preferList").selectpicker('refresh');
+                onPreferListChanged();
         	}
 
         	$("#dependencies").empty();
@@ -472,7 +497,10 @@ $(function() {
 	        var enabledReport = $("#enabledReport").prop("checked");
 	        var queueName = $("#queueName").val();
 	        var channelName = $("#channelName").val();
-	        var preferList = preferSelectSumo.getSelStr();
+	        var preferList = "";
+            if($("#preferList").val() != null) {
+                preferList = $("#preferList").val().toString();
+            }
 	        var dependencies = "";
             if($("#dependencies").val() != null) {
                 dependencies = $("#dependencies").val().toString();

@@ -6,8 +6,6 @@ layout:decorator="frame-layout">
 	 	<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 		<link href="lib/jquery-ui-1.11.4.custom/jquery-ui.min.css" rel="stylesheet" type="text/css" />
 		<link href="lib/tags-input/jquery.tagsinput.min.css" rel="stylesheet" type="text/css" />
-		<link href="lib/sumoselect/jquery.sumoselect.css" rel="stylesheet" />
-		<link href="/webjars/bootstrap-select/1.12.0/css/bootstrap-select.min.css" rel="stylesheet" />
     </head>
 	<body>
 		<div th:remove="tag" layout:fragment="content">
@@ -116,7 +114,7 @@ layout:decorator="frame-layout">
 							                <div class="form-group">
 							                    <label for="preferList" class="col-sm-2 control-label">优先Executor</label>
 							                    <div class="col-sm-9">
-								                    <select multiple="multiple" placeholder="请选择优先Executor" class="preferListSelect" style="width:100%">
+													<select id="preferList" class="selectpicker" multiple="multiple" data-live-search="true" data-size="10" data-width="100%" title="请选择优先Executor">
 													</select>
 												</div>
 							                </div>
@@ -186,7 +184,7 @@ layout:decorator="frame-layout">
 											<div class="form-group">
 												<label for="dependencies" class="col-sm-2 control-label">依赖的作业</label>
 												<div class="col-sm-9">
-													<select id="dependencies" class="selectpicker" multiple="multiple" data-live-search="true" data-width="100%" title="请选择依赖的作业">
+													<select id="dependencies" class="selectpicker" multiple="multiple" data-live-search="true" data-size="10" data-width="100%" title="请选择依赖的作业">
 													</select>
 												</div>
 											</div>
@@ -337,7 +335,6 @@ layout:decorator="frame-layout">
 			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
 			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
 			<script src="lib/mustache/mustache.min.js"></script>
-			<script src="lib/sumoselect/jquery.sumoselect.min.js"></script>
 			<script src="js/job_detail.js"></script>
 		</div>
 	</body>

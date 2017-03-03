@@ -1,5 +1,8 @@
-var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataTable,
-	executorsViewDataTable, $loading, opExecutorNames = new Array(),
+var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataTable,containersViewDataTable,
+	executorsViewDataTable, $loading,
+	ns = $("#namespace").val(),
+	containerType = $("#containerType").val(),
+	opExecutorNames = new Array(),
 	opAddJobNames = new Array(),
 	jobOperation = '<div id="jobviews-operation-area"><button class="btn btn-success change-jobStatus-batch-job" id="batch-enable-job" title="点击进行批量启用作业">启用作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-warning change-jobStatus-batch-job" id="batch-disable-job" title="点击进行批量禁用作业">禁用作业</button>&nbsp;&nbsp;'+
@@ -13,11 +16,20 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
 		'<button class="btn btn-info" id="shard-all-at-once" title="点击进行一键重排？（即把当前域下所有分片按照作业负荷以及优先Executor等作业配置重新进行排序。注：重排可能导致分片分布剧烈动荡，请谨慎操作！另外在操作本功能时，请尽量避免同时操作Executor上下线或启用禁用作业，以免影响到重排的均衡效果！）">一键重排</button>&nbsp;&nbsp;'+
 		'<button class="btn btn-danger" id="batch-remove-executor" title="点击进行批量删除Executor">删除Executor</button>&nbsp;&nbsp;</div>';
 
-
 $(function() {
 
 	$loading = $("#loading");
 	bindSubmitExecutorAddJobsForm();
+
+	$.fn.money_field = function(opts) {
+        var defaults = { width: null, symbol: '$' };
+        var opts     = $.extend(defaults, opts);
+        return this.each(function() {
+          if(opts.width)
+            $(this).css('width', opts.width + 'px');
+          $(this).wrap("<div class='input-group'>").before("<span class='input-group-addon'>" + opts.symbol + "</span>");
+        });
+    };
 	
 	// 下次触发时间排序
 	jQuery.fn.dataTableExt.oSort['zn-datetime-asc']  = function(a,b) {
@@ -91,6 +103,10 @@ $(function() {
     $('[href="#servers"]').click(function(event) {
     	$loading.show();
         renderServersOverview();
+    });
+    $('[href="#containers"]').click(function(event) {
+        $loading.show();
+        renderContainersOverview();
     });
 
     $('#jobType').change(function(event) {
@@ -255,7 +271,24 @@ $(function() {
     		return false;
     	});
     });
-    
+
+    $("#remove-container-confirm-dialog").on("shown.bs.modal", function (event) {
+        var taskId = event.relatedTarget;
+        $("#remove-container-confirm-dialog-confirm-btn").unbind('click').click(function() {
+            var $btn = $(this).button('loading');
+            $.post("container/removeContainer", {taskId : taskId,nns:regName}, function (data) {
+                $("#remove-container-confirm-dialog").modal("hide");
+                if(data.success == true) {
+                    showSuccessDialogWithCallback(function(){location.reload(true);});
+                } else {
+                    $("#failure-dialog .fail-reason").text(data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            }).always(function() { $btn.button('reset'); });
+            return false;
+        });
+    });
+
     $(document).on("change", "#groupSelect", function(event) {
     	var term = $(this).val();
         regex =  term ;
@@ -274,14 +307,116 @@ $(function() {
 		$("#pausePeriodTime").val('');
 		$("#showNormalLog").val('');
 		$("#jobType").removeAttr("disabled");
-    	$("#addJobTitle").html("添加作业");
-		$("#add-job-dialog").modal("show");
-		$("#jobName").focus();
+        reloadPreferListProvided("", function() {
+            $("#addJobTitle").html("添加作业");
+            $("#add-job-dialog").modal("show").css({height:'100%', 'overflow-y':'scroll'});
+            $("#jobName").focus();
+        });
 	});
+
+	$("#taskId").money_field({ width: null,symbol: ns + "-"});
+    $("#cmd").val("/apps/dat/web/working/saturn/bin/saturn-job-executor.sh start -r foreground -env docker -n " + ns);
+
+    $(document).on("click", "#add-preferResource", function(event) {
+        if(containerType == "VDOS") {
+            $.get("container/getContainerToken",{nns:regName}, function(data) {
+                if(data.success) {
+                    $("#containers-operation-token").val(data.obj.keyValue.token == null ? "" : data.obj.keyValue.token);
+                    $("#add-container-dialog-token").val(data.obj.keyValue.token == null ? "" : data.obj.keyValue.token);
+                } else {
+                    $("#failure-dialog .fail-reason").text("get token error:" + data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            });
+        } else {
+            $.get("container/getContainerToken", {nns: regName}, function(data) {
+                if(data.success) {
+                    $("#containers-operation-userName").val(data.obj.keyValue.userName == null ? "" : data.obj.keyValue.userName);
+                    $("#containers-operation-password").val(data.obj.keyValue.password == null ? "" : data.obj.keyValue.password);
+                    $("#add-container-dialog-userName").val(data.obj.keyValue.userName == null ? "" : data.obj.keyValue.userName);
+                    $("#add-container-dialog-password").val(data.obj.keyValue.password == null ? "" : data.obj.keyValue.password);
+                } else {
+                    $("#failure-dialog .fail-reason").text("get token error:" + data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            });
+        }
+        $("#nested").val("true");
+        $("#add-container-dialog").modal("show");
+    });
 
 	$(document).on("click", "#batch-add-job", function(event) {
 		$("#batch-add-job-dialog").modal("show");
 	});
+
+	$(document).on("click", "#add-container", function(event) {
+        $("#nested").val('');
+        $("#add-container-dialog").modal("show");
+    });
+
+    $(document).on("change", "#image-repositories", function(event) {
+        var imageTagsSelect = $("#image-tags");
+        imageTagsSelect.empty();
+        var repositoryValSelected = $(this).find("option:selected").val();
+        $(this).attr("title", repositoryValSelected);
+        if(!isNullOrEmpty(repositoryValSelected)) {
+            $.get("container/getRegistryRepositoryTags", {repository: repositoryValSelected,nns:regName}, function(data) {
+                if(data.success == true && data.obj) {
+                    var obj = $.parseJSON(data.obj);
+                    if(obj.tags && obj.tags instanceof Array) {
+                        var _options = "";
+                        for(var i=0; i<obj.tags.length; i++) {
+                            _options = _options + '<option value="' + obj.tags[i] + '" title="' + obj.tags[i] + '">' + obj.tags[i] + '</option>';
+                        }
+                        imageTagsSelect.append(_options);
+                        var imageTagsVal = $("#image-tags").find("option:selected").val();
+                        if(imageTagsVal) {
+                            $("#image-tags").attr("title", imageTagsVal);
+                        }
+                    }
+                } else {
+                    $("#failure-dialog .fail-reason").text("get getRegistryRepositoryTags error: " + data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            });
+        }
+    });
+
+    $("#volumes_table").attr("trAddCount", "1");
+    $("#volumes_table").find(".fa-plus").each(function(i) {
+        $(this).on("click", function(event) {
+            addVolumesTableTr(this);
+        });
+    });
+
+    $("#add-container-dialog").on("show.bs.modal", function(event) {
+        var imageRepositoriesSelect = $("#image-repositories");
+        imageRepositoriesSelect.empty();
+
+        var imageTagsSelect = $("#image-tags");
+        imageTagsSelect.empty();
+
+        $.get("container/getRegistryCatalog",{nns:regName}, function(data) {
+            if(data.success == true && data.obj) {
+                var obj = $.parseJSON(data.obj);
+                if(obj.repositories && obj.repositories instanceof Array) {
+                    var _options = "";
+                    for(var i=0; i<obj.repositories.length; i++) {
+                        var _selected = '';
+                        if(i == 0) {
+                            _selected = 'selected=true';
+                        }
+                        _options = _options + '<option value="' + obj.repositories[i] + '" title="' + obj.repositories[i] + '" ' + _selected + '>' + obj.repositories[i] + '</option>';
+                    }
+                    imageRepositoriesSelect.append(_options);
+                    imageRepositoriesSelect.trigger("change");
+                }
+            } else {
+                $("#failure-dialog .fail-reason").text("get getRegistryCatalog error: " + data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
+    });
 
 	$(document).on("click", "#copy-job", function(event) {
 		var chooseInputSize = 0;
@@ -311,7 +446,6 @@ $(function() {
 		$("#queueName").val(job.queueName);
 		$("#channelName").val(job.channelName);
 		$("#loadLevel").val(job.loadLevel);
-		$("#preferList").val(job.preferList);
 		$("#useDispreferList").val(job.useDispreferList);
 		$("#localMode").val(job.localMode);
 		$("#processCountIntervalSeconds").val(job.processCountIntervalSeconds);
@@ -322,8 +456,11 @@ $(function() {
 		$("#jobType").attr("disabled","disabled");
 		$("#addJobTitle").html("复制作业");
 		setJobTypeConfig(job.jobType);
-		$("#add-job-dialog").modal("show");
-		$("#jobName").focus();
+        reloadPreferListProvided(job.preferList, function() {
+            $("#addJobTitle").html("复制作业");
+            $("#add-job-dialog").modal("show").css({height:'100%', 'overflow-y':'scroll'});
+            $("#jobName").focus();
+        });
 	});
     
     $(document).on("click", "#batch-remove-job", function(event) {
@@ -408,7 +545,439 @@ $(function() {
     	$("#change-jobStatus-batch-confirm-dialog .confirm-reason").text(confirmReason);
     	$("#change-jobStatus-batch-confirm-dialog").modal("show",jobObj);
 	});
-    
+
+    $(document).on("click", "#containers-operation-save-token", function(event) {
+        var token = $("#containers-operation-token").val();
+        if(isNullOrEmpty(token)) {
+            alert("token不能为空");
+            return;
+        }
+        $loading.show();
+        $.post("container/saveOrUpdateContainerToken", {"keyValue['token']" : token,nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#add-container-dialog-token").val(token);
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $loading.hide(); });
+    });
+
+    $(document).on("click", "#add-container-dialog-save-token", function(event) {
+        var token = $("#add-container-dialog-token").val();
+        if(isNullOrEmpty(token)) {
+            alert("token不能为空");
+            return;
+        }
+        $loading.show();
+        $.post("container/saveOrUpdateContainerToken", {"keyValue['token']" : token,nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#containers-operation-token").val(token);
+                showSuccessDialog();
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $loading.hide(); });
+    });
+
+    $(document).on("click", "#containers-operation-save-user-pwd", function(event) {
+        var userName = $("#containers-operation-userName").val();
+        if(isNullOrEmpty(userName)) {
+            alert("userName不能为空");
+            return;
+        }
+        var password = $("#containers-operation-password").val();
+        if(isNullOrEmpty(password)) {
+            alert("password不能为空");
+            return;
+        }
+        $loading.show();
+        $.post("container/saveOrUpdateContainerToken", {"keyValue['userName']": userName, "keyValue['password']": password, nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#add-container-dialog-userName").val(userName);
+                $("#add-container-dialog-password").val(password);
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $loading.hide(); });
+    });
+
+    $(document).on("click", "#add-container-dialog-save-user-pwd", function(event) {
+        var userName = $("#add-container-dialog-userName").val();
+        if(isNullOrEmpty(userName)) {
+            alert("userName不能为空");
+            return;
+        }
+        var password = $("#add-container-dialog-password").val();
+        if(isNullOrEmpty(password)) {
+            alert("password不能为空");
+            return;
+        }
+        $loading.show();
+        $.post("container/saveOrUpdateContainerToken", {"keyValue['userName']": userName, "keyValue['password']":password, nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#containers-operation-userName").val(userName);
+                $("#containers-operation-password").val(password);
+                showSuccessDialog();
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $loading.hide(); });
+    });
+
+    $("#migrate-job-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var jobName = $("#migrate-jobName").html();
+        var newTask = $("#migrate-job-tasks-select").find("option:selected").val();
+        $.post("job/migrateJobNewTask", {jobName : jobName, newTask : newTask}, function(data) {
+            if(data.success == true) {
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $btn.button('reset'); });
+        return false;
+    });
+
+    $("#add-container-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading'),
+        taskIdPre = $("#taskId").prev(".input-group-addon:first").text(), 
+        taskId = $("#taskId").val(), 
+        instances = $("#containerInstance").val(),
+        cpus = $("#cpuCoreCount").val(), 
+        mem = $("#memory").val(),
+        cmd = $("#cmd").val(),
+        privileged = $("#privileged-div input[name='privileged']:checked").val(),
+        force_pull_image = $("#force_pull_image-div input[name='force_pull_image']:checked").val();
+        var token;
+        var userName;
+        var password;
+        var postJson = {};
+        if(containerType == "VDOS") {
+            token = $("#add-container-dialog-token").val();
+            if(isNullOrEmpty(token)) {
+                alert("token不能为空");
+                return;
+            }
+            postJson["containerToken.keyValue['token']"] = token;
+        } else {
+            userName = $("#add-container-dialog-userName").val();
+            if(isNullOrEmpty(userName)) {
+                alert("userName不能为空");
+                return;
+            }
+            postJson["containerToken.keyValue['userName']"] = userName;
+            password = $("#add-container-dialog-password").val();
+            if(isNullOrEmpty(password)) {
+                alert("password不能为空");
+                return;
+            }
+            postJson["containerToken.keyValue['password']"] = password;
+        }
+
+        var imageRepositoriesVal = $("#image-repositories").find("option:selected").val();
+        if(isNullOrEmpty(imageRepositoriesVal)) {
+            alert("repository不能为空");
+            $btn.button('reset');
+            return;
+        }
+        var imageTagsVal = $("#image-tags").find("option:selected").val();
+        if(isNullOrEmpty(imageTagsVal)) {
+            alert("tags不能为空");
+            $btn.button('reset');
+            return;
+        }
+        var image = imageRepositoriesVal + ":" + imageTagsVal;
+        if(isNullOrEmpty(taskId)) {
+            alert("资源标识不能为空");
+            $btn.button('reset');
+            return;
+        }
+        if(isNullOrEmpty(cpus)) {
+            alert("CPU数不能为空");
+            $btn.button('reset');
+            return;
+        }
+        if(isNullOrEmpty(mem)) {
+            alert("内存不能为空");
+            $btn.button('reset');
+            return;
+        }
+        if(isNullOrEmpty(instances)) {
+            alert("实例数不能为空");
+            $btn.button('reset');
+            return;
+        }
+        if(isNullOrEmpty(image)) {
+            alert("镜像名不能为空");
+            $btn.button('reset');
+            return;
+        }
+        if(isNaN(parseInt(cpus))) {
+            alert("CPU数必须为数字");
+            $btn.button('reset');
+            return;
+        }
+        if(parseInt(cpus) < 0) {
+            alert("CPU数不能为负数");
+            $btn.button('reset');
+            return;
+        }
+        if(isNaN(parseInt(mem))) {
+            alert("内存数必须为数字");
+            $btn.button('reset');
+            return;
+        }
+        if(parseInt(mem) < 0) {
+            alert("内存数不能为负数");
+            $btn.button('reset');
+            return;
+        }
+        if(isNaN(parseInt(instances))) {
+            alert("实例数数必须为数字");
+            $btn.button('reset');
+            return;
+        }
+        if(parseInt(instances) <= 0) {
+            alert("实例数必须为正数");
+            $btn.button('reset');
+            return;
+        }
+
+        postJson["taskId"] = taskIdPre + taskId;
+        postJson["cmd"] = cmd;
+        postJson["cpus"] = cpus;
+        postJson["mem"] = mem;
+        postJson["instances"] = instances;
+
+        $("#constraints_table tbody tr").each(function(i) {
+            postJson["constraints["+i+"][0]"] = $(this).find("input[name='attribute']").val();
+            postJson["constraints["+i+"][1]"] = $(this).find("input[name='operator']").val();
+            postJson["constraints["+i+"][2]"] = $(this).find("input[name='value']").val();
+        });
+
+        $("#env_table tbody tr").each(function(i) {
+            postJson["env['" + $(this).find("input[name='key']").val() + "']"] = $(this).find("input[name='value']").val();
+        });
+
+        postJson["privileged"] = privileged;
+        postJson["forcePullImage"] = force_pull_image;
+
+        $("#parameters_table tbody tr").each(function(i) {
+            postJson["parameters["+i+"]['key']"] = $(this).find("input[name='key']").val();
+            postJson["parameters["+i+"]['value']"] = $(this).find("input[name='value']").val();
+        });
+
+        $("#volumes_table tbody tr").each(function(i) {
+            postJson["volumes["+i+"]['containerPath']"] = $(this).find("input[name='containerPath']").val();
+            postJson["volumes["+i+"]['hostPath']"] = $(this).find("input[name='hostPath']").val();
+            postJson["volumes["+i+"]['mode']"] = $(this).find("input[type='radio']:checked").val();
+        });
+
+        postJson["image"] = image;
+        postJson["nns"] = regName;
+
+        $.post("container/addContainer", postJson,
+        	function(data) {
+                if(data.success == true) {
+                    $("#add-container-dialog-confirm-btn").modal("hide");
+                    if($("#nested").val() == "true") {
+                        reloadPreferListProvided("", function() {
+                            $("#add-container-dialog").modal("hide");
+                        });
+                        showSuccessDialog();
+                    }else{
+                        showSuccessDialogWithCallback(function() {location.reload(true);});
+                    }
+                } else {
+                    $("#failure-dialog .fail-reason").text(data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            }
+        ).always(function() { $btn.button('reset'); });
+    });
+
+    $("#alter-instance-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading'),taskId = $("#showTask").html(),instances = $("#alterInstance").val();
+        if(isNaN(parseInt(instances))) {
+            alert("实例数必须为数字");
+            $btn.button('reset');
+            return;
+        }
+        if(parseInt(instances) < 0) {
+            alert("实例数不能为负数");
+            $btn.button('reset');
+            return;
+        }
+        $.post("container/updateContainerInstances",{taskId:taskId,instances:instances,nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#alter-instance-dialog-confirm-btn").modal("hide");
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $btn.button('reset'); });
+    });
+
+    $("#add-scale-job-dialog-check-and-forecast-cron").on('click', function(event) {
+        var cron = $("#add-scale-job-dialog-cron").val();
+        checkAndForecastCron(cron);
+    });
+
+    $("#see-scale-job-dialog-check-and-forecast-cron").on('click', function(event) {
+        var cron = $("#see-scale-job-dialog-cron").val();
+        checkAndForecastCron(cron);
+    });
+
+    $("#add-scale-job-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var taskId = $("#add-scale-job-dialog-showTask").text();
+        var jobDesc = $("#add-scale-job-dialog-jobDesc").val();
+        var instances = $("#add-scale-job-dialog-instances").val();
+        var cron = $("#add-scale-job-dialog-cron").val();
+        if(isNullOrEmpty(taskId)) {
+            alert("taskId不能为空");
+            $btn.button('reset');
+            return false;
+        }
+        if(isNullOrEmpty(jobDesc)) {
+            alert("计划名称不能为空");
+            $btn.button('reset');
+            return false;
+        }
+        if(isNullOrEmpty(instances)) {
+            alert("实例数不能为空");
+            $btn.button('reset');
+            return false;
+        }
+        if(isNaN(parseInt(instances))) {
+            alert("实例数必须为数字");
+            $btn.button('reset');
+            return;
+        }
+        if(parseInt(instances) < 1) {
+            alert("实例数不能为小于1");
+            $btn.button('reset');
+            return;
+        }
+        if(isNullOrEmpty(cron)) {
+            alert("Cron不能为空");
+            $btn.button('reset');
+            return false;
+        }
+        $.post("container/addContainerScaleJob", {nns:regName, taskId:taskId, jobDesc:jobDesc, instances:instances, cron:cron}, function(data) {
+            if(data.success == true) {
+                $("#add-scale-job-dialog").modal("hide");
+                showSuccessDialogWithCallback(function(){
+                    location.reload(true);
+                });
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() {$btn.button('reset');});
+    });
+
+    $("#see-scale-job-dialog-enable-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var taskId = $("#see-scale-job-dialog-showTask").text();
+        var jobName = $("#see-scale-job-dialog-jobName").val();
+        var jobDesc = $("#see-scale-job-dialog-jobDesc").val();
+        var enable = $("#see-scale-job-dialog-enable-span").attr("enable");
+        $.post("container/enableContainerScaleJob", {nns:regName, jobName:jobName, enable:enable}, function(data) {
+            if(data.success == true) {
+                $.get("container/getContainerScaleJobVo", {nns:regName, taskId:taskId, jobName:jobName}, function(data) {
+                    if(data.success == true) {
+                        var iconId=$("#see-scale-job-dialog-iconId").val();
+                        if(data.obj.enabled == "false") {
+                            $("#see-scale-job-dialog-enable-span").attr("enable", "true");
+                            $("#see-scale-job-dialog-enable-span").html("启用");
+                            $("#see-scale-job-dialog-enable-confirm-btn").removeClass("btn-warning");
+                            $("#see-scale-job-dialog-enable-confirm-btn").addClass("btn-success");
+                            $("#" + iconId).attr("src", "image/icon-mini-suspended-color.png");
+                            $("#" + iconId).attr("title", "点击启用该伸缩计划");
+                            $("#" + iconId).attr("enable", "true");
+                        } else {
+                            $("#see-scale-job-dialog-enable-span").attr("enable", "false");
+                            $("#see-scale-job-dialog-enable-span").html("禁用");
+                            $("#see-scale-job-dialog-enable-confirm-btn").removeClass("btn-success");
+                            $("#see-scale-job-dialog-enable-confirm-btn").addClass("btn-warning");
+                            $("#" + iconId).attr("src", "image/icon-mini-running-color.png");
+                            $("#" + iconId).attr("title", "点击禁用该伸缩计划");
+                            $("#" + iconId).attr("enable", "false");
+                        }
+                        showSuccessDialog();
+                    } else {
+                        $("#failure-dialog .fail-reason").text(data.message);
+                        showFailureDialog("failure-dialog");
+                    }
+                });
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() {$btn.button('reset');});
+    });
+
+    $("#see-scale-job-dialog-delete-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var taskId = $("#see-scale-job-dialog-showTask").text();
+        var jobName = $("#see-scale-job-dialog-jobName").val();
+        var jobDesc = $("#see-scale-job-dialog-jobDesc").val();
+        $.post("container/deleteContainerScaleJob", {nns:regName, taskId:taskId, jobName:jobName, jobDesc:jobDesc}, function(data) {
+            if(data.success == true) {
+                $("#see-scale-job-dialog").modal("hide");
+                showSuccessDialogWithCallback(function() {
+                    location.reload(true);
+                });
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() {$btn.button('reset');});
+    });
+
+    $("#icon-enable-scale-job-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var iconId = $("#icon-enable-scale-job-dialog-iconId").val();
+        var taskId = $("#icon-enable-scale-job-dialog-taskId").val();
+        var jobName = $("#icon-enable-scale-job-dialog-jobName").val();
+        var jobDesc = $("#icon-enable-scale-job-dialog-jobDesc").val();
+        var enable = $("#icon-enable-scale-job-dialog-enable").val();
+        $.post("container/enableContainerScaleJob", {nns:regName, jobName:jobName, enable:enable}, function(data) {
+            if(data.success == true) {
+                $.get("container/getContainerScaleJobVo", {nns:regName, taskId:taskId, jobName:jobName}, function(data) {
+                    $("#icon-enable-scale-job-dialog").modal("hide");
+                    if(data.success == true) {
+                        if(data.obj.enabled == "false") {
+                            $("#" + iconId).attr("enable", "true");
+                            $("#" + iconId).attr("src", "image/icon-mini-suspended-color.png");
+                            $("#" + iconId).attr("title", "点击启用该伸缩计划");
+                        } else {
+                            $("#" + iconId).attr("enable", "false");
+                            $("#" + iconId).attr("src", "image/icon-mini-running-color.png");
+                            $("#" + iconId).attr("title", "点击禁用该伸缩计划");
+                        }
+                        showSuccessDialog();
+                    } else {
+                        $("#failure-dialog .fail-reason").text(data.message);
+                        showFailureDialog("failure-dialog");
+                    }
+                });
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() {$btn.button('reset');});
+    });
+
     $("#add-job-dialog-confirm-btn").on('click', function(event) {
     	var $btn = $(this).button('loading'),jobType = $("#jobType").val(), jobName = $("#jobName").val(),originJobName = $("#originJobName").val(),jobClass = $("#jobClass").val(), queueName = $("#queueName").val(),channelName = $("#channelName").val(),
     			cron = $("#cron").val(),shardingTotalCount = $("#shardingTotalCount").val(),shardingItemParameters = $("#shardingItemParameters").val(),jobParameter = $("#jobParameter").val().trim(),description = $("#description").val(),
@@ -499,6 +1068,9 @@ $(function() {
 				shardingItemStr += shardingItem + ",";
         	}
         }
+        if($("#preferListProvided").val() != null) {
+            preferList = $("#preferListProvided").val().toString();
+        }
 		$.post("executor/checkAndAddJobs",{jobName: jobName,jobClass:jobClass,channelName:channelName,queueName:queueName,
 			jobType:jobType,cron:cron,shardingTotalCount:shardingTotalCount,jobParameter:jobParameter,
 			shardingItemParameters:shardingItemParameters,description:description,loadLevel:loadLevel,preferList:preferList,
@@ -558,6 +1130,10 @@ $(function() {
 		return false;
 	});
 
+    $(document).on("click", "#check-and-forecast-cron", function(event) {
+        var cron = $("#cron").val();
+        checkAndForecastCron(cron);
+    });
 
     $("#totalCheckbox").on('click', function(event) {
     	if($(this).is(":checked")){
@@ -586,7 +1162,10 @@ $(function() {
     } else if ($("#servers").is(':visible')) {
     	$loading.show();
         renderServersOverview();
-    }
+    } else if($("#containers").is(':visible')){
+        $loading.show();
+        renderContainersOverview();
+      }
     
     $("[data-toggle='tooltip']").tooltip();
 });
@@ -656,6 +1235,30 @@ $(function() {
     	$("#remove-executor-confirm-dialog").modal("show", obj);
     }
 
+    function showMigrateJobDialog(obj) {
+        var migrateJobTasksSelectDiv = $("#migrate-job-tasks-select");
+        migrateJobTasksSelectDiv.empty();
+        var jobName = $(obj).attr("data-jobname");
+        $.get("job/tasksMigrateEnabled", {nns:regName, jobName:jobName}, function(data) {
+            if(data.success == true) {
+                var jobMigrateInfo = data.obj;
+                $("#migrate-jobName").html(jobMigrateInfo.jobName);
+                $("#migrate-tasks-old").html(jobMigrateInfo.tasksOld.toString());
+                var tasksMigrateEnabled = data.obj.tasksMigrateEnabled;
+                if(tasksMigrateEnabled instanceof Array) {
+                    for(var i=0; i<tasksMigrateEnabled.length; i++) {
+                        var taskOption = "<option value='" + tasksMigrateEnabled[i] + "'>" + tasksMigrateEnabled[i] + "</option>";
+                        migrateJobTasksSelectDiv.append(taskOption);
+                    }
+                }
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
+        $("#migrate-job-dialog").modal("show", obj);
+    }
+
     function renderJobsOverview() {
     	jobNameSelectValues = [];
     	var readys = runnings = stoppings = stoppeds = 0;
@@ -716,7 +1319,11 @@ $(function() {
                 	operationBtn = "禁用";
                 	operationBtnClass = "btn btn-warning";
                 }
-                var operationTd = "<button operation='change-jobStatus' class='"+operationBtnClass+"' data-jobstate='" + isJobEnabled + "' data-jobname='" + jobName + "' data-target='#change-jobStatus-confirm-dialog' onclick='showChangeJobConfirmDialog(this);'>"+operationBtn+"</button> ";
+                var operationTd = "";
+                if(list[i].migrateEnabled && list[i].migrateEnabled == true) {
+                    operationTd = "<button class='btn btn-success' data-jobname='" + jobName + "' onclick='showMigrateJobDialog(this);'>迁移</button>";
+                }
+                operationTd = operationTd + "<button operation='change-jobStatus' class='"+operationBtnClass+"' data-jobstate='" + isJobEnabled + "' data-jobname='" + jobName + "' data-target='#change-jobStatus-confirm-dialog' onclick='showChangeJobConfirmDialog(this);'>"+operationBtn+"</button> ";
                 if ("READY" === status) {
                     trClass = "info";
                     baseTd += "<td>"+operationTd+"</td>";
@@ -914,6 +1521,215 @@ $(function() {
             });
         }).always(function() { $loading.hide(); });
     }
+
+    function renderContainersOverview() {
+        $("#containers-operation-token").val("")
+        $("#containers-operation-userName").val("");
+        $("#containers-operation-password").val("");
+        $("#add-container-dialog-token").val("");
+        $("#add-container-dialog-userName").val("");
+        $("#add-container-dialog-password").val("");
+        if(containerType == "VDOS") {
+            $("#token-div").removeAttr("hidden");
+            $("#user-pwd-div").attr("hidden", "hidden");
+            $("#add-container-dialog-token-div").removeAttr("hidden");
+            $("#add-container-dialog-user-pwd-div").attr("hidden", "hidden");
+            $.get("container/getContainerToken",{nns:regName}, function(data) {
+                if(data.success) {
+                    $("#containers-operation-token").val(data.obj.keyValue.token == null ? "" : data.obj.keyValue.token);
+                    $("#add-container-dialog-token").val(data.obj.keyValue.token == null ? "" : data.obj.keyValue.token);
+                } else {
+                    $("#failure-dialog .fail-reason").text("get token error:" + data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            });
+        } else {
+            $("#token-div").attr("hidden", "hidden");
+            $("#user-pwd-div").removeAttr("hidden");
+            $("#add-container-dialog-token-div").attr("hidden", "hidden");
+            $("#add-container-dialog-user-pwd-div").removeAttr("hidden");
+            $.get("container/getContainerToken", {nns: regName}, function(data) {
+                if(data.success) {
+                    $("#containers-operation-userName").val(data.obj.keyValue.userName == null ? "" : data.obj.keyValue.userName);
+                    $("#containers-operation-password").val(data.obj.keyValue.password == null ? "" : data.obj.keyValue.password);
+                    $("#add-container-dialog-userName").val(data.obj.keyValue.userName == null ? "" : data.obj.keyValue.userName);
+                    $("#add-container-dialog-password").val(data.obj.keyValue.password == null ? "" : data.obj.keyValue.password);
+                } else {
+                    $("#failure-dialog .fail-reason").text("get token error:" + data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            });
+        }
+
+        $.get("container/getContainerVos",{nns:regName}, function (data) {
+            if(data.success) {
+                if (containersViewDataTable) {
+                    containersViewDataTable.destroy();
+                }
+                $("#containers-tbl tbody").empty();
+                var containerVos = data.obj;
+                if(containerVos) {
+                    for (var i = 0, length = containerVos.length;i < length;i++) {
+                        var containerVo = containerVos[i];
+                        var containerExecutorVos = containerVo.containerExecutorVos;
+                        var bindingJobNames = containerVo.bindingJobNames;
+                        var containerStatus = containerVo.containerStatus;
+                        var containerConfig = containerVo.containerConfig;
+                        var createTime = containerVo.createTime;
+                        var containerScaleJobVos = containerVo.containerScaleJobVos;
+                        var instancesConfigured = containerVo.instancesConfigured;
+                        var rowspan = 0;
+                        if(containerExecutorVos && containerExecutorVos instanceof Array) {
+                            rowspan = containerExecutorVos.length;
+                        }
+                        if(rowspan == 0) {
+                            rowspan = 1;
+                        }
+                        var taskId = containerVo.taskId;
+                        var executorName0 = "";
+                        var ip0 = "";
+                        var runningJobNames0 = "";
+                        if(containerExecutorVos && containerExecutorVos.length > 0) {
+                            executorName0 = containerExecutorVos[0].executorName ? containerExecutorVos[0].executorName : "";
+                            ip0 = containerExecutorVos[0].ip ? containerExecutorVos[0].ip : "";
+                            runningJobNames0 = containerExecutorVos[0].runningJobNames ? containerExecutorVos[0].runningJobNames : "";
+                        }
+                        var baseTr = "<tr><td rowspan="+rowspan+">";
+                        baseTr = baseTr + "<a href='javascript:void(0);' onclick='seeContainerInfoDialog(this)' title='查看资源详细信息' taskId='"+taskId+"'>"+taskId+"</a>";
+                        baseTr = baseTr + "</td>"
+                        + "<td>" + executorName0 + "</td>"
+                        + "<td>" + ip0 + "</td>"
+                        + "<td>" + runningJobNames0 + "</td>"
+                        + "<td rowspan="+rowspan+">"+ bindingJobNames+ "</td>"
+                        + "<td rowspan="+rowspan+">"+ containerStatus + "</td>"
+                        + "<td rowspan="+rowspan+" style='width: 350px; word-wrap:break-word;word-break:break-all;'>"+ containerConfig + "</td>"
+                        + "<td rowspan="+rowspan+">" + createTime + "</td>";
+                        baseTr = baseTr + "<td rowspan="+rowspan+">";
+                        if(containerScaleJobVos && containerScaleJobVos instanceof Array) {
+                            for(var j=0; j<containerScaleJobVos.length; j++) {
+                                var containerScaleJobVo = containerScaleJobVos[j];
+                                var jobName = containerScaleJobVo.jobName;
+                                var jobDesc = containerScaleJobVo.jobDesc;
+                                var instances = containerScaleJobVo.instances;;
+                                var cron = containerScaleJobVo.cron;
+                                var enabled = containerScaleJobVo.enabled;
+                                var enable;
+                                if(enabled == "false") {
+                                    baseTr = baseTr + "<img src='image/icon-mini-suspended-color.png' title='点击启用该伸缩计划'";
+                                    enable = "true";
+                                } else {
+                                    baseTr = baseTr + "<img src='image/icon-mini-running-color.png' title='点击禁用该伸缩计划'";
+                                    enable = "false";
+                                }
+                                var iconId = "icon-enable-" + jobName;
+                                baseTr = baseTr + " id='"+iconId+"' style='cursor:pointer; width:16px; height:16px;' taskId='"+taskId+"' jobName='"+jobName+"' jobDesc='"+jobDesc+"' enable='"+enable+"' onclick='iconEnableScaleJob(this);'/>  ";
+                                var jobDescCut = jobDesc.substring(0, 10);
+                                if(jobDesc.length > 10) {
+                                    jobDescCut = jobDescCut + "...";
+                                }
+                                baseTr = baseTr + "<a href='javascript:void(0);' iconId='"+iconId+"' taskId='"+taskId+"' jobName='"+jobName+"' onclick='seeScaleJob(this);' title='"+jobDesc+"'>"+jobDescCut+"</a>";
+                                if(j<containerScaleJobVos.length-1) {
+                                    baseTr = baseTr + "<br/>";
+                                }
+                            }
+                        }
+                        baseTr = baseTr + "</td>"
+                            + "<td rowspan="+rowspan+"><button class='btn btn-danger' taskId='"+taskId+"' onclick='removeContainer(this);'>销毁</button><br/>"
+                            + "<button class='btn btn-success' taskId='"+taskId+"' currentInstance='"+instancesConfigured+"' onclick='elasticInstance(this);'>伸缩</button></br>"
+                            + "<button class='btn btn-warning' taskId='"+taskId+"' onclick='addScaleJob(this);'>计划</button></td></tr>";
+                        for(var j=1;j < rowspan;j++){
+                            baseTr += "<tr>"
+                                + "<td>" + containerExecutorVos[j].executorName + "</td>"
+                                + "<td>" + containerExecutorVos[j].ip + "</td>"
+                                + "<td>" + containerExecutorVos[j].runningJobNames + "</td>"
+                                + "</tr>";
+                        }
+                        $("#containers-tbl tbody").append(baseTr);
+                    }
+                }
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $loading.hide(); });
+    }
+
+    function reloadPreferListProvided(preferList, callback) {
+        $.get("job/getAllExecutors", {nns:regName}, function (data) {
+            $("#preferListProvided").empty();
+            if(data) {
+                var preferListArr = preferList.split(",");
+                var preferListCandidateArr = data.split(",");
+                for (var i = 0; i < preferListCandidateArr.length; i++) {
+                    var preferExecutorCandidate = preferListCandidateArr[i];
+                    if(!preferExecutorCandidate){
+                        continue;
+                    }
+                    var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
+                    var preferExecutorValue = preferExecutorCandidateArr[0];
+                    var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
+                    if(isContainer){
+                        preferExecutorValue = "@"+preferExecutorValue;
+                    }
+                    var selected = false;
+                    $.each(preferListArr, function(index, preferValue) {
+                        if(isContainer) {
+                            if("@"+preferValue.split("(")[0] == preferExecutorValue) {
+                                selected = true;
+                            }
+                        } else {
+                            if(preferValue == preferExecutorValue){
+                                selected = true;
+                            }
+                        }
+                    });
+                    var option = "<option value='" + preferExecutorValue + "'";
+                    if(selected) {
+                        option = option + " selected";
+                    }
+                    option = option + ">" + preferExecutorCandidate + "</option>";
+                    $("#preferListProvided").append(option);
+                }
+                $("#preferListProvided").selectpicker('refresh');
+                onPreferListProvidedChanged();
+            }
+            if(callback) callback();
+        });
+    }
+
+    function onPreferListProvidedChanged() {
+        var containerSelected = false;
+        var options = $("#preferListProvided").find("option");
+        if(options) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.selected && option.value && option.value[0] == "@") {
+                    containerSelected = true;
+                    break;
+                }
+            }
+        }
+        if(containerSelected) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(!(option.selected) && option.value && option.value[0] == "@") {
+                    $(option).attr("disabled", "disabled");
+                }
+            }
+        } else {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.value && option.value[0] == "@") {
+                    $(option).removeAttr("disabled");
+                }
+            }
+        }
+        $("#preferListProvided").selectpicker('refresh');
+    }
+
+    $('#preferListProvided').on('changed.bs.select', function (e) {
+        onPreferListProvidedChanged();
+    });
     
     function filterJobsRegex(regex) {
     	jobsViewDataTable.search(regex,true,false).draw();
@@ -1106,6 +1922,225 @@ $(function() {
     	$("#executors-add-jobs-form").submit(function(event) {
     		event.preventDefault();
     	});
+    }
+
+    function seeContainerInfoDialog(obj) {
+        var taskId = $(obj).attr('taskId');
+        $.get("container/getContainerDetail", {taskId:taskId,nns:regName}, function(data) {
+            if(data.success) {
+                $("#see-container-info-textare").html(JSON.stringify($.parseJSON(data.obj), undefined, 4));
+            } else {
+                $("#see-container-info-textare").html(data.message);
+            }
+            $("#see-container-info-showTask").html(taskId);
+            $("#see-container-info-dialog").modal("show", obj);
+        });
+    }
+
+    function addEnvTableTr(obj, special) {
+        var trAddCount = parseInt($("#env_table").attr("trAddCount"));
+        trAddCount = trAddCount + 1;
+        $("#env_table").attr("trAddCount", trAddCount);
+        var trContent = '<tr>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="key" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="value" />' +
+            '</td>' +
+            '<td>' +
+                '<button class="fa fa-plus" onclick="addEnvTableTr(this);"></button><br/>' +
+                '<button class="fa fa-minus" onclick="delEnvTableTr(this);"></button>' +
+            '</td>';
+        if(special == 0) {
+            $("#env_table tbody").prepend(trContent);
+        } else {
+            $(obj).closest("tr").after(trContent);
+        }
+    }
+
+    function delEnvTableTr(obj) {
+        $(obj).closest("tr").remove();
+    }
+
+    function addConstraintsTableTr(obj, special) {
+        var trAddCount = parseInt($("#constraints_table").attr("trAddCount"));
+        trAddCount = trAddCount + 1;
+        $("#constraints_table").attr("trAddCount", trAddCount);
+        var trContent = '<tr>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="attribute" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="operator" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="value" />' +
+            '</td>' +
+            '<td>' +
+                '<button class="fa fa-plus" onclick="addConstraintsTableTr(this);"></button><br/>' +
+                '<button class="fa fa-minus" onclick="delConstraintsTableTr(this);"></button>' +
+            '</td>';
+        if(special == 0) {
+            $("#constraints_table tbody").prepend(trContent);
+        } else {
+            $(obj).closest("tr").after(trContent);
+        }
+    }
+
+    function delConstraintsTableTr(obj) {
+        $(obj).closest("tr").remove();
+    }
+
+    function addParametersTableTr(obj, special) {
+        var trAddCount = parseInt($("#parameters_table").attr("trAddCount"));
+        trAddCount = trAddCount + 1;
+        $("#parameters_table").attr("trAddCount", trAddCount);
+        var trContent = '<tr>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="key" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="value" />' +
+            '</td>' +
+            '<td>' +
+                '<button class="fa fa-plus" onclick="addParametersTableTr(this);"></button><br/>' +
+                '<button class="fa fa-minus" onclick="delParametersTableTr(this);"></button>' +
+            '</td>';
+        if(special == 0) {
+            $("#parameters_table tbody").prepend(trContent);
+        } else {
+            $(obj).closest("tr").after(trContent);
+        }
+    }
+
+    function delParametersTableTr(obj) {
+        $(obj).closest("tr").remove();
+    }
+
+    function addVolumesTableTr(obj) {
+        var trAddCount = parseInt($("#volumes_table").attr("trAddCount"));
+        trAddCount = trAddCount + 1;
+        $("#volumes_table").attr("trAddCount", trAddCount);
+        var trContent = '<tr>' +
+            '<td>' +
+                '<input type="text" class="form-control disabled" name="containerPath" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control disabled" name="hostPath" />' +
+            '</td>' +
+            '<td>' +
+                '<div class="radio">' +
+                    '<label>' +
+                        '<input type="radio" name="mode' + trAddCount + '" value="RW" checked="checked" />RW' +
+                    '</label>' +
+                    '<br/>' +
+                    '<label>' +
+                        '<input type="radio" name="mode' + trAddCount + '" value="RO"/>RO' +
+                    '</label>' +
+                '</div>' +
+            '</td>' +
+            '<td>' +
+                '<button class="fa fa-plus" onclick="addVolumesTableTr(this);"></button><br/>' +
+                '<button class="fa fa-minus" onclick="delVolumesTableTr(this);"></button>' +
+            '</td>';
+        $(obj).closest("tr").after(trContent);
+    }
+
+    function delVolumesTableTr(obj) {
+        $(obj).closest("tr").remove();
+    }
+
+    function elasticInstance(obj) {
+        var taskId = $(obj).attr('taskId');
+        var currentInstance = $(obj).attr('currentInstance');
+        $("#showTask").html(taskId);
+        $("#currentInstance").html(currentInstance);
+        $("#alterInstance").val(currentInstance);
+        $("#alter-instance-dialog").modal("show");
+    }
+
+    function addScaleJob(obj) {
+        var taskId = $(obj).attr('taskId');
+        $("#add-scale-job-dialog-showTask").html(taskId);
+        $("#add-scale-job-dialog").modal("show");
+    }
+
+    function seeScaleJob(obj) {
+        var iconId = $(obj).attr("iconId");
+        var taskId = $(obj).attr('taskId');
+        var jobName = $(obj).attr('jobName');
+        $.get("container/getContainerScaleJobVo", {nns:regName, taskId:taskId, jobName:jobName}, function(data) {
+            if(data.success == true) {
+                var scaleJobVo = data.obj;
+                $("#see-scale-job-dialog-showTask").html(taskId);
+                $("#see-scale-job-dialog-iconId").val(iconId);
+                $("#see-scale-job-dialog-jobName").val(scaleJobVo.jobName);
+                $("#see-scale-job-dialog-jobDesc").val(scaleJobVo.jobDesc);
+                $("#see-scale-job-dialog-instances").val(scaleJobVo.instances);
+                $("#see-scale-job-dialog-cron").val(scaleJobVo.cron);
+                if(scaleJobVo.enabled == "false") {
+                    $("#see-scale-job-dialog-enable-span").attr("enable", "true");
+                    $("#see-scale-job-dialog-enable-span").html("启用");
+                    $("#see-scale-job-dialog-enable-confirm-btn").removeClass("btn-warning");
+                    $("#see-scale-job-dialog-enable-confirm-btn").addClass("btn-success");
+                } else {
+                    $("#see-scale-job-dialog-enable-span").attr("enable", "false");
+                    $("#see-scale-job-dialog-enable-span").html("禁用");
+                    $("#see-scale-job-dialog-enable-confirm-btn").removeClass("btn-success");
+                    $("#see-scale-job-dialog-enable-confirm-btn").addClass("btn-warning");
+                }
+                $("#see-scale-job-dialog").modal("show");
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
+    }
+
+    function iconEnableScaleJob(obj) {
+        var iconId = $(obj).attr("id");
+        var taskId = $(obj).attr("taskId");
+        var jobName = $(obj).attr("jobName");
+        var jobDesc = $(obj).attr("jobDesc");
+        var enable = $(obj).attr("enable");
+
+        $("#icon-enable-scale-job-dialog-text").empty();
+        if(enable == "true") {
+            $("#icon-enable-scale-job-dialog-text").html("确认<font color='red'>启用</font>伸缩计划<font color='red'>"+jobDesc + "</font>？");
+        } else {
+            $("#icon-enable-scale-job-dialog-text").html("确认<font color='red'>禁用</font>伸缩计划<font color='red'>"+jobDesc + "</font>？");
+        }
+        $("#icon-enable-scale-job-dialog-iconId").val(iconId);
+        $("#icon-enable-scale-job-dialog-taskId").val(taskId);
+        $("#icon-enable-scale-job-dialog-jobName").val(jobName);
+        $("#icon-enable-scale-job-dialog-jobDesc").val(jobDesc);
+        $("#icon-enable-scale-job-dialog-enable").val(enable);
+
+        $("#icon-enable-scale-job-dialog").modal("show");
+    }
+
+    function checkAndForecastCron(cron) {
+        $.post("job/checkAndForecastCron", {cron : cron}, function (data) {
+            var msg = "检验结果：";
+            if(data.success == true) {
+                msg += "成功";
+                msg += "<hr>";
+                msg += "预测执行时间点：<br><br>";
+                msg += data.message;
+            } else {
+                msg += "失败";
+                msg += "<hr>";
+                msg += "错误信息：<br><br>";
+                msg += data.message;
+            }
+            showPromptDialogWithMsgAndCallback("check-and-forecast-cron-prompt-dialog", msg, null);
+        });
+    }
+
+    function removeContainer(obj) {
+        var taskId = $(obj).attr('taskId');
+        $("#remove-container-confirm-dialog").modal("show",taskId);
     }
 
     function isNullOrEmpty(value) {

@@ -18,7 +18,7 @@ public final class SaturnEnvProperties {
     /**
      * zk注册中心
      */
-    public static String VIP_SATURN_ZK_CONNECTION;
+    public static String NAME_VIP_SATURN_ZK_CONNECTION = "VIP_SATURN_ZK_CONNECTION";
 
     /**
      * 指定注册中心地址
@@ -30,6 +30,15 @@ public final class SaturnEnvProperties {
      */
     public static String REG_CENTER_JSON_FILE;
 
+    public static String CONTAINER_TYPE = System.getProperty("VIP_SATURN_CONTAINER_TYPE", System.getenv("VIP_SATURN_CONTAINER_TYPE"));
+    public static String VIP_SATURN_DCOS_REST_URI = System.getProperty("VIP_SATURN_DCOS_REST_URI", System.getenv("VIP_SATURN_DCOS_REST_URI"));
+    public static String VIP_SATURN_DCOS_REGISTRY_URI = System.getProperty("VIP_SATURN_DCOS_REGISTRY_URI", System.getenv("VIP_SATURN_DCOS_REGISTRY_URI"));
+    public static String NAME_VIP_SATURN_EXECUTOR_CLEAN = "VIP_SATURN_EXECUTOR_CLEAN";
+    public static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
+
+    public static String NAME_VIP_SATURN_SYSTEM_CONFIG_PATH = "VIP_SATURN_SYSTEM_CONFIG_PATH";
+    public static String VIP_SATURN_SYSTEM_CONFIG_PATH = System.getProperty(NAME_VIP_SATURN_SYSTEM_CONFIG_PATH, System.getenv(NAME_VIP_SATURN_SYSTEM_CONFIG_PATH));
+
     static {
         REG_CENTER_JSON_FILE = System.getProperty("REG_CENTER_JSON_PATH", System.getenv("REG_CENTER_JSON_PATH"));
         if (null != REG_CENTER_JSON_FILE) {
@@ -38,6 +47,8 @@ public final class SaturnEnvProperties {
         if (null != REG_CENTER_VALUE) {
             REG_CENTER_VALUE = new String(REG_CENTER_VALUE.getBytes(), Charset.forName("UTF-8"));
         }
-        VIP_SATURN_ZK_CONNECTION = System.getProperty("VIP_SATURN_ZK_CONNECTION", System.getenv("VIP_SATURN_ZK_CONNECTION"));
+        if(CONTAINER_TYPE == null) {
+            CONTAINER_TYPE = "MARATHON";
+        }
     }
 }

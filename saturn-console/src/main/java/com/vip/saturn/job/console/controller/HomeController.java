@@ -4,9 +4,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,13 @@
 
 package com.vip.saturn.job.console.controller;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
+import com.vip.saturn.job.console.SaturnEnvProperties;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.service.ExecutorService;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,27 +34,29 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/")
 public class HomeController  extends AbstractController {
-	
+
 	protected static Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
     @Resource
     private RegistryCenterService registryCenterService;
-    
+
     @Resource
     private JobDimensionService jobDimensionService;
-    
+
     @Resource
 	private ExecutorService executorService;
- 
+
     @RequestMapping(method = RequestMethod.GET)
 	public String homepage(final ModelMap model, HttpServletRequest request) {
     	RegistryCenterClient client =  getClientInSession(request.getSession());
@@ -70,17 +69,17 @@ public class HomeController  extends AbstractController {
     	model.put("version", version);
     	return "home";
     }
-    
+
     @RequestMapping(value = "registry_center_page", method = RequestMethod.GET)
     public String registryCenterPage(final ModelMap model, HttpServletRequest request) {
     	return "registry_center";
-    }   
-    
+    }
+
     @RequestMapping(value = "404", method = RequestMethod.GET)
     public String notFoundPage(final ModelMap model) {
         return "404";
-    }   
-    
+    }
+
     @RequestMapping(value = "500", method = RequestMethod.GET)
     public String errorPage(final ModelMap model, HttpServletRequest req) {
     	String code = null, message = null, type = null;
@@ -107,9 +106,9 @@ public class HomeController  extends AbstractController {
 	            "<P>" + ((throwable != null) ? getStackTrace(throwable) : "") + "</P>");
 	    return "500";
     }
-    
+
     @RequestMapping(value = "job_detail", method = RequestMethod.GET)
-    public String jobDetail(@RequestParam final String jobName, final ModelMap model, 
+    public String jobDetail(@RequestParam final String jobName, final ModelMap model,
     		final String nns, final HttpSession session, HttpServletRequest request) {
         model.put("jobName", jobName);
         setJobStatusAndIsEnabled(model, jobName);
@@ -121,9 +120,10 @@ public class HomeController  extends AbstractController {
         model.put("jobType", jobType);
         return "job_detail";
     }
-    
+
     @RequestMapping(value = "overview", method = RequestMethod.GET)
 	public String overview(String name, final ModelMap model, HttpServletRequest request, final HttpSession session) {
+		model.put("containerType", SaturnEnvProperties.CONTAINER_TYPE);
     	if (StringUtils.isNoneEmpty(name)) {
         	setSession(registryCenterService.connect(name), session);
         	renderShellExecutorInfos(model);
@@ -138,7 +138,7 @@ public class HomeController  extends AbstractController {
             return "overview";
 		}
     }
-    
+
     private void renderShellExecutorInfos(final ModelMap model) {
 		List<String> aliveExecutorNames = executorService.getAliveExecutorNames();
 		if (aliveExecutorNames != null && !aliveExecutorNames.isEmpty()) {
@@ -147,7 +147,7 @@ public class HomeController  extends AbstractController {
 			model.put("aliveExecutors", "");
 		}
     }
-	
+
 	@RequestMapping(value = "loadZks", method = RequestMethod.GET)
     @ResponseBody
 	public Map<String, Object> loadZks(final HttpSession session) throws IOException, ParseException {
@@ -156,5 +156,5 @@ public class HomeController  extends AbstractController {
     	model.put("currentZk", getCurrentZkAddr(session));
     	return model;
 	}
-	
+
 }

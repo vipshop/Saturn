@@ -14,16 +14,12 @@
 
 package com.vip.saturn.job.console.controller;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-
+import com.google.common.base.Strings;
+import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.utils.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.ModelMap;
@@ -31,17 +27,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobMode;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.utils.CronExpression;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("job")
@@ -104,6 +97,45 @@ public class JobController extends AbstractController {
             result.setMessage("Cron cannot be null or empty");
 		}
 		return result;
+	}
+
+	@RequestMapping(value = "tasksMigrateEnabled", method = RequestMethod.GET)
+	public RequestResult tasksMigrateEnabled(final String jobName, HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			JobMigrateInfo jobMigrateInfo = jobDimensionService.getJobMigrateInfo(jobName);
+			requestResult.setSuccess(true);
+			requestResult.setObj(jobMigrateInfo);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "migrateJobNewTask", method = RequestMethod.POST)
+	public RequestResult migrateJobNewTask(final String jobName, final String newTask, HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if (jobName == null) {
+				throw new SaturnJobConsoleException("The jobName cannot be null");
+			}
+			if (newTask == null) {
+				throw new SaturnJobConsoleException("The new task cannot be null");
+			}
+			if (jobName.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The jobName cannot be empty string");
+			}
+			if (newTask.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The new task cannot be empty string");
+			}
+			jobDimensionService.migrateJobNewTask(jobName.trim(), newTask.trim());
+			requestResult.setSuccess(true);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
 	}
 
 	@RequestMapping(value = "settings", method = RequestMethod.POST)
@@ -174,6 +206,14 @@ public class JobController extends AbstractController {
 	public ExecutionInfo getLogInfo(final ExecutionInfo config) {
 		ExecutionInfo info = jobDimensionService.getExecutionJobLog(config.getJobName(), config.getItem());
 		return info;
+	}
+
+	/**
+	 * 获取所有的executor作为优先候选列表
+	 */
+	@RequestMapping(value = "getAllExecutors", method = RequestMethod.GET)
+	public String getAllExecutors() {
+		return jobDimensionService.getAllExecutors(null);
 	}
 	
 	@RequestMapping(value = "getJobNextFireTime", method = RequestMethod.GET)
