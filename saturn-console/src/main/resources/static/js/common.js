@@ -32,19 +32,19 @@ function showSuccessDialogWithCallback(callback) {
 
 function showFailureDialog(id) {
     $("#" + id).modal("show");
-    setTimeout("$('#" + id + "').modal('hide')", 4000);
+//    setTimeout("$('#" + id + "').modal('hide')", 4000);
 }
 function showFailureDialogWithMsg(id, msg) {
     var dom = $("#" + id);
     dom.find(".fail-reason").html(msg);
 	dom.modal("show");
-    setTimeout("$('#" + id + "').modal('hide')", 4000);
+//    setTimeout("$('#" + id + "').modal('hide')", 4000);
 }
 function showFailureDialogWithMsgAndCallback(id, msg, callback) {
     var dom = $("#" + id);
     dom.find(".fail-reason").html(msg);
 	dom.modal("show");
-    setTimeout("$('#" + id + "').modal('hide')", 4000);
+//    setTimeout("$('#" + id + "').modal('hide')", 4000);
     dom.on('hide.bs.modal', function (event) {
 		callback();
 	});
