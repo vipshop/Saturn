@@ -667,6 +667,7 @@ $(function() {
             token = $("#add-container-dialog-token").val();
             if(isNullOrEmpty(token)) {
                 alert("token不能为空");
+                $btn.button('reset');
                 return;
             }
             postJson["containerToken.keyValue['token']"] = token;
@@ -674,12 +675,14 @@ $(function() {
             userName = $("#add-container-dialog-userName").val();
             if(isNullOrEmpty(userName)) {
                 alert("userName不能为空");
+                $btn.button('reset');
                 return;
             }
             postJson["containerToken.keyValue['userName']"] = userName;
             password = $("#add-container-dialog-password").val();
             if(isNullOrEmpty(password)) {
                 alert("password不能为空");
+                $btn.button('reset');
                 return;
             }
             postJson["containerToken.keyValue['password']"] = password;
