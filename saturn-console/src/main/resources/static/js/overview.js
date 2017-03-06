@@ -985,7 +985,7 @@ $(function() {
     $("#add-job-dialog-confirm-btn").on('click', function(event) {
     	var $btn = $(this).button('loading'),jobType = $("#jobType").val(), jobName = $("#jobName").val(),originJobName = $("#originJobName").val(),jobClass = $("#jobClass").val(), queueName = $("#queueName").val(),channelName = $("#channelName").val(),
     			cron = $("#cron").val(),shardingTotalCount = $("#shardingTotalCount").val(),shardingItemParameters = $("#shardingItemParameters").val(),jobParameter = $("#jobParameter").val().trim(),description = $("#description").val(),
-    			loadLevel = $("#loadLevel").val(),preferList = $("#preferList").val(),useDispreferList = $("#useDispreferList").val(),localMode = $("#localMode").val(),processCountIntervalSeconds = $("#processCountIntervalSeconds").val(),
+    			loadLevel = $("#loadLevel").val(),preferList = "",useDispreferList = $("#useDispreferList").val(),localMode = $("#localMode").val(),processCountIntervalSeconds = $("#processCountIntervalSeconds").val(),
     			timeoutSeconds = $("#timeoutSeconds").val(),pausePeriodDate = $("#pausePeriodDate").val(),pausePeriodTime = $("#pausePeriodTime").val(),showNormalLog = $("#showNormalLog").val(),isCopyJob = $("#isCopyJob").val();
     	if(isNullOrEmpty(jobType)){
     		alert("作业类型不能为空");
