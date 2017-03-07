@@ -175,3 +175,6 @@ td > hr {
 #btn-div {
 	padding-right: 7px;
 }
+#add-container-dialog {
+    overflow:scroll;
+}
