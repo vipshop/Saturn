@@ -654,7 +654,7 @@ $(function() {
         taskIdPre = $("#taskId").prev(".input-group-addon:first").text(), 
         taskId = $("#taskId").val(), 
         instances = $("#containerInstance").val(),
-        cpus = $("#cpuCoreCount").val(), 
+        cpus = $("#cpus").val(),
         mem = $("#memory").val(),
         cmd = $("#cmd").val(),
         privileged = $("#privileged-div input[name='privileged']:checked").val(),

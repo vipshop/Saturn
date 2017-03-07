@@ -47,6 +47,7 @@ public class MarathonRestClient {
         deployFormModel.put("id", containerConfig.getTaskId());
         deployFormModel.put("instances", containerConfig.getInstances());
         deployFormModel.put("cmd", containerConfig.getCmd());
+        deployFormModel.put("cpus", containerConfig.getCpus());
         deployFormModel.put("mem", containerConfig.getMem());
         deployFormModel.put("constraints", containerConfig.getConstraints());
         JSONObject container = new JSONObject();
@@ -55,6 +56,7 @@ public class MarathonRestClient {
         docker.put("image", containerConfig.getImage());
         docker.put("network", "BRIDGE");
         docker.put("parameters", containerConfig.getParameters());
+        docker.put("privileged", containerConfig.getPrivileged());
         JSONArray portMappings = new JSONArray();
         JSONObject portMapping = new JSONObject();
         portMapping.put("containerPort", 24500); // equal to jmx port
@@ -64,7 +66,6 @@ public class MarathonRestClient {
         portMappings.add(portMapping);
         docker.put("portMappings", portMappings);
         container.put("docker", docker);
-        container.put("privileged", containerConfig.getPrivileged());
         container.put("type", "DOCKER");
         container.put("volumes", containerConfig.getVolumes());
         deployFormModel.put("container", container);
