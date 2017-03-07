@@ -1,11 +1,8 @@
 package com.vip.saturn.job.executor;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,7 +35,10 @@ import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 
 public class SaturnExecutor {
+
 	protected static Logger log;
+
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private String executorName;
 	ClassLoader executorClassLoader;
@@ -100,7 +100,8 @@ public class SaturnExecutor {
 				}
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
+			e.printStackTrace(); // NOSONAR
 		}
 	}
 
@@ -205,6 +206,10 @@ public class SaturnExecutor {
 
 	protected void setNamespace(String namespace) {
 		this.namespace = namespace;
+	}
+
+	protected static String wrapLogPattern(String message) {
+		return String.format("[%s] >>> %s", sdf.format(new Date()), message);
 	}
 
 	protected void scheduleJob(String jobName) {
@@ -331,7 +336,8 @@ public class SaturnExecutor {
 
 			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
 		} catch (Exception e) {
-			e.printStackTrace();// NOSONAR
+			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
+			e.printStackTrace(); // NOSONAR
 			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.ZK);
 			throw e;
 		}
@@ -343,8 +349,8 @@ public class SaturnExecutor {
 			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.JOBKILL);
 		} catch (IllegalStateException ex) {
 			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
-			System.out.println("Start error. Please check it first."); // NOSONAR
-			System.out.println(ex.getMessage()); // NOSONAR
+			System.out.println(wrapLogPattern("Start error. Please check it first.")); // NOSONAR
+			System.out.println(wrapLogPattern(ex.getMessage())); // NOSONAR
 			throw ex;
 		}
 
@@ -357,7 +363,8 @@ public class SaturnExecutor {
 			saturnExecutorService.registerExecutor();
 			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.UNIQUE);
 		} catch (Exception e) {
-			e.printStackTrace();// NOSONAR
+			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
+			e.printStackTrace(); // NOSONAR
 			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.UNIQUE);
 			throw e;
 		}
@@ -488,8 +495,6 @@ public class SaturnExecutor {
 
 	/**
 	 * block until all Job is completed if it is not timeout
-	 * 
-	 * @param jobSchedulerList
 	 */
 	private void blockUntilJobCompletedIfNotTimeout() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
@@ -508,7 +513,8 @@ public class SaturnExecutor {
 			try {			
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
-				e.printStackTrace();// NOSONAR
+				System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
+				e.printStackTrace(); // NOSONAR
 			}
 			for(Entry<String, JobScheduler> entry : entries){
 				JobScheduler  jobScheduler = entry.getValue();
