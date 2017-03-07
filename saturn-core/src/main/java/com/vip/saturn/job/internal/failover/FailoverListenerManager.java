@@ -24,13 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 
 /**
@@ -65,10 +64,11 @@ public class FailoverListenerManager extends AbstractListenerManager {
     
     @Override
     public void start() {
-        addDataListener(new JobCrashedJobListener(), configService.getJobName());
-        addDataListener(new FailoverJobCrashedJobListener(), configService.getJobName());
-        addDataListener(new FailoverSettingsChangedJobListener(), configService.getJobName());
-        addDataListener(new FailoverDisabledJobListener(), configService.getJobName());
+    	zkCacheManager.addTreeCacheListener(new JobCrashedJobListener(), JobNodePath.getNodeFullPath(jobName, ExecutionNode.ROOT), 2);
+    	zkCacheManager.addTreeCacheListener(new FailoverJobCrashedJobListener(), JobNodePath.getNodeFullPath(jobName, ExecutionNode.ROOT), 2);
+        // addDataListener(new JobCrashedJobListener(), configService.getJobName());
+        // addDataListener(new FailoverJobCrashedJobListener(), configService.getJobName());
+        // addDataListener(new FailoverDisabledJobListener(), configService.getJobName()); see ConfigurationListenerManager.EnabledPathListener
     }
 
     @Override
@@ -98,7 +98,7 @@ public class FailoverListenerManager extends AbstractListenerManager {
     	
     	String failoverPath = FailoverNode.getItemsNode(item);
     	
-    	if(jobScheduler.getJobNodeStorage().isJobNodeExisted(failoverPath)){
+    	if (jobScheduler.getJobNodeStorage().isJobNodeExisted(failoverPath)){
     		return;
     	}
     	
@@ -139,20 +139,8 @@ public class FailoverListenerManager extends AbstractListenerManager {
         }
     }
     
-    class FailoverSettingsChangedJobListener extends AbstractJobListener {
-        
-        @Override
-        protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
-            if(isShutdown) return;
-            if (ConfigurationNode.isFailoverPath(jobConfiguration.getJobName(), path) && Type.NODE_UPDATED == event.getType()) {
-                if (!Boolean.valueOf(new String(event.getData().getData()))) {
-                    failoverService.removeFailoverInfo();
-                }
-            }
-        }
-    }
-    
-    class FailoverDisabledJobListener extends AbstractJobListener {
+    // see ConfigurationListenerManager.EnabledPathListener
+    /*class FailoverDisabledJobListener extends AbstractJobListener {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
@@ -163,5 +151,5 @@ public class FailoverListenerManager extends AbstractListenerManager {
                 }
             }
         }
-    }
+    }*/
 }

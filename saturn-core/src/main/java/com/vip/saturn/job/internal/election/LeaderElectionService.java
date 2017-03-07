@@ -17,16 +17,16 @@
 
 package com.vip.saturn.job.internal.election;
 
-import com.vip.saturn.job.basic.SaturnConstant;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 import com.vip.saturn.job.utils.BlockUtils;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 选举主节点的服务.
@@ -37,6 +37,13 @@ public class LeaderElectionService extends AbstractSaturnService{
 	static Logger log = LoggerFactory.getLogger(LeaderElectionService.class);
 
     private AtomicBoolean isShutdown = new AtomicBoolean(false);
+    
+    private Runnable leaderElectionTask = new Runnable() {
+		@Override
+		public void run() {
+			getJobNodeStorage().executeInLeader(ElectionNode.LATCH, new LeaderElectionExecutionCallback());
+		}
+	};
     
     public LeaderElectionService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
@@ -63,7 +70,7 @@ public class LeaderElectionService extends AbstractSaturnService{
      * 选举主节点.
      */
     public void leaderElection() {
-        getJobNodeStorage().executeInLeader(ElectionNode.LATCH, new LeaderElectionExecutionCallback());
+    	jobScheduler.getExecutorService().submit(leaderElectionTask);
     }
     
     /**

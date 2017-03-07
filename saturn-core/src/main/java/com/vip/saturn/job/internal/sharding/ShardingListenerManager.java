@@ -10,6 +10,7 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 /**
  * 分片监听管理器.
@@ -35,7 +36,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	
 	@Override
 	public void start() {
-		addDataListener(new ShardingNecessaryJobListener(), jobName);
+		// addDataListener(new ShardingNecessaryJobListener(), jobName);
+        zkCacheManager.addTreeCacheListener(new ShardingNecessaryJobListener(), JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), 0);
 	}
 
 	@Override
@@ -43,6 +45,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		super.shutdown();
 		isShutdown = true;
 		confService.shutdown();
+        zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), 0);
 	}
 
 	class ShardingNecessaryJobListener extends AbstractJobListener {

@@ -16,8 +16,6 @@ package com.vip.saturn.job.basic;
 
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
@@ -39,9 +37,6 @@ import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.server.ServerStatus;
 import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.threads.ExtendableThreadPoolExecutor;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
-import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
 
@@ -51,8 +46,6 @@ import com.vip.saturn.job.trigger.SaturnTrigger;
  */
 public abstract class AbstractElasticJob implements Stopable {
 	private static Logger log = LoggerFactory.getLogger(AbstractElasticJob.class);
-
-	private ExecutorService executorService;
 
 	private boolean stopped = false;
 
@@ -106,18 +99,10 @@ public abstract class AbstractElasticJob implements Stopable {
 		if(scheduler != null) {
 			scheduler.shutdown();
 		}
-		if (executorService != null && !executorService.isShutdown()) {
-			executorService.shutdown();
-		}
 	}
 	
 	public ExecutorService getExecutorService() {
-		if (executorService != null && !executorService.isShutdown()) {
-			return executorService;
-		}
-		ThreadFactory factory = new SaturnThreadFactory(jobName);
-		executorService = new ExtendableThreadPoolExecutor(0, 100, 2, TimeUnit.MINUTES, new TaskQueue(), factory);
-		return executorService;
+		return jobScheduler.getExecutorService();
 	}
 
 	protected void init() throws SchedulerException {

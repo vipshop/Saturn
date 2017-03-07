@@ -19,8 +19,6 @@ package com.vip.saturn.job.reg.base;
 
 import java.util.List;
 
-import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
 
 /**
@@ -62,21 +60,6 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
     void persistEphemeralSequential(String key);
     
     /**
-     * 添加本地缓存.
-     * 
-     * @param cachePath 需加入缓存的路径
-     */
-    void addCacheData(String cachePath);
-    
-    /**
-     * 获取注册中心数据缓存对象.
-     * 
-     * @param cachePath 缓存的节点路径
-     * @return 注册中心数据缓存对象
-     */
-    TreeCache getRawCache(String cachePath);
-    
-    /**
      * 获取会话超时时间
      * @return 会话超时时间
      */
@@ -99,19 +82,6 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
      * @return
      */
     String getExecutorName();
-
-    /**
-     * 关闭treeCache
-     * @param cachePath
-     */
-	void closeTreeCache(String cachePath);
-
-	/**
-	 * 添加treeCache事件监听
-	 * @param listener
-	 * @param jobName
-	 */
-	void addTreeCacheListener(final TreeCacheListener listener, String jobName);
 
 	/**
 	 * 添加连接状态变更事件监听

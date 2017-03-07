@@ -27,6 +27,7 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 /**
  * 作业控制监听管理器.
@@ -43,15 +44,21 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 	
 	@Override
 	public void start() {
-		addDataListener(new TriggerJobRunAtOnceListener(), jobName);
-		addDataListener(new JobDeleteListener(), jobName);
-		addDataListener(new JobForcedToStopListener(), jobName);
+		// addDataListener(new TriggerJobRunAtOnceListener(), jobName);
+		// addDataListener(new JobForcedToStopListener(), jobName);
+		// addDataListener(new JobDeleteListener(), jobName);
+		zkCacheManager.addTreeCacheListener(new TriggerJobRunAtOnceListener(), JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, executorName)), 0);
+		zkCacheManager.addTreeCacheListener(new JobForcedToStopListener(), JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.STOPONETIME, executorName)), 0);
+		zkCacheManager.addTreeCacheListener(new JobDeleteListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.TO_DELETE), 0);
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, executorName)), 0);
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.STOPONETIME, executorName)), 0);
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.TO_DELETE), 0);
 	}
 
 	/**
@@ -64,8 +71,8 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
-			if(isShutdown) return;
-			if (Type.NODE_ADDED == event.getType() && ServerNode.isRunOneTimePath(jobName, path, executorName)) {
+			if (isShutdown) return;
+			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) && ServerNode.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
 					log.info("[{}] msg=job run-at-once triggered.", jobName);
 					jobScheduler.triggerJob();
@@ -86,9 +93,9 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
-			if(ConfigurationNode.isToDeletePath(jobName, path) && Type.NODE_ADDED == event.getType()) {
-				log.info("[{}] msg={} is going to be deleted", jobName, jobName);
+			if (isShutdown) return;
+			if (ConfigurationNode.isToDeletePath(jobName, path) && (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())) {
+				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
 				jobScheduler.shutdown(true);
 			}
 		}
@@ -103,10 +110,10 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
-			if (Type.NODE_ADDED == event.getType() && ServerNode.isStopOneTimePath(jobName, path, executorName)) {
+			if (isShutdown) return;
+			if (ServerNode.isStopOneTimePath(jobName, path, executorName) && Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
 				try{
-					log.info("[{}] msg={} is going to be stop at once", jobName, jobName);	
+					log.info("[{}] msg={} is going to be stopped at once.", jobName, jobName);	
 					jobScheduler.getJob().forceStop();
 				}finally{
 					coordinatorRegistryCenter.remove(path);

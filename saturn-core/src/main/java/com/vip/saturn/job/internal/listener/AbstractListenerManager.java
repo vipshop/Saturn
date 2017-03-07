@@ -17,15 +17,13 @@
 
 package com.vip.saturn.job.internal.listener;
 
-import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
 
-import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.Shutdownable;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.storage.JobNodeStorage;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import com.vip.saturn.job.reg.zookeeper.ZkCacheManager;
 
 /**
  * 作业注册中心的监听器管理者的抽象类.
@@ -40,6 +38,7 @@ public abstract class AbstractListenerManager implements Shutdownable{
 	protected JobScheduler jobScheduler;
 	
 	protected JobConfiguration jobConfiguration;
+	protected ZkCacheManager zkCacheManager;
 	
 
 	public AbstractListenerManager(final JobScheduler jobScheduler) {
@@ -48,21 +47,11 @@ public abstract class AbstractListenerManager implements Shutdownable{
 		this.executorName = jobScheduler.getExecutorName();
         jobConfiguration = jobScheduler.getCurrentConf();
         coordinatorRegistryCenter = jobScheduler.getCoordinatorRegistryCenter();
+        zkCacheManager = jobScheduler.getZkCacheManager();
 	}
 	
     
     public abstract void start();
-    
-    /**
-     * the listener will be listened to the path of /$Jobs/${jobName}/${path}.<br>
-     * becareful that the path shouldn't start with /.
-     * @param listener
-     * @param jobName
-     */
-    protected void addDataListener(final TreeCacheListener listener, String jobName) {
-        coordinatorRegistryCenter.addTreeCacheListener(listener, jobName);
-    }
-    
     
     protected void addConnectionStateListener(final ConnectionStateListener listener) {
     	coordinatorRegistryCenter.addConnectionStateListener(listener);

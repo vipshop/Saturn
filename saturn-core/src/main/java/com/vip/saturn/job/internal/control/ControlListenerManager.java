@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 /**
  * @author chembo.huang
@@ -42,19 +43,20 @@ public class ControlListenerManager extends AbstractListenerManager {
 
 	@Override
 	public void start() {
-		addDataListener(new ReportPathListener(), jobName);
+    	zkCacheManager.addTreeCacheListener(new ReportPathListener(), JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
+    	zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
 	}
 
 	class ReportPathListener extends AbstractJobListener {
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
+			if (isShutdown) return;
 			if (ControlNode.isReportPath(jobName, path) && (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
 				log.info("[{}] msg={} received report event from console, start to flush data to zk.", jobName, jobName);
 				reportService.reportData2Zk();

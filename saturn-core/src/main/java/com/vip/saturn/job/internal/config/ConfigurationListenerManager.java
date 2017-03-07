@@ -23,8 +23,10 @@ import org.slf4j.LoggerFactory;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
+import com.vip.saturn.job.internal.failover.FailoverService;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 
 public class ConfigurationListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ConfigurationListenerManager.class);
@@ -35,24 +37,31 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 	private ExecutionService executionService;
 
+	private FailoverService failoverService;
+
 	public ConfigurationListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
 		jobConfiguration = jobScheduler.getCurrentConf();
         jobName = jobConfiguration.getJobName();
         executionContextService = jobScheduler.getExecutionContextService();
         executionService = jobScheduler.getExecutionService();
+        failoverService = jobScheduler.getFailoverService();
 	}
 
 	@Override
 	public void start() {
-		addDataListener(new CronPathListener(), jobName);
-		addDataListener(new EnabledPathListener(), jobName);
+		// addDataListener(new CronPathListener(), jobName);
+		zkCacheManager.addTreeCacheListener(new CronPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
+		// addDataListener(new EnabledPathListener(), jobName);
+        zkCacheManager.addTreeCacheListener(new EnabledPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
+        zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
 	class EnabledPathListener extends AbstractJobListener {
@@ -69,16 +78,17 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
-					if(jobScheduler != null && jobScheduler.getJob() != null){
+					if (jobScheduler != null && jobScheduler.getJob() != null) {
 						if (jobScheduler.getReportService() != null) {
 							jobScheduler.getReportService().clearInfoMap();
 						}
 						jobScheduler.getJob().enableJob();
 					}					
 				} else {
-					if(jobScheduler != null && jobScheduler.getJob() != null){
+					if (jobScheduler != null && jobScheduler.getJob() != null) {
 						jobScheduler.getJob().disableJob();
 					}
+					failoverService.removeFailoverInfo(); // clear failover info when disable job.
 				}
 			}
 		}
