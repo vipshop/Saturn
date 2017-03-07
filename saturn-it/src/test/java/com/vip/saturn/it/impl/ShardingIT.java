@@ -1,17 +1,9 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.it.utils.LogbackListAppender;
-import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.sharding.ShardingNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.sharding.service.NamespaceShardingService;
-import com.vip.saturn.job.utils.ItemUtils;
-import com.vip.saturn.job.utils.SystemEnvProperties;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -19,9 +11,16 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.executor.Main;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.sharding.ShardingNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.utils.ItemUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShardingIT extends AbstractSaturnIT {
@@ -117,7 +116,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		stopExecutor(0); //停第1个executor
 
-		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("9");
+		Thread.sleep(1000);
+		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("10");
 		
 		Thread.sleep(1000);
 		runAtOnce(jobName);

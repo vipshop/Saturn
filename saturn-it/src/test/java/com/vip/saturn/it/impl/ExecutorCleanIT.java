@@ -1,17 +1,18 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 
 /**
  * Created by xiaopeng.he on 2016/8/22.
@@ -21,6 +22,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        stopExecutorList();
         startNamespaceShardingManagerList(1);
     }
 
@@ -95,7 +97,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
         stopExecutorList();
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         assertDelete(job.getJobName(), executorName);
 

@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.exception.TimeDiffIntolerableException;
@@ -27,6 +30,8 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
  *
  */
 public class SaturnExecutorService {
+
+	static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
 	
 	private String executorName;
 	
@@ -42,6 +47,8 @@ public class SaturnExecutorService {
 
 	private ClassLoader executorClassLoader;
 
+	public static final int WAIT_JOBCLASS_ADDED_COUNT =  25;
+	
 	public static SaturnExecutorService init(String namespace, CoordinatorRegistryCenter coordinatorRegistryCenter,
 			String executorName) {
 		return new SaturnExecutorService(coordinatorRegistryCenter, executorName);
@@ -152,38 +159,30 @@ public class SaturnExecutorService {
 					ChildData data = event.getData();
 					if (type != null && data != null) {
 						String path = data.getPath();
-						if (path != null) {
-							if (type.equals(Type.NODE_ADDED) && isJobNameNodePath(path)) { // 增加作业
-								String newJob = getJobNameByPath(path);
-								if (!jobNames.contains(newJob)) {
-									jobNames.add(newJob);
-									callback.call(newJob);
-								}
-							} else if (type.equals(Type.NODE_REMOVED) && isJobNameNodePath(path)) { // 删除作业
-								String deleteJob = getJobNameByPath(path);
-								if (jobNames.contains(deleteJob)) {
-									jobNames.remove(deleteJob);
+						if (path != null && !path.equals("/" + JobNodePath.$JOBS_NODE_NAME)) {
+							if (type.equals(Type.NODE_ADDED)) { // add a job
+								String newJobName = StringUtils.substringAfterLast(path, "/");
+								String jobClassPath = JobNodePath.getNodeFullPath(newJobName, ConfigurationNode.JOB_CLASS);
+								// wait 5 seconds at most until jobClass created.
+								for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i ++) {
+									if (client.checkExists().forPath(jobClassPath) == null) {
+										Thread.sleep(200);
+									} else {
+										log.info("new job: {} 's jobClass created event received.", newJobName);
+										if (!jobNames.contains(newJobName)) {
+											jobNames.add(newJobName);
+											callback.call(newJobName);
+										}
+										break;
+									}
 								}
 							}
 						}
 					}
 				}
 			}
-
-			private boolean isJobNameNodePath(String path) {
-				String regex = "/" + "\\" + JobNodePath.$JOBS_NODE_NAME + "/" + "[^/]*/" + ConfigurationNode.JOB_CLASS;
-				return path.matches(regex);
-			}
-
-			private String getJobNameByPath(String path) {
-				String temp = "/" + JobNodePath.$JOBS_NODE_NAME + "/";
-				String substring = path.substring(temp.length());
-				return substring.split("/")[0];
-			}
 		});
-
 	}
-
 	
 	public CoordinatorRegistryCenter getCoordinatorRegistryCenter() {
 		return coordinatorRegistryCenter;
@@ -239,6 +238,12 @@ public class SaturnExecutorService {
 
 	public void setIpNode(String ipNode) {
 		this.ipNode = ipNode;
+	}
+	
+	public void removeJobName(String jobName) {
+		if (jobNames.contains(jobName)) {
+			jobNames.remove(jobName);
+		}
 	}
 
 }

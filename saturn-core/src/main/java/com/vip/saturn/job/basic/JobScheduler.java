@@ -308,8 +308,9 @@ public class JobScheduler {
 		}
 		if (removejob) {
 			jobNodeStorage.deleteJobNode();
+			saturnExecutorService.removeJobName(jobName);
 		}
-
+		
 		JobRegistry.clearJob(executorName, jobName);
 		if (executorService != null && !executorService.isShutdown()) {
 			executorService.shutdown();

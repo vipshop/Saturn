@@ -95,7 +95,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
 			if (isShutdown) return;
 			if (ConfigurationNode.isToDeletePath(jobName, path) && (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())) {
-				log.info("[{}] msg={} is going to be deleted", jobName, jobName);
+				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
 				jobScheduler.shutdown(true);
 			}
 		}
