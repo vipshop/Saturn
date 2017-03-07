@@ -18,6 +18,7 @@
 package com.vip.saturn.job.internal.storage;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
@@ -261,7 +262,28 @@ public class JobNodeStorage {
             }
         }
     }
-    
+
+    public void executeInLeader(final String latchNode, final LeaderExecutionCallback callback, final long timeout, final TimeUnit unit, final LeaderExecutionCallback timeoutCallback) {
+        try (LeaderLatch latch = new LeaderLatch(getClient(), JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), latchNode))) {
+            latch.start();
+            if(latch.await(timeout, unit)) {
+                callback.execute();
+            } else {
+                if(timeoutCallback != null) {
+                    timeoutCallback.execute();
+                }
+            }
+            //CHECKSTYLE:OFF
+        } catch (final Exception e) {
+            log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+            //CHECKSTYLE:ON
+            if (e instanceof InterruptedException) {//NOSONAR
+                Thread.currentThread().interrupt();
+            } else {
+                throw new JobException(e);
+            }
+        }
+    }
     
     private CuratorFramework getClient() {
         return (CuratorFramework) coordinatorRegistryCenter.getRawClient();

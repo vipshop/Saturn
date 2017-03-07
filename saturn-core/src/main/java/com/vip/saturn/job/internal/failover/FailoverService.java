@@ -17,6 +17,7 @@ package com.vip.saturn.job.internal.failover;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class FailoverService extends AbstractSaturnService {
 		if (!needFailover()) {
 			return;
 		}
-		getJobNodeStorage().executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback());
+		getJobNodeStorage().executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1, TimeUnit.MINUTES, new FailoverTimeoutLeaderExecutionCallback());
 	}
 
 	private boolean needFailover() {
@@ -148,6 +149,14 @@ public class FailoverService extends AbstractSaturnService {
 			getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
 			getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
 			jobScheduler.triggerJob();
+		}
+	}
+
+	class FailoverTimeoutLeaderExecutionCallback implements LeaderExecutionCallback {
+
+		@Override
+		public void execute() {
+			log.warn("Failover leader election timeout with a minute");
 		}
 	}
 }
