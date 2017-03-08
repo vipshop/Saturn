@@ -55,7 +55,7 @@ public class LeaderElectionService extends AbstractSaturnService{
         synchronized (isShutdown) {
             if(isShutdown.compareAndSet(false, true)) {
                 try { // Release my leader position
-                    if (executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST))) {
+                    if (executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
                         getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
                         log.info("[{}] msg=I'm {} that was {}'s leader, I have released myself", jobName, executorName, jobName);
                     }
@@ -87,7 +87,7 @@ public class LeaderElectionService extends AbstractSaturnService{
             log.info("[{}] msg=Elastic job: {} leader node is electing, waiting for 100 ms at executor '{}'", jobName, jobName, executorName);
             BlockUtils.waitingShortTime();
         }
-        return executorName.equals(getJobNodeStorage().getJobNodeData(ElectionNode.LEADER_HOST));
+        return executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST));
     }
     
     /**
