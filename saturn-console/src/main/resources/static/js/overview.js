@@ -731,8 +731,8 @@ $(function() {
             $btn.button('reset');
             return;
         }
-        if(parseInt(cpus) < 0) {
-            alert("CPU数不能为负数");
+        if(parseInt(cpus) <= 0) {
+            alert("CPU数必须大于0");
             $btn.button('reset');
             return;
         }
@@ -741,8 +741,8 @@ $(function() {
             $btn.button('reset');
             return;
         }
-        if(parseInt(mem) < 0) {
-            alert("内存数不能为负数");
+        if(parseInt(mem) <= 0) {
+            alert("内存数必须大于0");
             $btn.button('reset');
             return;
         }
