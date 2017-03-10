@@ -264,6 +264,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 						jobBriefInfo.setPreferList(allPreferExecutorsBuilder.substring(0,allPreferExecutorsBuilder.length()-1));
 					}
 					jobBriefInfo.setMigrateEnabled(isMigrateEnabled(preferList, containerTaskIds));
+				} else {
+					jobBriefInfo.setMigrateEnabled(false);
 				}
 	            jobBriefInfo.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
 	            
