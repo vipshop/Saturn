@@ -741,8 +741,8 @@ $(function() {
             $btn.button('reset');
             return;
         }
-        if(parseInt(mem) <= 0) {
-            alert("内存数必须大于0");
+        if(parseInt(mem) < 1024) {
+            alert("内存数不能小于1024");
             $btn.button('reset');
             return;
         }
