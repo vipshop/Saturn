@@ -60,41 +60,45 @@ public class ContainerServiceImpl implements ContainerService {
     private Map<String, String> systemConfig = new HashMap<>();
     private static final String NAME_CONTAINER_SENSITIVE_PARAMS = "CONTAINER_SENSITIVE_PARAMS";
 
-    @PostConstruct
-    public void init() {
-        FileInputStream fis = null;
-        BufferedReader in = null;
-        try {
-            fis = new FileInputStream(new File(SaturnEnvProperties.VIP_SATURN_SYSTEM_CONFIG_PATH));
-            in = new BufferedReader(new InputStreamReader(fis));
-            StringBuffer sb = new StringBuffer();
-            int maxLen = 1024;
-            char[] cBuf = new char[maxLen];
-            int readLen = -1;
-            while ((readLen = in.read(cBuf, 0, maxLen)) != -1) {
-                sb.append(cBuf, 0, readLen);
-            }
-            Map<String, String> obj = JSON.parseObject(sb.toString(), new TypeReference<Map<String, String>>() {
-            }.getType());
-            systemConfig.clear();
-            systemConfig.putAll(obj);
-        } catch (Throwable t) {
-            LOGGER.error(t.getMessage(), t);
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (Throwable t) {
-                }
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Throwable t) {
-                }
-            }
-        }
-    }
+	@PostConstruct
+	public void init() {
+		FileInputStream fis = null;
+		BufferedReader in = null;
+		try {
+			if (SaturnEnvProperties.VIP_SATURN_SYSTEM_CONFIG_PATH != null) {
+				fis = new FileInputStream(new File(SaturnEnvProperties.VIP_SATURN_SYSTEM_CONFIG_PATH));
+				in = new BufferedReader(new InputStreamReader(fis));
+				StringBuffer sb = new StringBuffer();
+				int maxLen = 1024;
+				char[] cBuf = new char[maxLen];
+				int readLen = -1;
+				while ((readLen = in.read(cBuf, 0, maxLen)) != -1) {
+					sb.append(cBuf, 0, readLen);
+				}
+				Map<String, String> obj = JSON.parseObject(sb.toString(), new TypeReference<Map<String, String>>() {
+				}.getType());
+				systemConfig.clear();
+				systemConfig.putAll(obj);
+			} else {
+				LOGGER.info("The env " + SaturnEnvProperties.NAME_VIP_SATURN_SYSTEM_CONFIG_PATH + " is not set");
+			}
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+		} finally {
+			if (fis != null) {
+				try {
+					fis.close();
+				} catch (Throwable t) {
+				}
+			}
+			if (in != null) {
+				try {
+					in.close();
+				} catch (Throwable t) {
+				}
+			}
+		}
+	}
 
     private ContainerRestService getContainerRestService() {
         String containerType = SaturnEnvProperties.CONTAINER_TYPE;
