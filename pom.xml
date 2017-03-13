@@ -35,7 +35,7 @@
 		<project.build.locale>zh_CN</project.build.locale>
 
 		<quartz.version>2.2.1</quartz.version>
-		<curator.version>2.7.0</curator.version>
+		<curator.version>2.9.0</curator.version>
 		<springframework.version>4.3.2.RELEASE</springframework.version>
 		<cas.client.version>3.2.1</cas.client.version>
 
