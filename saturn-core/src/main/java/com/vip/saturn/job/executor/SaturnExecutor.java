@@ -38,7 +38,7 @@ public class SaturnExecutor {
 
 	protected static Logger log;
 
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private String executorName;
 	ClassLoader executorClassLoader;
@@ -100,7 +100,6 @@ public class SaturnExecutor {
 				}
 			}
 		} catch (Exception e) {
-			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
 			e.printStackTrace(); // NOSONAR
 		}
 	}
@@ -208,7 +207,7 @@ public class SaturnExecutor {
 		this.namespace = namespace;
 	}
 
-	protected static String wrapLogPattern(String message) {
+	protected String wrapLogPattern(String message) {
 		return String.format("[%s] >>> %s", sdf.format(new Date()), message);
 	}
 
