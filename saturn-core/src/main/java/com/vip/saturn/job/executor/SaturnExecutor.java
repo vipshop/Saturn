@@ -270,7 +270,7 @@ public class SaturnExecutor {
 								return;
 							long newSessionId = getSessionId(client);
 							if (sessionId != newSessionId) {
-								log.info(" {} is going to shutdown for zk lost", executorName);
+								log.info(" {} is going to shutdown for zk lost ,client: {}", executorName, client);
 								shutdown();
 								stoped.set(true);
 								return;
@@ -286,7 +286,7 @@ public class SaturnExecutor {
 					public void run() {
 
 						if (stoped.compareAndSet(true, false)) {
-							log.info(" {} is going to restart for zk reconnected", executorName);
+							log.info(" {} is going to restart for zk reconnected ,client: {}", executorName, client);
 							// clear the Executor ip, make sure it can restart properly.
 							String ipNode = saturnExecutorService.getIpNode();
 							if (regCenter != null && ipNode != null && regCenter.isConnected()) {
