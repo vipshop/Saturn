@@ -1,5 +1,7 @@
 package com.vip.saturn.job.internal.sharding;
 
+import java.io.UnsupportedEncodingException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
@@ -61,7 +63,15 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			Type type = event.getType();
 			if (shardingNode.isShardingNecessaryPath(path)
 					&& (type.equals(Type.NODE_ADDED) || type.equals(Type.NODE_UPDATED))) { // 是否有必要resharding，不应该在这里判断，要确保每个executor的resharding事件都执行
-				log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}", jobName, jobName,type,path);
+				byte[] data = event.getData().getData();
+				String dataStr = null;
+				if(data != null) {
+					try {
+						dataStr = new String(data, "UTF-8");
+					} catch (UnsupportedEncodingException e) {
+					}
+				}
+				log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}, data:{}", jobName, jobName,type,path, dataStr);
 				jobScheduler.getJob().onResharding();
 			}
 		}
