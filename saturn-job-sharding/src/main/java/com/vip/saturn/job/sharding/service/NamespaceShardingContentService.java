@@ -127,6 +127,7 @@ public class NamespaceShardingContentService {
     public void persistJobsNecessaryInTransaction(Map<String/*jobName*/, Map<String/*executorName*/, List<Integer>/*items*/>> jobShardContent) throws Exception {
         if (!jobShardContent.isEmpty()) {
             log.info("Notify jobs sharding necessary, jobs is {}", jobShardContent.keySet());
+            int retryCount = 3;
             while(true) {
             	boolean retry = false;
 	            try {
@@ -153,10 +154,11 @@ public class NamespaceShardingContentService {
 		            }
 		            curatorTransactionFinal.commit();
 	            } catch (BadVersionException e) {
-	            	log.info("Bad version because of concurrency, will retry to notify jobs sharding necessary later");
 	            	retry = true;
+	            	retryCount--;
 	            }
-	            if(retry) {
+	            if(retry && retryCount >= 0) {
+	            	log.info("Bad version because of concurrency, will retry to notify jobs sharding necessary later");
 	            	Thread.sleep(100L);
 	            } else {
 	            	break;

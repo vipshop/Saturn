@@ -102,7 +102,7 @@ public class ShardingService extends AbstractSaturnService {
         getJobNodeStorage().fillEphemeralJobNode(ShardingNode.PROCESSING, "");
         try {
 	        clearShardingInfo();
-	        
+	        int retryCount = 3;
 	        while(!isShutdown) {
 	        	boolean needRetry = false;
 	        	int version = getDataStat.getVersion();
@@ -115,12 +115,13 @@ public class ShardingService extends AbstractSaturnService {
 		            curatorTransactionFinal.setData().withVersion(version).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
 		            curatorTransactionFinal.commit();
 	        	} catch(BadVersionException e) {
-	        		log.info("Bad version because of concurrency, will retry to get shards later");
 	        		needRetry = true;
+	        		retryCount--;
 	        	} catch(Exception e) {
 	        		log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Commit shards failed"), e);
 	        	}
-	        	if(needRetry) {
+	        	if(needRetry && retryCount >= 0) {
+	        		log.info("Bad version because of concurrency, will retry to get shards later");
 	        		Thread.sleep(200L);
 	        		getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
 	        	} else {
