@@ -120,10 +120,15 @@ public class ShardingService extends AbstractSaturnService {
 	        	} catch(Exception e) {
 	        		log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Commit shards failed"), e);
 	        	}
-	        	if(needRetry && retryCount >= 0) {
-	        		log.info("Bad version because of concurrency, will retry to get shards later");
-	        		Thread.sleep(200L);
-	        		getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
+	        	if(needRetry) {
+	        		if(retryCount >= 0) {
+		        		log.info(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, will retry to get shards later"));
+		        		Thread.sleep(200L);
+		        		getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
+	        		} else {
+	        			log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, give up to retry"));
+	        			break;
+	        		}
 	        	} else {
 	        		break;
 	        	}
