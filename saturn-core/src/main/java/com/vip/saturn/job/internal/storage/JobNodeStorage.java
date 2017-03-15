@@ -241,7 +241,6 @@ public class JobNodeStorage {
         //CHECKSTYLE:OFF
         } catch (final Exception ex) {
         //CHECKSTYLE:ON
-        	log.error(ex.getMessage(), ex);
             RegExceptionHandler.handleException(ex);
         }
     }

@@ -63,17 +63,21 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			Type type = event.getType();
 			if (shardingNode.isShardingNecessaryPath(path)
 					&& (type.equals(Type.NODE_ADDED) || type.equals(Type.NODE_UPDATED))) { // 是否有必要resharding，不应该在这里判断，要确保每个executor的resharding事件都执行
-				byte[] data = event.getData().getData();
-				String dataStr = null;
-				if(data != null) {
-					try {
-						dataStr = new String(data, "UTF-8");
-					} catch (UnsupportedEncodingException e) {
-					}
-				}
-				log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}, data:{}", jobName, jobName,type,path, dataStr);
+				log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}, data:{}", jobName, jobName,type,path, getData(event));
 				jobScheduler.getJob().onResharding();
 			}
+		}
+		
+		private String getData(TreeCacheEvent event) {
+			String dataStr = null;
+			if(event.getData() != null && event.getData().getData() != null) {
+				try {
+					dataStr = new String(event.getData().getData(), "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+			return dataStr;
 		}
 	}
 
