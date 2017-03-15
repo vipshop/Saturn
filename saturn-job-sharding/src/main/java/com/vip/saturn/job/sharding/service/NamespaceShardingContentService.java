@@ -1,18 +1,24 @@
 package com.vip.saturn.job.sharding.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.apache.zookeeper.KeeperException.BadVersionException;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
  * @author hebelala
@@ -127,47 +133,26 @@ public class NamespaceShardingContentService {
     public void persistJobsNecessaryInTransaction(Map<String/*jobName*/, Map<String/*executorName*/, List<Integer>/*items*/>> jobShardContent) throws Exception {
         if (!jobShardContent.isEmpty()) {
             log.info("Notify jobs sharding necessary, jobs is {}", jobShardContent.keySet());
-            int retryCount = 3;
-            while(true) {
-            	boolean retry = false;
-	            try {
-		            CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
-		            Iterator<Map.Entry<String, Map<String, List<Integer>>>> iterator = jobShardContent.entrySet().iterator();
-		            while (iterator.hasNext()) {
-		                Map.Entry<String, Map<String, List<Integer>>> next = iterator.next();
-		                String jobName = next.getKey();
-		                Map<String, List<Integer>> shardContent = next.getValue();
-		                String shardContentJson = gson.toJson(shardContent);
-		                byte[] necessaryContent = shardContentJson.getBytes("UTF-8");
-		                String jobLeaderShardingNodePath = SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName);
-		                String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName);
-		                if (curatorFramework.checkExists().forPath(jobLeaderShardingNodePath) == null) {
-		                    curatorFramework.create().creatingParentsIfNeeded().forPath(jobLeaderShardingNodePath);
-		                }
-		                Stat stat = curatorFramework.checkExists().forPath(jobLeaderShardingNecessaryNodePath);
-		                if (stat == null) {
-		                	 curatorFramework.create().creatingParentsIfNeeded().forPath(jobLeaderShardingNecessaryNodePath);
-		                	 stat = curatorFramework.checkExists().forPath(jobLeaderShardingNecessaryNodePath);
-		                }
-		                int version = stat != null ? stat.getVersion() : -1;
-		                curatorTransactionFinal.setData().withVersion(version).forPath(jobLeaderShardingNecessaryNodePath, necessaryContent).and();
-		            }
-		            curatorTransactionFinal.commit();
-	            } catch (BadVersionException e) {
-	            	retry = true;
-	            	retryCount--;
-	            }
-	            if(retry) {
-	            	if(retryCount >= 0) {
-		            	log.info("Bad version because of concurrency, will retry to notify jobs sharding necessary later");
-		            	Thread.sleep(100L);
-	            	} else {
-	            		throw new Exception("Bad version because of concurrency, give up to retry to notify jobs sharding necessary");
-	            	}
-	            } else {
-	            	break;
-	            }
+            CuratorTransactionFinal curatorTransactionFinal = curatorFramework.inTransaction().check().forPath("/").and();
+            Iterator<Map.Entry<String, Map<String, List<Integer>>>> iterator = jobShardContent.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Map<String, List<Integer>>> next = iterator.next();
+                String jobName = next.getKey();
+                Map<String, List<Integer>> shardContent = next.getValue();
+                String shardContentJson = gson.toJson(shardContent);
+                byte[] necessaryContent = shardContentJson.getBytes("UTF-8");
+                String jobLeaderShardingNodePath = SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName);
+                String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName);
+                if (curatorFramework.checkExists().forPath(jobLeaderShardingNodePath) == null) {
+                    curatorFramework.create().creatingParentsIfNeeded().forPath(jobLeaderShardingNodePath);
+                }
+				if (curatorFramework.checkExists().forPath(jobLeaderShardingNecessaryNodePath) == null) {
+					curatorTransactionFinal.create().forPath(jobLeaderShardingNecessaryNodePath, necessaryContent).and();
+				} else {
+					curatorTransactionFinal.setData().forPath(jobLeaderShardingNecessaryNodePath, necessaryContent).and();
+				}
             }
+            curatorTransactionFinal.commit();
         }
     }
 
