@@ -19,13 +19,13 @@ package com.vip.saturn.job.internal.sharding;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.internal.storage.TransactionExecutionCallback;
+import com.vip.saturn.job.reg.base.GetDataStat;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.BlockUtils;
 import com.vip.saturn.job.utils.ItemUtils;
@@ -88,51 +88,49 @@ public class ShardingService extends AbstractSaturnService {
      * 如果需要分片且当前节点为主节点, 则作业分片.
      */
     public synchronized void shardingIfNecessary() throws JobExecutionException {
-        String preNecessaryData = SHARDING_UN_NECESSARY;
+        GetDataStat getDataStat = null;
         if(getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)) {
-            preNecessaryData = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY);
+        	getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
         }
-        if(SHARDING_UN_NECESSARY.equals(preNecessaryData)) {
+        if(getDataStat == null || SHARDING_UN_NECESSARY.equals(getDataStat.getData())) {
             return;
         }
-
         if(blockUntilShardingComplatedIfNotLeader()) {
         	return;
         }
 		waitingOtherJobCompleted();
-        log.info("Saturn job: {} sharding begin, contentStr: {}", jobName, preNecessaryData);
         getJobNodeStorage().fillEphemeralJobNode(ShardingNode.PROCESSING, "");
-        clearShardingInfo();
-        Map<String, List<Integer>> shardingItems = new LinkedHashMap<>();
         try {
-            while(!isShutdown) {
-                // 失败重试三次
-                int retry = 3;
-                while (retry-- > 0) {
-                    try {
-                        shardingItems = namespaceShardingContentService.getShardContent(jobName, preNecessaryData);
-                        break;
-                    } catch (Exception e) {//NOSONAR
-                    	log.info("Saturn job:{} retry sharding remains:{} time",jobName,retry);
-                    }
-                }
-                // 是否需要重拿分片
-                // assert(getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY));
-                String currentNecessaryData = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY);
-                if (preNecessaryData.equals(currentNecessaryData)) {
-                    break;
-                } else {
-                    preNecessaryData = currentNecessaryData;
-                }
-            }
-        } catch (Exception e) {
+	        clearShardingInfo();
+	        
+	        while(!isShutdown) {
+	        	boolean needRetry = false;
+	        	int version = getDataStat.getVersion();
+	        	Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardContent(jobName, getDataStat.getData());
+	        	try {
+	        		CuratorTransactionFinal curatorTransactionFinal = getJobNodeStorage().getClient().inTransaction().check().forPath("/").and();
+	        		for (Entry<String, List<Integer>> entry : shardingItems.entrySet()) {
+		                curatorTransactionFinal.create().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(entry.getKey())), ItemUtils.toItemsString(entry.getValue()).getBytes(StandardCharsets.UTF_8)).and();
+		            }
+		            curatorTransactionFinal.setData().withVersion(version).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
+		            curatorTransactionFinal.commit();
+	        	} catch(BadVersionException e) {
+	        		log.info("Bad version because of concurrency, will retry to get shards later");
+	        		needRetry = true;
+	        	} catch(Exception e) {
+	        		log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Commit shards failed"), e);
+	        	}
+	        	if(needRetry) {
+	        		Thread.sleep(200L);
+	        		getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
+	        	} else {
+	        		break;
+	        	}
+	        }
+        } catch(Exception e) {
         	log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
-        	throw new JobExecutionException(e);
         } finally {
-            log.info("Saturn job: {} sharding get sharding content: {}", jobName, shardingItems);
-        	// 清除leader/sharding/necessary节点，避免msgJob无法触发msgService.reExecuteJob()
-        	getJobNodeStorage().executeInTransaction(new PersistShardingInfoTransactionExecutionCallback(shardingItems));
-            log.info("Saturn job: {} sharding completed.", jobName);
+        	getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.PROCESSING);        		        	
         }
     }
     
@@ -187,25 +185,4 @@ public class ShardingService extends AbstractSaturnService {
     	isShutdown = true;
     }
     
-    class PersistShardingInfoTransactionExecutionCallback implements TransactionExecutionCallback {
-        
-        private final Map<String, List<Integer>> shardingItems;
-               
-        public PersistShardingInfoTransactionExecutionCallback(Map<String, List<Integer>> shardingItems) {
-			super();
-			this.shardingItems = shardingItems;
-		}
-
-		@Override
-        public void execute(final CuratorTransactionFinal curatorTransactionFinal) throws Exception {
-        	if(isShutdown) {
-        		return;
-        	}
-            for (Entry<String, List<Integer>> entry : shardingItems.entrySet()) {
-                curatorTransactionFinal.create().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(entry.getKey())), ItemUtils.toItemsString(entry.getValue()).getBytes(StandardCharsets.UTF_8)).and();
-            }
-            curatorTransactionFinal.setData().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
-            curatorTransactionFinal.delete().forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.PROCESSING)).and();
-        }
-    }
 }
