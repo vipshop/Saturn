@@ -162,8 +162,7 @@ public class NamespaceShardingContentService {
 		            	log.info("Bad version because of concurrency, will retry to notify jobs sharding necessary later");
 		            	Thread.sleep(100L);
 	            	} else {
-	            		log.warn("Bad version because of concurrency, give up to retry");
-	            		break;
+	            		throw new Exception("Bad version because of concurrency, give up to retry to notify jobs sharding necessary");
 	            	}
 	            } else {
 	            	break;
