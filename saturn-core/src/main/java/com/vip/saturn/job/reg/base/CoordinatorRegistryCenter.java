@@ -36,8 +36,6 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
      */
     String getDirectly(String key);
     
-    GetDataStat getStatDirectly(String key);
-    
     /**
      * 获取子节点名称集合.
      * 

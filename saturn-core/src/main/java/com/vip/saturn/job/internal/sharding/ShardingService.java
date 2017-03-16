@@ -24,8 +24,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.zookeeper.KeeperException.BadVersionException;
+import org.apache.zookeeper.data.Stat;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +40,6 @@ import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.reg.base.GetDataStat;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.BlockUtils;
 import com.vip.saturn.job.utils.ItemUtils;
@@ -62,8 +63,9 @@ public class ShardingService extends AbstractSaturnService {
     public final static String SHARDING_UN_NECESSARY = "0";
     
     private volatile boolean isShutdown;
-
     
+    private CuratorWatcher necessaryWatcher;
+
     public ShardingService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
     }
@@ -84,13 +86,41 @@ public class ShardingService extends AbstractSaturnService {
         return getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY) && !SHARDING_UN_NECESSARY.equals(getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY));
     }
     
+    public void registryNecessaryWatcher(CuratorWatcher necessaryWatcher) {
+    	this.necessaryWatcher = necessaryWatcher;
+    	try {
+			getJobNodeStorage().getClient().checkExists().usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+    }
+    
+    private GetDataStat getNecessaryDataStat() {
+    	String data = null;
+    	int version = -1;
+    	try {
+    		Stat stat = new Stat();
+    		byte[] bs = getJobNodeStorage().getClient().getData().storingStatIn(stat).usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+			if(bs != null) {
+				data = new String(bs, "UTF-8");
+			}
+			version = stat.getVersion();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+    	return new GetDataStat(data, version);
+    }
+    
     /**
      * 如果需要分片且当前节点为主节点, 则作业分片.
      */
     public synchronized void shardingIfNecessary() throws JobExecutionException {
+    	if(isShutdown) {
+    		return;
+    	}
         GetDataStat getDataStat = null;
         if(getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)) {
-        	getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
+        	getDataStat = getNecessaryDataStat();
         }
         if(getDataStat == null || SHARDING_UN_NECESSARY.equals(getDataStat.getData())) {
             return;
@@ -124,7 +154,7 @@ public class ShardingService extends AbstractSaturnService {
 	        		if(retryCount >= 0) {
 		        		log.info(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, will retry to get shards later"));
 		        		Thread.sleep(200L);
-		        		getDataStat = getJobNodeStorage().getJobNodeStatDirectly(ShardingNode.NECESSARY);
+		        		getDataStat = getNecessaryDataStat();
 	        		} else {
 	        			log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, give up to retry"));
 	        			break;

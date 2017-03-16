@@ -1,18 +1,16 @@
 package com.vip.saturn.job.internal.sharding;
 
-import java.io.UnsupportedEncodingException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.zookeeper.WatchedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.internal.config.ConfigurationService;
-import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
-import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 
 /**
  * 分片监听管理器.
@@ -23,62 +21,69 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 public class ShardingListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ShardingListenerManager.class);
 
-	private ConfigurationService confService;
-
-	private final ShardingNode shardingNode;
-
 	private boolean isShutdown;
-
+	
+	private CuratorWatcher necessaryWatcher;
+	
+	private ShardingService shardingService;
+	
+	private ExecutorService executorService;
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
         super(jobScheduler);
-        confService = jobScheduler.getConfigService();
-        shardingNode = new ShardingNode(jobName);
+        necessaryWatcher = new NecessaryWatcher();
+        shardingService = jobScheduler.getShardingService();
+        executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watch-pool-" + jobName, false));
     }
 	
 	@Override
 	public void start() {
-		// addDataListener(new ShardingNecessaryJobListener(), jobName);
-        zkCacheManager.addTreeCacheListener(new ShardingNecessaryJobListener(), JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), 0);
+        shardingService.registryNecessaryWatcher(necessaryWatcher);
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
-		confService.shutdown();
-        zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY), 0);
+		executorService.shutdownNow();
 	}
-
-	class ShardingNecessaryJobListener extends AbstractJobListener {
+	
+	class NecessaryWatcher implements CuratorWatcher {
 
 		@Override
-		protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
-			if (isShutdown) {
-				return;
-			}		
-			if (jobScheduler == null || jobScheduler.getJob() == null) {
-				return;
-			}
-			Type type = event.getType();
-			if (shardingNode.isShardingNecessaryPath(path)
-					&& (type.equals(Type.NODE_ADDED) || type.equals(Type.NODE_UPDATED))) { // 是否有必要resharding，不应该在这里判断，要确保每个executor的resharding事件都执行
-				log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}, data:{}", jobName, jobName,type,path, getData(event));
-				jobScheduler.getJob().onResharding();
+		public void process(WatchedEvent event) throws Exception {
+			switch (event.getType()) {
+			case NodeCreated:
+			case NodeDataChanged:
+				doBusiness(event);
+			default:
+				shardingService.registryNecessaryWatcher(this);
 			}
 		}
-		
-		private String getData(TreeCacheEvent event) {
-			String dataStr = null;
-			if(event.getData() != null && event.getData().getData() != null) {
-				try {
-					dataStr = new String(event.getData().getData(), "UTF-8");
-				} catch (UnsupportedEncodingException e) {
-					log.error(e.getMessage(), e);
+
+		private void doBusiness(final WatchedEvent event) {
+			try {
+				// cannot block re-registryNecessaryWatcher, so use thread pool to do business
+				if(!executorService.isShutdown()) {
+					executorService.submit(new Runnable() {
+						@Override
+						public void run() {
+							if (isShutdown) {
+								return;
+							}		
+							if (jobScheduler == null || jobScheduler.getJob() == null) {
+								return;
+							}
+							log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}", jobName, jobName, event.getType(), event.getPath());
+							jobScheduler.getJob().onResharding();
+						}
+					});
 				}
+			} catch (Throwable t) {
+				log.error(t.getMessage(), t);
 			}
-			return dataStr;
 		}
+
 	}
 
 }

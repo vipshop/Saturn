@@ -31,7 +31,6 @@ import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.server.ServerNode;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.reg.base.GetDataStat;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
@@ -104,10 +103,6 @@ public class JobNodeStorage {
      */
     public String getJobNodeDataDirectly(final String node) {
         return coordinatorRegistryCenter.getDirectly(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
-    }
-    
-    public GetDataStat getJobNodeStatDirectly(final String node) {
-        return coordinatorRegistryCenter.getStatDirectly(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
     }
     
     /**

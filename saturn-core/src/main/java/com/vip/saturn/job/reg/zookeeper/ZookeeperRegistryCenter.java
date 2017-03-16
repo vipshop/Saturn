@@ -32,7 +32,6 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.internal.monitor.MonitorService;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.reg.base.GetDataStat;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 
 /**
@@ -190,27 +188,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
             return null;
         }
     }
-    
-    @Override
-	public GetDataStat getStatDirectly(String key) {
-		try {
-			GetDataStat getDataStat = new GetDataStat();
-			Stat stat = new Stat();
-			byte[] getZnodeData = client.getData().storingStatIn(stat).forPath(key);
-			String data = null;
-			if (getZnodeData != null) {
-				data = new String(getZnodeData, Charset.forName("UTF-8"));
-            }
-			getDataStat.setData(data);
-			getDataStat.setVersion(stat.getVersion());
-			return getDataStat;
-		//CHECKSTYLE:OFF
-        } catch (final Exception ex) {
-        //CHECKSTYLE:ON
-            RegExceptionHandler.handleException(ex);
-            return null;
-        }
-	}
     
     @Override
     public List<String> getChildrenKeys(final String key) {

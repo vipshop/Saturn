@@ -1,4 +1,4 @@
-package com.vip.saturn.job.reg.base;
+package com.vip.saturn.job.internal.sharding;
 
 /**
  * 
