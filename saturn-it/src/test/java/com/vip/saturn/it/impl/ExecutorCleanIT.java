@@ -155,7 +155,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
         assertDelete(job.getJobName(), executorName);
 
-        Thread.sleep(3 * 1000);
+        Thread.sleep(40 * 1000);
 
         assertNoDelete2(job.getJobName(), executorName);
 
