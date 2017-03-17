@@ -126,6 +126,7 @@ public class FailoverService extends AbstractSaturnService {
 	 * 删除作业失效转移信息.
 	 */
 	public void removeFailoverInfo() {
+		getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.ITEMS_ROOT);
 		for (String each : getJobNodeStorage().getJobNodeChildrenKeys(ExecutionNode.ROOT)) {
 			getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getExecutionFailoverNode(Integer.parseInt(each)));
 		}
@@ -144,11 +145,14 @@ public class FailoverService extends AbstractSaturnService {
 			if(!jobScheduler.getConfigService().getPreferList().contains(executorName) && !jobScheduler.getConfigService().isUseDispreferList()){
 				return;
 			}
-			int crashedItem = Integer.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
-			log.info("[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName, crashedItem);
-			getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
-			getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
-			jobScheduler.triggerJob();
+			List<String> items = getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT);
+			if(items != null && !items.isEmpty()) {
+				int crashedItem = Integer.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
+				log.info("[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName, crashedItem);
+				getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
+				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
+				jobScheduler.triggerJob();
+			}
 		}
 	}
 

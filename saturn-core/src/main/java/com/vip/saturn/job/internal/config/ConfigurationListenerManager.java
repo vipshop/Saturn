@@ -82,6 +82,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 						if (jobScheduler.getReportService() != null) {
 							jobScheduler.getReportService().clearInfoMap();
 						}
+						failoverService.removeFailoverInfo();
 						jobScheduler.getJob().enableJob();
 					}					
 				} else {
