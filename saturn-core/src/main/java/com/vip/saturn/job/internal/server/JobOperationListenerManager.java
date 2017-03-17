@@ -111,7 +111,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
 			if (isShutdown) return;
-			if (ServerNode.isStopOneTimePath(jobName, path, executorName) && Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
+			if (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
 				try{
 					log.info("[{}] msg={} is going to be stopped at once.", jobName, jobName);	
 					jobScheduler.getJob().forceStop();
