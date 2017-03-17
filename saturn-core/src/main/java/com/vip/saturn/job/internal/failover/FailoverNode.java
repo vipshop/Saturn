@@ -49,7 +49,11 @@ public final class FailoverNode {
     static String getItemsNode(final int item) {
         return String.format(ITEMS, item);
     }
-    
+
+    public static String getFailoverItemsNode() {
+        return ITEMS_ROOT;
+    }
+
     public static String getExecutionFailoverNode(final int item) {
         return String.format(EXECUTION_FAILOVER, item);
     }

@@ -219,7 +219,7 @@ public class FailoverIT extends AbstractSaturnIT {
 			String key = jobName + "_" + i;
 			LongtimeJavaJob.JobStatus status = new LongtimeJavaJob.JobStatus();
 			status.runningCount = 0;
-			status.sleepSeconds = 10;
+			status.sleepSeconds = 20;
 			status.finished = false;
 			status.timeout = false;
 			status.killed = false;
@@ -266,6 +266,10 @@ public class FailoverIT extends AbstractSaturnIT {
 		final String firstExecutorName = saturnExecutorList.get(0).getExecutorName();
 		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
 				ShardingNode.getShardingNode(firstExecutorName))));
+
+		final String secondExecutorName = saturnExecutorList.get(1).getExecutorName();
+		final List<Integer> items2 = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
+				ShardingNode.getShardingNode(secondExecutorName))));
 		
 		//4 停止第一个executor，在该executor上运行的分片会失败转移
 		stopExecutor(0);
@@ -297,15 +301,31 @@ public class FailoverIT extends AbstractSaturnIT {
 			}
 			status.runningCount = 0;
 		}
-		
-		//7 判断failover标识已分配给其他Executor
+
+		//7 检查运行executor2上的分片都正在运行，而且runningCount为0
+		for (Integer item : items2) {
+			String key = jobName + "_" + item;
+			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
+			if (status.finished || status.killed || status.timeout) {
+				fail("should running");
+			}
+			if(status.runningCount != 0) {
+				fail("runningCount should be 0");
+			}
+		}
+
+		//8 禁用作业
+		disableJob(jobName);
+
+		//9 等待executor2分片运行完
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
-
-					for (Integer item : items) {
-						if (!isFailoverAssigned(jobConfiguration, item)) {
+					for (Integer item : items2) {
+						String key = jobName + "_" + item;
+						LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
+						if(!status.finished) {
 							return false;
 						}
 					}
@@ -317,44 +337,21 @@ public class FailoverIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-		
-		Thread.sleep(1000);
-		
-		disableJob(jobName);//禁用作业
-		
-		Thread.sleep(1000);
-		
-		//8 如果禁用作业以后发现failover标识并未被清除，说明有问题
+
+		//10 检测无failover信息
+		assertThat(noFailoverItems(jobConfiguration));
 		for (Integer item : items) {
 			assertThat(isFailoverAssigned(jobConfiguration, item)).isEqualTo(false);
 		}
-		
-		enableJob(jobName);// 启用作业
-		
-		Thread.sleep(1000);
-		
-		runAtOnce(jobName);// 立刻执行一次作业
 
-		//9 保证全部分片都会正常执行一次
-		try {
-			waitForFinish(new FinishCheck() {
-				@Override
-				public boolean docheck() {
-
-					for (int j = 0; j < shardCount; j++) {
-						String key = jobName + "_" + j;
-						LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
-						if (status.runningCount <= 0) {
-							return false;
-						}
-					}
-					return true;
-				}
-
-			}, 60);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
+		//11 检测只executor2的分片只运行了一次
+		Thread.sleep(2000);
+		for (Integer item : items2) {
+			String key = jobName + "_" + item;
+			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
+			if (status.runningCount != 1) {
+				fail("runningCount should be 1");
+			}
 		}
 		
 		removeJob(jobConfiguration.getJobName());

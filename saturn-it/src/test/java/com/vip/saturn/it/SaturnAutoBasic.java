@@ -321,6 +321,11 @@ public class SaturnAutoBasic {
         return jobNodeStorage.isJobNodeExisted(FailoverNode.getExecutionFailoverNode(item));
     }
 
+    public static boolean noFailoverItems(JobConfiguration jobConfiguration) {
+        JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
+        return jobNodeStorage.getJobNodeChildrenKeys(FailoverNode.getFailoverItemsNode()).isEmpty();
+    }
+
 
     public interface FinishCheck {
         boolean docheck();
