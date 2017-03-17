@@ -69,8 +69,8 @@ public class ShardingService extends AbstractSaturnService {
     public ShardingService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
     }
-    
-    @Override
+
+	@Override
 	public synchronized void start(){
 		leaderElectionService = jobScheduler.getLeaderElectionService();
         serverService = jobScheduler.getServerService();
@@ -85,11 +85,17 @@ public class ShardingService extends AbstractSaturnService {
     public boolean isNeedSharding() {
         return getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY) && !SHARDING_UN_NECESSARY.equals(getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY));
     }
-    
-    public void registryNecessaryWatcher(CuratorWatcher necessaryWatcher) {
-    	this.necessaryWatcher = necessaryWatcher;
+
+	public void registerNecessaryWatcher(CuratorWatcher necessaryWatcher) {
+		this.necessaryWatcher = necessaryWatcher;
+		registerNecessaryWatcher();
+	}
+
+    public void registerNecessaryWatcher() {
     	try {
-			getJobNodeStorage().getClient().checkExists().usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+			if (necessaryWatcher != null) {
+				getJobNodeStorage().getClient().checkExists().usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -219,6 +225,7 @@ public class ShardingService extends AbstractSaturnService {
     @Override
     public void shutdown() {
     	isShutdown = true;
+		necessaryWatcher = null; // cannot registerNecessaryWatcher
     }
     
 }

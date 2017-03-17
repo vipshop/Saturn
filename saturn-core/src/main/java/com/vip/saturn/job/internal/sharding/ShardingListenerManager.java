@@ -33,12 +33,12 @@ public class ShardingListenerManager extends AbstractListenerManager {
         super(jobScheduler);
         necessaryWatcher = new NecessaryWatcher();
         shardingService = jobScheduler.getShardingService();
-        executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watch-pool-" + jobName, false));
+        executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watch-" + jobName, false));
     }
 	
 	@Override
 	public void start() {
-        shardingService.registryNecessaryWatcher(necessaryWatcher);
+        shardingService.registerNecessaryWatcher(necessaryWatcher);
 	}
 
 	@Override
@@ -57,13 +57,13 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			case NodeDataChanged:
 				doBusiness(event);
 			default:
-				shardingService.registryNecessaryWatcher(this);
+				shardingService.registerNecessaryWatcher();
 			}
 		}
 
 		private void doBusiness(final WatchedEvent event) {
 			try {
-				// cannot block re-registryNecessaryWatcher, so use thread pool to do business
+				// cannot block re-registerNecessaryWatcher, so use thread pool to do business
 				if(!executorService.isShutdown()) {
 					executorService.submit(new Runnable() {
 						@Override
