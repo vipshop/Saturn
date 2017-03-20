@@ -33,7 +33,7 @@ public class NestedZkUtils {
 
     public CuratorFramework createClient(String namespace) throws InterruptedException {
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
-        CuratorFramework curatorFramework = builder.connectString("localhost:" + port)
+        CuratorFramework curatorFramework = builder.connectString("127.0.0.1:" + port)
                 .sessionTimeoutMs(600 * 1000) // long long, could to debug
                 .retryPolicy(new RetryNTimes(3, 1000))
                 .namespace(namespace)
