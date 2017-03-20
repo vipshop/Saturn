@@ -159,7 +159,7 @@ public class ShardingService extends AbstractSaturnService {
 	        	if(needRetry) {
 	        		if(retryCount >= 0) {
 		        		log.info(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, will retry to get shards later"));
-		        		Thread.sleep(200L);
+		        		Thread.sleep(200L); // NOSONAR
 		        		getDataStat = getNecessaryDataStat();
 	        		} else {
 	        			log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Bad version because of concurrency, give up to retry"));
