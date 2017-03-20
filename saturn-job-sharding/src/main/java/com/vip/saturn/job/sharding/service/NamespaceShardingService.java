@@ -228,7 +228,7 @@ public class NamespaceShardingService {
 				}
 				curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes("UTF-8"));
 			} else {
-				curatorFramework.create().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes("UTF-8"));
+				curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH, _shardingCount.toString().getBytes("UTF-8"));
 			}
 		}
 
