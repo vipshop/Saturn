@@ -53,7 +53,7 @@ public class NestedZkUtils {
     }
 
     public String getZkString() {
-        return "localhost:" + PORT;
+        return "127.0.0.1:" + PORT;
     }
 
     public void killSession(ZooKeeper client) throws Exception {
