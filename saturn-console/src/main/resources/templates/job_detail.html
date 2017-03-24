@@ -55,12 +55,6 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    
-							                    <label for="timeoutSeconds" class="col-sm-1 control-label">超时秒数</label>
-							                    <div class="col-sm-2">
-							                        <input type="number" min="0" id="timeoutSeconds" name="timeoutSeconds" class="form-control" data-toggle="tooltip" data-placement="bottom" title="调度脚本超时时间，单位秒。0表示不控制超时时间。" />
-							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
-							                    </div>
-							                    
 							                    <label for="processCountIntervalSeconds" class="col-sm-2 control-label">统计处理数据量的间隔秒数</label>
 							                    <div class="col-sm-2">
 							                        <input type="number" min="1" id="processCountIntervalSeconds" name="processCountIntervalSeconds" class="form-control" 
@@ -76,7 +70,7 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    
-							                    <label for="cron" class="col-sm-1 control-label hide-when-is-msg-job">cron表达式</label>
+							                    <label for="cron" class="col-sm-2 control-label hide-when-is-msg-job">cron表达式</label>
 							                    <div class="col-sm-2 hide-when-is-msg-job">
 							                        <input type="text" id="cron" name="cron" class="form-control" data-toggle="tooltip" data-placement="bottom" title="作业启动时间的cron表达式。&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每10秒运行：*/10 * * * * ? &nbsp;&nbsp; 每5分钟运行：0 */5 * * * ?" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
@@ -91,8 +85,8 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    
-							                    <label id="onlyUsePreferListLabel" for="onlyUsePreferList" class="col-sm-1 control-label">只使用优先Executor</label>
-							                    <div class="col-sm-2">
+							                    <label id="onlyUsePreferListLabel" for="onlyUsePreferList" class="col-sm-2 control-label">只使用优先Executor</label>
+							                    <div class="col-sm-1">
 							                        <input type="checkbox" id="onlyUsePreferList" name="onlyUsePreferList" style="height:28px;" data-toggle="tooltip" title="当没有可用的优先Executor后，不允许把分片迁移到非优先Executor" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
@@ -163,8 +157,22 @@ layout:decorator="frame-layout">
 									</div>
 									<div id="advanced-config-body" class="panel-collapse collapse">
 										<div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="timeout4AlarmSeconds" class="col-sm-2 control-label">超时（告警）</label>
+                                                <div class="col-sm-2">
+                                                    <input type="number" min="0" id="timeout4AlarmSeconds" name="timeoutSeconds" class="form-control" data-toggle="tooltip" data-placement="bottom" title="超时后告警。单位秒。0表示不控制超时。" />
+                                                    <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+                                                </div>
+
+                                                <label for="timeoutSeconds" class="col-sm-2 control-label">超时（Kill线程/进程）</label>
+                                                <div class="col-sm-2">
+                                                    <input type="number" min="0" id="timeoutSeconds" name="timeoutSeconds" class="form-control" data-toggle="tooltip" data-placement="bottom" title="超时后杀死线程/进程。单位秒。0表示不控制超时。" />
+                                                    <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+                                                </div>
+                                            </div>
+
 											<div class="form-group">
-							                    <label for="group" class="col-sm-2 control-label">所属分组</label>
+							                    <label for="groups" class="col-sm-2 control-label">所属分组</label>
 							                    <div class="col-sm-9">
 							                        <input type="text" id="groups" name="groups" class="form-control" data-toggle="tooltip" 
 							                        data-placement="bottom" title="作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业" />
@@ -209,7 +217,7 @@ layout:decorator="frame-layout">
 							                </div>
 							                
 							                <div class="form-group hide-when-is-msg-job">
-							                    <label for="pausePeriod" class="col-sm-2 control-label">暂停日期段<br/>
+							                    <label for="pausePeriodDate" class="col-sm-2 control-label">暂停日期段<br/>
 							                    <small style="color:#999">日期时间段，支持多个日期段，逗号隔开<br/>例如03/12-03/15,11/23-12/25<br/>
 							                    	当日期为空，时间段不为空，表示每天那些时间段都暂停</small></label>
 							                    <div class="col-sm-9">
@@ -218,7 +226,7 @@ layout:decorator="frame-layout">
 												</div>
 											</div>
 							                <div class="form-group  hide-when-is-msg-job">
-							                    <label for="pausePeriod" class="col-sm-2 control-label">暂停时间段<br/>
+							                    <label for="pausePeriodTime" class="col-sm-2 control-label">暂停时间段<br/>
 							                    <small style="color:#999">日期时间段，支持多个时间段，逗号隔开<br/>例如12:23-13:23,16:00-17:00<br/>
 							                    	当日期为不空，时间段为空，表示那些日期段24小时都暂停
 							                    </small></label>

@@ -56,7 +56,9 @@ public class JobConfig implements Serializable {
     private Boolean failover;
     
     private String description;
-    
+
+	private Integer timeout4AlarmSeconds;
+
     private Integer timeoutSeconds;
     
     private Boolean showNormalLog;
@@ -110,6 +112,7 @@ public class JobConfig implements Serializable {
 	private List<String> dependenciesProvided;
 
     public void setDefaultValues() {
+		timeout4AlarmSeconds = timeout4AlarmSeconds == null || timeout4AlarmSeconds < 0 ? 0 : timeout4AlarmSeconds;
         timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
         processCountIntervalSeconds = processCountIntervalSeconds == null ? 300 : processCountIntervalSeconds;
         showNormalLog = showNormalLog == null ? false : showNormalLog;
@@ -232,6 +235,14 @@ public class JobConfig implements Serializable {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public Integer getTimeout4AlarmSeconds() {
+		return timeout4AlarmSeconds;
+	}
+
+	public void setTimeout4AlarmSeconds(Integer timeout4AlarmSeconds) {
+		this.timeout4AlarmSeconds = timeout4AlarmSeconds;
 	}
 
 	public Integer getTimeoutSeconds() {

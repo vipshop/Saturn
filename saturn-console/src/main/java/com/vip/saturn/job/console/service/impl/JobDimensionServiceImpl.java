@@ -222,6 +222,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				}
                 jobBriefInfo.setJobDegree(jobDegree);
 	            jobBriefInfo.setShardingTotalCount(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")));
+                String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
+                if(timeout4AlarmSecondsStr != null) {
+                    jobBriefInfo.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+                } else {
+                    jobBriefInfo.setTimeout4AlarmSeconds(0);
+                }
 	            jobBriefInfo.setTimeoutSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
 	            jobBriefInfo.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
 	            jobBriefInfo.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
@@ -416,6 +422,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
         result.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
         result.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
+        String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
+        if(timeout4AlarmSecondsStr != null) {
+            result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+        } else {
+            result.setTimeout4AlarmSeconds(0);
+        }
 		result.setTimeoutSeconds(
 				Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
         String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
@@ -507,6 +519,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingItemParameters"), jobSettings.getShardingItemParameters(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobParameter"), jobSettings.getJobParameter(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "processCountIntervalSeconds"), jobSettings.getProcessCountIntervalSeconds(), bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeout4AlarmSeconds"), jobSettings.getTimeout4AlarmSeconds(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeoutSeconds"), jobSettings.getTimeoutSeconds(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "dependencies"), jobSettings.getDependencies(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "groups"), jobSettings.getGroups(), bw)

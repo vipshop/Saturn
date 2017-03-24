@@ -373,6 +373,7 @@ $(function() {
         	
 	        $("#shardingItemParameters").val(jobConfig.shardingItemParameters);
 	        $("#jobParameter").val(jobConfig.jobParameter);
+	        $("#timeout4AlarmSeconds").val(jobConfig.timeout4AlarmSeconds);
 	        $("#timeoutSeconds").val(jobConfig.timeoutSeconds);
 	        $("#showNormalLog").prop("checked", jobConfig.showNormalLog);
 	        $("#enabledReport").prop("checked", jobConfig.enabledReport);
@@ -492,6 +493,7 @@ $(function() {
 	        }
 	        var onlyUsePreferList = $("#onlyUsePreferList").prop("checked");
 	        var description = $("#description").val();
+	        var timeout4AlarmSeconds = $("#timeout4AlarmSeconds").val();
 	        var timeoutSeconds = $("#timeoutSeconds").val();
 	        var showNormalLog = $("#showNormalLog").prop("checked");
 	        var enabledReport = $("#enabledReport").prop("checked");
@@ -510,7 +512,7 @@ $(function() {
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
 	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
 	        	failover: failover, shardingItemParameters: shardingItemParameters, dependencies: dependencies, groups: groups, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
-	        	timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
+	        	timeout4AlarmSeconds:timeout4AlarmSeconds,timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
 		            	showSuccessDialog();
 		            	setTimeout("window.parent.location.reload(true)", 1000)
@@ -739,6 +741,7 @@ $(function() {
                         { "data": "localMode" },
                         { "data": "useDispreferList" },
 		                { "data": "shardingTotalCount" },
+		                { "data": "timeout4AlarmSeconds" },
 		                { "data": "timeoutSeconds" },
 		                { "data": "cron" },
 		                { "data": "queueName" },

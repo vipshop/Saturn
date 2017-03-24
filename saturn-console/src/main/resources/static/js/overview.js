@@ -306,6 +306,7 @@ $(function() {
     	$("#useDispreferList").val('');
     	$("#localMode").val('');
     	$("#processCountIntervalSeconds").val('');
+    	$("#timeout4AlarmSeconds").val('');
     	$("#timeoutSeconds").val('');
 		$("#pausePeriodDate").val('');
 		$("#pausePeriodTime").val('');
@@ -453,6 +454,7 @@ $(function() {
 		$("#useDispreferList").val(job.useDispreferList);
 		$("#localMode").val(job.localMode);
 		$("#processCountIntervalSeconds").val(job.processCountIntervalSeconds);
+		$("#timeout4AlarmSeconds").val(job.timeout4AlarmSeconds);
 		$("#timeoutSeconds").val(job.timeoutSeconds);
 		$("#pausePeriodDate").val(job.pausePeriodDate);
 		$("#pausePeriodTime").val(job.pausePeriodTime);
@@ -989,7 +991,7 @@ $(function() {
     	var $btn = $(this).button('loading'),jobType = $("#jobType").val(), jobName = $("#jobName").val(),originJobName = $("#originJobName").val(),jobClass = $("#jobClass").val(), queueName = $("#queueName").val(),channelName = $("#channelName").val(),
     			cron = $("#cron").val(),shardingTotalCount = $("#shardingTotalCount").val(),shardingItemParameters = $("#shardingItemParameters").val(),jobParameter = $("#jobParameter").val().trim(),description = $("#description").val(),
     			loadLevel = $("#loadLevel").val(),preferList = "",useDispreferList = $("#useDispreferList").val(),localMode = $("#localMode").val(),processCountIntervalSeconds = $("#processCountIntervalSeconds").val(),
-    			timeoutSeconds = $("#timeoutSeconds").val(),pausePeriodDate = $("#pausePeriodDate").val(),pausePeriodTime = $("#pausePeriodTime").val(),showNormalLog = $("#showNormalLog").val(),isCopyJob = $("#isCopyJob").val();
+    			timeout4AlarmSeconds = $("#timeout4AlarmSeconds").val(),timeoutSeconds = $("#timeoutSeconds").val(),pausePeriodDate = $("#pausePeriodDate").val(),pausePeriodTime = $("#pausePeriodTime").val(),showNormalLog = $("#showNormalLog").val(),isCopyJob = $("#isCopyJob").val();
     	if(isNullOrEmpty(jobType)){
     		alert("作业类型不能为空");
 			$btn.button('reset');
@@ -1082,7 +1084,7 @@ $(function() {
 			jobType:jobType,cron:cron,shardingTotalCount:shardingTotalCount,jobParameter:jobParameter,
 			shardingItemParameters:shardingItemParameters,description:description,loadLevel:loadLevel,preferList:preferList,
 			useDispreferList:useDispreferList,localMode:localMode,processCountIntervalSeconds:processCountIntervalSeconds,
-			timeoutSeconds:timeoutSeconds,pausePeriodDate:pausePeriodDate,isCopyJob:isCopyJob,originJobName:originJobName,
+			timeout4AlarmSeconds:timeout4AlarmSeconds,timeoutSeconds:timeoutSeconds,pausePeriodDate:pausePeriodDate,isCopyJob:isCopyJob,originJobName:originJobName,
 			pausePeriodTime:pausePeriodTime,showNormalLog:showNormalLog,nns:regName}, function(data) {
 			if(data.success == true) {
 				$("#add-job-dialog").modal("hide");

@@ -13,6 +13,7 @@ public class RestApiJobConfig {
     private String cron;
     private String pausePeriodDate;
     private String pausePeriodTime;
+    private Integer timeout4AlarmSeconds;
     private Integer timeoutSeconds;
     private String channelName;
     private String queueName;
@@ -88,6 +89,14 @@ public class RestApiJobConfig {
 
     public void setPausePeriodTime(String pausePeriodTime) {
         this.pausePeriodTime = pausePeriodTime;
+    }
+
+    public Integer getTimeout4AlarmSeconds() {
+        return timeout4AlarmSeconds;
+    }
+
+    public void setTimeout4AlarmSeconds(Integer timeout4AlarmSeconds) {
+        this.timeout4AlarmSeconds = timeout4AlarmSeconds;
     }
 
     public Integer getTimeoutSeconds() {

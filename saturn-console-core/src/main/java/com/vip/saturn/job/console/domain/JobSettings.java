@@ -39,6 +39,7 @@ public final class JobSettings extends JobConfig {
     		.append("shardingItemParameters=").append(getShardingItemParameters()).append(", ")
     		.append("jobParameter=").append(getJobParameter()).append(", ")
     		.append("processCountIntervalSeconds=").append(getProcessCountIntervalSeconds()).append(", ")
+            .append("timeout4AlarmSeconds=").append(getTimeout4AlarmSeconds()).append(", ")
     		.append("timeoutSeconds=").append(getTimeoutSeconds()).append(", ")
     		.append("failover=").append(getFailover()).append(", ")
 			.append("dependencies=").append(getDependencies()).append(", ")

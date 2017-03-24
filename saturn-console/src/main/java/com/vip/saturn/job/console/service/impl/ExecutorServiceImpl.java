@@ -122,6 +122,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "queueName"), jobConfig.getQueueName());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "channelName"), jobConfig.getChannelName());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), "true");
+        curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"), jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"), jobConfig.getTimeoutSeconds());
 		if(JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), "");
@@ -280,7 +281,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(shardingTotalCountLabel, "对本地作业无效");
 			sheet1.addCell(shardingTotalCountLabel);
 
-			Label timeoutSecondsLabel = new Label(7, 0, "超时时间");
+			Label timeoutSecondsLabel = new Label(7, 0, "超时（Kill线程/进程）时间");
 			setCellComment(timeoutSecondsLabel, "0表示无超时");
 			sheet1.addCell(timeoutSecondsLabel);
 
@@ -326,7 +327,11 @@ public class ExecutorServiceImpl implements ExecutorService {
 			Label groupsLabel = new Label(24, 0, "所属分组");
 			setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
 			sheet1.addCell(groupsLabel);
-			
+
+            Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
+            setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
+            sheet1.addCell(timeout4AlarmSecondsLabel);
+
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
@@ -361,6 +366,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					sheet1.addCell(new Label(22, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
 					sheet1.addCell(new Label(23, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
 					sheet1.addCell(new Label(24, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
+                    sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
 					continue;

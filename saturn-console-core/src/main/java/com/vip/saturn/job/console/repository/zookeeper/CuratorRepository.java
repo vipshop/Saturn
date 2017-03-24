@@ -51,6 +51,8 @@ public interface CuratorRepository {
 
         long getMtime(String node);
 
+        long getCtime(String node);
+
         CuratorTransactionOp inTransaction();
         
         CuratorFramework getCuratorFramework();

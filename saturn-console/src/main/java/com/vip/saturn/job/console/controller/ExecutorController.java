@@ -319,7 +319,7 @@ public class ExecutorController extends AbstractController {
 				timeoutSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 8, "超时时间有误，" + e.toString()));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e.toString()));
 		}
 		jobConfig.setTimeoutSeconds(timeoutSeconds);
 
@@ -373,7 +373,7 @@ public class ExecutorController extends AbstractController {
 				loadLevel = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 15, "负荷有误，" + e.toString()));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e.toString()));
 		}
 		jobConfig.setLoadLevel(loadLevel);
 
@@ -392,7 +392,7 @@ public class ExecutorController extends AbstractController {
 				jobDegree = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 20, "作业重要等级有误，" + e.toString()));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e.toString()));
 		}
 		jobConfig.setJobDegree(jobDegree);
 
@@ -412,17 +412,28 @@ public class ExecutorController extends AbstractController {
 
 		String jobMode = getContents(rowCells, 22);;
 		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 22, "作业模式有误，不能添加系统作业"));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "作业模式有误，不能添加系统作业"));
 		}
 		jobConfig.setJobMode(jobMode);
 
 		String dependencies = getContents(rowCells, 23);;
 		if(dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 24, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
 		}
 		jobConfig.setDependencies(dependencies);
 		
 		jobConfig.setGroups(getContents(rowCells, 24));
+
+        int timeout4AlarmSeconds = 0;
+        try {
+            String tmp = getContents(rowCells, 25);
+            if (tmp != null && !tmp.trim().isEmpty()) {
+                timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
+            }
+        } catch (NumberFormatException e) {
+            throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e.toString()));
+        }
+        jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
 		return jobConfig;
 	}

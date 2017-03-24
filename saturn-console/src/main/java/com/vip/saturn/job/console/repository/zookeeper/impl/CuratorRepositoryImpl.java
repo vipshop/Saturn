@@ -340,6 +340,21 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		}
 
         @Override
+        public long getCtime(String node) {
+            try {
+                Stat stat = curatorFramework.checkExists().forPath(node);
+                if (stat != null) {
+                    return stat.getCtime();
+                } else {
+                    return 0l;
+                }
+            } catch (final Exception ex) {
+                // CHECKSTYLE:ON
+                throw new JobConsoleException(ex);
+            }
+        }
+
+        @Override
 		public CuratorFramework getCuratorFramework() {
 			return curatorFramework;
 		}

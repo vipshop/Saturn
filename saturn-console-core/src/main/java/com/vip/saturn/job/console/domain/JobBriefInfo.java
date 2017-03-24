@@ -72,7 +72,9 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     private String channelName;
     
     private Integer processCountIntervalSeconds;
-    
+
+	private Integer timeout4AlarmSeconds;
+
     private Integer timeoutSeconds;
     
     private String pausePeriodDate;
@@ -313,6 +315,14 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 
 	public void setProcessCountIntervalSeconds(Integer processCountIntervalSeconds) {
 		this.processCountIntervalSeconds = processCountIntervalSeconds;
+	}
+
+	public Integer getTimeout4AlarmSeconds() {
+		return timeout4AlarmSeconds;
+	}
+
+	public void setTimeout4AlarmSeconds(Integer timeout4AlarmSeconds) {
+		this.timeout4AlarmSeconds = timeout4AlarmSeconds;
 	}
 
 	public Integer getTimeoutSeconds() {

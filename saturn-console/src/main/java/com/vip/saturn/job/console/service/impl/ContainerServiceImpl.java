@@ -398,6 +398,7 @@ public class ContainerServiceImpl implements ContainerService {
         jobConfig.setShardingTotalCount(1);
         jobConfig.setShardingItemParameters(getContainerScaleJobShardingItemParameters(containerToken, taskId, instances));
         jobConfig.setUseDispreferList(false);
+        jobConfig.setTimeout4AlarmSeconds(30);
         jobConfig.setTimeoutSeconds(30);
         jobConfig.setJobParameter("");
         jobConfig.setQueueName("");
