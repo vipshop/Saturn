@@ -106,7 +106,12 @@ public class ShardingService extends AbstractSaturnService {
     	int version = -1;
     	try {
     		Stat stat = new Stat();
-    		byte[] bs = getJobNodeStorage().getClient().getData().storingStatIn(stat).usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+    		byte[] bs = null;
+			if(necessaryWatcher != null) {
+				bs = getJobNodeStorage().getClient().getData().storingStatIn(stat).usingWatcher(necessaryWatcher).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+			} else {
+				bs = getJobNodeStorage().getClient().getData().storingStatIn(stat).forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
+			}
 			if(bs != null) {
 				data = new String(bs, "UTF-8");
 			}

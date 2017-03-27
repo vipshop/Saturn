@@ -3,6 +3,8 @@ package com.vip.saturn.job.internal.sharding;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.vip.saturn.job.basic.AbstractSaturnJob;
+import com.vip.saturn.job.basic.CrondJob;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.zookeeper.WatchedEvent;
 import org.slf4j.Logger;
@@ -31,21 +33,46 @@ public class ShardingListenerManager extends AbstractListenerManager {
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
         super(jobScheduler);
-        necessaryWatcher = new NecessaryWatcher();
-        shardingService = jobScheduler.getShardingService();
-        executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watch-" + jobName, false));
+		shardingService = jobScheduler.getShardingService();
+		if(!isCrondJob(jobScheduler.getCurrentConf().getSaturnJobClass())) { // because crondJob do nothing in onResharding method, no need this watcher
+			necessaryWatcher = new NecessaryWatcher();
+			executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watcher-" + jobName, false));
+		}
     }
+
+	private boolean isCrondJob(Class<?> saturnJobClass) {
+		if (saturnJobClass != null) {
+			Class<?> superClass = saturnJobClass.getSuperclass();
+			String crondJobCanonicalName = CrondJob.class.getCanonicalName();
+			String abstractSaturnJobCanonicalName = AbstractSaturnJob.class.getCanonicalName();
+			while (superClass != null) {
+				String superClassCanonicalName = superClass.getCanonicalName();
+				if (superClassCanonicalName.equals(crondJobCanonicalName)) {
+					return true;
+				}
+				if(superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is CrondJob's parent
+					return false;
+				}
+				superClass = superClass.getSuperclass();
+			}
+		}
+		return false;
+	}
 	
 	@Override
 	public void start() {
-        shardingService.registerNecessaryWatcher(necessaryWatcher);
+		if(necessaryWatcher != null) {
+			shardingService.registerNecessaryWatcher(necessaryWatcher);
+		}
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
-		executorService.shutdownNow();
+		if(executorService != null) {
+			executorService.shutdownNow();
+		}
 	}
 	
 	class NecessaryWatcher implements CuratorWatcher {
