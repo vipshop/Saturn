@@ -132,12 +132,8 @@ public class NamespaceShardingService {
 					executorService.submit(new ExecuteAllShardingTask());
 				} else { // 如果当前是全量分片，则告警并关闭当前服务，重选leader来做事情
 					if(reportAlarmService != null) {
-						Map<String, String> alarmData = new HashMap<>();
-						alarmData.put("eventType", "SHARDING_ALLSHARDING_EXCEPTION");
-						alarmData.put("domain", namespace);
-						alarmData.put("hostValue", hostValue);
 						try {
-							reportAlarmService.reportWarningAlarm(alarmData);
+							reportAlarmService.allShardingError(namespace, hostValue);
 						} catch (Throwable t2) {
 							log.error(t2.getMessage(), t2);
 						}
