@@ -225,7 +225,7 @@ public abstract class AbstractElasticJob implements Stopable {
 				JobConfiguration currentConf = jobScheduler.getCurrentConf();
 				// 没有配enabledReport，java/shell作业默认为开启；
 				if ((currentConf.isEnabledReport() == null && ("JAVA_JOB".equals(currentConf.getJobType()) || "SHELL_JOB".equals(currentConf.getJobType())))
-						|| currentConf.isEnabledReport()) {
+						|| (currentConf.isEnabledReport() != null && currentConf.isEnabledReport())) {
 					// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
 					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
 					return false;
