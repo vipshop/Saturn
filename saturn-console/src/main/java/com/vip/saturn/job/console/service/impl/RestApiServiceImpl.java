@@ -28,12 +28,14 @@ import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.JobNodePath;
 
 /**
- * @author xiaopeng.he
+ * @author hebelala
  */
 @Service
 public class RestApiServiceImpl implements RestApiService {
 
     private final static Logger logger = LoggerFactory.getLogger(RestApiServiceImpl.class);
+
+    private final long threeSecondsMillis = 3 * 1000L;
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -46,48 +48,35 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
-        List<RestApiJobInfo> restApiJobInfos = new ArrayList<>();
-        try {
-            RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
-            if (registryCenterConfiguration == null) {
-                throw new SaturnJobConsoleException("The namespace is not exists");
-            }
-            RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
-            if (registryCenterClient != null && registryCenterClient.isConnected()) {
-                CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-                CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+        return reuse(namespace, new ReuseCallBack<List<RestApiJobInfo>>() {
+            @Override
+            public List<RestApiJobInfo> call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                List<RestApiJobInfo> restApiJobInfos = new ArrayList<>();
                 List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
                 if (jobs != null) {
                     for (String job : jobs) {
-                    	try{
-	                        RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
-	                        restApiJobInfo.setJobName(job);
-	                        // 设置作业配置信息
-	                        setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
-	                        // 设置运行状态
-	                        setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
-	                        // 设置统计信息
-	                        RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
-	                        setStatics(curatorFrameworkOp, restApiJobStatistics, job);
-	                        restApiJobInfo.setStatistics(restApiJobStatistics);
-	
-	                        restApiJobInfos.add(restApiJobInfo);
-	                    } catch (Exception e) {
-	                		logger.error("getRestApiJobInfos exception:", e);
-	                		continue;
-	                    }
+                        try {
+                            RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
+                            restApiJobInfo.setJobName(job);
+                            // 设置作业配置信息
+                            setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
+                            // 设置运行状态
+                            setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
+                            // 设置统计信息
+                            RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
+                            setStatics(curatorFrameworkOp, restApiJobStatistics, job);
+                            restApiJobInfo.setStatistics(restApiJobStatistics);
+
+                            restApiJobInfos.add(restApiJobInfo);
+                        } catch (Exception e) {
+                            logger.error("getRestApiJobInfos exception:", e);
+                            continue;
+                        }
                     }
                 }
-            } else {
-                throw new SaturnJobConsoleException("Connect zookeeper failed");
+                return restApiJobInfos;
             }
-        } catch (SaturnJobConsoleException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new SaturnJobConsoleException(e);
-        }
-        return restApiJobInfos;
+        });
     }
 
     private void setRunningStatus(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RestApiJobInfo restApiJobInfo, String jobName) {
@@ -268,6 +257,92 @@ public class RestApiServiceImpl implements RestApiService {
             }
         }
         return runningIp;
+    }
+
+    @Override
+    public int enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        return reuse(namespace, jobName, new ReuseCallBack<Integer>() {
+            @Override
+            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
+                String enabled = curatorFrameworkOp.getData(enabledNodePath);
+                if (Boolean.valueOf(enabled)) {
+                    return 201;
+                } else {
+                    long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
+                    if (updateIntervalLessThanThreeSeconds(mtime)) {
+                        return 403;
+                    }
+                    curatorFrameworkOp.update(enabledNodePath, "true");
+                    return 200;
+                }
+            }
+        });
+    }
+
+    @Override
+    public int disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        return reuse(namespace, jobName, new ReuseCallBack<Integer>() {
+            @Override
+            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
+                String enabled = curatorFrameworkOp.getData(enabledNodePath);
+                if (Boolean.valueOf(enabled)) {
+                    long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
+                    if (updateIntervalLessThanThreeSeconds(mtime)) {
+                        return 403;
+                    }
+                    curatorFrameworkOp.update(enabledNodePath, "false");
+                    return 200;
+                } else {
+                    return 201;
+                }
+            }
+        });
+    }
+
+    private boolean updateIntervalLessThanThreeSeconds(long lastMtime) {
+        return Math.abs(System.currentTimeMillis() - lastMtime) < threeSecondsMillis;
+    }
+
+    private <T> T reuse(String namespace, final String jobName, final ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
+        return reuse(namespace, new ReuseCallBack<T>() {
+            @Override
+            public T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
+                    throw new SaturnJobConsoleException("The jobName is not exists");
+                }
+                return callBack.call(curatorFrameworkOp);
+            }
+        });
+    }
+
+    private <T> T reuse(String namespace, ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
+        try {
+            RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
+            if (registryCenterConfiguration == null) {
+                throw new SaturnJobConsoleException("The namespace is not exists");
+            }
+            RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
+            if (registryCenterClient != null && registryCenterClient.isConnected()) {
+                CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+                CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+                return callBack.call(curatorFrameworkOp);
+            } else {
+                throw new SaturnJobConsoleException("Connect zookeeper failed");
+            }
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Throwable t) {
+            logger.error(t.getMessage(), t);
+            throw new SaturnJobConsoleException(t);
+        }
+    }
+
+    private interface ReuseCallBack<T> {
+
+        T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
     }
 
 }
