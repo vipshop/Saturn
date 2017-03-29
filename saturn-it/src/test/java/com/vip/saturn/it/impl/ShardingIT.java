@@ -963,8 +963,14 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(1);
-			// 无需re-sharding
 			Thread.sleep(1000);
+			waitForFinish(new FinishCheck() {
+				@Override
+				public boolean docheck() {
+					return isNeedSharding(jobConfiguration);
+				}
+			}, 10);
+			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1050,8 +1056,13 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 无需re-sharding
-			Thread.sleep(1000);
+			waitForFinish(new FinishCheck() {
+				@Override
+				public boolean docheck() {
+					return isNeedSharding(jobConfiguration);
+				}
+			}, 10);
+			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1137,8 +1148,13 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
-			// 无需re-sharding
-			Thread.sleep(1000);
+			waitForFinish(new FinishCheck() {
+				@Override
+				public boolean docheck() {
+					return isNeedSharding(jobConfiguration);
+				}
+			}, 10);
+			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1163,7 +1179,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_N_NotifyNecessaryJobs() throws Exception {
-		// 启动1个容器executor
+		// 启动1个executor
 		Main executor1 = startOneNewExecutorList();
 		Thread.sleep(1000);
 
@@ -1235,7 +1251,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_O_NotifyNecessaryJobsPrior() throws Exception {
-		// 启动1个容器executor
+		// 启动1个executor
 		Main executor1 = startOneNewExecutorList();
 		Thread.sleep(1000);
 
