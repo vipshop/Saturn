@@ -250,17 +250,20 @@ public class NamespaceShardingService {
 					continue;
 				}
 				Map<String, List<Integer>> oldShardingItems = namespaceShardingContentService.getShardingItems(oldOnlineExecutorList, enableJob);
-				// just compare executorName's shardList
+				// just compare whether or not contains the same executorName, and it's shardList
 				boolean isChanged = false;
 				Iterator<Map.Entry<String, List<Integer>>> oldIterator = oldShardingItems.entrySet().iterator();
 				wl_loop:
 				while (oldIterator.hasNext()) {
 					Map.Entry<String, List<Integer>> next = oldIterator.next();
 					String executorName = next.getKey();
+					if(!lastShardingItems.containsKey(executorName)) {
+						isChanged = true;
+						break;
+					}
 					List<Integer> shards = next.getValue();
 					List<Integer> newShard = lastShardingItems.get(executorName);
-					if ((shards == null || shards.isEmpty()) && (newShard != null && !newShard.isEmpty())
-							|| (shards != null && !shards.isEmpty()) && (newShard == null || newShard.isEmpty())) { // NOSONAR
+					if (shards == null && newShard != null || shards != null && newShard == null) {
 						isChanged = true;
 						break;
 					}
@@ -279,10 +282,13 @@ public class NamespaceShardingService {
 					while (newIterator.hasNext()) {
 						Map.Entry<String, List<Integer>> next = newIterator.next();
 						String executorName = next.getKey();
+						if(!oldShardingItems.containsKey(executorName)) {
+							isChanged = true;
+							break;
+						}
 						List<Integer> shards = next.getValue();
 						List<Integer> oldShard = oldShardingItems.get(executorName);
-						if ((shards == null || shards.isEmpty()) && (oldShard != null && !oldShard.isEmpty())
-								|| (shards != null && !shards.isEmpty()) && (oldShard == null || oldShard.isEmpty())) { // NOSONAR
+						if (shards == null && oldShard != null || shards != null && oldShard == null) {
 							isChanged = true;
 							break;
 						}

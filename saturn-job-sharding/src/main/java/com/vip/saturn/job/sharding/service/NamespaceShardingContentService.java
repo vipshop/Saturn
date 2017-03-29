@@ -68,15 +68,17 @@ public class NamespaceShardingContentService {
 
     public Map<String, List<Integer>> getShardingItems(List<Executor> executorList, String jobName) throws Exception {
         Map<String, List<Integer>> shardingItems = new HashMap<>();
-        if(executorList != null && executorList.size()>0){
-            for(Executor tmp : executorList) {
-                List<Integer> items = new ArrayList<>();
-                for(Shard shard : tmp.getShardList()) {
-                    if(shard.getJobName().equals(jobName)) {
-                        items.add(shard.getItem());
+        if (executorList != null && executorList.size() > 0) {
+            for (Executor tmp : executorList) {
+                if (tmp.getJobNameList() != null && tmp.getJobNameList().contains(jobName)) {
+                    List<Integer> items = new ArrayList<>();
+                    for (Shard shard : tmp.getShardList()) {
+                        if (shard.getJobName().equals(jobName)) {
+                            items.add(shard.getItem());
+                        }
                     }
+                    shardingItems.put(tmp.getExecutorName(), items);
                 }
-                shardingItems.put(tmp.getExecutorName(), items);
             }
         }
         return shardingItems;
