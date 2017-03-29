@@ -1296,7 +1296,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_P_PersistShardingContentIfNecessary() throws Exception {
-		// 启动1个容器executor
+		// 启动1个executor
 		Main executor1 = startOneNewExecutorList();
 		Thread.sleep(1000);
 
@@ -1345,6 +1345,93 @@ public class ShardingIT extends AbstractSaturnIT {
 		long mtime2 = ((CuratorFramework) regCenter.getRawClient()).checkExists().forPath(SaturnExecutorsNode.getShardingContentElementNodePath("0")).getMtime();
 
 		assertThat(mtime).isEqualTo(mtime2);
+
+		stopExecutorList();
+		forceRemoveJob(jobName1);
+	}
+
+	/**
+	 * https://github.com/vipshop/Saturn/issues/119
+	 */
+	@Test
+	public void test_Q_PersistNecessaryTheRightData() throws Exception {
+		// 启动1个executor
+		Main executor1 = startOneNewExecutorList();
+		Thread.sleep(1000);
+
+		// 启动第一个作业
+		Thread.sleep(1000);
+		String jobName1 = "test_Q_PersistNecessaryTheRightData";
+		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
+		jobConfiguration1.setCron("* * 1 * * ?");
+		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration1.setShardingTotalCount(1);
+		jobConfiguration1.setShardingItemParameters("0=0");
+		jobConfiguration1.setUseDispreferList(false);
+		addJob(jobConfiguration1);
+		Thread.sleep(1000);
+		enableJob(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName1);
+		String data1 = regCenter.getDirectly(jobLeaderShardingNecessaryNodePath);
+		System.out.println("data1:" + data1);
+
+		runAtOnce(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		// 启动第2个executor
+		Main executor2 = startOneNewExecutorList();
+		Thread.sleep(1000);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		String data2 = regCenter.getDirectly(jobLeaderShardingNecessaryNodePath);
+		System.out.println("data2:" + data2);
+		assertThat(data2.contains(executor2.getExecutorName())).isTrue();
+
+		runAtOnce(jobName1);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		// offline executor2
+		stopExecutor(1);
+		Thread.sleep(1000);
+
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				return isNeedSharding(jobConfiguration1);
+			}
+		}, 10);
+
+		String data3 = regCenter.getDirectly(jobLeaderShardingNecessaryNodePath);
+		System.out.println("data3:" + data3);
+
+		assertThat(data3.contains(executor2.getExecutorName())).isFalse();
 
 		stopExecutorList();
 		forceRemoveJob(jobName1);
