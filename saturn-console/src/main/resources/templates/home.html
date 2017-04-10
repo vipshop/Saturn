@@ -20,11 +20,12 @@
 	                <a class="navbar-brand" href="#">Saturn Console</a>
 	            </div>
                 <div class="navbar-header">
-                    <span class="navbar-brand">当前注册中心：<span id="activated-reg-center" th:text="${activated_config}?${activated_config.nameAndNamespace}:未连接"></span></span>
+                    <span class="navbar-brand">当前命名空间：<span id="activated-reg-center" th:text="${activated_config}?${activated_config.nameAndNamespace}:未连接"></span></span>
                 </div>
 	            <!-- Top Menu Items -->
 	            <ul class="nav navbar-right top-nav"> 
 	            	<li id="zk-select" title="当前zk集群"> <select class="form-control" id="zks"></select> </li> 
+	            	<li id="dashboardTab"><a href="dashboard" target="contentFrame"><i class="fa fa-pie-chart">&nbsp;</i>Dashboard</a></li>
 	            	<li id="regTab"><a href="registry_center_page" target="contentFrame"><i class="fa fa-server">&nbsp;</i>注册中心信息</a></li>
 	            	
 	            </ul>
@@ -37,13 +38,13 @@
 	        </nav>
 	
 	        <div id="page-wrapper" style="position:relative;">
-	            <iframe id="contentFrame" th:src="${session.last_vist_url}?${session.last_vist_url}:registry_center_page" name="contentFrame" width="100%" height="97%"
+	            <iframe id="contentFrame" th:src="${session.last_vist_url}?${session.last_vist_url}:dashboard" name="contentFrame" width="100%" height="97%"
 		          scrolling="yes" marginheight="0" marginwidth="0" frameborder="0">
 		        	<p>Your browser does not support iframes</p>
 		     	</iframe>
 		     	
 				<div class="footer">
-					<p class="text-muted" th:text="'saturn-console-' + ${version}+' ©2016'"></p>
+					<p class="text-muted" th:text="'saturn-console-' + ${version}+' ©2017'"></p>
 				</div>
 	        </div>
 	    </div>

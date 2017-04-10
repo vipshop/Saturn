@@ -175,6 +175,18 @@ td > hr {
 #btn-div {
 	padding-right: 7px;
 }
+.panel-green {
+    border-color: #5cb85c;
+}
+.panel-yellow {
+    border-color: #f0ad4e;
+}
+.panel-red {
+    border-color: #d9534f;
+}
 #add-container-dialog {
     overflow:scroll;
+}
+.memory-div {
+	padding-left: 0px;
 }

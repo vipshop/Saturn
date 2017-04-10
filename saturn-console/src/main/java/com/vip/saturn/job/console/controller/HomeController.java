@@ -69,6 +69,11 @@ public class HomeController  extends AbstractController {
     	model.put("version", version);
     	return "home";
     }
+    
+    @RequestMapping(value = "dashboard", method = RequestMethod.GET)
+    public String dashboard(final ModelMap model, HttpServletRequest request) {
+    	return "dashboard";
+    }    
 
     @RequestMapping(value = "registry_center_page", method = RequestMethod.GET)
     public String registryCenterPage(final ModelMap model, HttpServletRequest request) {
