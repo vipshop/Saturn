@@ -20,6 +20,7 @@ package com.vip.saturn.job.internal.config;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.basic.JobTypeManager;
+import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 
@@ -75,7 +76,12 @@ public class JobConfiguration {
      * 作业分片总数.
      */
     private int shardingTotalCount;
-    
+
+	/**
+	 * 时区
+	 */
+	private String timeZone;
+
     /**
      * 作业启动时间的cron表达式.
      */
@@ -218,7 +224,12 @@ public class JobConfiguration {
 		if (!Strings.isNullOrEmpty(valStr)) {
 			shardingTotalCount =  Integer.parseInt(valStr);
 		}
-		
+
+		timeZone = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.TIMEZONE));
+		if (Strings.isNullOrEmpty(timeZone)) {
+			timeZone = SaturnConstant.TIME_ZONE_ID_DEFAULT;
+		}
+
 		cron = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON));		
 		pausePeriodDate = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.PAUSE_PERIOD_DATE));
 		pausePeriodTime = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.PAUSE_PERIOD_TIME));
@@ -277,6 +288,10 @@ public class JobConfiguration {
 
 	public int getShardingTotalCount() {
 		return shardingTotalCount;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
 	}
 
 	public String getCron() {
@@ -373,6 +388,10 @@ public class JobConfiguration {
 
 	public void setShardingTotalCount(int shardingTotalCount) {
 		this.shardingTotalCount = shardingTotalCount;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
 	}
 
 	public void setCron(String cron) {

@@ -19,7 +19,6 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.constants.SaturnConstants;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
@@ -39,6 +38,7 @@ import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -48,8 +48,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
     @Resource
     private CuratorRepository curatorRepository;
-
-    private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, Locale.SIMPLIFIED_CHINESE);
 
 	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
 
@@ -223,11 +221,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
                 jobBriefInfo.setJobDegree(jobDegree);
 	            jobBriefInfo.setShardingTotalCount(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")));
                 String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
-                if(timeout4AlarmSecondsStr != null) {
-                    jobBriefInfo.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
-                } else {
-                    jobBriefInfo.setTimeout4AlarmSeconds(0);
-                }
+				if(Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
+					jobBriefInfo.setTimeout4AlarmSeconds(0);
+				} else {
+					jobBriefInfo.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+				}
 	            jobBriefInfo.setTimeoutSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
 	            jobBriefInfo.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
 	            jobBriefInfo.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
@@ -273,7 +271,13 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				} else {
 					jobBriefInfo.setMigrateEnabled(false);
 				}
-	            jobBriefInfo.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
+				String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+				if(Strings.isNullOrEmpty(timeZone)) {
+					jobBriefInfo.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
+				} else {
+					jobBriefInfo.setTimeZone(timeZone);
+				}
+				jobBriefInfo.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
 	            
 	            if(!JobStatus.STOPPED.equals(jobBriefInfo.getStatus())){// 作业如果是STOPPED状态，不需要显示已分配的executor
 	            	String executorsPath = JobNodePath.getServerNodePath(jobName);
@@ -416,18 +420,25 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setJobName(jobName);
         result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
         result.setShardingTotalCount(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
-        result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
+		String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if(Strings.isNullOrEmpty(timeZone)) {
+			result.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
+		} else {
+			result.setTimeZone(timeZone);
+		}
+		result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
+		result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
         result.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
         result.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
         result.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
         result.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
         result.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
         String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
-        if(timeout4AlarmSecondsStr != null) {
-            result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
-        } else {
-            result.setTimeout4AlarmSeconds(0);
-        }
+        if(Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
+			result.setTimeout4AlarmSeconds(0);
+		} else {
+			result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+		}
 		result.setTimeoutSeconds(
 				Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
         String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
@@ -513,6 +524,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"), jobSettings.getLoadLevel(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"), jobSettings.getJobDegree(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "enabledReport"), jobSettings.getEnabledReport(), bw)
+				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeZone"), StringUtils.trim(jobSettings.getTimeZone()), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "cron"), StringUtils.trim(jobSettings.getCron()), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodDate"), jobSettings.getPausePeriodDate(), bw)
 				.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodTime"), jobSettings.getPausePeriodTime(), bw)
@@ -682,19 +694,27 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failover"))) {
             result.setFailoverExecutor(curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "failover")));
         }
+		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
+		result.setTimeZone(timeZoneStr);
+		TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		sdf.setTimeZone(timeZone);
         String lastBeginTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
-        result.setLastBeginTime(null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
+        result.setLastBeginTime(null == lastBeginTime ? null : sdf.format(new Date(Long.parseLong(lastBeginTime))));
         String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
-        result.setNextFireTime(null == nextFireTime ? null : dateFormat.format(new Date(Long.parseLong(nextFireTime))));
+        result.setNextFireTime(null == nextFireTime ? null : sdf.format(new Date(Long.parseLong(nextFireTime))));
         String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
 		if (lastCompleteTime != null) {
 			long lastCompleteTimeLong = Long.parseLong(lastCompleteTime);
 			if (lastBeginTime == null) {
-				result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
+				result.setLastCompleteTime(sdf.format(new Date(lastCompleteTimeLong)));
 			} else {
 				long lastBeginTimeLong = Long.parseLong(lastBeginTime);
 				if (lastCompleteTimeLong >= lastBeginTimeLong) {
-					result.setLastCompleteTime(dateFormat.format(new Date(lastCompleteTimeLong)));
+					result.setLastCompleteTime(sdf.format(new Date(lastCompleteTimeLong)));
 				}
 			}
 		}
@@ -1049,6 +1069,22 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
+	public String formatTimeByJobTimeZone(String jobName, Long time) {
+		if(time != null) {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+			String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+			if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+				timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+			}
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			sdf.setTimeZone(TimeZone.getTimeZone(timeZoneStr));
+			return timeZoneStr + " " + sdf.format(new Date(time));
+		}
+		return null;
+	}
+
+
+	@Override
 	public Long calculateJobNextTime(String jobName) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		try {
@@ -1229,9 +1265,14 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
 		String cronVal = curatorFrameworkOp.getData(cronPath);
+		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
 		CronExpression cronExpression = null;
 		try {
 			cronExpression = new CronExpression(cronVal);
+			cronExpression.setTimeZone(TimeZone.getTimeZone(timeZoneStr));
 		} catch (ParseException e) {
 			log.error(e.getMessage(), e);
 			return null;
@@ -1252,9 +1293,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return nextFireTime.getTime();
 	}
 
-	/** 
-	 * @see com.vip.saturn.job.console.service.JobDimensionService#getAllJobGroups()
-	 */
 	@Override
 	public List<String> getAllJobGroups() {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();

@@ -153,7 +153,7 @@ function collapseTree () {
     });
 }*/
 function reloadTreeAndExpandJob() {
-	if (tree.activeNode == null) {
+	if (tree && tree.activeNode == null) {
 		var regName = $("#activated-reg-center").text();
 		var node = tree.findFirst(regName);
 		if (node) {

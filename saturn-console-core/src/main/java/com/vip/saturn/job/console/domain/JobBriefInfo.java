@@ -33,6 +33,8 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
     
     private String description;
 
+	private String timeZone;
+
     private String cron;
     
     private String jobClass;
@@ -163,6 +165,14 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
 	}
 
 	public String getCron() {

@@ -24,7 +24,9 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 	private static final long serialVersionUID = 8587397581949456718L;
     
     private String jobName;
-    
+
+	private String timeZone;
+
     private int item;
     
     private ExecutionStatus status;
@@ -49,9 +51,16 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
     
     /** 作业分片运行日志 */
     private String logMsg;
-    
 
-    public String getJobName() {
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
+	}
+
+	public String getJobName() {
 		return jobName;
 	}
 

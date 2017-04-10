@@ -3,7 +3,6 @@ package com.vip.saturn.job.console.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.constants.SaturnConstants;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.container.*;
 import com.vip.saturn.job.console.domain.container.vo.ContainerExecutorVo;
@@ -18,6 +17,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -383,7 +383,7 @@ public class ContainerServiceImpl implements ContainerService {
     }
 
     @Override
-    public void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String cron)
+    public void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron)
             throws SaturnJobConsoleException {
         CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
         String jobName = SaturnConstants.SYSTEM_SCALE_JOB_PREFEX + System.currentTimeMillis();
@@ -391,6 +391,7 @@ public class ContainerServiceImpl implements ContainerService {
         JobConfig jobConfig = new JobConfig();
         jobConfig.setJobName(jobName);
         jobConfig.setDescription(jobDesc);
+        jobConfig.setTimeZone(timeZone);
         jobConfig.setCron(cron);
         jobConfig.setJobMode(JobMode.system_scale);
         jobConfig.setJobType(JobBriefInfo.JobType.SHELL_JOB.name());
@@ -413,6 +414,7 @@ public class ContainerServiceImpl implements ContainerService {
         containerScaleJobConfig.setJobName(jobName);
         containerScaleJobConfig.setJobDesc(jobDesc);
         containerScaleJobConfig.setInstances(instances);
+        containerScaleJobConfig.setTimeZone(timeZone);
         containerScaleJobConfig.setCron(cron);
         try {
             String containerScaleJobStr = JSON.toJSONString(containerScaleJobConfig);
@@ -454,6 +456,11 @@ public class ContainerServiceImpl implements ContainerService {
             containerScaleJobVo.setJobDesc(containerScaleJobConfig.getJobDesc());
             if (containerScaleJobConfig.getInstances() != null) {
                 containerScaleJobVo.setInstances(containerScaleJobConfig.getInstances().toString());
+            }
+            if(containerScaleJobConfig.getTimeZone() == null) {
+                containerScaleJobVo.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
+            } else {
+                containerScaleJobVo.setTimeZone(containerScaleJobConfig.getTimeZone());
             }
             containerScaleJobVo.setCron(containerScaleJobConfig.getCron());
             containerScaleJobVo.setEnabled(containerScaleJob.getEnabled().toString());

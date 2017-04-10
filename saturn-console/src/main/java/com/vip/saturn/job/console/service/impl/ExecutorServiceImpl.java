@@ -8,6 +8,7 @@ import java.util.Random;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableCell;
@@ -24,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.constants.SaturnConstants;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -124,6 +124,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), "true");
         curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"), jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"), jobConfig.getTimeoutSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeZone"), jobConfig.getTimeZone());
 		if(JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), "");
 		}else{
@@ -332,6 +333,10 @@ public class ExecutorServiceImpl implements ExecutorService {
             setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
             sheet1.addCell(timeout4AlarmSecondsLabel);
 
+			Label timeZoneLabel = new Label(26, 0, "时区");
+			setCellComment(timeZoneLabel, "作业运行时区");
+			sheet1.addCell(timeZoneLabel);
+
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 			for (int i=0; i<jobNames.size(); i++) {
@@ -367,6 +372,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					sheet1.addCell(new Label(23, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
 					sheet1.addCell(new Label(24, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
                     sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"))));
+					sheet1.addCell(new Label(26, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
 					continue;

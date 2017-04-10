@@ -306,6 +306,19 @@ $(function() {
 	        }else{
 	        	$("#onlyUsePreferList").prop("checked",false);
 	        }
+	        $("#timeZone").empty();
+	        if(jobConfig.timeZonesProvided instanceof Array) {
+	            for(var i in jobConfig.timeZonesProvided) {
+	                var tmp = jobConfig.timeZonesProvided[i];
+	                var option = "<option value='" + tmp + "'";
+	                if(jobConfig.timeZone == tmp) {
+	                    option = option + " selected";
+	                }
+	                option = option + ">" + tmp + "</option>";
+	                $("#timeZone").append(option);
+	            }
+	        }
+	        $("#timeZone").selectpicker('refresh');
 	        $("#cron").val(jobConfig.cron);
         	var preferListCandidate = jobConfig.preferListCandidate;
         	var preferList = jobConfig.preferList;
@@ -483,6 +496,10 @@ $(function() {
 	        }
 	        var loadLevel = $("#loadLevel").val();
 	        var jobDegree = $("#jobDegree").val();
+	        var timeZone = "Asia/Shanghai";
+	        if($("#timeZone").val() != null) {
+	            timeZone = $("#timeZone").val();
+	        }
 	        var cron = $("#cron").val();
 	        var jobClass = $("#jobClass").val();
 	        var jobParameter = $("#jobParameter").val().trim();
@@ -510,7 +527,7 @@ $(function() {
             var groups = $("#groups").val().trim();
 	        $.post("job/settings", {channelName: channelName, loadLevel:loadLevel,jobDegree:jobDegree, localMode:localMode,useSerial:useSerial,useDispreferList:!onlyUsePreferList, queueName: queueName, 
 	        	showNormalLog: showNormalLog, jobName: jobName, jobClass : jobClass, shardingTotalCount: shardingTotalCount, 
-	        	jobParameter: jobParameter, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds, 
+	        	jobParameter: jobParameter, timeZone: timeZone, cron: cron, pausePeriodDate: pausePeriodDate, pausePeriodTime: pausePeriodTime, processCountIntervalSeconds: processCountIntervalSeconds,
 	        	failover: failover, shardingItemParameters: shardingItemParameters, dependencies: dependencies, groups: groups, description: description, enabledReport: enabledReport, jobType: jobTypeStr,
 	        	timeout4AlarmSeconds:timeout4AlarmSeconds,timeoutSeconds:timeoutSeconds,preferList:preferList,nns:regName}, function(data) {
 		            if(data.success == true) {
@@ -635,8 +652,14 @@ $(function() {
 		loadingExecution = true;
 		
 	    $.get("job/execution", {jobName : jobName,nns:regName}, function (data) {
+	        $("#timeZone2").empty();
+            $("#timeZone3").empty();
 	        $("#execution tbody").empty();
 	        for (var i = 0;i < data.length;i++) {
+	            if(i == 0) {
+                    $("#timeZone2").text("（" + data[i].timeZone + "）");
+                    $("#timeZone3").text("（" + data[i].timeZone + "）");
+                }
 	            var status = data[i].status;
 	            var jobMsg = null == data[i].jobMsg? "-" : data[i].jobMsg;
 	            var runningIp = data[i].runningIp;
@@ -811,19 +834,23 @@ $(function() {
 	/** checkAndForecastCron按钮 */
 	function bindCheckAndForecastCronButton() {
 		 $(document).on("click", "#check-and-forecast-cron", function(event) {
-			$.post("job/checkAndForecastCron", {cron : $("#cron").val()}, function (data) {
+			$.post("job/checkAndForecastCron", {timeZone: $("#timeZone").val(), cron : $("#cron").val()}, function (data) {
 				var msg = "检验结果：";
 				if(data.success == true) {
-					msg += "成功";
-					msg += "<hr>";
-					msg += "预测执行时间点：<br><br>";
-					msg += data.message;
-				} else {
-					msg += "失败";
-					msg += "<hr>";
-					msg += "错误信息：<br><br>";
-					msg += data.message;
-				}
+                    msg += "成功";
+                    msg += "<hr>";
+                    msg += "作业时区：" + data.obj.timeZone;
+                    msg += "<hr>";
+                    msg += "预测执行时间点：<br><br>";
+                    msg += data.obj.times;
+                } else {
+                    msg += "失败";
+                    msg += "<hr>";
+                    msg += "作业时区：" + data.obj.timeZone;
+                    msg += "<hr>";
+                    msg += "错误信息：<br><br>";
+                    msg += data.message;
+                }
 				showPromptDialogWithMsgAndCallback("check-and-forecast-cron-prompt-dialog", msg, null);
 			});
 		});

@@ -10,6 +10,7 @@ import com.vip.saturn.job.console.domain.container.vo.ContainerVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ContainerService;
 import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -257,8 +258,16 @@ public class ContainerController extends AbstractController {
         return requestResult;
     }
 
+    @RequestMapping(value = "/getTimeZoneIds", method = RequestMethod.GET)
+    public RequestResult getTimeZoneIds(HttpServletRequest request) {
+        RequestResult requestResult = new RequestResult();
+        requestResult.setSuccess(true);
+        requestResult.setObj(SaturnConstants.TIME_ZONE_IDS);
+        return requestResult;
+    }
+
     @RequestMapping(value = "/addContainerScaleJob", method = RequestMethod.POST)
-    public RequestResult addContainerScaleJob(String taskId, String jobDesc, Integer instances, String cron, HttpServletRequest request) {
+    public RequestResult addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron, HttpServletRequest request) {
         RequestResult requestResult = new RequestResult();
         try {
             if (taskId == null) {
@@ -270,6 +279,9 @@ public class ContainerController extends AbstractController {
             if (instances == null || instances < 0) {
                 throw new SaturnJobConsoleException("Please input the positive instances");
             }
+            if (timeZone == null || timeZone.trim().length() == 0) {
+                throw new SaturnJobConsoleException("The timeZone cannot be null or empty");
+            }
             if (cron == null || cron.trim().length() == 0) {
                 throw new SaturnJobConsoleException("The cron cannot be null or empty");
             }
@@ -278,7 +290,7 @@ public class ContainerController extends AbstractController {
             } catch (ParseException e) {
                 throw new SaturnJobConsoleException("The cron is not valid, " + e.toString());
             }
-            containerService.addContainerScaleJob(taskId, jobDesc, instances, cron);
+            containerService.addContainerScaleJob(taskId, jobDesc, instances, timeZone, cron);
             requestResult.setSuccess(true);
         } catch (SaturnJobConsoleException e) {
             requestResult.setSuccess(false);

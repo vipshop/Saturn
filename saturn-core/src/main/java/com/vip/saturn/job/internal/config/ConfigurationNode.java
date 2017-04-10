@@ -31,7 +31,9 @@ public final class ConfigurationNode {
     public static final String JOB_CLASS = ROOT + "/jobClass";
     
     public static final String SHARDING_TOTAL_COUNT = ROOT + "/shardingTotalCount";
-    
+
+    public static final String TIMEZONE = ROOT + "/timeZone";
+
     public static final String CRON = ROOT + "/cron";
     
     public static final String PREFER_LIST = ROOT + "/preferList";

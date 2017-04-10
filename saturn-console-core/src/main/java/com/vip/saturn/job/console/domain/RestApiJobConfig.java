@@ -10,6 +10,7 @@ public class RestApiJobConfig {
     private Integer shardingTotalCount;
     private String shardingItemParameters;
     private String jobParameter;
+    private String timeZone;
     private String cron;
     private String pausePeriodDate;
     private String pausePeriodTime;
@@ -65,6 +66,14 @@ public class RestApiJobConfig {
 
     public void setJobParameter(String jobParameter) {
         this.jobParameter = jobParameter;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     public String getCron() {

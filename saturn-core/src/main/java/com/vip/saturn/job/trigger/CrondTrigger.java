@@ -14,6 +14,7 @@ import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.exception.JobException;
 
 public class CrondTrigger implements SaturnTrigger{
+
 	/**
 	 * 验证cron表达式的合法性
 	 */
@@ -36,7 +37,9 @@ public class CrondTrigger implements SaturnTrigger{
 		} else {
 			cronScheduleBuilder = CronScheduleBuilder.cronSchedule("* * * * * ? 2099");
 		}
-		cronScheduleBuilder = cronScheduleBuilder.withMisfireHandlingInstructionDoNothing();
+		cronScheduleBuilder = cronScheduleBuilder
+				.inTimeZone(job.getConfigService().getTimeZone())
+				.withMisfireHandlingInstructionDoNothing();
 		Trigger cronTrigger = TriggerBuilder.newTrigger().withIdentity(job.getExecutorName() + "_" + job.getJobName())
 				.withSchedule(cronScheduleBuilder).build();
 		((AbstractTrigger<CronTrigger>) cronTrigger)

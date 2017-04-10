@@ -33,6 +33,7 @@ public final class JobSettings extends JobConfig {
     		.append("loadLevel=").append(getLoadLevel()).append(", ")
     		.append("jobDegree=").append(getJobDegree()).append(", ")
     		.append("enabledReport=").append(getEnabledReport()).append(", ")
+			.append("timeZone=").append(getTimeZone()).append(", ")
     		.append("cron=").append(getCron()).append(", ")
     		.append("pausePeriodDate=").append(getPausePeriodDate()).append(", ")
     		.append("pausePeriodTime=").append(getPausePeriodTime()).append(", ")

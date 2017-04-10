@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 
 /**
  * @author chembo.huang
@@ -40,7 +41,11 @@ public class JobConfig implements Serializable {
     private String jobClass;
     
     private Integer shardingTotalCount;
-    
+
+	private String timeZone;
+
+	private List<String> timeZonesProvided;
+
     private String cron;
     
     private String pausePeriodDate;
@@ -112,6 +117,7 @@ public class JobConfig implements Serializable {
 	private List<String> dependenciesProvided;
 
     public void setDefaultValues() {
+		timeZone = timeZone == null ? SaturnConstants.TIME_ZONE_ID_DEFAULT : timeZone;
 		timeout4AlarmSeconds = timeout4AlarmSeconds == null || timeout4AlarmSeconds < 0 ? 0 : timeout4AlarmSeconds;
         timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
         processCountIntervalSeconds = processCountIntervalSeconds == null ? 300 : processCountIntervalSeconds;
@@ -171,6 +177,22 @@ public class JobConfig implements Serializable {
 
 	public void setShardingTotalCount(Integer shardingTotalCount) {
 		this.shardingTotalCount = shardingTotalCount;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
+	}
+
+	public List<String> getTimeZonesProvided() {
+		return timeZonesProvided;
+	}
+
+	public void setTimeZonesProvided(List<String> timeZonesProvided) {
+		this.timeZonesProvided = timeZonesProvided;
 	}
 
 	public String getCron() {

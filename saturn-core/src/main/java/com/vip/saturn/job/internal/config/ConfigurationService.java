@@ -18,14 +18,9 @@
 package com.vip.saturn.job.internal.config;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.vip.saturn.job.basic.SaturnConstant;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.quartz.CronExpression;
@@ -50,6 +45,8 @@ public class ConfigurationService extends AbstractSaturnService {
 	private static final String PATTERN = ",(?=(([^\"]*\"){2})*[^\"]*$)";
 	
     private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class);
+
+	private TimeZone jobTimeZone;
     
     public ConfigurationService(JobScheduler jobScheduler) {
         super(jobScheduler);
@@ -135,7 +132,34 @@ public class ConfigurationService extends AbstractSaturnService {
     public String getJobParameter() {
         return jobConfiguration.getJobParameter();
     }
-    
+
+	/**
+	 * 获取作业时区字符串
+	 */
+	public String getTimeZoneStr() {
+		String timeZone = jobConfiguration.getTimeZone();
+		if(timeZone == null || timeZone.trim().isEmpty()) {
+			return SaturnConstant.TIME_ZONE_ID_DEFAULT;
+		}
+		return timeZone;
+	}
+
+	/**
+	 * 获取作业时区对象
+	 */
+	public TimeZone getTimeZone() {
+		String timeZoneStr = jobConfiguration.getTimeZone();
+		if(timeZoneStr == null || timeZoneStr.trim().isEmpty()) {
+			timeZoneStr = SaturnConstant.TIME_ZONE_ID_DEFAULT;
+		}
+		if(jobTimeZone != null && timeZoneStr.equals(jobTimeZone.getID())) {
+			return jobTimeZone;
+		} else {
+			jobTimeZone = TimeZone.getTimeZone(timeZoneStr);
+			return jobTimeZone;
+		}
+	}
+
     /**
      * 获取作业启动时间的cron表达式.
      * 
@@ -200,20 +224,19 @@ public class ConfigurationService extends AbstractSaturnService {
      * @return 本机当前时间是否在作业暂停时间段范围内.
      */
     public boolean isInPausePeriod() {
-		Date now = new Date(System.currentTimeMillis());
-		return isInPausePeriod(now);
+		return isInPausePeriod(new Date());
     }
     
     /**
      * 该时间是否在作业暂停时间段范围内。
      * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
      * 
-     * @param date 时间
+     * @param date 时间，本机时区的时间
      * 
      * @return 该时间是否在作业暂停时间段范围内。
      */
 	public boolean isInPausePeriod(Date date) {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = Calendar.getInstance(getTimeZone());
 		calendar.setTime(date);
 		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
 		int d = calendar.get(Calendar.DAY_OF_MONTH);

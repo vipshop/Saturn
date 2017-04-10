@@ -130,7 +130,8 @@ public class JobScheduler {
 		listenerManager = new ListenerManager(this);
 		reportService = new ReportService(this);
 
-		// see EnabledPathListener.java, only these values are supposed to be watched.
+		// see EnabledPathListener and CronPathListener, only these values are supposed to be watched.
+		previousConf.setTimeZone(jobConfiguration.getTimeZone());
 		previousConf.setCron(jobConfiguration.getCron());
 		previousConf.setPausePeriodDate(jobConfiguration.getPausePeriodDate());
 		previousConf.setPausePeriodTime(jobConfiguration.getPausePeriodTime());

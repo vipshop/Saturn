@@ -8,6 +8,7 @@ public class ContainerScaleJobVo {
     private String jobName;
     private String jobDesc;
     private String instances;
+    private String timeZone;
     private String cron;
     private String enabled;
 
@@ -33,6 +34,14 @@ public class ContainerScaleJobVo {
 
     public void setInstances(String instances) {
         this.instances = instances;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     public String getCron() {

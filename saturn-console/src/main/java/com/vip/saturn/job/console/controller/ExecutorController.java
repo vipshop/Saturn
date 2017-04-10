@@ -1,36 +1,5 @@
 package com.vip.saturn.job.console.controller;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import jxl.Cell;
-import jxl.CellType;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.write.WriteException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobMode;
@@ -39,6 +8,31 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.SaturnConstants;
+import jxl.Cell;
+import jxl.CellType;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.write.WriteException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author xiaopeng.he
@@ -53,8 +47,6 @@ public class ExecutorController extends AbstractController {
 	private ExecutorService executorService;
     @Resource
     private JobDimensionService jobDimensionService;
-
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
 	@RequestMapping(value = "checkAndAddJobs", method = RequestMethod.POST)
 	public RequestResult checkAndAddJobs(JobConfig jobConfig, HttpServletRequest request) {
@@ -435,6 +427,17 @@ public class ExecutorController extends AbstractController {
         }
         jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
+		String timeZone = getContents(rowCells, 26);
+		if(timeZone == null || timeZone.trim().length() == 0) {
+			timeZone = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		} else {
+			timeZone = timeZone.trim();
+			if(!SaturnConstants.TIME_ZONE_IDS.contains(timeZone)) {
+				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 27, "时区有误"));
+			}
+		}
+		jobConfig.setTimeZone(timeZone);
+
 		return jobConfig;
 	}
 
@@ -451,7 +454,7 @@ public class ExecutorController extends AbstractController {
 		try {
 			exportJobFile = executorService.getExportJobFile();
 
-			String currentTime = sdf.format(new Date());
+			String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 			String fileName = getNamespace() + "_allJobs_" + currentTime + ".xls";
 
 			response.setContentType("application/octet-stream");

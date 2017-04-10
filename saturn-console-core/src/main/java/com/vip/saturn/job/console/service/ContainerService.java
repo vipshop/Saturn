@@ -35,7 +35,7 @@ public interface ContainerService {
 
     String getRegistryRepositoryTags(String repository) throws SaturnJobConsoleException;
 
-    void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String cron) throws SaturnJobConsoleException;
+    void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron) throws SaturnJobConsoleException;
 
     ContainerScaleJobVo getContainerScaleJobVo(String taskId, String jobName) throws SaturnJobConsoleException;
 

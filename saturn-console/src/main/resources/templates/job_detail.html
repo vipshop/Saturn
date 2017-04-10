@@ -69,8 +69,15 @@ layout:decorator="frame-layout">
 							                        <input type="number" min="1" max="1000" id="loadLevel" name="loadLevel" class="form-control" data-toggle="tooltip" data-placement="bottom" title="每个分片的负荷，默认为1" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
-							                    
-							                    <label for="cron" class="col-sm-2 control-label hide-when-is-msg-job">cron表达式</label>
+
+												<label for="timeZone" class="col-sm-1 control-label">时区</label>
+												<div class="col-sm-2">
+													<select id="timeZone" class="selectpicker form-control" data-live-search="true" data-size="10" data-width="100%" title="请选择时区">
+													</select>
+													<span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+												</div>
+
+							                    <label for="cron" class="col-sm-1 control-label hide-when-is-msg-job">cron表达式</label>
 							                    <div class="col-sm-2 hide-when-is-msg-job">
 							                        <input type="text" id="cron" name="cron" class="form-control" data-toggle="tooltip" data-placement="bottom" title="作业启动时间的cron表达式。&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每10秒运行：*/10 * * * * ? &nbsp;&nbsp; 每5分钟运行：0 */5 * * * ?" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
@@ -86,12 +93,12 @@ layout:decorator="frame-layout">
 							                    </div>
 							                    
 							                    <label id="onlyUsePreferListLabel" for="onlyUsePreferList" class="col-sm-2 control-label">只使用优先Executor</label>
-							                    <div class="col-sm-1">
+							                    <div class="col-sm-2">
 							                        <input type="checkbox" id="onlyUsePreferList" name="onlyUsePreferList" style="height:28px;" data-toggle="tooltip" title="当没有可用的优先Executor后，不允许把分片迁移到非优先Executor" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    
-							                    <label for="jobDegree" class="col-sm-2 control-label">作业重要等级</label>
+							                    <label for="jobDegree" class="col-sm-1 control-label">作业重要等级</label>
 							                    <div class="col-sm-2">
 													<select id="jobDegree" class="selectpicker form-control">
 														<option selected="selected" value="0" title="0:没有定义">0:没有定义</option>
@@ -270,8 +277,8 @@ layout:decorator="frame-layout">
 				                        <th>状态</th>
 				                        <th width="20%">分片返回信息</th>
 				                        <th>Executor</th>
-				                        <th>最近执行时间</th>
-				                        <th class="hide-when-is-msg-job">下次开始时间</th>
+				                        <th>最近执行时间<span id="timeZone2"></span></th>
+				                        <th class="hide-when-is-msg-job">下次开始时间<span id="timeZone3"></span></th>
 				                        <th>日志</th>
 				                    </tr>
 				                </thead>

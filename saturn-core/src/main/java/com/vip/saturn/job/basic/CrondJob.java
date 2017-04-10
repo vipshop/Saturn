@@ -17,12 +17,23 @@ public abstract class CrondJob extends AbstractSaturnJob{
 	
 	@Override
 	public void enableJob() {
-		String cronFromZk = configService.getCron();
-		if (jobScheduler.getPreviousConf().getCron() != null && !jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
-			jobScheduler.getPreviousConf().setCron(cronFromZk);
-			jobScheduler.rescheduleJob(cronFromZk);
-			executionService.updateNextFireTime(executionContextService.getShardingItems());
+		boolean shouldReschedule = false;
+		String timeZoneFromZk = configService.getTimeZoneStr();
+		String timeZone = jobScheduler.getPreviousConf().getTimeZone();
+		if(timeZoneFromZk != null && !timeZoneFromZk.equals(timeZone) || timeZoneFromZk == null && timeZone != null) {
+			shouldReschedule = true;
+			jobScheduler.getPreviousConf().setTimeZone(timeZoneFromZk);
 		}
+		String cronFromZk = configService.getCron();
+		String cron = jobScheduler.getPreviousConf().getCron();
+		if(cronFromZk != null && !cronFromZk.equals(cron) || cronFromZk == null && cron != null) {
+			shouldReschedule = true;
+			jobScheduler.getPreviousConf().setCron(cronFromZk);
+		}
+		if(shouldReschedule) {
+			jobScheduler.rescheduleJob(cronFromZk);
+		}
+
 		// if PausePeriodDatePath or pausePeriodTime changed.
 		String prePauseDate = jobScheduler.getPreviousConf().getPausePeriodDate();
 		String prePauseTime = jobScheduler.getPreviousConf().getPausePeriodTime();
@@ -32,8 +43,14 @@ public abstract class CrondJob extends AbstractSaturnJob{
 		boolean updatePauseConditionSecond = (prePauseDate == null && pauseDate != null);
 		boolean updatePauseConditionThird = (prePauseTime != null && !prePauseTime.equals(pauseTime));
 		boolean updatePauseConditionFourth = (prePauseTime == null && pauseTime != null);
-		if (updatePauseConditionFirst || updatePauseConditionSecond || updatePauseConditionThird || updatePauseConditionFourth) {
+		if (shouldReschedule || updatePauseConditionFirst || updatePauseConditionSecond || updatePauseConditionThird || updatePauseConditionFourth) {
 			executionService.updateNextFireTime(executionContextService.getShardingItems());
+		}
+		if(updatePauseConditionFirst || updatePauseConditionSecond) {
+			jobScheduler.getPreviousConf().setPausePeriodDate(pauseDate);
+		}
+		if(updatePauseConditionThird || updatePauseConditionFourth) {
+			jobScheduler.getPreviousConf().setPausePeriodTime(pauseTime);
 		}
 
 	    int countTime =  configService.getJobConfiguration().getProcessCountIntervalSeconds();

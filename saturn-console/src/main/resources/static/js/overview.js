@@ -311,6 +311,7 @@ $(function() {
 		$("#pausePeriodDate").val('');
 		$("#pausePeriodTime").val('');
 		$("#showNormalLog").val('');
+		$("#timeZone").val('Asia/Shanghai');
 		$("#jobType").removeAttr("disabled");
         reloadPreferListProvided("", function() {
             $("#addJobTitle").html("添加作业");
@@ -443,6 +444,7 @@ $(function() {
 		$("#originJobName").val(job.jobName);
 		$("#jobName").val("CopyOf"+job.jobName);
 		$("#jobClass").val(job.jobClass);
+		$("#timeZone").val(job.timeZone);
 		$("#cron").val(job.cron);
 		$("#shardingTotalCount").val(job.shardingTotalCount);
 		$("#jobParameter").val(job.jobParameter);
@@ -836,13 +838,15 @@ $(function() {
     });
 
     $("#add-scale-job-dialog-check-and-forecast-cron").on('click', function(event) {
+        var timeZone = $("#add-scale-job-dialog-timeZone").val();
         var cron = $("#add-scale-job-dialog-cron").val();
-        checkAndForecastCron(cron);
+        checkAndForecastCron(timeZone, cron);
     });
 
     $("#see-scale-job-dialog-check-and-forecast-cron").on('click', function(event) {
+        var timeZone = $("#see-scale-job-dialog-timeZone").val();
         var cron = $("#see-scale-job-dialog-cron").val();
-        checkAndForecastCron(cron);
+        checkAndForecastCron(timeZone, cron);
     });
 
     $("#add-scale-job-dialog-confirm-btn").on('click', function(event) {
@@ -850,6 +854,7 @@ $(function() {
         var taskId = $("#add-scale-job-dialog-showTask").text();
         var jobDesc = $("#add-scale-job-dialog-jobDesc").val();
         var instances = $("#add-scale-job-dialog-instances").val();
+        var timeZone = $("#add-scale-job-dialog-timeZone").val();
         var cron = $("#add-scale-job-dialog-cron").val();
         if(isNullOrEmpty(taskId)) {
             alert("taskId不能为空");
@@ -876,12 +881,17 @@ $(function() {
             $btn.button('reset');
             return;
         }
+        if(isNullOrEmpty(timeZone)) {
+            alert("timeZone不能为空");
+            $btn.button('reset');
+            return false;
+        }
         if(isNullOrEmpty(cron)) {
             alert("Cron不能为空");
             $btn.button('reset');
             return false;
         }
-        $.post("container/addContainerScaleJob", {nns:regName, taskId:taskId, jobDesc:jobDesc, instances:instances, cron:cron}, function(data) {
+        $.post("container/addContainerScaleJob", {nns:regName, taskId:taskId, jobDesc:jobDesc, instances:instances, timeZone:timeZone, cron:cron}, function(data) {
             if(data.success == true) {
                 $("#add-scale-job-dialog").modal("hide");
                 showSuccessDialogWithCallback(function(){
@@ -989,7 +999,7 @@ $(function() {
 
     $("#add-job-dialog-confirm-btn").on('click', function(event) {
     	var $btn = $(this).button('loading'),jobType = $("#jobType").val(), jobName = $("#jobName").val(),originJobName = $("#originJobName").val(),jobClass = $("#jobClass").val(), queueName = $("#queueName").val(),channelName = $("#channelName").val(),
-    			cron = $("#cron").val(),shardingTotalCount = $("#shardingTotalCount").val(),shardingItemParameters = $("#shardingItemParameters").val(),jobParameter = $("#jobParameter").val().trim(),description = $("#description").val(),
+    			timeZone = $("#timeZone").val(), cron = $("#cron").val(),shardingTotalCount = $("#shardingTotalCount").val(),shardingItemParameters = $("#shardingItemParameters").val(),jobParameter = $("#jobParameter").val().trim(),description = $("#description").val(),
     			loadLevel = $("#loadLevel").val(),preferList = "",useDispreferList = $("#useDispreferList").val(),localMode = $("#localMode").val(),processCountIntervalSeconds = $("#processCountIntervalSeconds").val(),
     			timeout4AlarmSeconds = $("#timeout4AlarmSeconds").val(),timeoutSeconds = $("#timeoutSeconds").val(),pausePeriodDate = $("#pausePeriodDate").val(),pausePeriodTime = $("#pausePeriodTime").val(),showNormalLog = $("#showNormalLog").val(),isCopyJob = $("#isCopyJob").val();
     	if(isNullOrEmpty(jobType)){
@@ -1081,7 +1091,7 @@ $(function() {
             preferList = $("#preferListProvided").val().toString();
         }
 		$.post("executor/checkAndAddJobs",{jobName: jobName,jobClass:jobClass,channelName:channelName,queueName:queueName,
-			jobType:jobType,cron:cron,shardingTotalCount:shardingTotalCount,jobParameter:jobParameter,
+			jobType:jobType,timeZone:timeZone,cron:cron,shardingTotalCount:shardingTotalCount,jobParameter:jobParameter,
 			shardingItemParameters:shardingItemParameters,description:description,loadLevel:loadLevel,preferList:preferList,
 			useDispreferList:useDispreferList,localMode:localMode,processCountIntervalSeconds:processCountIntervalSeconds,
 			timeout4AlarmSeconds:timeout4AlarmSeconds,timeoutSeconds:timeoutSeconds,pausePeriodDate:pausePeriodDate,isCopyJob:isCopyJob,originJobName:originJobName,
@@ -1140,8 +1150,9 @@ $(function() {
 	});
 
     $(document).on("click", "#check-and-forecast-cron", function(event) {
+        var timeZone = $("#timeZone").val();
         var cron = $("#cron").val();
-        checkAndForecastCron(cron);
+        checkAndForecastCron(timeZone, cron);
     });
 
     $("#totalCheckbox").on('click', function(event) {
@@ -1368,8 +1379,8 @@ $(function() {
                     var jobName = list[dataIndex].jobName;
                     $.get("job/getJobNextFireTime", {nns:regName, jobName:jobName}, function(data) {
                     	var nextFireTime = "-";
-                        if (data != '0') {
-                        	nextFireTime = new Date(parseInt(data)).format("yyyy-MM-dd HH:mm:ss");
+                        if (data) {
+                            nextFireTime = data;
                         }
                     	$(row).find(".nft").html(nextFireTime);
                     });
@@ -2070,9 +2081,29 @@ $(function() {
     }
 
     function addScaleJob(obj) {
-        var taskId = $(obj).attr('taskId');
-        $("#add-scale-job-dialog-showTask").html(taskId);
-        $("#add-scale-job-dialog").modal("show");
+        $.get("container/getTimeZoneIds", {nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#add-scale-job-dialog-timeZone").empty();
+                if(data.obj instanceof Array) {
+                    for(var i in data.obj) {
+                        var tmp = data.obj[i];
+                        var option = "<option value='" + tmp + "'";
+                        if(tmp == "Asia/Shanghai") {
+                            option = option + " selected"
+                        }
+                        option = option + ">" + tmp + "</option>";
+                        $("#add-scale-job-dialog-timeZone").append(option);
+                    }
+                }
+                $("#add-scale-job-dialog-timeZone").selectpicker('refresh');
+                var taskId = $(obj).attr('taskId');
+                $("#add-scale-job-dialog-showTask").html(taskId);
+                $("#add-scale-job-dialog").modal("show");
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
     }
 
     function seeScaleJob(obj) {
@@ -2087,6 +2118,7 @@ $(function() {
                 $("#see-scale-job-dialog-jobName").val(scaleJobVo.jobName);
                 $("#see-scale-job-dialog-jobDesc").val(scaleJobVo.jobDesc);
                 $("#see-scale-job-dialog-instances").val(scaleJobVo.instances);
+                $("#see-scale-job-dialog-timeZone").val(scaleJobVo.timeZone);
                 $("#see-scale-job-dialog-cron").val(scaleJobVo.cron);
                 if(scaleJobVo.enabled == "false") {
                     $("#see-scale-job-dialog-enable-span").attr("enable", "true");
@@ -2129,16 +2161,20 @@ $(function() {
         $("#icon-enable-scale-job-dialog").modal("show");
     }
 
-    function checkAndForecastCron(cron) {
-        $.post("job/checkAndForecastCron", {cron : cron}, function (data) {
+    function checkAndForecastCron(timeZone, cron) {
+        $.post("job/checkAndForecastCron", {timeZone: timeZone, cron : cron}, function (data) {
             var msg = "检验结果：";
             if(data.success == true) {
                 msg += "成功";
                 msg += "<hr>";
+                msg += "作业时区：" + data.obj.timeZone;
+                msg += "<hr>";
                 msg += "预测执行时间点：<br><br>";
-                msg += data.message;
+                msg += data.obj.times;
             } else {
                 msg += "失败";
+                msg += "<hr>";
+                msg += "作业时区：" + data.obj.timeZone;
                 msg += "<hr>";
                 msg += "错误信息：<br><br>";
                 msg += data.message;

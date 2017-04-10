@@ -20,6 +20,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.ModelMap;
@@ -29,12 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("job")
@@ -63,38 +63,59 @@ public class JobController extends AbstractController {
 	}
 
 	@RequestMapping(value = "checkAndForecastCron", method = RequestMethod.POST)
-	public RequestResult checkAndForecastCron(final String cron, HttpServletRequest request) {
+	public RequestResult checkAndForecastCron(final String timeZone, final String cron, HttpServletRequest request) {
 		RequestResult result = new RequestResult();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		if (cron != null && !cron.trim().isEmpty()) {
-			try {
-				CronExpression cronExpression = new CronExpression(cron.trim());
-				StringBuilder sb = new StringBuilder(100);
-				Date date = new Date();
-				for (int i = 0; i < 10; i++) {
-					Date next = cronExpression.getNextValidTimeAfter(date);
-					if (next != null) {
-						sb.append(dateFormat.format(next)).append("<br>");
-						date = next;
-					}
+		if(timeZone == null || timeZone.trim().isEmpty()) {
+			result.setSuccess(false);
+			result.setMessage("timeZone cannot be null or empty");
+			return result;
+		}
+		if(cron == null || cron.trim().isEmpty()) {
+			result.setSuccess(false);
+			result.setMessage("cron cannot be null or empty");
+			return result;
+		}
+		String timeZoneTrim = timeZone.trim();
+		String cronTrim = cron.trim();
+		if(!SaturnConstants.TIME_ZONE_IDS.contains(timeZoneTrim)) {
+			result.setSuccess(false);
+			result.setMessage("timeZone is not available");
+			return result;
+		}
+		try {
+			TimeZone tz = TimeZone.getTimeZone(timeZoneTrim);
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			dateFormat.setTimeZone(tz);
+			CronExpression cronExpression = new CronExpression(cronTrim);
+			cronExpression.setTimeZone(tz);
+
+			Map<String, String> obj = new HashMap<>();
+			obj.put("timeZone", timeZoneTrim);
+
+			StringBuilder sb = new StringBuilder(100);
+			Date now = new Date();
+			for (int i = 0; i < 10; i++) {
+				Date next = cronExpression.getNextValidTimeAfter(now);
+				if (next != null) {
+					sb.append(dateFormat.format(next)).append("<br>");
+					now = next;
 				}
-				result.setSuccess(true);
-				if (sb.length() == 0) {
-					result.setMessage("Cron maybe describe the past time, the job will never be executed");
-				} else {
-					if (sb.toString().split("<br>") != null && sb.toString().split("<br>").length >= 10) {
-						sb.append("......");
-					}
-					result.setMessage(sb.toString());
-				}
-			} catch (ParseException e) {
-				result.setSuccess(false);
-				result.setMessage(e.toString());
-				return result;
 			}
-		} else {
-            result.setSuccess(false);
-            result.setMessage("Cron cannot be null or empty");
+			if (sb.length() == 0) {
+				obj.put("times", "Cron maybe describe the past time, the job will never be executed");
+			} else {
+				if (sb.toString().split("<br>") != null && sb.toString().split("<br>").length >= 10) {
+					sb.append("......");
+				}
+				obj.put("times", sb.toString());
+			}
+
+			result.setSuccess(true);
+			result.setObj(obj);
+		} catch (ParseException e) {
+			result.setSuccess(false);
+			result.setMessage(e.toString());
+			return result;
 		}
 		return result;
 	}
@@ -217,9 +238,10 @@ public class JobController extends AbstractController {
 	}
 	
 	@RequestMapping(value = "getJobNextFireTime", method = RequestMethod.GET)
-    public long getJobNextFireTime(String jobName) {
-    	Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
-        return calculateJobNextTime == null?0l:calculateJobNextTime;
+    public String getJobNextFireTime(String jobName) {
+		Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
+		String formatTimeByJobTimeZone = jobDimensionService.formatTimeByJobTimeZone(jobName, calculateJobNextTime);
+		return formatTimeByJobTimeZone;
     }
 	
 	 /**

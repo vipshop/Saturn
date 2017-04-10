@@ -35,13 +35,8 @@ public final class ExecutionInfo implements Serializable {
     
     /** 作业分片运行日志 */
     private String jobLog;
-    
-    public Long getNextFireTime() {
-		return nextFireTime;
-	}
 
-	public void setNextFireTime(Long nextFireTime) {
-		this.nextFireTime = nextFireTime;
+	public ExecutionInfo() {
 	}
 
 	public ExecutionInfo(int item, Long lastBeginTime) {
@@ -55,9 +50,6 @@ public final class ExecutionInfo implements Serializable {
 
 	public void setJobLog(String jobLog) {
 		this.jobLog = jobLog;
-	}
-
-	public ExecutionInfo() {
 	}
 
 	public ExecutionInfo(int item) {
@@ -94,6 +86,14 @@ public final class ExecutionInfo implements Serializable {
 
 	public void setLastCompleteTime(Long lastCompleteTime) {
 		this.lastCompleteTime = lastCompleteTime;
+	}
+
+	public Long getNextFireTime() {
+		return nextFireTime;
+	}
+
+	public void setNextFireTime(Long nextFireTime) {
+		this.nextFireTime = nextFireTime;
 	}
 
 	@Override
