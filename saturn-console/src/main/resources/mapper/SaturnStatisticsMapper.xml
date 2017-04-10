@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.SaturnStatisticsRepository" >
+  <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="zklist" property="zklist" jdbcType="VARCHAR" />
+    <result column="result" property="result" jdbcType="LONGVARCHAR" />
+  </resultMap>
+
+ <sql id="Base_Column_List" >
+   `id`,
+   `name`,
+   `zklist`,
+   `result`
+ </sql>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from saturn_statistics
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from saturn_statistics
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  
+  <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    insert into saturn_statistics ( 
+     `id`,
+     `name`,
+     `zklist`,
+     `result`
+    )
+    values (
+     #{id,jdbcType=INTEGER},
+     #{name,jdbcType=VARCHAR},
+     #{zklist,jdbcType=VARCHAR},
+     #{result,jdbcType=LONGVARCHAR}
+ )
+  </insert>
+  
+  
+  
+  <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    insert into saturn_statistics
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        `id`,
+      </if>
+      <if test="name != null" >
+        `name`,
+      </if>
+      <if test="zklist != null" >
+        `zklist`,
+      </if>
+      <if test="result != null" >
+        `result`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="zklist != null" >
+        #{zklist,jdbcType=VARCHAR},
+      </if>
+      <if test="result != null" >
+        #{result,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  <update id="updateByPrimaryKeySelective" parameterType="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    update saturn_statistics
+	  <set>
+       <if test="name != null" >
+        `name`= #{name,jdbcType=VARCHAR},
+       </if>
+       <if test="zklist != null" >
+        `zklist`= #{zklist,jdbcType=VARCHAR},
+       </if>
+           <if test="result != null" >
+        `result`= #{result,jdbcType=LONGVARCHAR},
+       </if>
+      </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <update id="updateByPrimaryKey" parameterType="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    update saturn_statistics
+    set 
+   `result` = #{result,jdbcType=LONGVARCHAR},
+       `name` = #{name,jdbcType=VARCHAR},
+       `zklist` = #{zklist,jdbcType=VARCHAR}
+     where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+   <select id="findStatisticsByNameAndZkList" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from saturn_statistics
+    where zklist = #{zklist,jdbcType=VARCHAR} and name = #{name,jdbcType=VARCHAR} limit 0,1
+  </select>
+
+  
+  <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.SaturnStatistics" >
+    select count(*) from saturn_statistics
+    <where >
+            <if test="id != null" >
+        and `id` = #{id,jdbcType=INTEGER}
+      </if>
+            <if test="name != null" >
+        and `name` = #{name,jdbcType=VARCHAR}
+      </if>
+            <if test="zklist != null" >
+        and `zklist` = #{zklist,jdbcType=VARCHAR}
+      </if>
+            <if test="result != null" >
+        and `result` = #{result,jdbcType=LONGVARCHAR}
+      </if>
+          </where>
+  </select>
+
+    <select id="selectPage" resultMap="BaseResultMap" >
+    select 
+    <include refid="Base_Column_List" />
+    from saturn_statistics where 1 = 1 
+        <if test="saturnStatistics.id != null" >
+      and `id` = #{saturnStatistics.id,jdbcType=INTEGER}
+    </if>
+        <if test="saturnStatistics.name != null" >
+      and `name` = #{saturnStatistics.name,jdbcType=VARCHAR}
+    </if>
+        <if test="saturnStatistics.zklist != null" >
+      and `zklist` = #{saturnStatistics.zklist,jdbcType=VARCHAR}
+    </if>
+        <if test="saturnStatistics.result != null" >
+      and `result` = #{saturnStatistics.result,jdbcType=LONGVARCHAR}
+    </if>
+        <if test="pageable.sort != null" >
+      order by 
+      <foreach collection="pageable.sort" item="order" separator="," >
+        <if test="
+   order.property == 'id' 
+   || order.property == 'name'
+   || order.property == 'zklist'
+   || order.property == 'result'
+        " >
+        		${order.property} ${order.direction}
+        </if>
+      </foreach>
+    </if>
+    <if test="pageable.offset >= 0 and pageable.pageSize > 0" >
+      limit ${pageable.offset}, ${pageable.pageSize}
+    </if>
+  </select>
+ </mapper>
+  
+
+  
+	

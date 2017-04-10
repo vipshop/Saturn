@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.HistoryJobConfigRepository" >
+  <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="job_name" property="jobName" jdbcType="VARCHAR" />
+    <result column="job_class" property="jobClass" jdbcType="VARCHAR" />
+    <result column="sharding_total_count" property="shardingTotalCount" jdbcType="INTEGER" />
+    <result column="load_level" property="loadLevel" jdbcType="INTEGER" />
+    <result column="job_degree" property="jobDegree" jdbcType="INTEGER" />
+    <result column="enabled_report" property="enabledReport" jdbcType="BIT" />
+    <result column="local_mode" property="localMode" jdbcType="BIT" />
+    <result column="use_serial" property="useSerial" jdbcType="BIT" />
+    <result column="use_disprefer_list" property="useDispreferList" jdbcType="BIT" />
+    <result column="cron" property="cron" jdbcType="VARCHAR" />
+    <result column="prefer_list" property="preferList" jdbcType="VARCHAR" />
+    <result column="pause_period_date" property="pausePeriodDate" jdbcType="VARCHAR" />
+    <result column="pause_period_time" property="pausePeriodTime" jdbcType="VARCHAR" />
+    <result column="sharding_item_parameters" property="shardingItemParameters" jdbcType="VARCHAR" />
+    <result column="job_parameter" property="jobParameter" jdbcType="VARCHAR" />
+    <result column="process_count_interval_seconds" property="processCountIntervalSeconds" jdbcType="INTEGER" />
+    <result column="failover" property="failover" jdbcType="BIT" />
+    <result column="dependencies" property="dependencies" jdbcType="VARCHAR" />
+    <result column="groups" property="groups" jdbcType="VARCHAR" />
+    <result column="description" property="description" jdbcType="VARCHAR" />
+    <result column="timeout_seconds" property="timeoutSeconds" jdbcType="INTEGER" />
+    <result column="show_normal_log" property="showNormalLog" jdbcType="BIT" />
+    <result column="channel_name" property="channelName" jdbcType="VARCHAR" />
+    <result column="job_type" property="jobType" jdbcType="VARCHAR" />
+    <result column="queue_name" property="queueName" jdbcType="VARCHAR" />
+    <result column="create_by" property="createBy" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="last_update_by" property="lastUpdateBy" jdbcType="VARCHAR" />
+    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+    <result column="namespace" property="namespace" jdbcType="VARCHAR" />
+    <result column="zk_list" property="zkList" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, cron, prefer_list, pause_period_date, pause_period_time, 
+    sharding_item_parameters, job_parameter, process_count_interval_seconds, 
+    failover, dependencies, groups, description, timeout_seconds, show_normal_log,
+    channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
+    namespace, zk_list
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from job_config_history
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from job_config_history
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    insert into job_config_history (id, job_name, job_class, 
+      sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, cron, prefer_list, pause_period_date, 
+      pause_period_time, sharding_item_parameters, 
+      job_parameter, process_count_interval_seconds, 
+      failover, dependencies, groups, description,
+      timeout_seconds, show_normal_log, channel_name, 
+      job_type, queue_name, create_by, 
+      create_time, last_update_by, last_update_time,
+      namespace, zk_list
+      )
+    values (#{id,jdbcType=BIGINT}, #{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR}, 
+      #{shardingTotalCount,jdbcType=INTEGER},#{loadLevel,jdbcType=INTEGER},#{jobDegree,jdbcType=INTEGER},#{enabledReport,jdbcType=BIT},
+      #{localMode,jdbcType=BIT},#{useSerial,jdbcType=BIT}, #{useDispreferList,jdbcType=BIT},  
+      #{cron,jdbcType=VARCHAR},#{preferList,jdbcType=VARCHAR}, #{pausePeriodDate,jdbcType=VARCHAR}, 
+      #{pausePeriodTime,jdbcType=VARCHAR}, #{shardingItemParameters,jdbcType=VARCHAR}, 
+      #{jobParameter,jdbcType=VARCHAR}, #{processCountIntervalSeconds,jdbcType=INTEGER}, 
+      #{failover,jdbcType=BIT}, #{dependencies,jdbcType=VARCHAR}, #{groups,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+      #{timeoutSeconds,jdbcType=INTEGER}, #{showNormalLog,jdbcType=BIT}, #{channelName,jdbcType=VARCHAR}, 
+      #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
+      #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    insert into job_config_history
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="jobName != null" >
+        job_name,
+      </if>
+      <if test="jobClass != null" >
+        job_class,
+      </if>
+      <if test="shardingTotalCount != null" >
+        sharding_total_count,
+      </if>
+      <if test="loadLevel != null" >
+        load_level,
+      </if>
+      <if test="jobDegree != null" >
+        job_degree,
+      </if>
+      <if test="enabledReport != null" >
+        enabled_report,
+      </if>
+      <if test="localMode != null" >
+        local_mode,
+      </if>
+      <if test="useSerial != null" >
+        use_serial,
+      </if>
+      <if test="useDispreferList != null" >
+        use_disprefer_list,
+      </if>
+      <if test="cron != null" >
+        cron,
+      </if>
+      <if test="preferList != null" >
+        prefer_list,
+      </if>
+      <if test="pausePeriodDate != null" >
+        pause_period_date,
+      </if>
+      <if test="pausePeriodTime != null" >
+        pause_period_time,
+      </if>
+      <if test="shardingItemParameters != null" >
+        sharding_item_parameters,
+      </if>
+      <if test="jobParameter != null" >
+        job_parameter,
+      </if>
+      <if test="processCountIntervalSeconds != null" >
+        process_count_interval_seconds,
+      </if>
+      <if test="failover != null" >
+        failover,
+      </if>
+      <if test="dependencies != null">
+        dependencies,
+      </if>
+      <if test="groups != null">
+        groups,
+      </if>
+      <if test="description != null" >
+        description,
+      </if>
+      <if test="timeoutSeconds != null" >
+        timeout_seconds,
+      </if>
+      <if test="showNormalLog != null" >
+        show_normal_log,
+      </if>
+      <if test="channelName != null" >
+        channel_name,
+      </if>
+      <if test="jobType != null" >
+        job_type,
+      </if>
+      <if test="queueName != null" >
+        queue_name,
+      </if>
+      <if test="createBy != null" >
+        create_by,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="lastUpdateBy != null" >
+        last_update_by,
+      </if>
+      <if test="lastUpdateTime != null" >
+        last_update_time,
+      </if>
+      <if test="namespace != null" >
+        namespace,
+      </if>
+      <if test="zkList != null" >
+        zk_list,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="jobName != null" >
+        #{jobName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobClass != null" >
+        #{jobClass,jdbcType=VARCHAR},
+      </if>
+      <if test="shardingTotalCount != null" >
+        #{shardingTotalCount,jdbcType=INTEGER},
+      </if>
+      <if test="loadLevel != null" >
+        #{loadLevel,jdbcType=INTEGER},
+      </if>
+      <if test="jobDegree != null" >
+        #{jobDegree,jdbcType=INTEGER},
+      </if>
+      <if test="enabledReport != null" >
+        #{enabledReport,jdbcType=BIT},
+      </if>
+      <if test="localMode != null" >
+        #{localMode,jdbcType=BIT},
+      </if>
+      <if test="useDispreferList != null" >
+        #{useDispreferList,jdbcType=BIT},
+      </if>
+      <if test="cron != null" >
+        #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="preferList != null" >
+        #{preferList,jdbcType=VARCHAR},
+      </if>
+      <if test="pausePeriodDate != null" >
+        #{pausePeriodDate,jdbcType=VARCHAR},
+      </if>
+      <if test="pausePeriodTime != null" >
+        #{pausePeriodTime,jdbcType=VARCHAR},
+      </if>
+      <if test="shardingItemParameters != null" >
+        #{shardingItemParameters,jdbcType=VARCHAR},
+      </if>
+      <if test="jobParameter != null" >
+        #{jobParameter,jdbcType=VARCHAR},
+      </if>
+      <if test="processCountIntervalSeconds != null" >
+        #{processCountIntervalSeconds,jdbcType=INTEGER},
+      </if>
+      <if test="failover != null" >
+        #{failover,jdbcType=BIT},
+      </if>
+      <if test="dependencies != null">
+        #{dependencies,jdbcType=VARCHAR},
+      </if>
+      <if test="groups != null">
+        #{groups,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null" >
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="timeoutSeconds != null" >
+        #{timeoutSeconds,jdbcType=INTEGER},
+      </if>
+      <if test="showNormalLog != null" >
+        #{showNormalLog,jdbcType=BIT},
+      </if>
+      <if test="channelName != null" >
+        #{channelName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobType != null" >
+        #{jobType,jdbcType=VARCHAR},
+      </if>
+      <if test="queueName != null" >
+        #{queueName,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null" >
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastUpdateBy != null" >
+        #{lastUpdateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="lastUpdateTime != null" >
+        #{lastUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="namespace != null" >
+        #{namespace,jdbcType=VARCHAR},
+      </if>
+      <if test="zkList != null" >
+        #{zkList,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    update job_config_history
+    <set >
+      <if test="jobName != null" >
+        job_name = #{jobName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobClass != null" >
+        job_class = #{jobClass,jdbcType=VARCHAR},
+      </if>
+      <if test="shardingTotalCount != null" >
+        sharding_total_count = #{shardingTotalCount,jdbcType=INTEGER},
+      </if>
+      <if test="loadLevel != null" >
+        load_level = #{loadLevel,jdbcType=INTEGER},
+      </if>
+      <if test="jobDegree != null" >
+        job_degree = #{jobDegree,jdbcType=INTEGER},
+      </if>
+      <if test="enabledReport != null" >
+        enabled_report = #{enabledReport,jdbcType=BIT},
+      </if>
+      <if test="localMode != null" >
+        local_mode = #{localMode,jdbcType=BIT},
+      </if>
+      <if test="useSerial != null" >
+        use_serial = #{useSerial,jdbcType=BIT},
+      </if>
+      <if test="useDispreferList != null" >
+        use_disprefer_list = #{useDispreferList,jdbcType=BIT},
+      </if>
+      <if test="cron != null" >
+        cron = #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="preferList != null" >
+        preferList = #{preferList,jdbcType=VARCHAR},
+      </if>
+      <if test="pausePeriodDate != null" >
+        pause_period_date = #{pausePeriodDate,jdbcType=VARCHAR},
+      </if>
+      <if test="pausePeriodTime != null" >
+        pause_period_time = #{pausePeriodTime,jdbcType=VARCHAR},
+      </if>
+      <if test="shardingItemParameters != null" >
+        sharding_item_parameters = #{shardingItemParameters,jdbcType=VARCHAR},
+      </if>
+      <if test="jobParameter != null" >
+        job_parameter = #{jobParameter,jdbcType=VARCHAR},
+      </if>
+      <if test="processCountIntervalSeconds != null" >
+        process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER},
+      </if>
+      <if test="failover != null" >
+        failover = #{failover,jdbcType=BIT},
+      </if>
+      <if test="dependencies != null">
+        dependencies = #{dependencies,jdbcType=VARCHAR},
+      </if>
+      <if test="groups != null">
+        groups = #{groups,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null" >
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="timeoutSeconds != null" >
+        timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
+      </if>
+      <if test="showNormalLog != null" >
+        show_normal_log = #{showNormalLog,jdbcType=BIT},
+      </if>
+      <if test="channelName != null" >
+        channel_name = #{channelName,jdbcType=VARCHAR},
+      </if>
+      <if test="jobType != null" >
+        job_type = #{jobType,jdbcType=VARCHAR},
+      </if>
+      <if test="queueName != null" >
+        queue_name = #{queueName,jdbcType=VARCHAR},
+      </if>
+      <if test="createBy != null" >
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastUpdateBy != null" >
+        last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
+      </if>
+      <if test="lastUpdateTime != null" >
+        last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="namespace != null" >
+        namespace = #{namespace,jdbcType=VARCHAR},
+      </if>
+      <if test="zkList != null" >
+        zk_list = #{zkList,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    update job_config_history
+    set job_name = #{jobName,jdbcType=VARCHAR},
+      job_class = #{jobClass,jdbcType=VARCHAR},
+      sharding_total_count = #{shardingTotalCount,jdbcType=INTEGER},
+      load_level = #{loadLevel,jdbcType=INTEGER},
+      job_degree = #{jobDegree,jdbcType=INTEGER},
+      enabled_report = #{enabledReport,jdbcType=BIT},
+      local_mode = #{localMode,jdbcType=BIT},
+      use_serial = #{useSerial,jdbcType=BIT},
+      use_disprefer_list = #{useDispreferList,jdbcType=BIT},
+      cron = #{cron,jdbcType=VARCHAR},
+      prefer_list = #{preferList,jdbcType=VARCHAR},
+      pause_period_date = #{pausePeriodDate,jdbcType=VARCHAR},
+      pause_period_time = #{pausePeriodTime,jdbcType=VARCHAR},
+      sharding_item_parameters = #{shardingItemParameters,jdbcType=VARCHAR},
+      job_parameter = #{jobParameter,jdbcType=VARCHAR},
+      process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER},
+      failover = #{failover,jdbcType=BIT},
+      dependencies = #{dependencies,jdbcType=VARCHAR},
+      groups = #{groups,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR},
+      timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
+      show_normal_log = #{showNormalLog,jdbcType=BIT},
+      channel_name = #{channelName,jdbcType=VARCHAR},
+      job_type = #{jobType,jdbcType=VARCHAR},
+      queue_name = #{queueName,jdbcType=VARCHAR},
+      create_by = #{createBy,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
+      last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+      zk_list = #{zkList,jdbcType=VARCHAR},
+      namespace = #{namespace,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
+    select count(*) from job_config_history
+    <where >
+      <if test="id != null" >
+        and id = #{id,jdbcType=BIGINT}
+      </if>
+      <if test="jobName != null" >
+        and job_name = #{jobName,jdbcType=VARCHAR}
+      </if>
+      <if test="jobClass != null" >
+        and job_class = #{jobClass,jdbcType=VARCHAR}
+      </if>
+      <if test="shardingTotalCount != null" >
+        and sharding_total_count = #{shardingTotalCount,jdbcType=INTEGER}
+      </if>
+      <if test="loadLevel != null" >
+        and load_level = #{loadLevel,jdbcType=INTEGER}
+      </if>
+      <if test="jobDegree != null" >
+        and job_degree = #{jobDegree,jdbcType=INTEGER}
+      </if>
+      <if test="enabledReport != null" >
+        and enabled_report = #{enabledReport,jdbcType=BIT}
+      </if>
+      <if test="localMode != null" >
+        and local_mode = #{localMode,jdbcType=BIT}
+      </if>
+      <if test="useSerial != null" >
+        and use_serial = #{useSerial,jdbcType=BIT}
+      </if>
+      <if test="useDispreferList != null" >
+        and use_disprefer_list = #{useDispreferList,jdbcType=BIT}
+      </if>
+      <if test="cron != null" >
+        and cron = #{cron,jdbcType=VARCHAR}
+      </if>
+      <if test="preferList != null" >
+        and prefer_list = #{preferList,jdbcType=VARCHAR}
+      </if>
+      <if test="pausePeriodDate != null" >
+        and pause_period_date = #{pausePeriodDate,jdbcType=VARCHAR}
+      </if>
+      <if test="pausePeriodTime != null" >
+        and pause_period_time = #{pausePeriodTime,jdbcType=VARCHAR}
+      </if>
+      <if test="shardingItemParameters != null" >
+        and sharding_item_parameters = #{shardingItemParameters,jdbcType=VARCHAR}
+      </if>
+      <if test="jobParameter != null" >
+        and job_parameter = #{jobParameter,jdbcType=VARCHAR}
+      </if>
+      <if test="processCountIntervalSeconds != null" >
+        and process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER}
+      </if>
+      <if test="failover != null" >
+        and failover = #{failover,jdbcType=BIT}
+      </if>
+      <if test="dependencies != null">
+        and dependencies = #{dependencies,jdbcType=VARCHAR}
+      </if>
+      <if test="groups != null">
+        and groups = #{groups,jdbcType=VARCHAR}
+      </if>
+      <if test="description != null" >
+        and description = #{description,jdbcType=VARCHAR}
+      </if>
+      <if test="timeoutSeconds != null" >
+        and timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER}
+      </if>
+      <if test="showNormalLog != null" >
+        and show_normal_log = #{showNormalLog,jdbcType=BIT}
+      </if>
+      <if test="channelName != null" >
+        and channel_name = #{channelName,jdbcType=VARCHAR}
+      </if>
+      <if test="jobType != null" >
+        and job_type = #{jobType,jdbcType=VARCHAR}
+      </if>
+      <if test="queueName != null" >
+        and queue_name = #{queueName,jdbcType=VARCHAR}
+      </if>
+      <if test="createBy != null" >
+        and create_by = #{createBy,jdbcType=VARCHAR}
+      </if>
+      <if test="createTime != null" >
+        and create_time = #{createTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="lastUpdateBy != null" >
+        and last_update_by = #{lastUpdateBy,jdbcType=VARCHAR}
+      </if>
+      <if test="lastUpdateTime != null" >
+        and last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="namespace != null" >
+        and namespace = #{namespace,jdbcType=VARCHAR}
+      </if>
+      <if test="zkList != null" >
+        and zk_list = #{zkList,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
+  <select id="selectPage" resultMap="BaseResultMap" >
+    select @rownum:=@rownum+1 AS rownum,
+    <include refid="Base_Column_List" />
+    from (SELECT @rownum:=0) r, job_config_history where 1 = 1 
+    <if test="historyjobconfig.jobName != null" >
+      and job_name = #{historyjobconfig.jobName,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.jobClass != null" >
+      and job_class = #{historyjobconfig.jobClass,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.shardingTotalCount != null" >
+      and sharding_total_count = #{historyjobconfig.shardingTotalCount,jdbcType=INTEGER}
+    </if>
+    <if test="historyjobconfig.loadLevel != null" >
+      and load_level = #{historyjobconfig.loadLevel,jdbcType=INTEGER}
+    </if>
+    <if test="historyjobconfig.jobDegree != null" >
+      and job_degree = #{historyjobconfig.jobDegree,jdbcType=INTEGER}
+    </if>
+    <if test="historyjobconfig.enabledReport != null" >
+      and enabled_report = #{historyjobconfig.enabledReport,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.localMode != null" >
+      and local_mode = #{historyjobconfig.localMode,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.useSerial != null" >
+      and use_serial = #{historyjobconfig.useSerial,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.useDispreferList != null" >
+      and use_disprefer_list = #{historyjobconfig.useDispreferList,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.cron != null" >
+      and cron = #{historyjobconfig.cron,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.preferList != null" >
+      and prefer_list = #{historyjobconfig.preferList,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.pausePeriodDate != null" >
+      and pause_period_date = #{historyjobconfig.pausePeriodDate,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.pausePeriodTime != null" >
+      and pause_period_time = #{historyjobconfig.pausePeriodTime,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.shardingItemParameters != null" >
+      and sharding_item_parameters = #{historyjobconfig.shardingItemParameters,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.jobParameter != null" >
+      and job_parameter = #{historyjobconfig.jobParameter,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.processCountIntervalSeconds != null" >
+      and process_count_interval_seconds = #{historyjobconfig.processCountIntervalSeconds,jdbcType=INTEGER}
+    </if>
+    <if test="historyjobconfig.failover != null" >
+      and failover = #{historyjobconfig.failover,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.dependencies != null" >
+      and dependencies = #{historyjobconfig.dependencies,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.groups != null" >
+      and groups = #{historyjobconfig.groups,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.description != null" >
+      and description = #{historyjobconfig.description,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.timeoutSeconds != null" >
+      and timeout_seconds = #{historyjobconfig.timeoutSeconds,jdbcType=INTEGER}
+    </if>
+    <if test="historyjobconfig.showNormalLog != null" >
+      and show_normal_log = #{historyjobconfig.showNormalLog,jdbcType=BIT}
+    </if>
+    <if test="historyjobconfig.channelName != null" >
+      and channel_name = #{historyjobconfig.channelName,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.jobType != null" >
+      and job_type = #{historyjobconfig.jobType,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.queueName != null" >
+      and queue_name = #{historyjobconfig.queueName,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.createBy != null" >
+      and create_by = #{historyjobconfig.createBy,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.createTime != null" >
+      and create_time = #{historyjobconfig.createTime,jdbcType=TIMESTAMP}
+    </if>
+    <if test="historyjobconfig.lastUpdateBy != null" >
+      and last_update_by = #{historyjobconfig.lastUpdateBy,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.lastUpdateTime != null" >
+      and last_update_time = #{historyjobconfig.lastUpdateTime,jdbcType=TIMESTAMP}
+    </if>
+    <if test="historyjobconfig.namespace != null" >
+      and namespace = #{historyjobconfig.namespace,jdbcType=VARCHAR}
+    </if>
+    <if test="historyjobconfig.zkList != null" >
+      and zk_list = #{historyjobconfig.zkList,jdbcType=VARCHAR}
+    </if>
+    <if test="pageable.sort != null" >
+      order by 
+      <foreach collection="pageable.sort" item="order" separator="," >
+        ${order.property} ${order.direction}
+      </foreach>
+    </if>
+    <if test="pageable.offset >= 0 and pageable.pageSize > 0" >
+      limit ${pageable.offset}, ${pageable.pageSize}
+    </if>
+  </select>
+</mapper>
