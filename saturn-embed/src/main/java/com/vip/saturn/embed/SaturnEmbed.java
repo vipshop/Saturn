@@ -68,9 +68,6 @@ public class SaturnEmbed {
 		if(namespace == null || namespace.isEmpty()){
 			throw new Exception("saturn.app.namespace is not set");
 		}
-		if(executorName == null || executorName.isEmpty()){
-			throw new Exception("saturn.app.executorName is not set");
-		}
 		
 		URLClassLoader executorClassLoader = new URLClassLoader(new URL[]{new File(saturnHome, "saturn-executor.jar").toURI().toURL()}, null); 
 		final List<String> argList = new ArrayList<>();
@@ -80,9 +77,11 @@ public class SaturnEmbed {
 
 		argList.add("-namespace");
 		argList.add(namespace);
-		
-		argList.add("-executorName");
-		argList.add(executorName);
+
+		if(executorName != null && !executorName.isEmpty()) {
+			argList.add("-executorName");
+			argList.add(executorName);
+		}
 
 		Class<?> mainClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.Main");
 		Object main = mainClass.newInstance();
