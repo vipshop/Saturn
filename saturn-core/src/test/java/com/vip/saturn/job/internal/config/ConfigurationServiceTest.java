@@ -7,6 +7,7 @@ import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import org.junit.Test;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,6 +59,7 @@ public class ConfigurationServiceTest {
     public void test_A_isInPausePeriodTime() throws Exception {
         JobConfiguration jobConfiguration = new JobConfiguration("");
         jobConfiguration.setPausePeriodTime("11:30-12:00");
+        jobConfiguration.setTimeZone(TimeZone.getDefault().getID());
 
         ZookeeperRegistryCenter zookeeperRegistryCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration());
         zookeeperRegistryCenter.setExecutorName("haha");
@@ -78,6 +80,7 @@ public class ConfigurationServiceTest {
         JobConfiguration jobConfiguration = new JobConfiguration("");
         jobConfiguration.setPausePeriodDate("09/11-10/01");
         jobConfiguration.setPausePeriodTime("11:30-12:00");
+        jobConfiguration.setTimeZone(TimeZone.getDefault().getID());
 
         ZookeeperRegistryCenter zookeeperRegistryCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration());
         zookeeperRegistryCenter.setExecutorName("haha");

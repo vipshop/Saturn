@@ -61,6 +61,13 @@ layout:decorator="frame-layout">
 							                        	data-toggle="tooltip" data-placement="bottom" title="上报ZK的时间间隔，统计时间周期为一天" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
+
+												<label for="timeZone" class="col-sm-1 control-label">时区</label>
+												<div class="col-sm-2">
+													<select id="timeZone" class="selectpicker form-control" data-live-search="true" data-size="10" data-width="100%" title="请选择时区">
+													</select>
+													<span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
+												</div>
 							                </div>
 							                
 							                <div class="form-group">
@@ -70,19 +77,12 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 
-												<label for="timeZone" class="col-sm-1 control-label">时区</label>
-												<div class="col-sm-2">
-													<select id="timeZone" class="selectpicker form-control" data-live-search="true" data-size="10" data-width="100%" title="请选择时区">
-													</select>
-													<span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
-												</div>
-
-							                    <label for="cron" class="col-sm-1 control-label hide-when-is-msg-job">cron表达式</label>
+							                    <label for="cron" class="col-sm-2 control-label hide-when-is-msg-job">cron表达式</label>
 							                    <div class="col-sm-2 hide-when-is-msg-job">
 							                        <input type="text" id="cron" name="cron" class="form-control" data-toggle="tooltip" data-placement="bottom" title="作业启动时间的cron表达式。&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每10秒运行：*/10 * * * * ? &nbsp;&nbsp; 每5分钟运行：0 */5 * * * ?" />
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
-							                    <a id="check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">检验和预测</a>
+							                    <a id="check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">预测</a>
 							                </div>
 							                
 							                <div class="form-group">
