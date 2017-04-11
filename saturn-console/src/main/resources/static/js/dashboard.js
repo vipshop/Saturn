@@ -95,6 +95,7 @@ function renderServersOverview(){
 function renderWarnOverview(){
 	$(".collapse").collapse("show");
 	renderAbnormalJob();
+	renderTimeout4AlarmJob();
 	renderUnableFailoverJob();
 	renderAbnormalContainer();
 }
@@ -140,7 +141,7 @@ function renderTop10FailDomain() {
 		        text: ''
 		    },
 		    xAxis: {
-		        categories: domains, 
+		        categories: domains,
 		        labels: {
 	                rotation: -20
 		        }
@@ -215,7 +216,7 @@ function renderTop10UnStableDomain() {
 		        text: ''
 		    },
 		    xAxis: {
-		        categories: domains, 
+		        categories: domains,
 		        labels: {
 	                rotation: -20
 		        }
@@ -289,7 +290,7 @@ function renderTop10FailExe() {
 		        text: ''
 		    },
 		    xAxis: {
-		        categories: exes, 
+		        categories: exes,
 		        labels: {
 	                rotation: -20
 		        }
@@ -367,7 +368,7 @@ function renderTop10FailJob() {
 		        text: ''
 		    },
 		    xAxis: {
-		        categories: jobs, 
+		        categories: jobs,
 		        labels: {
 	                rotation: -20
 		        }
@@ -447,7 +448,7 @@ function renderTop10ActiveJob() {
 		        }
 		    },
 		    xAxis: {
-		        categories: jobs, 
+		        categories: jobs,
 		        labels: {
 	                rotation: -20
 		        }
@@ -469,7 +470,7 @@ function renderTop10ActiveJob() {
 		        useHTML:true,
 		        hideDelay: 1000,
 		        formatter: function() {
-                    return '<b>' + this.point.jobName + '</b><br/>所属域: : ' + this.point.domainName 
+                    return '<b>' + this.point.jobName + '</b><br/>所属域: : ' + this.point.domainName
                     	+ '<br/>当天执行总数: ' + this.point.processCountOfTheDay + '<br/>当天失败数: ' + this.point.failureCountOfTheDay + '<br/><button class="' + cleanButtonClass + '" data-clean="one-executor" data-job=' + this.point.jobName + ' data-nns="' + this.point.nns + '" data-target="#dashboard-confirm-dialog" onclick="cleanOneJobExecutorCount(this);">清除zk</button>';
                 }
 		    },
@@ -522,7 +523,7 @@ function renderTop10LoadJob() {
 		        text: ''
 		    },
 		    xAxis: {
-		        categories: jobs, 
+		        categories: jobs,
 		        labels: {
 	                rotation: -20
 		        }
@@ -597,7 +598,7 @@ function renderTop10LoadExecutor() {
 		        }
 		    },
 		    xAxis: {
-		        categories: exes, 
+		        categories: exes,
 		        labels: {
 	                rotation: -20
 		        }
@@ -738,7 +739,7 @@ function renderJobRank() {
 }
 
 function renderAbnormalJob() {
-	var unnormalJobTmp = $("#unnormal-job-template").html(), $unnormalJobGroup = $("#unnormal-job"), jobNode = "";
+	var unnormalJobTmp = $("#unnormal-job-template").html();
 	$.post("dashboard/unnormalJob", {}, function (data) {
 		data = JSON.parse(data);
 		$("#abnormalJobCount").html(data.length);
@@ -749,6 +750,19 @@ function renderAbnormalJob() {
         }
         $tbody.append(trContent);
         $("#unnormal-job-table").DataTable({"destroy": true,"oLanguage": language});
+	}).always(function() { $loading.hide(); });
+}
+
+function renderTimeout4AlarmJob() {
+	$.post("dashboard/allTimeout4AlarmJob", {}, function (data) {
+		data = JSON.parse(data);
+		var $tbody = $("#timeout4Alarm-job-table tbody"), trContent = "", timeout4AlarmJobTmp = $("#timeout4Alarm-job-template").html();
+		$("#timeout4Alarm-job-table tbody").empty();
+        for (var i in data) {
+        	trContent += Mustache.render(timeout4AlarmJobTmp,{degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
+        }
+        $tbody.append(trContent);
+        $("#timeout4Alarm-job-table").DataTable({"destroy": true, "oLanguage": language});
 	}).always(function() { $loading.hide(); });
 }
 

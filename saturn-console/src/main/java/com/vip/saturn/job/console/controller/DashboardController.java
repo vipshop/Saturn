@@ -134,19 +134,19 @@ public class DashboardController  extends AbstractController {
     	//return "[{\"domainName\":\"g.1.com\",\"jobName\":\"j1\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j2\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j3\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j4\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j5\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"}]";
     }
     
-    @RequestMapping(value = "cannotGetShardJob", method = RequestMethod.POST)
-    @ResponseBody
-	public String cannotGetShardJob(HttpServletRequest request) {
-    	SaturnStatistics ss = dashboardService.allCannotGetShardJob(getCurrentZkAddr(request.getSession()));
-    	return ss == null? null:ss.getResult();
-    }
-    
     @RequestMapping(value = "unableFailoverJob", method = RequestMethod.POST)
     @ResponseBody
 	public String unableFailoverJob(HttpServletRequest request) {
     	SaturnStatistics ss = dashboardService.allUnableFailoverJob(getCurrentZkAddr(request.getSession()));
     	return ss == null? null:ss.getResult();
     }
+
+	@RequestMapping(value = "allTimeout4AlarmJob", method = RequestMethod.POST)
+	@ResponseBody
+	public String allTimeout4AlarmJob(HttpServletRequest request) {
+		SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(getCurrentZkAddr(request.getSession()));
+		return ss == null? null:ss.getResult();
+	}
     
     @RequestMapping(value = "domainProcessCount", method = RequestMethod.POST)
     @ResponseBody

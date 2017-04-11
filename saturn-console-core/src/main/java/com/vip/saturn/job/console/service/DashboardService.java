@@ -54,11 +54,8 @@ public interface DashboardService {
 	 * 根据$Jobs/xx/config/cron计算出下次执行时间，如果大于当前时间且作业不在running，则为异常
 	 */
 	SaturnStatistics allUnnormalJob(String zklist);
-	
-	/**
-	 * 不能获取到分片的异常作业列表
-	 */
-	SaturnStatistics allCannotGetShardJob(String currentZkAddr);
+
+	SaturnStatistics allTimeout4AlarmJob(String currentZkAddr);
 	
 	/**
 	 * 无法高可用作业列表

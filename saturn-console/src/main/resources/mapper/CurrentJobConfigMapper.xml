@@ -12,6 +12,7 @@
     <result column="local_mode" property="localMode" jdbcType="BIT" />
     <result column="use_serial" property="useSerial" jdbcType="BIT" />
     <result column="use_disprefer_list" property="useDispreferList" jdbcType="BIT" />
+    <result column="timeZone" property="timeZone" jdbcType="VARCHAR" />
     <result column="cron" property="cron" jdbcType="VARCHAR" />
     <result column="prefer_list" property="preferList" jdbcType="VARCHAR" />
     <result column="pause_period_date" property="pausePeriodDate" jdbcType="VARCHAR" />
@@ -23,6 +24,7 @@
     <result column="dependencies" property="dependencies" jdbcType="VARCHAR" />
     <result column="groups" property="groups" jdbcType="VARCHAR" />
     <result column="description" property="description" jdbcType="VARCHAR" />
+    <result column="timeout_4_alarm_seconds" property="timeout4AlarmSeconds" jdbcType="INTEGER" />
     <result column="timeout_seconds" property="timeoutSeconds" jdbcType="INTEGER" />
     <result column="show_normal_log" property="showNormalLog" jdbcType="BIT" />
     <result column="channel_name" property="channelName" jdbcType="VARCHAR" />
@@ -36,9 +38,9 @@
     <result column="zk_list" property="zkList" jdbcType="VARCHAR" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, cron, prefer_list, pause_period_date, pause_period_time, 
+    id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, timeZone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
-    failover, dependencies, groups, description, timeout_seconds, show_normal_log,
+    failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
     namespace, zk_list
   </sql>
@@ -61,23 +63,23 @@
   </delete>
   <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
     insert into job_config (job_name, job_class, 
-      sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, cron, prefer_list, pause_period_date, 
+      sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, timeZone, cron, prefer_list, pause_period_date,
       pause_period_time, sharding_item_parameters, 
       job_parameter, process_count_interval_seconds, 
       failover, dependencies, groups, description,
-      timeout_seconds, show_normal_log, channel_name, 
+      timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
       job_type, queue_name, create_by, 
       create_time, last_update_by, last_update_time,
       namespace, zk_list
       )
     values (#{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR}, 
       #{shardingTotalCount,jdbcType=INTEGER}, #{loadLevel,jdbcType=INTEGER}, #{jobDegree,jdbcType=INTEGER}, #{enabledReport,jdbcType=BIT},
-      #{localMode,jdbcType=BIT}, #{useSerial,jdbcType=BIT}, #{useDispreferList,jdbcType=BIT}, #{cron,jdbcType=VARCHAR}, 
+      #{localMode,jdbcType=BIT}, #{useSerial,jdbcType=BIT}, #{useDispreferList,jdbcType=BIT}, #{timeZone,jdbcType=VARCHAR}, #{cron,jdbcType=VARCHAR},
       #{preferList,jdbcType=VARCHAR},#{pausePeriodDate,jdbcType=VARCHAR}, 
       #{pausePeriodTime,jdbcType=VARCHAR}, #{shardingItemParameters,jdbcType=VARCHAR}, 
       #{jobParameter,jdbcType=VARCHAR}, #{processCountIntervalSeconds,jdbcType=INTEGER}, 
       #{failover,jdbcType=BIT}, #{dependencies,jdbcType=VARCHAR}, #{groups,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
-      #{timeoutSeconds,jdbcType=INTEGER}, #{showNormalLog,jdbcType=BIT}, #{channelName,jdbcType=VARCHAR}, 
+      #{timeout4AlarmSeconds,jdbcType=INTEGER}, #{timeoutSeconds,jdbcType=INTEGER}, #{showNormalLog,jdbcType=BIT}, #{channelName,jdbcType=VARCHAR},
       #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
       #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR}
@@ -116,6 +118,9 @@
       <if test="useDispreferList != null" >
         use_disprefer_list,
       </if>
+      <if test="timeZone != null" >
+        timeZone,
+      </if>
       <if test="cron != null" >
         cron,
       </if>
@@ -148,6 +153,9 @@
       </if>
       <if test="description != null" >
         description,
+      </if>
+      <if test="timeout4AlarmSeconds != null" >
+        timeout_4_alarm_seconds,
       </if>
       <if test="timeoutSeconds != null" >
         timeout_seconds,
@@ -214,6 +222,9 @@
       <if test="useDispreferList != null" >
         #{useDispreferList,jdbcType=BIT},
       </if>
+      <if test="timeZone != null" >
+        #{timeZone,jdbcType=VARCHAR},
+      </if>
       <if test="cron != null" >
         #{cron,jdbcType=VARCHAR},
       </if>
@@ -246,6 +257,9 @@
       </if>
       <if test="description != null" >
         #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="timeout4AlarmSeconds != null" >
+        #{timeout4AlarmSeconds,jdbcType=INTEGER},
       </if>
       <if test="timeoutSeconds != null" >
         #{timeoutSeconds,jdbcType=INTEGER},
@@ -312,6 +326,9 @@
       <if test="useDispreferList != null" >
         use_disprefer_list = #{useDispreferList,jdbcType=BIT},
       </if>
+      <if test="timeZone != null" >
+        timeZone = #{timeZone,jdbcType=VARCHAR},
+      </if>
       <if test="cron != null" >
         cron = #{cron,jdbcType=VARCHAR},
       </if>
@@ -344,6 +361,9 @@
       </if>
       <if test="description != null" >
         description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="timeout4AlarmSeconds != null" >
+        timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER},
       </if>
       <if test="timeoutSeconds != null" >
         timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
@@ -392,6 +412,7 @@
       local_mode = #{localMode,jdbcType=BIT},
       use_serial = #{useSerial,jdbcType=BIT},
       use_disprefer_list = #{useDispreferList,jdbcType=BIT},
+      timeZone = #{timeZone,jdbcType=VARCHAR},
       cron = #{cron,jdbcType=VARCHAR},
       prefer_list = #{preferList,jdbcType=VARCHAR},
       pause_period_date = #{pausePeriodDate,jdbcType=VARCHAR},
@@ -403,6 +424,7 @@
       dependencies = #{dependencies,jdbcType=VARCHAR},
       groups = #{groups,jdbcType=VARCHAR},
       description = #{description,jdbcType=VARCHAR},
+      timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER},
       timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
       show_normal_log = #{showNormalLog,jdbcType=BIT},
       channel_name = #{channelName,jdbcType=VARCHAR},
@@ -449,6 +471,9 @@
       <if test="useDispreferList != null" >
         and use_disprefer_list = #{useDispreferList,jdbcType=BIT}
       </if>
+      <if test="timeZone != null" >
+        and timeZone = #{timeZone,jdbcType=VARCHAR}
+      </if>
       <if test="cron != null" >
         and cron = #{cron,jdbcType=VARCHAR}
       </if>
@@ -481,6 +506,9 @@
       </if>
       <if test="description != null" >
         and description = #{description,jdbcType=VARCHAR}
+      </if>
+      <if test="timeout4AlarmSeconds != null" >
+        and timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER}
       </if>
       <if test="timeoutSeconds != null" >
         and timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER}
@@ -548,6 +576,9 @@
     <if test="currentJobConfig.useDispreferList != null" >
       and use_disprefer_list = #{currentJobConfig.useDispreferList,jdbcType=BIT}
     </if>
+    <if test="currentJobConfig.timeZone != null" >
+      and timeZone = #{currentJobConfig.timeZone,jdbcType=VARCHAR}
+    </if>
     <if test="currentJobConfig.cron != null" >
       and cron = #{currentJobConfig.cron,jdbcType=VARCHAR}
     </if>
@@ -580,6 +611,9 @@
     </if>
     <if test="currentJobConfig.description != null" >
       and description = #{currentJobConfig.description,jdbcType=VARCHAR}
+    </if>
+    <if test="currentJobConfig.timeout4AlarmSeconds != null" >
+      and timeout_4_alarm_seconds = #{currentJobConfig.timeout4AlarmSeconds,jdbcType=INTEGER}
     </if>
     <if test="currentJobConfig.timeoutSeconds != null" >
       and timeout_seconds = #{currentJobConfig.timeoutSeconds,jdbcType=INTEGER}

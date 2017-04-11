@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.console.service.impl;
 
 import java.nio.charset.Charset;
@@ -19,6 +16,7 @@ import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.PostConstruct;
 
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.service.ContainerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -31,21 +29,11 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.constants.StatisticsTableKeyConstant;
-import com.vip.saturn.job.console.domain.AbnormalContainer;
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.DomainStatistics;
-import com.vip.saturn.job.console.domain.ExecutorStatistics;
+import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
 import com.vip.saturn.job.console.exception.JobConsoleException;
-import com.vip.saturn.job.console.marathon.MarathonRestClient;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -66,11 +54,11 @@ import com.vip.saturn.job.console.utils.ResetCountType;
  */
 @Service
 public class DashboardServiceImpl implements DashboardService {
-	
+
 	private static final Logger log = org.slf4j.LoggerFactory.getLogger(DashboardServiceImpl.class);
 
 	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
-	
+
 	private static int ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
 
 
@@ -81,16 +69,16 @@ public class DashboardServiceImpl implements DashboardService {
 	public static HashMap<String/** zkBsKey **/, Integer/** physical executor count */> PHYSICAL_EXECUTOR_COUNT_MAP = new HashMap<>();
 	public static Map<String/** jobName **/, Long/** last alert time */> JOB_MAP_LAST_ALERT_TIME = new WeakHashMap<>();
 
-	
+
 	@Autowired
 	private SaturnStatisticsService saturnStatisticsService;
-	
+
 	@Autowired
 	private RegistryCenterService registryCenterService;
-	
+
 	@Autowired
 	private JobDimensionService jobDimensionService;
-	
+
 	@Autowired
 	private CuratorRepository curatorRepository;
 
@@ -104,7 +92,7 @@ public class DashboardServiceImpl implements DashboardService {
 	public void init() throws Exception {
 		startRefreshStatisticsTimmer();
 	}
-	
+
 	static {
 		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE", System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));
 		if (refreshInterval != null) {
@@ -147,7 +135,7 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		};
 	}
-	
+
 	private void startRefreshStatisticsTimmer() {
 		Timer timer = new Timer("refresh-statistics-to-db-timmer", true);
 		timer.scheduleAtFixedRate(refreshStatisticsTask(), 1000 * 15 , 1000 * 60 * REFRESH_INTERVAL_IN_MINUTE);
@@ -162,15 +150,15 @@ public class DashboardServiceImpl implements DashboardService {
 			List<JobStatistics> jobList = new ArrayList<>();
 			List<ExecutorStatistics> executorList = new ArrayList<>();
 			List<AbnormalJob> unnormalJobList = new ArrayList<>();
-			List<AbnormalJob> cannotGetShardJobList = new ArrayList<>();
 			List<AbnormalJob> unableFailoverJobList = new ArrayList<>();
+			List<Timeout4AlarmJob> timeout4AlarmJobList = new ArrayList<>();
 			List<DomainStatistics> domainList = new ArrayList<>();
 			List<AbnormalContainer> abnormalContainerList = new ArrayList<>();
 			Map<String, Long> versionDomainNumber = new HashMap<>(); // 不同版本的域数量
 			Map<String, Long> versionExecutorNumber = new HashMap<>(); // 不同版本的executor数量
 			int exeInDocker = 0;
 			int exeNotInDocker = 0;
-			int totalCount = 0; 
+			int totalCount = 0;
 			int errorCount = 0;
 			for (RegistryCenterConfiguration config : RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkCluster.getZkAddr()).getRegCenterConfList()) {
 				// 过滤非当前zk连接
@@ -179,9 +167,9 @@ public class DashboardServiceImpl implements DashboardService {
 					int errorCountOfThisDomainAllTime = 0;
 					int processCountOfThisDomainThisDay = 0;
 					int errorCountOfThisDomainThisDay = 0;
-					
+
 					DomainStatistics domain = new DomainStatistics(config.getNamespace(), zkCluster.getZkAddr(), config.getNameAndNamespace());
-							
+
 					RegistryCenterClient registryCenterClient = registryCenterService.connect(config.getNameAndNamespace());
 					try {
 						if (registryCenterClient != null) {
@@ -244,7 +232,7 @@ public class DashboardServiceImpl implements DashboardService {
 									versionExecutorNumber.put(version, executorNumber);
 								}
 							}
-							
+
 							// 遍历所有$Jobs子节点，非系统作业
 							List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 							for (String job : jobs) {
@@ -256,13 +244,13 @@ public class DashboardServiceImpl implements DashboardService {
 										jobStatistics = new JobStatistics(job, config.getNamespace(),config.getNameAndNamespace());
 										jobMap.put(jobDomainKey, jobStatistics);
 									}
-									
+
 									String jobDegree = getData(curatorClient,JobNodePath.getConfigNodePath(job, "jobDegree"));
 									if(Strings.isNullOrEmpty(jobDegree)){
 										jobDegree = "0";
 									}
 									jobStatistics.setJobDegree(Integer.parseInt(jobDegree));
-									
+
 									// 非本地作业才参与判断
 									if (!localMode) {
 										AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
@@ -271,14 +259,21 @@ public class DashboardServiceImpl implements DashboardService {
 											unnormalJobList.add(unnormalJob);
 										}
 									}
-									
+
+									// 查找超时告警作业
+									Timeout4AlarmJob timeout4AlarmJob = new Timeout4AlarmJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
+									if (isTimeout4AlarmJob(timeout4AlarmJob, curatorFrameworkOp) != null) {
+										timeout4AlarmJob.setJobDegree(jobDegree);
+										timeout4AlarmJobList.add(timeout4AlarmJob);
+									}
+
 									// 查找无法高可用的作业
 									AbnormalJob unableFailoverJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
 									if (isUnableFailoverJob(curatorClient, unableFailoverJob,curatorFrameworkOp) != null) {
 										unableFailoverJob.setJobDegree(jobDegree);
 										unableFailoverJobList.add(unableFailoverJob);
 									}
-									
+
 									String processCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getProcessCountPath(job));
 									String errorCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getErrorCountPath(job));
 									int processCountOfThisJobAllTime = processCountOfThisJobAllTimeStr == null?0:Integer.valueOf(processCountOfThisJobAllTimeStr);
@@ -287,7 +282,7 @@ public class DashboardServiceImpl implements DashboardService {
 									errorCountOfThisDomainAllTime += errorCountOfThisJobAllTime;
 									int processCountOfThisJobThisDay = 0;
 									int errorCountOfThisJobThisDay = 0;
-									
+
 									// loadLevel of this job
 									int loadLevel = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "loadLevel")));
 									int shardingTotalCount = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "shardingTotalCount")));
@@ -306,15 +301,15 @@ public class DashboardServiceImpl implements DashboardService {
 													// 该作业当天运行统计
 													processCountOfThisJobThisDay += processSuccessCountOfThisExe + processFailureCountOfThisExe;
 													errorCountOfThisJobThisDay += processFailureCountOfThisExe;
-													
+
 													// 全部域当天的成功数与失败数
 													totalCount += processSuccessCountOfThisExe + processFailureCountOfThisExe;
 													errorCount += processFailureCountOfThisExe;
-													
+
 													// 全域当天运行统计
 													processCountOfThisDomainThisDay += processCountOfThisJobThisDay;
 													errorCountOfThisDomainThisDay += errorCountOfThisJobThisDay;
-													
+
 													// executor当天运行成功失败数
 													String executorMapKey = server + "-" + config.getNamespace();
 													ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
@@ -326,11 +321,11 @@ public class DashboardServiceImpl implements DashboardService {
 													}
 													executorStatistics.setFailureCountOfTheDay(executorStatistics.getFailureCountOfTheDay() + processFailureCountOfThisExe);
 													executorStatistics.setProcessCountOfTheDay(executorStatistics.getProcessCountOfTheDay() + processSuccessCountOfThisExe + processFailureCountOfThisExe);
-													
+
 												} catch (Exception e) {
 													log.info(e.getMessage());
 												}
-												
+
 												// 2.统计executor的loadLevel;
 												try {
 													// enabled 的作业才需要计算权重
@@ -338,7 +333,7 @@ public class DashboardServiceImpl implements DashboardService {
 														String sharding = getData(curatorClient,JobNodePath.getServerSharding(job, server));
 														if (StringUtils.isNotEmpty(sharding)) {
 															// 更新job的executorsAndshards
-															String exesAndShards = (jobStatistics.getExecutorsAndShards() == null?"":jobStatistics.getExecutorsAndShards())  + server + ":" + sharding + "; "; 
+															String exesAndShards = (jobStatistics.getExecutorsAndShards() == null?"":jobStatistics.getExecutorsAndShards())  + server + ":" + sharding + "; ";
 															jobStatistics.setExecutorsAndShards(exesAndShards);
 															// 2.统计是物理机还是容器
 															String executorMapKey = server + "-" + config.getNamespace();
@@ -409,41 +404,41 @@ public class DashboardServiceImpl implements DashboardService {
 					domainList.add(domain);
 				}
 			}
-			
+
 			jobList.addAll(jobMap.values());
-			
+
 			executorList.addAll(executorMap.values());
-			
+
 			// 全域当天处理总数，失败总数
 			saveOrUpdateDomainProcessCount(new ZkStatistics(totalCount, errorCount), zkCluster.getZkAddr());
-			
+
 			// 失败率Top10的域列表
 			saveOrUpdateTop10FailDomain(domainList, zkCluster.getZkAddr());
-			
+
 			// 稳定性最差的Top10的域列表
 			saveOrUpdateTop10UnstableDomain(domainList, zkCluster.getZkAddr());
-			
+
 			// 稳定性最差的Top10的executor列表
 			saveOrUpdateTop10FailExecutor(executorList, zkCluster.getZkAddr());
-			
+
 			// 根据失败率Top10的作业列表
 			saveOrUpdateTop10FailJob(jobList, zkCluster.getZkAddr());
-			
+
 			// 最活跃作业Top10的作业列表(即当天执行次数最多的作业)
 			saveOrUpdateTop10ActiveJob(jobList, zkCluster.getZkAddr());
-			
+
 			// 负荷最重的Top10的作业列表
 			saveOrUpdateTop10LoadJob(jobList, zkCluster.getZkAddr());
-			
+
 			// 负荷最重的Top10的Executor列表
 			saveOrUpdateTop10LoadExecutor(executorList, zkCluster.getZkAddr());
 
 			// 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)
 			saveOrUpdateAbnormalJob(unnormalJobList, zkCluster.getZkAddr());
-			
-			// 不能获取到分片的作业列表（持久化分片有异常的作业）
-			saveOrUpdateCannotGetShardJob(cannotGetShardJobList, zkCluster.getZkAddr());
-			
+
+			// 超时告警的作业列表
+			saveOrUpdateTimeout4AlarmJob(timeout4AlarmJobList, zkCluster.getZkAddr());
+
 			// 无法高可用的作业列表
 			saveOrUpdateUnableFailoverJob(unableFailoverJobList, zkCluster.getZkAddr());
 
@@ -455,7 +450,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 			// 不同版本的executor数量
 			saveOrUpdateVersionExecutorNumber(versionExecutorNumber, zkCluster.getZkAddr());
-			
+
 			UNNORMAL_JOB_LIST_CACHE.put(zkCluster.getZkAddr(), unnormalJobList);
 
 			JOB_MAP_CACHE.put(zkCluster.getZkAddr(), jobMap);
@@ -481,7 +476,7 @@ public class DashboardServiceImpl implements DashboardService {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		
+
 	}
 
 	private void saveOrUpdateTop10FailDomain(List<DomainStatistics> domainList, String zkAddr) {
@@ -616,19 +611,19 @@ public class DashboardServiceImpl implements DashboardService {
 			saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
 		}
 	}
-	
-	private void saveOrUpdateCannotGetShardJob(List<AbnormalJob> cannotGetShardJobList, String zkAddr) {
-		String cannotGetShardJobJsonString = JSON.toJSONString(cannotGetShardJobList);
-		SaturnStatistics cannotGetShardJobFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.CANNOT_GET_SHARD_JOB, zkAddr);
-		if (cannotGetShardJobFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.CANNOT_GET_SHARD_JOB, zkAddr, cannotGetShardJobJsonString);
+
+	private void saveOrUpdateTimeout4AlarmJob(List<Timeout4AlarmJob> timeout4AlarmJobList, String zkAddr) {
+		String timeout4AlarmJobJsonString = JSON.toJSONString(timeout4AlarmJobList);
+		SaturnStatistics timeout4AlarmJobFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr);
+		if (timeout4AlarmJobFromDB == null) {
+			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr, timeout4AlarmJobJsonString);
 			saturnStatisticsService.create(ss);
 		} else {
-			cannotGetShardJobFromDB.setResult(cannotGetShardJobJsonString);
-			saturnStatisticsService.updateByPrimaryKey(cannotGetShardJobFromDB);
+			timeout4AlarmJobFromDB.setResult(timeout4AlarmJobJsonString);
+			saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
 		}
 	}
-	
+
 	private void saveOrUpdateUnableFailoverJob(List<AbnormalJob> unableFailoverJobList, String zkAddr) {
 		String unableFailoverJobJsonString = JSON.toJSONString(unableFailoverJobList);
 		SaturnStatistics unableFailoverJobFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zkAddr);
@@ -731,7 +726,7 @@ public class DashboardServiceImpl implements DashboardService {
     				    						minCompletedMtime = completedMtime;
     				    					}
     				    				}
-    				    			} else if (itemChildren.contains("running")) { 
+    				    			} else if (itemChildren.contains("running")) {
     				    				continue;
     				    			} else {
     				    				// 既无running又无completed视为异常，立即终止循环
@@ -789,6 +784,48 @@ public class DashboardServiceImpl implements DashboardService {
 			log.error(e.getMessage(), e);
 			return null;
 		}
+	}
+
+	/**
+	 * 如果配置了超时告警时间，而且running节点存在时间大于它，则告警
+	 */
+	private Timeout4AlarmJob isTimeout4AlarmJob(Timeout4AlarmJob timeout4AlarmJob, CuratorFrameworkOp curatorFrameworkOp) {
+		String jobName = timeout4AlarmJob.getJobName();
+		String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
+		int timeout4AlarmSeconds = 0;
+		if(timeout4AlarmSecondsStr != null) {
+			try {
+				timeout4AlarmSeconds = Integer.parseInt(timeout4AlarmSecondsStr);
+			} catch (NumberFormatException e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+		if(timeout4AlarmSeconds > 0) {
+			List<String> items = new ArrayList<>();
+			List<String> tmp = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName));
+			if (tmp != null) {
+				items.addAll(tmp);
+			}
+			if (items != null && !items.isEmpty()) {
+				long timeout4AlarmMills = timeout4AlarmSeconds * 1L * 1000;
+				timeout4AlarmJob.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
+				for(String itemStr : items) {
+					long ctime = curatorFrameworkOp.getCtime(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
+					if(ctime > 0 && System.currentTimeMillis() - ctime > timeout4AlarmMills) {
+						timeout4AlarmJob.getTimeoutItems().add(Integer.parseInt(itemStr));
+					}
+				}
+				if(!timeout4AlarmJob.getTimeoutItems().isEmpty()) {
+					try {
+						reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(), jobName, timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
+					} catch (Throwable t) {
+						log.error(t.getMessage(), t);
+					}
+					return timeout4AlarmJob;
+				}
+			}
+		}
+		return null;
 	}
 
 	// 无法高可用的情况：
@@ -859,7 +896,7 @@ public class DashboardServiceImpl implements DashboardService {
 			return null;
 		}
 	}
-	
+
 	private AbnormalContainer isContainerInstanceMismatch(AbnormalContainer abnormalContainer, CuratorFrameworkOp curatorFrameworkOp) {
 		try {
 			String taskId = abnormalContainer.getTaskId();
@@ -937,7 +974,7 @@ public class DashboardServiceImpl implements DashboardService {
 			throw new JobConsoleException(ex);
 		}
 	}
-	
+
 	public String getData(final CuratorFramework curatorClient, final String znode) {
 		try {
 			if (checkExists(curatorClient, znode)) {
@@ -998,12 +1035,12 @@ public class DashboardServiceImpl implements DashboardService {
 	public SaturnStatistics allUnnormalJob(String zklist) {
 		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zklist);
 	}
-	
+
 	@Override
-	public SaturnStatistics allCannotGetShardJob(String zklist) {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.CANNOT_GET_SHARD_JOB, zklist);
+	public SaturnStatistics allTimeout4AlarmJob(String zklist) {
+		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zklist);
 	}
-	
+
 	@Override
 	public SaturnStatistics allUnableFailoverJob(String zklist) {
 		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zklist);
@@ -1019,7 +1056,7 @@ public class DashboardServiceImpl implements DashboardService {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
 		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-		
+
 		if (checkExists(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH)) {
 			curatorClient.setData().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
 
@@ -1036,11 +1073,11 @@ public class DashboardServiceImpl implements DashboardService {
 		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
 		// reset analyse data.
 		updateResetValue(curatorClient, jobName, ResetCountType.RESET_ANALYSE);
-		
+
 		resetOneJobAnalyse(jobName, curatorClient);
 		asyncRefreshStatistics();
 	}
-	
+
 	@Override
 	public void cleanAllJobAnalyse(String nns) throws Exception {
 		// 获取当前连接
@@ -1056,7 +1093,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		asyncRefreshStatistics();
 	}
-	
+
 	@Override
 	public void cleanAllJobExecutorCount(String nns) throws Exception {
 		// 获取当前连接
@@ -1139,7 +1176,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		return domainMap;
 	}
-	
+
 	@Override
 	public Map<Integer, Integer> loadJobRankDistribution(String zkBsKey) {
 		Map<Integer, Integer> jobDegreeMap = new HashMap<>();

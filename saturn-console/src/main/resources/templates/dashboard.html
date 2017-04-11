@@ -377,6 +377,36 @@ layout:decorator="frame-layout">
 										</div>
 									</li>
 									<li class="col-lg-6">
+										<div class="panel panel-default">
+											<div class="panel-heading">
+												<a data-toggle="collapse" href="#timeout4Alarm-job-body">
+													<h3 class="pull-left panel-title">运行超时（告警）的作业分片</h3>
+													<i class="pull-right fa fa-minus"></i>
+												</a>
+												<div class="clearfix"></div>
+											</div>
+											<div id="timeout4Alarm-job-body" class="panel-collapse collapse in">
+												<div class="panel-body">
+													<div class="table-responsive">
+														<table id="timeout4Alarm-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
+															<thead>
+															<tr>
+																<th>作业名</th>
+																<th>所属域</th>
+																<th>域等级</th>
+																<th>作业等级</th>
+																<th>超时秒数</th>
+																<th>超时的分片</th>
+															</tr>
+															</thead>
+															<tbody></tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+										</div>
+									</li>
+									<li class="col-lg-6">
 					    				<div class="panel panel-default">
 											<div class="panel-heading">
 												<a data-toggle="collapse" href="#unable-failover-job-body">
@@ -443,7 +473,7 @@ layout:decorator="frame-layout">
 			<div th:replace="fragments :: confirm-dialog(id='dashboard-confirm-dialog', text='')"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 		</div>
-		
+
 		<div th:remove="tag" layout:fragment="footer-scripts">
 			<script type="text/x-mustache" id="unnormal-job-template">
 				<tr>
@@ -453,6 +483,16 @@ layout:decorator="frame-layout">
 					<td>{{jobDegree}}</td>
 					<td>{{nextFireTime}}</td>
 					<td>{{cause}}</td>
+				</tr>
+			</script>
+			<script type="text/x-mustache" id="timeout4Alarm-job-template">
+				<tr>
+					<td><a href="job_detail?nns={{nns}}jobName={{jobName}}">{{jobName}}</a></td>
+					<td>{{domainName}}</td>
+					<td>{{degree}}</td>
+					<td>{{jobDegree}}</td>
+					<td>{{timeout4AlarmSeconds}}</td>
+					<td>{{timeoutItems}}</td>
 				</tr>
 			</script>
 			<script type="text/x-mustache" id="unable-failover-job-template">
