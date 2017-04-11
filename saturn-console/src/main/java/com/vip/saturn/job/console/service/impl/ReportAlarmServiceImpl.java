@@ -11,37 +11,6 @@ import java.util.List;
  */
 @Service
 public class ReportAlarmServiceImpl implements ReportAlarmService {
-	
-    public enum EventType {
-
-        UnnormalJob("UnnormalJob"),
-        CONTAINER_INSTANCE_MISMATCH("CONTAINER.INSTANCE.MISMATCH"),
-        SHARDING_ALLSHARDING_EXCEPTION("SHARDING.ALLSHARDING.EXCEPTION");
-        private String type;
-
-        EventType(String type) {
-            this.type = type;
-        }
-
-        public String getValue() {
-            return type;
-        }
-
-        public static EventType getByName(String name) {
-            if(name != null) {
-                EventType[] values = EventType.values();
-                if (values != null && values.length > 0) {
-                    for (EventType eventType : values) {
-                        if (name.equals(eventType.name())) {
-                            return eventType;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-    }	
-
 
     @Override
     public void allShardingError(String namespace, String hostValue) throws ReportAlarmException {
