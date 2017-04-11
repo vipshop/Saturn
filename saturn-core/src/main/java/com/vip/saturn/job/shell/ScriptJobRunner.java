@@ -193,7 +193,7 @@ public class ScriptJobRunner {
             log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} Exception", t);
             saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t.toString(), SaturnSystemErrorGroup.FAIL);
         } finally {
-            FileUtils.deleteQuietly(saturnOutputFile);
+            FileUtils.deleteQuietly(saturnOutputFile.getParentFile());
         }
 
         if(saturnJobReturn.getProp() == null){
