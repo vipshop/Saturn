@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.PostConstruct;
 
+import com.vip.saturn.job.console.service.ContainerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -95,6 +96,9 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Autowired
 	private ReportAlarmServiceImpl reportAlarmService;
+
+	@Autowired
+	private ContainerService containerService;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -891,21 +895,13 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 			}
 			if (myInstance != -1) {
-				String dcosConfigTokenNodePath = ContainerNodePath.getDcosConfigTokenNodePath();
-				String tokenData = curatorFrameworkOp.getData(dcosConfigTokenNodePath);
-				int count = MarathonRestClient.count("", "", taskId);
+				int count = containerService.getContainerRunningInstances(taskId, curatorFrameworkOp);
 				if(myInstance != count) {
 					abnormalContainer.setCause(AbnormalContainer.Cause.CONTAINER_INSTANCE_MISMATCH.name());
 					abnormalContainer.setConfigInstances(myInstance);
 					abnormalContainer.setRunningInstances(count);
 					try {
-						Map<String, String> alarmData = new HashMap<>();
-						alarmData.put("eventType", ReportAlarmServiceImpl.EventType.CONTAINER_INSTANCE_MISMATCH.name());
-						alarmData.put("domain", abnormalContainer.getDomainName());
-						alarmData.put("taskId", abnormalContainer.getTaskId());
-						alarmData.put("configInstances", String.valueOf(abnormalContainer.getConfigInstances()));
-						alarmData.put("runningInstances", String.valueOf(abnormalContainer.getRunningInstances()));
-						reportAlarmService.reportWarningAlarm(alarmData);
+						reportAlarmService.dashboardContainerInstancesMismatch(abnormalContainer.getDomainName(), abnormalContainer.getTaskId(), abnormalContainer.getConfigInstances(), abnormalContainer.getRunningInstances());
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}

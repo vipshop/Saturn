@@ -133,6 +133,11 @@ public class MarathonRestAdapter implements ContainerRestService {
     }
 
     @Override
+    public int count(ContainerToken containerToken, String appId) throws SaturnJobConsoleException {
+        return MarathonRestClient.count(getUserName(containerToken), getPassword(containerToken), appId);
+    }
+
+    @Override
     public String info(ContainerToken containerToken, String appId) throws SaturnJobConsoleException {
         return MarathonRestClient.info(getUserName(containerToken), getPassword(containerToken), appId);
     }

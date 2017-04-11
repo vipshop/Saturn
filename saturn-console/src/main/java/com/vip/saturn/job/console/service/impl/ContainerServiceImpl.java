@@ -188,7 +188,11 @@ public class ContainerServiceImpl implements ContainerService {
 
     @Override
     public ContainerToken getContainerToken() throws SaturnJobConsoleException {
-        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+        return getContainerToken(curatorRepository.inSessionClient());
+    }
+
+    @Override
+    public ContainerToken getContainerToken(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
         String dcosConfigTokenNodePath = ContainerNodePath.getDcosConfigTokenNodePath();
         String data = curatorFrameworkOp.getData(dcosConfigTokenNodePath);
         ContainerRestService containerRestService = getContainerRestService();
@@ -370,6 +374,11 @@ public class ContainerServiceImpl implements ContainerService {
             throw new SaturnJobConsoleException("The taskId already exists");
         }
         return getContainerRestService().info(containerToken, taskId);
+    }
+
+    @Override
+    public int getContainerRunningInstances(String taskId, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+        return getContainerRestService().count(getContainerToken(curatorFrameworkOp), taskId);
     }
 
     @Override

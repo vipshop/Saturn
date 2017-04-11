@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.domain.container.ContainerToken;
 import com.vip.saturn.job.console.domain.container.vo.ContainerScaleJobVo;
 import com.vip.saturn.job.console.domain.container.vo.ContainerVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
 import java.util.List;
 
@@ -21,6 +22,8 @@ public interface ContainerService {
 
     ContainerToken getContainerToken() throws SaturnJobConsoleException;
 
+    ContainerToken getContainerToken(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
     List<ContainerVo> getContainerVos() throws SaturnJobConsoleException;
 
     void addContainer(ContainerConfig containerConfig) throws SaturnJobConsoleException;
@@ -30,6 +33,8 @@ public interface ContainerService {
     void removeContainer(String taskId) throws SaturnJobConsoleException;
 
     String getContainerDetail(String taskId) throws SaturnJobConsoleException;
+
+    int getContainerRunningInstances(String taskId, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
     String getRegistryCatalog() throws SaturnJobConsoleException;
 

@@ -28,6 +28,8 @@ public interface ContainerRestService {
 
     void destroy(ContainerToken containerToken, String appId) throws SaturnJobConsoleException;
 
+    int count(ContainerToken containerToken, String appId) throws SaturnJobConsoleException;
+
     String info(ContainerToken containerToken, String appId) throws SaturnJobConsoleException;
 
     String getRegistryCatalog() throws SaturnJobConsoleException;
