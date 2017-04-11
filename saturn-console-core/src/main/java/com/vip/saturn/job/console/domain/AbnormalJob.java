@@ -28,6 +28,8 @@ public class AbnormalJob {
 	
 	private String cause;
 	
+	private long nextFireTimeAfterEnabledMtime;
+	
 	public AbnormalJob(String jobName, String domainName, String nns, String degree){
 		this.jobName = jobName;
 		this.domainName = domainName;
@@ -85,6 +87,14 @@ public class AbnormalJob {
 				+ ", nns=" + nns + ", degree=" + degree + ", jobDegree="
 				+ jobDegree + ", nextFireTime=" + nextFireTime + ", cause="
 				+ cause + "]";
+	}
+
+	public long getNextFireTimeAfterEnabledMtime() {
+		return nextFireTimeAfterEnabledMtime;
+	}
+
+	public void setNextFireTimeAfterEnabledMtime(long nextFireTimeAfterEnabledMtime) {
+		this.nextFireTimeAfterEnabledMtime = nextFireTimeAfterEnabledMtime;
 	}
 	
 }

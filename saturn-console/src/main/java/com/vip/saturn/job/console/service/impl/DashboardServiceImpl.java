@@ -1,23 +1,25 @@
 package com.vip.saturn.job.console.service.impl;
 
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
-import com.vip.saturn.job.console.domain.*;
-import com.vip.saturn.job.console.service.ContainerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -29,8 +31,18 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
+import com.vip.saturn.job.console.domain.AbnormalContainer;
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.AbnormalShardingState;
+import com.vip.saturn.job.console.domain.DomainStatistics;
+import com.vip.saturn.job.console.domain.ExecutorStatistics;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.JobStatistics;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
+import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
 import com.vip.saturn.job.console.exception.JobConsoleException;
@@ -39,6 +51,7 @@ import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.repository.zookeeper.impl.CuratorRepositoryImpl;
+import com.vip.saturn.job.console.service.ContainerService;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -47,6 +60,8 @@ import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ResetCountType;
+import com.vip.saturn.job.console.utils.SaturnThreadFactory;
+import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 
 /**
  * @author chembo.huang
@@ -67,7 +82,10 @@ public class DashboardServiceImpl implements DashboardService {
 	public static HashMap<String/** zkBsKey **/, HashMap<String/** {executorName}-{domain} */, ExecutorStatistics>> EXECUTOR_MAP_CACHE = new HashMap<>();
 	public static HashMap<String/** zkBsKey **/, Integer/** docker executor count */> DOCKER_EXECUTOR_COUNT_MAP = new HashMap<>();
 	public static HashMap<String/** zkBsKey **/, Integer/** physical executor count */> PHYSICAL_EXECUTOR_COUNT_MAP = new HashMap<>();
-	public static Map<String/** jobName **/, Long/** last alert time */> JOB_MAP_LAST_ALERT_TIME = new WeakHashMap<>();
+	public static Map<String/** domainName_jobName_shardingItemStr **/, AbnormalShardingState/** abnormal sharding state */> ABNORMAL_SHARDING_STATE_CACHE = new ConcurrentHashMap<>();
+
+	private static ScheduledExecutorService abnormalShardingCacheCleaner = Executors.newScheduledThreadPool(1, new SaturnThreadFactory("AbnormalSharding-Cache-Cleaner"));;
+	
 
 
 	@Autowired
@@ -103,6 +121,10 @@ public class DashboardServiceImpl implements DashboardService {
 				log.error(e.getMessage(), e);
 			}
 		}
+		
+		//启动定时清理分片告警缓存信息线程
+		abnormalShardingCacheCleaner.scheduleAtFixedRate(new AbnormalShardingCacheCleaner(), 0,
+				ALLOW_DELAY_MILLIONSECONDS, TimeUnit.MILLISECONDS);
 	}
 
 	private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -254,10 +276,7 @@ public class DashboardServiceImpl implements DashboardService {
 									// 非本地作业才参与判断
 									if (!localMode) {
 										AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
-										if (isJavaOrShellJobHasProblem(curatorClient, unnormalJob) != null) {
-											unnormalJob.setJobDegree(jobDegree);
-											unnormalJobList.add(unnormalJob);
-										}
+										checkJavaOrShellJobHasProblem(curatorClient, unnormalJob, jobDegree, unnormalJobList);
 									}
 
 									// 查找超时告警作业
@@ -679,8 +698,159 @@ public class DashboardServiceImpl implements DashboardService {
 			log.error(e.getMessage(), e);
 		}
 	}
+	
+	private void fillAbnormalJob(CuratorFramework curatorClient, AbnormalJob abnormalJob, String cause, long nextFireTimeExcludePausePeriod) throws Exception{
+		boolean areNotReady = true;
+		String serverNodePath = JobNodePath.getServerNodePath(abnormalJob.getJobName());
+		if(checkExists(curatorClient, serverNodePath)) {
+    		List<String> servers = curatorClient.getChildren().forPath(serverNodePath);
+    		if(servers != null && !servers.isEmpty()) {
+    			for(String server : servers) {
+    				if(checkExists(curatorClient, JobNodePath.getServerStatus(abnormalJob.getJobName(), server))) {
+    					areNotReady = false;
+    					break;
+    				}
+    			}
+    		}
+		}
+		if(areNotReady) {
+			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
+		}
+    	abnormalJob.setCause(cause);
+    	abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
+	}
+	
+	/**
+	 * 检查和处理问题作业
+	 * @param curatorClient
+	 * @param abnormalJob
+	 * @param enabledPath
+	 * @param shardingItemStr
+	 * @param zkNodeCVersion
+	 * @param jobDegree
+	 * @param unnormalJobList
+	 * @throws Exception
+	 */
+	private void checkAndHandleJobProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath,
+			String shardingItemStr, int zkNodeCVersion, String jobDegree, List<AbnormalJob> unnormalJobList) throws Exception{
+		if(unnormalJobList.contains(abnormalJob)){
+			return;
+		}
 
-	private AbnormalJob isJavaOrShellJobHasProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob) {
+		long nextFireTime = checkShardingState(curatorClient, abnormalJob, enabledPath, shardingItemStr);
+		if (nextFireTime != -1 && doubleCheckShardingState(abnormalJob, shardingItemStr, zkNodeCVersion)) {
+			if(abnormalJob.getCause() == null){
+				abnormalJob.setCause(AbnormalJob.Cause.NOT_RUN.name());
+			}
+
+			//上报Hermes
+			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), nextFireTime);
+			//补充异常信息
+			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), nextFireTime);
+
+			//增加到非正常作业列表
+			abnormalJob.setJobDegree(jobDegree);
+			unnormalJobList.add(abnormalJob);
+
+			log.info("Job sharding alert with DomainName: {}, JobName: {}, ShardingItem: {}, Cause: {}", abnormalJob.getDomainName(), abnormalJob.getJobName(), shardingItemStr, abnormalJob.getCause());
+		}
+	}	
+	
+	/**
+	 * 符合连续两次告警返回true，否则返回false
+	 * ALLOW_DELAY_MILLIONSECONDS * 1.5 钝化触发检查的时间窗口精度
+     * 告警触发条件：
+	 * 1、上次告警+本次检查窗口告警（连续2次）
+	 * 2、上次告警CVersion与本次一致（说明当前本次检查窗口时间内没有子节点变更）
+	 */
+	private static boolean doubleCheckShardingState(AbnormalJob abnormalJob, String shardingItemStr, int zkNodeCVersion){
+		String key = abnormalJob.getDomainName() + "_" + abnormalJob.getJobName() + "_" + shardingItemStr;
+		long nowTime = System.currentTimeMillis();
+
+		if(ABNORMAL_SHARDING_STATE_CACHE.containsKey(key)){
+			AbnormalShardingState abnormalShardingState = ABNORMAL_SHARDING_STATE_CACHE.get(key);
+			if(abnormalShardingState != null && abnormalShardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 1.5 > nowTime
+					&& abnormalShardingState.getZkNodeCVersion() == zkNodeCVersion){
+				ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新告警
+				return true;
+			}else{
+				ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新无效（过时）告警
+				return false;
+			}
+		}else{
+			ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//新增告警信息
+			return false;
+		}
+	}
+	
+	/**
+	 * 判断分片状态
+	 *
+	 * 逻辑：
+	 * 1、有running节点，返回正常
+	 * 2.1、有completed节点，但马上就取不到Mtime，节点有变动说明正常
+	 * 2.2、根据Mtime计算下次触发时间，比较下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+	 * 3、既没有running又没completed视为异常
+	 * @param curatorClient
+	 * @param abnormalJob
+	 * @param shardingItemStr
+	 * @return -1：状态正常，非-1：状态异常
+	 * @throws Exception
+	 */
+	private long checkShardingState(CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath, String shardingItemStr) throws Exception{
+		List<String> itemChildren = curatorClient.getChildren().forPath(JobNodePath.getExecutionItemNodePath(abnormalJob.getJobName(), shardingItemStr));
+
+		//注意：针对stock-update域的不上报节点信息但又有分片残留的情况，分片节点下只有两个子节点，返回正常
+		if (itemChildren.size() != 2) {
+			//有running节点，返回正常
+			if (itemChildren.contains("running")) {
+				return -1;
+			}
+
+			//有completed节点：尝试取分片节点的Mtime时间
+			//1、能取到则根据Mtime计算下次触发时间，比较下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+			//2、取不到（为0）说明completed节点刚好被删除了，节点有变动说明正常（上一秒还在，下一秒不在了）
+			else if (itemChildren.contains("completed")) {
+				String completedPath = JobNodePath.getExecutionNodePath(abnormalJob.getJobName(), shardingItemStr, "completed");
+				long completedMtime = getMtime(curatorClient, completedPath);
+
+				if (completedMtime > 0) {
+					// 对比minCompletedMtime与enabled mtime, 取最大值
+		    		long nextFireTimeAfterThis = getMtime(curatorClient, enabledPath);
+		    		if (nextFireTimeAfterThis < completedMtime) {
+		    			nextFireTimeAfterThis = completedMtime;
+		    		}
+
+		    		Long nextFireTimeExcludePausePeriod = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis,
+		    				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+		    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+		    		if (nextFireTimeExcludePausePeriod != null && nextFireTimeExcludePausePeriod + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime() ) {
+		    			return nextFireTimeExcludePausePeriod;
+		    		}
+				} else {
+					return -1;
+				}
+			}
+
+			// 既没有running又没completed视为异常
+			else {
+				if (abnormalJob.getNextFireTimeAfterEnabledMtime() == 0) {
+					abnormalJob.setNextFireTimeAfterEnabledMtime(jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(getMtime(curatorClient, enabledPath),
+		    				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient)));
+				}
+
+				Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtime();
+	    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+	    		if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime()) {
+	    			return nextFireTime;
+	    		}
+			}
+		}
+
+		return -1;
+	}		
+
+	private void checkJavaOrShellJobHasProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob, String jobDegree, List<AbnormalJob> unnormalJobList) {
 		try {
 			// 计算异常作业,根据$Jobs/jobName/execution/item/nextFireTime，如果小于当前时间且作业不在running，则为异常
 			// 只有java/shell作业有cron
@@ -693,98 +863,50 @@ public class DashboardServiceImpl implements DashboardService {
 					String enabledReportVal = getData(curatorClient, enabledReportPath);
 					// 开启上报运行信息
 					if (enabledReportVal == null || "true".equals(enabledReportVal)) {
-						String cause = null;
 						String executionRootpath = JobNodePath.getExecutionNodePath(abnormalJob.getJobName());
-	            		long minCompletedMtime = 0;
 						// 有execution节点
-		            	List<String> items = curatorClient.getChildren().forPath(executionRootpath);
+	            		List<String> items = null;
+	            		try {
+	            			items = curatorClient.getChildren().forPath(executionRootpath);
+	            		}catch (Exception e) {
+						}
 		            	// 有分片
 		            	if (items != null && !items.isEmpty()) {
-		            		cause = AbnormalJob.Cause.NOT_RUN.name();
 		            		int shardingTotalCount = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "shardingTotalCount")));
-		            		boolean allRunning = true;
         					for (String itemStr : items) {
         						int each = Integer.parseInt(itemStr);
         						// 过滤历史遗留分片
         						if (each >= shardingTotalCount) {
         							continue;
         						}
-					    		// 针对stock-update域的不上报节点信息但又有分片残留的情况
-					    		List<String> itemChildren = curatorClient.getChildren().forPath(JobNodePath.getExecutionItemNodePath(abnormalJob.getJobName(), itemStr));
-    				    		if (itemChildren.size() == 2) {
-    					    		return null;
-    				    		} else {
-    				    			String completedPath = JobNodePath.getExecutionNodePath(abnormalJob.getJobName(), itemStr, "completed");
-    				    			if (itemChildren.contains("completed")) {
-    				    				// 上一秒还在，下一秒不在了，说明在跑，正常；
-    				    				long completedMtime = getMtime(curatorClient, completedPath);
-    				    				if (completedMtime == 0l) {
-    				    					continue;
-    				    				} else {
-    				    					allRunning = false;
-    				    					if (completedMtime < minCompletedMtime || minCompletedMtime == 0) {
-    				    						minCompletedMtime = completedMtime;
-    				    					}
-    				    				}
-    				    			} else if (itemChildren.contains("running")) {
-    				    				continue;
-    				    			} else {
-    				    				// 既无running又无completed视为异常，立即终止循环
-    				    				allRunning = false;
-    				    				minCompletedMtime = 0;
-    				    				break;
-    				    			}
-    				    		}
+        						checkAndHandleJobProblem(curatorClient, abnormalJob, enabledPath, itemStr, getCVersion(curatorClient, JobNodePath.getExecutionItemNodePath(abnormalJob.getJobName(), itemStr)), jobDegree, unnormalJobList);
 				    		}
-        					if (allRunning) {
-        						return null;
-        					}
 		            	} else { // 无分片
-		            		cause = AbnormalJob.Cause.NO_SHARDS.name();
+		            		abnormalJob.setCause(AbnormalJob.Cause.NO_SHARDS.name());
+
+		            		Long nextFireTime = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(getMtime(curatorClient, enabledPath),
+		    	    				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+		    	    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+		    	    		if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime() ) {
+		    	    			//上报Hermes
+		    	    			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), nextFireTime);
+		    	    			//补充异常信息
+		    	    			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), nextFireTime);
+
+		    	    			//增加到非正常作业列表
+		    	    			abnormalJob.setJobDegree(jobDegree);
+		    	    			unnormalJobList.add(abnormalJob);
+
+		    	    			log.info("Job sharding alert with DomainName: {}, JobName: {}, ShardingItem: {}, Cause: {}", abnormalJob.getDomainName(), abnormalJob.getJobName(), 0, abnormalJob.getCause());
+		    	    		}
 		            	}
-			            // 对比minCompletedMtime与enabled mtime, 取最大值
-			    		long nextFireTimeAfterThis = getMtime(curatorClient, enabledPath);
-			    		if (nextFireTimeAfterThis < minCompletedMtime) {
-			    			nextFireTimeAfterThis = minCompletedMtime;
-			    		}
-			    		Long nextFireTimeExcludePausePeriod = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
-			    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
-			    		if (nextFireTimeExcludePausePeriod != null && nextFireTimeExcludePausePeriod + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime() ) {
-			    			// all servers are not ready for the job
-				    		boolean areNotReady = true;
-				    		String serverNodePath = JobNodePath.getServerNodePath(abnormalJob.getJobName());
-				    		if(checkExists(curatorClient, serverNodePath)) {
-					    		List<String> servers = curatorClient.getChildren().forPath(serverNodePath);
-					    		if(servers != null && !servers.isEmpty()) {
-					    			for(String server : servers) {
-					    				if(checkExists(curatorClient, JobNodePath.getServerStatus(abnormalJob.getJobName(), server))) {
-					    					areNotReady = false;
-					    					break;
-					    				}
-					    			}
-					    		}
-				    		}
-				    		if(areNotReady) {
-				    			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
-				    		}
-					    	abnormalJob.setCause(cause);
-					    	abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
-							return abnormalJob;
-			    		}
-					} else {
-						// 关闭上报视为正常
-						return null;
 					}
 				}
-				return null;
 			}
-			// 非java/shell job视为正常
-			return null;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			return null;
 		}
-	}
+	}	
 
 	/**
 	 * 如果配置了超时告警时间，而且running节点存在时间大于它，则告警
@@ -896,6 +1018,15 @@ public class DashboardServiceImpl implements DashboardService {
 			return null;
 		}
 	}
+	
+	private void registerAbnormalJob(String job, String domain, Long nextFireTimeValue) {
+		try {
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			reportAlarmService.dashboardAbnormalJob(domain, job, format.format(new Date(nextFireTimeValue)));
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}		
 
 	private AbnormalContainer isContainerInstanceMismatch(AbnormalContainer abnormalContainer, CuratorFrameworkOp curatorFrameworkOp) {
 		try {
@@ -974,6 +1105,20 @@ public class DashboardServiceImpl implements DashboardService {
 			throw new JobConsoleException(ex);
 		}
 	}
+	
+	public int getCVersion(final CuratorFramework curatorClient, final String znode) {
+		try {
+			Stat stat = curatorClient.checkExists().forPath(znode);
+			if (stat != null) {
+				return stat.getCversion();
+			} else {
+				return 0;
+			}
+		} catch (final Exception ex) {
+			// CHECKSTYLE:ON
+			throw new JobConsoleException(ex);
+		}
+	}	
 
 	public String getData(final CuratorFramework curatorClient, final String znode) {
 		try {
@@ -1218,5 +1363,20 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
-
+	/**
+	 * 清理AbnormalShardingState过期Cache
+	 * @author jamin.li
+	 */
+	private static class AbnormalShardingCacheCleaner implements Runnable {
+		@Override
+		public void run() {
+			for (Entry<String, AbnormalShardingState> entrySet : ABNORMAL_SHARDING_STATE_CACHE.entrySet()) {
+				AbnormalShardingState shardingState = entrySet.getValue();
+				if(shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()){
+					ABNORMAL_SHARDING_STATE_CACHE.remove(entrySet.getKey());
+					log.info("Clean ABNORMAL_SHARDING_STATE_CACHE with key: {}, alertTime: {}, zkNodeCVersion: {}: " + entrySet.getKey(), shardingState.getAlertTime(), shardingState.getZkNodeCVersion());
+				}
+			}
+		}
+	}
 }
