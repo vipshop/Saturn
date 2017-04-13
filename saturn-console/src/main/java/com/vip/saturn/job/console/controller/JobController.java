@@ -133,6 +133,45 @@ public class JobController extends AbstractController {
 		}
 		return requestResult;
 	}
+	
+	@RequestMapping(value = "batchTasksMigrateEnabled", method = RequestMethod.GET)
+	public RequestResult batchTasksMigrateEnabled(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			JobMigrateInfo jobMigrateInfo = jobDimensionService.getAllJobMigrateInfo();
+			requestResult.setSuccess(true);
+			requestResult.setObj(jobMigrateInfo);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
+	}	
+	
+	@RequestMapping(value = "batchMigrateJobNewTask", method = RequestMethod.POST)
+	public RequestResult batchMigrateJobNewTask(final String jobNames, final String newTask, HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if (jobNames == null) {
+				throw new SaturnJobConsoleException("The jobNames cannot be null");
+			}
+			if (newTask == null) {
+				throw new SaturnJobConsoleException("The new task cannot be null");
+			}
+			if (jobNames.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The jobNames cannot be empty string");
+			}
+			if (newTask.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The new task cannot be empty string");
+			}
+			jobDimensionService.batchMigrateJobNewTask(jobNames.trim(), newTask.trim());
+			requestResult.setSuccess(true);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
+	}		
 
 	@RequestMapping(value = "migrateJobNewTask", method = RequestMethod.POST)
 	public RequestResult migrateJobNewTask(final String jobName, final String newTask, HttpServletRequest request) {

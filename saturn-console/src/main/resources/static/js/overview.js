@@ -9,6 +9,7 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
                	'<button class="btn btn-danger" id="batch-remove-job" title="点击进行批量删除作业">删除作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="add-job" title="点击进行添加作业">添加作业</button>&nbsp;&nbsp;' +
                	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>' +
+               	'<button class="btn btn-success batch-migrate-job" id="batch-migrate-job" title="点击进行批量迁移作业">迁移作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="batch-add-job" title="点击进行导入作业">导入作业</button>&nbsp;&nbsp;' +
                	'<a class="btn btn-info" id="export-job" href="executor/exportJob?nns='+regName+'" title="点击进行导出全域作业" target="_self">导出全域作业</a>&nbsp;&nbsp;' +
                	'<label>分组 <select id="groupSelect" title="选择作业分组" class="form-control"><option value="">全部分组</option></select></label>';
@@ -517,6 +518,44 @@ $(function() {
     	$("#shard-all-at-once-confirm-dialog").modal("show");
 	});
     
+    $(document).on("click", ".batch-migrate-job", function(event) {
+    	var jobNames = "";
+		$(".batchInput").each(function(){
+			if($(this).is(":checked")){
+    			jobNames += $(this).attr("jobName") + ",";
+    		}
+		});
+    	if(isNullOrEmpty(jobNames)) {
+			$("#failure-dialog .fail-reason").text("没有可以“迁移”的作业，请勾选！");
+			showFailureDialog("failure-dialog");
+			return;
+		}
+    	
+    	jobNames = jobNames.substring(0, jobNames.length-1);
+    	
+    	var migrateJobTasksSelectDiv = $("#batch-migrate-job-tasks-select");
+        migrateJobTasksSelectDiv.empty();
+        $.get("job/batchTasksMigrateEnabled", {nns:regName}, function(data) {
+            if(data.success == true) {
+                var jobMigrateInfo = data.obj;
+                $("#batch-migrate-jobName").html(jobNames);
+                $("#batch-migrate-tasks-old").html(jobMigrateInfo.tasksOld.toString());
+                var tasksMigrateEnabled = data.obj.tasksMigrateEnabled;
+                if(tasksMigrateEnabled instanceof Array) {
+                    for(var i=0; i<tasksMigrateEnabled.length; i++) {
+                        var taskOption = "<option value='" + tasksMigrateEnabled[i] + "'>" + tasksMigrateEnabled[i] + "</option>";
+                        migrateJobTasksSelectDiv.append(taskOption);
+                    }
+                }
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
+        var jobObj = new Object();
+        $("#batch-migrate-job-dialog").modal("show", jobObj);
+	});    
+    
     $(document).on("click", ".change-jobStatus-batch-job", function(event) {
     	var targetButtonId = event.target.id;
     	var isEnableButton = false;
@@ -652,6 +691,21 @@ $(function() {
         }).always(function() { $btn.button('reset'); });
         return false;
     });
+    
+    $("#batch-migrate-job-dialog-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var jobName = $("#batch-migrate-jobName").html();
+        var newTask = $("#batch-migrate-job-tasks-select").find("option:selected").val();
+        $.post("job/batchMigrateJobNewTask", {jobNames : jobName, newTask : newTask}, function(data) {
+            if(data.success == true) {
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $btn.button('reset'); });
+        return false;
+    });    
 
     $("#add-container-dialog-confirm-btn").on('click', function(event) {
         var $btn = $(this).button('loading'),
