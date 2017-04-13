@@ -18,7 +18,6 @@ public class SaturnThreadFactory implements ThreadFactory {
 
 	public SaturnThreadFactory(String threadName) {
 		this.threadName = "Saturn-" + threadName + "-" + poolNumber.getAndIncrement() + "-thread-";
-		
 	}
 	public SaturnThreadFactory(String threadName, boolean isMultiple) {
 		this.isMultiple = isMultiple;

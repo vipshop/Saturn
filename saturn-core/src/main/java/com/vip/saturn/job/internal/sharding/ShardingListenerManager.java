@@ -28,15 +28,12 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	private CuratorWatcher necessaryWatcher;
 	
 	private ShardingService shardingService;
-	
-	private ExecutorService executorService;
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
         super(jobScheduler);
 		shardingService = jobScheduler.getShardingService();
 		if(!isCrondJob(jobScheduler.getCurrentConf().getSaturnJobClass())) { // because crondJob do nothing in onResharding method, no need this watcher
 			necessaryWatcher = new NecessaryWatcher();
-			executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("saturn-sharding-necessary-watcher-" + jobName, false));
 		}
     }
 
@@ -70,9 +67,6 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
-		if(executorService != null) {
-			executorService.shutdownNow();
-		}
 	}
 	
 	class NecessaryWatcher implements CuratorWatcher {
@@ -90,22 +84,25 @@ public class ShardingListenerManager extends AbstractListenerManager {
 
 		private void doBusiness(final WatchedEvent event) {
 			try {
-				// cannot block re-registerNecessaryWatcher, so use thread pool to do business
-				if(!executorService.isShutdown()) {
-					executorService.submit(new Runnable() {
-						@Override
-						public void run() {
+				// cannot block re-registerNecessaryWatcher, so use thread pool to do business,
+				// and the thread pool is the same with job-tree-cache's
+				zkCacheManager.getExecutorService().execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
 							if (isShutdown) {
 								return;
-							}		
+							}
 							if (jobScheduler == null || jobScheduler.getJob() == null) {
 								return;
 							}
 							log.info("[{}] msg={} trigger on-resharding event, type:{}, path:{}", jobName, jobName, event.getType(), event.getPath());
 							jobScheduler.getJob().onResharding();
+						} catch (Throwable t) {
+							log.error(t.getMessage(), t);
 						}
-					});
-				}
+					}
+				});
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
 			}

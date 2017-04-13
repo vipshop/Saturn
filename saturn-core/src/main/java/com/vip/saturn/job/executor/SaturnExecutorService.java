@@ -3,7 +3,9 @@ package com.vip.saturn.job.executor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -11,6 +13,7 @@ import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +22,6 @@ import com.vip.saturn.job.exception.TimeDiffIntolerableException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.reg.zookeeper.ZkCacheManager;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -39,7 +41,7 @@ public class SaturnExecutorService {
 
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 
-	private TreeCache treeCache;
+	private TreeCache $JobsTreeCache;
 
 	private String ipNode;
 
@@ -48,17 +50,8 @@ public class SaturnExecutorService {
 	private ClassLoader executorClassLoader;
 
 	public static final int WAIT_JOBCLASS_ADDED_COUNT =  25;
-	
-	public static SaturnExecutorService init(String namespace, CoordinatorRegistryCenter coordinatorRegistryCenter,
-			String executorName) {
-		return new SaturnExecutorService(coordinatorRegistryCenter, executorName);
-	}
 
-	/**
-	 * 实例化之前，请确保执行了SaturnExecutorService.initExecutorName()方法
-	 * @param coordinatorRegistryCenter zk registry
-	 */
-	private SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
+	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
 		this.executorName = executorName;
 		if (coordinatorRegistryCenter != null) {
@@ -149,9 +142,18 @@ public class SaturnExecutorService {
 		}
 	}
 
+	private TreeCache buildAndStart$JobsTreeCache(CuratorFramework client) throws Exception {
+		TreeCache tc = TreeCache.newBuilder(client, "/" + JobNodePath.$JOBS_NODE_NAME)
+				.setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true))
+				.setMaxDepth(1)
+				.build();
+		tc.start();
+		return tc;
+	}
+
 	public void addNewJobListenerCallback(final ScheduleNewJobCallback callback) throws Exception {
-		treeCache = ZkCacheManager.buildAndStart$JobsTreeCache((CuratorFramework) coordinatorRegistryCenter.getRawClient());
-		treeCache.getListenable().addListener(new TreeCacheListener() {
+		$JobsTreeCache = buildAndStart$JobsTreeCache((CuratorFramework) coordinatorRegistryCenter.getRawClient());
+		$JobsTreeCache.getListenable().addListener(new TreeCacheListener() {
 			@Override
 			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
 				if (event != null) {
@@ -182,6 +184,39 @@ public class SaturnExecutorService {
 				}
 			}
 		});
+	}
+
+	public void removeJobName(String jobName) {
+		if (jobNames.contains(jobName)) {
+			jobNames.remove(jobName);
+		}
+	}
+
+	private void removeIpNode() {
+		try {
+			if (coordinatorRegistryCenter != null && ipNode != null && coordinatorRegistryCenter.isConnected()) {
+				log.info(" {} is going to delete its ip node {}", executorName, ipNode);
+				coordinatorRegistryCenter.remove(ipNode);
+			}
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}
+
+	private void close$JobsTreeCache() {
+		try {
+			if ($JobsTreeCache != null) {
+				$JobsTreeCache.close();
+			}
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}
+
+	// Attention, catch Throwable and not throw it.
+	public void shutdown() {
+		removeIpNode();
+		close$JobsTreeCache();
 	}
 	
 	public CoordinatorRegistryCenter getCoordinatorRegistryCenter() {
@@ -220,12 +255,12 @@ public class SaturnExecutorService {
 		this.jobNames = jobNames;
 	}
 
-	public TreeCache getTreeCache() {
-		return treeCache;
+	public TreeCache get$JobsTreeCache() {
+		return $JobsTreeCache;
 	}
 
-	public void setTreeCache(TreeCache treeCache) {
-		this.treeCache = treeCache;
+	public void set$JobsTreeCache(TreeCache $JobsTreeCache) {
+		this.$JobsTreeCache = $JobsTreeCache;
 	}
 
 	public void setExecutorName(String executorName) {
@@ -238,12 +273,6 @@ public class SaturnExecutorService {
 
 	public void setIpNode(String ipNode) {
 		this.ipNode = ipNode;
-	}
-	
-	public void removeJobName(String jobName) {
-		if (jobNames.contains(jobName)) {
-			jobNames.remove(jobName);
-		}
 	}
 
 }

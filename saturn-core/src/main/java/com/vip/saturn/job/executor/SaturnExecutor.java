@@ -176,7 +176,7 @@ public class SaturnExecutor {
 		this.namespace = namespace;
 		this.monitorPort = monitorPort;
 		executor = Executors
-				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "zk-reconnect-thread", false));
+				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
 	}
 
 	/**
@@ -286,12 +286,6 @@ public class SaturnExecutor {
 
 						if (stoped.compareAndSet(true, false)) {
 							log.info(" {} is going to restart for zk reconnected ,client: {}", executorName, client);
-							// clear the Executor ip, make sure it can restart properly.
-							String ipNode = saturnExecutorService.getIpNode();
-							if (regCenter != null && ipNode != null && regCenter.isConnected()) {
-								log.info(" {} is going to delete its ip node {}", executorName, ipNode);
-								regCenter.remove(ipNode);
-							}
 							restart();
 						}
 
@@ -318,11 +312,14 @@ public class SaturnExecutor {
 		doValidation();
 		String serverLists = SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
 		zkConfig = new ZookeeperConfiguration(monitorPort, serverLists, namespace, 1000, 3000, 3);
+		if(saturnExecutorService != null) {
+			saturnExecutorService.shutdown();
+		}
 		if (regCenter != null) {
 			regCenter.close();
 		}
 		regCenter = new ZookeeperRegistryCenter(zkConfig);
-		saturnExecutorService = SaturnExecutorService.init(namespace, regCenter, executorName);
+		saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
 
 		saturnExecutorService.setJobClassLoader(jobClassLoader);
 		saturnExecutorService.setExecutorClassLoader(executorClassLoader);
@@ -444,10 +441,10 @@ public class SaturnExecutor {
 	public void shutdown() {
 		synchronized (shutdownLock) {
 			shutdownUnfinishJob();
-			// 清理Executor的IP运行Node
-			String ipNode = saturnExecutorService.getIpNode();
-			if (regCenter != null && ipNode != null && regCenter.isConnected()) {
-				regCenter.remove(ipNode);
+			// 关闭SaturnExecutorService
+			saturnExecutorService.shutdown();
+			// 关闭zkClient
+			if (regCenter != null && regCenter.isConnected()) {
 				regCenter.close();
 			}
 			JobRegistry.clearExecutor(executorName);
@@ -471,11 +468,8 @@ public class SaturnExecutor {
 		synchronized (shutdownLock) {
 			shutdownAllCountThread();
 			
-			// 清理Executor的IP运行Node
-			String ipNode = saturnExecutorService.getIpNode();
-			if (regCenter != null && ipNode != null && regCenter.isConnected()) {
-				regCenter.remove(ipNode);
-			}		
+			// 关闭SaturnExecutorService
+			saturnExecutorService.shutdown();
 			// cancel零点清0成功数错误数线程
 			resetCountService.shutdownRestCountTimer();
 			// shutdown timeout-watchdog-threadpool

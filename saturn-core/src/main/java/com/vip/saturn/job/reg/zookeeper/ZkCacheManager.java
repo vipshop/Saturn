@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.reg.zookeeper;
 
 import java.io.IOException;
@@ -35,13 +32,13 @@ public class ZkCacheManager {
 	private CuratorFramework client;
 	private String jobName;
 	private String executorName;
-	/** let all the treeCaches share the same thread pool, and do not shutdown on treecache.close()  **/
-	private static ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new SaturnThreadFactory("treecache-pool"));
+	private ExecutorService executorService;
 	
 	public ZkCacheManager(CuratorFramework client, String jobName, String executorName) {
 		this.client = client;
 		this.jobName = jobName;
 		this.executorName = executorName;
+		executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-watcher", false));
 		log.info("ZkCacheManager for executor:{} - job:{} created.", executorName, jobName);
 	}
 	
@@ -61,14 +58,8 @@ public class ZkCacheManager {
 		}
 		return null;
 	}
-	
-	/**
-	 * Note that all the treeCaches built from these method share the same thread pool and the pool won't shutdown as treeCaches close their selves.
-	 * @param path path to watch
-	 * @param depth maxDepth of treeCache
-	 * @return TreeCache
-	 */
-	public TreeCache buildAndStartTreeCache(String path, int depth) {
+
+	private TreeCache buildAndStartTreeCache(String path, int depth) {
 		try {
 			String key = buildMapKey(path, depth);
 			TreeCache tc = treeCacheMap.get(key);
@@ -109,9 +100,13 @@ public class ZkCacheManager {
 			Entry<String, TreeCache> next = iterator.next();
 			TreeCache tc = next.getValue();
 			String path = next.getKey();
-			tc.close();
-			iterator.remove();
-			log.info("treeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
+			try {
+				tc.close();
+				iterator.remove();
+				log.info("treeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 	}	
 	
@@ -139,8 +134,7 @@ public class ZkCacheManager {
 				nc.close();
 				iterator.remove();
 				log.info("nodeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
-			} catch (IOException e) {
-				log.error("{} closes nodeCache error.");
+			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}
@@ -149,12 +143,6 @@ public class ZkCacheManager {
 	private static String buildMapKey(String path, int depth) {
 		return path + "-" + depth;
 	}
-	
-	public static TreeCache buildAndStart$JobsTreeCache(CuratorFramework client) throws Exception {
-		TreeCache tc = TreeCache.newBuilder(client, "/" + JobNodePath.$JOBS_NODE_NAME).setExecutor(new CloseableExecutorService(executorService, false)).setMaxDepth(1).build();
-		tc.start();
-		return tc;
-	}
 
 	public void addNodeCacheListener(final NodeCacheListener listener, final String path) {
 		NodeCache nc = buildAndStartNodeCache(path);
@@ -162,10 +150,18 @@ public class ZkCacheManager {
 			nc.getListenable().addListener(listener);
 		}
 	}
-	
-	public static void shutDownExecutorService() {
-		if (!executorService.isShutdown()) {
-			executorService.shutdownNow();
+
+	public ExecutorService getExecutorService() {
+		return executorService;
+	}
+
+	public void shutdown() {
+		closeAllTreeCache();
+		closeAllNodeCache();
+		if (executorService != null && !executorService.isShutdown()) {
+			// Cannot use shutdownNow, because the current thread maybe is running in the pool, and there are codes after this.
+			// Such as JobDeleteListener
+			executorService.shutdown();
 		}
 	}
 	

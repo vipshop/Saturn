@@ -302,7 +302,7 @@ public class JobScheduler {
 		analyseService.shutdown();
 		limitMaxJobsService.shutdown();
 
-		// coordinatorRegistryCenter.closeTreeCache(JobNodePath.getJobNameFullPath(jobName));
+		zkCacheManager.shutdown();
 		try {
 			Thread.sleep(500);
 		} catch (InterruptedException e) {
