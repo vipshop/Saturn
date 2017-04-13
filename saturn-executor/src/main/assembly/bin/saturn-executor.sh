@@ -29,6 +29,8 @@ PID_FILE=${PRGDIR}/PID
 
 RUN_MODE="background"
 
+STARTUP_DELAY_SECONDS=20
+
 USAGE()
 {
 	echo "Usage: $0 start|stop [-n|--namespace namespace] [-e|--executorName executorName] [-m|--monport monitorport] [-jmx|--jmx-port port] [JVM args, e.g., -Xms2048m -DVIP_SATURN_RUNNING_IP=192.168.1.100. Note that additional arguments should be put in the end.]"
@@ -76,6 +78,9 @@ elif [[ "$RUN_ENVIRONMENT" = "docker" ]]; then
   ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
   PERM_SIZE="128m"
   MAX_PERM_SIZE="256m"
+elif [[ "$RUN_ENVIRONMENT" = "production" ]]; then
+  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
+  sleep $STARTUP_DELAY_SECONDS  
 else
   ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
 fi
