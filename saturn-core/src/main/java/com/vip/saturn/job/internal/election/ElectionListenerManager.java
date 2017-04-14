@@ -58,12 +58,21 @@ public class ElectionListenerManager extends AbstractListenerManager {
     class LeaderElectionJobListener implements NodeCacheListener {
        @Override
 	    public void nodeChanged() throws Exception {
-    	   if (isShutdown) return;
-           if (!leaderElectionService.hasLeader()) {
-               log.info("[{}] msg=Elastic job: leader crashed, elect a new leader now.", jobName);
-               leaderElectionService.leaderElection();
-               log.info("[{}] msg=Elastic job: leader election completed.", jobName);
-           }
+           zkCacheManager.getExecutorService().execute(new Runnable() {
+               @Override
+               public void run() {
+                   try {
+                       if (isShutdown) return;
+                       if (!leaderElectionService.hasLeader()) {
+                           log.info("[{}] msg=Elastic job: leader crashed, elect a new leader now.", jobName);
+                           leaderElectionService.leaderElection();
+                           log.info("[{}] msg=Elastic job: leader election completed.", jobName);
+                       }
+                   } catch (Throwable t) {
+                       log.error(t.getMessage(), t);
+                   }
+               }
+           });
 	    }
     }
 }

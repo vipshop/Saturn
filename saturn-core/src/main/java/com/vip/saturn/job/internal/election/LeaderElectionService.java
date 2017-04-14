@@ -38,13 +38,6 @@ public class LeaderElectionService extends AbstractSaturnService{
 
     private AtomicBoolean isShutdown = new AtomicBoolean(false);
     
-    private Runnable leaderElectionTask = new Runnable() {
-		@Override
-		public void run() {
-			getJobNodeStorage().executeInLeader(ElectionNode.LATCH, new LeaderElectionExecutionCallback());
-		}
-	};
-    
     public LeaderElectionService(final JobScheduler jobScheduler) {
     	super(jobScheduler);
     }
@@ -70,7 +63,7 @@ public class LeaderElectionService extends AbstractSaturnService{
      * 选举主节点.
      */
     public void leaderElection() {
-    	jobScheduler.getExecutorService().submit(leaderElectionTask);
+        getJobNodeStorage().executeInLeader(ElectionNode.LATCH, new LeaderElectionExecutionCallback());
     }
     
     /**
