@@ -193,6 +193,36 @@ layout:decorator="frame-layout">
 					</div>
 				</div>
 			</div>
+			<div id="batch-migrate-job-dialog" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">批量迁移到新的容器资源</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">作业名</label>
+								<div class="col-sm-6">
+									<pre id="batch-migrate-jobName"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">迁移到容器资源</label>
+								<div class="col-sm-6">
+									<select id="batch-migrate-job-tasks-select" class="form-control"></select>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="batch-migrate-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div id="add-container-dialog" class="modal fade" tabindex="-1" style="z-index:9998;">
 				<div class="modal-dialog modal-lg">
 					<div class="modal-content">

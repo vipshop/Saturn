@@ -83,10 +83,14 @@ public interface JobDimensionService {
     String getAllExecutors(String jobName);
     
     String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+    
+    JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException;
 
     JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
 
     void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
+    
+    void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException;
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
 

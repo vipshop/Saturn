@@ -28,6 +28,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -1312,4 +1314,76 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         }
 		return result;
 	}
+
+	@Override
+	public JobMigrateInfo getAllJobMigrateInfo()
+			throws SaturnJobConsoleException {
+        JobMigrateInfo jobMigrateInfo = new JobMigrateInfo();
+        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+
+        List<String> tasksMigrateEnabled = new ArrayList<>();
+        List<String> tasks = new ArrayList<>();
+        String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
+        if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
+            tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
+        }
+        if (tasks != null && !tasks.isEmpty()) {
+            for (String tmp : tasks) {
+            	tasksMigrateEnabled.add(tmp);
+            }
+        }
+
+        jobMigrateInfo.setTasksMigrateEnabled(tasksMigrateEnabled);
+        return jobMigrateInfo;
+	}
+
+	@Override
+	public void batchMigrateJobNewTask(String jobNames, String taskNew)
+			throws SaturnJobConsoleException {
+		for (String jobName : jobNames.split(",")) {
+			List<String> preferTasks = getPreferTasksByJobName(jobName);
+			if(preferTasks.size() == 0){
+				throw new SaturnJobConsoleException(jobName + ":The job has not set a docker task");
+			}
+			if(preferTasks.contains(taskNew)){
+				throw new SaturnJobConsoleException(jobName + ":The taskNew is equals to current task");
+			}
+		}
+		
+		for (String jobName : jobNames.split(",")) {
+			try{
+				this.migrateJobNewTask(jobName, taskNew);
+			}catch(SaturnJobConsoleException e){
+				throw new SaturnJobConsoleException(jobName + ":" + e.getMessage());
+			}
+		}
+	}
+	
+	private List<String> getPreferTasksByJobName(String jobName){
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+
+        List<String> tasks = new ArrayList<>();
+        String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
+        if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
+            tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
+        }
+        List<String> preferTasks = new ArrayList<>();
+        if (tasks != null && !tasks.isEmpty()) {
+            String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
+            if (curatorFrameworkOp.checkExists(preferListNodePath)) {
+                String preferList = curatorFrameworkOp.getData(preferListNodePath);
+                if (preferList != null) {
+                    String[] split = preferList.split(",");
+                    for (int i = 0; i < split.length; i++) {
+                        String prefer = split[i].trim();
+                        if (prefer.startsWith("@")) {
+                            preferTasks.add(prefer.substring(1));
+                        }
+                    }
+                }
+            }
+        }
+        
+        return preferTasks;
+	}	
 }
