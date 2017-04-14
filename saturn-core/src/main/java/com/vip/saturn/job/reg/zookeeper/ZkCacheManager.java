@@ -88,9 +88,13 @@ public class ZkCacheManager {
 		String key = buildMapKey(path, depth);
 		TreeCache tc = treeCacheMap.get(key);
 		if (tc != null) {
-			tc.close();
-			treeCacheMap.remove(key);
-			log.info("treeCache for path:{} of executorName:{} - job:{} closed.", path, executorName, jobName);
+			try {
+				tc.close();
+				treeCacheMap.remove(key);
+				log.info("{} - {} closed treeCache, path and depth is {}", executorName, jobName, key);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 	}
 	
@@ -103,7 +107,7 @@ public class ZkCacheManager {
 			try {
 				tc.close();
 				iterator.remove();
-				log.info("treeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
+				log.info("{} - {} closed treeCache, path and depth is {}", executorName, jobName, path);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -116,9 +120,8 @@ public class ZkCacheManager {
 			try {
 				nc.close();
 				nodeCacheMap.remove(path);
-				log.info("nodeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
-			} catch (IOException e) {
-				log.error("{} closes nodeCache error.");
+				log.info("{} - {} closed nodeCache, path is {}", executorName, jobName, path);
+			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}
@@ -133,7 +136,7 @@ public class ZkCacheManager {
 			try {
 				nc.close();
 				iterator.remove();
-				log.info("nodeCache for path:{} of executor:{} - job:{} closed.", path, executorName, jobName);
+				log.info("{} - {} closed nodeCache, path is {}", executorName, jobName, path);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
