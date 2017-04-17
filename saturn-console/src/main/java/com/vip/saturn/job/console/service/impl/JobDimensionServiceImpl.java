@@ -1074,10 +1074,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	public String formatTimeByJobTimeZone(String jobName, Long time) {
 		if(time != null) {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-			String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-			if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
-				timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
-			}
+			String timeZoneStr = getTimeZone(jobName, curatorFrameworkOp);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			sdf.setTimeZone(TimeZone.getTimeZone(timeZoneStr));
 			return timeZoneStr + " " + sdf.format(new Date(time));
@@ -1085,6 +1082,13 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return null;
 	}
 
+	private String getTimeZone(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
+		return timeZoneStr;
+	}
 
 	@Override
 	public Long calculateJobNextTime(String jobName) {
@@ -1160,12 +1164,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
      * 该时间是否在作业暂停时间段范围内。
      * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
      *
-     * @param date 时间
-     *
      * @return 该时间是否在作业暂停时间段范围内。
      */
-	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime) {
-		Calendar calendar = Calendar.getInstance();
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime, TimeZone timeZone) {
+		Calendar calendar = Calendar.getInstance(timeZone);
 		calendar.setTime(date);
 		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
 		int d = calendar.get(Calendar.DAY_OF_MONTH);
@@ -1267,18 +1269,16 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
 		String cronVal = curatorFrameworkOp.getData(cronPath);
-		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
-			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
-		}
 		CronExpression cronExpression = null;
 		try {
 			cronExpression = new CronExpression(cronVal);
-			cronExpression.setTimeZone(TimeZone.getTimeZone(timeZoneStr));
 		} catch (ParseException e) {
 			log.error(e.getMessage(), e);
 			return null;
 		}
+		String timeZoneStr = getTimeZone(jobName, curatorFrameworkOp);
+		TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
+		cronExpression.setTimeZone(timeZone);
 
 		Date nextFireTime = cronExpression.getTimeAfter(new Date(nextFireTimeAfterThis));
 		String pausePeriodDatePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodDate");
@@ -1286,7 +1286,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		String pausePeriodTimePath =  JobNodePath.getConfigNodePath(jobName, "pausePeriodTime");
 		String pausePeriodTime = curatorFrameworkOp.getData(pausePeriodTimePath);
 
-		while (nextFireTime != null && isInPausePeriod(nextFireTime,pausePeriodDate, pausePeriodTime)) {
+		while (nextFireTime != null && isInPausePeriod(nextFireTime, pausePeriodDate, pausePeriodTime, timeZone)) {
 			nextFireTime = cronExpression.getTimeAfter(nextFireTime);
 		}
 		if (null == nextFireTime) {
