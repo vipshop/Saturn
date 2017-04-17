@@ -77,10 +77,7 @@ if [[ "$RUN_ENVIRONMENT" = "dev" ]]; then
 elif [[ "$RUN_ENVIRONMENT" = "docker" ]]; then
   ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
   PERM_SIZE="128m"
-  MAX_PERM_SIZE="256m"
-elif [[ "$RUN_ENVIRONMENT" = "production" ]]; then
-  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
-  sleep $STARTUP_DELAY_SECONDS  
+  MAX_PERM_SIZE="256m" 
 else
   ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
 fi
@@ -166,6 +163,12 @@ CHECK_PARAMETERS()
 
 START()
 {
+	if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
+	  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
+	  echo 'sleeping' $STARTUP_DELAY_SECONDS'S under production env' 
+	  sleep $STARTUP_DELAY_SECONDS
+	fi
+
 	echo "Log redirects to ${LOGDIR}"
 	CHECK_JMX
 	CHECK_MONPORT
