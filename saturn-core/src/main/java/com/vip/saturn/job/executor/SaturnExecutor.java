@@ -1,16 +1,24 @@
 package com.vip.saturn.job.executor;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +88,29 @@ public class SaturnExecutor {
 	 */
 	private void doValidation() {
 		if (extClazz == null) {
+			Builder builder = CuratorFrameworkFactory.builder()
+	                .connectString(SystemEnvProperties.VIP_SATURN_ZK_CONNECTION)
+	                .sessionTimeoutMs(20 * 1000)
+	                .connectionTimeoutMs(20 * 1000)
+	                .retryPolicy(new ExponentialBackoffRetry(1000, 2));
+			CuratorFramework client = builder.build();
+			client.start();
+			try {
+	        	client.getZookeeperClient().blockUntilConnectedOrTimedOut();
+	    		if (!client.getZookeeperClient().isConnected()) {
+	    			log.error("fail in connectting to zk:{}, now exit.", SystemEnvProperties.VIP_SATURN_ZK_CONNECTION);
+	    			System.exit(-1);
+	    		}
+	    		if (null == client.checkExists().forPath("/" + namespace)) {
+	    			client.close();
+	    			log.error("domain:{} doesn't exist in the zk:{}, now exit.", namespace, SystemEnvProperties.VIP_SATURN_ZK_CONNECTION);
+	    			System.exit(-1);
+	    		}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				client.close();
+			}
 			return;
 		}
 		try {
@@ -218,6 +249,7 @@ public class SaturnExecutor {
 			return;
 		}
 		if (jobConfig.isDeleting()) {
+			log.info("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
 			String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 			if (regCenter.isExisted(serverNodePath)) {
 				regCenter.remove(serverNodePath);

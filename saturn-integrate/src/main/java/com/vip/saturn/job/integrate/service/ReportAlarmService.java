@@ -32,9 +32,10 @@ public interface ReportAlarmService {
      *
      * @param namespace       The domain or namespace
      * @param jobName         The abnormal job's name
+     * @param timeZone        The timeZone of job
      * @param shouldFiredTime The time that job should be fired
      */
-    void dashboardAbnormalJob(String namespace, String jobName, String shouldFiredTime) throws ReportAlarmException;
+    void dashboardAbnormalJob(String namespace, String jobName, String timeZone, long shouldFiredTime) throws ReportAlarmException;
 
     /**
      * Dashboard refresh data, find that the job is timeout

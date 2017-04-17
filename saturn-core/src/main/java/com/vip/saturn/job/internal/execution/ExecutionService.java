@@ -274,7 +274,15 @@ public class ExecutionService extends AbstractSaturnService {
     public boolean isCompleted(final int item) {
         return getJobNodeStorage().isJobNodeExisted(ExecutionNode.getCompletedNode(item));
     }
-    
+
+    public boolean isRunning(final int item) {
+		return getJobNodeStorage().isJobNodeExisted(ExecutionNode.getRunningNode(item));
+	}
+
+	public boolean isFailover(final int item) {
+		return getJobNodeStorage().isJobNodeExisted(FailoverNode.getExecutionFailoverNode(item));
+	}
+
     /**
      * 判断分片项中是否还有执行中的作业.
      * 

@@ -19,6 +19,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +50,17 @@ public class FailoverService extends AbstractSaturnService {
 	 * 
 	 * @param item 崩溃的作业项
 	 */
-	public boolean setCrashedFailoverFlag(final int item, final String random) {
+	public void createCrashedFailoverFlag(final int item) {
 		if (!isFailoverAssigned(item)) {
-			log.info(" {} - {} setCrashedFailoverFlag items:{} - value:{}",jobScheduler.getExecutorName(),jobScheduler.getJobName(),item, random);
-			getJobNodeStorage().fillJobNodeIfNullOrOverwrite(FailoverNode.getItemsNode(item),random);
-			return true;
+			try {
+				getJobNodeStorage().getClient().create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(JobNodePath.getNodeFullPath(jobName, FailoverNode.getItemsNode(item)));
+				log.info("{} - {} create failover flag of item {}", executorName, jobName, item);
+			} catch (KeeperException.NodeExistsException e) {
+				log.debug("{} - {} create failover flag of item {} failed, because it is already existing", executorName, jobName, item);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
-		return false;
 	}
 
 	public boolean isFailoverAssigned(final Integer item) {

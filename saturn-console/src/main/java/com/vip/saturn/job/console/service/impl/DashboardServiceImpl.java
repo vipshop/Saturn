@@ -2,15 +2,8 @@ package com.vip.saturn.job.console.service.impl;
 
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import com.vip.saturn.job.console.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -31,7 +25,6 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.AbnormalContainer;
 import com.vip.saturn.job.console.domain.AbnormalJob;
 import com.vip.saturn.job.console.domain.AbnormalShardingState;
@@ -703,7 +696,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 	
-	private void fillAbnormalJob(CuratorFramework curatorClient, AbnormalJob abnormalJob, String cause, long nextFireTimeExcludePausePeriod) throws Exception{
+	private void fillAbnormalJob(CuratorFramework curatorClient, AbnormalJob abnormalJob, String cause, String timeZone, long nextFireTimeExcludePausePeriod) throws Exception{
 		boolean areNotReady = true;
 		String serverNodePath = JobNodePath.getServerNodePath(abnormalJob.getJobName());
 		if(checkExists(curatorClient, serverNodePath)) {
@@ -721,6 +714,10 @@ public class DashboardServiceImpl implements DashboardService {
 			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
 		}
     	abnormalJob.setCause(cause);
+		abnormalJob.setTimeZone(timeZone);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
+		abnormalJob.setNextFireTimeWithTimeZoneFormat(sdf.format(nextFireTimeExcludePausePeriod));
     	abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
 	}
 	
@@ -746,11 +743,11 @@ public class DashboardServiceImpl implements DashboardService {
 			if(abnormalJob.getCause() == null){
 				abnormalJob.setCause(AbnormalJob.Cause.NOT_RUN.name());
 			}
-
+			String timeZone = getTimeZone(abnormalJob.getJobName(), curatorClient);
 			//上报Hermes
-			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), nextFireTime);
+			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
 			//补充异常信息
-			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), nextFireTime);
+			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), timeZone, nextFireTime);
 
 			//增加到非正常作业列表
 			abnormalJob.setJobDegree(jobDegree);
@@ -892,10 +889,11 @@ public class DashboardServiceImpl implements DashboardService {
 		    	    				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
 		    	    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 		    	    		if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime() ) {
+								String timeZone = getTimeZone(abnormalJob.getJobName(), curatorClient);
 		    	    			//上报Hermes
-		    	    			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), nextFireTime);
+		    	    			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
 		    	    			//补充异常信息
-		    	    			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), nextFireTime);
+		    	    			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), timeZone, nextFireTime);
 
 		    	    			//增加到非正常作业列表
 		    	    			abnormalJob.setJobDegree(jobDegree);
@@ -910,7 +908,15 @@ public class DashboardServiceImpl implements DashboardService {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-	}	
+	}
+
+	private String getTimeZone(String jobName, CuratorFramework curatorClient) {
+		String timeZoneStr = getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
+		return timeZoneStr;
+	}
 
 	/**
 	 * 如果配置了超时告警时间，而且running节点存在时间大于它，则告警
@@ -1023,10 +1029,9 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 	
-	private void registerAbnormalJob(String job, String domain, Long nextFireTimeValue) {
+	private void registerAbnormalJob(String job, String domain, String timeZone, Long nextFireTimeValue) {
 		try {
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			reportAlarmService.dashboardAbnormalJob(domain, job, format.format(new Date(nextFireTimeValue)));
+			reportAlarmService.dashboardAbnormalJob(domain, job, timeZone, nextFireTimeValue);
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
 		}
