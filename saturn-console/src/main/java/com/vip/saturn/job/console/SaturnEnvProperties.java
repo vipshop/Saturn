@@ -38,6 +38,10 @@ public final class SaturnEnvProperties {
 
     public static String NAME_VIP_SATURN_SYSTEM_CONFIG_PATH = "VIP_SATURN_SYSTEM_CONFIG_PATH";
     public static String VIP_SATURN_SYSTEM_CONFIG_PATH = System.getProperty(NAME_VIP_SATURN_SYSTEM_CONFIG_PATH, System.getenv(NAME_VIP_SATURN_SYSTEM_CONFIG_PATH));
+    
+    public static String SATURN_CONSOLE_DB_URL = System.getProperty("SATURN_CONSOLE_DB_URL", System.getenv("SATURN_CONSOLE_DB_URL"));
+    public static String SATURN_CONSOLE_DB_USERNAME = System.getProperty("SATURN_CONSOLE_DB_USERNAME", System.getenv("SATURN_CONSOLE_DB_USERNAME"));
+    public static String SATURN_CONSOLE_DB_PASSWORD = System.getProperty("SATURN_CONSOLE_DB_PASSWORD", System.getenv("SATURN_CONSOLE_DB_PASSWORD"));
 
     static {
         REG_CENTER_JSON_FILE = System.getProperty("REG_CENTER_JSON_PATH", System.getenv("REG_CENTER_JSON_PATH"));

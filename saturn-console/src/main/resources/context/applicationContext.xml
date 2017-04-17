@@ -12,11 +12,6 @@
     <context:component-scan base-package="com.vip.saturn.job.console">
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
     </context:component-scan>
-    <context:property-placeholder
-		ignore-resource-not-found="true"
-		location="classpath:/properties/production/application-production.properties,
-				  classpath:/properties/${spring.profiles.active}/application-${spring.profiles.active}.properties,
-				  classpath:project.properties" />
 				  
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dataSource" />
@@ -33,10 +28,10 @@
 		<property name="mapperLocations" value="classpath*:mapper/*Mapper.xml" />
 	</bean>
 	
-    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
-        <property name="url" value="jdbc:mysql://10.199.188.4:3306/saturn_console" />
-        <property name="username" value="root" />
-        <property name="password" value="saturn" />
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close" lazy-init="true">
+        <property name="url" value="${SATURN_CONSOLE_DB_URL:jdbc:mysql://a.b.c.d}" />
+        <property name="username" value="${SATURN_CONSOLE_DB_USERNAME:}" />
+        <property name="password" value="${SATURN_CONSOLE_DB_PASSWORD:}" />
         <!-- 初始化连接大小 -->
         <property name="initialSize" value="0" />
         <!-- 连接池最大使用连接数量 -->

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
+import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.AbnormalContainer;
 import com.vip.saturn.job.console.domain.AbnormalJob;
 import com.vip.saturn.job.console.domain.AbnormalShardingState;
@@ -56,6 +57,7 @@ import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
+import com.vip.saturn.job.console.utils.ConsoleUtil;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
@@ -108,7 +110,9 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@PostConstruct
 	public void init() throws Exception {
-		startRefreshStatisticsTimmer();
+		if(ConsoleUtil.isDashboardOn()){
+			startRefreshStatisticsTimmer();
+		}
 	}
 
 	static {
@@ -1307,7 +1311,9 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	private void asyncRefreshStatistics() {
-		singleThreadExecutor.submit(refreshStatisticsTask());
+		if(ConsoleUtil.isDashboardOn()){
+			singleThreadExecutor.submit(refreshStatisticsTask());
+		}
 	}
 
 	@Override
