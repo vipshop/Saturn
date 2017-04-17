@@ -218,6 +218,7 @@ public class SaturnExecutor {
 			return;
 		}
 		if (jobConfig.isDeleting()) {
+			log.info("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
 			String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 			if (regCenter.isExisted(serverNodePath)) {
 				regCenter.remove(serverNodePath);

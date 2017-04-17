@@ -42,8 +42,6 @@ public class ContainerServiceImpl implements ContainerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
-    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
     @Resource
     private CuratorRepository curatorRepository;
 
@@ -271,7 +269,7 @@ public class ContainerServiceImpl implements ContainerService {
     private String changeTypeOfCreateTime(ContainerConfig containerConfig) {
         Long createTime = containerConfig.getCreateTime();
         if (createTime != null) {
-            return simpleDateFormat.format(createTime);
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(createTime);
         } else {
             return null;
         }

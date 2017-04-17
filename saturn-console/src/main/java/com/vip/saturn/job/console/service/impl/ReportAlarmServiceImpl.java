@@ -23,7 +23,7 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
     }
 
     @Override
-    public void dashboardAbnormalJob(String namespace, String jobName, String shouldFiredTime) throws ReportAlarmException {
+    public void dashboardAbnormalJob(String namespace, String jobName, String timeZone, long shouldFiredTime) throws ReportAlarmException {
 
     }
 

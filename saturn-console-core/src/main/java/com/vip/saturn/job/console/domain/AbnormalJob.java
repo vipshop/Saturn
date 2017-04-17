@@ -23,12 +23,16 @@ public class AbnormalJob {
 	private final String degree;
 	
 	private String jobDegree;
+
+	private String timeZone;
 	
 	private long nextFireTime;
+
+	private String nextFireTimeWithTimeZoneFormat;
 	
 	private String cause;
 	
-	private long nextFireTimeAfterEnabledMtime;
+	private transient long nextFireTimeAfterEnabledMtime;
 	
 	public AbnormalJob(String jobName, String domainName, String nns, String degree){
 		this.jobName = jobName;
@@ -49,12 +53,28 @@ public class AbnormalJob {
 		this.jobDegree = jobDegree;
 	}
 
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
+	}
+
 	public long getNextFireTime() {
 		return nextFireTime;
 	}
 
 	public void setNextFireTime(long nextFireTime) {
 		this.nextFireTime = nextFireTime;
+	}
+
+	public String getNextFireTimeWithTimeZoneFormat() {
+		return nextFireTimeWithTimeZoneFormat;
+	}
+
+	public void setNextFireTimeWithTimeZoneFormat(String nextFireTimeWithTimeZoneFormat) {
+		this.nextFireTimeWithTimeZoneFormat = nextFireTimeWithTimeZoneFormat;
 	}
 
 	public String getCause() {
@@ -79,14 +99,6 @@ public class AbnormalJob {
 
 	public String getDegree() {
 		return degree;
-	}
-
-	@Override
-	public String toString() {
-		return "AbnormalJob [jobName=" + jobName + ", domainName=" + domainName
-				+ ", nns=" + nns + ", degree=" + degree + ", jobDegree="
-				+ jobDegree + ", nextFireTime=" + nextFireTime + ", cause="
-				+ cause + "]";
 	}
 
 	public long getNextFireTimeAfterEnabledMtime() {
