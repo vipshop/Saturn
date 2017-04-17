@@ -12,7 +12,7 @@
     <result column="local_mode" property="localMode" jdbcType="BIT" />
     <result column="use_serial" property="useSerial" jdbcType="BIT" />
     <result column="use_disprefer_list" property="useDispreferList" jdbcType="BIT" />
-    <result column="timeZone" property="timeZone" jdbcType="VARCHAR" />
+    <result column="time_zone" property="timeZone" jdbcType="VARCHAR" />
     <result column="cron" property="cron" jdbcType="VARCHAR" />
     <result column="prefer_list" property="preferList" jdbcType="VARCHAR" />
     <result column="pause_period_date" property="pausePeriodDate" jdbcType="VARCHAR" />
@@ -38,7 +38,7 @@
     <result column="zk_list" property="zkList" jdbcType="VARCHAR" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, timeZone, cron, prefer_list, pause_period_date, pause_period_time,
+    id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
     failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
@@ -56,7 +56,7 @@
   </delete>
   <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig" >
     insert into job_config_history (id, job_name, job_class, 
-      sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, timeZone, cron, prefer_list, pause_period_date,
+      sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date,
       pause_period_time, sharding_item_parameters, 
       job_parameter, process_count_interval_seconds, 
       failover, dependencies, groups, description,
@@ -112,7 +112,7 @@
         use_disprefer_list,
       </if>
       <if test="timeZone != null" >
-        timeZone,
+        time_zone,
       </if>
       <if test="cron != null" >
         cron,
@@ -317,7 +317,7 @@
         use_disprefer_list = #{useDispreferList,jdbcType=BIT},
       </if>
       <if test="timeZone != null" >
-        timeZone = #{timeZone,jdbcType=VARCHAR},
+        time_zone = #{timeZone,jdbcType=VARCHAR},
       </if>
       <if test="cron != null" >
         cron = #{cron,jdbcType=VARCHAR},
@@ -402,7 +402,7 @@
       local_mode = #{localMode,jdbcType=BIT},
       use_serial = #{useSerial,jdbcType=BIT},
       use_disprefer_list = #{useDispreferList,jdbcType=BIT},
-      timeZone = #{timeZone,jdbcType=VARCHAR},
+      time_zone = #{timeZone,jdbcType=VARCHAR},
       cron = #{cron,jdbcType=VARCHAR},
       prefer_list = #{preferList,jdbcType=VARCHAR},
       pause_period_date = #{pausePeriodDate,jdbcType=VARCHAR},
@@ -462,7 +462,7 @@
         and use_disprefer_list = #{useDispreferList,jdbcType=BIT}
       </if>
       <if test="timeZone != null" >
-        and timeZone = #{timeZone,jdbcType=VARCHAR}
+        and time_zone = #{timeZone,jdbcType=VARCHAR}
       </if>
       <if test="cron != null" >
         and cron = #{cron,jdbcType=VARCHAR}
@@ -567,7 +567,7 @@
       and use_disprefer_list = #{historyjobconfig.useDispreferList,jdbcType=BIT}
     </if>
     <if test="historyjobconfig.timeZone != null" >
-      and timeZone = #{historyjobconfig.timeZone,jdbcType=VARCHAR}
+      and time_zone = #{historyjobconfig.timeZone,jdbcType=VARCHAR}
     </if>
     <if test="historyjobconfig.cron != null" >
       and cron = #{historyjobconfig.cron,jdbcType=VARCHAR}
