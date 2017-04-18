@@ -17,13 +17,16 @@
 
 package com.vip.saturn.job.console.controller;
 
-import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +37,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.vip.saturn.job.console.SaturnEnvProperties;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.service.ExecutorService;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
+import com.vip.saturn.job.console.utils.ConsoleUtil;
 
 @Controller
 @RequestMapping("/")
@@ -67,6 +70,7 @@ public class HomeController  extends AbstractController {
         	model.addAttribute("ns", "");
         }
     	model.put("version", version);
+    	model.put("dashboard_on", ConsoleUtil.isDashboardOn() ? "show" : "hide");
     	return "home";
     }
     
