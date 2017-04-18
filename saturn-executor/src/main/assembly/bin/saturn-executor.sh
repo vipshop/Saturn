@@ -163,12 +163,6 @@ CHECK_PARAMETERS()
 
 START()
 {
-	if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
-	  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
-	  echo 'sleeping' $STARTUP_DELAY_SECONDS'S under production env' 
-	  sleep $STARTUP_DELAY_SECONDS
-	fi
-
 	echo "Log redirects to ${LOGDIR}"
 	CHECK_JMX
 	CHECK_MONPORT
@@ -196,6 +190,12 @@ START()
 		 exit -1
 		fi
 	fi
+	
+	if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
+	  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
+	  echo 'sleeping' $STARTUP_DELAY_SECONDS'S under production env' 
+	  sleep $STARTUP_DELAY_SECONDS
+	fi	
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR} $MON_CONF"
