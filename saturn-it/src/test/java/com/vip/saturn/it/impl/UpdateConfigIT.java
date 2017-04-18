@@ -120,6 +120,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
         updateJobNode(jobConfiguration, "config/pausePeriodDate", pauseDate);
         updateJobNode(jobConfiguration, "config/pausePeriodTime", pauseTime);
 
+        Thread.sleep(1000);
         enableJob(jobConfiguration.getJobName());
         Thread.sleep(2 * 1000);
 

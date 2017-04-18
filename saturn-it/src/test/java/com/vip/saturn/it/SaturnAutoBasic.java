@@ -287,6 +287,7 @@ public class SaturnAutoBasic {
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.SHARDING_TOTAL_COUNT, jobConfiguration.getShardingTotalCount());
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.SHARDING_ITEM_PARAMETERS, jobConfiguration.getShardingItemParameters());
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_PARAMETER, jobConfiguration.getJobParameter());
+        jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.TIMEZONE, jobConfiguration.getTimeZone());
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.CRON, jobConfiguration.getCron());
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.PREFER_LIST, jobConfiguration.getPreferList());
         jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.PAUSE_PERIOD_DATE, jobConfiguration.getPausePeriodDate());
