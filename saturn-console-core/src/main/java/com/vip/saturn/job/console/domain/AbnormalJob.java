@@ -108,5 +108,19 @@ public class AbnormalJob {
 	public void setNextFireTimeAfterEnabledMtime(long nextFireTimeAfterEnabledMtime) {
 		this.nextFireTimeAfterEnabledMtime = nextFireTimeAfterEnabledMtime;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "AbnormalJob{" +
+				"jobName='" + jobName + '\'' +
+				", domainName='" + domainName + '\'' +
+				", nns='" + nns + '\'' +
+				", degree='" + degree + '\'' +
+				", jobDegree='" + jobDegree + '\'' +
+				", timeZone='" + timeZone + '\'' +
+				", nextFireTime=" + nextFireTime +
+				", nextFireTimeWithTimeZoneFormat='" + nextFireTimeWithTimeZoneFormat + '\'' +
+				", cause='" + cause + '\'' +
+				'}';
+	}
 }
