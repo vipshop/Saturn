@@ -11,5 +11,5 @@ branches:
   only:
     - develop
     
-after_success:
-  - mvn clean cobertura:cobertura-integration-test coveralls:report
+#after_success:
+#  - mvn clean cobertura:cobertura-integration-test coveralls:report
