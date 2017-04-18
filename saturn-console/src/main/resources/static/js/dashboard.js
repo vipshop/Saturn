@@ -746,7 +746,7 @@ function renderAbnormalJob() {
 		var $tbody = $("#unnormal-job-table tbody"), trContent = "", unnormalJobTmp = $("#unnormal-job-template").html();
 		$("#unnormal-job-table tbody").empty();
         for (var i in data) {
-        	trContent += Mustache.render(unnormalJobTmp,{cause:causeMap[data[i].cause],degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", nextFireTime:data[i].timeZone + " " + data[i].nextFireTimeWithTimeZoneFormat)});
+        	trContent += Mustache.render(unnormalJobTmp,{cause:causeMap[data[i].cause],degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", nextFireTime:data[i].timeZone + " " + data[i].nextFireTimeWithTimeZoneFormat});
         }
         $tbody.append(trContent);
         $("#unnormal-job-table").DataTable({"destroy": true,"oLanguage": language});
