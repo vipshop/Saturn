@@ -161,6 +161,18 @@ CHECK_PARAMETERS()
 	fi
 }
 
+STARTUP_DELAY()
+{
+    if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
+        i=1
+        while(($i<=$STARTUP_DELAY_SECONDS)); do
+        	echo -e ".\c"
+        	sleep 1
+        	i=$(($i+1))
+        done
+    fi
+}
+
 START()
 {
 	echo "Log redirects to ${LOGDIR}"
@@ -191,11 +203,7 @@ START()
 		fi
 	fi
 	
-	if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
-	  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
-	  echo 'sleeping' $STARTUP_DELAY_SECONDS'S under production env' 
-	  sleep $STARTUP_DELAY_SECONDS
-	fi	
+	STARTUP_DELAY	
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR} $MON_CONF"
