@@ -203,29 +203,25 @@ public abstract class AbstractElasticJob implements Stopable {
 	 * @return 是否继续执行完complete节点，清空failover信息
 	 */
 	private boolean checkIfZkLostAfterExecution(final Integer item) {
-		// 如果zk disconnected, 直接返回false；即不属于当前zk创建的
-		if (!((CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient()).getZookeeperClient()
-				.isConnected()) {
-			return false;
-		}
+		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient();
 		try {
-			long sessionId = ((CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient())
-					.getZookeeperClient().getZooKeeper().getSessionId();
+			long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
-			Stat itemStat = ((CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient())
-					.checkExists().forPath(runningPath);
+			Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
 
 			if (itemStat != null) {
-				if (itemStat.getEphemeralOwner() != sessionId) {
-					log.info("[{}] msg=item={} 's running node doesn't belong to current zk, zk sessionid={} ", jobName,
-							itemStat.getEphemeralOwner(), sessionId);
+                long ephemeralOwner = itemStat.getEphemeralOwner();
+                if (ephemeralOwner != sessionId) {
+					log.info("[{}] msg=item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}", jobName, item, ephemeralOwner, sessionId);
 					return false;
 				}
 			} else {
 				JobConfiguration currentConf = jobScheduler.getCurrentConf();
-				// 没有配enabledReport，java/shell作业默认为开启；
-				if ((currentConf.isEnabledReport() == null && ("JAVA_JOB".equals(currentConf.getJobType()) || "SHELL_JOB".equals(currentConf.getJobType())))
-						|| (currentConf.isEnabledReport() != null && currentConf.isEnabledReport())) {
+                Boolean enabledReport = currentConf.isEnabledReport();
+                String jobType = currentConf.getJobType();
+                // 没有配enabledReport，java/shell作业默认为开启；
+				if ((enabledReport == null && ("JAVA_JOB".equals(jobType) || "SHELL_JOB".equals(jobType)))
+						|| (enabledReport != null && enabledReport)) {
 					// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
 					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
 					return false;
