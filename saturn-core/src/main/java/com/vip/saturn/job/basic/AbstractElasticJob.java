@@ -205,9 +205,9 @@ public abstract class AbstractElasticJob implements Stopable {
 	private boolean checkIfZkLostAfterExecution(final Integer item) {
 		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient();
 		try {
-			long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
-			Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
+            Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
+            long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
 
 			if (itemStat != null) {
                 long ephemeralOwner = itemStat.getEphemeralOwner();
