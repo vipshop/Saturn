@@ -61,12 +61,17 @@
             <pattern>${log.pattern}</pattern>
         </encoder>
     </appender>
-    
-
 
 	<!-- 为了单独控制com.vip.saturn的日志级别，例如DEBUG -->
 	<logger name="com.vip.saturn" additivity="false">
-		<level value="INFO" />
+        <if condition='property("saturn.debug").equals("true")'>
+            <then>
+                <level value="DEBUG" />
+            </then>
+            <else>
+                <level value="INFO" />
+            </else>
+        </if>
 		<if condition='property("saturn.stdout").equals("true")'>
 			<then>
 				<appender-ref ref="STDOUT" />
@@ -77,7 +82,14 @@
 	</logger>
 	
     <root>
-        <level value="INFO" />
+        <if condition='property("saturn.debug").equals("true")'>
+            <then>
+                <level value="DEBUG" />
+            </then>
+            <else>
+                <level value="INFO" />
+            </else>
+        </if>
         <if condition='property("saturn.stdout").equals("true")'>
 			<then>
 				<appender-ref ref="STDOUT" />
