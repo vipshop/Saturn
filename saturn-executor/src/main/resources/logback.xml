@@ -82,14 +82,7 @@
 	</logger>
 	
     <root>
-        <if condition='property("saturn.debug").equals("true")'>
-            <then>
-                <level value="DEBUG" />
-            </then>
-            <else>
-                <level value="INFO" />
-            </else>
-        </if>
+        <level value="INFO" />
         <if condition='property("saturn.stdout").equals("true")'>
 			<then>
 				<appender-ref ref="STDOUT" />
