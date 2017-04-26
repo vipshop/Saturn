@@ -19,7 +19,6 @@ EXECUTORNAME=`hostname`
 LOCALIP=`ip addr| grep 'inet '| grep -v '127.0.0.1'`
 LOCALIP=`echo $LOCALIP | cut -d/ -f1|awk '{print $2}'`
 JMX_PORT="24501"
-MONITOR_PORT=4499
 START_TIME=20
 SATURN_LIB_DIR=$BASEDIR/lib
 APP_LIB_DIR=$PARENTDIR/app
@@ -33,10 +32,9 @@ STARTUP_DELAY_SECONDS=20
 
 USAGE()
 {
-	echo "Usage: $0 start|stop [-n|--namespace namespace] [-e|--executorName executorName] [-m|--monport monitorport] [-jmx|--jmx-port port] [JVM args, e.g., -Xms2048m -DVIP_SATURN_RUNNING_IP=192.168.1.100. Note that additional arguments should be put in the end.]"
+	echo "Usage: $0 start|stop [-n|--namespace namespace] [-e|--executorName executorName] [-jmx|--jmx-port port] [JVM args, e.g., -Xms2048m -DVIP_SATURN_RUNNING_IP=192.168.1.100. Note that additional arguments should be put in the end.]"
 	echo -e "\n      '-n|--namespace': required."
 	echo -e "\n      '-e|--executorName': optional,default value is ${EXECUTORNAME}."
-	echo -e "\n      '-m|--monport': optional,default value is  ${MONITOR_PORT}."
 	echo -e "\n      '-d|--libdir': optional, default value is $PARENTDIR/app."
 	echo -e "\n      '-r|--runmode': optional, default value is $RUN_MODE, you can set it foreground"
 	echo -e "\n      '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
@@ -56,7 +54,6 @@ while true; do
 	case "$1" in
 		-n|--namespace) NAMESPACE="$2"; shift 2;;
 		-e|--executorName) EXECUTORNAME="$2"; shift 2;;
-		-m|--monport) MONITOR_PORT="$2"; shift 2;;
 		-d| --libdir) APP_LIB_DIR="$2"; shift 2;;
 		-r| --runmode) RUN_MODE="$2"; shift 2;;
 		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
@@ -91,7 +88,6 @@ MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:
 GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
 CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
 JMX_OPTS="-Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dsun.rmi.transport.tcp.threadKeepAliveTime=75000 -Djava.rmi.server.hostname=${LOCALIP}"
-MON_CONF="-monport ${MONITOR_PORT}"
 SETTING_CONF="-Dstart.check.outfile=${STATUS_FILE} -Dlog.folder=${EXECUTORNAME}-${LOCALIP}"
 
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
@@ -108,30 +104,6 @@ if [[ "$JAVA_VERSION" < "1.8" ]]; then
 else         
   MEM_OPTS="$MEM_OPTS -XX:MetaspaceSize=${PERM_SIZE} -XX:MaxMetaspaceSize=${MAX_PERM_SIZE} "
 fi
-
-
-CHECK_MONPORT()
-{
-	if [ x"$MONITOR_PORT" == x ]; then
-		MON_CONF=""
-		return
-	fi
-	times=0
-	nc -w 3 -z localhost ${MONITOR_PORT} > /dev/null 2>&1
-	while [ $? -eq 0 ]; do
-        if [ ${times} -gt 9 ]; then
-                echo "failed in getting a port after 10 times. monitor will not start."
-                MON_CONF="-monport -1"
-                return
-        fi
-        echo "${MONITOR_PORT} is in use, now try `expr $MONITOR_PORT + 1`"
-        ((MONITOR_PORT++))
-        ((times++))
-        nc -w 3 -z localhost ${MONITOR_PORT} > /dev/null 2>&1
-	done
-	MON_CONF="-monport ${MONITOR_PORT}"
-	echo "The monitor port is ${MONITOR_PORT}."
-}
 
 CHECK_JMX()
 {
@@ -177,7 +149,6 @@ START()
 {
 	echo "Log redirects to ${LOGDIR}"
 	CHECK_JMX
-	CHECK_MONPORT
 
 	CHECK_PARAMETERS
 	
@@ -206,7 +177,7 @@ START()
 	STARTUP_DELAY	
 
 	echo "" > ${STATUS_FILE}
-	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR} $MON_CONF"
+	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
     nohup java  $JAVA_OPTS $MEM_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASEDIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
 	PID=$!
 	echo $PID > $PID_FILE

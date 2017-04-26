@@ -87,32 +87,8 @@ public class ZookeeperConfiguration extends AbstractRegistryCenterConfiguration 
      */
     private String nestedDataDir;
     
-    /**
-     * dump zk信息监听端口，默认为-1，不开启.
-     */
-    private int monitorPort = -1;
-    
     public ZookeeperConfiguration(){
     	
-    }
-    
-    /**
-     * 包含了必需属性的构造器.
-     * 
-     * @param monitorPort dump zk info socket port.
-     * @param serverLists 连接Zookeeper服务器的列表
-     * @param namespace 命名空间
-     * @param baseSleepTimeMilliseconds 等待重试的间隔时间的初始值
-     * @param maxSleepTimeMilliseconds 等待重试的间隔时间的最大值
-     * @param maxRetries 最大重试次数
-     */
-    public ZookeeperConfiguration(final int monitorPort, final String serverLists, final String namespace, final int baseSleepTimeMilliseconds, final int maxSleepTimeMilliseconds, final int maxRetries) {
-        this.monitorPort = monitorPort;
-    	this.serverLists = serverLists;
-        this.namespace = namespace;
-        this.baseSleepTimeMilliseconds = baseSleepTimeMilliseconds;
-        this.maxSleepTimeMilliseconds = maxSleepTimeMilliseconds;
-        this.maxRetries = maxRetries;
     }
     
     /**
@@ -220,14 +196,5 @@ public class ZookeeperConfiguration extends AbstractRegistryCenterConfiguration 
 	public void setNestedDataDir(String nestedDataDir) {
 		this.nestedDataDir = nestedDataDir;
 	}
-
-	public int getMonitorPort() {
-		return monitorPort;
-	}
-
-	public void setMonitorPort(int monitorPort) {
-		this.monitorPort = monitorPort;
-	}
-    
     
 }

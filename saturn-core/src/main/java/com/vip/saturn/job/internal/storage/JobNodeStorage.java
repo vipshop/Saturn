@@ -302,7 +302,6 @@ public class JobNodeStorage {
      */
     public void deleteJobNode(){   
     	ZookeeperConfiguration zkConfig = ((ZookeeperRegistryCenter)coordinatorRegistryCenter).getZkConfig();
-    	zkConfig.setMonitorPort(-1);
     	ZookeeperRegistryCenter newZk = new ZookeeperRegistryCenter(zkConfig);
     	newZk.init();
     	try {

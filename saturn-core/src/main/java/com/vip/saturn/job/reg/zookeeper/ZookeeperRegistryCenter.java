@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.internal.monitor.MonitorService;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 
@@ -67,17 +66,9 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	private int sessionTimeout = SESSION_TIMEOUT;
 	
 	private String executorName;
-
-	private MonitorService monitorService;
 	
     public ZookeeperRegistryCenter(final ZookeeperConfiguration zkConfig) {
         this.zkConfig = zkConfig;
-    }
-    
-    public void closeMonitorService() {
-    	if (monitorService != null) {
-    		monitorService.close();
-    	}
     }
     
     public ZookeeperConfiguration getZkConfig() {
@@ -140,13 +131,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         } catch (final Exception ex) {
         	throw new RuntimeException("zk connect fail, zkList is " + zkConfig.getServerLists(),ex);
         }
-
-		// start monitor.
-		if (zkConfig.getMonitorPort() > 0) {
-			monitorService = new MonitorService(this, zkConfig.getMonitorPort());
-			monitorService.listen();
-			log.info("msg=zk monitor port starts at {}. usage: telnet {jobServerIP} {} and execute dump {jobName}", zkConfig.getMonitorPort(), zkConfig.getMonitorPort());
-		}
     }
     
     @Override

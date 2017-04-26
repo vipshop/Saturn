@@ -15,7 +15,6 @@ import java.util.List;
 public class Main {
 
 	private String namespace;
-	private int monitorPort = -1;
 	private String executorName;
 	
 	private String saturnLibDir = getLibDir("lib");
@@ -40,12 +39,6 @@ public class Main {
 					System.setProperty("namespace", this.namespace); // For logback.
 				} catch(Exception e) {
 					throw new Exception("Please set namespace value, exception message: " + e.getMessage(),e);
-				}
-			} else if("-monport".equals(param)) {
-				try {
-					monitorPort = Integer.parseInt(args[++i].trim());//NOSONAR
-				} catch (Exception e) {
-					throw new Exception("Please set monitor port value, exception message: " + e.getMessage(),e);
 				}
 			} else if("-executorName".equals(param)) {
 				//String executorName;
@@ -151,7 +144,7 @@ public class Main {
 
 	public void startExecutor() throws Exception{
 		Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
-		saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, int.class, String.class).invoke(null, namespace, monitorPort, executorName);
+		saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class).invoke(null, namespace, executorName);
 		startExecutorClass.getMethod("execute", ClassLoader.class, ClassLoader.class).invoke(saturnExecutor, executorClassLoader, jobClassLoader);
 	}
 	

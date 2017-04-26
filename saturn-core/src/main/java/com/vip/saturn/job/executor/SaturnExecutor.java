@@ -51,7 +51,6 @@ public class SaturnExecutor {
 	private Runnable shutdownHandler = null;
 
 	private String namespace;
-	private int monitorPort = -1;
 	
 	private Object shutdownLock = new Object();
 
@@ -158,12 +157,8 @@ public class SaturnExecutor {
 
 	/**
 	 * SaturnExecutor工厂入口
-	 * @param namespace
-	 * @param monitorPort
-	 * @param _executorName
-	 * @return
 	 */
-	public static SaturnExecutor buildExecutor(String namespace, int monitorPort, String _executorName) {
+	public static SaturnExecutor buildExecutor(String namespace, String _executorName) {
 		if (_executorName == null || _executorName.isEmpty()) {
 			String hostName = LocalHostService.getHostName();
 			if ("localhost".equals(hostName) || "localhost6".equals(hostName)) {
@@ -173,13 +168,12 @@ public class SaturnExecutor {
 			_executorName = hostName;// NOSONAR
 		}
 		init(_executorName);
-		return new SaturnExecutor(namespace, monitorPort, _executorName);
+		return new SaturnExecutor(namespace, _executorName);
 	}
 
-	private SaturnExecutor(String namespace, int monitorPort, String executorName) {
+	private SaturnExecutor(String namespace, String executorName) {
 		this.executorName = executorName;
 		this.namespace = namespace;
-		this.monitorPort = monitorPort;
 		executor = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
 	}
@@ -317,7 +311,7 @@ public class SaturnExecutor {
 		// 验证namespace是否存在
 		doValidation();
 		String serverLists = SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
-		zkConfig = new ZookeeperConfiguration(monitorPort, serverLists, namespace, 1000, 3000, 3);
+		zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
 		if(saturnExecutorService != null) {
 			saturnExecutorService.shutdown();
 		}
@@ -458,10 +452,6 @@ public class SaturnExecutor {
 			resetCountService.shutdownRestCountTimer();
 			// shutdown timeout-watchdog-threadpool
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
-			// close zk-dump socket.
-			if(regCenter != null) {
-				regCenter.closeMonitorService();
-			}
 		}
 	}
 	

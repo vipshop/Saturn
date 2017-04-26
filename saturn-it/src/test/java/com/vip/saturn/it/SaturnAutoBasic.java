@@ -70,7 +70,7 @@ public class SaturnAutoBasic {
         String zkString = nestedZkUtils.getZkString();
         SystemEnvProperties.VIP_SATURN_ZK_CONNECTION = nestedZkUtils.getZkString();
 
-        regCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(-1, zkString, NAMESPACE, 1000, 3000, 3));
+        regCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(zkString, NAMESPACE, 1000, 3000, 3));
         regCenter.init();
     }
 
@@ -153,7 +153,7 @@ public class SaturnAutoBasic {
     public static void startNamespaceShardingManagerList(int count) throws Exception {
         assertThat(nestedZkUtils.isStarted());
         for (int i = 0; i < count; i++) {
-            ZookeeperRegistryCenter shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(-1, nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
+            ZookeeperRegistryCenter shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
             shardingRegCenter.init();
             NamespaceShardingManager namespaceShardingManager = new NamespaceShardingManager((CuratorFramework) shardingRegCenter.getRawClient(),NAMESPACE, "127.0.0.1-" + i, null);
             namespaceShardingManager.start();
