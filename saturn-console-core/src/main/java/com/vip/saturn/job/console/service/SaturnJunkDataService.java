@@ -19,26 +19,18 @@ package com.vip.saturn.job.console.service;
 import java.util.Collection;
 
 import com.vip.saturn.job.console.domain.SaturnJunkData;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
 /** 
  * @author yangjuanying  
  */
 public interface SaturnJunkDataService {
 
-	/**
-	 * get the junk data
-	 * @param bootstrapKey 
-	 * 
-	 */
 	Collection<SaturnJunkData> getJunkData(String bootstrapKey);
 
-	/**
-	 * 
-	 * 
-	 * @param saturnJunkData
-	 * @return
-	 */
 	String removeSaturnJunkData(SaturnJunkData saturnJunkData);
+
+	void deleteRunningNode(String namespace, String jobName, Integer item) throws SaturnJobConsoleException;
 
 }
   

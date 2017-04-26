@@ -22,6 +22,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -75,6 +77,35 @@ public class SaturnJunkDataController extends AbstractController {
 			LOGGER.error("removeOneExecutor exception:", e);
 			return "清理废弃数据("+saturnJunkData.getPath()+")出现异常："+ e.getMessage();
 		}
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "junkData/deleteRunningNode",method = RequestMethod.POST)
+	public RequestResult deleteRunningNode(String namespace, String jobName, Integer item) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if(namespace == null || namespace.trim().isEmpty()) {
+				throw new SaturnJobConsoleException("The namespace can not be null or empty");
+			}
+			if(jobName == null || jobName.trim().isEmpty()) {
+				throw new SaturnJobConsoleException("The jobName can not be null or empty");
+			}
+			if(item == null) {
+				throw new SaturnJobConsoleException("The item can not be null");
+			}
+			saturnJunkDataService.deleteRunningNode(namespace, jobName, item);
+			LOGGER.info("do junkData/deleteRunningNode success, namespace is {}, jobName is {}, item is {}", namespace, jobName, item);
+			requestResult.setSuccess(true);
+		} catch (Throwable t) {
+			requestResult.setSuccess(false);
+			if(t instanceof SaturnJobConsoleException) {
+				requestResult.setMessage(t.getMessage());
+			} else {
+				requestResult.setMessage(t.toString());
+			}
+			LOGGER.error(t.getMessage(), t);
+		}
+		return requestResult;
 	}
 }
   

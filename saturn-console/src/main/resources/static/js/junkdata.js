@@ -29,6 +29,48 @@ $(function() {
     		return false;
     	});
     });
+
+    $("#delete-running-btn").on("click", function(event) {
+        var namespace = $("#delete-running-namespace").val();
+        var jobName = $("#delete-running-jobName").val();
+        var item = $("#delete-running-item").val();
+        if(isNullOrEmpty(namespace)) {
+            alert("namespace不能为空");
+            return;
+        }
+        if(isNullOrEmpty(jobName)) {
+            alert("jobName不能为空");
+            return;
+        }
+        if(isNullOrEmpty(item)) {
+            alert("item不能为空");
+            return false;
+        }
+        if(isNaN(parseInt(item))) {
+            alert("item必须为数字");
+            return;
+        }
+        if(parseInt(item) < 0) {
+            alert("item不能为小于0");
+            return;
+        }
+        var path = namespace + "/$Jobs/" + jobName + "/execution/" + item + "/running";
+        $("#delete-running-confirm-dialog .confirm-reason").text("确认要删除路径：" + path + "？");
+        $("#delete-running-confirm-dialog").modal("show");
+        $("#delete-running-confirm-dialog-confirm-btn").unbind('click').click(function() {
+            var $btn = $(this).button('loading');
+            $.post("junkData/deleteRunningNode", {namespace: namespace, jobName: jobName, item: item}, function (data) {
+                $("#delete-running-confirm-dialog").modal("hide");
+                if(data.success) {
+                    showSuccessDialog();
+                } else {
+                    $("#failure-dialog .fail-reason").text(data.message);
+                    showFailureDialog("failure-dialog");
+                }
+            }).always(function() { $btn.button('reset'); });
+            return false;
+        });
+    });
 });
 
 function renderJunkData(zkAddr) {
@@ -77,4 +119,17 @@ function renderZks() {
 		$("#zks").append(options);
 		renderJunkData($("#zks").val());
 	});
+}
+
+function isNullOrEmpty(value) {
+    if(!value || value == null) {
+        return true;
+    }
+    if(value instanceof Array) {
+        return value.length == 0;
+    }
+    if(typeof value == "string") {
+        return value.trim() == "";
+    }
+    return false;
 }

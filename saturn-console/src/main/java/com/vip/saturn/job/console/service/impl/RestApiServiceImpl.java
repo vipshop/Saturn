@@ -1,23 +1,8 @@
 package com.vip.saturn.job.console.service.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.annotation.Resource;
-
-import com.vip.saturn.job.console.utils.SaturnConstants;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RestApiJobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.domain.RestApiJobStatistics;
@@ -26,7 +11,19 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.service.impl.helper.ReuseCallBack;
+import com.vip.saturn.job.console.service.impl.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hebelala
@@ -49,7 +46,7 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
-        return reuse(namespace, new ReuseCallBack<List<RestApiJobInfo>>() {
+        return ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBack<List<RestApiJobInfo>>() {
             @Override
             public List<RestApiJobInfo> call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 List<RestApiJobInfo> restApiJobInfos = new ArrayList<>();
@@ -122,7 +119,7 @@ public class RestApiServiceImpl implements RestApiService {
             restApiJobConfig.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
             restApiJobConfig.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
             String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-            if(timeZone == null || timeZone.trim().length() == 0) {
+            if (timeZone == null || timeZone.trim().length() == 0) {
                 timeZone = SaturnConstants.TIME_ZONE_ID_DEFAULT;
             }
             restApiJobConfig.setTimeZone(timeZone);
@@ -130,7 +127,7 @@ public class RestApiServiceImpl implements RestApiService {
             restApiJobConfig.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
             restApiJobConfig.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
             String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
-            if(timeout4AlarmSecondsStr != null) {
+            if (timeout4AlarmSecondsStr != null) {
                 restApiJobConfig.setTimeout4AlarmSeconds(Integer.valueOf(timeout4AlarmSecondsStr));
             } else {
                 restApiJobConfig.setTimeout4AlarmSeconds(0);
@@ -140,10 +137,10 @@ public class RestApiServiceImpl implements RestApiService {
             restApiJobConfig.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
             restApiJobConfig.setLoadLevel(Integer.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"))));
             String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
-            if(!Strings.isNullOrEmpty(jobDegree)){
-            	restApiJobConfig.setJobDegree(Integer.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
+            if (!Strings.isNullOrEmpty(jobDegree)) {
+                restApiJobConfig.setJobDegree(Integer.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
             }
-            
+
             restApiJobConfig.setEnabledReport(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
             restApiJobConfig.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
             restApiJobConfig.setUseDispreferList(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"))));
@@ -267,7 +264,7 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Override
     public int enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return reuse(namespace, jobName, new ReuseCallBack<Integer>() {
+        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
             @Override
             public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
@@ -288,7 +285,7 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Override
     public int disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return reuse(namespace, jobName, new ReuseCallBack<Integer>() {
+        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
             @Override
             public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
@@ -309,46 +306,6 @@ public class RestApiServiceImpl implements RestApiService {
 
     private boolean updateIntervalLessThanThreeSeconds(long lastMtime) {
         return Math.abs(System.currentTimeMillis() - lastMtime) < threeSecondsMillis;
-    }
-
-    private <T> T reuse(String namespace, final String jobName, final ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
-        return reuse(namespace, new ReuseCallBack<T>() {
-            @Override
-            public T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-                if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-                    throw new SaturnJobConsoleException("The jobName is not exists");
-                }
-                return callBack.call(curatorFrameworkOp);
-            }
-        });
-    }
-
-    private <T> T reuse(String namespace, ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
-        try {
-            RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
-            if (registryCenterConfiguration == null) {
-                throw new SaturnJobConsoleException("The namespace is not exists");
-            }
-            RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
-            if (registryCenterClient != null && registryCenterClient.isConnected()) {
-                CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-                CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-                return callBack.call(curatorFrameworkOp);
-            } else {
-                throw new SaturnJobConsoleException("Connect zookeeper failed");
-            }
-        } catch (SaturnJobConsoleException e) {
-            throw e;
-        } catch (Throwable t) {
-            logger.error(t.getMessage(), t);
-            throw new SaturnJobConsoleException(t);
-        }
-    }
-
-    private interface ReuseCallBack<T> {
-
-        T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
-
     }
 
 }

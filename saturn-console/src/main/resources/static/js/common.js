@@ -18,6 +18,10 @@ var language = {
 	"sZeroRecords": "没有检索到数据"},
 	degreeMap = {"0":"没有定义","1":"非线上业务","2":"简单业务","3":"一般业务","4":"重要业务","5":"核心业务"}, $loading = $("#loading");
 
+function showSuccessDialogAndNotHide() {
+    $("#success-dialog").modal("show");
+}
+
 function showSuccessDialog() {
     $("#success-dialog").modal("show");
     setTimeout('$("#success-dialog").modal("hide")', 1000);

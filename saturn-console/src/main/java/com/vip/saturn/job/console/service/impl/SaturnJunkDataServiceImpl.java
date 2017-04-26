@@ -22,6 +22,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.impl.helper.ReuseCallBack;
+import com.vip.saturn.job.console.service.impl.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -41,6 +46,8 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 
+import javax.annotation.Resource;
+
 /** 
  * @author yangjuanying  
  */
@@ -48,6 +55,12 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	
 	protected static Logger log = LoggerFactory.getLogger(SaturnJunkDataServiceImpl.class);
+
+	@Resource
+	private RegistryCenterService registryCenterService;
+
+	@Resource
+	private CuratorRepository curatorRepository;
 
 	@Override
 	public Collection<SaturnJunkData> getJunkData(String zkAddr) {
@@ -199,6 +212,28 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 			return "清理废弃数据失败:"+e.getMessage();
 		}
 	}
-	
+
+	@Override
+	public void deleteRunningNode(String namespace, final String jobName, final Integer item) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Void>() {
+			@Override
+			public Void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+				try {
+					String runningPath = JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "running");
+					if(!curatorFrameworkOp.checkExists(runningPath)) {
+						throw new SaturnJobConsoleException("The running path is not existing");
+					}
+					curatorFrameworkOp.deleteRecursive(runningPath);
+				} catch (SaturnJobConsoleException e) {
+					throw e;
+				} catch (Throwable t) {
+					log.error(t.getMessage(), t);
+					throw new SaturnJobConsoleException(t);
+				}
+				return null;
+			}
+		});
+	}
+
 }
   
