@@ -197,14 +197,14 @@ public class ShardingService extends AbstractSaturnService {
 			if(!(isNeedSharding() || getJobNodeStorage().isJobNodeExisted(ShardingNode.PROCESSING))) {
 				return true;
 			}
-			log.debug("Elastic job: sleep short time until sharding completed.");
+			log.debug("[{}] msg=Sleep short time until sharding completed", jobName);
 			BlockUtils.waitingShortTime();
     	}
     }
     
     private void waitingOtherJobCompleted() {
         while (!isShutdown && executionService.hasRunningItems()) {
-            log.info("Elastic job: sleep short time until other job completed.");
+            log.info("[{}] msg=Sleep short time until other job completed.", jobName);
             BlockUtils.waitingShortTime();
         }
     }

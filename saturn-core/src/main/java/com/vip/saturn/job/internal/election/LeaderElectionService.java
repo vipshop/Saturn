@@ -50,10 +50,10 @@ public class LeaderElectionService extends AbstractSaturnService{
                 try { // Release my leader position
                     if (executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
                         getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
-                        log.info("[{}] msg=I'm {} that was {}'s leader, I have released myself", jobName, executorName, jobName);
+                        log.info("[{}] msg={} that was {}'s leader, released itself", jobName, executorName, jobName);
                     }
                 } catch (Throwable t) {
-                    log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "release my leader error"), t);
+                    log.error(t.getMessage(), t);
                 }
             }
         }
@@ -67,29 +67,20 @@ public class LeaderElectionService extends AbstractSaturnService{
     }
     
     /**
-     * 判断当前节点是否是主节点.
-     * 
-     * <p>
-     * 如果主节点正在选举中而导致取不到主节点, 则阻塞至主节点选举完成再返回.
-     * </p>
-     * 
+     * 判断当前节点是否是主节点，如果没有主节点，则选举，直到有主节点
+     *
      * @return 当前节点是否是主节点
      */
     public Boolean isLeader() {
         while (!isShutdown.get() && !hasLeader()) {
-            log.info("[{}] msg=Elastic job: {} leader node is electing, waiting for 100 ms at executor '{}'", jobName, jobName, executorName);
-            BlockUtils.waitingShortTime();
+            log.info("[{}] msg=No leader, try to election", jobName);
+            leaderElection();
         }
         return executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST));
     }
     
     /**
-     * 判断是否已经有主节点.
-     * 
-     * <p>
-     * 仅为选举监听使用.
-     * 程序中其他地方判断是否有主节点应使用{@code isLeader() }方法.
-     * </p>
+     * 判断是否已经有主节点
      * 
      * @return 是否已经有主节点
      */
