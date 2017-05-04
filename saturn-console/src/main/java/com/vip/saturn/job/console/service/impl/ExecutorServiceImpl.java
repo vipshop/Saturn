@@ -8,6 +8,7 @@ import java.util.Random;
 
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import jxl.Workbook;
 import jxl.write.Label;
@@ -36,6 +37,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * 
@@ -54,6 +56,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private CuratorRepository curatorRepository;
 	@Resource
 	private JobDimensionService jobDimensionService;
+	@Resource
+	private JobOperationService jobOperationService;
 
 	private Random random = new Random();
 
@@ -93,9 +97,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 			String jobName = jobConfig.getJobName();
 			if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
 				if(jobConfig.getIsCopyJob()){// 复制作业
-					copyAndPersisJobJobConfig(jobConfig);
+					jobOperationService.copyAndPersistJob(jobConfig, curatorFrameworkOp);
 				}else{
-					persisJobConfig(jobConfig);// 新增作业
+					jobOperationService.persistJob(jobConfig, curatorFrameworkOp);// 新增作业
 				}
 			} else {
 				requestResult.setSuccess(false);
@@ -109,100 +113,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return requestResult;
 	}
 
-	private void persisJobConfig(JobConfig jobConfig) {
-		jobConfig.setDefaultValues();
-		String jobName = jobConfig.getJobName();
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"), jobConfig.getDescription());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobType"), jobConfig.getJobType());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobMode"), jobConfig.getJobMode());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"), jobConfig.getShardingItemParameters());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobParameter"), jobConfig.getJobParameter());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "queueName"), jobConfig.getQueueName());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "channelName"), jobConfig.getChannelName());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), "true");
-        curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"), jobConfig.getTimeout4AlarmSeconds());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"), jobConfig.getTimeoutSeconds());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeZone"), jobConfig.getTimeZone());
-		if(JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), "");
-		}else{
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), jobConfig.getCron());
-		}
-		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodDate())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"), jobConfig.getPausePeriodDate());
-		}
-		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodTime())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"), jobConfig.getPausePeriodTime());
-		}
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"), jobConfig.getProcessCountIntervalSeconds());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"), jobConfig.getShardingTotalCount());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "showNormalLog"), jobConfig.getShowNormalLog());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "loadLevel"), jobConfig.getLoadLevel());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobDegree"), jobConfig.getJobDegree());
-        curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabledReport"), jobConfig.getEnabledReport());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "preferList"), jobConfig.getPreferList());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useDispreferList"), jobConfig.getUseDispreferList());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "localMode"), jobConfig.getLocalMode());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useSerial"), jobConfig.getUseSerial());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "dependencies"), jobConfig.getDependencies());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "groups"), jobConfig.getGroups());
-		if(JobType.SHELL_JOB.name().equals(jobConfig.getJobType())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
-		}else{
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
-		}
-	}
-	
-	private void copyAndPersisJobJobConfig(JobConfig jobConfig) throws Exception {
-		String originJobName = jobConfig.getOriginJobName();
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		List<String> jobConfigNodes = curatorFrameworkOp.getChildren(JobNodePath.getConfigNodePath(originJobName));
-		if(CollectionUtils.isEmpty(jobConfigNodes)){
-			return;
-		}
-		Class<?> cls = jobConfig.getClass();
-		String jobClassPath = "";
-		String jobClassValue = "";
-		for(String jobConfigNode : jobConfigNodes){
-			String jobConfigPath = JobNodePath.getConfigNodePath(originJobName, jobConfigNode);
-			String jobConfigValue = curatorFrameworkOp.getData(jobConfigPath);
-			if("enabled".equals(jobConfigNode)){// enabled固定为false
-				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"false");
-				continue;
-			}
-			if("failover".equals(jobConfigNode)){// failover固定为true
-				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"true");
-				continue;
-			}
-			try{
-				Field field = cls.getDeclaredField(jobConfigNode);
-				field.setAccessible(true);
-				Object fieldValue = field.get(jobConfig);
-				if(fieldValue != null){
-					jobConfigValue = fieldValue.toString();
-				}
-				if("jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
-					jobClassPath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-					jobClassValue = jobConfigValue;
-				}
-			}catch(NoSuchFieldException e){// 即使JobConfig类中不存在该属性也复制（一般是旧版作业的一些节点，可以在旧版Executor上运行）
-				continue;
-			}finally{
-				if(!"jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
-					String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-					curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
-				}
-			}
-		}
-		if(!Strings.isNullOrEmpty(jobClassPath)){
-			curatorFrameworkOp.fillJobNodeIfNotExist(jobClassPath,jobClassValue);
-		}
-	}
-	
 	@Override
 	public String removeJob(String jobName) {
 		try {

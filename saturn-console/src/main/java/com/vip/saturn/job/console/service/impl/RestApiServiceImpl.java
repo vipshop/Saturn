@@ -2,16 +2,12 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RestApiJobConfig;
-import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.service.*;
 import com.vip.saturn.job.console.service.impl.helper.ReuseCallBack;
+import com.vip.saturn.job.console.service.impl.helper.ReuseCallBackWithoutReturn;
 import com.vip.saturn.job.console.service.impl.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
@@ -43,6 +39,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Resource
     private JobDimensionService jobDimensionService;
+
+    @Resource
+    private JobOperationService jobOperationService;
 
     @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
@@ -302,6 +301,21 @@ public class RestApiServiceImpl implements RestApiService {
                 }
             }
         });
+    }
+
+    @Override
+    public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
+         ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+                    throw new SaturnJobConsoleException("Invalid request. Job: {" + jobConfig.getJobName() +"} already existed.");
+                }
+
+                jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
+            }
+        });
+
     }
 
     private boolean updateIntervalLessThanThreeSeconds(long lastMtime) {

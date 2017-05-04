@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
@@ -28,5 +29,14 @@ public interface RestApiService {
      * @return 200, the job was enabled, and disable it success; 201, the job was already disabled; 403, the update interval time cannot less than 3 seconds; others, should throw exception.
      */
     int disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+
+    /**
+     * Create a new job.
+     *
+     * @param jobConfig construct from the request.
+     *
+     * @throws SaturnJobConsoleException once the exception is thrown, which means the creation is not successfully. the caller should handle the exception by itself.
+     */
+    void createJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 }

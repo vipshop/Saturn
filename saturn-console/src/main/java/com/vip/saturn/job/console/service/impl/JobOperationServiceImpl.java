@@ -19,6 +19,13 @@ package com.vip.saturn.job.console.service.impl;
 
 import javax.annotation.Resource;
 
+import com.google.common.base.Strings;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.utils.CronExpression;
 import org.springframework.stereotype.Service;
 
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -26,6 +33,11 @@ import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import org.springframework.util.CollectionUtils;
+
+import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.util.List;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
@@ -38,6 +50,9 @@ public class JobOperationServiceImpl implements JobOperationService {
 
     @Resource
     private ServerDimensionService serverDimensionService;
+
+    @Resource
+	private JobDimensionService jobDimensionService;
     
 	@Override
 	public void runAtOnceByJobnameAndExecutorName(String jobName, String exeName) {
@@ -63,5 +78,191 @@ public class JobOperationServiceImpl implements JobOperationService {
 	public void setJobEnabledState(String jobName, boolean state) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), state);
+	}
+
+	@Override
+	public void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
+		// 作业名必填
+		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
+			throw new SaturnJobConsoleException("作业名必填");
+		}
+		// 作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_
+		if (!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
+			throw new SaturnJobConsoleException("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
+		}
+		// 依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,
+		if (jobConfig.getDependencies() != null && !jobConfig.getDependencies().matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException("依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
+		}
+		// 作业类型必填
+		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
+			throw new SaturnJobConsoleException("作业类型必填");
+		}
+		// 验证作业类型
+		if (JobBriefInfo.JobType.getJobType(jobConfig.getJobType()).equals(JobBriefInfo.JobType.UNKOWN_JOB)) {
+			throw new SaturnJobConsoleException("作业类型未知");
+		}
+		// 验证VSHELL类型版本兼容性
+		if (JobBriefInfo.JobType.getJobType(jobConfig.getJobType()).equals(JobBriefInfo.JobType.VSHELL) && jobDimensionService.isNewSaturn("1.1.2") != 2) {
+			throw new SaturnJobConsoleException("Shell消息作业导入要求所有executor版本都是1.1.2及以上");
+		}
+		// 如果是JAVA/MSG作业
+		if (jobConfig.getJobType().equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobConfig.getJobType().equals(JobBriefInfo.JobType.MSG_JOB.name())) {
+			// 作业实现类必填
+			if (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty()) {
+				throw new SaturnJobConsoleException("对于JAVA/MSG作业，作业实现类必填");
+			}
+		}
+		// 如果是JAVA/SHELL作业
+		if (jobConfig.getJobType().equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobConfig.getJobType().equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+			// cron表达式必填
+			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
+				throw new SaturnJobConsoleException("对于JAVA/SHELL作业，cron表达式必填");
+			}
+			// cron表达式语法验证
+			try {
+				CronExpression.validateExpression(jobConfig.getCron());
+			} catch (ParseException e) {
+				throw new SaturnJobConsoleException("cron表达式语法有误，" + e.toString());
+			}
+		} else {
+			jobConfig.setCron("");
+			;// 其他类型的不需要持久化保存cron表达式
+		}
+		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
+			if (jobConfig.getShardingItemParameters() == null) {
+				throw new SaturnJobConsoleException("对于本地模式作业，分片参数必填。");
+			} else {
+				String[] split = jobConfig.getShardingItemParameters().split(",");
+				boolean includeXing = false;
+				for (String tmp : split) {
+					String[] split2 = tmp.split("=");
+					if ("*".equalsIgnoreCase(split2[0].trim())) {
+						includeXing = true;
+						break;
+					}
+				}
+				if (!includeXing) {
+					throw new SaturnJobConsoleException("对于本地模式作业，分片参数必须包含如*=xx。");
+				}
+			}
+		} else {
+			// 分片参数不能小于分片总数
+			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
+				throw new SaturnJobConsoleException("分片数不能为空，并且不能小于1");
+			}
+			if (jobConfig.getShardingTotalCount() > 0) {
+				if (jobConfig.getShardingItemParameters() == null || jobConfig.getShardingItemParameters().trim().isEmpty() || jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount()) {
+					throw new SaturnJobConsoleException("分片参数不能小于分片总数");
+				}
+			}
+		}
+		// 不能添加系统作业
+		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
+			throw new SaturnJobConsoleException("作业模式有误，不能添加系统作业");
+		}
+	}
+
+	@Override
+	public void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		if(curatorFrameworkOp == null){
+			curatorFrameworkOp = curatorRepository.inSessionClient();
+		}
+
+		jobConfig.setDefaultValues();
+		String jobName = jobConfig.getJobName();
+
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"), jobConfig.getDescription());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobType"), jobConfig.getJobType());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobMode"), jobConfig.getJobMode());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"), jobConfig.getShardingItemParameters());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobParameter"), jobConfig.getJobParameter());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "queueName"), jobConfig.getQueueName());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "channelName"), jobConfig.getChannelName());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), "true");
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"), jobConfig.getTimeout4AlarmSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"), jobConfig.getTimeoutSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeZone"), jobConfig.getTimeZone());
+		if(JobBriefInfo.JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), "");
+		}else{
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), jobConfig.getCron());
+		}
+		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodDate())){
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"), jobConfig.getPausePeriodDate());
+		}
+		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodTime())){
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"), jobConfig.getPausePeriodTime());
+		}
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"), jobConfig.getProcessCountIntervalSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"), jobConfig.getShardingTotalCount());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "showNormalLog"), jobConfig.getShowNormalLog());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "loadLevel"), jobConfig.getLoadLevel());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobDegree"), jobConfig.getJobDegree());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabledReport"), jobConfig.getEnabledReport());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "preferList"), jobConfig.getPreferList());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useDispreferList"), jobConfig.getUseDispreferList());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "localMode"), jobConfig.getLocalMode());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useSerial"), jobConfig.getUseSerial());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "dependencies"), jobConfig.getDependencies());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "groups"), jobConfig.getGroups());
+		if(JobBriefInfo.JobType.SHELL_JOB.name().equals(jobConfig.getJobType())){
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
+		}else{
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
+		}
+	}
+
+	@Override
+	public void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception {
+		if(curatorFrameworkOp == null){
+			curatorFrameworkOp = curatorRepository.inSessionClient();
+		}
+
+		String originJobName = jobConfig.getOriginJobName();
+		List<String> jobConfigNodes = curatorFrameworkOp.getChildren(JobNodePath.getConfigNodePath(originJobName));
+		if(CollectionUtils.isEmpty(jobConfigNodes)){
+			return;
+		}
+		Class<?> cls = jobConfig.getClass();
+		String jobClassPath = "";
+		String jobClassValue = "";
+		for(String jobConfigNode : jobConfigNodes){
+			String jobConfigPath = JobNodePath.getConfigNodePath(originJobName, jobConfigNode);
+			String jobConfigValue = curatorFrameworkOp.getData(jobConfigPath);
+			if("enabled".equals(jobConfigNode)){// enabled固定为false
+				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"false");
+				continue;
+			}
+			if("failover".equals(jobConfigNode)){// failover固定为true
+				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"true");
+				continue;
+			}
+			try{
+				Field field = cls.getDeclaredField(jobConfigNode);
+				field.setAccessible(true);
+				Object fieldValue = field.get(jobConfig);
+				if(fieldValue != null){
+					jobConfigValue = fieldValue.toString();
+				}
+				if("jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					jobClassPath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					jobClassValue = jobConfigValue;
+				}
+			}catch(NoSuchFieldException e){// 即使JobConfig类中不存在该属性也复制（一般是旧版作业的一些节点，可以在旧版Executor上运行）
+				continue;
+			}finally{
+				if(!"jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
+				}
+			}
+		}
+		if(!Strings.isNullOrEmpty(jobClassPath)){
+			curatorFrameworkOp.fillJobNodeIfNotExist(jobClassPath,jobClassValue);
+		}
 	}
 }

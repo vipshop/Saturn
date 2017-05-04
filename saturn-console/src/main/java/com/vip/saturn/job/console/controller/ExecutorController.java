@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import jxl.Cell;
@@ -47,12 +48,14 @@ public class ExecutorController extends AbstractController {
 	private ExecutorService executorService;
     @Resource
     private JobDimensionService jobDimensionService;
+    @Resource
+	private JobOperationService jobOperationService;
 
 	@RequestMapping(value = "checkAndAddJobs", method = RequestMethod.POST)
 	public RequestResult checkAndAddJobs(JobConfig jobConfig, HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			checkJobConfig(jobConfig);
+			jobOperationService.validateJobConfig(jobConfig);
 			requestResult = executorService.addJobs(jobConfig);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);
@@ -63,88 +66,6 @@ public class ExecutorController extends AbstractController {
 			LOGGER.error("checkAndAddJobs exception:", t);
 		}
 		return requestResult;
-	}
-
-	private void checkJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
-		// 作业名必填
-		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
-			throw new SaturnJobConsoleException("作业名必填");
-		}
-		// 作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_
-		if(!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
-			throw new SaturnJobConsoleException("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
-		}
-		// 依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,
-		if(jobConfig.getDependencies() != null && !jobConfig.getDependencies().matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException("依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
-		}
-		// 作业类型必填
-		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
-			throw new SaturnJobConsoleException("作业类型必填");
-		}
-		// 验证作业类型
-		if (JobBriefInfo.JobType.getJobType(jobConfig.getJobType()).equals(JobBriefInfo.JobType.UNKOWN_JOB)) {
-			throw new SaturnJobConsoleException("作业类型未知");
-		}
-		// 如果是JAVA/MSG作业
-		if (jobConfig.getJobType().equals(JobBriefInfo.JobType.JAVA_JOB.name())
-				|| jobConfig.getJobType().equals(JobBriefInfo.JobType.MSG_JOB.name())) {
-			// 作业实现类必填
-			if (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty()) {
-				throw new SaturnJobConsoleException("对于JAVA/MSG作业，作业实现类必填");
-			}
-		}
-		// 如果是JAVA/SHELL作业
-		if (jobConfig.getJobType().equals(JobBriefInfo.JobType.JAVA_JOB.name())
-				|| jobConfig.getJobType().equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
-			// cron表达式必填
-			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
-				throw new SaturnJobConsoleException("对于JAVA/SHELL作业，cron表达式必填");
-			}
-			// cron表达式语法验证
-			try {
-				CronExpression.validateExpression(jobConfig.getCron());
-			} catch (ParseException e) {
-				throw new SaturnJobConsoleException("cron表达式语法有误，" + e.toString());
-			}
-		} else {
-        	jobConfig.setCron("");;// 其他类型的不需要持久化保存cron表达式
-        }
-		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
-			if (jobConfig.getShardingItemParameters() == null) {
-				throw new SaturnJobConsoleException("对于本地模式作业，分片参数必填。");
-			} else {
-				String[] split = jobConfig.getShardingItemParameters().split(",");
-				boolean includeXing = false;
-				for (String tmp : split) {
-					String[] split2 = tmp.split("=");
-					if ("*".equalsIgnoreCase(split2[0].trim())) {
-						includeXing = true;
-						break;
-					}
-				}
-				if (!includeXing) {
-					throw new SaturnJobConsoleException("对于本地模式作业，分片参数必须包含如*=xx。");
-				}
-			}
-		} else {
-			// 分片参数不能小于分片总数
-			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
-				throw new SaturnJobConsoleException("分片数不能为空，并且不能小于1");
-			}
-			if (jobConfig.getShardingTotalCount() > 0) {
-				if (jobConfig.getShardingItemParameters() == null
-						|| jobConfig.getShardingItemParameters().trim().isEmpty()
-						|| jobConfig.getShardingItemParameters().split(",").length < jobConfig
-								.getShardingTotalCount()) {
-					throw new SaturnJobConsoleException("分片参数不能小于分片总数");
-				}
-			}
-		}
-		// 不能添加系统作业
-		if(jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
-			throw new SaturnJobConsoleException("作业模式有误，不能添加系统作业");
-		}
 	}
 
 	@RequestMapping(value = "batchAddJobs", method = RequestMethod.POST)
