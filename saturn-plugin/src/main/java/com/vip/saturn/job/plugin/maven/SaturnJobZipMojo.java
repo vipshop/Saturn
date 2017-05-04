@@ -49,9 +49,7 @@ public class SaturnJobZipMojo extends AbstractMojo {
 		for (Artifact artifact : runtimeArtifacts) {
 			runtimeLibFiles.add(artifact.getFile());
 		}
-		// Maybe could be more cool.
-		runtimeLibFiles.add(new File(project.getBuild().getDirectory(),
-				project.getArtifactId() + "-" + project.getVersion() + ".jar"));
+		runtimeLibFiles.add(new File(project.getBuild().getDirectory(), project.getBuild().getFinalName() + "." + project.getPackaging()));
 
 		File zipFile = new File(project.getBuild().getDirectory(),
 				project.getArtifactId() + "-" + project.getVersion() + "-" + "app.zip");
@@ -65,8 +63,6 @@ public class SaturnJobZipMojo extends AbstractMojo {
 		projectHelper.attachArtifact(project, "zip", "executor", zipFile);
 
 	}
-
-
 
 	@SuppressWarnings("unchecked")
 	private String getSaturnVersion(MavenProject project) throws MojoExecutionException {
