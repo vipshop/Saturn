@@ -9,7 +9,7 @@
 	<name>saturn-job-spring-demo</name>
 
 	<properties>
-		<saturn-job.version>master-SNAPSHOT</saturn-job.version>
+		<saturn-job.version>2.0.6</saturn-job.version>
 	</properties>
 
 	<dependencies>

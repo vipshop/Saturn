@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/context 
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        ">
+    <bean id="SpringContextUtils" class="com.vip.saturn.demo.embed.tomcat.utils.SpringContextUtils" scope="singleton" lazy-init="false"/>
+
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+
+    <bean id="demoService" class="com.vip.saturn.demo.embed.tomcat.service.DemoService"></bean>
+
+    <!-- 注册作业 -->
+    <bean id="demoJob" class="com.vip.saturn.demo.embed.tomcat.job.DemoJob"></bean>
+
+    <!-- 启动saturn-executor -->
+    <bean id="saturnEmbedUtils" class="com.vip.saturn.demo.embed.tomcat.utils.SaturnEmbedUtils" init-method="start2"></bean>
+
+</beans>

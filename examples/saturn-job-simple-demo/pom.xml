@@ -4,12 +4,12 @@
 
 	<groupId>com.vip.saturn.demo</groupId>
 	<artifactId>saturn-job-simple-demo</artifactId>
-	<version>master-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>saturn-job-simple-demo</name>
 
 	<properties>
-		<saturn-job.version>master-SNAPSHOT</saturn-job.version>
+		<saturn-job.version>2.0.6</saturn-job.version>
 	</properties>
 
 	<dependencies>
