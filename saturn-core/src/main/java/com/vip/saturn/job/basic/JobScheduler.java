@@ -145,11 +145,13 @@ public class JobScheduler {
 		try {
 			String currentConfJobName = currentConf.getJobName();
 			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
-			// coordinatorRegistryCenter.addCacheData(JobNodePath.getJobNameFullPath(currentConfJobName));
 
 			startAll();
 			createJob();
 			serverService.persistServerOnline();
+
+			// Notify job enabled or disabled after that all are ready, include job was initialized.
+			configService.notifyJobEnabledOrNot();
 		} catch (Throwable t) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
 			shutdown(false);

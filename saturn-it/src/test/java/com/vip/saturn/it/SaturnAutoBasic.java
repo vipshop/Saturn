@@ -57,8 +57,7 @@ public class SaturnAutoBasic {
     protected static void initSysEnv() {
         System.setProperty("namespace", NAMESPACE);
         System.setProperty("saturn.stdout", "true");
-        // logback都加载完了，下面这句无效；
-        // System.setProperty("saturn.stdout", "true");
+        System.setProperty("saturn.debug", "true");
         // 必须在设置saturn.out后，才加载日志框架
         log = LoggerFactory.getLogger(AbstractSaturnIT.class);
     }

@@ -19,8 +19,11 @@ package com.vip.saturn.job.internal.config;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.quartz.CronExpression;
@@ -31,6 +34,8 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.utils.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 弹性化分布式作业配置服务.
@@ -38,7 +43,9 @@ import com.vip.saturn.job.utils.JsonUtils;
  * 
  */
 public class ConfigurationService extends AbstractSaturnService {
-	
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
+
 	private static final String DOUBLE_QUOTE = "\"";
 	
 	//参考http://stackoverflow.com/questions/17963969/java-regex-pattern-split-commna
@@ -47,12 +54,78 @@ public class ConfigurationService extends AbstractSaturnService {
     private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class);
 
 	private TimeZone jobTimeZone;
-    
+
+	private ExecutorService executorService;
+
+	private static final Object lock = new Object();
+
     public ConfigurationService(JobScheduler jobScheduler) {
         super(jobScheduler);
     }
-    
-	
+
+	@Override
+	public void start() {
+		super.start();
+		executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-enabledChanged", false));
+	}
+
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		if(executorService != null) {
+			executorService.shutdown();
+		}
+	}
+
+	public void notifyJobEnabledOrNot() {
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (lock) {
+					try {
+						if (isJobEnabled()) {
+							jobScheduler.getJob().notifyJobEnabled();
+						} else {
+							jobScheduler.getJob().notifyJobDisabled();
+						}
+					} catch (Throwable t) {
+						LOGGER.error(t.getMessage(), t);
+					}
+				}
+			}
+		});
+	}
+
+	public void notifyJobEnabled() {
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (lock) {
+					try {
+						jobScheduler.getJob().notifyJobEnabled();
+					} catch (Throwable t) {
+						LOGGER.error(t.getMessage(), t);
+					}
+				}
+			}
+		});
+	}
+
+	public void notifyJobDisabled() {
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (lock) {
+					try {
+						jobScheduler.getJob().notifyJobDisabled();
+					} catch (Throwable t) {
+						LOGGER.error(t.getMessage(), t);
+					}
+				}
+			}
+		});
+	}
+
     /**
      * 获取作业分片总数.
      * 

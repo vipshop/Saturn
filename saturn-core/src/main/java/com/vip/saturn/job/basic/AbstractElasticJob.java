@@ -399,4 +399,8 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	public abstract void onTimeout(int item);
 
+	public void notifyJobEnabled() {}
+
+	public void notifyJobDisabled() {}
+
 }

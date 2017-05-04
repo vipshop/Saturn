@@ -29,7 +29,19 @@ public abstract class AbstractSaturnMsgJob {
 	
 	public void postForceStop(String jobName, Integer key, String value, MsgHolder msgHolder, SaturnJobExecutionContext shardingContext) {
 	}
-	
+
+	/**
+	 * The job was just enabled.
+	 */
+	public void onEnabled(String jobName) {
+	}
+
+	/**
+	 * The job was just disabled.
+	 */
+	public void onDisabled(String jobName) {
+	}
+
 	public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws Exception {
 		if(saturnApi != null){
 			Class<?> clazz = saturnApi.getClass();

@@ -39,6 +39,8 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 	private FailoverService failoverService;
 
+	private ConfigurationService configurationService;
+
 	public ConfigurationListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
 		jobConfiguration = jobScheduler.getCurrentConf();
@@ -46,13 +48,12 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
         executionContextService = jobScheduler.getExecutionContextService();
         executionService = jobScheduler.getExecutionService();
         failoverService = jobScheduler.getFailoverService();
+		configurationService = jobScheduler.getConfigService();
 	}
 
 	@Override
 	public void start() {
-		// addDataListener(new CronPathListener(), jobName);
 		zkCacheManager.addTreeCacheListener(new CronPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
-		// addDataListener(new EnabledPathListener(), jobName);
         zkCacheManager.addTreeCacheListener(new EnabledPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
@@ -84,12 +85,14 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 						}
 						failoverService.removeFailoverInfo();
 						jobScheduler.getJob().enableJob();
-					}					
+						configurationService.notifyJobEnabled();
+					}
 				} else {
 					if (jobScheduler != null && jobScheduler.getJob() != null) {
 						jobScheduler.getJob().disableJob();
+						failoverService.removeFailoverInfo(); // clear failover info when disable job.
+						configurationService.notifyJobDisabled();
 					}
-					failoverService.removeFailoverInfo(); // clear failover info when disable job.
 				}
 			}
 		}

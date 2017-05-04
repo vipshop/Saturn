@@ -191,7 +191,7 @@ public class SaturnJavaJob extends CrondJob {
 
 		try {
 			if( jobBusinessInstance == null){
-				throw new JobException("the jobClass is not found");
+				throw new JobException("the job business instance is not initialized");
 			}
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
@@ -229,7 +229,7 @@ public class SaturnJavaJob extends CrondJob {
 
 		try {
 			if( jobBusinessInstance == null){
-				throw new JobException("the jobClass is not found");
+				throw new JobException("the job business instance is not initialized");
 			}
 			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
@@ -257,7 +257,7 @@ public class SaturnJavaJob extends CrondJob {
 
 		try {
 			if( jobBusinessInstance == null){
-				throw new JobException("the jobClass is not found");
+				throw new JobException("the job business instance is not initialized");
 			}
 			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
@@ -285,7 +285,7 @@ public class SaturnJavaJob extends CrondJob {
 
 		try {
 			if( jobBusinessInstance == null){
-				throw new JobException("the jobClass is not found");
+				throw new JobException("the job business instance is not initialized");
 			}
 			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
@@ -299,6 +299,50 @@ public class SaturnJavaJob extends CrondJob {
 						.getMethod("postForceStop", String.class, Integer.class, String.class,
 								saturnJobExecutionContextClazz)
 						.invoke(jobBusinessInstance, jobName, key, value, callable.getContextForJob(jobClassLoader));
+			} finally {
+				Thread.currentThread().setContextClassLoader(executorClassLoader);
+			}
+		} catch (Exception e) {
+			logBusinessExceptionIfNecessary(jobName, e);
+		}
+	}
+
+	@Override
+	public void notifyJobEnabled() {
+		String jobClass = configService.getJobConfiguration().getJobClass();
+		log.info("[{}] msg=SaturnJavaJob onEnabled,  jobClass is {} ", jobName, jobClass);
+		try {
+			if (jobBusinessInstance == null) {
+				throw new JobException("the job business instance is not initialized");
+			}
+			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				jobBusinessInstance.getClass().getMethod("onEnabled", String.class).invoke(jobBusinessInstance, jobName);
+			} finally {
+				Thread.currentThread().setContextClassLoader(executorClassLoader);
+			}
+		} catch (Exception e) {
+			logBusinessExceptionIfNecessary(jobName, e);
+		}
+	}
+
+	@Override
+	public void notifyJobDisabled() {
+		String jobClass = configService.getJobConfiguration().getJobClass();
+		log.info("[{}] msg=SaturnJavaJob onDisabled,  jobClass is {} ", jobName, jobClass);
+		try {
+			if (jobBusinessInstance == null) {
+				throw new JobException("the job business instance is not initialized");
+			}
+			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				jobBusinessInstance.getClass().getMethod("onDisabled", String.class).invoke(jobBusinessInstance, jobName);
 			} finally {
 				Thread.currentThread().setContextClassLoader(executorClassLoader);
 			}
