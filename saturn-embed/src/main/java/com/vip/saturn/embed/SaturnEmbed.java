@@ -94,12 +94,7 @@ public class SaturnEmbed {
 			i++;
 		}
 
-		ClassLoader outerClassLoader = Thread.currentThread().getContextClassLoader();
-		try {
-			mainMethod.invoke(main, args, SaturnEmbed.class.getClassLoader());
-		} finally {
-			Thread.currentThread().setContextClassLoader(outerClassLoader);
-		}
+		mainMethod.invoke(main, args, SaturnEmbed.class.getClassLoader());
 	}
 	
 	public static void unzip(File zip, File directory) throws ZipException, IOException {

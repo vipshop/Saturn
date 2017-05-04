@@ -129,9 +129,8 @@ public class Main {
 		}
 		return urls;
 	}
-	
-	
-	public void initClassLoader() throws Exception{
+
+	private void initClassLoader() throws Exception{
 		List<URL> urls = getUrls(new File(saturnLibDir));	
 		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());//NOSONAR
 		if(new File(appLibDir).isDirectory()){
@@ -142,10 +141,16 @@ public class Main {
 		}
 	}
 
-	public void startExecutor() throws Exception{
-		Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
-		saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class).invoke(null, namespace, executorName);
-		startExecutorClass.getMethod("execute", ClassLoader.class, ClassLoader.class).invoke(saturnExecutor, executorClassLoader, jobClassLoader);
+	private void startExecutor() throws Exception{
+		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(executorClassLoader);
+		try {
+			Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
+			saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class).invoke(null, namespace, executorName);
+			startExecutorClass.getMethod("execute", ClassLoader.class, ClassLoader.class).invoke(saturnExecutor, executorClassLoader, jobClassLoader);
+		} finally {
+			Thread.currentThread().setContextClassLoader(oldCL);
+		}
 	}
 	
 	public void launch(String[] args, ClassLoader jobClassLoader) throws Exception{
@@ -163,8 +168,14 @@ public class Main {
 	}
 	
 	public void shutdown() throws Exception{
-		Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
-		startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
+		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(executorClassLoader);
+		try {
+			Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
+			startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
+		} finally {
+			Thread.currentThread().setContextClassLoader(oldCL);
+		}
 	}
 	
 	public static void main(String[] args) {
