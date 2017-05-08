@@ -81,12 +81,13 @@ public class RestApiController {
             if (jobName == null || jobName.trim().length() == 0) {
                 throw new SaturnJobConsoleException("The jobName of parameter is required");
             }
+            //FIXME: return status code is not enough as some error will share the same status code.
             int code = restApiService.enableJob(namespace, jobName);
             if (code == 201) {
                 return new ResponseEntity<String>(httpHeaders, HttpStatus.CREATED);
             } else if (code == 403) {
                 RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
-                restApiErrorResult.setMessage("The update interval time cannot less than 3 seconds");
+                restApiErrorResult.setMessage("The update interval time cannot less than 3 seconds and 30 seconds after job creation");
                 return new ResponseEntity<String>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.FORBIDDEN);
             } else {
                 return new ResponseEntity<String>(httpHeaders, HttpStatus.OK);
@@ -147,7 +148,7 @@ public class RestApiController {
 
             restApiService.createJob(namespace, jobConfig);
 
-            return new ResponseEntity<String>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<String>(HttpStatus.CREATED);
         } catch (SaturnJobConsoleException e){
             if(e.getMessage().contains(BAD_REQ_MSG_PREFIX)){
                 return constructErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);

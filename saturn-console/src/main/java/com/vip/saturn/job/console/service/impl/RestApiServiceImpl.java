@@ -29,7 +29,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     private final static Logger logger = LoggerFactory.getLogger(RestApiServiceImpl.class);
 
-    private final long threeSecondsMillis = 3 * 1000L;
+    private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
+
+    private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 30 * 1000L;
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -271,16 +273,19 @@ public class RestApiServiceImpl implements RestApiService {
                 if (Boolean.valueOf(enabled)) {
                     return 201;
                 } else {
+                    long ctime = curatorFrameworkOp.getCtime(enabledNodePath);
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (updateIntervalLessThanThreeSeconds(mtime)) {
+                    if (!isUpdateStatusToEnableAllowed(ctime, mtime)) {
                         return 403;
                     }
+
                     curatorFrameworkOp.update(enabledNodePath, "true");
                     return 200;
                 }
             }
         });
     }
+
 
     @Override
     public int disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
@@ -291,9 +296,10 @@ public class RestApiServiceImpl implements RestApiService {
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (updateIntervalLessThanThreeSeconds(mtime)) {
+                    if (!isUpdateStatusToDisableAllowed(mtime)) {
                         return 403;
                     }
+
                     curatorFrameworkOp.update(enabledNodePath, "false");
                     return 200;
                 } else {
@@ -318,8 +324,27 @@ public class RestApiServiceImpl implements RestApiService {
 
     }
 
-    private boolean updateIntervalLessThanThreeSeconds(long lastMtime) {
-        return Math.abs(System.currentTimeMillis() - lastMtime) < threeSecondsMillis;
+    private boolean isUpdateStatusToEnableAllowed(long ctime, long mtime) {
+        if (Math.abs(System.currentTimeMillis() - ctime) < OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS){
+            logger.warn("Cannot enable the job until {} seconds after job creation!", OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS);
+            return false;
+        }
+
+        if (Math.abs(System.currentTimeMillis() - mtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
+            logger.warn("The interval of switching from status 'disable' to 'enable' should be larger than {} seconds!", STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isUpdateStatusToDisableAllowed(long lastMtime) {
+        if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS){
+            logger.warn("The interval of switching from status 'enable' to 'disable' should be larger than {} seconds!", STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS);
+            return false;
+        }
+
+        return true;
     }
 
 }
