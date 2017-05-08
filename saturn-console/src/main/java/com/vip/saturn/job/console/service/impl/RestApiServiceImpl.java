@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.*;
 import com.vip.saturn.job.console.service.impl.helper.ReuseCallBack;
@@ -31,7 +32,7 @@ public class RestApiServiceImpl implements RestApiService {
 
     private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
 
-    private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 30 * 1000L;
+    private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -264,23 +265,20 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public int enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
+    public void enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
-            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
-                    return 201;
+                    throw new SaturnJobConsoleHttpException(201, "The job is already enable");
                 } else {
                     long ctime = curatorFrameworkOp.getCtime(enabledNodePath);
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (!isUpdateStatusToEnableAllowed(ctime, mtime)) {
-                        return 403;
-                    }
+                    checkUpdateStatusToEnableAllowed(ctime, mtime);
 
                     curatorFrameworkOp.update(enabledNodePath, "true");
-                    return 200;
                 }
             }
         });
@@ -288,22 +286,19 @@ public class RestApiServiceImpl implements RestApiService {
 
 
     @Override
-    public int disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
+    public void disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
-            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (!isUpdateStatusToDisableAllowed(mtime)) {
-                        return 403;
-                    }
+                    checkUpdateStatusToDisableAllowed(mtime);
 
                     curatorFrameworkOp.update(enabledNodePath, "false");
-                    return 200;
                 } else {
-                    return 201;
+                    throw new SaturnJobConsoleHttpException(201, "The job is already disable");
                 }
             }
         });
@@ -315,7 +310,7 @@ public class RestApiServiceImpl implements RestApiService {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
-                    throw new SaturnJobConsoleException("Invalid request. Job: {" + jobConfig.getJobName() +"} already existed.");
+                    throw new SaturnJobConsoleException("Invalid request. Job: {" + jobConfig.getJobName() +"} already existed");
                 }
 
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
@@ -324,27 +319,26 @@ public class RestApiServiceImpl implements RestApiService {
 
     }
 
-    private boolean isUpdateStatusToEnableAllowed(long ctime, long mtime) {
+    private void checkUpdateStatusToEnableAllowed(long ctime, long mtime) throws SaturnJobConsoleHttpException {
         if (Math.abs(System.currentTimeMillis() - ctime) < OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS){
-            logger.warn("Cannot enable the job until {} seconds after job creation!", OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS);
-            return false;
+            String errMsg = "Cannot enable the job until " + OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS + " seconds after job creation!";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(403, errMsg);
         }
 
         if (Math.abs(System.currentTimeMillis() - mtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
-            logger.warn("The interval of switching from status 'disable' to 'enable' should be larger than {} seconds!", STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS);
-            return false;
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(403, errMsg);
         }
-
-        return true;
     }
 
-    private boolean isUpdateStatusToDisableAllowed(long lastMtime) {
+    private void checkUpdateStatusToDisableAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
         if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS){
-            logger.warn("The interval of switching from status 'enable' to 'disable' should be larger than {} seconds!", STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS);
-            return false;
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(403, errMsg);
         }
-
-        return true;
     }
 
 }
