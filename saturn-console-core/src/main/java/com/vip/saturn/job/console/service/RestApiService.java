@@ -16,7 +16,9 @@ public interface RestApiService {
      *
      * @param jobConfig construct from the request.
      *
-     * @throws SaturnJobConsoleException once the exception is thrown, which means the creation is not successfully. the caller should handle the exception by itself.
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - namespace or jobName is not found (statusCode = 404)
+     * - Job with the same name is already created. (statusCode = 400)
      */
     void createJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
@@ -31,10 +33,10 @@ public interface RestApiService {
      * Nothing will return once the the job is enable successfully;
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * <li> The job was already enabled (statusCode = 201) </li>
-     * <li> The update interval time cannot less than 3 seconds (statusCode = 403)</li>
-     * <li> Enable the job after creation within 10 seconds (statusCode = 403)</li>
-     * <li> Other exceptions (statusCode = 500) </li>
+     * - The job was already enabled (statusCode = 201) 
+     * - The update interval time cannot less than 3 seconds (statusCode = 403)
+     * - Enable the job after creation within 10 seconds (statusCode = 403)
+     * - Other exceptions (statusCode = 500) 
      *
      */
     void enableJob(String namespace, String jobName) throws SaturnJobConsoleException;
@@ -45,9 +47,9 @@ public interface RestApiService {
      * Nothing will return when disable successfully;
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * <li> The job was already disabled (statusCode = 201) </li>
-     * <li> The update interval time cannot less than 3 seconds (statusCode = 403)</li>
-     * <li> Other exceptions (statusCode = 500) </li>
+     * - The job was already disabled (statusCode = 201) 
+     * - The update interval time cannot less than 3 seconds (statusCode = 403)
+     * - Other exceptions (statusCode = 500) 
      *
      */
     void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
