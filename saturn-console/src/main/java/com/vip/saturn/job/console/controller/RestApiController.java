@@ -51,7 +51,6 @@ public class RestApiController {
     public ResponseEntity<String> createJob(@PathVariable("namespace") String namespace, @RequestBody Map<String,Object> reqParams){
         try{
             JobConfig jobConfig = constructJobConfig(namespace, reqParams);
-
             jobOperationService.validateJobConfig(jobConfig);
 
             restApiService.createJob(namespace, jobConfig);
@@ -62,8 +61,28 @@ public class RestApiController {
         }
     }
 
+    @RequestMapping(value = "/{namespace}/{jobName}", method = RequestMethod.GET)
+    public ResponseEntity<String> getJobInfo(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName){
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        try{
+            if(StringUtils.isBlank(namespace)){
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
+            }
+            if(StringUtils.isBlank(jobName)){
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
+            }
+
+            RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
+
+            return new ResponseEntity<String>(JSON.toJSONString(restAPIJobInfo), httpHeaders, HttpStatus.OK);
+        } catch (Exception e){
+            return constructOtherResponses(e);
+        }
+    }
+
     @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET)
-    public ResponseEntity<String> getJobs(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<String> getJobInfos(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         try {

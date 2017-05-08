@@ -23,6 +23,18 @@ public interface RestApiService {
     void createJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
     /**
+     *
+     * Get the job info by namespace and jobName pair.
+     *
+     * @param namespace
+     * @param jobName
+     * @return
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - namespace or jobName is not found (statusCode = 404)
+     */
+    RestApiJobInfo getRestAPIJobInfo(String namespace, String jobName) throws SaturnJobConsoleException;
+
+    /**
      * Get the jobs info under the namespace
      */
     List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException;
@@ -33,7 +45,7 @@ public interface RestApiService {
      * Nothing will return once the the job is enable successfully;
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * - The job was already enabled (statusCode = 201) 
+     * - The job was already enabled (statusCode = 201)
      * - The update interval time cannot less than 3 seconds (statusCode = 403)
      * - Enable the job after creation within 10 seconds (statusCode = 403)
      * - Other exceptions (statusCode = 500) 

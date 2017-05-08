@@ -48,6 +48,35 @@ public class RestApiServiceImpl implements RestApiService {
     private JobOperationService jobOperationService;
 
     @Override
+    public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() +"} already existed");
+                }
+
+                jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
+            }
+        });
+
+    }
+
+    @Override
+    public RestApiJobInfo getRestAPIJobInfo(String namespace, final String jobName) throws SaturnJobConsoleException {
+        return ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBack<RestApiJobInfo>() {
+            @Override
+            public RestApiJobInfo call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName)) || !curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The jobName does not existed");
+                }
+
+                return constructJobInfo(curatorFrameworkOp, jobName);
+            }
+        });
+    }
+
+    @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
         return ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBack<List<RestApiJobInfo>>() {
             @Override
@@ -57,17 +86,7 @@ public class RestApiServiceImpl implements RestApiService {
                 if (jobs != null) {
                     for (String job : jobs) {
                         try {
-                            RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
-                            restApiJobInfo.setJobName(job);
-                            // 设置作业配置信息
-                            setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
-                            // 设置运行状态
-                            setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
-                            // 设置统计信息
-                            RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
-                            setStatics(curatorFrameworkOp, restApiJobStatistics, job);
-                            restApiJobInfo.setStatistics(restApiJobStatistics);
-
+                            RestApiJobInfo restApiJobInfo = constructJobInfo(curatorFrameworkOp, job);
                             restApiJobInfos.add(restApiJobInfo);
                         } catch (Exception e) {
                             logger.error("getRestApiJobInfos exception:", e);
@@ -78,6 +97,20 @@ public class RestApiServiceImpl implements RestApiService {
                 return restApiJobInfos;
             }
         });
+    }
+
+    private RestApiJobInfo constructJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String job) {
+        RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
+        restApiJobInfo.setJobName(job);
+        // 设置作业配置信息
+        setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
+        // 设置运行状态
+        setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
+        // 设置统计信息
+        RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
+        setStatics(curatorFrameworkOp, restApiJobStatistics, job);
+        restApiJobInfo.setStatistics(restApiJobStatistics);
+        return restApiJobInfo;
     }
 
     private void setRunningStatus(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RestApiJobInfo restApiJobInfo, String jobName) {
@@ -303,21 +336,6 @@ public class RestApiServiceImpl implements RestApiService {
                 }
             }
         });
-    }
-
-    @Override
-    public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
-         ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
-            @Override
-            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
-                    throw new SaturnJobConsoleException("Invalid request. Job: {" + jobConfig.getJobName() +"} already existed");
-                }
-
-                jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
-            }
-        });
-
     }
 
     private void checkUpdateStatusToEnableAllowed(long ctime, long mtime) throws SaturnJobConsoleHttpException {

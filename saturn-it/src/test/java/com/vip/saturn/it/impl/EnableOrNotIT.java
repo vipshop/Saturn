@@ -45,7 +45,7 @@ public class EnableOrNotIT extends AbstractSaturnIT {
         Thread.sleep(15000);
         assertThat(SimpleJavaJob.enabled.get()).isFalse();
         enableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
+        Thread.sleep(4000);
         assertThat(SimpleJavaJob.enabled.get()).isTrue();
         disableJob(jobConfiguration.getJobName());
         Thread.sleep(1000);
