@@ -14,6 +14,7 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -272,7 +273,7 @@ public class RestApiServiceImpl implements RestApiService {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
-                    throw new SaturnJobConsoleHttpException(201, "The job is already enable");
+                    throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(), "The job is already enable");
                 } else {
                     long ctime = curatorFrameworkOp.getCtime(enabledNodePath);
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
@@ -298,7 +299,7 @@ public class RestApiServiceImpl implements RestApiService {
 
                     curatorFrameworkOp.update(enabledNodePath, "false");
                 } else {
-                    throw new SaturnJobConsoleHttpException(201, "The job is already disable");
+                    throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(), "The job is already disable");
                 }
             }
         });
@@ -323,13 +324,13 @@ public class RestApiServiceImpl implements RestApiService {
         if (Math.abs(System.currentTimeMillis() - ctime) < OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS){
             String errMsg = "Cannot enable the job until " + OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS + " seconds after job creation!";
             logger.warn(errMsg);
-            throw new SaturnJobConsoleHttpException(403, errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
 
         if (Math.abs(System.currentTimeMillis() - mtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
             String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS + " seconds";
             logger.warn(errMsg);
-            throw new SaturnJobConsoleHttpException(403, errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
     }
 
@@ -337,7 +338,7 @@ public class RestApiServiceImpl implements RestApiService {
         if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS){
             String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS + " seconds";
             logger.warn(errMsg);
-            throw new SaturnJobConsoleHttpException(403, errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
     }
 
