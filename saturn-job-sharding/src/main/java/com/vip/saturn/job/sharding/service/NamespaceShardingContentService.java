@@ -161,6 +161,7 @@ public class NamespaceShardingContentService {
     public Map<String, List<Integer>> getShardContent(String jobName, String jobNecessaryContent) throws Exception {
         Map<String, List<Integer>> shardContent = new HashMap<>();
         try {
+            //TODO: can change to Jackson ?
             Map<String, List<Integer>> obj = gson.fromJson(jobNecessaryContent, new TypeToken<Map<String, List<Integer>>>() {
             }.getType());
             shardContent.putAll(obj);

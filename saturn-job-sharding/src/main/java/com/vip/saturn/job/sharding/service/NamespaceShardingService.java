@@ -1187,6 +1187,7 @@ public class NamespaceShardingService {
 			return total;
 		}
 
+		// 计算平均load，然后摘取最接近平均负载的shard。
 		private void pickBalance(List<Shard> shardList, List<Executor> allExecutors) {
 			int totalLoalLevel = getTotalLoadLevel(shardList, allExecutors);
 			int averageTotalLoal = totalLoalLevel / (allExecutors.size());
@@ -1194,6 +1195,7 @@ public class NamespaceShardingService {
 				Executor executor = allExecutors.get(i);
 				while (true) {
 					int pickLoadLevel = executor.getTotalLoadLevel() - averageTotalLoal;
+					//摘取现在totalLoad > 平均值的executor里面的shard
 					if (pickLoadLevel > 0 && !executor.getShardList().isEmpty()) {
 						Shard pickShard = null;
 						for (int j = 0; j < executor.getShardList().size(); j++) {
