@@ -1,12 +1,13 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author hebelala
@@ -42,10 +43,10 @@ public class EnableOrNotIT extends AbstractSaturnIT {
         jobConfiguration.setShardingTotalCount(1);
         jobConfiguration.setShardingItemParameters("0=0");
         addJob(jobConfiguration);
-        Thread.sleep(15000);
+        Thread.sleep(1000);
         assertThat(SimpleJavaJob.enabled.get()).isFalse();
         enableJob(jobConfiguration.getJobName());
-        Thread.sleep(4000);
+        Thread.sleep(1000);
         assertThat(SimpleJavaJob.enabled.get()).isTrue();
         disableJob(jobConfiguration.getJobName());
         Thread.sleep(1000);
