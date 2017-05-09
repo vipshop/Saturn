@@ -32,6 +32,7 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
+//TODO: merge JobOperationService with JobDimensionService
 public interface JobDimensionService {
 	
 	JobStatus getJobStatus(final String jobName);

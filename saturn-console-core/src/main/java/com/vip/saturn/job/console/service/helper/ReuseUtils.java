@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.impl.helper;
+package com.vip.saturn.job.console.service.helper;
 
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
@@ -22,7 +22,7 @@ public class ReuseUtils {
             @Override
             public T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-                    throw new SaturnJobConsoleException("The jobName is not exists");
+                    throw new SaturnJobConsoleException("The jobName does not exists");
                 }
                 return callBack.call(curatorFrameworkOp);
             }
@@ -33,13 +33,48 @@ public class ReuseUtils {
         try {
             RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
             if (registryCenterConfiguration == null) {
-                throw new SaturnJobConsoleException("The namespace is not exists");
+                throw new SaturnJobConsoleException("The namespace does not exists");
             }
             RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
             if (registryCenterClient != null && registryCenterClient.isConnected()) {
                 CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
                 CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
                 return callBack.call(curatorFrameworkOp);
+            } else {
+                throw new SaturnJobConsoleException("Connect zookeeper failed");
+            }
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Throwable t) {
+            LOGGER.error(t.getMessage(), t);
+            throw new SaturnJobConsoleException(t);
+        }
+    }
+
+    public static void reuse(String namespace, final String jobName, RegistryCenterService registryCenterService, CuratorRepository curatorRepository, final ReuseCallBackWithoutReturn callBack) throws SaturnJobConsoleException {
+        reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
+                    throw new SaturnJobConsoleException("The jobName does not exists");
+                }
+                callBack.call(curatorFrameworkOp);
+            }
+        });
+    }
+
+    public static void reuse(String namespace, RegistryCenterService registryCenterService, CuratorRepository curatorRepository, ReuseCallBackWithoutReturn callBack) throws SaturnJobConsoleException {
+        try {
+            RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
+            if (registryCenterConfiguration == null) {
+                throw new SaturnJobConsoleException("The namespace does not exists");
+            }
+            RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
+            if (registryCenterClient != null && registryCenterClient.isConnected()) {
+                CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+                CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+
+                callBack.call(curatorFrameworkOp);
             } else {
                 throw new SaturnJobConsoleException("Connect zookeeper failed");
             }

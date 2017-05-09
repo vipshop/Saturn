@@ -2,21 +2,19 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RestApiJobConfig;
-import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.service.impl.helper.ReuseCallBack;
-import com.vip.saturn.job.console.service.impl.helper.ReuseUtils;
+import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.helper.ReuseCallBack;
+import com.vip.saturn.job.console.service.helper.ReuseCallBackWithoutReturn;
+import com.vip.saturn.job.console.service.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -33,7 +31,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     private final static Logger logger = LoggerFactory.getLogger(RestApiServiceImpl.class);
 
-    private final long threeSecondsMillis = 3 * 1000L;
+    private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
+
+    private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -43,6 +43,38 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Resource
     private JobDimensionService jobDimensionService;
+
+    @Resource
+    private JobOperationService jobOperationService;
+
+    @Override
+    public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() +"} already existed");
+                }
+
+                jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
+            }
+        });
+
+    }
+
+    @Override
+    public RestApiJobInfo getRestAPIJobInfo(String namespace, final String jobName) throws SaturnJobConsoleException {
+        return ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBack<RestApiJobInfo>() {
+            @Override
+            public RestApiJobInfo call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName)) || !curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The jobName does not existed");
+                }
+
+                return constructJobInfo(curatorFrameworkOp, jobName);
+            }
+        });
+    }
 
     @Override
     public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
@@ -54,17 +86,7 @@ public class RestApiServiceImpl implements RestApiService {
                 if (jobs != null) {
                     for (String job : jobs) {
                         try {
-                            RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
-                            restApiJobInfo.setJobName(job);
-                            // 设置作业配置信息
-                            setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
-                            // 设置运行状态
-                            setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
-                            // 设置统计信息
-                            RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
-                            setStatics(curatorFrameworkOp, restApiJobStatistics, job);
-                            restApiJobInfo.setStatistics(restApiJobStatistics);
-
+                            RestApiJobInfo restApiJobInfo = constructJobInfo(curatorFrameworkOp, job);
                             restApiJobInfos.add(restApiJobInfo);
                         } catch (Exception e) {
                             logger.error("getRestApiJobInfos exception:", e);
@@ -75,6 +97,20 @@ public class RestApiServiceImpl implements RestApiService {
                 return restApiJobInfos;
             }
         });
+    }
+
+    private RestApiJobInfo constructJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String job) {
+        RestApiJobInfo restApiJobInfo = new RestApiJobInfo();
+        restApiJobInfo.setJobName(job);
+        // 设置作业配置信息
+        setJobConfig(curatorFrameworkOp, restApiJobInfo, job);
+        // 设置运行状态
+        setRunningStatus(curatorFrameworkOp, restApiJobInfo, job);
+        // 设置统计信息
+        RestApiJobStatistics restApiJobStatistics = new RestApiJobStatistics();
+        setStatics(curatorFrameworkOp, restApiJobStatistics, job);
+        restApiJobInfo.setStatistics(restApiJobStatistics);
+        return restApiJobInfo;
     }
 
     private void setRunningStatus(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RestApiJobInfo restApiJobInfo, String jobName) {
@@ -263,49 +299,65 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public int enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
+    public void enableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
-            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
-                    return 201;
+                    throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(), "The job is already enable");
                 } else {
+                    long ctime = curatorFrameworkOp.getCtime(enabledNodePath);
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (updateIntervalLessThanThreeSeconds(mtime)) {
-                        return 403;
-                    }
+                    checkUpdateStatusToEnableAllowed(ctime, mtime);
+
                     curatorFrameworkOp.update(enabledNodePath, "true");
-                    return 200;
                 }
             }
         });
     }
+
 
     @Override
-    public int disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
-        return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Integer>() {
+    public void disableJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
-            public Integer call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
                 String enabled = curatorFrameworkOp.getData(enabledNodePath);
                 if (Boolean.valueOf(enabled)) {
                     long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
-                    if (updateIntervalLessThanThreeSeconds(mtime)) {
-                        return 403;
-                    }
+                    checkUpdateStatusToDisableAllowed(mtime);
+
                     curatorFrameworkOp.update(enabledNodePath, "false");
-                    return 200;
                 } else {
-                    return 201;
+                    throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(), "The job is already disable");
                 }
             }
         });
     }
 
-    private boolean updateIntervalLessThanThreeSeconds(long lastMtime) {
-        return Math.abs(System.currentTimeMillis() - lastMtime) < threeSecondsMillis;
+    private void checkUpdateStatusToEnableAllowed(long ctime, long mtime) throws SaturnJobConsoleHttpException {
+        if (Math.abs(System.currentTimeMillis() - ctime) < OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS){
+            String errMsg = "Cannot enable the job until " + OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS / 1000 + " seconds after job creation!";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
+        }
+
+        if (Math.abs(System.currentTimeMillis() - mtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
+        }
+    }
+
+    private void checkUpdateStatusToDisableAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
+        if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS){
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
+        }
     }
 
 }

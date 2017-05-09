@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.impl.helper;
+package com.vip.saturn.job.console.service.helper;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;

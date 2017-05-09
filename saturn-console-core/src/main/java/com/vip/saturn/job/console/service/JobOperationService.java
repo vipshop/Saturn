@@ -17,6 +17,10 @@
 
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+
 public interface JobOperationService {
     
     void runAtOnceByJobnameAndExecutorName(String jobName, String executorName);
@@ -24,5 +28,11 @@ public interface JobOperationService {
     void stopAtOnceByJobnameAndExecutorName(String jobName, String executorName);
     
     void setJobEnabledState(String jobName, boolean state);
+
+    void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException;
+
+    void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) ;
+
+    void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception;
     
 }

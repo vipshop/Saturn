@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
@@ -11,22 +12,58 @@ import java.util.List;
 public interface RestApiService {
 
     /**
+     * Create a new job.
+     *
+     * @param jobConfig construct from the request.
+     *
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - namespace or jobName is not found (statusCode = 404)
+     * - Job with the same name is already created. (statusCode = 400)
+     */
+    void createJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+    /**
+     *
+     * Get the job info by namespace and jobName pair.
+     *
+     * @param namespace
+     * @param jobName
+     * @return
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - namespace or jobName is not found (statusCode = 404)
+     */
+    RestApiJobInfo getRestAPIJobInfo(String namespace, String jobName) throws SaturnJobConsoleException;
+
+    /**
      * Get the jobs info under the namespace
      */
     List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException;
 
     /**
-     * Enable the job
+     * Enable the job if the job is disable.
      *
-     * @return 200, the job was disabled, and enable it success; 201, the job was already enabled; 403, the update interval time cannot less than 3 seconds; others, should throw exception.
+     * Nothing will return once the the job is enable successfully;
+     *
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - The job was already enabled (statusCode = 201)
+     * - The update interval time cannot less than 3 seconds (statusCode = 403)
+     * - Enable the job after creation within 10 seconds (statusCode = 403)
+     * - Other exceptions (statusCode = 500) 
+     *
      */
-    int enableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+    void enableJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
     /**
-     * Disable the job
+     * Disable the job if the job is enable.<br>
      *
-     * @return 200, the job was enabled, and disable it success; 201, the job was already disabled; 403, the update interval time cannot less than 3 seconds; others, should throw exception.
+     * Nothing will return when disable successfully;
+     *
+     * @throws SaturnJobConsoleException for below scenarios:
+     * - The job was already disabled (statusCode = 201) 
+     * - The update interval time cannot less than 3 seconds (statusCode = 403)
+     * - Other exceptions (statusCode = 500) 
+     *
      */
-    int disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+    void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
 }
