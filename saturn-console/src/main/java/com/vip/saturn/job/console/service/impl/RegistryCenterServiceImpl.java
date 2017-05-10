@@ -134,43 +134,44 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void refreshRegistryCenterFromJsonFile() throws IOException {
-		ArrayList<RegistryCenterConfiguration> list = new ArrayList<>();
-		String json = FileUtils.readFileToString(new File(SaturnEnvProperties.REG_CENTER_JSON_FILE), StandardCharsets.UTF_8);
-		list = (ArrayList<RegistryCenterConfiguration>) JSON.parseArray(json, RegistryCenterConfiguration.class);
 		LinkedHashMap<String/** zkAddr **/, ZkCluster> newClusterMap = new LinkedHashMap<>();
-		for (RegistryCenterConfiguration conf: list) {
-			try {
-				conf.initNameAndNamespace(conf.getNameAndNamespace());
-				if (conf.getZkAlias() == null) {
-					conf.setZkAlias(conf.getZkAddressList());
-				}
-				if (conf.getBootstrapKey() == null) {
-					conf.setBootstrapKey(conf.getZkAddressList());
-				}
-				ZkCluster cluster = newClusterMap.get(conf.getZkAddressList());
-				if (cluster == null) {
-					CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
-					cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), curatorFramework);
-					newClusterMap.put(conf.getZkAddressList(), cluster);
-				} else if (cluster.getCuratorFramework() == null) {
-					if (cluster.getCuratorFramework() !=null && !cluster.getCuratorFramework().getZookeeperClient().isConnected()) {
-						cluster.getCuratorFramework().close();
+		if(SaturnEnvProperties.REG_CENTER_JSON_FILE != null) {
+			String json = FileUtils.readFileToString(new File(SaturnEnvProperties.REG_CENTER_JSON_FILE), StandardCharsets.UTF_8);
+			ArrayList<RegistryCenterConfiguration> list = (ArrayList<RegistryCenterConfiguration>) JSON.parseArray(json, RegistryCenterConfiguration.class);
+			for (RegistryCenterConfiguration conf : list) {
+				try {
+					conf.initNameAndNamespace(conf.getNameAndNamespace());
+					if (conf.getZkAlias() == null) {
+						conf.setZkAlias(conf.getZkAddressList());
 					}
-					CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
-					cluster.setCuratorFramework(curatorFramework);
+					if (conf.getBootstrapKey() == null) {
+						conf.setBootstrapKey(conf.getZkAddressList());
+					}
+					ZkCluster cluster = newClusterMap.get(conf.getZkAddressList());
+					if (cluster == null) {
+						CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
+						cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), curatorFramework);
+						newClusterMap.put(conf.getZkAddressList(), cluster);
+					} else if (cluster.getCuratorFramework() == null) {
+						if (cluster.getCuratorFramework() != null && !cluster.getCuratorFramework().getZookeeperClient().isConnected()) {
+							cluster.getCuratorFramework().close();
+						}
+						CuratorFramework curatorFramework = curatorRepository.connect(conf.getZkAddressList(), "", conf.getDigest());
+						cluster.setCuratorFramework(curatorFramework);
+					}
+					if (cluster.getCuratorFramework() == null) {
+						throw new IllegalArgumentException();
+					}
+					cluster.setOffline(false);
+					conf.setVersion(getVersion(conf.getNamespace(), cluster.getCuratorFramework()));
+					cluster.getRegCenterConfList().add(conf);
+				} catch (Exception e) {
+					log.error("found an offline zkCluster: {}", conf);
+					log.error(e.getMessage(), e);
+					ZkCluster cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), null);
+					cluster.setOffline(true);
+					newClusterMap.put(conf.getZkAddressList(), cluster);
 				}
-				if (cluster.getCuratorFramework() == null) {
-					throw new IllegalArgumentException();
-				}
-				cluster.setOffline(false);
-				conf.setVersion(getVersion(conf.getNamespace(), cluster.getCuratorFramework()));
-				cluster.getRegCenterConfList().add(conf);
-			} catch (Exception e) {
-				log.error("found an offline zkCluster: {}", conf);
-				log.error(e.getMessage(), e);
-				ZkCluster cluster = new ZkCluster(conf.getZkAlias(), conf.getZkAddressList(), null);
-				cluster.setOffline(true);
-				newClusterMap.put(conf.getZkAddressList(), cluster);
 			}
 		}
 		shutdownZkClientInZkClusterMap();

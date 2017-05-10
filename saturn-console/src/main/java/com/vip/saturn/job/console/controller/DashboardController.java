@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import com.vip.saturn.job.console.domain.ZkCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,16 +69,21 @@ public class DashboardController  extends AbstractController {
 	public Map<String,Integer> count(HttpServletRequest request) {
     	String zkBsKey = getCurrentZkAddr(request.getSession());
     	Map<String,Integer> countMap = new HashMap<String,Integer>();
-    	countMap.put("executorInDockerCount",DashboardServiceImpl.DOCKER_EXECUTOR_COUNT_MAP.get(zkBsKey));
-    	countMap.put("executorNotInDockerCount",DashboardServiceImpl.PHYSICAL_EXECUTOR_COUNT_MAP.get(zkBsKey));
-    	HashMap<String, JobStatistics> jobMap = DashboardServiceImpl.JOB_MAP_CACHE.get(zkBsKey);
-    	if(jobMap != null){
-    		countMap.put("jobCount",jobMap.size());
-    	}
-    	ArrayList<RegistryCenterConfiguration> regList = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey).getRegCenterConfList();
-    	if(regList != null){
-    		countMap.put("domainCount",regList.size());
-    	}
+		if(zkBsKey != null) {
+			countMap.put("executorInDockerCount", DashboardServiceImpl.DOCKER_EXECUTOR_COUNT_MAP.get(zkBsKey));
+			countMap.put("executorNotInDockerCount", DashboardServiceImpl.PHYSICAL_EXECUTOR_COUNT_MAP.get(zkBsKey));
+			HashMap<String, JobStatistics> jobMap = DashboardServiceImpl.JOB_MAP_CACHE.get(zkBsKey);
+			if (jobMap != null) {
+				countMap.put("jobCount", jobMap.size());
+			}
+			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey);
+			if(zkCluster != null) {
+				ArrayList<RegistryCenterConfiguration> regList = zkCluster.getRegCenterConfList();
+				if (regList != null) {
+					countMap.put("domainCount", regList.size());
+				}
+			}
+		}
     	return countMap;
     }
     

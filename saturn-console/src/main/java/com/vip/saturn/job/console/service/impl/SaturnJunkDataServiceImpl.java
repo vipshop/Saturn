@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -36,10 +37,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.SaturnJunkData;
-import com.vip.saturn.job.console.domain.SaturnJunkDataOpType;
 import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.service.SaturnJunkDataService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
@@ -64,7 +61,14 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 
 	@Override
 	public Collection<SaturnJunkData> getJunkData(String zkAddr) {
-		ArrayList<RegistryCenterConfiguration> registryCenterList = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkAddr).getRegCenterConfList();
+		if(zkAddr == null) {
+			return Collections.emptyList();
+		}
+		ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkAddr);
+		if(zkCluster == null) {
+			return Collections.emptyList();
+		}
+		ArrayList<RegistryCenterConfiguration> registryCenterList = zkCluster.getRegCenterConfList();
 		if(CollectionUtils.isEmpty(registryCenterList)){
 			return Collections.emptyList();
 		}

@@ -1324,10 +1324,15 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public Map<String, Integer> loadDomainRankDistribution(String zkBsKey) {
 		Map<String, Integer> domainMap = new HashMap<>();
-		for (RegistryCenterConfiguration config : RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey).getRegCenterConfList()) {
-			Integer count = domainMap.get(config.getDegree());
-			if (null != config.getDegree()) {
-				domainMap.put(config.getDegree(), count == null?1:count + 1);
+		if(zkBsKey != null) {
+			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey);
+			if(zkCluster != null) {
+				for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()){
+					Integer count = domainMap.get(config.getDegree());
+					if (null != config.getDegree()) {
+						domainMap.put(config.getDegree(), count == null ? 1 : count + 1);
+					}
+				}
 			}
 		}
 		return domainMap;

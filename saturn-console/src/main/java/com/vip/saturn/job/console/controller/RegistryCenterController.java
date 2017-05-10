@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import com.vip.saturn.job.console.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,10 +34,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.domain.TreeNode;
 import com.vip.saturn.job.console.service.InitRegistryCenterService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -66,8 +63,14 @@ public class RegistryCenterController extends AbstractController {
 	@RequestMapping(method = RequestMethod.GET)
 	public Map<?, ?> load(final HttpSession session) {
 		Map<String, Object> model = new HashMap<String, Object>();
-		model.put("configs", RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(getCurrentZkAddr(session)).getRegCenterConfList());
-		model.put("currentZk", getCurrentZkAddr(session));
+		String currentZkAddr = getCurrentZkAddr(session);
+		if(currentZkAddr != null) {
+			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(currentZkAddr);
+			if(zkCluster != null) {
+				model.put("configs", zkCluster.getRegCenterConfList());
+			}
+			model.put("currentZk", currentZkAddr);
+		}
 		return model;
 	}
 
@@ -140,7 +143,15 @@ public class RegistryCenterController extends AbstractController {
 		if (!Strings.isNullOrEmpty(fp)) {
 			return connectAndLoadJobs(request, fp, session);
 		}
-		return InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.get(getCurrentZkAddr(session)).getChildren(); 
+		String currentZkAddr = getCurrentZkAddr(session);
+		if(currentZkAddr == null) {
+			return new ArrayList<>();
+		}
+		TreeNode treeNode = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.get(currentZkAddr);
+		if(treeNode != null) {
+			return treeNode.getChildren();
+		}
+		return new ArrayList<>();
 	}
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)
