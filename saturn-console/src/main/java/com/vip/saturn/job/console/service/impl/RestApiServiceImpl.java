@@ -6,12 +6,18 @@ import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.service.helper.ReuseCallBack;
 import com.vip.saturn.job.console.service.helper.ReuseCallBackWithoutReturn;
 import com.vip.saturn.job.console.service.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.integrate.entity.AlarmInfo;
+import com.vip.saturn.job.integrate.exception.ReportAlarmException;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -46,6 +52,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Resource
     private JobOperationService jobOperationService;
+
+    @Resource
+    private ReportAlarmService reportAlarmService;
 
     @Override
     public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -333,6 +342,20 @@ public class RestApiServiceImpl implements RestApiService {
                     curatorFrameworkOp.update(enabledNodePath, "false");
                 } else {
                     throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(), "The job is already disable");
+                }
+            }
+        });
+    }
+
+    @Override
+    public void raiseAlarm(final String namespace, final String jobName, final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                try {
+                    reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
+                } catch (ReportAlarmException e) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
                 }
             }
         });

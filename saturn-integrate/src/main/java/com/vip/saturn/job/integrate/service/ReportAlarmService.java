@@ -1,5 +1,6 @@
 package com.vip.saturn.job.integrate.service;
 
+import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 
 import java.util.List;
@@ -46,5 +47,16 @@ public interface ReportAlarmService {
      * @param timeout4AlarmSeconds The timeout4AlarmSeconds of job configured
      */
     void dashboardTimeout4AlarmJob(String namespace, String jobName, List<Integer> timeoutItems, int timeout4AlarmSeconds) throws ReportAlarmException;
+
+    /**
+     * Raise customized alarm by Saturn job.
+     *
+     * @param namespace The domain or namespace
+     * @param jobName   The job name
+     * @param shardItem The shardItem number
+     * @param alarmInfo The alarm info.
+     * @throws ReportAlarmException
+     */
+    void raise(String namespace, String jobName, Integer shardItem, AlarmInfo alarmInfo) throws ReportAlarmException;
 
 }

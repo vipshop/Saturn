@@ -8,6 +8,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -187,83 +191,50 @@ public class RestApiController {
         }
         Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
 
-        jobConfig.setJobName(checkAndGetParametersValueAsString(reqParams, "jobName", true));
+        jobConfig.setJobName(ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true));
 
-        jobConfig.setDescription(checkAndGetParametersValueAsString(reqParams, "description", false));
+        jobConfig.setDescription(ControllerUtils.checkAndGetParametersValueAsString(reqParams, "description", false));
 
-        jobConfig.setChannelName(checkAndGetParametersValueAsString(configParams, "channelName", false));
+        jobConfig.setChannelName(ControllerUtils.checkAndGetParametersValueAsString(configParams, "channelName", false));
 
-        jobConfig.setCron(checkAndGetParametersValueAsString(configParams, "cron", false));
+        jobConfig.setCron(ControllerUtils.checkAndGetParametersValueAsString(configParams, "cron", false));
 
-        jobConfig.setJobClass(checkAndGetParametersValueAsString(configParams, "jobClass", false));
+        jobConfig.setJobClass(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobClass", false));
 
-        jobConfig.setJobParameter(checkAndGetParametersValueAsString(configParams, "jobParameter", false));
+        jobConfig.setJobParameter(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
-        jobConfig.setJobType(checkAndGetParametersValueAsString(configParams, "jobType", true));
+        jobConfig.setJobType(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true));
 
-        jobConfig.setLoadLevel(checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
+        jobConfig.setLoadLevel(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
 
-        jobConfig.setLocalMode(checkAndGetParametersValueAsBoolean(configParams, "localMode", false));
+        jobConfig.setLocalMode(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "localMode", false));
 
-        jobConfig.setPausePeriodDate(checkAndGetParametersValueAsString(configParams, "pausePeriodDate", false));
+        jobConfig.setPausePeriodDate(ControllerUtils.checkAndGetParametersValueAsString(configParams, "pausePeriodDate", false));
 
-        jobConfig.setPausePeriodTime(checkAndGetParametersValueAsString(configParams, "pausePeriodTime", false));
+        jobConfig.setPausePeriodTime(ControllerUtils.checkAndGetParametersValueAsString(configParams, "pausePeriodTime", false));
 
-        jobConfig.setPreferList(checkAndGetParametersValueAsString(configParams,"preferList", false));
+        jobConfig.setPreferList(ControllerUtils.checkAndGetParametersValueAsString(configParams, "preferList", false));
 
-        jobConfig.setQueueName(checkAndGetParametersValueAsString(configParams,"queueName", false));
+        jobConfig.setQueueName(ControllerUtils.checkAndGetParametersValueAsString(configParams, "queueName", false));
 
-        jobConfig.setShardingItemParameters(checkAndGetParametersValueAsString(configParams,"shardingItemParameters", true));
+        jobConfig.setShardingItemParameters(ControllerUtils.checkAndGetParametersValueAsString(configParams, "shardingItemParameters", true));
 
-        jobConfig.setShardingTotalCount(checkAndGetParametersValueAsInteger(configParams,"shardingTotalCount", true));
+        jobConfig.setShardingTotalCount(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "shardingTotalCount", true));
 
-        jobConfig.setTimeout4AlarmSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
+        jobConfig.setTimeout4AlarmSeconds(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
 
-        jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
+        jobConfig.setTimeoutSeconds(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
 
-        jobConfig.setUseDispreferList(checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
+        jobConfig.setUseDispreferList(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
 
-        jobConfig.setUseSerial(checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
+        jobConfig.setUseSerial(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
 
-        jobConfig.setJobDegree(checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
+        jobConfig.setJobDegree(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
 
-        jobConfig.setDependencies(checkAndGetParametersValueAsString(configParams, "dependencies", false));
+        jobConfig.setDependencies(ControllerUtils.checkAndGetParametersValueAsString(configParams, "dependencies", false));
 
         return jobConfig;
     }
 
-    private String checkAndGetParametersValueAsString(Map<String, Object> reqParams, String key, boolean isMandatory) throws SaturnJobConsoleException {
-        if(reqParams.containsKey(key)) {
-            String value =  (String)reqParams.get(key);
-            return StringUtils.isBlank(value) ? null : value;
-        } else {
-            if (isMandatory){
-                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, key));
-            }
-            return null;
-        }
-    }
-
-    private Integer checkAndGetParametersValueAsInteger(Map<String, Object> reqParams, String key, boolean isMandatory) throws SaturnJobConsoleException {
-        if(reqParams.containsKey(key)) {
-            return (Integer)reqParams.get(key);
-        } else {
-            if (isMandatory){
-                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, key));
-            }
-            return null;
-        }
-    }
-
-    private Boolean checkAndGetParametersValueAsBoolean(Map<String, Object> reqParams, String key, boolean isMandatory) throws SaturnJobConsoleException {
-        if(reqParams.containsKey(key)) {
-            return (Boolean)reqParams.get(key);
-        } else {
-            if (isMandatory){
-                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, key));
-            }
-            return Boolean.FALSE;
-        }
-    }
 
 }

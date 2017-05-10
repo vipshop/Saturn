@@ -3,6 +3,7 @@ package com.vip.saturn.job.console.service;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.integrate.entity.AlarmInfo;
 
 import java.util.List;
 
@@ -17,8 +18,11 @@ public interface RestApiService {
      * @param jobConfig construct from the request.
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * - namespace or jobName is not found (statusCode = 404)
-     * - Job with the same name is already created. (statusCode = 400)
+     * <ul>
+     * <li>namespace or jobName is not found (statusCode = 404)</li>
+     * <li>Job with the same name is already created. (statusCode = 400）</li>
+     * <li>Other exceptions (statusCode = 500)</li>
+     * </ul>
      */
     void createJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
@@ -30,7 +34,10 @@ public interface RestApiService {
      * @param jobName
      * @return
      * @throws SaturnJobConsoleException for below scenarios:
-     * - namespace or jobName is not found (statusCode = 404)
+     * <ul>
+     * <li>namespace or jobName is not found (statusCode = 404)</li>
+     * <li>Other exceptions (statusCode = 500)</li>
+     * </ul>
      */
     RestApiJobInfo getRestAPIJobInfo(String namespace, String jobName) throws SaturnJobConsoleException;
 
@@ -45,11 +52,12 @@ public interface RestApiService {
      * Nothing will return once the the job is enable successfully;
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * - The job was already enabled (statusCode = 201)
-     * - The update interval time cannot less than 3 seconds (statusCode = 403)
-     * - Enable the job after creation within 10 seconds (statusCode = 403)
-     * - Other exceptions (statusCode = 500) 
-     *
+     * <ul>
+     * <li>The job was already enabled (statusCode = 201)</li>
+     * <li>The update interval time cannot less than 3 seconds (statusCode = 403)</li>
+     * <li>Enable the job after creation within 10 seconds (statusCode = 403)</li>
+     * <li>Other exceptions (statusCode = 500)</li>
+     *</ul>
      */
     void enableJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
@@ -59,11 +67,27 @@ public interface RestApiService {
      * Nothing will return when disable successfully;
      *
      * @throws SaturnJobConsoleException for below scenarios:
-     * - The job was already disabled (statusCode = 201) 
-     * - The update interval time cannot less than 3 seconds (statusCode = 403)
-     * - Other exceptions (statusCode = 500) 
-     *
+     * <ul>
+     * <li>The job was already disabled (statusCode = 201)</li>
+     * <li>The update interval time cannot less than 3 seconds (statusCode = 403)</li>
+     * <li>Other exceptions (statusCode = 500)</li>
+     * </ul>
      */
     void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
+
+    /**
+     * Raise alarm for specified job/shard exception.
+     *
+     * @param namespace
+     * @param jobName
+     * @param shardItem
+     * @param alarmInfo
+     * @throws SaturnJobConsoleException for below scenarios:
+     *                                   <ul>
+     *                                   <li>namespace or jobName is not found (statusCode = 404)</li>
+     *                                   <li>Job with the same name is already created. (statusCode = 400)</li>
+     *                                   </ul>
+     */
+    void raiseAlarm(String namespace, String jobName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobConsoleException;
 }
