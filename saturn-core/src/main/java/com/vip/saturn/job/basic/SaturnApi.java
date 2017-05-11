@@ -53,21 +53,19 @@ public class SaturnApi {
 	/**
 	 * The hook for client job raise alarm.
 	 *
-	 * @param jobName   The target job of alarm.
-	 * @param shardItem The target shard ite id of alarm. If null, then will use 0 by default.
 	 * @param alarmInfo The alarm information.
 	 */
-	public void raiseAlarm(String jobName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobException {
+	public void raiseAlarm(Map<String, Object> alarmInfo) throws SaturnJobException {
 		CloseableHttpClient httpClient = null;
 		try {
-			JSONObject json = constructRaiseAlarmRequestBody(jobName, shardItem, alarmInfo);
+			checkParameters(alarmInfo);
+			JSONObject json = new JSONObject(alarmInfo);
 			// prepare
 			httpClient = HttpClientBuilder.create().build();
 			HttpPost request = new HttpPost(SATURN_API_URI_PREFIX + namespace + "/alarm/raise");
 			StringEntity params = new StringEntity(json.toString());
 			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
-
 			// send request
 			CloseableHttpResponse httpResponse = httpClient.execute(request);
 			// handle response
@@ -114,50 +112,31 @@ public class SaturnApi {
 		}
 	}
 
-	private JSONObject constructRaiseAlarmRequestBody(String jobName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobException {
-		JSONObject jsonObject = new JSONObject();
-
-		if (StringUtils.isBlank(jobName)) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "jobName cannot be blank.");
-		}
-		jsonObject.put("jobName", jobName);
-
-		if (shardItem != null) {
-			jsonObject.put("shardItem", shardItem);
-		}
-
+	private void checkParameters(Map<String, Object> alarmInfo) throws SaturnJobException {
 		if (alarmInfo == null) {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo cannot be null.");
 		}
 
-		String level = alarmInfo.getLevel();
-		if (StringUtils.isBlank(level)) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.level cannot be blank.");
+		String jobName = (String) alarmInfo.get("jobName");
+		if (StringUtils.isBlank(jobName)) {
+			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "jobName cannot be blank.");
 		}
-		jsonObject.put("level", alarmInfo.getLevel());
 
-		String name = alarmInfo.getName();
+		String level = (String) alarmInfo.get("level");
+		if (StringUtils.isBlank(level)) {
+			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "level cannot be blank.");
+		}
+
+		String name = (String) alarmInfo.get("name");
 		if (StringUtils.isBlank(name)) {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.name cannot be blank.");
 		}
-		jsonObject.put("name", alarmInfo.getName());
 
-		String title = alarmInfo.getTitle();
+		String title = (String) alarmInfo.get("title");
 		if (StringUtils.isBlank(title)) {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.title cannot be blank.");
 		}
-		jsonObject.put("title", alarmInfo.getTitle());
 
-		String message = alarmInfo.getMessage();
-		if (StringUtils.isNotBlank(message)) {
-			jsonObject.put("message", alarmInfo.getMessage());
-		}
-
-		if (alarmInfo.getCustomFields() != null) {
-			jsonObject.put("additionalInfo", alarmInfo.getCustomFields());
-		}
-
-		return jsonObject;
 	}
 
 	private SaturnJobException constructSaturnJobException(Exception e) {
@@ -169,7 +148,6 @@ public class SaturnApi {
 		// other exception will be marked as
 		SaturnJobException saturnJobException = new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
 		saturnJobException.setStackTrace(e.getStackTrace());
-
 
 		return saturnJobException;
 	}

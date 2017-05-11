@@ -3,6 +3,7 @@ package com.vip.saturn.job;
 import com.vip.saturn.job.alarm.AlarmInfo;
 import com.vip.saturn.job.exception.SaturnJobException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractSaturnJavaJob {
@@ -74,7 +75,7 @@ public abstract class AbstractSaturnJavaJob {
 		if (saturnApi != null) {
 			Class<?> clazz = saturnApi.getClass();
 			try {
-				clazz.getMethod("raiseAlarm", String.class, Integer.class, AlarmInfo.class).invoke(saturnApi, jobName, shardItem, alarmInfo);
+				clazz.getMethod("raiseAlarm", Map.class).invoke(saturnApi, constructMap(jobName, shardItem, alarmInfo));
 			} catch (Exception e) {
 				e.printStackTrace();
 				if (e instanceof SaturnJobException) {
@@ -84,6 +85,20 @@ public abstract class AbstractSaturnJavaJob {
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
 			}
 		}
+	}
+
+	private Map<String, Object> constructMap(String jobName, Integer shardItem, AlarmInfo alarmInfo) {
+		Map<String, Object> ret = new HashMap<>();
+
+		ret.put("jobName", jobName);
+		ret.put("shardItem", shardItem);
+		ret.put("name", alarmInfo.getName());
+		ret.put("title", alarmInfo.getTitle());
+		ret.put("level", alarmInfo.getLevel());
+		ret.put("message", alarmInfo.getMessage());
+		ret.put("additionalInfo", alarmInfo.getCustomFields());
+
+		return ret;
 	}
 
 	public static Object getObject(){
