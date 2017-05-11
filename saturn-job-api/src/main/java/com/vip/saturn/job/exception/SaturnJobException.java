@@ -8,18 +8,17 @@ package com.vip.saturn.job.exception;
 
 public class SaturnJobException extends Exception {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final int CRON_VALID = 0;
+	public static final int ILLEGAL_ARGUMENT = 0;
 
 	public static final int JOB_NOT_FOUND = 1;
 
 	public static final int OUT_OF_ZK_LIMIT_MEMORY = 3;
-	
-	public static final int JOBNAME_VALID = 4;
+
+	public static final int JOB_NAME_INVALID = 4;
+
+	public static final int SYSTEM_ERROR = 5;
 
 	private int type;
 
@@ -27,6 +26,12 @@ public class SaturnJobException extends Exception {
 
 	public SaturnJobException(int type, String message) {
 		super();
+		this.type = type;
+		this.message = message;
+	}
+
+	public SaturnJobException(int type, String message, Throwable cause) {
+		super(cause);
 		this.type = type;
 		this.message = message;
 	}

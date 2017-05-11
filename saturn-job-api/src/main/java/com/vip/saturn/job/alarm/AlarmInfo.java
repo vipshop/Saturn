@@ -1,4 +1,4 @@
-package com.vip.saturn.job.integrate.entity;
+package com.vip.saturn.job.alarm;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,8 +11,6 @@ import java.util.Set;
  */
 public class AlarmInfo {
 
-    private String type;
-
     private String level;
 
     private String name;
@@ -23,11 +21,7 @@ public class AlarmInfo {
 
     private Map<String, String> customFields = new HashMap<>();
 
-    public AlarmInfo() {
-    }
-
-    public AlarmInfo(String type, String level, String name, String title, String message, Map<String, String> customFields) {
-        this.type = type;
+    public AlarmInfo(String level, String name, String title, String message, Map<String, String> customFields) {
         this.level = level;
         this.name = name;
         this.title = title;
@@ -42,8 +36,7 @@ public class AlarmInfo {
     @Override
     public String toString() {
         return "AlarmInfo{" +
-                "type='" + type + '\'' +
-                ", level='" + level + '\'' +
+                "level='" + level + '\'' +
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
                 ", message='" + message + '\'' +
@@ -59,14 +52,6 @@ public class AlarmInfo {
         }
 
         return result.substring(0, result.length() - 1);
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getName() {
@@ -109,5 +94,49 @@ public class AlarmInfo {
         this.customFields = customFields;
     }
 
+    public static class AlarmInfoBuilder {
+        private String level;
+
+        private String name;
+
+        private String title;
+
+        private String message;
+
+        private Map<String, String> customFields = new HashMap<>();
+
+        public AlarmInfoBuilder() {
+
+        }
+
+        public AlarmInfoBuilder level(String level) {
+            this.level = level;
+            return this;
+        }
+
+        public AlarmInfoBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public AlarmInfoBuilder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public AlarmInfoBuilder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public AlarmInfoBuilder customField(String key, String value) {
+            this.customFields.put(key, value);
+            return this;
+        }
+
+        public AlarmInfo build() {
+            return new AlarmInfo(level, name, title, message, customFields);
+        }
+    }
 }
 

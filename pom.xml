@@ -111,6 +111,8 @@
 		<jxl.version>2.6.12</jxl.version>
 
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+
+		<httpclient.version>4.5.2</httpclient.version>
 	</properties>
 
 	<dependencyManagement>
@@ -352,6 +354,11 @@
 				<groupId>commons-fileupload</groupId>
 				<artifactId>commons-fileupload</artifactId>
 				<version>${commons-fileupload.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.alibaba</groupId>

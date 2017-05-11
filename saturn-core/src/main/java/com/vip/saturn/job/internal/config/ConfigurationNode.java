@@ -77,8 +77,8 @@ public final class ConfigurationNode {
 	/**
 	 * 自定义上下文 
 	 */
-    public static final String CUSTOME_CONTEXT = ROOT + "/customContext";
-	
+    public static final String CUSTOM_CONTEXT = ROOT + "/customContext";
+
     /**
      * 作业接收的queue名字
      */

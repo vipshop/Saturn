@@ -1,9 +1,8 @@
 package com.vip.saturn.job.utils;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Strings;
 
 public class SystemEnvProperties {
 	static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
@@ -47,6 +46,12 @@ public class SystemEnvProperties {
 	 */
 	public static int VIP_SATURN_SHUTDOWN_TIMEOUT = 60;
 	public static int VIP_SATURN_SHUTDOWN_TIMEOUT_MAX = 5*60 - 10;
+
+	/**
+	 * Saturn Server Hostname.
+	 */
+	private static String NAME_VIP_SATURN_HOST_NAME = "VIP_SATURN_HOST_NAME";
+	public static String VIP_SATURN_HOST_NAME = System.getProperty(NAME_VIP_SATURN_HOST_NAME, System.getenv(NAME_VIP_SATURN_HOST_NAME));
 
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 

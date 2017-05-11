@@ -1,31 +1,22 @@
 package com.vip.saturn.job.java;
 
+import com.vip.saturn.job.SaturnJobExecutionContext;
+import com.vip.saturn.job.SaturnJobReturn;
+import com.vip.saturn.job.SaturnSystemErrorGroup;
+import com.vip.saturn.job.SaturnSystemReturnCode;
+import com.vip.saturn.job.basic.*;
+import com.vip.saturn.job.exception.JobException;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vip.saturn.job.SaturnJobExecutionContext;
-import com.vip.saturn.job.SaturnJobReturn;
-import com.vip.saturn.job.SaturnSystemErrorGroup;
-import com.vip.saturn.job.SaturnSystemReturnCode;
-import com.vip.saturn.job.basic.AbstractSaturnJob;
-import com.vip.saturn.job.basic.CrondJob;
-import com.vip.saturn.job.basic.JavaShardingItemCallable;
-import com.vip.saturn.job.basic.JobRegistry;
-import com.vip.saturn.job.basic.SaturnApi;
-import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.basic.SaturnExecutionContext;
-import com.vip.saturn.job.basic.ShardingItemFutureTask;
-import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
-import com.vip.saturn.job.exception.JobException;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 
 public class SaturnJavaJob extends CrondJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
@@ -73,7 +64,7 @@ public class SaturnJavaJob extends CrondJob {
 					if (jobBusinessInstance == null) {
 						jobBusinessInstance = jobClass.newInstance();
 					}
-					SaturnApi saturnApi = new SaturnApi();
+					SaturnApi saturnApi = new SaturnApi(getNamespace());
 					saturnApi.setConfigService(getConfigService());
 					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 

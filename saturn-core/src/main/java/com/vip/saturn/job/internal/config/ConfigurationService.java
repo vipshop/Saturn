@@ -17,25 +17,24 @@
 
 package com.vip.saturn.job.internal.config;
 
+import com.google.common.base.Strings;
+import com.vip.saturn.job.basic.AbstractSaturnService;
+import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.exception.SaturnJobException;
+import com.vip.saturn.job.exception.ShardingItemParametersException;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.JsonUtils;
+import org.codehaus.jackson.map.type.MapType;
+import org.codehaus.jackson.map.type.TypeFactory;
+import org.quartz.CronExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
-import org.codehaus.jackson.map.type.MapType;
-import org.codehaus.jackson.map.type.TypeFactory;
-import org.quartz.CronExpression;
-
-import com.google.common.base.Strings;
-import com.vip.saturn.job.basic.AbstractSaturnService;
-import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.exception.SaturnJobException;
-import com.vip.saturn.job.exception.ShardingItemParametersException;
-import com.vip.saturn.job.utils.JsonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 弹性化分布式作业配置服务.
@@ -256,47 +255,47 @@ public class ConfigurationService extends AbstractSaturnService {
 				cron0 = cron0.trim();
 				CronExpression.validateExpression(cron0);
 			} catch (ParseException e) {
-				throw new SaturnJobException(SaturnJobException.CRON_VALID, "The cron expression is valid: " + cron);
+				throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "The cron expression is valid: " + cron);
 			}
     	} else {
     		cron0 = "";
     	}
     	if(getJobNodeStorage().isJobExisted(jobName)) {
-	    	String oldCustomContextStr = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CUSTOME_CONTEXT);
-	    	Map<String, String> oldCustomContextMap = toCustomContext(oldCustomContextStr);
-	    	if(customContext != null && !customContext.isEmpty()) {
-	    		oldCustomContextMap.putAll(customContext);
-	    		String newCustomContextStr = toCustomContext(oldCustomContextMap);
-	    		if(newCustomContextStr.getBytes().length > 1024 * 1024) {
-	    			throw new SaturnJobException(SaturnJobException.OUT_OF_ZK_LIMIT_MEMORY, "The all customContext is out of zk limit memory(1M)");
-	    		}
-	    		getJobNodeStorage().replaceJobNode(jobName, ConfigurationNode.CUSTOME_CONTEXT, newCustomContextStr);
-	    	}
-	    	String oldCron = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CRON);
-	    	if(cron0 != null && oldCron != null && !cron0.equals(oldCron.trim())) {
-	    		getJobNodeStorage().updateJobNode(jobName, ConfigurationNode.CRON, cron0);
-	    	}
-    	} else {
-    		throw new SaturnJobException(SaturnJobException.JOB_NOT_FOUND, "The job is not found: " + jobName);
-    	}
-    }
-    
-    /**
-     * 获取统计作业处理数据数量的间隔时间.
-     * 
-     * @return 统计作业处理数据数量的间隔时间
-     */
-    public int getProcessCountIntervalSeconds() {
-    	return jobConfiguration.getProcessCountIntervalSeconds();
-    }
-    
-    /**
-     * 本机当前时间是否在作业暂停时间段范围内。
-     * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
-     * 
-     * @return 本机当前时间是否在作业暂停时间段范围内.
-     */
-    public boolean isInPausePeriod() {
+			String oldCustomContextStr = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CUSTOM_CONTEXT);
+			Map<String, String> oldCustomContextMap = toCustomContext(oldCustomContextStr);
+			if (customContext != null && !customContext.isEmpty()) {
+				oldCustomContextMap.putAll(customContext);
+				String newCustomContextStr = toCustomContext(oldCustomContextMap);
+				if (newCustomContextStr.getBytes().length > 1024 * 1024) {
+					throw new SaturnJobException(SaturnJobException.OUT_OF_ZK_LIMIT_MEMORY, "The all customContext is out of zk limit memory(1M)");
+				}
+				getJobNodeStorage().replaceJobNode(jobName, ConfigurationNode.CUSTOM_CONTEXT, newCustomContextStr);
+			}
+			String oldCron = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CRON);
+			if (cron0 != null && oldCron != null && !cron0.equals(oldCron.trim())) {
+				getJobNodeStorage().updateJobNode(jobName, ConfigurationNode.CRON, cron0);
+			}
+		} else {
+			throw new SaturnJobException(SaturnJobException.JOB_NOT_FOUND, "The job is not found: " + jobName);
+		}
+	}
+
+	/**
+	 * 获取统计作业处理数据数量的间隔时间.
+	 *
+	 * @return 统计作业处理数据数量的间隔时间
+	 */
+	public int getProcessCountIntervalSeconds() {
+		return jobConfiguration.getProcessCountIntervalSeconds();
+	}
+
+	/**
+	 * 本机当前时间是否在作业暂停时间段范围内。
+	 * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+	 *
+	 * @return 本机当前时间是否在作业暂停时间段范围内.
+	 */
+	public boolean isInPausePeriod() {
 		return isInPausePeriod(new Date());
     }
     
@@ -450,42 +449,44 @@ public class ConfigurationService extends AbstractSaturnService {
      * @return 获取自定义上下文
      */
     public Map<String, String> getCustomContext() {
-    	String jobNodeData = getJobNodeStorage().getJobNodeData(ConfigurationNode.CUSTOME_CONTEXT);
-    	return toCustomContext(jobNodeData);
-    }
-    
-    /**
-     * 将str转为map
-     * @param customContextStr str字符串
-     * @return 自定义上下文map
-     */
-    private Map<String, String> toCustomContext(String customContextStr) {
-    	Map<String, String> customContext = null;
-    	if(customContextStr != null) {
-    		customContext = JsonUtils.fromJSON(customContextStr, customContextType);
-    	}
-    	if(customContext == null) {
-    		customContext = new HashMap<>();
-    	}
-    	return customContext;
-    }
-    
-    /**
-     * 将map转为str字符串
-     * @param customContextMap 自定义上下文map
-     * @return 自定义上下文str
-     */
-    private String toCustomContext(Map<String, String> customContextMap) {
-    	String result = JsonUtils.toJSON(customContextMap);
-    	if(result == null) {
-    		result = "";
-    	}
-    	return result.trim();
-    }
-    
-    
-    public String getRawJobType(){
-   	 return jobConfiguration.getJobType();
+		String jobNodeData = getJobNodeStorage().getJobNodeData(ConfigurationNode.CUSTOM_CONTEXT);
+		return toCustomContext(jobNodeData);
+	}
+
+	/**
+	 * 将str转为map
+	 *
+	 * @param customContextStr str字符串
+	 * @return 自定义上下文map
+	 */
+	private Map<String, String> toCustomContext(String customContextStr) {
+		Map<String, String> customContext = null;
+		if (customContextStr != null) {
+			customContext = JsonUtils.fromJSON(customContextStr, customContextType);
+		}
+		if (customContext == null) {
+			customContext = new HashMap<>();
+		}
+		return customContext;
+	}
+
+	/**
+	 * 将map转为str字符串
+	 *
+	 * @param customContextMap 自定义上下文map
+	 * @return 自定义上下文str
+	 */
+	private String toCustomContext(Map<String, String> customContextMap) {
+		String result = JsonUtils.toJSON(customContextMap);
+		if (result == null) {
+			result = "";
+		}
+		return result.trim();
+	}
+
+
+	public String getRawJobType() {
+		return jobConfiguration.getJobType();
    }
     
     /**
