@@ -4,11 +4,16 @@ import com.vip.saturn.job.alarm.AlarmInfo;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.msg.MsgHolder;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractSaturnMsgJob {
 	private Object saturnApi;
-	
+
+	public static Object getObject() {
+		return null;
+	}
+
 	public void setSaturnApi(Object saturnApi) {
 		this.saturnApi = saturnApi;
 	}
@@ -66,14 +71,25 @@ public abstract class AbstractSaturnMsgJob {
 		if (saturnApi != null) {
 			Class<?> clazz = saturnApi.getClass();
 			try {
-				clazz.getMethod("raiseAlarm", String.class, Integer.class, AlarmInfo.class).invoke(saturnApi, jobName, shardItem, alarmInfo);
+				clazz.getMethod("raiseAlarm", Map.class).invoke(saturnApi, constructMap(jobName, shardItem, alarmInfo));
 			} catch (Exception e) {
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
 			}
 		}
 	}
 
-	public static Object getObject(){
-		return null;
+	private Map<String, Object> constructMap(String jobName, Integer shardItem, AlarmInfo alarmInfo) {
+		Map<String, Object> ret = new HashMap<>();
+
+		ret.put("jobName", jobName);
+		ret.put("shardItem", shardItem);
+		ret.put("name", alarmInfo.getName());
+		ret.put("title", alarmInfo.getTitle());
+		ret.put("level", alarmInfo.getLevel());
+		ret.put("message", alarmInfo.getMessage());
+		ret.put("additionalInfo", alarmInfo.getCustomFields());
+
+		return ret;
 	}
+
 }

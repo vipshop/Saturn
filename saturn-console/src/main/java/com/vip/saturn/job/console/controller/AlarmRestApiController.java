@@ -51,6 +51,8 @@ public class AlarmRestApiController {
 
             reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
 
+            logger.info("alarm is raised: {}", alarmInfo.toString());
+
             return new ResponseEntity<String>(HttpStatus.CREATED);
         } catch (Exception e) {
             return constructOtherResponses(e);
