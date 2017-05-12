@@ -19,14 +19,13 @@ package com.vip.saturn.job.internal.election;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.vip.saturn.job.internal.storage.JobNodeStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
-import com.vip.saturn.job.utils.BlockUtils;
 
 /**
  * 选举主节点的服务.
@@ -48,8 +47,9 @@ public class LeaderElectionService extends AbstractSaturnService{
         synchronized (isShutdown) {
             if(isShutdown.compareAndSet(false, true)) {
                 try { // Release my leader position
-                    if (executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
-                        getJobNodeStorage().removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
+                    JobNodeStorage jobNodeStorage = getJobNodeStorage();
+                    if (jobNodeStorage.isConnected() && executorName.equals(jobNodeStorage.getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
+                        jobNodeStorage.removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
                         log.info("[{}] msg={} that was {}'s leader, released itself", jobName, executorName, jobName);
                     }
                 } catch (Throwable t) {

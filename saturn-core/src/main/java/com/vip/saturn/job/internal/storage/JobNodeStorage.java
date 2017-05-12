@@ -327,4 +327,8 @@ public class JobNodeStorage {
         	newZk.close();
     	}
     }
+
+    public boolean isConnected() {
+        return coordinatorRegistryCenter.isConnected();
+    }
 }
