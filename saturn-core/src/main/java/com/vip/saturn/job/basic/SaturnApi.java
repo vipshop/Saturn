@@ -45,8 +45,12 @@ public class SaturnApi {
 	public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
 		try {
 			configService.updateJobCron(jobName, cron, customContext);
+		} catch (SaturnJobException se) {
+			logger.error("SaturnJobException throws: {}", se.getMessage());
+			throw se;
 		} catch (Exception e) {
-			throw constructSaturnJobException(e);
+			logger.error("Other exception throws: {}", e.getMessage());
+			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 		}
 	}
 
@@ -70,8 +74,12 @@ public class SaturnApi {
 			CloseableHttpResponse httpResponse = httpClient.execute(request);
 			// handle response
 			handleResponse(httpResponse);
+		} catch (SaturnJobException se) {
+			logger.error("SaturnJobException throws: {}", se.getMessage());
+			throw se;
 		} catch (Exception e) {
-			throw constructSaturnJobException(e);
+			logger.error("Other exception throws: {}", e.getMessage());
+			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 		} finally {
 			if (httpClient != null) {
 				try {
@@ -137,19 +145,6 @@ public class SaturnApi {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.title cannot be blank.");
 		}
 
-	}
-
-	private SaturnJobException constructSaturnJobException(Exception e) {
-		logger.error("SaturnJobException throws: {%s}", e.getMessage());
-
-		if (e instanceof SaturnJobException) {
-			return (SaturnJobException) e;
-		}
-		// other exception will be marked as
-		SaturnJobException saturnJobException = new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
-		saturnJobException.setStackTrace(e.getStackTrace());
-
-		return saturnJobException;
 	}
 
 	private SaturnJobException constructSaturnJobException(int statusCode, String msg) {
