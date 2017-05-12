@@ -48,10 +48,10 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_SHUTDOWN_TIMEOUT_MAX = 5*60 - 10;
 
 	/**
-	 * Saturn Server Hostname.
+	 * Saturn Console URI.
 	 */
-	private static String NAME_VIP_SATURN_HOST_NAME = "VIP_SATURN_HOST_NAME";
-	public static String VIP_SATURN_HOST_NAME = System.getProperty(NAME_VIP_SATURN_HOST_NAME, System.getenv(NAME_VIP_SATURN_HOST_NAME));
+	private static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
+	public static String VIP_SATURN_CONSOLE_URI = System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI));
 
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 

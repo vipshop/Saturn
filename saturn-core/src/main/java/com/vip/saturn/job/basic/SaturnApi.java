@@ -1,7 +1,6 @@
 package com.vip.saturn.job.basic;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vip.saturn.job.alarm.AlarmInfo;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -28,7 +27,7 @@ public class SaturnApi {
 
 	private static Logger logger = LoggerFactory.getLogger(SaturnApi.class);
 
-	private static final String SATURN_API_URI_PREFIX = SystemEnvProperties.VIP_SATURN_HOST_NAME + "/rest/v1/";
+	private static final String SATURN_API_URI_PREFIX = SystemEnvProperties.VIP_SATURN_CONSOLE_URI + "/rest/v1/";
 
 	private String namespace;
 
@@ -38,7 +37,7 @@ public class SaturnApi {
 		this.namespace = namespace;
 	}
 
-	// cannot be called
+	// Make sure that only SaturnApi(String namespace) will be called.
 	private SaturnApi() {
 	}
 
