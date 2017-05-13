@@ -95,47 +95,47 @@ public class AlarmInfo {
     }
 
     public static class AlarmInfoBuilder {
-        private String level;
+        private String nestedLevel;
 
-        private String name;
+        private String nestedName;
 
-        private String title;
+        private String nestedTitle;
 
-        private String message;
+        private String nestedMessage;
 
-        private Map<String, String> customFields = new HashMap<>();
+        private Map<String, String> nestedCustomFields = new HashMap<>();
 
         public AlarmInfoBuilder() {
 
         }
 
         public AlarmInfoBuilder level(String level) {
-            this.level = level;
+            this.nestedLevel = level;
             return this;
         }
 
         public AlarmInfoBuilder name(String name) {
-            this.name = name;
+            this.nestedName = name;
             return this;
         }
 
         public AlarmInfoBuilder title(String title) {
-            this.title = title;
+            this.nestedTitle = title;
             return this;
         }
 
         public AlarmInfoBuilder message(String message) {
-            this.message = message;
+            this.nestedMessage = message;
             return this;
         }
 
         public AlarmInfoBuilder customField(String key, String value) {
-            this.customFields.put(key, value);
+            this.nestedCustomFields.put(key, value);
             return this;
         }
 
         public AlarmInfo build() {
-            return new AlarmInfo(level, name, title, message, customFields);
+            return new AlarmInfo(nestedLevel, nestedName, nestedTitle, nestedMessage, nestedCustomFields);
         }
     }
 }

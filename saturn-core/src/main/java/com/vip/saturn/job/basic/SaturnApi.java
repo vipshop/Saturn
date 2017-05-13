@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +85,7 @@ public class SaturnApi {
 				try {
 					httpClient.close();
 				} catch (IOException e) {
-					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
+					logger.error("Exception during httpclient closed.", e);
 				}
 			}
 		}
@@ -99,18 +100,12 @@ public class SaturnApi {
 		}
 
 		if (status >= 400 && status <= 500) {
-			HttpEntity entity = httpResponse.getEntity();
-			StringBuffer buffer = new StringBuffer();
-			if (entity != null) {
-				BufferedReader in = new BufferedReader(new InputStreamReader(entity.getContent()));
-				String temp = null;
-				while ((temp = in.readLine()) != null) {
-					buffer.append(temp);
-				}
-			}
-			if (buffer.toString().length() > 0) {
-				String errMsg = JSONObject.parseObject(buffer.toString()).getString("message");
+			String responseBody = EntityUtils.toString(httpResponse.getEntity());
+			if (StringUtils.isNotBlank(responseBody)) {
+				String errMsg = JSONObject.parseObject(responseBody).getString("message");
 				throw constructSaturnJobException(status, errMsg);
+			} else {
+				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");
 			}
 		} else {
 			// if have unexpected status, then throw RuntimeException directly.

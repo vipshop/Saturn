@@ -62,7 +62,7 @@ public abstract class AbstractSaturnJavaJob {
             try {
                 clazz.getMethod("updateJobCron", String.class, String.class, Map.class).invoke(saturnApi, jobName, cron, customContext);
             } catch (Exception e) {
-                throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
+                throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
             }
         }
     }
@@ -80,7 +80,7 @@ public abstract class AbstractSaturnJavaJob {
             try {
                 clazz.getMethod("raiseAlarm", Map.class).invoke(saturnApi, constructMap(jobName, shardItem, alarmInfo));
             } catch (Exception e) {
-                throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e.getCause());
+                throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
             }
         }
     }
