@@ -131,12 +131,12 @@ public class SaturnApi {
 
 		String name = (String) alarmInfo.get("name");
 		if (StringUtils.isBlank(name)) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.name cannot be blank.");
+			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "name cannot be blank.");
 		}
 
 		String title = (String) alarmInfo.get("title");
 		if (StringUtils.isBlank(title)) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo.title cannot be blank.");
+			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "title cannot be blank.");
 		}
 
 	}

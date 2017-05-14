@@ -36,13 +36,13 @@ public class AlarmRestApiController {
 
     public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
-    private final static Logger logger = LoggerFactory.getLogger(RestApiController.class);
+    private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
     @Resource
     private ReportAlarmService reportAlarmService;
 
     @RequestMapping(value = "/raise", method = RequestMethod.POST)
-    public ResponseEntity<String> raiseAlarm(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
+    public ResponseEntity<String> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
         try {
             String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
             Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", true);
