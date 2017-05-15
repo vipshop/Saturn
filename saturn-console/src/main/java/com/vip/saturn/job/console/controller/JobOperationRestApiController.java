@@ -100,7 +100,7 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = "/{namespace}/{jobName}/enable", method = RequestMethod.POST)
+    @RequestMapping(value = {"/{namespace}/{jobName}/enable", "/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST)
     public ResponseEntity<String> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
@@ -118,7 +118,7 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = "/{namespace}/{jobName}/disable", method = RequestMethod.POST)
+    @RequestMapping(value = {"/{namespace}/{jobName}/disable", "/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST)
     public ResponseEntity<String> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
