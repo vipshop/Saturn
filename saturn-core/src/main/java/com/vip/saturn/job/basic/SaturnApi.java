@@ -66,7 +66,7 @@ public class SaturnApi {
 			JSONObject json = new JSONObject(alarmInfo);
 			// prepare
 			httpClient = HttpClientBuilder.create().build();
-			HttpPost request = new HttpPost(SATURN_API_URI_PREFIX + namespace + "/alarm/raise");
+			HttpPost request = new HttpPost(SATURN_API_URI_PREFIX + namespace + "/alarms/raise");
 			StringEntity params = new StringEntity(json.toString());
 			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
