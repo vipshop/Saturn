@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by kfchu on 10/05/2017.
  */
 @Controller
-@RequestMapping("/rest/v1/{namespace}/alarm")
+@RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController {
 
     public final static String NOT_EXISTED_PREFIX = "does not exists";
@@ -49,11 +49,11 @@ public class AlarmRestApiController {
 
             AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
+            logger.info("try to raise alarm: {}", alarmInfo.toString());
+
             reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
 
-            logger.info("alarm is raised: {}", alarmInfo.toString());
-
-            return new ResponseEntity<String>(HttpStatus.CREATED);
+            return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (Exception e) {
             return constructOtherResponses(e);
         }
@@ -110,7 +110,7 @@ public class AlarmRestApiController {
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(message);
-        return new ResponseEntity<String>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<String> constructErrorResponse(String errorMsg, HttpStatus status) {
@@ -120,6 +120,6 @@ public class AlarmRestApiController {
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(errorMsg);
 
-        return new ResponseEntity<String>(JSON.toJSONString(restApiErrorResult), httpHeaders, status);
+        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, status);
     }
 }
