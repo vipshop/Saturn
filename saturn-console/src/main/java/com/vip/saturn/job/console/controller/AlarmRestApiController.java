@@ -41,8 +41,8 @@ public class AlarmRestApiController {
     @Resource
     private ReportAlarmService reportAlarmService;
 
-    @RequestMapping(value = "/raise", method = RequestMethod.POST)
-    public ResponseEntity<String> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
+    @RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
         try {
             String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
             Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", true);
@@ -85,9 +85,8 @@ public class AlarmRestApiController {
         return alarmInfo;
     }
 
-    private ResponseEntity<String> constructOtherResponses(Exception e) {
+    private ResponseEntity<Object> constructOtherResponses(Exception e) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         if (e instanceof SaturnJobConsoleHttpException) {
             SaturnJobConsoleHttpException saturnJobConsoleHttpException = (SaturnJobConsoleHttpException) e;
@@ -110,16 +109,16 @@ public class AlarmRestApiController {
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(message);
-        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<String> constructErrorResponse(String errorMsg, HttpStatus status) {
+    private ResponseEntity<Object> constructErrorResponse(String errorMsg, HttpStatus status) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(errorMsg);
 
-        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, status);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
     }
 }

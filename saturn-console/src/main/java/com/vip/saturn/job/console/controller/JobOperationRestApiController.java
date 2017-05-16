@@ -51,8 +51,8 @@ public class JobOperationRestApiController {
     @Resource
     private JobOperationService jobOperationService;
 
-    @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST)
-    public ResponseEntity<String> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
+    @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
         try{
             JobConfig jobConfig = constructJobConfig(namespace, reqParams);
             jobOperationService.validateJobConfig(jobConfig);
@@ -65,10 +65,9 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET)
-    public ResponseEntity<String> query(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) {
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> query(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         try{
             if(StringUtils.isBlank(namespace)){
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
@@ -79,31 +78,29 @@ public class JobOperationRestApiController {
 
             RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
 
-            return new ResponseEntity<>(JSON.toJSONString(restAPIJobInfo), httpHeaders, HttpStatus.OK);
+            return new ResponseEntity<Object>(restAPIJobInfo, httpHeaders, HttpStatus.OK);
         } catch (Exception e){
             return constructOtherResponses(e);
         }
     }
 
-    @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET)
-    public ResponseEntity<String> queryAll(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) {
+    @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> queryAll(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         try {
             if (namespace == null || namespace.trim().length() == 0) {
                 throw new SaturnJobConsoleException("The namespace of parameter is required");
             }
             List<RestApiJobInfo> restApiJobInfos = restApiService.getRestApiJobInfos(namespace);
-            return new ResponseEntity<>(JSON.toJSONString(restApiJobInfos), httpHeaders, HttpStatus.OK);
+            return new ResponseEntity<Object>(restApiJobInfos, httpHeaders, HttpStatus.OK);
         } catch (Exception e) {
             return constructOtherResponses(e);
         }
     }
 
-    @RequestMapping(value = {"/{namespace}/{jobName}/enable", "/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST)
-    public ResponseEntity<String> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
+    @RequestMapping(value = {"/{namespace}/{jobName}/enable", "/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         try {
             if (namespace == null || namespace.trim().length() == 0) {
                 throw new SaturnJobConsoleException("The namespace of parameter is required");
@@ -118,10 +115,9 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = {"/{namespace}/{jobName}/disable", "/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST)
-    public ResponseEntity<String> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
+    @RequestMapping(value = {"/{namespace}/{jobName}/disable", "/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         try {
             if (namespace == null || namespace.trim().length() == 0) {
                 throw new SaturnJobConsoleException("The namespace of parameter is required");
@@ -136,9 +132,8 @@ public class JobOperationRestApiController {
         }
     }
 
-    private ResponseEntity<String> constructOtherResponses(Exception e){
+    private ResponseEntity<Object> constructOtherResponses(Exception e) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         if (e instanceof SaturnJobConsoleHttpException){
             SaturnJobConsoleHttpException saturnJobConsoleHttpException = (SaturnJobConsoleHttpException) e;
@@ -164,17 +159,16 @@ public class JobOperationRestApiController {
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(message);
-        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<String> constructErrorResponse(String errorMsg, HttpStatus status){
+    private ResponseEntity<Object> constructErrorResponse(String errorMsg, HttpStatus status) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(errorMsg);
 
-        return new ResponseEntity<>(JSON.toJSONString(restApiErrorResult), httpHeaders, status);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
     }
 
 
