@@ -17,20 +17,12 @@
 
 package com.vip.saturn.job.console.service;
 
-import java.util.Collection;
-import java.util.List;
-
-import com.vip.saturn.job.console.domain.ExecutionInfo;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobMigrateInfo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+
+import java.util.Collection;
+import java.util.List;
 
 //TODO: merge JobOperationService with JobDimensionService
 public interface JobDimensionService {
@@ -80,7 +72,9 @@ public interface JobDimensionService {
      *         	-2：Executor的版本存在大于、等于或小于指定的版本
 	 */
     int isNewSaturn(String version);
-    
+
+    int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
     String getAllExecutors(String jobName);
     
     String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);

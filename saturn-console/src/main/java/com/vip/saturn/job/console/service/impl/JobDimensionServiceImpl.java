@@ -28,7 +28,6 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-
-import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -342,12 +339,13 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return false;
 	}
 
+	@Override
 	public String geJobRunningInfo(final String jobName) {
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	if(!curatorFrameworkOp.checkExists(serverNodePath)) {
-    		return "";
-    	}
+		if (!curatorFrameworkOp.checkExists(serverNodePath)) {
+			return "";
+		}
 		List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
 		// server为空表示没有Server工作，这个时候作业状态应该是Crashed
 		if (servers == null || servers.size() == 0) {
@@ -967,13 +965,20 @@ public class JobDimensionServiceImpl implements JobDimensionService {
      *         	-3：Executor的版本存在大于、等于或小于指定的版本
      * </pre></blockquote>
 	 */
+	@Override
 	public int isNewSaturn(String version) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		if(!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath())){
+		return isNewSaturn(version, null);
+	}
+
+	@Override
+	public int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp cfo) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = cfo == null ? curatorRepository.inSessionClient() : cfo;
+
+		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath())) {
 			return -1;
 		}
 		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
-		if(executors == null || executors.size() == 0){
+		if (executors == null || executors.size() == 0) {
 			return -1;
 		}
 		int oldExecutorSize = 0;
@@ -981,48 +986,48 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		int lessThanExecutorSize = 0;
 		int moreThanExecutorSize = 0;
 		boolean isCompareVersion = !Strings.isNullOrEmpty(version);
-		for(String executor : executors){
+		for (String executor : executors) {
 			String executorVersionPath = ExecutorNodePath.getExecutorNodePath(executor, "version");
 			if (!curatorFrameworkOp.checkExists(executorVersionPath)) {
 				++oldExecutorSize;
 				continue;
 			}
 			++newExecutorSize;
-			if(isCompareVersion){// 1.1.0及之后的版本比较，1.1.0及其以后的executor才有version节点
+			if (isCompareVersion) {// 1.1.0及之后的版本比较，1.1.0及其以后的executor才有version节点
 				String executorVersion = curatorFrameworkOp.getData(executorVersionPath);
-				try{
-					if(Strings.isNullOrEmpty(executorVersion)){
+				try {
+					if (Strings.isNullOrEmpty(executorVersion)) {
 						++lessThanExecutorSize;// 如果取到的版本号为空串，默认认为是比当前指定版本要低
 						continue;
 					}
-					int compareResult = compareVersion(executorVersion,version);
-					if(compareResult < 0){// 比指定版本小
+					int compareResult = compareVersion(executorVersion, version);
+					if (compareResult < 0) {// 比指定版本小
 						++lessThanExecutorSize;
 						continue;
 					}
 					++moreThanExecutorSize;// 大于等于指定版本
-				}catch(NumberFormatException e){
+				} catch (NumberFormatException e) {
 					++lessThanExecutorSize;// 如果遇到非数字（非1.1.x）的版本号，如saturn-dev，默认认为是比当前指定版本要低
 				}
 			}
 		}
 		int executorSize = executors.size();
-		if(oldExecutorSize == executorSize){// 先判断如果是全是旧版本的话直接返回
+		if (oldExecutorSize == executorSize) {// 先判断如果是全是旧版本的话直接返回
 			return 0;
 		}
-		if(isCompareVersion){// 新版本才存在需要比较版本号的情况
-			if(lessThanExecutorSize > 0 && moreThanExecutorSize > 0){
+		if (isCompareVersion) {// 新版本才存在需要比较版本号的情况
+			if (lessThanExecutorSize > 0 && moreThanExecutorSize > 0) {
 				return -3;
 			}
-			if(lessThanExecutorSize == executorSize){
+			if (lessThanExecutorSize == executorSize) {
 				return -2;
 			}
-			if(moreThanExecutorSize == executorSize){
+			if (moreThanExecutorSize == executorSize) {
 				return 2;
 			}
 			return -1;// 该域下的executor有些有version节点，有些没有version节点，无法判断
 		}
-		if(newExecutorSize == executorSize){
+		if (newExecutorSize == executorSize) {
 			return 1;
 		}
 		return -1;
