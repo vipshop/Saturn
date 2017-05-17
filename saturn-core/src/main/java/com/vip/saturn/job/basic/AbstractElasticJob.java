@@ -14,16 +14,6 @@
 
 package com.vip.saturn.job.basic;
 
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.data.Stat;
-import org.quartz.JobExecutionException;
-import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.config.JobConfiguration;
@@ -39,6 +29,15 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.data.Stat;
+import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
 
 /**
  * 弹性化分布式作业的基类.
@@ -398,6 +397,8 @@ public abstract class AbstractElasticJob implements Stopable {
 	public abstract void onForceStop(int item);
 
 	public abstract void onTimeout(int item);
+
+	public abstract void onNeedRaiseAlarm(int item, String alarmMessage);
 
 	public void notifyJobEnabled() {}
 

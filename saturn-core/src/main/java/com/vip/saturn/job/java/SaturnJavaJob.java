@@ -350,4 +350,9 @@ public class SaturnJavaJob extends CrondJob {
 	public void onTimeout(int item) {
 	}
 
+	@Override
+	public void onNeedRaiseAlarm(int item, String alarmMessage) {
+		//TODO: need to raise alarm by implementor
+	}
+
 }
