@@ -1,5 +1,4 @@
 FROM java:7
-MAINTAINER jamin.li@vipshop.com
 
 ARG SATURN_EXECUTOR_DOWNLOAD_URL
 

@@ -1,5 +1,4 @@
 FROM java:7
-MAINTAINER jamin.li@vipshop.com
 
 ARG SATURN_CONSOLE_DOWNLOAD_URL
 
