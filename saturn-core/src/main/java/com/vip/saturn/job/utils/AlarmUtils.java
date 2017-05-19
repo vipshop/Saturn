@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -67,16 +68,16 @@ public class AlarmUtils {
     private static void handleResponse(CloseableHttpResponse httpResponse) throws IOException, SaturnJobException {
         int status = httpResponse.getStatusLine().getStatusCode();
 
-        if (status == 201) {
+        if (status == HttpStatus.SC_CREATED) {
             logger.info("raise alarm successfully.");
             return;
         }
 
-        if (status >= 400 && status <= 500) {
+        if (status >= HttpStatus.SC_BAD_REQUEST && status <= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
             String responseBody = EntityUtils.toString(httpResponse.getEntity());
             if (StringUtils.isNotBlank(responseBody)) {
                 String errMsg = JSONObject.parseObject(responseBody).getString("message");
-                throw constructSaturnJobException(status, errMsg);
+                throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, errMsg);
             } else {
                 throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");
             }
@@ -114,10 +115,4 @@ public class AlarmUtils {
 
     }
 
-    private static SaturnJobException constructSaturnJobException(int statusCode, String msg) {
-        if (statusCode >= 400 && statusCode < 500) {
-            return new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, msg);
-        }
-        return new SaturnJobException(SaturnJobException.SYSTEM_ERROR, msg);
-    }
 }
