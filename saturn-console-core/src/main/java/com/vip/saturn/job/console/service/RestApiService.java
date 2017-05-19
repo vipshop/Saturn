@@ -81,6 +81,7 @@ public interface RestApiService {
      *
      * @param namespace
      * @param jobName
+     * @param exectorName
      * @param shardItem
      * @param alarmInfo
      * @throws SaturnJobConsoleException for below scenarios:
@@ -89,5 +90,5 @@ public interface RestApiService {
      *                                   <li>Job with the same name is already created. (statusCode = 400)</li>
      *                                   </ul>
      */
-    void raiseAlarm(String namespace, String jobName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobConsoleException;
+    void raiseAlarm(String namespace, String jobName, String exectorName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobConsoleException;
 }

@@ -1,12 +1,11 @@
 package com.vip.saturn.job.console.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.ControllerUtils;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,19 +38,20 @@ public class AlarmRestApiController {
     private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
     @Resource
-    private ReportAlarmService reportAlarmService;
+    private RestApiService restApiService;
 
     @RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
         try {
             String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
-            Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", true);
+            String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
+            Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
 
             AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-            logger.info("try to raise alarm: {}", alarmInfo.toString());
+            logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName, executorName, shardItem);
 
-            reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
+            restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
 
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (Exception e) {

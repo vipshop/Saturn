@@ -348,12 +348,17 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public void raiseAlarm(final String namespace, final String jobName, final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+    public void raiseAlarm(final String namespace, final String jobName, final String executorName, final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 try {
-                    reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
+                    //verify executor exist or not
+                    if (curatorFrameworkOp.checkExists(JobNodePath.getServerNodePath(jobName, executorName))) {
+                        throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format("The executor {%s} does not exists.", executorName));
+                    }
+
+                    reportAlarmService.raise(namespace, jobName, executorName, shardItem, alarmInfo);
                 } catch (ReportAlarmException e) {
                     throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
                 }

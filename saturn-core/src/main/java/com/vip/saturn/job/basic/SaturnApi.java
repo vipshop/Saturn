@@ -17,10 +17,13 @@ public class SaturnApi {
 
 	private String namespace;
 
+	private String executorName;
+
 	private ConfigurationService configService;
 
-	public SaturnApi(String namespace) {
+	public SaturnApi(String namespace, String executorName) {
 		this.namespace = namespace;
+		this.executorName = executorName;
 	}
 
 	// Make sure that only SaturnApi(String namespace) will be called.
@@ -45,6 +48,8 @@ public class SaturnApi {
 	 * @param alarmInfo The alarm information.
 	 */
 	public void raiseAlarm(Map<String, Object> alarmInfo) throws SaturnJobException {
+		// set executorName into the alarmInfo
+		alarmInfo.put("executorName", executorName);
 		AlarmUtils.raiseAlarm(alarmInfo, namespace);
 	}
 

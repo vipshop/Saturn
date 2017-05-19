@@ -34,7 +34,9 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
     }
 
     @Override
-    public void raise(String namespace, String jobName, Integer shardItem, AlarmInfo alarmInfo) throws ReportAlarmException {
+    public void raise(String namespace, String jobName, String executorName, Integer shardItem, AlarmInfo alarmInfo) throws ReportAlarmException {
         // do nothing. should be implemented.
     }
+
+
 }
