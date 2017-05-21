@@ -53,14 +53,6 @@ public class SaturnApi {
 		AlarmUtils.raiseAlarm(alarmInfo, namespace);
 	}
 
-
-	private SaturnJobException constructSaturnJobException(int statusCode, String msg) {
-		if (statusCode >= 400 && statusCode < 500) {
-			return new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, msg);
-		}
-		return new SaturnJobException(SaturnJobException.SYSTEM_ERROR, msg);
-	}
-
 	public void setConfigService(ConfigurationService configService) {
 		this.configService = configService;
 	}
