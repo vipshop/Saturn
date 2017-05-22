@@ -33,7 +33,10 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author chembo.huang
@@ -46,7 +49,9 @@ public class DashboardServiceImpl implements DashboardService {
 
 	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
 
-	private static int ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
+	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
+
+	private static final long INTERVAL_DELTA_IN_SECOND = 30L;
 
 	static {
 		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE", System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));
@@ -929,7 +934,8 @@ public class DashboardServiceImpl implements DashboardService {
 			//有completed节点：尝试取分片节点的Mtime时间
 			//1、能取到则根据Mtime计算下次触发时间，比较下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 			//2、取不到（为0）说明completed节点刚好被删除了，节点有变动说明正常（上一秒还在，下一秒不在了）
-			else if (itemChildren.contains("completed")) {
+			long currentTime = System.currentTimeMillis();
+			if (itemChildren.contains("completed")) {
 				String completedPath = JobNodePath.getExecutionNodePath(abnormalJob.getJobName(), shardingItemStr, "completed");
 				long completedMtime = getMtime(curatorClient, completedPath);
 
@@ -940,18 +946,23 @@ public class DashboardServiceImpl implements DashboardService {
 		    			nextFireTimeAfterThis = completedMtime;
 		    		}
 
-		    		Long nextFireTimeExcludePausePeriod = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis,
-		    				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
-		    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
-		    		if (nextFireTimeExcludePausePeriod != null && nextFireTimeExcludePausePeriod + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime() ) {
-		    			return nextFireTimeExcludePausePeriod;
-		    		}
+					Long nextFireTimeExcludePausePeriod = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis,
+							abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+					// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
+					if (nextFireTimeExcludePausePeriod != null && nextFireTimeExcludePausePeriod + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
+						// 为了避免误报情况(executor时钟快过console时钟产生的误报)，加上一个delta，然后再计算
+						if (!doubleCheckShardingStateAfterAddingDeltaInterval(curatorClient, abnormalJob, nextFireTimeAfterThis, nextFireTimeExcludePausePeriod, currentTime)) {
+							log.debug("still has problem after adding delta interval");
+							return nextFireTimeExcludePausePeriod;
+						} else {
+							return -1;
+						}
+					}
 				} else {
 					return -1;
 				}
 			}
-
-			// 既没有running又没completed视为异常
+			// 既没有running又没completed，同时nextFireTime + ALLOW_DELAY_MILLIONSECONDS < 当期时间，视为异常
 			else {
 				if (abnormalJob.getNextFireTimeAfterEnabledMtime() == 0) {
 					abnormalJob.setNextFireTimeAfterEnabledMtime(jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(getMtime(curatorClient, enabledPath),
@@ -960,14 +971,31 @@ public class DashboardServiceImpl implements DashboardService {
 
 				Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtime();
 	    		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
-	    		if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime()) {
-	    			return nextFireTime;
-	    		}
+				if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
+					return nextFireTime;
+				}
 			}
 		}
 
 		return -1;
-	}		
+	}
+
+	/**
+	 * 为了避免executor时钟比Console快的现象，加上一个修正值，然后计算新的nextFireTime + ALLOW_DELAY_MILLIONSECONDS 依然早于当前时间。
+	 *
+	 * @return false: 依然有异常；true: 修正后没有异常。
+	 */
+	private boolean doubleCheckShardingStateAfterAddingDeltaInterval(CuratorFramework curatorClient, AbnormalJob abnormalJob, long nextFireTimeAfterThis, Long nextFireTimeExcludePausePeriod, long currentTime) {
+		Long nextFireTimeExcludePausePeriodWithDelta = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis + INTERVAL_DELTA_IN_SECOND,
+				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+
+		if (nextFireTimeExcludePausePeriod.equals(nextFireTimeExcludePausePeriodWithDelta) || nextFireTimeExcludePausePeriodWithDelta + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
+			log.debug("still not work after adding delta interval");
+			return false;
+		}
+
+		return true;
+	}
 
 	private void checkJavaOrShellJobHasProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob, String jobDegree, List<AbnormalJob> unnormalJobList) {
 		try {
