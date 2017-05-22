@@ -17,16 +17,10 @@
 
 package com.vip.saturn.job.console.controller;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
+import com.vip.saturn.job.console.service.DashboardService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.ConsoleUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +29,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
-import com.vip.saturn.job.console.service.DashboardService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.DashboardServiceImpl;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("dashboard")
@@ -58,10 +51,13 @@ public class DashboardController  extends AbstractController {
     @RequestMapping(value = "refresh", method = RequestMethod.GET)
     @ResponseBody
 	public String refresh(HttpServletRequest request) {
-    	Date start = new Date();
-    	dashboardService.refreshStatistics2DB();
-    	return "done refresh. takes:" + (new Date().getTime() - start.getTime()) +"\n\r" +
-    		DashboardServiceImpl.UNNORMAL_JOB_LIST_CACHE;
+		if(ConsoleUtil.isDashboardOn()) {
+			Date start = new Date();
+			dashboardService.refreshStatistics2DB(true);
+			return "done refresh. takes:" + (new Date().getTime() - start.getTime());
+		} else {
+			return "dashboard is off";
+		}
     }
     
     @RequestMapping(value = "count", method = RequestMethod.POST)
@@ -70,19 +66,10 @@ public class DashboardController  extends AbstractController {
     	String zkBsKey = getCurrentZkAddr(request.getSession());
     	Map<String,Integer> countMap = new HashMap<String,Integer>();
 		if(zkBsKey != null) {
-			countMap.put("executorInDockerCount", DashboardServiceImpl.DOCKER_EXECUTOR_COUNT_MAP.get(zkBsKey));
-			countMap.put("executorNotInDockerCount", DashboardServiceImpl.PHYSICAL_EXECUTOR_COUNT_MAP.get(zkBsKey));
-			HashMap<String, JobStatistics> jobMap = DashboardServiceImpl.JOB_MAP_CACHE.get(zkBsKey);
-			if (jobMap != null) {
-				countMap.put("jobCount", jobMap.size());
-			}
-			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey);
-			if(zkCluster != null) {
-				ArrayList<RegistryCenterConfiguration> regList = zkCluster.getRegCenterConfList();
-				if (regList != null) {
-					countMap.put("domainCount", regList.size());
-				}
-			}
+			countMap.put("executorInDockerCount", dashboardService.executorInDockerCount(zkBsKey));
+			countMap.put("executorNotInDockerCount", dashboardService.executorNotInDockerCount(zkBsKey));
+			countMap.put("jobCount", dashboardService.jobCount(zkBsKey));
+			countMap.put("domainCount", registryCenterService.domainCount(zkBsKey));
 		}
     	return countMap;
     }

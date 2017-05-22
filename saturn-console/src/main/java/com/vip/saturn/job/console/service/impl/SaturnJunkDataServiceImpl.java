@@ -64,7 +64,7 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 		if(zkAddr == null) {
 			return Collections.emptyList();
 		}
-		ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkAddr);
+		ZkCluster zkCluster = registryCenterService.getZkCluster(zkAddr);
 		if(zkCluster == null) {
 			return Collections.emptyList();
 		}
@@ -76,7 +76,7 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 		for(RegistryCenterConfiguration registryCenter : registryCenterList){
 			try {
 				String namespace = registryCenter.getNameAndNamespace();
-				RegistryCenterClient registryCenterClient = RegistryCenterServiceImpl.getCuratorByNameAndNamespace(namespace);
+				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
 				if(registryCenterClient == null){
 					continue;
 				}
@@ -189,13 +189,13 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	@Override
 	public String removeSaturnJunkData(SaturnJunkData saturnJunkData) {
 		try{
-			ArrayList<RegistryCenterConfiguration> registryCenterList = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(saturnJunkData.getZkAddr()).getRegCenterConfList();
+			ArrayList<RegistryCenterConfiguration> registryCenterList = registryCenterService.getZkCluster(saturnJunkData.getZkAddr()).getRegCenterConfList();
 			if(CollectionUtils.isEmpty(registryCenterList)){
 				return "清理废弃数据失败，根据集群zk key:"+saturnJunkData.getZkAddr()+"，在注册中心没有取到相关信息";
 			}
 			for(RegistryCenterConfiguration registryCenter : registryCenterList){
 				String namespace = registryCenter.getNameAndNamespace();
-				RegistryCenterClient registryCenterClient = RegistryCenterServiceImpl.getCuratorByNameAndNamespace(namespace);
+				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
 				if(registryCenterClient == null){
 					continue;
 				}

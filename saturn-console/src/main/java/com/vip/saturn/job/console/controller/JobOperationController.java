@@ -38,7 +38,6 @@ import com.google.common.base.Strings;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
 
 @RestController
@@ -60,9 +59,6 @@ public class JobOperationController extends AbstractController {
 
     @Resource
     private ExecutorService executorService;
-    
-    @Resource
-    private RegistryCenterService registryCenterService;
     
     @RequestMapping(value = "toggleJobEnabledState", method = RequestMethod.POST)
   	public RequestResult toggleJobEnabledState(HttpServletRequest request, String jobName, Boolean state, Boolean confirmed) {

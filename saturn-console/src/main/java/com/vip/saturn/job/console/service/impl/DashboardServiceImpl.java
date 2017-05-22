@@ -1,42 +1,10 @@
 package com.vip.saturn.job.console.service.impl;
 
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
-
-import com.vip.saturn.job.console.utils.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.KeeperException.NoNodeException;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.AbnormalContainer;
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.AbnormalShardingState;
-import com.vip.saturn.job.console.domain.DomainStatistics;
-import com.vip.saturn.job.console.domain.ExecutorStatistics;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
-import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
 import com.vip.saturn.job.console.exception.JobConsoleException;
@@ -50,13 +18,22 @@ import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
-import com.vip.saturn.job.console.utils.ConsoleUtil;
-import com.vip.saturn.job.console.utils.ContainerNodePath;
-import com.vip.saturn.job.console.utils.ExecutorNodePath;
-import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.console.utils.ResetCountType;
-import com.vip.saturn.job.console.utils.SaturnThreadFactory;
-import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
+import com.vip.saturn.job.console.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.KeeperException.NoNodeException;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
 
 /**
  * @author chembo.huang
@@ -71,17 +48,27 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private static int ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
 
+	static {
+		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE", System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));
+		if (refreshInterval != null) {
+			try {
+				REFRESH_INTERVAL_IN_MINUTE = Integer.valueOf(refreshInterval);
+				ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+	}
 
-	public static HashMap<String/** zkBsKey **/, List<AbnormalJob>> UNNORMAL_JOB_LIST_CACHE = new HashMap<>();
-	public static HashMap<String/** zkBsKey **/, HashMap<String/** {jobname}-{domain} */, JobStatistics>> JOB_MAP_CACHE = new HashMap<>();
-	public static HashMap<String/** zkBsKey **/, HashMap<String/** {executorName}-{domain} */, ExecutorStatistics>> EXECUTOR_MAP_CACHE = new HashMap<>();
-	public static HashMap<String/** zkBsKey **/, Integer/** docker executor count */> DOCKER_EXECUTOR_COUNT_MAP = new HashMap<>();
-	public static HashMap<String/** zkBsKey **/, Integer/** physical executor count */> PHYSICAL_EXECUTOR_COUNT_MAP = new HashMap<>();
-	public static Map<String/** domainName_jobName_shardingItemStr **/, AbnormalShardingState/** abnormal sharding state */> ABNORMAL_SHARDING_STATE_CACHE = new ConcurrentHashMap<>();
+	private Map<String, Integer> executorInDockerCountMapCache = new HashMap<>();
+	private Map<String, Integer> executorNotInDockerCountMapCache = new HashMap<>();
+	private Map<String, Integer> jobCountMapCache = new HashMap<>();
 
-	private static ScheduledExecutorService abnormalShardingCacheCleaner = Executors.newScheduledThreadPool(1, new SaturnThreadFactory("AbnormalSharding-Cache-Cleaner"));;
-	
+	private Map<String/** domainName_jobName_shardingItemStr **/, AbnormalShardingState/** abnormal sharding state */> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
+	private Timer refreshStatisticsTimmer;
+	private Timer cleanAbnormalShardingCacheTimer;
+	private ExecutorService updateStatisticsThreadPool;
 
 	@Autowired
 	private SaturnStatisticsService saturnStatisticsService;
@@ -104,375 +91,506 @@ public class DashboardServiceImpl implements DashboardService {
 	@PostConstruct
 	public void init() throws Exception {
 		if(ConsoleUtil.isDashboardOn()){
+			initUpdateStatisticsThreadPool();
 			startRefreshStatisticsTimmer();
+			startCleanAbnormalShardingCacheTimer();
 		}
 	}
 
-	static {
-		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE", System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));
-		if (refreshInterval != null) {
-			try {
-				REFRESH_INTERVAL_IN_MINUTE = Integer.valueOf(refreshInterval);
-				ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
+	@PreDestroy
+	public void destroy() {
+		if(updateStatisticsThreadPool != null) {
+			updateStatisticsThreadPool.shutdownNow();
 		}
-		
-		//启动定时清理分片告警缓存信息线程
-		abnormalShardingCacheCleaner.scheduleAtFixedRate(new AbnormalShardingCacheCleaner(), 0,
-				ALLOW_DELAY_MILLIONSECONDS, TimeUnit.MILLISECONDS);
+		if(refreshStatisticsTimmer != null) {
+			refreshStatisticsTimmer.cancel();
+		}
+		if(cleanAbnormalShardingCacheTimer != null) {
+			cleanAbnormalShardingCacheTimer.cancel();
+		}
 	}
 
-	private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-		@Override
-		public Thread newThread(Runnable r) {
-			String name = "single-update-satatistics";
-			Thread t = new Thread(r, name);
-			if (t.isDaemon()) {
-				t.setDaemon(false);
-			}
-			if (t.getPriority() != Thread.NORM_PRIORITY) {
-				t.setPriority(Thread.NORM_PRIORITY);
-			}
-			return t;
-		}
-	});
-
-	private TimerTask refreshStatisticsTask() {
-		return new TimerTask() {
+	private void initUpdateStatisticsThreadPool() {
+		updateStatisticsThreadPool = Executors.newSingleThreadExecutor(new ThreadFactory() {
 			@Override
-			public void run() {
-				try {
-					Date start = new Date();
-					log.info("start refresh statistics.");
-					refreshStatistics2DB();
-					log.info("end refresh statistics, takes " + (new Date().getTime()  - start.getTime()));
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+			public Thread newThread(Runnable r) {
+				String name = "single-update-statistics";
+				Thread t = new Thread(r, name);
+				if (t.isDaemon()) {
+					t.setDaemon(false);
 				}
+				if (t.getPriority() != Thread.NORM_PRIORITY) {
+					t.setPriority(Thread.NORM_PRIORITY);
+				}
+				return t;
 			}
-		};
+		});
 	}
 
 	private void startRefreshStatisticsTimmer() {
-		Timer timer = new Timer("refresh-statistics-to-db-timmer", true);
-		timer.scheduleAtFixedRate(refreshStatisticsTask(), 1000 * 15 , 1000 * 60 * REFRESH_INTERVAL_IN_MINUTE);
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				refreshStatistics2DB(false);
+			}
+		};
+		refreshStatisticsTimmer = new Timer("refresh-statistics-to-db-timmer", true);
+		refreshStatisticsTimmer.scheduleAtFixedRate(timerTask, 1000 * 15 , 1000 * 60 * REFRESH_INTERVAL_IN_MINUTE);
+	}
+
+	private void startCleanAbnormalShardingCacheTimer() {
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				for (Entry<String, AbnormalShardingState> entrySet : abnormalShardingStateCache.entrySet()) {
+					AbnormalShardingState shardingState = entrySet.getValue();
+					if (shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()) {
+						abnormalShardingStateCache.remove(entrySet.getKey());
+						log.info("Clean abnormalShardingStateCache with key: {}, alertTime: {}, zkNodeCVersion: {}: " + entrySet.getKey(), shardingState.getAlertTime(), shardingState.getZkNodeCVersion());
+					}
+				}
+			}
+		};
+		cleanAbnormalShardingCacheTimer = new Timer("clean-abnormalShardingCache-timmer", true);
+		cleanAbnormalShardingCacheTimer.scheduleAtFixedRate(timerTask, 0, ALLOW_DELAY_MILLIONSECONDS);
 	}
 
 	@Override
-	public synchronized void  refreshStatistics2DB() {
-		Collection<ZkCluster> zkClusters = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.values();
-		for (ZkCluster zkCluster : zkClusters) {
-			HashMap<String/** {jobname}-{domain} */, JobStatistics> jobMap = new HashMap<>();
-			HashMap<String/** {executorName}-{domain} */, ExecutorStatistics> executorMap = new HashMap<>();
-			List<JobStatistics> jobList = new ArrayList<>();
-			List<ExecutorStatistics> executorList = new ArrayList<>();
-			List<AbnormalJob> unnormalJobList = new ArrayList<>();
-			List<AbnormalJob> unableFailoverJobList = new ArrayList<>();
-			List<Timeout4AlarmJob> timeout4AlarmJobList = new ArrayList<>();
-			List<DomainStatistics> domainList = new ArrayList<>();
-			List<AbnormalContainer> abnormalContainerList = new ArrayList<>();
-			Map<String, Long> versionDomainNumber = new HashMap<>(); // 不同版本的域数量
-			Map<String, Long> versionExecutorNumber = new HashMap<>(); // 不同版本的executor数量
-			int exeInDocker = 0;
-			int exeNotInDocker = 0;
-			int totalCount = 0;
-			int errorCount = 0;
-			for (RegistryCenterConfiguration config : RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkCluster.getZkAddr()).getRegCenterConfList()) {
-				// 过滤非当前zk连接
-				if (zkCluster.getZkAddr().equals(config.getZkAddressList())) {
-					int processCountOfThisDomainAllTime = 0;
-					int errorCountOfThisDomainAllTime = 0;
-					int processCountOfThisDomainThisDay = 0;
-					int errorCountOfThisDomainThisDay = 0;
+	public synchronized void refreshStatistics2DB(boolean force) {
+		log.info("start refresh statistics.");
+		Date start = new Date();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		if (zkClusterList != null) {
+			for (ZkCluster zkCluster : zkClusterList) {
+				if (force || registryCenterService.isDashboardLeader(zkCluster.getZkAddr())) {
+					refreshStatistics2DB(zkCluster);
+				}
+				// no matter, update caches
+				updateExecutorInDockerCountCache(zkCluster.getZkAddr());
+				updateExecutorNotInDockerCountCache(zkCluster.getZkAddr());
+				updateExecutorJobCountCache(zkCluster.getZkAddr());
+			}
+		}
+		log.info("end refresh statistics, takes " + (new Date().getTime() - start.getTime()));
+	}
 
-					DomainStatistics domain = new DomainStatistics(config.getNamespace(), zkCluster.getZkAddr(), config.getNameAndNamespace());
+	private void updateExecutorJobCountCache(String zkAddr) {
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_COUNT, zkAddr);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			jobCountMapCache.put(zkAddr, count == null ? 0 : count);
+		} else {
+			jobCountMapCache.put(zkAddr, 0);
+		}
+	}
 
-					RegistryCenterClient registryCenterClient = registryCenterService.connect(config.getNameAndNamespace());
-					try {
-						if (registryCenterClient != null) {
-							CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-							CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-							// 统计稳定性
-							if (checkExists(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH)) {
-								String countStr = getData(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH);
-								domain.setShardingCount(Integer.valueOf(countStr));
-							}
-							String version = null; // 该域的版本号
-							long executorNumber = 0L; // 该域的在线executor数量
-							// 统计物理容器资源，统计版本数据
-							if (null != curatorClient.checkExists().forPath(ExecutorNodePath.getExecutorNodePath())) {
-								List<String> executors = curatorClient.getChildren().forPath(ExecutorNodePath.getExecutorNodePath());
-								if(executors != null) {
-									for (String exe : executors) {
-										// 在线的才统计
-										if (null != curatorClient.checkExists().forPath(ExecutorNodePath.getExecutorIpNodePath(exe))) {
-											// 统计是物理机还是容器
-											String executorMapKey = exe + "-" + config.getNamespace();
-											ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
-											if (executorStatistics == null) {
-												executorStatistics = new ExecutorStatistics(exe, config.getNamespace());
-												executorStatistics.setNns(domain.getNns());
-												executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(exe)));
-												executorMap.put(executorMapKey, executorStatistics);
-											}
-											// set runInDocker field
-											if (checkExists(curatorClient, ExecutorNodePath.get$ExecutorTaskNodePath(exe))) {
-												executorStatistics.setRunInDocker(true);
-												exeInDocker++;
-											} else {
-												exeNotInDocker++;
-											}
+	private void updateExecutorNotInDockerCountCache(String zkAddr) {
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkAddr);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			executorNotInDockerCountMapCache.put(zkAddr, count == null ? 0 : count);
+		} else {
+			executorNotInDockerCountMapCache.put(zkAddr, 0);
+		}
+	}
+
+	private void updateExecutorInDockerCountCache(String zkAddr) {
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkAddr);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			executorInDockerCountMapCache.put(zkAddr, count == null ? 0 : count);
+		} else {
+			executorInDockerCountMapCache.put(zkAddr, 0);
+		}
+	}
+
+	private void refreshStatistics2DB(ZkCluster zkCluster) {
+		HashMap<String/** {jobname}-{domain} */, JobStatistics> jobMap = new HashMap<>();
+		HashMap<String/** {executorName}-{domain} */, ExecutorStatistics> executorMap = new HashMap<>();
+		List<JobStatistics> jobList = new ArrayList<>();
+		List<ExecutorStatistics> executorList = new ArrayList<>();
+		List<AbnormalJob> unnormalJobList = new ArrayList<>();
+		List<AbnormalJob> unableFailoverJobList = new ArrayList<>();
+		List<Timeout4AlarmJob> timeout4AlarmJobList = new ArrayList<>();
+		List<DomainStatistics> domainList = new ArrayList<>();
+		List<AbnormalContainer> abnormalContainerList = new ArrayList<>();
+		Map<String, Long> versionDomainNumber = new HashMap<>(); // 不同版本的域数量
+		Map<String, Long> versionExecutorNumber = new HashMap<>(); // 不同版本的executor数量
+		int exeInDocker = 0;
+		int exeNotInDocker = 0;
+		int totalCount = 0;
+		int errorCount = 0;
+		for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()) {
+			// 过滤非当前zk连接
+			if (zkCluster.getZkAddr().equals(config.getZkAddressList())) {
+				int processCountOfThisDomainAllTime = 0;
+				int errorCountOfThisDomainAllTime = 0;
+				int processCountOfThisDomainThisDay = 0;
+				int errorCountOfThisDomainThisDay = 0;
+
+				DomainStatistics domain = new DomainStatistics(config.getNamespace(), zkCluster.getZkAddr(), config.getNameAndNamespace());
+
+				RegistryCenterClient registryCenterClient = registryCenterService.connect(config.getNameAndNamespace());
+				try {
+					if (registryCenterClient != null) {
+						CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+						CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+						// 统计稳定性
+						if (checkExists(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH)) {
+							String countStr = getData(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH);
+							domain.setShardingCount(Integer.valueOf(countStr));
+						}
+						String version = null; // 该域的版本号
+						long executorNumber = 0L; // 该域的在线executor数量
+						// 统计物理容器资源，统计版本数据
+						if (null != curatorClient.checkExists().forPath(ExecutorNodePath.getExecutorNodePath())) {
+							List<String> executors = curatorClient.getChildren().forPath(ExecutorNodePath.getExecutorNodePath());
+							if(executors != null) {
+								for (String exe : executors) {
+									// 在线的才统计
+									if (null != curatorClient.checkExists().forPath(ExecutorNodePath.getExecutorIpNodePath(exe))) {
+										// 统计是物理机还是容器
+										String executorMapKey = exe + "-" + config.getNamespace();
+										ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
+										if (executorStatistics == null) {
+											executorStatistics = new ExecutorStatistics(exe, config.getNamespace());
+											executorStatistics.setNns(domain.getNns());
+											executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(exe)));
+											executorMap.put(executorMapKey, executorStatistics);
 										}
-										// 获取版本号
-										if (version == null) {
-											version = getData(curatorClient, ExecutorNodePath.getExecutorVersionNodePath(exe));
+										// set runInDocker field
+										if (checkExists(curatorClient, ExecutorNodePath.get$ExecutorTaskNodePath(exe))) {
+											executorStatistics.setRunInDocker(true);
+											exeInDocker++;
+										} else {
+											exeNotInDocker++;
 										}
 									}
-									executorNumber = executors.size();
+									// 获取版本号
+									if (version == null) {
+										version = getData(curatorClient, ExecutorNodePath.getExecutorVersionNodePath(exe));
+									}
 								}
+								executorNumber = executors.size();
 							}
-							// 统计版本数据
-							if(version == null) { // 未知版本
-								version = "-1";
+						}
+						// 统计版本数据
+						if(version == null) { // 未知版本
+							version = "-1";
+						}
+						if(versionDomainNumber.containsKey(version)) {
+							Long domainNumber = versionDomainNumber.get(version);
+							versionDomainNumber.put(version, domainNumber + 1);
+						} else {
+							versionDomainNumber.put(version, 1L);
+						}
+						if(versionExecutorNumber.containsKey(version)) {
+							Long executorNumber0 = versionExecutorNumber.get(version);
+							versionExecutorNumber.put(version, executorNumber0 + executorNumber);
+						} else {
+							if(executorNumber != 0) {
+								versionExecutorNumber.put(version, executorNumber);
 							}
-							if(versionDomainNumber.containsKey(version)) {
-								Long domainNumber = versionDomainNumber.get(version);
-								versionDomainNumber.put(version, domainNumber + 1);
-							} else {
-								versionDomainNumber.put(version, 1L);
-							}
-							if(versionExecutorNumber.containsKey(version)) {
-								Long executorNumber0 = versionExecutorNumber.get(version);
-								versionExecutorNumber.put(version, executorNumber0 + executorNumber);
-							} else {
-								if(executorNumber != 0) {
-									versionExecutorNumber.put(version, executorNumber);
-								}
-							}
+						}
 
-							// 遍历所有$Jobs子节点，非系统作业
-							List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-							for (String job : jobs) {
-								try{
-									Boolean localMode = Boolean.valueOf(getData(curatorClient,JobNodePath.getConfigNodePath(job, "localMode")));
-									String jobDomainKey = job + "-" + config.getNamespace();
-									JobStatistics jobStatistics = jobMap.get(jobDomainKey);
-									if (jobStatistics == null) {
-										jobStatistics = new JobStatistics(job, config.getNamespace(),config.getNameAndNamespace());
-										jobMap.put(jobDomainKey, jobStatistics);
-									}
-
-									String jobDegree = getData(curatorClient,JobNodePath.getConfigNodePath(job, "jobDegree"));
-									if(Strings.isNullOrEmpty(jobDegree)){
-										jobDegree = "0";
-									}
-									jobStatistics.setJobDegree(Integer.parseInt(jobDegree));
-
-									// 非本地作业才参与判断
-									if (!localMode) {
-										AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
-										checkJavaOrShellJobHasProblem(curatorClient, unnormalJob, jobDegree, unnormalJobList);
-									}
-
-									// 查找超时告警作业
-									Timeout4AlarmJob timeout4AlarmJob = new Timeout4AlarmJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
-									if (isTimeout4AlarmJob(timeout4AlarmJob, curatorFrameworkOp) != null) {
-										timeout4AlarmJob.setJobDegree(jobDegree);
-										timeout4AlarmJobList.add(timeout4AlarmJob);
-									}
-
-									// 查找无法高可用的作业
-									AbnormalJob unableFailoverJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
-									if (isUnableFailoverJob(curatorClient, unableFailoverJob,curatorFrameworkOp) != null) {
-										unableFailoverJob.setJobDegree(jobDegree);
-										unableFailoverJobList.add(unableFailoverJob);
-									}
-
-									String processCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getProcessCountPath(job));
-									String errorCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getErrorCountPath(job));
-									int processCountOfThisJobAllTime = processCountOfThisJobAllTimeStr == null?0:Integer.valueOf(processCountOfThisJobAllTimeStr);
-									int errorCountOfThisJobAllTime = processCountOfThisJobAllTimeStr == null?0:Integer.valueOf(errorCountOfThisJobAllTimeStr);
-									processCountOfThisDomainAllTime += processCountOfThisJobAllTime;
-									errorCountOfThisDomainAllTime += errorCountOfThisJobAllTime;
-									int processCountOfThisJobThisDay = 0;
-									int errorCountOfThisJobThisDay = 0;
-
-									// loadLevel of this job
-									int loadLevel = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "loadLevel")));
-									int shardingTotalCount = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "shardingTotalCount")));
-									List<String> servers = null;
-									if (null != curatorClient.checkExists().forPath(JobNodePath.getServerNodePath(job))) {
-										servers = curatorClient.getChildren().forPath(JobNodePath.getServerNodePath(job));
-										for (String server:servers) {
-											// 如果结点存活，算两样东西：1.遍历所有servers节点里面的processSuccessCount &  processFailureCount，用以统计作业每天的执行次数；2.统计executor的loadLevel;，
-											if (checkExists(curatorClient, JobNodePath.getServerStatus(job, server))) {
-												// 1.遍历所有servers节点里面的processSuccessCount &  processFailureCount，用以统计作业每天的执行次数；
-												try {
-													String processSuccessCountOfThisExeStr = getData(curatorClient, JobNodePath.getProcessSucessCount(job, server));
-													String processFailureCountOfThisExeStr = getData(curatorClient, JobNodePath.getProcessFailureCount(job, server));
-													int processSuccessCountOfThisExe = processSuccessCountOfThisExeStr == null?0:Integer.valueOf(processSuccessCountOfThisExeStr);
-													int processFailureCountOfThisExe = processFailureCountOfThisExeStr == null?0:Integer.valueOf(processFailureCountOfThisExeStr);
-													// 该作业当天运行统计
-													processCountOfThisJobThisDay += processSuccessCountOfThisExe + processFailureCountOfThisExe;
-													errorCountOfThisJobThisDay += processFailureCountOfThisExe;
-
-													// 全部域当天的成功数与失败数
-													totalCount += processSuccessCountOfThisExe + processFailureCountOfThisExe;
-													errorCount += processFailureCountOfThisExe;
-
-													// 全域当天运行统计
-													processCountOfThisDomainThisDay += processCountOfThisJobThisDay;
-													errorCountOfThisDomainThisDay += errorCountOfThisJobThisDay;
-
-													// executor当天运行成功失败数
-													String executorMapKey = server + "-" + config.getNamespace();
-													ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
-													if (executorStatistics == null) {
-														executorStatistics = new ExecutorStatistics(server, config.getNamespace());
-														executorStatistics.setNns(domain.getNns());
-														executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(server)));
-														executorMap.put(executorMapKey, executorStatistics);
-													}
-													executorStatistics.setFailureCountOfTheDay(executorStatistics.getFailureCountOfTheDay() + processFailureCountOfThisExe);
-													executorStatistics.setProcessCountOfTheDay(executorStatistics.getProcessCountOfTheDay() + processSuccessCountOfThisExe + processFailureCountOfThisExe);
-
-												} catch (Exception e) {
-													log.info(e.getMessage());
-												}
-
-												// 2.统计executor的loadLevel;
-												try {
-													// enabled 的作业才需要计算权重
-													if (Boolean.valueOf(getData(curatorClient, JobNodePath.getConfigNodePath(job, "enabled")))) {
-														String sharding = getData(curatorClient,JobNodePath.getServerSharding(job, server));
-														if (StringUtils.isNotEmpty(sharding)) {
-															// 更新job的executorsAndshards
-															String exesAndShards = (jobStatistics.getExecutorsAndShards() == null?"":jobStatistics.getExecutorsAndShards())  + server + ":" + sharding + "; ";
-															jobStatistics.setExecutorsAndShards(exesAndShards);
-															// 2.统计是物理机还是容器
-															String executorMapKey = server + "-" + config.getNamespace();
-															ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
-															if (executorStatistics == null) {
-																executorStatistics = new ExecutorStatistics(server, config.getNamespace());
-																executorStatistics.setNns(domain.getNns());
-																executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(server)));
-																executorMap.put(executorMapKey, executorStatistics);
-																// set runInDocker field
-																if (checkExists(curatorClient, ExecutorNodePath.get$ExecutorTaskNodePath(server))) {
-																	executorStatistics.setRunInDocker(true);
-																	exeInDocker ++;
-																} else {
-																	exeNotInDocker ++;
-																}
-															}
-															if (executorStatistics.getJobAndShardings() != null) {
-																executorStatistics.setJobAndShardings(executorStatistics.getJobAndShardings() + job + ":" + sharding + ";");
-															} else {
-																executorStatistics.setJobAndShardings(job + ":" + sharding + ";");
-															}
-															int newLoad = executorStatistics.getLoadLevel() + (loadLevel * sharding.split(",").length);
-															executorStatistics.setLoadLevel(newLoad);
-														}
-													}
-												} catch (Exception e) {
-													log.info(e.getMessage());
-												}
-											}
-										}
-									}
-									// local-mode job = server count(regardless server status)
-									if (localMode) {
-										jobStatistics.setTotalLoadLevel(servers == null?0:(servers.size() * loadLevel));
-									} else {
-										jobStatistics.setTotalLoadLevel(loadLevel * shardingTotalCount);
-									}
-									jobStatistics.setErrorCountOfAllTime(errorCountOfThisJobAllTime);
-									jobStatistics.setProcessCountOfAllTime(processCountOfThisJobAllTime);
-									jobStatistics.setFailureCountOfTheDay(errorCountOfThisJobThisDay);
-									jobStatistics.setProcessCountOfTheDay(processCountOfThisJobThisDay);
+						// 遍历所有$Jobs子节点，非系统作业
+						List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+						for (String job : jobs) {
+							try{
+								Boolean localMode = Boolean.valueOf(getData(curatorClient,JobNodePath.getConfigNodePath(job, "localMode")));
+								String jobDomainKey = job + "-" + config.getNamespace();
+								JobStatistics jobStatistics = jobMap.get(jobDomainKey);
+								if (jobStatistics == null) {
+									jobStatistics = new JobStatistics(job, config.getNamespace(),config.getNameAndNamespace());
 									jobMap.put(jobDomainKey, jobStatistics);
-								}catch(Exception e){
-									log.info("statistics namespace:{} ,jobName:{} ,exception:{}",domain.getNns(),job,e.getMessage());
 								}
-							}
 
-							// 遍历容器资源，获取异常资源
-							String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
-							List<String> tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
-							if(tasks != null && !tasks.isEmpty()) {
-								for(String taskId : tasks) {
-									AbnormalContainer abnormalContainer = new AbnormalContainer(taskId, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
-									if(isContainerInstanceMismatch(abnormalContainer, curatorFrameworkOp) != null) {
-										abnormalContainerList.add(abnormalContainer);
+								String jobDegree = getData(curatorClient,JobNodePath.getConfigNodePath(job, "jobDegree"));
+								if(Strings.isNullOrEmpty(jobDegree)){
+									jobDegree = "0";
+								}
+								jobStatistics.setJobDegree(Integer.parseInt(jobDegree));
+
+								// 非本地作业才参与判断
+								if (!localMode) {
+									AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
+									checkJavaOrShellJobHasProblem(curatorClient, unnormalJob, jobDegree, unnormalJobList);
+								}
+
+								// 查找超时告警作业
+								Timeout4AlarmJob timeout4AlarmJob = new Timeout4AlarmJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
+								if (isTimeout4AlarmJob(timeout4AlarmJob, curatorFrameworkOp) != null) {
+									timeout4AlarmJob.setJobDegree(jobDegree);
+									timeout4AlarmJobList.add(timeout4AlarmJob);
+								}
+
+								// 查找无法高可用的作业
+								AbnormalJob unableFailoverJob = new AbnormalJob(job, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
+								if (isUnableFailoverJob(curatorClient, unableFailoverJob,curatorFrameworkOp) != null) {
+									unableFailoverJob.setJobDegree(jobDegree);
+									unableFailoverJobList.add(unableFailoverJob);
+								}
+
+								String processCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getProcessCountPath(job));
+								String errorCountOfThisJobAllTimeStr = getData(curatorClient, JobNodePath.getErrorCountPath(job));
+								int processCountOfThisJobAllTime = processCountOfThisJobAllTimeStr == null?0:Integer.valueOf(processCountOfThisJobAllTimeStr);
+								int errorCountOfThisJobAllTime = processCountOfThisJobAllTimeStr == null?0:Integer.valueOf(errorCountOfThisJobAllTimeStr);
+								processCountOfThisDomainAllTime += processCountOfThisJobAllTime;
+								errorCountOfThisDomainAllTime += errorCountOfThisJobAllTime;
+								int processCountOfThisJobThisDay = 0;
+								int errorCountOfThisJobThisDay = 0;
+
+								// loadLevel of this job
+								int loadLevel = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "loadLevel")));
+								int shardingTotalCount = Integer.parseInt(getData(curatorClient,JobNodePath.getConfigNodePath(job, "shardingTotalCount")));
+								List<String> servers = null;
+								if (null != curatorClient.checkExists().forPath(JobNodePath.getServerNodePath(job))) {
+									servers = curatorClient.getChildren().forPath(JobNodePath.getServerNodePath(job));
+									for (String server:servers) {
+										// 如果结点存活，算两样东西：1.遍历所有servers节点里面的processSuccessCount &  processFailureCount，用以统计作业每天的执行次数；2.统计executor的loadLevel;，
+										if (checkExists(curatorClient, JobNodePath.getServerStatus(job, server))) {
+											// 1.遍历所有servers节点里面的processSuccessCount &  processFailureCount，用以统计作业每天的执行次数；
+											try {
+												String processSuccessCountOfThisExeStr = getData(curatorClient, JobNodePath.getProcessSucessCount(job, server));
+												String processFailureCountOfThisExeStr = getData(curatorClient, JobNodePath.getProcessFailureCount(job, server));
+												int processSuccessCountOfThisExe = processSuccessCountOfThisExeStr == null?0:Integer.valueOf(processSuccessCountOfThisExeStr);
+												int processFailureCountOfThisExe = processFailureCountOfThisExeStr == null?0:Integer.valueOf(processFailureCountOfThisExeStr);
+												// 该作业当天运行统计
+												processCountOfThisJobThisDay += processSuccessCountOfThisExe + processFailureCountOfThisExe;
+												errorCountOfThisJobThisDay += processFailureCountOfThisExe;
+
+												// 全部域当天的成功数与失败数
+												totalCount += processSuccessCountOfThisExe + processFailureCountOfThisExe;
+												errorCount += processFailureCountOfThisExe;
+
+												// 全域当天运行统计
+												processCountOfThisDomainThisDay += processCountOfThisJobThisDay;
+												errorCountOfThisDomainThisDay += errorCountOfThisJobThisDay;
+
+												// executor当天运行成功失败数
+												String executorMapKey = server + "-" + config.getNamespace();
+												ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
+												if (executorStatistics == null) {
+													executorStatistics = new ExecutorStatistics(server, config.getNamespace());
+													executorStatistics.setNns(domain.getNns());
+													executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(server)));
+													executorMap.put(executorMapKey, executorStatistics);
+												}
+												executorStatistics.setFailureCountOfTheDay(executorStatistics.getFailureCountOfTheDay() + processFailureCountOfThisExe);
+												executorStatistics.setProcessCountOfTheDay(executorStatistics.getProcessCountOfTheDay() + processSuccessCountOfThisExe + processFailureCountOfThisExe);
+
+											} catch (Exception e) {
+												log.info(e.getMessage());
+											}
+
+											// 2.统计executor的loadLevel;
+											try {
+												// enabled 的作业才需要计算权重
+												if (Boolean.valueOf(getData(curatorClient, JobNodePath.getConfigNodePath(job, "enabled")))) {
+													String sharding = getData(curatorClient,JobNodePath.getServerSharding(job, server));
+													if (StringUtils.isNotEmpty(sharding)) {
+														// 更新job的executorsAndshards
+														String exesAndShards = (jobStatistics.getExecutorsAndShards() == null?"":jobStatistics.getExecutorsAndShards())  + server + ":" + sharding + "; ";
+														jobStatistics.setExecutorsAndShards(exesAndShards);
+														// 2.统计是物理机还是容器
+														String executorMapKey = server + "-" + config.getNamespace();
+														ExecutorStatistics executorStatistics = executorMap.get(executorMapKey);
+														if (executorStatistics == null) {
+															executorStatistics = new ExecutorStatistics(server, config.getNamespace());
+															executorStatistics.setNns(domain.getNns());
+															executorStatistics.setIp(getData(curatorClient, ExecutorNodePath.getExecutorIpNodePath(server)));
+															executorMap.put(executorMapKey, executorStatistics);
+															// set runInDocker field
+															if (checkExists(curatorClient, ExecutorNodePath.get$ExecutorTaskNodePath(server))) {
+																executorStatistics.setRunInDocker(true);
+																exeInDocker ++;
+															} else {
+																exeNotInDocker ++;
+															}
+														}
+														if (executorStatistics.getJobAndShardings() != null) {
+															executorStatistics.setJobAndShardings(executorStatistics.getJobAndShardings() + job + ":" + sharding + ";");
+														} else {
+															executorStatistics.setJobAndShardings(job + ":" + sharding + ";");
+														}
+														int newLoad = executorStatistics.getLoadLevel() + (loadLevel * sharding.split(",").length);
+														executorStatistics.setLoadLevel(newLoad);
+													}
+												}
+											} catch (Exception e) {
+												log.info(e.getMessage());
+											}
+										}
 									}
+								}
+								// local-mode job = server count(regardless server status)
+								if (localMode) {
+									jobStatistics.setTotalLoadLevel(servers == null?0:(servers.size() * loadLevel));
+								} else {
+									jobStatistics.setTotalLoadLevel(loadLevel * shardingTotalCount);
+								}
+								jobStatistics.setErrorCountOfAllTime(errorCountOfThisJobAllTime);
+								jobStatistics.setProcessCountOfAllTime(processCountOfThisJobAllTime);
+								jobStatistics.setFailureCountOfTheDay(errorCountOfThisJobThisDay);
+								jobStatistics.setProcessCountOfTheDay(processCountOfThisJobThisDay);
+								jobMap.put(jobDomainKey, jobStatistics);
+							}catch(Exception e){
+								log.info("statistics namespace:{} ,jobName:{} ,exception:{}",domain.getNns(),job,e.getMessage());
+							}
+						}
+
+						// 遍历容器资源，获取异常资源
+						String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
+						List<String> tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
+						if(tasks != null && !tasks.isEmpty()) {
+							for(String taskId : tasks) {
+								AbnormalContainer abnormalContainer = new AbnormalContainer(taskId, config.getNamespace(), config.getNameAndNamespace(), config.getDegree());
+								if(isContainerInstanceMismatch(abnormalContainer, curatorFrameworkOp) != null) {
+									abnormalContainerList.add(abnormalContainer);
 								}
 							}
 						}
-					} catch (Exception e) {
-						log.info("refreshStatistics2DB namespace:{} ,exception:{}",domain.getNns(), e.getMessage());
 					}
-					domain.setErrorCountOfAllTime(errorCountOfThisDomainAllTime);
-					domain.setProcessCountOfAllTime(processCountOfThisDomainAllTime);
-					domain.setErrorCountOfTheDay(errorCountOfThisDomainThisDay);
-					domain.setProcessCountOfTheDay(processCountOfThisDomainThisDay);
-					domainList.add(domain);
+				} catch (Exception e) {
+					log.info("refreshStatistics2DB namespace:{} ,exception:{}",domain.getNns(), e.getMessage());
 				}
+				domain.setErrorCountOfAllTime(errorCountOfThisDomainAllTime);
+				domain.setProcessCountOfAllTime(processCountOfThisDomainAllTime);
+				domain.setErrorCountOfTheDay(errorCountOfThisDomainThisDay);
+				domain.setProcessCountOfTheDay(processCountOfThisDomainThisDay);
+				domainList.add(domain);
 			}
+		}
 
-			jobList.addAll(jobMap.values());
+		jobList.addAll(jobMap.values());
 
-			executorList.addAll(executorMap.values());
+		executorList.addAll(executorMap.values());
 
-			// 全域当天处理总数，失败总数
-			saveOrUpdateDomainProcessCount(new ZkStatistics(totalCount, errorCount), zkCluster.getZkAddr());
+		// 全域当天处理总数，失败总数
+		saveOrUpdateDomainProcessCount(new ZkStatistics(totalCount, errorCount), zkCluster.getZkAddr());
 
-			// 失败率Top10的域列表
-			saveOrUpdateTop10FailDomain(domainList, zkCluster.getZkAddr());
+		// 失败率Top10的域列表
+		saveOrUpdateTop10FailDomain(domainList, zkCluster.getZkAddr());
 
-			// 稳定性最差的Top10的域列表
-			saveOrUpdateTop10UnstableDomain(domainList, zkCluster.getZkAddr());
+		// 稳定性最差的Top10的域列表
+		saveOrUpdateTop10UnstableDomain(domainList, zkCluster.getZkAddr());
 
-			// 稳定性最差的Top10的executor列表
-			saveOrUpdateTop10FailExecutor(executorList, zkCluster.getZkAddr());
+		// 稳定性最差的Top10的executor列表
+		saveOrUpdateTop10FailExecutor(executorList, zkCluster.getZkAddr());
 
-			// 根据失败率Top10的作业列表
-			saveOrUpdateTop10FailJob(jobList, zkCluster.getZkAddr());
+		// 根据失败率Top10的作业列表
+		saveOrUpdateTop10FailJob(jobList, zkCluster.getZkAddr());
 
-			// 最活跃作业Top10的作业列表(即当天执行次数最多的作业)
-			saveOrUpdateTop10ActiveJob(jobList, zkCluster.getZkAddr());
+		// 最活跃作业Top10的作业列表(即当天执行次数最多的作业)
+		saveOrUpdateTop10ActiveJob(jobList, zkCluster.getZkAddr());
 
-			// 负荷最重的Top10的作业列表
-			saveOrUpdateTop10LoadJob(jobList, zkCluster.getZkAddr());
+		// 负荷最重的Top10的作业列表
+		saveOrUpdateTop10LoadJob(jobList, zkCluster.getZkAddr());
 
-			// 负荷最重的Top10的Executor列表
-			saveOrUpdateTop10LoadExecutor(executorList, zkCluster.getZkAddr());
+		// 负荷最重的Top10的Executor列表
+		saveOrUpdateTop10LoadExecutor(executorList, zkCluster.getZkAddr());
 
-			// 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)
-			saveOrUpdateAbnormalJob(unnormalJobList, zkCluster.getZkAddr());
+		// 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)
+		saveOrUpdateAbnormalJob(unnormalJobList, zkCluster.getZkAddr());
 
-			// 超时告警的作业列表
-			saveOrUpdateTimeout4AlarmJob(timeout4AlarmJobList, zkCluster.getZkAddr());
+		// 超时告警的作业列表
+		saveOrUpdateTimeout4AlarmJob(timeout4AlarmJobList, zkCluster.getZkAddr());
 
-			// 无法高可用的作业列表
-			saveOrUpdateUnableFailoverJob(unableFailoverJobList, zkCluster.getZkAddr());
+		// 无法高可用的作业列表
+		saveOrUpdateUnableFailoverJob(unableFailoverJobList, zkCluster.getZkAddr());
 
-			// 异常容器资源列表，包含实例数不匹配的资源列表
-			saveOrUpdateAbnormalContainer(abnormalContainerList, zkCluster.getZkAddr());
+		// 异常容器资源列表，包含实例数不匹配的资源列表
+		saveOrUpdateAbnormalContainer(abnormalContainerList, zkCluster.getZkAddr());
 
-			// 不同版本的域数量
-			saveOrUpdateVersionDomainNumber(versionDomainNumber, zkCluster.getZkAddr());
+		// 不同版本的域数量
+		saveOrUpdateVersionDomainNumber(versionDomainNumber, zkCluster.getZkAddr());
 
-			// 不同版本的executor数量
-			saveOrUpdateVersionExecutorNumber(versionExecutorNumber, zkCluster.getZkAddr());
+		// 不同版本的executor数量
+		saveOrUpdateVersionExecutorNumber(versionExecutorNumber, zkCluster.getZkAddr());
 
-			UNNORMAL_JOB_LIST_CACHE.put(zkCluster.getZkAddr(), unnormalJobList);
+		// 不同作业等级的作业数量
+		saveOrUpdateJobRankDistribution(jobList, zkCluster.getZkAddr());
 
-			JOB_MAP_CACHE.put(zkCluster.getZkAddr(), jobMap);
-			EXECUTOR_MAP_CACHE.put(zkCluster.getZkAddr(), executorMap);
-			DOCKER_EXECUTOR_COUNT_MAP.put(zkCluster.getZkAddr(), exeInDocker);
-			PHYSICAL_EXECUTOR_COUNT_MAP.put(zkCluster.getZkAddr(), exeNotInDocker);
+		// 容器executor数量
+		saveOrUpdateExecutorInDockerCount(exeInDocker, zkCluster.getZkAddr());
+
+		// 物理机executor数量
+		saveOrUpdateExecutorNotInDockerCount(exeNotInDocker, zkCluster.getZkAddr());
+
+		// 作业数量
+		saveOrUpdateJobCount(jobList.size(), zkCluster.getZkAddr());
+	}
+
+	private void saveOrUpdateJobCount(int jobCount, String zkAddr) {
+		try {
+			String jobCountString = JSON.toJSONString(jobCount);
+			SaturnStatistics jobCountFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_COUNT, zkAddr);
+			if (jobCountFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.JOB_COUNT, zkAddr, jobCountString);
+				saturnStatisticsService.create(ss);
+			} else {
+				jobCountFromDB.setResult(jobCountString);
+				saturnStatisticsService.updateByPrimaryKey(jobCountFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void saveOrUpdateExecutorNotInDockerCount(int exeNotInDocker, String zkAddr) {
+		try {
+			String exeNotInDockerString = JSON.toJSONString(exeNotInDocker);
+			SaturnStatistics exeNotInDockerFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkAddr);
+			if (exeNotInDockerFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkAddr, exeNotInDockerString);
+				saturnStatisticsService.create(ss);
+			} else {
+				exeNotInDockerFromDB.setResult(exeNotInDockerString);
+				saturnStatisticsService.updateByPrimaryKey(exeNotInDockerFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void saveOrUpdateExecutorInDockerCount(int exeInDocker, String zkAddr) {
+		try {
+			String exeInDockerString = JSON.toJSONString(exeInDocker);
+			SaturnStatistics exeInDockerFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkAddr);
+			if (exeInDockerFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkAddr, exeInDockerString);
+				saturnStatisticsService.create(ss);
+			} else {
+				exeInDockerFromDB.setResult(exeInDockerString);
+				saturnStatisticsService.updateByPrimaryKey(exeInDockerFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void saveOrUpdateJobRankDistribution(List<JobStatistics> jobList, String zkAddr) {
+		try {
+			Map<Integer, Integer> jobDegreeCountMap = new HashMap<>();
+			for (JobStatistics jobStatistics : jobList) {
+				int jobDegree = jobStatistics.getJobDegree();
+				Integer count = jobDegreeCountMap.get(jobDegree);
+				jobDegreeCountMap.put(jobDegree, count == null ? 1 : count + 1);
+			}
+			String jobDegreeMapString = JSON.toJSONString(jobDegreeCountMap);
+			SaturnStatistics jobDegreeMapFromDB = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_RANK_DISTRIBUTION, zkAddr);
+			if (jobDegreeMapFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.JOB_RANK_DISTRIBUTION, zkAddr, jobDegreeMapString);
+				saturnStatisticsService.create(ss);
+			} else {
+				jobDegreeMapFromDB.setResult(jobDegreeMapString);
+				saturnStatisticsService.updateByPrimaryKey(jobDegreeMapFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -764,22 +882,22 @@ public class DashboardServiceImpl implements DashboardService {
 	 * 1、上次告警+本次检查窗口告警（连续2次）
 	 * 2、上次告警CVersion与本次一致（说明当前本次检查窗口时间内没有子节点变更）
 	 */
-	private static boolean doubleCheckShardingState(AbnormalJob abnormalJob, String shardingItemStr, int zkNodeCVersion){
+	private boolean doubleCheckShardingState(AbnormalJob abnormalJob, String shardingItemStr, int zkNodeCVersion){
 		String key = abnormalJob.getDomainName() + "_" + abnormalJob.getJobName() + "_" + shardingItemStr;
 		long nowTime = System.currentTimeMillis();
 
-		if(ABNORMAL_SHARDING_STATE_CACHE.containsKey(key)){
-			AbnormalShardingState abnormalShardingState = ABNORMAL_SHARDING_STATE_CACHE.get(key);
+		if(abnormalShardingStateCache.containsKey(key)){
+			AbnormalShardingState abnormalShardingState = abnormalShardingStateCache.get(key);
 			if(abnormalShardingState != null && abnormalShardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 1.5 > nowTime
 					&& abnormalShardingState.getZkNodeCVersion() == zkNodeCVersion){
-				ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新告警
+				abnormalShardingStateCache.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新告警
 				return true;
 			}else{
-				ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新无效（过时）告警
+				abnormalShardingStateCache.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//更新无效（过时）告警
 				return false;
 			}
 		}else{
-			ABNORMAL_SHARDING_STATE_CACHE.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//新增告警信息
+			abnormalShardingStateCache.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));//新增告警信息
 			return false;
 		}
 	}
@@ -1151,6 +1269,24 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	@Override
+	public int executorInDockerCount(String zkList) {
+		Integer count = executorInDockerCountMapCache.get(zkList);
+		return count == null ? 0 : count;
+	}
+
+	@Override
+	public int executorNotInDockerCount(String zkList) {
+		Integer count = executorNotInDockerCountMapCache.get(zkList);
+		return count == null ? 0 : count;
+	}
+
+	@Override
+	public int jobCount(String zkList) {
+		Integer count = jobCountMapCache.get(zkList);
+		return count == null ? 0 : count;
+	}
+
+	@Override
 	public SaturnStatistics top10FailureJob(String zklist) {
 		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_JOB, zklist);
 	}
@@ -1217,7 +1353,7 @@ public class DashboardServiceImpl implements DashboardService {
 		} else {
 			curatorClient.create().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
 		}
-		asyncRefreshStatistics();
+		asyncForceRefreshStatistics();
 	}
 
 	@Override
@@ -1229,7 +1365,7 @@ public class DashboardServiceImpl implements DashboardService {
 		updateResetValue(curatorClient, jobName, ResetCountType.RESET_ANALYSE);
 
 		resetOneJobAnalyse(jobName, curatorClient);
-		asyncRefreshStatistics();
+		asyncForceRefreshStatistics();
 	}
 
 	@Override
@@ -1245,7 +1381,7 @@ public class DashboardServiceImpl implements DashboardService {
 			// reset analyse data.
 			updateResetValue(curatorClient, job, ResetCountType.RESET_ANALYSE);
 		}
-		asyncRefreshStatistics();
+		asyncForceRefreshStatistics();
 	}
 
 	@Override
@@ -1261,7 +1397,7 @@ public class DashboardServiceImpl implements DashboardService {
 			// reset all jobs' executor's success/failure count.
 			updateResetValue(curatorClient, job, ResetCountType.RESET_SERVERS);
 		}
-		asyncRefreshStatistics();
+		asyncForceRefreshStatistics();
 	}
 
 	@Override
@@ -1272,7 +1408,7 @@ public class DashboardServiceImpl implements DashboardService {
 		// reset executor's success/failure count.
 		updateResetValue(curatorClient, jobName, ResetCountType.RESET_SERVERS);
 		resetOneJobExecutorCount(jobName, curatorClient);
-		asyncRefreshStatistics();
+		asyncForceRefreshStatistics();
 	}
 
 	private void resetOneJobExecutorCount(String jobName, CuratorFramework curatorClient) throws Exception {
@@ -1315,9 +1451,15 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
-	private void asyncRefreshStatistics() {
+	private void asyncForceRefreshStatistics() {
 		if(ConsoleUtil.isDashboardOn()){
-			singleThreadExecutor.submit(refreshStatisticsTask());
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					refreshStatistics2DB(true);
+				}
+			};
+			updateStatisticsThreadPool.submit(runnable);
 		}
 	}
 
@@ -1325,7 +1467,7 @@ public class DashboardServiceImpl implements DashboardService {
 	public Map<String, Integer> loadDomainRankDistribution(String zkBsKey) {
 		Map<String, Integer> domainMap = new HashMap<>();
 		if(zkBsKey != null) {
-			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(zkBsKey);
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkBsKey);
 			if(zkCluster != null) {
 				for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()){
 					Integer count = domainMap.get(config.getDegree());
@@ -1340,16 +1482,13 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public Map<Integer, Integer> loadJobRankDistribution(String zkBsKey) {
-		Map<Integer, Integer> jobDegreeMap = new HashMap<>();
-		HashMap<String, JobStatistics> jobStatisticsMap = JOB_MAP_CACHE.get(zkBsKey);
-		if(jobStatisticsMap == null || jobStatisticsMap.values().isEmpty()){
-			return jobDegreeMap;
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_RANK_DISTRIBUTION, zkBsKey);
+		if(ss != null) {
+			String result = ss.getResult();
+			return JSON.parseObject(result, new TypeReference<Map<Integer, Integer>>(){});
+		} else {
+			return new HashMap<>();
 		}
-		for (JobStatistics jobStatistics : jobStatisticsMap.values()) {
-			Integer count = jobDegreeMap.get(jobStatistics.getJobDegree());
-			jobDegreeMap.put(jobStatistics.getJobDegree(), count == null?1:count + 1);
-		}
-		return jobDegreeMap;
 	}
 
 	@Override
@@ -1379,20 +1518,4 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
-	/**
-	 * 清理AbnormalShardingState过期Cache
-	 * @author jamin.li
-	 */
-	private static class AbnormalShardingCacheCleaner implements Runnable {
-		@Override
-		public void run() {
-			for (Entry<String, AbnormalShardingState> entrySet : ABNORMAL_SHARDING_STATE_CACHE.entrySet()) {
-				AbnormalShardingState shardingState = entrySet.getValue();
-				if(shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()){
-					ABNORMAL_SHARDING_STATE_CACHE.remove(entrySet.getKey());
-					log.info("Clean ABNORMAL_SHARDING_STATE_CACHE with key: {}, alertTime: {}, zkNodeCVersion: {}: " + entrySet.getKey(), shardingState.getAlertTime(), shardingState.getZkNodeCVersion());
-				}
-			}
-		}
-	}
 }

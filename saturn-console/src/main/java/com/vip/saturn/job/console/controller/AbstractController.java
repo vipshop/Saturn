@@ -20,7 +20,6 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 /**
@@ -75,7 +74,7 @@ public class AbstractController {
 	public String getCurrentZkAddr(final HttpSession session) {
 		String zkAddr = (String)session.getAttribute(CURRENT_ZK);
 		if (zkAddr == null) {
-			Collection<ZkCluster> zks = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.values();
+			Collection<ZkCluster> zks = registryCenterService.getZkClusterList();
 			for (ZkCluster zkCluster : zks) {
 				setCurrentZkAddr(zkCluster.getZkAddr(), session);
 				return zkCluster.getZkAddr();
@@ -93,7 +92,7 @@ public class AbstractController {
 		if (reg == null) {
 			return null;
 		}
-		return RegistryCenterServiceImpl.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
+		return registryCenterService.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
 	}
 	
 	public void setJobStatusAndIsEnabled(ModelMap model, String jobName) {

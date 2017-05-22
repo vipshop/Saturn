@@ -3,12 +3,11 @@
  */
 package com.vip.saturn.job.console.domain;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.curator.framework.CuratorFramework;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * @author chembo.huang
@@ -21,6 +20,8 @@ public class ZkCluster implements Serializable {
 	private String zkAlias;
 	
 	private String zkAddr;
+
+	private String digest;
 	
 	private boolean offline = false;
 	
@@ -29,19 +30,8 @@ public class ZkCluster implements Serializable {
 	
 	@JsonIgnore
 	private transient ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
-	
-	public ZkCluster(String zkAlias, String zkAddr, CuratorFramework curatorFramework) {
-		this.zkAddr = zkAddr;
-		this.zkAlias = zkAlias;
-		this.curatorFramework = curatorFramework;
-	}
 
-	public boolean isOffline() {
-		return offline;
-	}
-
-	public void setOffline(boolean offline) {
-		this.offline = offline;
+	public ZkCluster() {
 	}
 
 	public String getZkAlias() {
@@ -60,6 +50,22 @@ public class ZkCluster implements Serializable {
 		this.zkAddr = zkAddr;
 	}
 
+	public String getDigest() {
+		return digest;
+	}
+
+	public void setDigest(String digest) {
+		this.digest = digest;
+	}
+
+	public boolean isOffline() {
+		return offline;
+	}
+
+	public void setOffline(boolean offline) {
+		this.offline = offline;
+	}
+
 	public CuratorFramework getCuratorFramework() {
 		return curatorFramework;
 	}
@@ -72,15 +78,7 @@ public class ZkCluster implements Serializable {
 		return regCenterConfList;
 	}
 
-	public void setRegCenterConfList(
-			ArrayList<RegistryCenterConfiguration> regCenterConfList) {
+	public void setRegCenterConfList(ArrayList<RegistryCenterConfiguration> regCenterConfList) {
 		this.regCenterConfList = regCenterConfList;
-	}
-
-	@Override
-	public String toString() {
-		return "ZkCluster [zkAlias=" + zkAlias + ", zkAddr=" + zkAddr
-				+ ", offline=" + offline + ", regCenterConfList="
-				+ regCenterConfList + "]";
 	}
 }

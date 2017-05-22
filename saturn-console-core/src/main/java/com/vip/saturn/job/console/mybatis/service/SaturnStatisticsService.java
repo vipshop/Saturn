@@ -5,20 +5,20 @@ import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 
 public interface SaturnStatisticsService{
 	
-	public int create(SaturnStatistics SaturnStatistics);
+	int create(SaturnStatistics SaturnStatistics);
 	
-	public int createSelective(SaturnStatistics SaturnStatistics);
+	int createSelective(SaturnStatistics SaturnStatistics);
 	
-	public SaturnStatistics findByPrimaryKey(Integer id);
+	SaturnStatistics findByPrimaryKey(Integer id);
 	
-	public int updateByPrimaryKey(SaturnStatistics SaturnStatistics);
+	int updateByPrimaryKey(SaturnStatistics SaturnStatistics);
 	
-	public int updateByPrimaryKeySelective(SaturnStatistics SaturnStatistics);
+	int updateByPrimaryKeySelective(SaturnStatistics SaturnStatistics);
 	
-	public int deleteByPrimaryKey(Integer id);
+	int deleteByPrimaryKey(Integer id);
 	
 	SaturnStatistics findStatisticsByNameAndZkList(String name, String zklist );
 	
-	public int selectCount(SaturnStatistics SaturnStatistics);
+	int selectCount(SaturnStatistics SaturnStatistics);
 	
 }

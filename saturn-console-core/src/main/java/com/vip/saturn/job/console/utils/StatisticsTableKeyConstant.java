@@ -24,4 +24,8 @@ public class StatisticsTableKeyConstant {
 	public static final String TOP_10_FAIL_EXECUTOR = "top_10_fail_executor";
 	public static final String VERSION_DOMAIN_NUMBER = "version_domain_number";
 	public static final String VERSION_EXECUTOR_NUMBER = "version_executor_number";
+	public static final String JOB_RANK_DISTRIBUTION = "job_rank_distribution";
+	public static final String EXECUTOR_IN_DOCKER_COUNT = "executor_in_docker_count";
+	public static final String EXECUTOR_NOT_IN_DOCKER_COUNT = "executor_not_in_docker_count";
+	public static final String JOB_COUNT = "job_count";
 }

@@ -18,10 +18,10 @@
 package com.vip.saturn.job.console.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ import com.vip.saturn.job.console.domain.TreeNode;
 public final class InitRegistryCenterService {
 	private static final Logger log = LoggerFactory.getLogger(InitRegistryCenterService.class);
 	public static TreeNode treeData = new TreeNode();
-	public static final Map<String/** zkBsKey **/, TreeNode> ZKBSKEY_TO_TREENODE_MAP = new HashMap<>();
+	public static final Map<String/** zkBsKey **/, TreeNode> ZKBSKEY_TO_TREENODE_MAP = new ConcurrentHashMap<>();
 
     /**
      * transfer /a/b/b1, /a/b/b2 to 

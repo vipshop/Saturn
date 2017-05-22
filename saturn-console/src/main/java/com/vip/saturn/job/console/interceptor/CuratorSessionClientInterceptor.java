@@ -29,7 +29,6 @@ import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 public final class CuratorSessionClientInterceptor extends HandlerInterceptorAdapter {
@@ -53,7 +52,7 @@ public final class CuratorSessionClientInterceptor extends HandlerInterceptorAda
     		response.sendRedirect(request.getContextPath() + "/registry_center_page");
         	return false;
 		}
-    	RegistryCenterClient client = RegistryCenterServiceImpl.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
+    	RegistryCenterClient client = registryCenterService.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
         if (null == client || !client.isConnected()) {
         	response.sendRedirect(request.getContextPath() + "/registry_center_page");
         	return false;

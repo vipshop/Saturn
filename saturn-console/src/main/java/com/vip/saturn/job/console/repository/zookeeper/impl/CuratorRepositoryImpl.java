@@ -28,7 +28,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
 import org.apache.curator.framework.api.ACLProvider;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
-import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
@@ -52,16 +52,21 @@ public class CuratorRepositoryImpl implements CuratorRepository {
     private static final int WAITING_SECONDS = 2;
 
     /**
-     * 会话超时和连接超时时间
+     * 会话超时时间
      */
-    private static int CONNECTION_TIMEOUT = 10 * 1000;
+    private static int SESSION_TIMEOUT = 20 * 1000;
+
+    /**
+     * 连接超时时间
+     */
+    private static int CONNECTION_TIMEOUT = 20 * 1000;
 
     @Override
     public CuratorFramework connect(final String connectString, final String namespace, final String digest) {
         Builder builder = CuratorFrameworkFactory.builder().connectString(connectString)
-                .sessionTimeoutMs(CONNECTION_TIMEOUT)
+                .sessionTimeoutMs(SESSION_TIMEOUT)
                 .connectionTimeoutMs(CONNECTION_TIMEOUT)
-                .retryPolicy(new RetryOneTime(1000));
+                .retryPolicy(new ExponentialBackoffRetry(1000, 3, 3000));
         if (namespace != null) {
             builder.namespace(namespace);
         }

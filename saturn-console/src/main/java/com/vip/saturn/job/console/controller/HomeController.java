@@ -42,8 +42,6 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import com.vip.saturn.job.console.utils.ConsoleUtil;
 
 @Controller
@@ -51,8 +49,6 @@ import com.vip.saturn.job.console.utils.ConsoleUtil;
 public class HomeController  extends AbstractController {
 
 	protected static Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
-    @Resource
-    private RegistryCenterService registryCenterService;
 
     @Resource
     private JobDimensionService jobDimensionService;
@@ -161,7 +157,7 @@ public class HomeController  extends AbstractController {
     @ResponseBody
 	public Map<String, Object> loadZks(final HttpSession session) throws IOException, ParseException {
     	Map<String, Object> model = new HashMap<>();
-    	model.put("clusters", RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.values());
+    	model.put("clusters", registryCenterService.getZkClusterList());
     	model.put("currentZk", getCurrentZkAddr(session));
     	return model;
 	}

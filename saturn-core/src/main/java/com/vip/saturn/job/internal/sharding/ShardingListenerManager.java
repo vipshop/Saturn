@@ -1,8 +1,5 @@
 package com.vip.saturn.job.internal.sharding;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.CrondJob;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -12,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
 
 /**
  * 分片监听管理器.

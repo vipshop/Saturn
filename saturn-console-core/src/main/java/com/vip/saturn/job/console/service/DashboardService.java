@@ -3,17 +3,24 @@
  */
 package com.vip.saturn.job.console.service;
 
-import java.util.Map;
-
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
+
+import java.util.Map;
 
 /**
  * @author chembo.huang
  *
  */
 public interface DashboardService {
-	
-	void refreshStatistics2DB();
+
+	void refreshStatistics2DB(boolean force);
+
+	int executorInDockerCount(String zkList);
+
+	int executorNotInDockerCount(String zkList);
+
+	int jobCount(String zkList);
+
 	/**
 	 * 失败率top10的域列表
 	 */

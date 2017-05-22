@@ -36,8 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.service.InitRegistryCenterService;
 import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 @RestController
@@ -57,15 +55,12 @@ public class RegistryCenterController extends AbstractController {
 	@Resource
 	private JobDimensionService jobDimensionService;
 
-	@Resource
-	private RegistryCenterService registryCenterService;
-
 	@RequestMapping(method = RequestMethod.GET)
 	public Map<?, ?> load(final HttpSession session) {
 		Map<String, Object> model = new HashMap<String, Object>();
 		String currentZkAddr = getCurrentZkAddr(session);
 		if(currentZkAddr != null) {
-			ZkCluster zkCluster = RegistryCenterServiceImpl.ZKADDR_TO_ZKCLUSTER_MAP.get(currentZkAddr);
+			ZkCluster zkCluster = registryCenterService.getZkCluster(currentZkAddr);
 			if(zkCluster != null) {
 				model.put("configs", zkCluster.getRegCenterConfList());
 			}

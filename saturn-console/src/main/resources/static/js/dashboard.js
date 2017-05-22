@@ -102,9 +102,20 @@ function renderWarnOverview(){
 
 function renderCountJob() {
 	$.post("dashboard/count", {}, function (data) {
-		$("#jobCount").html(data["jobCount"]);
+		var jobCount = data["jobCount"];
+        var domainCount =data["domainCount"];
 		var executorInDockerCount = data["executorInDockerCount"];
 		var executorNotInDockerCount = data["executorNotInDockerCount"];
+		if(jobCount >= 0) {
+            $("#jobCount").html(jobCount);
+        } else {
+            $("#jobCount").html('COUNTING');
+        }
+        if(domainCount >= 0) {
+            $("#domainCount").html(domainCount);
+        } else {
+            $("#domainCount").html('COUNTING');
+        }
 		if(executorInDockerCount >= 0 && executorNotInDockerCount >= 0){
 			$("#executorCount").html(executorNotInDockerCount +'+'+ executorInDockerCount);
 		}else if(executorInDockerCount >= 0){
@@ -112,22 +123,23 @@ function renderCountJob() {
 		}else if(executorNotInDockerCount >= 0){
 			$("#executorCount").html('COUNTING+'+ executorNotInDockerCount);
 		}
-		$("#domainCount").html(data["domainCount"]);
 	}).always(function() { $loading.hide(); });
 }
 
 function renderTop10FailDomain() {
-	$.post("dashboard/top10FailDomain", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10FailDomain", {}, function (data0) {
 		var domains = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].failureRateOfAllTime || data[d].failureRateOfAllTime == 0) {
-				continue;
-			}
-			domains.push(data[d].domainName);
-			data[d].y = data[d].failureRateOfAllTime;
-			data[d].url = "overview?name=" + data[d].nns;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].failureRateOfAllTime || data[d].failureRateOfAllTime == 0) {
+                    continue;
+                }
+                domains.push(data[d].domainName);
+                data[d].y = data[d].failureRateOfAllTime;
+                data[d].url = "overview?name=" + data[d].nns;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-fail-domain').highcharts({
@@ -192,17 +204,19 @@ function renderTop10FailDomain() {
 	}).always(function() { $loading.hide(); });
 }
 function renderTop10UnStableDomain() {
-	$.post("dashboard/top10UnstableDomain", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10UnstableDomain", {}, function (data0) {
 		var domains = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].shardingCount || data[d].shardingCount == 0) {
-				continue;
-			}
-			domains.push(data[d].domainName);
-			data[d].y = data[d].shardingCount;
-			data[d].url = "overview?name=" + data[d].nns;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].shardingCount || data[d].shardingCount == 0) {
+                    continue;
+                }
+                domains.push(data[d].domainName);
+                data[d].y = data[d].shardingCount;
+                data[d].url = "overview?name=" + data[d].nns;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-unstable-domain').highcharts({
@@ -266,17 +280,19 @@ function renderTop10UnStableDomain() {
 	}).always(function() { $loading.hide(); });
 }
 function renderTop10FailExe() {
-	$.post("dashboard/top10FailExe", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10FailExe", {}, function (data0) {
 		var exes = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].failureRateOfTheDay || data[d].failureRateOfTheDay == 0) {
-				continue;
-			}
-			exes.push(data[d].executorName);
-			data[d].y = data[d].failureRateOfTheDay;
-			data[d].url = "overview?name=" + data[d].nns;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].failureRateOfTheDay || data[d].failureRateOfTheDay == 0) {
+                    continue;
+                }
+                exes.push(data[d].executorName);
+                data[d].y = data[d].failureRateOfTheDay;
+                data[d].url = "overview?name=" + data[d].nns;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-fail-exe').highcharts({
@@ -343,19 +359,20 @@ function renderTop10FailExe() {
 }
 
 function renderTop10FailJob() {
-	$.post("dashboard/top10FailJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10FailJob", {}, function (data0) {
 		var jobs = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].failureRateOfAllTime || data[d].failureRateOfAllTime == 0) {
-				continue;
-			}
-			jobs.push(data[d].jobName);
-			data[d].y = data[d].failureRateOfAllTime;
-			data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
-			seriesData.push(data[d]);
-		}
-
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].failureRateOfAllTime || data[d].failureRateOfAllTime == 0) {
+                    continue;
+                }
+                jobs.push(data[d].jobName);
+                data[d].y = data[d].failureRateOfAllTime;
+                data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
+                seriesData.push(data[d]);
+            }
+        }
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-fail-job').highcharts({
 		    chart: {
@@ -419,17 +436,19 @@ function renderTop10FailJob() {
 	}).always(function() { $loading.hide(); });
 }
 function renderTop10ActiveJob() {
-	$.post("dashboard/top10ActiveJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10ActiveJob", {}, function (data0) {
 		var jobs = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].processCountOfTheDay || data[d].processCountOfTheDay == 0) {
-				continue;
-			}
-			jobs.push(data[d].jobName);
-			data[d].y = data[d].processCountOfTheDay;
-			data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].processCountOfTheDay || data[d].processCountOfTheDay == 0) {
+                    continue;
+                }
+                jobs.push(data[d].jobName);
+                data[d].y = data[d].processCountOfTheDay;
+                data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-active-job').highcharts({
@@ -499,17 +518,19 @@ function renderTop10ActiveJob() {
 	}).always(function() { $loading.hide(); });
 }
 function renderTop10LoadJob() {
-	$.post("dashboard/top10LoadJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10LoadJob", {}, function (data0) {
 		var jobs = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].totalLoadLevel || data[d].totalLoadLevel == 0) {
-				continue;
-			}
-			jobs.push(data[d].jobName);
-			data[d].y = data[d].totalLoadLevel;
-			data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].totalLoadLevel || data[d].totalLoadLevel == 0) {
+                    continue;
+                }
+                jobs.push(data[d].jobName);
+                data[d].y = data[d].totalLoadLevel;
+                data[d].url = "job_detail?nns="+data[d].nns+"&jobName="+data[d].jobName;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-load-job').highcharts({
@@ -570,16 +591,18 @@ function renderTop10LoadJob() {
 	}).always(function() { $loading.hide(); });
 }
 function renderTop10LoadExecutor() {
-	$.post("dashboard/top10LoadExecutor", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/top10LoadExecutor", {}, function (data0) {
 		var exes = [], seriesData = [];
-		for (var d in data) {
-			if (!data[d].loadLevel || data[d].loadLevel == 0) {
-				continue;
-			}
-			exes.push(data[d].executorName);
-			data[d].y = data[d].loadLevel;
-			seriesData.push(data[d]);
+		if(data0) {
+            var data = JSON.parse(data0);
+            for (var d in data) {
+                if (!data[d].loadLevel || data[d].loadLevel == 0) {
+                    continue;
+                }
+                exes.push(data[d].executorName);
+                data[d].y = data[d].loadLevel;
+                seriesData.push(data[d]);
+            }
 		}
 		var series = [{showInLegend: false,data:seriesData}];
 		$('#top10-load-executor').highcharts({
@@ -637,9 +660,14 @@ function renderTop10LoadExecutor() {
 	}).always(function() { $loading.hide(); });
 }
 function renderDomainProcessCount() {
-	$.post("dashboard/domainProcessCount", {}, function (data) {
-		data = JSON.parse(data);
-		var error = data.error, count = data.count, success = parseInt(count - error);
+	$.post("dashboard/domainProcessCount", {}, function (data0) {
+		var error = 0, count = 0, success = 0;
+		if(data0) {
+		    var data = JSON.parse(data0);
+		    error = data.error;
+		    count = data.count;
+		    success = parseInt(count - error);
+		}
 		$("#domains-total").html(count);
 		$('#domain-process-count-pie').highcharts({
 			chart: {
@@ -673,10 +701,12 @@ function renderDomainProcessCount() {
 function renderDomainRank() {
 	$.post("dashboard/loadDomainRank", {}, function (data) {
 		var rankArray = [];
-		for (var degree in data) {
-			var oneDegree = []
-			oneDegree.push(degreeMap[degree]+ ": " + data[degree], data[degree]);
-			rankArray.push(oneDegree)
+		if(data) {
+            for (var degree in data) {
+                var oneDegree = []
+                oneDegree.push(degreeMap[degree]+ ": " + data[degree], data[degree]);
+                rankArray.push(oneDegree)
+            }
 		}
 		$('#domain-rank-pie').highcharts({
 			chart: {
@@ -707,10 +737,12 @@ function renderDomainRank() {
 function renderJobRank() {
 	$.post("dashboard/loadJobRank", {}, function (data) {
 		var rankArray = [];
-		for (var degree in data) {
-			var oneDegree = []
-			oneDegree.push(degreeMap[degree]+ ": " + data[degree], data[degree]);
-			rankArray.push(oneDegree)
+		if(data) {
+            for (var degree in data) {
+                var oneDegree = []
+                oneDegree.push(degreeMap[degree]+ ": " + data[degree], data[degree]);
+                rankArray.push(oneDegree)
+            }
 		}
 		$('#job-rank-pie').highcharts({
 			chart: {
@@ -740,8 +772,11 @@ function renderJobRank() {
 
 function renderAbnormalJob() {
 	var unnormalJobTmp = $("#unnormal-job-template").html();
-	$.post("dashboard/unnormalJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/unnormalJob", {}, function (data0) {
+		var data = new Array();
+		if(data0) {
+		    data = JSON.parse(data0);
+		}
 		$("#abnormalJobCount").html(data.length);
 		var $tbody = $("#unnormal-job-table tbody"), trContent = "", unnormalJobTmp = $("#unnormal-job-template").html();
 		$("#unnormal-job-table tbody").empty();
@@ -754,8 +789,11 @@ function renderAbnormalJob() {
 }
 
 function renderTimeout4AlarmJob() {
-	$.post("dashboard/allTimeout4AlarmJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/allTimeout4AlarmJob", {}, function (data0) {
+		var data = new Array();
+        if(data0) {
+            data = JSON.parse(data0);
+        }
 		var $tbody = $("#timeout4Alarm-job-table tbody"), trContent = "", timeout4AlarmJobTmp = $("#timeout4Alarm-job-template").html();
 		$("#timeout4Alarm-job-table tbody").empty();
         for (var i in data) {
@@ -768,8 +806,11 @@ function renderTimeout4AlarmJob() {
 
 function renderUnableFailoverJob() {
 	var unableFailoverJobTmp = $("#unable-failover-job-template").html();
-	$.post("dashboard/unableFailoverJob", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/unableFailoverJob", {}, function (data0) {
+		var data = new Array();
+        if(data0) {
+            data = JSON.parse(data0);
+        }
 		var $tbody = $("#unable-failover-job-table tbody"), trContent = "", unableFailoverJobTmp = $("#unable-failover-job-template").html();
 		$("#unable-failover-job-table tbody").empty();
         for (var i in data) {
@@ -781,8 +822,11 @@ function renderUnableFailoverJob() {
 }
 
 function renderAbnormalContainer() {
-	$.post("dashboard/abnormalContainer", {}, function (data) {
-		data = JSON.parse(data);
+	$.post("dashboard/abnormalContainer", {}, function (data0) {
+		var data = new Array();
+        if(data0) {
+            data = JSON.parse(data0);
+        }
 		var $tbody = $("#abnormal-container-table tbody"), trContent = "", abnormalContainerTmp = $("#abnormal-container-template").html();
 		$("#abnormal-container-table tbody").empty();
         for (var i in data) {
