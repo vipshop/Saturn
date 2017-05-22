@@ -1,6 +1,15 @@
 package com.vip.saturn.job.shell;
 
 
+import com.vip.saturn.job.SaturnJobReturn;
+import com.vip.saturn.job.SaturnSystemErrorGroup;
+import com.vip.saturn.job.SaturnSystemReturnCode;
+import com.vip.saturn.job.basic.*;
+import com.vip.saturn.job.utils.ScriptPidUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,20 +18,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vip.saturn.job.SaturnJobReturn;
-import com.vip.saturn.job.SaturnSystemErrorGroup;
-import com.vip.saturn.job.SaturnSystemReturnCode;
-import com.vip.saturn.job.basic.CrondJob;
-import com.vip.saturn.job.basic.JavaShardingItemCallable;
-import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.basic.SaturnExecutionContext;
-import com.vip.saturn.job.basic.ShardingItemCallable;
-import com.vip.saturn.job.utils.ScriptPidUtils;
-import com.vip.saturn.job.utils.SystemEnvProperties;
 
 /**
  * 处理通用Script的调度(也支持PHP)
@@ -196,8 +191,12 @@ public class SaturnScriptJob extends CrondJob {
 	}
 
 	@Override
+	public void onNeedRaiseAlarm(int item, String alarmMessage) {
+	}
+
+	@Override
 	public SaturnJobReturn doExecution(String jobName, Integer key, String value,
-			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable {
+									   SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable {
 		return null;
 	}
 }

@@ -57,6 +57,6 @@ public interface ReportAlarmService {
      * @param alarmInfo The alarm info.
      * @throws ReportAlarmException
      */
-    void raise(String namespace, String jobName, Integer shardItem, AlarmInfo alarmInfo) throws ReportAlarmException;
+    void raise(String namespace, String jobName, String executorName, Integer shardItem, AlarmInfo alarmInfo) throws ReportAlarmException;
 
 }

@@ -64,7 +64,7 @@ public class SaturnJavaJob extends CrondJob {
 					if (jobBusinessInstance == null) {
 						jobBusinessInstance = jobClass.newInstance();
 					}
-					SaturnApi saturnApi = new SaturnApi(getNamespace());
+					SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 					saturnApi.setConfigService(getConfigService());
 					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 
@@ -348,6 +348,11 @@ public class SaturnJavaJob extends CrondJob {
 
 	@Override
 	public void onTimeout(int item) {
+	}
+
+	@Override
+	public void onNeedRaiseAlarm(int item, String alarmMessage) {
+		//TODO: need to raise alarm by implementor
 	}
 
 }

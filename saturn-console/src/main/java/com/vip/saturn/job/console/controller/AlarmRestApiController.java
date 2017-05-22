@@ -1,12 +1,11 @@
 package com.vip.saturn.job.console.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.ControllerUtils;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,31 +28,32 @@ import java.util.Map;
  * Created by kfchu on 10/05/2017.
  */
 @Controller
-@RequestMapping("/rest/v1/{namespace}/alarm")
+@RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController {
 
     public final static String NOT_EXISTED_PREFIX = "does not exists";
 
     public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
-    private final static Logger logger = LoggerFactory.getLogger(RestApiController.class);
+    private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
     @Resource
-    private ReportAlarmService reportAlarmService;
+    private RestApiService restApiService;
 
-    @RequestMapping(value = "/raise", method = RequestMethod.POST)
-    public ResponseEntity<String> raiseAlarm(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
+    @RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
         try {
             String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
-            Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", true);
+            String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
+            Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
 
             AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-            reportAlarmService.raise(namespace, jobName, shardItem, alarmInfo);
+            logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName, executorName, shardItem);
 
-            logger.info("alarm is raised: {}", alarmInfo.toString());
+            restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
 
-            return new ResponseEntity<String>(HttpStatus.CREATED);
+            return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (Exception e) {
             return constructOtherResponses(e);
         }
@@ -85,9 +85,8 @@ public class AlarmRestApiController {
         return alarmInfo;
     }
 
-    private ResponseEntity<String> constructOtherResponses(Exception e) {
+    private ResponseEntity<Object> constructOtherResponses(Exception e) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         if (e instanceof SaturnJobConsoleHttpException) {
             SaturnJobConsoleHttpException saturnJobConsoleHttpException = (SaturnJobConsoleHttpException) e;
@@ -110,16 +109,16 @@ public class AlarmRestApiController {
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(message);
-        return new ResponseEntity<String>(JSON.toJSONString(restApiErrorResult), httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<String> constructErrorResponse(String errorMsg, HttpStatus status) {
+    private ResponseEntity<Object> constructErrorResponse(String errorMsg, HttpStatus status) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
         restApiErrorResult.setMessage(errorMsg);
 
-        return new ResponseEntity<String>(JSON.toJSONString(restApiErrorResult), httpHeaders, status);
+        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
     }
 }

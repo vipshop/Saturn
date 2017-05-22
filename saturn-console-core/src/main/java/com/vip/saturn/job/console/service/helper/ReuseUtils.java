@@ -15,6 +15,10 @@ import org.slf4j.LoggerFactory;
  */
 public class ReuseUtils {
 
+    private static final String JOB_NOT_EXIST_TEMPLATE = "The job {%s} does not exists.";
+
+    private static final String NAMESPACE_NOT_EXIST_TEMPLATE = "The namespace {%s} does not exists.";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ReuseUtils.class);
 
     public static <T> T reuse(String namespace, final String jobName, RegistryCenterService registryCenterService, CuratorRepository curatorRepository, final ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
@@ -22,7 +26,7 @@ public class ReuseUtils {
             @Override
             public T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-                    throw new SaturnJobConsoleException("The jobName does not exists");
+                    throw new SaturnJobConsoleException(String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
                 }
                 return callBack.call(curatorFrameworkOp);
             }
@@ -33,7 +37,7 @@ public class ReuseUtils {
         try {
             RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
             if (registryCenterConfiguration == null) {
-                throw new SaturnJobConsoleException("The namespace does not exists");
+                throw new SaturnJobConsoleException(String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
             }
             RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
             if (registryCenterClient != null && registryCenterClient.isConnected()) {
@@ -56,7 +60,7 @@ public class ReuseUtils {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-                    throw new SaturnJobConsoleException("The jobName does not exists");
+                    throw new SaturnJobConsoleException(String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
                 }
                 callBack.call(curatorFrameworkOp);
             }
@@ -67,7 +71,7 @@ public class ReuseUtils {
         try {
             RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
             if (registryCenterConfiguration == null) {
-                throw new SaturnJobConsoleException("The namespace does not exists");
+                throw new SaturnJobConsoleException(String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
             }
             RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
             if (registryCenterClient != null && registryCenterClient.isConnected()) {

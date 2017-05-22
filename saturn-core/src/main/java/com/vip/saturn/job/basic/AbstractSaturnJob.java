@@ -1,20 +1,19 @@
 package com.vip.saturn.job.basic;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.PropertyPlaceholderHelper;
-
 import com.google.common.base.Strings;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.PropertyPlaceholderHelper;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Saturn抽象父类
@@ -86,10 +85,13 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 				int errorGroup = jobReturn.getErrorGroup();
 				if (errorGroup == SaturnSystemErrorGroup.SUCCESS) {
 					successCount++;
-				} else if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
-					errorCount++;
-					onTimeout(item);
 				} else {
+					if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
+						onTimeout(item);
+					} else if (errorGroup == SaturnSystemErrorGroup.FAIL_NEED_RAISE_ALARM) {
+						onNeedRaiseAlarm(item, jobReturn.getReturnMsg());
+					}
+
 					errorCount++;
 				}
 			}

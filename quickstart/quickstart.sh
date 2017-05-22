@@ -24,6 +24,7 @@ nohup java -Dsaturn.embeddedzk=true -Dsaturn.stdout=true -jar saturn-console/tar
 echo "[Step 3] Running Saturn Executor"
 cd saturn-executor/target
 export VIP_SATURN_ZK_CONNECTION=localhost:2182
+export VIP_SATURN_CONSOLE_URI=http://localhost:9088
 jar xf saturn-executor-master-SNAPSHOT-zip.zip
 
 cp -r ${BASEDIR}/quickstart/demo-java-job.jar $BASEDIR/saturn-executor/target/saturn-executor-master-SNAPSHOT/lib

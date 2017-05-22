@@ -14,16 +14,6 @@
 
 package com.vip.saturn.job.basic;
 
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.data.Stat;
-import org.quartz.JobExecutionException;
-import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.config.JobConfiguration;
@@ -39,6 +29,15 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.data.Stat;
+import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
 
 /**
  * 弹性化分布式作业的基类.
@@ -208,26 +207,37 @@ public abstract class AbstractElasticJob implements Stopable {
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
             Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
             long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
-
+			//有itemStat的情况
 			if (itemStat != null) {
                 long ephemeralOwner = itemStat.getEphemeralOwner();
                 if (ephemeralOwner != sessionId) {
 					log.info("[{}] msg=item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}", jobName, item, ephemeralOwner, sessionId);
 					return false;
-				}
-			} else {
-				JobConfiguration currentConf = jobScheduler.getCurrentConf();
-                Boolean enabledReport = currentConf.isEnabledReport();
-                String jobType = currentConf.getJobType();
-                // 没有配enabledReport，java/shell作业默认为开启；
-				if ((enabledReport == null && ("JAVA_JOB".equals(jobType) || "SHELL_JOB".equals(jobType)))
-						|| (enabledReport != null && enabledReport)) {
-					// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
-					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
-					return false;
+				} else {
+					return true;
 				}
 			}
-			return true;
+			//如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
+			JobConfiguration currentConf = jobScheduler.getCurrentConf();
+			Boolean enabledReport = currentConf.isEnabledReport();
+			String jobType = currentConf.getJobType();
+
+			if (enabledReport != null) {
+				if (enabledReport.equals(Boolean.TRUE)) {
+					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+					return false;
+				} else {
+					return true;
+				}
+			}
+
+			// 没有配enabledReport，java/shell作业默认为开启；
+			if ("JAVA_JOB".equals(jobType) || "SHELL_JOB".equals(jobType)) {
+				log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+				return false;
+			} else {
+				return true;
+			}
 		} catch (Exception e) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 			return false;
@@ -398,6 +408,8 @@ public abstract class AbstractElasticJob implements Stopable {
 	public abstract void onForceStop(int item);
 
 	public abstract void onTimeout(int item);
+
+	public abstract void onNeedRaiseAlarm(int item, String alarmMessage);
 
 	public void notifyJobEnabled() {}
 
