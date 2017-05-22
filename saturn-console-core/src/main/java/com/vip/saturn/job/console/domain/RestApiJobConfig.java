@@ -27,6 +27,8 @@ public class RestApiJobConfig {
     private Boolean useSerial;
     private String dependencies;
     private String groups;
+    private Boolean showNormalLog;
+    private Integer processCountInterValSeconds;
 
     public String getJobClass() {
         return jobClass;
@@ -203,5 +205,20 @@ public class RestApiJobConfig {
 	public void setGroups(String groups) {
 		this.groups = groups;
 	}
-    
+
+    public Boolean getShowNormalLog() {
+        return showNormalLog;
+    }
+
+    public void setShowNormalLog(Boolean showNormalLog) {
+        this.showNormalLog = showNormalLog;
+    }
+
+    public Integer getProcessCountInterValSeconds() {
+        return processCountInterValSeconds;
+    }
+
+    public void setProcessCountInterValSeconds(Integer processCountInterValSeconds) {
+        this.processCountInterValSeconds = processCountInterValSeconds;
+    }
 }
