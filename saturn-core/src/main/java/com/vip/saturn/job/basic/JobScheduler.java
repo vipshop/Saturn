@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.quartz.SchedulerException;
@@ -104,6 +105,8 @@ public class JobScheduler {
 	private AbstractElasticJob job;
 
 	private SaturnExecutorService saturnExecutorService;
+
+	private AtomicBoolean isShutdownFlag = new AtomicBoolean(false);
 
 	public JobScheduler(final CoordinatorRegistryCenter coordinatorRegistryCenter,
 			final JobConfiguration jobConfiguration) {
@@ -210,6 +213,17 @@ public class JobScheduler {
 		executorService = new ExtendableThreadPoolExecutor(0, 100, 2, TimeUnit.MINUTES, new TaskQueue(), factory);
 	}
 
+	public void reCreateExecutorService() {
+		synchronized (isShutdownFlag) {
+			if(isShutdownFlag.get()) {
+				log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "the jobScheduler was shutdown, cannot re-create business thread pool"));
+				return;
+			}
+			executionService.shutdown();
+			initExecutorService();
+		}
+	}
+
 	/**
 	 * 获取下次作业触发时间.可能被暂停时间段所影响。
 	 * 
@@ -282,42 +296,45 @@ public class JobScheduler {
 	 * 关闭调度器.
 	 */
 	public void shutdown(boolean removejob) {
-		try {
-			if (job != null) {
-				job.shutdown();
-				Thread.sleep(500);
+		synchronized (isShutdownFlag) {
+			isShutdownFlag.set(true);
+			try {
+				if (job != null) {
+					job.shutdown();
+					Thread.sleep(500);
+				}
+			} catch (final Exception e) {
+				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 			}
-		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
-		}
 
-		listenerManager.shutdown();
-		shardingService.shutdown();
-		configService.shutdown();
-		leaderElectionService.shutdown();
-		serverService.shutdown();
-		executionContextService.shutdown();
-		executionService.shutdown();
-		failoverService.shutdown();
-		statisticsService.shutdown();
-		offsetService.shutdown();
-		analyseService.shutdown();
-		limitMaxJobsService.shutdown();
+			listenerManager.shutdown();
+			shardingService.shutdown();
+			configService.shutdown();
+			leaderElectionService.shutdown();
+			serverService.shutdown();
+			executionContextService.shutdown();
+			executionService.shutdown();
+			failoverService.shutdown();
+			statisticsService.shutdown();
+			offsetService.shutdown();
+			analyseService.shutdown();
+			limitMaxJobsService.shutdown();
 
-		zkCacheManager.shutdown();
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-		}
-		if (removejob) {
-			jobNodeStorage.deleteJobNode();
-			saturnExecutorService.removeJobName(jobName);
-		}
-		
-		JobRegistry.clearJob(executorName, jobName);
-		JobRegistry.clearJobBusinessInstance(executorName, jobName);
-		if (executorService != null && !executorService.isShutdown()) {
-			executorService.shutdown();
+			zkCacheManager.shutdown();
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+			}
+			if (removejob) {
+				jobNodeStorage.deleteJobNode();
+				saturnExecutorService.removeJobName(jobName);
+			}
+
+			JobRegistry.clearJob(executorName, jobName);
+			JobRegistry.clearJobBusinessInstance(executorName, jobName);
+			if (executorService != null && !executorService.isShutdown()) {
+				executorService.shutdown();
+			}
 		}
 	}
 
