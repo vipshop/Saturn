@@ -42,6 +42,10 @@ public final class ServerNode {
 
     /** server 版本 **/
     public static final String VERSION = ROOT + "/%s/version";
+
+    /** server 版本 **/
+    public static final String JOB_VERSION = ROOT + "/%s/jobVersion";
+
     /** 对应的Executor运行节点 */
     public static final String SERVER = ROOT + "/%s";
     
@@ -55,6 +59,10 @@ public final class ServerNode {
 
     static String getVersionNode(String executorName) {
         return String.format(VERSION, executorName);
+    }
+
+    static String getJobVersionNode(String executorName){
+        return String.format(JOB_VERSION, executorName);
     }
     
     static String getIpNode(String executorName) {

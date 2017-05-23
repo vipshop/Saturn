@@ -204,11 +204,6 @@ public class JobConfiguration {
      */
     private boolean useDispreferList = true;
 
-	/**
-	 * 作业版本
-	 */
-	private String version;
-
 	public void reloadConfig() {
 		if (regCenter == null) {
 			return;
@@ -268,11 +263,6 @@ public class JobConfiguration {
 		localMode =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
 		useSerial =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
 		useDispreferList =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
-
-		valStr = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.VERSION));
-		if (valStr != null) {
-			version = valStr;
-		}
 	}
 
 	public boolean isDeleting(){
@@ -486,13 +476,5 @@ public class JobConfiguration {
 
 	public Boolean isEnabledReport() {
 		return enabledReport;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 }

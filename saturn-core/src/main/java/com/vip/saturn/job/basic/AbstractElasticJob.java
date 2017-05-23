@@ -79,8 +79,9 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected SaturnExecutorService saturnExecutorService;
 	
 	protected ReportService reportService;
-	
 
+	protected String jobVersion;
+	
 	/**
 	 * vms job这个状态无效。
 	 */
@@ -360,6 +361,18 @@ public abstract class AbstractElasticJob implements Stopable {
 		return configService;
 	}
 
+	public final void setConfigService(final ConfigurationService configService) {
+		this.configService = configService;
+	}
+
+	public String getJobVersion() {
+		return jobVersion;
+	}
+
+	public void setJobVersion(String jobVersion) {
+		this.jobVersion = jobVersion;
+	}
+
 	protected abstract void executeJob(final JobExecutionMultipleShardingContext shardingContext);
 
 	/**
@@ -391,10 +404,6 @@ public abstract class AbstractElasticJob implements Stopable {
 	@Override
 	public void resume() {
 		stopped = false;
-	}
-
-	public final void setConfigService(final ConfigurationService configService) {
-		this.configService = configService;
 	}
 
 	public abstract SaturnTrigger getTrigger();

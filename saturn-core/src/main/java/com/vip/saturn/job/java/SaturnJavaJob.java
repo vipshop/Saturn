@@ -47,19 +47,18 @@ public class SaturnJavaJob extends CrondJob {
 			return;
 		}
 
+		if (jobVersion != null){
+			return;
+		}
+
 		JobConfiguration currentConf = configService.getJobConfiguration();
 
 		try {
 			Class<?> jobClass = saturnExecutorService.getJobClassLoader().loadClass(currentConf.getJobClass());
 			String version = (String) jobClass.getMethod("getJobVersion").invoke(jobBusinessInstance);
-			if (currentConf.getVersion() != null && currentConf.getVersion().equals(version)) {
-				log.debug("the version is already up to date. version {}", version);
-				return;
-			}
-
-			configService.updateJobVersion(jobName, version);
+			setJobVersion(version);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "persist job version has error throws"), t);
+			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "error throws during get job version"), t);
 			throw new SchedulerException(t);
 		}
 	}

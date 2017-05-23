@@ -417,7 +417,6 @@ $(function() {
         		$("#pausePeriodTime_tagsinput").append(w).addClass("warnging-tag");
 	        } 
 	        $("#jobClass").val(jobConfig.jobClass);
-	        $("#version").val(jobConfig.version);
 	    }).always(function() { $loading.hide(); });
 	}
 
@@ -577,7 +576,7 @@ $(function() {
 	            	+ statusLabel + "'>" + status + "</span></td><td title='统计周期可配置(参考作业配置)'>" 
 		            + list[i].processSuccessCount + "</td><td title='统计周期可配置(参考作业配置)'>" + list[i].processFailureCount 
 		            + "</td><td>" + list[i].percentage 
-		            + "</td><td>" + sharding + "</td><td>" + list[i].version + "</td>";
+		            + "</td><td>" + sharding + "</td><td>" + list[i].jobVersion + "</td><td>" + list[i].version + "</td>";
 	            
 	            var trClass = "";
 	            if ("ONLINE" === status) {
