@@ -26,10 +26,10 @@ import java.text.NumberFormat;
  *
  */
 public final class JobServer implements Serializable {
-    
-    private static final long serialVersionUID = 4241736510750597679L;
-    
-    private String jobName;
+
+	private static final long serialVersionUID = -7862835299298383387L;
+
+	private String jobName;
     
     private String ip;
     
@@ -46,6 +46,8 @@ public final class JobServer implements Serializable {
     private boolean leader;
     
     private String version;
+
+    private String jobVersion;
     
     private boolean leaderStopped;
     
@@ -153,4 +155,12 @@ public final class JobServer implements Serializable {
 		this.jobStatus = jobStatus;
 	}
 
+
+	public String getJobVersion() {
+		return jobVersion;
+	}
+
+	public void setJobVersion(String jobVersion) {
+		this.jobVersion = jobVersion;
+	}
 }
