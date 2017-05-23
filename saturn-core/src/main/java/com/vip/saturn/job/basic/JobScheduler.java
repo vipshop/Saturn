@@ -50,17 +50,6 @@ import com.vip.saturn.job.threads.ExtendableThreadPoolExecutor;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
-import org.apache.curator.framework.CuratorFramework;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.spi.OperableTrigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 作业调度器.
