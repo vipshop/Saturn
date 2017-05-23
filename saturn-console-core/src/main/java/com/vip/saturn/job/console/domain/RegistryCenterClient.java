@@ -19,6 +19,8 @@ package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 import org.apache.curator.framework.CuratorFramework;
 
 /**
@@ -30,8 +32,12 @@ public final class RegistryCenterClient implements Serializable {
     private static final long serialVersionUID = -946258964014121184L;
     
     private String nameAndNamespace;
-    
-    private CuratorFramework curatorClient;
+
+	@JsonIgnore
+    private transient CuratorFramework curatorClient;
+
+	@JsonIgnore
+	private transient AbstractConnectionListener connectionListener;
     
     private boolean connected;
     
@@ -59,12 +65,31 @@ public final class RegistryCenterClient implements Serializable {
 		this.curatorClient = curatorClient;
 	}
 
+	public AbstractConnectionListener getConnectionListener() {
+		return connectionListener;
+	}
+
+	public void setConnectionListener(AbstractConnectionListener connectionListener) {
+		this.connectionListener = connectionListener;
+	}
+
 	public boolean isConnected() {
 		return connected;
 	}
 
 	public void setConnected(boolean connected) {
 		this.connected = connected;
+	}
+
+	public void close() throws Exception{
+		if(connectionListener != null) {
+			connectionListener.shutdownNowUntilTerminated();
+			connectionListener = null;
+		}
+		if(curatorClient != null) {
+			curatorClient.close();
+			curatorClient = null;
+		}
 	}
 
 }

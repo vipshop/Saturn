@@ -4,6 +4,7 @@
 package com.vip.saturn.job.console.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 import org.apache.curator.framework.CuratorFramework;
 
 import java.io.Serializable;
@@ -27,6 +28,9 @@ public class ZkCluster implements Serializable {
 	
 	@JsonIgnore
 	private transient  CuratorFramework curatorFramework;
+
+	@JsonIgnore
+	private transient AbstractConnectionListener connectionListener;
 	
 	@JsonIgnore
 	private transient ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
@@ -72,6 +76,14 @@ public class ZkCluster implements Serializable {
 
 	public void setCuratorFramework(CuratorFramework curatorFramework) {
 		this.curatorFramework = curatorFramework;
+	}
+
+	public AbstractConnectionListener getConnectionListener() {
+		return connectionListener;
+	}
+
+	public void setConnectionListener(AbstractConnectionListener connectionListener) {
+		this.connectionListener = connectionListener;
 	}
 
 	public ArrayList<RegistryCenterConfiguration> getRegCenterConfList() {

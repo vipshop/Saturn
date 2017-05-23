@@ -31,6 +31,7 @@ import javax.annotation.Resource;
 import com.vip.saturn.job.console.service.helper.DashboardLeaderTreeCache;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -71,6 +72,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns */, RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>();
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns **/, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
@@ -179,7 +181,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				iterator.remove();
 				closeZkCluster(zkCluster);
 			} else {
-				newClusterMap.get(zkAddr).setCuratorFramework(zkCluster.getCuratorFramework());
+				ZkCluster newZkCluster = newClusterMap.get(zkAddr);
+				newZkCluster.setCuratorFramework(zkCluster.getCuratorFramework());
+				newZkCluster.setConnectionListener(zkCluster.getConnectionListener());
 			}
 		}
 		// 完善curatorFramework。如果没有，则新建
@@ -249,13 +253,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (regCenterConfList != null) {
 				for (RegistryCenterConfiguration conf : regCenterConfList) {
 					String nns = conf.getNameAndNamespace();
-					try {
-						RegistryCenterClient registryCenterClient = registryCenterClientMap.remove(nns);
-						if (registryCenterClient != null) {
-							registryCenterClient.getCuratorClient().close();
+					synchronized (getRegistryCenterClientNnsLock(nns)) {
+						try {
+							RegistryCenterClient registryCenterClient = registryCenterClientMap.remove(nns);
+							if (registryCenterClient != null) {
+								registryCenterClient.close();
+							}
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
 						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
 					}
 					try {
 						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.remove(nns);
@@ -268,26 +274,57 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					}
 				}
 			}
-			zkCluster.getCuratorFramework().close();
+			if(zkCluster.getConnectionListener() != null) {
+				zkCluster.getConnectionListener().shutdownNowUntilTerminated();
+				zkCluster.setConnectionListener(null);
+			}
+			if(zkCluster.getCuratorFramework() != null) {
+				zkCluster.getCuratorFramework().close();
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
-	private void createNewConnect(ZkCluster zkCluster) {
+	private void createNewConnect(final ZkCluster zkCluster) {
 		String zkAddr = zkCluster.getZkAddr();
 		try {
 			CuratorFramework tmp = curatorRepository.connect(zkAddr, null, zkCluster.getDigest());
-			zkCluster.setCuratorFramework(tmp);
 			if (tmp == null) {
 				log.error("found an offline zkCluster, zkAddr is {}", zkAddr);
+				zkCluster.setCuratorFramework(null);
+				zkCluster.setConnectionListener(null);
 				zkCluster.setOffline(true);
 			} else {
+				AbstractConnectionListener connectionListener = new AbstractConnectionListener("zk-connectionListener-thread-for-zkCluster-" + zkCluster.getZkAlias()) {
+					@Override
+					public void stop() {
+						zkCluster.setOffline(true);
+					}
+					@Override
+					public void restart() {
+						zkCluster.setOffline(false);
+						// 刷新版本号
+						ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
+						if (regCenterConfList != null) {
+							Iterator<RegistryCenterConfiguration> iterator = regCenterConfList.iterator();
+							while (iterator.hasNext()) {
+								RegistryCenterConfiguration conf = iterator.next();
+								conf.setVersion(getVersion(conf.getNamespace(), zkCluster.getCuratorFramework()));
+							}
+						}
+					}
+				};
+				zkCluster.setCuratorFramework(tmp);
+				zkCluster.setConnectionListener(connectionListener);
 				zkCluster.setOffline(false);
+				tmp.getConnectionStateListenable().addListener(connectionListener);
 			}
 		} catch (Exception e) {
 			log.error("found an offline zkCluster, zkAddr is {}", zkAddr);
 			log.error(e.getMessage(), e);
+			zkCluster.setCuratorFramework(null);
+			zkCluster.setConnectionListener(null);
 			zkCluster.setOffline(true);
 		}
 	}
@@ -339,42 +376,62 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			InitRegistryCenterService.initTreeJson(zkCluster.getRegCenterConfList(), zkCluster.getZkAddr());
 		}
 	}
-	
+
+	private Object getRegistryCenterClientNnsLock(String nns) {
+		Object lock = new Object();
+		Object pre = registryCenterClientNnsLock.putIfAbsent(nns, lock);
+		if(pre != null) {
+			return pre;
+		} else {
+			return lock;
+		}
+	}
+
 	@Override
 	public RegistryCenterClient connect(final String nameAndNameSpace) {
-		RegistryCenterClient registryCenterClient = new RegistryCenterClient();
+        final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
 		registryCenterClient.setNameAndNamespace(nameAndNameSpace);
 		if(nameAndNameSpace == null) {
 			return registryCenterClient;
 		}
-		if (!registryCenterClientMap.containsKey(nameAndNameSpace)) {
-			RegistryCenterConfiguration registryCenterConfiguration = findConfig(nameAndNameSpace);
-			if(registryCenterConfiguration == null) {
-				return registryCenterClient;
-			}
-			String zkAddressList = registryCenterConfiguration.getZkAddressList();
-			String namespace = registryCenterConfiguration.getNamespace();
-			String digest = registryCenterConfiguration.getDigest();
+		synchronized (getRegistryCenterClientNnsLock(nameAndNameSpace)) {
+			if (!registryCenterClientMap.containsKey(nameAndNameSpace)) {
+				RegistryCenterConfiguration registryCenterConfiguration = findConfig(nameAndNameSpace);
+				if(registryCenterConfiguration == null) {
+					return registryCenterClient;
+				}
+				String zkAddressList = registryCenterConfiguration.getZkAddressList();
+				String namespace = registryCenterConfiguration.getNamespace();
+				String digest = registryCenterConfiguration.getDigest();
 
-			CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
-			if (client == null) {
+				CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
+				if (client == null) {
+					return registryCenterClient;
+				}
+				AbstractConnectionListener connectionListener = new AbstractConnectionListener("zk-connectionListener-thread-for-registryCenterClient-" + nameAndNameSpace) {
+					@Override
+					public void stop() {
+						registryCenterClient.setConnected(false);
+					}
+
+					@Override
+					public void restart() {
+						registryCenterClient.setConnected(true);
+					}
+				};
+				registryCenterClient.setConnected(true);
+				registryCenterClient.setCuratorClient(client);
+				registryCenterClient.setConnectionListener(connectionListener);
+				client.getConnectionStateListenable().addListener(connectionListener);
+				registryCenterClientMap.put(nameAndNameSpace, registryCenterClient);
 				return registryCenterClient;
-			}
-			registryCenterClient.setConnected(true);
-			registryCenterClient.setCuratorClient(client);
-			RegistryCenterClient pre = registryCenterClientMap.putIfAbsent(nameAndNameSpace, registryCenterClient);
-			if (pre != null) {
-				client.close();
-				return pre;
 			} else {
+				RegistryCenterClient registryCenterClient2 = registryCenterClientMap.get(nameAndNameSpace);
+				if(registryCenterClient2 != null) {
+					return registryCenterClient2;
+				}
 				return registryCenterClient;
 			}
-		} else {
-			RegistryCenterClient registryCenterClient2 = registryCenterClientMap.get(nameAndNameSpace);
-			if(registryCenterClient2 != null) {
-				return registryCenterClient2;
-			}
-			return registryCenterClient;
 		}
 	}
 
@@ -390,29 +447,39 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		String zkAddressList = registryCenterConfiguration.getZkAddressList();
 		String digest = registryCenterConfiguration.getDigest();
-		if (!registryCenterClientMap.containsKey(nns)) {
-			RegistryCenterClient registryCenterClient = new RegistryCenterClient();
-			registryCenterClient.setNameAndNamespace(nns);
-			CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
-			if(client == null) {
+		synchronized (getRegistryCenterClientNnsLock(nns)) {
+			if (!registryCenterClientMap.containsKey(nns)) {
+				final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
+				registryCenterClient.setNameAndNamespace(nns);
+				CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
+				if (client == null) {
+					return registryCenterClient;
+				}
+				AbstractConnectionListener connectionListener = new AbstractConnectionListener("zk-connectionListener-thread-for-registryCenterClient-" + nns) {
+					@Override
+					public void stop() {
+						registryCenterClient.setConnected(false);
+					}
+
+					@Override
+					public void restart() {
+						registryCenterClient.setConnected(true);
+					}
+				};
+				registryCenterClient.setConnected(true);
+				registryCenterClient.setCuratorClient(client);
+				registryCenterClient.setConnectionListener(connectionListener);
+				client.getConnectionStateListenable().addListener(connectionListener);
+				registryCenterClientMap.put(nns, registryCenterClient);
 				return registryCenterClient;
-			}
-			registryCenterClient.setConnected(true);
-			registryCenterClient.setCuratorClient(client);
-			RegistryCenterClient pre = registryCenterClientMap.putIfAbsent(nns, registryCenterClient);
-			if(pre != null) {
-				client.close();
-				return pre;
 			} else {
+				RegistryCenterClient registryCenterClient = registryCenterClientMap.get(nns);
+				if (registryCenterClient == null) {
+					registryCenterClient = new RegistryCenterClient();
+					registryCenterClient.setNameAndNamespace(namespace);
+				}
 				return registryCenterClient;
 			}
-		} else {
-			RegistryCenterClient registryCenterClient = registryCenterClientMap.get(nns);
-			if(registryCenterClient == null) {
-				registryCenterClient = new RegistryCenterClient();
-				registryCenterClient.setNameAndNamespace(namespace);
-			}
-			return registryCenterClient;
 		}
 	}
 
