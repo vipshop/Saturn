@@ -203,9 +203,14 @@ public class JobConfiguration {
      * 是否使用非preferList
      */
     private boolean useDispreferList = true;
-    
-    public void reloadConfig(){
-    	if (regCenter == null) {
+
+	/**
+	 * 作业版本
+	 */
+	private String version;
+
+	public void reloadConfig() {
+		if (regCenter == null) {
 			return;
 		} 
     	
@@ -263,8 +268,13 @@ public class JobConfiguration {
 		localMode =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
 		useSerial =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
 		useDispreferList =  Boolean.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
-    }
-    
+
+		valStr = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.VERSION));
+		if (valStr != null) {
+			version = valStr;
+		}
+	}
+
 	public boolean isDeleting(){
 		return regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.TO_DELETE));
 	}
@@ -478,7 +488,11 @@ public class JobConfiguration {
 		return enabledReport;
 	}
 
-	public void setEnabledReport(Boolean enabledReport) {
-		this.enabledReport = enabledReport;
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
 	}
 }

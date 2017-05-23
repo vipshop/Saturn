@@ -281,6 +281,21 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	/**
+	 * 更新作业版本到ZK.
+	 *
+	 * @param jobName 作业名
+	 * @param version 从业务代码读取到的作业版本
+	 */
+	public void updateJobVersion(String jobName, String version) throws SaturnJobException {
+		if (!getJobNodeStorage().isJobExisted(jobName)) {
+			throw new SaturnJobException(SaturnJobException.JOB_NOT_FOUND, "The job is not found: " + jobName);
+		}
+
+		getJobNodeStorage().replaceJobNode(jobName, ConfigurationNode.VERSION, version);
+	}
+
+
+	/**
 	 * 获取统计作业处理数据数量的间隔时间.
 	 *
 	 * @return 统计作业处理数据数量的间隔时间

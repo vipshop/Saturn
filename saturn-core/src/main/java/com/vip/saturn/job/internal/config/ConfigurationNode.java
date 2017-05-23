@@ -88,6 +88,11 @@ public final class ConfigurationNode {
      * 执行作业发送的channel名字
      */
     public static final String CHANNEL_NAME = ROOT + "/channelName";
+
+    /**
+     * 作业版本
+     */
+    public static final String VERSION = ROOT + "/version";
     
     /**
      * 判断是否为作业配置路径.

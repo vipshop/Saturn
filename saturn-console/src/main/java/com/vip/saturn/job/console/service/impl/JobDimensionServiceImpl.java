@@ -503,6 +503,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
         result.setShowNormalLog(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
+
+		String version = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "version"));
+		result.setVersion(version);
+
         return result;
     }
 

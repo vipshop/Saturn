@@ -107,8 +107,7 @@ public class AlarmRestApiController {
             message = e.getMessage();
         }
 
-        RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
-        restApiErrorResult.setMessage(message);
+        RestApiErrorResult restApiErrorResult = new RestApiErrorResult(message);
         return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -116,9 +115,7 @@ public class AlarmRestApiController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
-        RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
-        restApiErrorResult.setMessage(errorMsg);
-
+        RestApiErrorResult restApiErrorResult = new RestApiErrorResult(errorMsg);
         return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
     }
 }

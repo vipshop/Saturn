@@ -257,7 +257,6 @@ $(function() {
     	    }
 	    	
 	    	var jobConfig = data, reinitDate = false, reinitTime = false;
-
 	    	if (jobConfig.jobType === "SHELL_JOB") {
 	    		$(".hide-when-is-script-job").hide();
 	    		$(".hide-when-is-script-job-but-show-when-is-vshell-job").hide();
@@ -418,6 +417,7 @@ $(function() {
         		$("#pausePeriodTime_tagsinput").append(w).addClass("warnging-tag");
 	        } 
 	        $("#jobClass").val(jobConfig.jobClass);
+	        $("#version").val(jobConfig.version);
 	    }).always(function() { $loading.hide(); });
 	}
 

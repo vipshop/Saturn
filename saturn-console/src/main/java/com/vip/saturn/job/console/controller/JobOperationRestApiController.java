@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
@@ -226,6 +225,16 @@ public class JobOperationRestApiController {
         jobConfig.setJobDegree(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
 
         jobConfig.setDependencies(ControllerUtils.checkAndGetParametersValueAsString(configParams, "dependencies", false));
+
+        jobConfig.setTimeZone(ControllerUtils.checkAndGetParametersValueAsString(configParams, "timeZone", false));
+
+        jobConfig.setTimeoutSeconds(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeoutSeconds", false));
+
+        jobConfig.setProcessCountIntervalSeconds(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "processCountIntervalSeconds", false));
+
+        jobConfig.setGroups(ControllerUtils.checkAndGetParametersValueAsString(configParams, "groups", false));
+
+        jobConfig.setShowNormalLog(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
 
         return jobConfig;
     }
