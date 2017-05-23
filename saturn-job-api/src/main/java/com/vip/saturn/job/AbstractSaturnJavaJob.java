@@ -39,7 +39,7 @@ public abstract class AbstractSaturnJavaJob {
     /**
      * @return version of the job
      */
-    protected String getJobVersion() {
+    public String getJobVersion() {
         return "";
     }
 

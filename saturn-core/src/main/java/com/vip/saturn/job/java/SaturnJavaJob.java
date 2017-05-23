@@ -35,6 +35,33 @@ public class SaturnJavaJob extends CrondJob {
 	public void init() throws SchedulerException{
 		super.init();
 		createJobBusinessInstanceIfNecessary();
+		persistJobVersionIfNecessary();
+	}
+
+	/**
+	 * 2种情况需要更新作业版本：1. 版本号为空（默认为空串） 2. 版本号跟作业不一致
+	 */
+	private void persistJobVersionIfNecessary() throws SchedulerException {
+		if (jobBusinessInstance == null) {
+			log.debug("jobBusinessInstance is null.");
+			return;
+		}
+
+		JobConfiguration currentConf = configService.getJobConfiguration();
+
+		try {
+			Class<?> jobClass = saturnExecutorService.getJobClassLoader().loadClass(currentConf.getJobClass());
+			String version = (String) jobClass.getMethod("getJobVersion").invoke(jobBusinessInstance);
+			if (currentConf.getVersion() != null && currentConf.getVersion().equals(version)) {
+				log.debug("the version is already up to date. version {}", version);
+				return;
+			}
+
+			configService.updateJobVersion(jobName, version);
+		} catch (Throwable t) {
+			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "persist job version has error throws"), t);
+			throw new SchedulerException(t);
+		}
 	}
 
 	private void createJobBusinessInstanceIfNecessary() throws SchedulerException {

@@ -43,9 +43,14 @@ layout:decorator="frame-layout">
 										<div class="panel-body">
 							                <div class="form-group hide-when-is-script-job" style="margin-top:4px;">
 							                    <label for="jobClass" class="col-sm-2 control-label">作业实现类</label>
-							                    <div class="col-sm-9">
+							                    <div class="col-sm-6">
 							                        <input type="text" id="jobClass" name="jobClass" class="form-control" readonly="readonly" />
 							                    </div>
+
+												<label for="version" class="col-sm-1 control-label">版本</label>
+												<div class="col-sm-2">
+													<input type="text" id="version" name="version" class="form-control" readonly="readonly" />
+												</div>
 							                </div>
 							                
 							                <div class="form-group">
@@ -83,6 +88,7 @@ layout:decorator="frame-layout">
 							                        <span class="glyphicon glyphicon-warning-sign diff-conf-warning"></span>
 							                    </div>
 							                    <a id="check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">预测</a>
+
 							                </div>
 							                
 							                <div class="form-group">

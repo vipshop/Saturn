@@ -1,20 +1,26 @@
 package com.vip.saturn.it.job;
 
+import com.vip.saturn.job.AbstractSaturnJavaJob;
+import com.vip.saturn.job.SaturnJobExecutionContext;
+import com.vip.saturn.job.SaturnJobReturn;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.vip.saturn.job.AbstractSaturnJavaJob;
-import com.vip.saturn.job.SaturnJobExecutionContext;
-import com.vip.saturn.job.SaturnJobReturn;
-
 public class SimpleJavaJob extends AbstractSaturnJavaJob {
 	public static Map<String,Integer> statusMap = new HashMap<String,Integer>();
+
+	@Override
+	public String getJobVersion() {
+		return "2.2.1";
+	}
 
 	public static AtomicBoolean enabled = new AtomicBoolean(false);
 
 	public static AtomicBoolean lock = new AtomicBoolean(false);
+
 
 	private static synchronized void countInc(String key){
 		Integer status = statusMap.get(key);
