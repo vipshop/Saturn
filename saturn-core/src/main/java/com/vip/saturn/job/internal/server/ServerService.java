@@ -17,16 +17,17 @@
 
 package com.vip.saturn.job.internal.server;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-
 import com.google.common.base.Strings;
+import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * 作业服务器节点服务.
@@ -49,16 +50,17 @@ public class ServerService extends AbstractSaturnService {
     /**
      * 持久化作业服务器上线相关信息.
      */
-    public void persistServerOnline() {
+    public void persistServerOnline(AbstractElasticJob job) {
         if (!leaderElectionService.hasLeader()) {
             leaderElectionService.leaderElection();
         }
         persistIp();
         persistVersion();
+        persistJobVersion(job.getJobVersion());
         ephemeralPersistServerReady();
     }
-    
-    private void persistVersion() {
+
+    public void persistVersion() {
 		final Properties props = ResourceUtils
 				.getResource("properties/saturn-core.properties");
 		if (props != null) {
@@ -77,7 +79,13 @@ public class ServerService extends AbstractSaturnService {
 	private void persistIp() {
         getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getIpNode(executorName), LocalHostService.cachedIpAddress);
     }
-    
+
+    private void persistJobVersion(String jobVersion) {
+        if(jobVersion != null) {
+            getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getJobVersionNode(executorName), jobVersion);
+        }
+    }
+
     private void ephemeralPersistServerReady() {
         getJobNodeStorage().fillEphemeralJobNode(ServerNode.getStatusNode(executorName), ServerStatus.READY);
     }

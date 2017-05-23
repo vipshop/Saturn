@@ -116,8 +116,6 @@ public class JobConfig implements Serializable {
 
 	private List<String> dependenciesProvided;
 
-	private String version;
-
     public void setDefaultValues() {
 		timeZone = timeZone == null ? SaturnConstants.TIME_ZONE_ID_DEFAULT : timeZone;
 		timeout4AlarmSeconds = timeout4AlarmSeconds == null || timeout4AlarmSeconds < 0 ? 0 : timeout4AlarmSeconds;
@@ -139,7 +137,6 @@ public class JobConfig implements Serializable {
 		jobMode = jobMode == null ? "" : jobMode;
 		dependencies = dependencies == null ? "" : dependencies;
 		groups = groups == null ? "" : groups;
-		version = version ==null ? "" : version;
     }
 
 	public Integer getRownum() {
@@ -476,13 +473,5 @@ public class JobConfig implements Serializable {
 
 	public void setGroups(String groups) {
 		this.groups = groups;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 }

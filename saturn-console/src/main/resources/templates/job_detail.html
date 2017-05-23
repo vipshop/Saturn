@@ -43,14 +43,9 @@ layout:decorator="frame-layout">
 										<div class="panel-body">
 							                <div class="form-group hide-when-is-script-job" style="margin-top:4px;">
 							                    <label for="jobClass" class="col-sm-2 control-label">作业实现类</label>
-							                    <div class="col-sm-6">
+							                    <div class="col-sm-9">
 							                        <input type="text" id="jobClass" name="jobClass" class="form-control" readonly="readonly" />
 							                    </div>
-
-												<label for="version" class="col-sm-1 control-label">作业版本</label>
-												<div class="col-sm-2">
-													<input type="text" id="version" name="version" class="form-control" readonly="readonly" />
-												</div>
 							                </div>
 							                
 							                <div class="form-group">
@@ -268,7 +263,8 @@ layout:decorator="frame-layout">
 				                        <th>最近处理失败数(每天)</th>
 				                        <th>成功率(每天)</th>
 				                        <th>分片项</th>
-				                        <th>版本</th>
+										<th>作业版本</th>
+				                        <th>Executor版本</th>
 				                    </tr>
 				                </thead>
 				                <tbody>

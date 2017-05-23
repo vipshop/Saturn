@@ -29,7 +29,6 @@ public class RestApiJobConfig {
     private String groups;
     private Boolean showNormalLog;
     private Integer processCountInterValSeconds;
-    private String version;
 
     public String getJobClass() {
         return jobClass;
@@ -221,13 +220,5 @@ public class RestApiJobConfig {
 
     public void setProcessCountInterValSeconds(Integer processCountInterValSeconds) {
         this.processCountInterValSeconds = processCountInterValSeconds;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 }

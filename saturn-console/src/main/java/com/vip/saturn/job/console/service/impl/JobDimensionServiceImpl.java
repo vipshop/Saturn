@@ -504,9 +504,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
         result.setShowNormalLog(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
 
-		String version = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "version"));
-		result.setVersion(version);
-
         return result;
     }
 
@@ -610,10 +607,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         result.setStatus(getServerStatus(jobName, serverIp));
         result.setLeader(serverIp.equals(leaderIp));
         result.setJobStatus(getJobStatus(jobName));
+		result.setJobVersion(getJobVersion(jobName, serverIp));
         return result;
     }
 
-    private HealthCheckJobServer getJobServerVersion(final String jobName, final String executorName, RegistryCenterConfiguration registryCenterConfig) {
+	private HealthCheckJobServer getJobServerVersion(final String jobName, final String executorName, RegistryCenterConfiguration registryCenterConfig) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
     	HealthCheckJobServer result = new HealthCheckJobServer();
         result.setExecutorName(executorName);
@@ -628,6 +626,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(serverIp, "ip"));
         return ServerStatus.getServerStatus(ip);
     }
+
+	private String getJobVersion(String jobName, String serverIp) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		String jobVersion = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "jobVersion"));
+		return jobVersion == null ? "" : jobVersion;
+	}
 
     @Override
     public Collection<ExecutionInfo> getExecutionInfo(final String jobName) {
