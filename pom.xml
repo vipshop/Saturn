@@ -37,6 +37,7 @@
 		<quartz.version>2.2.1</quartz.version>
 		<curator.version>2.10.0</curator.version>
 		<springframework.version>4.3.2.RELEASE</springframework.version>
+		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
 		<cas.client.version>3.2.1</cas.client.version>
 
 		<mybatis.version>3.2.7</mybatis.version>
@@ -376,6 +377,12 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-test</artifactId>
 				<version>${springframework.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-test</artifactId>
+				<version>${spring-boot-test.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
