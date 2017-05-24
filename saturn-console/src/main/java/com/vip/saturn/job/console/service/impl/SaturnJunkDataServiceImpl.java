@@ -77,7 +77,7 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 			try {
 				String namespace = registryCenter.getNameAndNamespace();
 				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
-				if(registryCenterClient == null){
+				if (registryCenterClient == null || !registryCenterClient.isConnected()) {
 					continue;
 				}
 				String zkBootstrapKey = registryCenter.getBootstrapKey();
@@ -196,7 +196,7 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 			for(RegistryCenterConfiguration registryCenter : registryCenterList){
 				String namespace = registryCenter.getNameAndNamespace();
 				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
-				if(registryCenterClient == null){
+				if(registryCenterClient == null || !registryCenterClient.isConnected()){
 					continue;
 				}
 				CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();

@@ -240,7 +240,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 				RegistryCenterClient registryCenterClient = registryCenterService.connect(config.getNameAndNamespace());
 				try {
-					if (registryCenterClient != null) {
+					if (registryCenterClient != null && registryCenterClient.isConnected()) {
 						CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
 						CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
 						// 统计稳定性
@@ -1373,70 +1373,80 @@ public class DashboardServiceImpl implements DashboardService {
 	public void cleanShardingCount(String nns) throws Exception {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
-		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+		if(registryCenterClient.isConnected()) {
+			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
 
-		if (checkExists(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH)) {
-			curatorClient.setData().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
+			if (checkExists(curatorClient, ExecutorNodePath.SHARDING_COUNT_PATH)) {
+				curatorClient.setData().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
 
-		} else {
-			curatorClient.create().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
+			} else {
+				curatorClient.create().forPath(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
+			}
+			asyncForceRefreshStatistics();
 		}
-		asyncForceRefreshStatistics();
 	}
 
 	@Override
 	public void cleanOneJobAnalyse(String jobName, String nns) throws Exception {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
-		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-		// reset analyse data.
-		updateResetValue(curatorClient, jobName, ResetCountType.RESET_ANALYSE);
+		if(registryCenterClient.isConnected()) {
+			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+			// reset analyse data.
+			updateResetValue(curatorClient, jobName, ResetCountType.RESET_ANALYSE);
 
-		resetOneJobAnalyse(jobName, curatorClient);
-		asyncForceRefreshStatistics();
+			resetOneJobAnalyse(jobName, curatorClient);
+			asyncForceRefreshStatistics();
+		}
 	}
 
 	@Override
 	public void cleanAllJobAnalyse(String nns) throws Exception {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
-		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-		CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-		// 遍历所有$Jobs子节点，非系统作业
-		List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-		for (String job : jobs) {
-			resetOneJobAnalyse(job, curatorClient);
-			// reset analyse data.
-			updateResetValue(curatorClient, job, ResetCountType.RESET_ANALYSE);
+		if(registryCenterClient.isConnected()) {
+			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+			// 遍历所有$Jobs子节点，非系统作业
+			List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+			for (String job : jobs) {
+				resetOneJobAnalyse(job, curatorClient);
+				// reset analyse data.
+				updateResetValue(curatorClient, job, ResetCountType.RESET_ANALYSE);
+			}
+			asyncForceRefreshStatistics();
 		}
-		asyncForceRefreshStatistics();
 	}
 
 	@Override
 	public void cleanAllJobExecutorCount(String nns) throws Exception {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
-		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-		CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-		// 遍历所有$Jobs子节点，非系统作业
-		List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-		for (String job : jobs) {
-			resetOneJobExecutorCount(job, curatorClient);
-			// reset all jobs' executor's success/failure count.
-			updateResetValue(curatorClient, job, ResetCountType.RESET_SERVERS);
+		if(registryCenterClient.isConnected()) {
+			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+			// 遍历所有$Jobs子节点，非系统作业
+			List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+			for (String job : jobs) {
+				resetOneJobExecutorCount(job, curatorClient);
+				// reset all jobs' executor's success/failure count.
+				updateResetValue(curatorClient, job, ResetCountType.RESET_SERVERS);
+			}
+			asyncForceRefreshStatistics();
 		}
-		asyncForceRefreshStatistics();
 	}
 
 	@Override
 	public void cleanOneJobExecutorCount(String jobName, String nns) throws Exception {
 		// 获取当前连接
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
-		CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-		// reset executor's success/failure count.
-		updateResetValue(curatorClient, jobName, ResetCountType.RESET_SERVERS);
-		resetOneJobExecutorCount(jobName, curatorClient);
-		asyncForceRefreshStatistics();
+		if(registryCenterClient.isConnected()) {
+			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
+			// reset executor's success/failure count.
+			updateResetValue(curatorClient, jobName, ResetCountType.RESET_SERVERS);
+			resetOneJobExecutorCount(jobName, curatorClient);
+			asyncForceRefreshStatistics();
+		}
 	}
 
 	private void resetOneJobExecutorCount(String jobName, CuratorFramework curatorClient) throws Exception {

@@ -159,6 +159,9 @@ public class SaturnExecutor {
 	 * SaturnExecutor工厂入口
 	 */
 	public static SaturnExecutor buildExecutor(String namespace, String _executorName) {
+		if ("$SaturnSelf".equals(namespace)) {
+			throw new RuntimeException("The namespace cannot be $SaturnSelf");
+		}
 		if (_executorName == null || _executorName.isEmpty()) {
 			String hostName = LocalHostService.getHostName();
 			if ("localhost".equals(hostName) || "localhost6".equals(hostName)) {
