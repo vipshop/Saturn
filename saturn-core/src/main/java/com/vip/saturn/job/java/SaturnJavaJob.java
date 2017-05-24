@@ -35,31 +35,23 @@ public class SaturnJavaJob extends CrondJob {
 	public void init() throws SchedulerException{
 		super.init();
 		createJobBusinessInstanceIfNecessary();
-		persistJobVersionIfNecessary();
+		getJobVersionIfNecessary();
 	}
 
-	/**
-	 * 2种情况需要更新作业版本：1. 版本号为空（默认为空串） 2. 版本号跟作业不一致
-	 */
-	private void persistJobVersionIfNecessary() throws SchedulerException {
-		if (jobBusinessInstance == null) {
-			log.debug("jobBusinessInstance is null.");
-			return;
-		}
-
-		if (jobVersion != null){
-			return;
-		}
-
-		JobConfiguration currentConf = configService.getJobConfiguration();
-
-		try {
-			Class<?> jobClass = saturnExecutorService.getJobClassLoader().loadClass(currentConf.getJobClass());
-			String version = (String) jobClass.getMethod("getJobVersion").invoke(jobBusinessInstance);
-			setJobVersion(version);
-		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "error throws during get job version"), t);
-			throw new SchedulerException(t);
+	private void getJobVersionIfNecessary() throws SchedulerException {
+		if (jobBusinessInstance != null && jobVersion != null) {
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+			ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				String version = (String) jobBusinessInstance.getClass().getMethod("getJobVersion").invoke(jobBusinessInstance);
+				setJobVersion(version);
+			} catch (Throwable t) {
+				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "error throws during get job version"), t);
+				throw new SchedulerException(t);
+			} finally {
+				Thread.currentThread().setContextClassLoader(executorClassLoader);
+			}
 		}
 	}
 
@@ -67,7 +59,6 @@ public class SaturnJavaJob extends CrondJob {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (jobClassStr != null && !jobClassStr.trim().isEmpty()) {
-			jobBusinessInstance = JobRegistry.getJobBusinessInstance(executorName, jobName);
 			if (jobBusinessInstance == null) {
 				ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 				ClassLoader executorClassLoader = saturnExecutorService.getExecutorClassLoader();
@@ -93,8 +84,6 @@ public class SaturnJavaJob extends CrondJob {
 					SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 					saturnApi.setConfigService(getConfigService());
 					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
-
-					JobRegistry.addJobBusinessInstance(executorName, jobName, jobBusinessInstance);
 				} catch (Throwable t) {
 					log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "create job business instance error"), t);
 					throw new SchedulerException(t);

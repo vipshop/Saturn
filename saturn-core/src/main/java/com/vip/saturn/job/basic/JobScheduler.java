@@ -331,7 +331,6 @@ public class JobScheduler {
 			}
 
 			JobRegistry.clearJob(executorName, jobName);
-			JobRegistry.clearJobBusinessInstance(executorName, jobName);
 			if (executorService != null && !executorService.isShutdown()) {
 				executorService.shutdown();
 			}

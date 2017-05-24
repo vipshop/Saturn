@@ -25,8 +25,6 @@ public class JobRegistry {
 
 	private static Map<String, ConcurrentHashMap<String, JobScheduler>> SCHEDULER_MAP = new ConcurrentHashMap<>();
 
-	private static ConcurrentHashMap<String, ConcurrentHashMap<String, Object>> JOB_BUSINESS_INSTANCE_MAP = new ConcurrentHashMap<>();
-
 	private JobRegistry() {
 	}
 
@@ -50,7 +48,6 @@ public class JobRegistry {
 
 	public static void clearExecutor(String executorName){
 		SCHEDULER_MAP.remove(executorName);
-		JOB_BUSINESS_INSTANCE_MAP.remove(executorName);
 	}
 	
 	public static void clearJob(String executorName,String jobName) {
@@ -60,28 +57,6 @@ public class JobRegistry {
 			if(jobScheduler != null && jobScheduler.getJob()!=null){
 				jobScheduler.getJob().shutdown();
 			}
-		}
-	}
-
-	public static void addJobBusinessInstance(String executorName, String jobName, Object jobBusinessInstance) {
-		if(!JOB_BUSINESS_INSTANCE_MAP.containsKey(executorName)) {
-			JOB_BUSINESS_INSTANCE_MAP.putIfAbsent(executorName, new ConcurrentHashMap());
-		}
-		JOB_BUSINESS_INSTANCE_MAP.get(executorName).putIfAbsent(jobName, jobBusinessInstance);
-	}
-
-	public static Object getJobBusinessInstance(String executorName, String jobName) {
-		ConcurrentHashMap<String, Object> jobBI = JOB_BUSINESS_INSTANCE_MAP.get(executorName);
-		if(jobBI != null) {
-			return jobBI.get(jobName);
-		}
-		return null;
-	}
-
-	public static void clearJobBusinessInstance(String executorName, String jobName) {
-		ConcurrentHashMap<String, Object> jobBI = JOB_BUSINESS_INSTANCE_MAP.get(executorName);
-		if(jobBI != null) {
-			jobBI.remove(jobName);
 		}
 	}
 
