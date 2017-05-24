@@ -38,6 +38,13 @@ public abstract class AbstractSaturnMsgJob {
 	}
 
 	/**
+	 * @return version of the job
+	 */
+	public String getJobVersion() {
+		return "";
+	}
+
+	/**
 	 * The job was just enabled.
 	 */
 	public void onEnabled(String jobName) {
