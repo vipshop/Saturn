@@ -16,7 +16,7 @@ public class ConsoleThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        String name = isMultiple ? threadName + threadNumber.getAndIncrement() : threadName;
+        String name = isMultiple ? threadName + "-" + threadNumber.getAndIncrement() : threadName;
         Thread t = new Thread(r, name);
         if (t.isDaemon()) {
             t.setDaemon(false);
