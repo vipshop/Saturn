@@ -143,8 +143,9 @@ public class JobScheduler {
 
 	/**
 	 * 初始化作业.
+	 * @return true初始化成功，false初始化失败
 	 */
-	public void init() {
+	public boolean init() {
 		try {
 			String currentConfJobName = currentConf.getJobName();
 			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
@@ -155,9 +156,12 @@ public class JobScheduler {
 
 			// Notify job enabled or disabled after that all are ready, include job was initialized.
 			configService.notifyJobEnabledOrNot();
+
+			return true;
 		} catch (Throwable t) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
 			shutdown(false);
+			return false;
 		}
 	}
 

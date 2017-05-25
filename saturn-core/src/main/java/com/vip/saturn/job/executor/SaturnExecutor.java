@@ -213,23 +213,24 @@ public class SaturnExecutor {
 		return String.format("[%s] >>> %s", sdf.format(new Date()), message);
 	}
 
-	protected void scheduleJob(String jobName) {
+	protected boolean scheduleJob(String jobName) {
 		log.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
 		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 		if (jobConfig.getSaturnJobClass() == null) {
-			return;
+			log.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName, jobConfig.getJobType());
+			return false;
 		}
 		if (jobConfig.isDeleting()) {
-			log.info("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
+			log.warn("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
 			String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 			if (regCenter.isExisted(serverNodePath)) {
 				regCenter.remove(serverNodePath);
 			}
-			return;
+			return false;
 		}
 		JobScheduler scheduler = new JobScheduler(regCenter, jobConfig);
 		scheduler.setSaturnExecutorService(saturnExecutorService);
-		scheduler.init();
+		return scheduler.init();
 	}
 
 	class ConnectionLostListener implements ConnectionStateListener {
@@ -371,15 +372,25 @@ public class SaturnExecutor {
 		// 启动作业
 		if (zkJobNames != null) {
 			for (String jobName : zkJobNames) {
-				scheduleJob(jobName);
+				if(scheduleJob(jobName)) {
+					log.info("the job {} initialize successfully", jobName);
+				} else {
+					saturnExecutorService.removeJobName(jobName);
+					log.warn("the job {} initialize fail", jobName);
+				}
 			}
 		}
 
 		// 添加新增作业时的回调方法
 		saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
 			@Override
-			public void call(String jobName) {
-				scheduleJob(jobName);
+			public boolean call(String jobName) {
+				try {
+					return scheduleJob(jobName);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					return false;
+				}
 			}
 		});
 
