@@ -93,4 +93,25 @@ public class ZkCluster implements Serializable {
 	public void setRegCenterConfList(ArrayList<RegistryCenterConfiguration> regCenterConfList) {
 		this.regCenterConfList = regCenterConfList;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof ZkCluster)) return false;
+
+		ZkCluster zkCluster = (ZkCluster) o;
+
+		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null) return false;
+		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) return false;
+		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = zkAlias != null ? zkAlias.hashCode() : 0;
+		result = 31 * result + (zkAddr != null ? zkAddr.hashCode() : 0);
+		result = 31 * result + (digest != null ? digest.hashCode() : 0);
+		return result;
+	}
 }
