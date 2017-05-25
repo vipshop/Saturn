@@ -71,9 +71,6 @@ public class JobOperationRestApiController {
             if(StringUtils.isBlank(namespace)){
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
             }
-            if(StringUtils.isBlank(jobName)){
-                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
-            }
 
             RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
 
