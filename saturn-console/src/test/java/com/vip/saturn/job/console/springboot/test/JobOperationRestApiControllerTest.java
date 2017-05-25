@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(JobOperationRestApiController.class)
-public class JobOperationRestApiTest {
+public class JobOperationRestApiControllerTest {
 
     @Autowired
     private MockMvc mvc;
