@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RestApiService;
@@ -82,6 +83,42 @@ public class JobOperationRestApiControllerTest {
 
     @Test
     public void testCreateFailAsSaturnJobExceptionThrows() throws Exception {
+        String customErrMsg = "some exception throws";
+        willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
+
+        JobEntity jobEntity = constructJobEntity("job1");
+        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+                .andExpect(status().isInternalServerError()).andReturn();
+
+        String message  = fetchErrorMessage(result);
+        assertEquals("error message not equal", customErrMsg, message);
+
+        // Created
+        customErrMsg = "jobname does not exists";
+        willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
+
+        result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+                .andExpect(status().isNotFound()).andReturn();
+
+        message  = fetchErrorMessage(result);
+        assertEquals("error message not equal", customErrMsg, message);
+    }
+
+    @Test
+    public void testCreateFailAsSaturnJobHttpExceptionThrows() throws Exception {
+        String customErrMsg = "some exception throws";
+        willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
+
+        JobEntity jobEntity = constructJobEntity("job1");
+        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+                .andExpect(status().isBadRequest()).andReturn();
+
+        String message  = fetchErrorMessage(result);
+        assertEquals("error message not equal", customErrMsg, message);
+    }
+
+    @Test
+    public void testCreateFailAsSaturnHttpJobExceptionThrows() throws Exception {
         String customErrMsg = "some exception throws";
         willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
 
