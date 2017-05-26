@@ -61,10 +61,10 @@ public class RegistryCenterController extends AbstractController {
 		String currentZkAddr = getCurrentZkAddr(session);
 		if(currentZkAddr != null) {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(currentZkAddr);
-			if(zkCluster != null) {
+			if(zkCluster != null && !zkCluster.isOffline()) {
 				model.put("configs", zkCluster.getRegCenterConfList());
+				model.put("currentZk", currentZkAddr);
 			}
-			model.put("currentZk", currentZkAddr);
 		}
 		return model;
 	}

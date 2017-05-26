@@ -74,10 +74,13 @@ public class AbstractController {
 	public String getCurrentZkAddr(final HttpSession session) {
 		String zkAddr = (String)session.getAttribute(CURRENT_ZK);
 		if (zkAddr == null) {
+			// if zkAddr doesn't exist in map, use the first online one in map.
 			Collection<ZkCluster> zks = registryCenterService.getZkClusterList();
 			for (ZkCluster zkCluster : zks) {
-				setCurrentZkAddr(zkCluster.getZkAddr(), session);
-				return zkCluster.getZkAddr();
+				if(!zkCluster.isOffline()) {
+					setCurrentZkAddr(zkCluster.getZkAddr(), session);
+					return zkCluster.getZkAddr();
+				}
 			}
 		}
 		return zkAddr;

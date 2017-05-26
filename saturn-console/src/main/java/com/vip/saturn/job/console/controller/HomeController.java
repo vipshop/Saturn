@@ -131,6 +131,10 @@ public class HomeController  extends AbstractController {
 		model.put("containerType", SaturnEnvProperties.CONTAINER_TYPE);
     	if (StringUtils.isNoneEmpty(name)) {
         	setSession(registryCenterService.connect(name), session);
+			RegistryCenterClient client = getClientInSession(session);
+			if (null == client || !client.isConnected()) {
+				return "redirect:registry_center_page";
+			}
         	renderShellExecutorInfos(model);
             return "overview";
         }

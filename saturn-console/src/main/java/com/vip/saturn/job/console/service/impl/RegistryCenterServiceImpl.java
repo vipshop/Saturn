@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import com.vip.saturn.job.console.domain.*;
@@ -70,7 +71,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns */, RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
-	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>(); // maybe could remove in right time
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns **/, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
@@ -78,6 +79,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	@PostConstruct
 	public void init() throws Exception {
 		refreshAll();
+	}
+
+	@PreDestroy
+	public void destroy() {
+		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
+		while(iterator.hasNext()) {
+			closeZkCluster(iterator.next().getValue());
+		}
 	}
 
 	private void refreshAll() throws IOException {
@@ -172,7 +181,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 			}
 		}
-		// 对比旧的。不包含的，关闭操作；包含的，拿取旧的curatorFramework
+		// 对比旧的。不包含的，关闭操作；包含的，检查属性是否相同，如果相同，则直接赋值，否则，关闭旧的
 		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ZkCluster> next = iterator.next();
@@ -183,8 +192,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				closeZkCluster(zkCluster);
 			} else {
 				ZkCluster newZkCluster = newClusterMap.get(zkAddr);
-				newZkCluster.setCuratorFramework(zkCluster.getCuratorFramework());
-				newZkCluster.setConnectionListener(zkCluster.getConnectionListener());
+				if(zkCluster.equals(newZkCluster)) {
+					newClusterMap.put(zkAddr, zkCluster);
+				} else {
+					iterator.remove();
+					closeZkCluster(zkCluster);
+				}
 			}
 		}
 		// 完善curatorFramework。如果没有，则新建
@@ -302,10 +315,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					@Override
 					public void stop() {
 						zkCluster.setOffline(true);
+						refreshTreeData(zkCluster);
 					}
 					@Override
 					public void restart() {
 						zkCluster.setOffline(false);
+						refreshTreeData(zkCluster);
 					}
 				};
 				zkCluster.setCuratorFramework(tmp);
@@ -362,6 +377,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
+	private void refreshTreeData(ZkCluster zkCluster) {
+		String zkAddr = zkCluster.getZkAddr();
+		if (!zkCluster.isOffline()) {
+			InitRegistryCenterService.initTreeJson(zkCluster.getRegCenterConfList(), zkAddr);
+		} else {
+			InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.remove(zkAddr);
+		}
+	}
+
 	private void refreshTreeData() {
 		// clear removed zkCluster treeData
 		Iterator<Entry<String, TreeNode>> iterator = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.entrySet().iterator();
@@ -372,23 +396,23 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				iterator.remove();
 			}
 		}
-		// refresh online zkCluster treeData
+		// refresh online zkCluster treeData, clear offline zkCluster treeData
 		Collection<ZkCluster> zkClusters = zkClusterMap.values();
 		for (ZkCluster zkCluster : zkClusters) {
-			if(!zkCluster.isOffline()) {
-				InitRegistryCenterService.initTreeJson(zkCluster.getRegCenterConfList(), zkCluster.getZkAddr());
-			}
+			refreshTreeData(zkCluster);
 		}
 	}
 
 	private Object getRegistryCenterClientNnsLock(String nns) {
-		Object lock = new Object();
-		Object pre = registryCenterClientNnsLock.putIfAbsent(nns, lock);
-		if(pre != null) {
-			return pre;
-		} else {
-			return lock;
+		Object lock = registryCenterClientNnsLock.get(nns);
+		if(lock == null) {
+			lock = new Object();
+			Object pre = registryCenterClientNnsLock.putIfAbsent(nns, lock);
+			if(pre != null) {
+				lock = pre;
+			}
 		}
+		return lock;
 	}
 
 	@Override
