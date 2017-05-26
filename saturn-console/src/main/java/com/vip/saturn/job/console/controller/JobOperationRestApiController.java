@@ -147,7 +147,7 @@ public class JobOperationRestApiController {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
             }
 
-            restApiService.runAtOnce(namespace, jobName);
+            restApiService.runJobAtOnce(namespace, jobName);
 
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SaturnJobConsoleException e) {
@@ -167,7 +167,7 @@ public class JobOperationRestApiController {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
             }
 
-            restApiService.stopAtOnce(namespace, jobName);
+            restApiService.stopJobAtOnce(namespace, jobName);
 
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SaturnJobConsoleException e) {
@@ -187,7 +187,7 @@ public class JobOperationRestApiController {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
             }
 
-            restApiService.delete(namespace, jobName);
+            restApiService.deleteJob(namespace, jobName);
 
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SaturnJobConsoleException e) {

@@ -352,7 +352,7 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public void runAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
+    public void runJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
@@ -380,7 +380,7 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public void stopAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
+    public void stopJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
@@ -407,7 +407,7 @@ public class RestApiServiceImpl implements RestApiService {
     }
 
     @Override
-    public void delete(String namespace, final String jobName) throws SaturnJobConsoleException {
+    public void deleteJob(String namespace, final String jobName) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
