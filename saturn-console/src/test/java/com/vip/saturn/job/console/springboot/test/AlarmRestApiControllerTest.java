@@ -48,10 +48,9 @@ public class AlarmRestApiControllerTest {
         final String alarmTitle = "title";
 
         AlarmEntity alarmEntity = new AlarmEntity(jobName, executorName, alarmName, alarmTitle, "CRITICAL");
-//        alarmEntity.getAdditionalInfo().put("key1", "value1");
+        alarmEntity.getAdditionalInfo().put("key1", "value1");
         alarmEntity.setShardItem(1);
         alarmEntity.setMessage("message");
-        alarmEntity.setAdditionalInfo(null);
 
         mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
                 .andExpect(status().isCreated());
@@ -133,7 +132,7 @@ public class AlarmRestApiControllerTest {
         assertEquals("title is not equal", expectAlarmInfo.getTitle(), actualAlarmInfo.getTitle());
         assertEquals("level is not equal", expectAlarmInfo.getLevel(), actualAlarmInfo.getLevel());
         assertEquals("message is not equal", expectAlarmInfo.getMessage(), actualAlarmInfo.getMessage());
-//        assertEquals("additional info is not equal", expectAlarmInfo.getAdditionalInfo().get("key1"), actualAlarmInfo.getCustomFields().get("key1"));
+        assertEquals("additional info is not equal", expectAlarmInfo.getAdditionalInfo().get("key1"), actualAlarmInfo.getCustomFields().get("key1"));
     }
 
     private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {

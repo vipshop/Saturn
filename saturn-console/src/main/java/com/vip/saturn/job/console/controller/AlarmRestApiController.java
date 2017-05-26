@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.controller;
 
-import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
@@ -9,7 +8,6 @@ import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +39,7 @@ public class AlarmRestApiController {
     private RestApiService restApiService;
 
     @RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) {
+    public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
         try {
             String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
             String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
@@ -54,8 +52,10 @@ public class AlarmRestApiController {
             restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
 
             return new ResponseEntity<>(HttpStatus.CREATED);
+        } catch (SaturnJobConsoleException e) {
+            throw e;
         } catch (Exception e) {
-            return constructOtherResponses(e);
+            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
         }
     }
 
@@ -83,39 +83,5 @@ public class AlarmRestApiController {
         }
 
         return alarmInfo;
-    }
-
-    private ResponseEntity<Object> constructOtherResponses(Exception e) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-
-        if (e instanceof SaturnJobConsoleHttpException) {
-            SaturnJobConsoleHttpException saturnJobConsoleHttpException = (SaturnJobConsoleHttpException) e;
-            int statusCode = saturnJobConsoleHttpException.getStatusCode();
-            return constructErrorResponse(e.getMessage(), HttpStatus.valueOf(statusCode));
-        }
-
-        if (e instanceof SaturnJobConsoleException) {
-            if (e.getMessage().contains(NOT_EXISTED_PREFIX)) {
-                return constructErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
-            }
-        }
-
-        String message = null;
-        if (e.getMessage() == null || e.getMessage().trim().length() == 0) {
-            message = e.toString();
-        } else {
-            message = e.getMessage();
-        }
-
-        RestApiErrorResult restApiErrorResult = new RestApiErrorResult(message);
-        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    private ResponseEntity<Object> constructErrorResponse(String errorMsg, HttpStatus status) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
-
-        RestApiErrorResult restApiErrorResult = new RestApiErrorResult(errorMsg);
-        return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
     }
 }
