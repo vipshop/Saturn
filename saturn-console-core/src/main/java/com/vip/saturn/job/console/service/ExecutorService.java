@@ -1,11 +1,11 @@
 package com.vip.saturn.job.console.service;
 
-import java.io.File;
-import java.util.List;
-
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * 
@@ -18,6 +18,10 @@ public interface ExecutorService {
 	
 	RequestResult addJobs(JobConfig jobConfig);
 
+	@Deprecated
+	/**
+	 * Use JobOperationService.removeJob(String jobName)
+	 */
 	String removeJob(String jobName);
 
 	File getExportJobFile() throws SaturnJobConsoleException;

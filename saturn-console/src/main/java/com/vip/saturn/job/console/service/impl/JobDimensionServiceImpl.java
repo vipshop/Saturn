@@ -380,22 +380,26 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result + "%";
 	}
 
-    @Override
-    public JobStatus getJobStatus(final String jobName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	// see if all the shards is finished.
-    	List<String> executionItems = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName));
-    	boolean isAllShardsFinished = true;
-    	if (executionItems != null && !executionItems.isEmpty()) {
-	    	for (String itemStr: executionItems) {
-	    		boolean isItemCompleted = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "completed"));
-	    		boolean isItemRunning = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
-	    		// if executor is kill by -9 while it is running, completed node won't exists as well as running node.
-	    		// under this circumstance, we consider it is completed.
-	    		if (!isItemCompleted && isItemRunning) {
-	    			isAllShardsFinished = false;
-	    			break;
-	    		}
+	@Override
+	public JobStatus getJobStatus(String jobName) {
+		return getJobStatus(jobName, curatorRepository.inSessionClient());
+	}
+
+	@Override
+	public JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		// see if all the shards is finished.
+		List<String> executionItems = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName));
+		boolean isAllShardsFinished = true;
+		if (executionItems != null && !executionItems.isEmpty()) {
+			for (String itemStr : executionItems) {
+				boolean isItemCompleted = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "completed"));
+				boolean isItemRunning = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
+				// if executor is kill by -9 while it is running, completed node won't exists as well as running node.
+				// under this circumstance, we consider it is completed.
+				if (!isItemCompleted && isItemRunning) {
+					isAllShardsFinished = false;
+					break;
+				}
 			}
     	}
     	// see if the job is enabled or not.
@@ -413,8 +417,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
     	}
     }
 
-    @Override
-    public JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration configInSession) {
+	@Override
+	public JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration configInSession) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
         JobSettings result = new JobSettings();
         result.setJobName(jobName);
@@ -561,24 +565,28 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         return null;
     }
 
-    @Override
-    public Collection<JobServer> getServers(final String jobName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	String serverNodePath = JobNodePath.getServerNodePath(jobName);
-    	List<String> serverIps = new ArrayList<>();
-    	if(curatorFrameworkOp.checkExists(serverNodePath)) {
-    		serverIps = curatorFrameworkOp.getChildren(serverNodePath);
-    	}
-        String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
-        Collection<JobServer> result = new ArrayList<>(serverIps.size());
-        for (String each : serverIps) {
-            result.add(getJobServer(jobName, leaderIp, each));
-        }
-        return result;
-    }
+	@Override
+	public Collection<JobServer> getServers(final String jobName) {
+		return getServers(jobName, curatorRepository.inSessionClient());
+	}
 
-    @Override
-    public void getServersVersion(final String jobName,List<HealthCheckJobServer> allJobServers,RegistryCenterConfiguration registryCenterConfig) {
+	@Override
+	public Collection<JobServer> getServers(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String serverNodePath = JobNodePath.getServerNodePath(jobName);
+		List<String> serverIps = new ArrayList<>();
+		if (curatorFrameworkOp.checkExists(serverNodePath)) {
+			serverIps = curatorFrameworkOp.getChildren(serverNodePath);
+		}
+		String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
+		Collection<JobServer> result = new ArrayList<>(serverIps.size());
+		for (String each : serverIps) {
+			result.add(getJobServer(jobName, leaderIp, each));
+		}
+		return result;
+	}
+
+	@Override
+	public void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers, RegistryCenterConfiguration registryCenterConfig) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
     	String serverNodePath = JobNodePath.getServerNodePath(jobName);
     	List<String> executorNames = new ArrayList<>();
@@ -771,7 +779,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	@Override
 	public String getJobType(String jobName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		return getJobType(jobName, curatorRepository.inSessionClient());
+	}
+
+	@Override
+	public String getJobType(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		return curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
 	}
 
@@ -952,11 +964,14 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public boolean isJobEnabled(String jobName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+	public boolean isJobEnabled(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		return Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled")));
 	}
 
+	@Override
+	public boolean isJobEnabled(String jobName) {
+		return isJobEnabled(jobName, curatorRepository.inSessionClient());
+	}
 
 	/**
 	 * <blockquote><pre>

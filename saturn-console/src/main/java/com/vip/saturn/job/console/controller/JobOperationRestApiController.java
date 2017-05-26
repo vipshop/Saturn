@@ -137,6 +137,66 @@ public class JobOperationRestApiController {
         }
     }
 
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}/run", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> run(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+        try {
+            if (StringUtils.isBlank(namespace)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
+            }
+            if (StringUtils.isBlank(jobName)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
+            }
+
+            restApiService.runAtOnce(namespace, jobName);
+
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+        try {
+            if (StringUtils.isBlank(namespace)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
+            }
+            if (StringUtils.isBlank(jobName)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
+            }
+
+            restApiService.stopAtOnce(namespace, jobName);
+
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+        try {
+            if (StringUtils.isBlank(namespace)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
+            }
+            if (StringUtils.isBlank(jobName)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
+            }
+
+            restApiService.delete(namespace, jobName);
+
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+        }
+    }
+
     private JobConfig constructJobConfig(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
         JobConfig jobConfig = new JobConfig();
 

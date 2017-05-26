@@ -29,8 +29,6 @@ import java.util.Map;
 @RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController {
 
-    public final static String NOT_EXISTED_PREFIX = "does not exists";
-
     public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
     private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
