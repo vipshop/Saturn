@@ -371,11 +371,13 @@ public class SaturnExecutor {
 
 		// 启动作业
 		if (zkJobNames != null) {
-			for (String jobName : zkJobNames) {
+			Iterator<String> iterator = zkJobNames.iterator();
+			while(iterator.hasNext()) {
+				String jobName = iterator.next();
 				if(scheduleJob(jobName)) {
 					log.info("the job {} initialize successfully", jobName);
 				} else {
-					saturnExecutorService.removeJobName(jobName);
+					iterator.remove();
 					log.warn("the job {} initialize fail", jobName);
 				}
 			}
