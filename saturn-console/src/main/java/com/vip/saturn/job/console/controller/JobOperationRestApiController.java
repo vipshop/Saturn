@@ -1,10 +1,10 @@
 package com.vip.saturn.job.console.controller;
 
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,14 +44,10 @@ public class JobOperationRestApiController {
     @Resource
     private RestApiService restApiService;
 
-    @Resource
-    private JobOperationService jobOperationService;
-
     @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
         try{
             JobConfig jobConfig = constructJobConfig(namespace, reqParams);
-            jobOperationService.validateJobConfig(jobConfig);
 
             restApiService.createJob(namespace, jobConfig);
 
@@ -220,7 +216,12 @@ public class JobOperationRestApiController {
 
         jobConfig.setJobParameter(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
-        jobConfig.setJobType(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true));
+        String jobType = ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true);
+        if (JobBriefInfo.JobType.UNKOWN_JOB.equals(JobBriefInfo.JobType.getJobType(jobType))) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
+        }
+        jobConfig.setJobType(jobType);
+
 
         jobConfig.setLoadLevel(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
 

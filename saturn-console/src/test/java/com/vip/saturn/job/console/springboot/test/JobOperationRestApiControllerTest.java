@@ -9,7 +9,6 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.domain.RestApiJobStatistics;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RestApiService;
 import org.assertj.core.util.Maps;
 import org.junit.Test;
@@ -50,9 +49,6 @@ public class JobOperationRestApiControllerTest {
     @MockBean
     private RestApiService restApiService;
 
-    @MockBean
-    private JobOperationService jobOperationService;
-
     @Test
     public void testCreateSuccessfully() throws Exception {
         JobEntity jobEntity = constructJobEntity("job1");
@@ -63,8 +59,6 @@ public class JobOperationRestApiControllerTest {
         ArgumentCaptor<JobConfig> argument = ArgumentCaptor.forClass(JobConfig.class);
 
         verify(restApiService).createJob(eq("domain"), argument.capture());
-        assertTrue("jobconfig is not equal", jobConfig.equals(argument.getValue()));
-        verify(jobOperationService).validateJobConfig(argument.capture());
         assertTrue("jobconfig is not equal", jobConfig.equals(argument.getValue()));
     }
 
@@ -77,8 +71,21 @@ public class JobOperationRestApiControllerTest {
         MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isBadRequest()).andReturn();
 
-        String message  = fetchErrorMessage(result);
+        String message = fetchErrorMessage(result);
         assertEquals("error message not equal", "Invalid request. Missing parameter: {jobType}", message);
+    }
+
+    @Test
+    public void testCreateFailAsInvalidJobType() throws Exception {
+        JobEntity jobEntity = constructJobEntity("job1");
+        // jobType should be mandatory
+        jobEntity.setConfig("jobType", "abc");
+
+        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+                .andExpect(status().isBadRequest()).andReturn();
+
+        String message = fetchErrorMessage(result);
+        assertEquals("error message not equal", "Invalid request. Parameter: {jobType} is malformed", message);
     }
 
     @Test
@@ -90,7 +97,7 @@ public class JobOperationRestApiControllerTest {
         MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isInternalServerError()).andReturn();
 
-        String message  = fetchErrorMessage(result);
+        String message = fetchErrorMessage(result);
         assertEquals("error message not equal", customErrMsg, message);
 
         // Created
@@ -100,7 +107,7 @@ public class JobOperationRestApiControllerTest {
         result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isNotFound()).andReturn();
 
-        message  = fetchErrorMessage(result);
+        message = fetchErrorMessage(result);
         assertEquals("error message not equal", customErrMsg, message);
     }
 
@@ -113,7 +120,7 @@ public class JobOperationRestApiControllerTest {
         MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isBadRequest()).andReturn();
 
-        String message  = fetchErrorMessage(result);
+        String message = fetchErrorMessage(result);
         assertEquals("error message not equal", customErrMsg, message);
     }
 
@@ -126,7 +133,7 @@ public class JobOperationRestApiControllerTest {
         MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isBadRequest()).andReturn();
 
-        String message  = fetchErrorMessage(result);
+        String message = fetchErrorMessage(result);
         assertEquals("error message not equal", customErrMsg, message);
     }
 
@@ -139,7 +146,7 @@ public class JobOperationRestApiControllerTest {
         MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
                 .andExpect(status().isInternalServerError()).andReturn();
 
-        String message  = fetchErrorMessage(result);
+        String message = fetchErrorMessage(result);
         assertEquals("error message not equal", customErrMsg, message);
     }
 
@@ -151,7 +158,7 @@ public class JobOperationRestApiControllerTest {
 
         given(restApiService.getRestAPIJobInfo("domain", jobName)).willReturn(jobInfo);
 
-        MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/"+ jobName))
+        MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/" + jobName))
                 .andExpect(status().isOk()).andReturn();
 
         String body = result.getResponse().getContentAsString();
@@ -163,7 +170,7 @@ public class JobOperationRestApiControllerTest {
         assertEquals("cron not equal", jobInfo.getJobConfig().getCron(), jobConfigMap.get("cron"));
 
         Map<String, Object> statisticsMap = (Map<String, Object>) resultMap.get("statistics");
-        assertEquals("nextFireTime not equal", jobInfo.getStatistics().getNextFireTime(), new Long((Integer)statisticsMap.get("nextFireTime")));
+        assertEquals("nextFireTime not equal", jobInfo.getStatistics().getNextFireTime(), new Long((Integer) statisticsMap.get("nextFireTime")));
     }
 
     @Test
@@ -187,7 +194,7 @@ public class JobOperationRestApiControllerTest {
         jobInfo.setEnabled(true);
         jobInfo.setDescription("this is a decription of " + jobName);
 
-        RestApiJobConfig jobConfig =  new RestApiJobConfig();
+        RestApiJobConfig jobConfig = new RestApiJobConfig();
         jobConfig.setCron("0 */1 * * * ?");
 
         jobInfo.setJobConfig(jobConfig);
@@ -204,19 +211,19 @@ public class JobOperationRestApiControllerTest {
 
         jobConfig.setJobName(jobEntity.getJobName());
         jobConfig.setNamespace(namespace);
-        jobConfig.setCron((String)jobEntity.getConfig("cron"));
-        jobConfig.setJobType((String)jobEntity.getConfig("jobType"));
+        jobConfig.setCron((String) jobEntity.getConfig("cron"));
+        jobConfig.setJobType((String) jobEntity.getConfig("jobType"));
         jobConfig.setShardingTotalCount((Integer) jobEntity.getConfig("shardingTotalCount"));
         jobConfig.setShardingItemParameters((String) jobEntity.getConfig("shardingItemParameters"));
         jobConfig.setDescription(jobEntity.getDescription());
         Boolean showNormalLog = (Boolean) jobEntity.getConfig("showNormalLog");
-        if (showNormalLog == null){
+        if (showNormalLog == null) {
             showNormalLog = Boolean.FALSE;
         }
         jobConfig.setShowNormalLog(showNormalLog);
 
         Boolean useDispreferList = (Boolean) jobEntity.getConfig("useDispreferList");
-        if (useDispreferList == null){
+        if (useDispreferList == null) {
             useDispreferList = false;
         }
         jobConfig.setUseDispreferList(useDispreferList);
@@ -250,15 +257,15 @@ public class JobOperationRestApiControllerTest {
             this.jobName = jobName;
         }
 
-        public void setConfig(String key, Object value){
+        public void setConfig(String key, Object value) {
             jobConfig.put(key, value);
         }
 
-        public Object getConfig(String key){
+        public Object getConfig(String key) {
             return jobConfig.get(key);
         }
 
-        public String toJSON(){
+        public String toJSON() {
             return gson.toJson(this);
         }
 

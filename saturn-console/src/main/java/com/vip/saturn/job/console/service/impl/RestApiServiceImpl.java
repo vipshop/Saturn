@@ -70,6 +70,7 @@ public class RestApiServiceImpl implements RestApiService {
                     throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() +"} already existed");
                 }
 
+                jobOperationService.validateJobConfig(jobConfig);
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
             }
         });
@@ -435,7 +436,7 @@ public class RestApiServiceImpl implements RestApiService {
 
         for (JobServer server : servers) {
             logger.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
-            jobOperationService.stopAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName());
+            jobOperationService.stopAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(), curatorFrameworkOp);
         }
     }
 
@@ -446,7 +447,7 @@ public class RestApiServiceImpl implements RestApiService {
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
                 try {
                     //verify executor exist or not
-                    if (curatorFrameworkOp.checkExists(JobNodePath.getServerNodePath(jobName, executorName))) {
+                    if (!curatorFrameworkOp.checkExists(JobNodePath.getServerNodePath(jobName, executorName))) {
                         throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format("The executor {%s} does not exists.", executorName));
                     }
 
