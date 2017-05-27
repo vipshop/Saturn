@@ -5,6 +5,7 @@ import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
+ * Util for handling alarm.
+ *
  * Created by jeff.zhu on 17/05/2017.
  */
 public class AlarmUtils {
@@ -27,8 +30,9 @@ public class AlarmUtils {
     private final static Logger logger = LoggerFactory.getLogger(AlarmUtils.class);
 
     /**
-     * Raise alarm to Console.
+     * Send alarm request to Alarm API in Console.
      */
+    //FIXME: Jeff set timeout of http client
     public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
         logger.info("send alarm of domain {} to console: {}", namespace, alarmInfo.toString());
 
@@ -41,18 +45,21 @@ public class AlarmUtils {
             // prepare
             httpClient = HttpClientBuilder.create().build();
             HttpPost request = new HttpPost(targetUrl);
+            final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(3000).build();
+            request.setConfig(requestConfig);
             StringEntity params = new StringEntity(json.toString());
             request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
             request.setEntity(params);
+
             // send request
             CloseableHttpResponse httpResponse = httpClient.execute(request);
             // handle response
             handleResponse(httpResponse);
         } catch (SaturnJobException se) {
-            logger.error("SaturnJobException throws: {}", se.getMessage());
+            logger.error("SaturnJobException throws: {}", se);
             throw se;
         } catch (Exception e) {
-            logger.error("Other exception throws: {}", e.getMessage());
+            logger.error("Other exception throws: {}", e);
             throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
         } finally {
             if (httpClient != null) {
