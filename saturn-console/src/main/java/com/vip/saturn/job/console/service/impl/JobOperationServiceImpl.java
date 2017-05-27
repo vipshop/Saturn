@@ -28,8 +28,12 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
-import com.vip.saturn.job.console.utils.*;
-import org.apache.zookeeper.data.Stat;
+import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -41,6 +45,8 @@ import java.util.List;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
+
+	private final static Logger logger = LoggerFactory.getLogger(JobOperationServiceImpl.class);
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -226,13 +232,12 @@ public class JobOperationServiceImpl implements JobOperationService {
 	@Override
 	public void deleteJob(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 		try {
-			Stat itemStat = ThreadLocalCuratorClient.getCuratorClient().checkExists().forPath(JobNodePath.getJobNodePath(jobName));
-			if (itemStat != null) {
-				long createTimeDiff = System.currentTimeMillis() - itemStat.getCtime();
-				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
-					String errMessage = "Job cannot be enable until " + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 1000) + " seconds after job creation";
-					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), errMessage);
-				}
+			String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
+			long creationTime = curatorFrameworkOp.getCtime(enabledNodePath);
+			long timeDiff = System.currentTimeMillis() - creationTime;
+			if (timeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
+				String errMessage = "Job cannot be deleted until " + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 1000) + " seconds after job creation";
+				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), errMessage);
 			}
 
 			//1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
@@ -271,7 +276,10 @@ public class JobOperationServiceImpl implements JobOperationService {
 
 				Thread.sleep(200);
 			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
 		} catch (Throwable t) {
+			logger.error("exception is thrown during delete job", t);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
 		}
 	}

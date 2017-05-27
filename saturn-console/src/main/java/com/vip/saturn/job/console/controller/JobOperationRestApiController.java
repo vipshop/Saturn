@@ -21,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +82,7 @@ public class JobOperationRestApiController {
     }
 
     @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Object> queryAll(@PathVariable("namespace") String namespace, HttpServletRequest request, HttpServletResponse response) throws SaturnJobConsoleException {
+    public ResponseEntity<Object> queryAll(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
         HttpHeaders httpHeaders = new HttpHeaders();
         try {
             if (StringUtils.isBlank(namespace)) {
@@ -100,7 +98,7 @@ public class JobOperationRestApiController {
     }
 
     @RequestMapping(value = {"/{namespace}/{jobName}/enable", "/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) throws SaturnJobConsoleException {
+    public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
         HttpHeaders httpHeaders = new HttpHeaders();
         try {
             if (StringUtils.isBlank(namespace)) {
@@ -109,6 +107,7 @@ public class JobOperationRestApiController {
             if (StringUtils.isBlank(jobName)) {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
             }
+
             restApiService.enableJob(namespace, jobName);
             return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
         } catch (SaturnJobConsoleException e) {
@@ -119,7 +118,7 @@ public class JobOperationRestApiController {
     }
 
     @RequestMapping(value = {"/{namespace}/{jobName}/disable", "/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, HttpServletRequest request, HttpServletResponse response) throws SaturnJobConsoleException {
+    public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
         HttpHeaders httpHeaders = new HttpHeaders();
         try {
             if (StringUtils.isBlank(namespace)) {
@@ -128,6 +127,7 @@ public class JobOperationRestApiController {
             if (StringUtils.isBlank(jobName)) {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
             }
+
             restApiService.disableJob(namespace, jobName);
             return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
         } catch (SaturnJobConsoleException e) {
@@ -148,7 +148,6 @@ public class JobOperationRestApiController {
             }
 
             restApiService.runJobAtOnce(namespace, jobName);
-
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SaturnJobConsoleException e) {
             throw e;
@@ -177,7 +176,7 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}/delete", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
         try {
             if (StringUtils.isBlank(namespace)) {
@@ -188,7 +187,6 @@ public class JobOperationRestApiController {
             }
 
             restApiService.deleteJob(namespace, jobName);
-
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (SaturnJobConsoleException e) {
             throw e;

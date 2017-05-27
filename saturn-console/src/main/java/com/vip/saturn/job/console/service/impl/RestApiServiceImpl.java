@@ -42,6 +42,10 @@ public class RestApiServiceImpl implements RestApiService {
 
     private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
+    private final static String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
+
+    private final static String NO_EXECUTOR_FOUND = "no executor found for this job";
+
     @Resource
     private RegistryCenterService registryCenterService;
 
@@ -359,13 +363,13 @@ public class RestApiServiceImpl implements RestApiService {
                 JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
 
                 if (!JobStatus.READY.equals(js)) {
-                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "job is not in 'ready' status");
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.READY.name()));
                 }
 
                 Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
 
                 if (CollectionUtils.isEmpty(servers)) {
-                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "no executor for this job");
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
                 }
 
                 for (JobServer server : servers) {
@@ -390,18 +394,18 @@ public class RestApiServiceImpl implements RestApiService {
                     boolean jobEnabled = jobDimensionService.isJobEnabled(jobName, curatorFrameworkOp);
                     if (jobEnabled) {
                         throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "job cannot be stopped while it is enable");
-                    } else {
-                        stopOnceTime(jobName, curatorFrameworkOp);
-                        return;
                     }
+
+                    stopAtOnce(jobName, curatorFrameworkOp);
+                    return;
                 }
 
                 // For other Job types
                 JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
                 if (!JobStatus.STOPPING.equals(js)) {
-                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "job cannot be stopped while it is stopping");
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPING.name()));
                 }
-                stopOnceTime(jobName, curatorFrameworkOp);
+                stopAtOnce(jobName, curatorFrameworkOp);
             }
         });
     }
@@ -411,16 +415,22 @@ public class RestApiServiceImpl implements RestApiService {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+
+                if (!JobStatus.STOPPED.equals(js)) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPED.name()));
+                }
+
                 jobOperationService.deleteJob(jobName, curatorFrameworkOp);
                 logger.info("job:{} deletion done", jobName);
             }
         });
     }
 
-    private void stopOnceTime(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleHttpException {
+    private void stopAtOnce(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleHttpException {
         Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
         if (CollectionUtils.isEmpty(servers)) {
-            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "no executor found for this job");
+            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
         }
 
         for (JobServer server : servers) {
