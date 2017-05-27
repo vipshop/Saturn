@@ -19,19 +19,26 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
 public interface JobOperationService {
-    
+
     void runAtOnceByJobnameAndExecutorName(String jobName, String executorName);
-    
+
+    void runAtOnceByJobnameAndExecutorName(String jobName, String executorName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
     void stopAtOnceByJobnameAndExecutorName(String jobName, String executorName);
+
+    void stopAtOnceByJobnameAndExecutorName(String jobName, String executorName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
     
     void setJobEnabledState(String jobName, boolean state);
 
     void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException;
 
-    void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) ;
+    void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
+    void deleteJob(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleHttpException, SaturnJobConsoleException;
 
     void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception;
     

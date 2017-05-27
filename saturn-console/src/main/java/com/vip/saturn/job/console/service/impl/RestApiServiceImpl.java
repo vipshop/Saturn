@@ -26,6 +26,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +41,10 @@ public class RestApiServiceImpl implements RestApiService {
     private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
 
     private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
+
+    private final static String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
+
+    private final static String NO_EXECUTOR_FOUND = "no executor found for this job";
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -348,6 +353,90 @@ public class RestApiServiceImpl implements RestApiService {
                 }
             }
         });
+    }
+
+    @Override
+    public void runJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+
+                if (!JobStatus.READY.equals(js)) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.READY.name()));
+                }
+
+                Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
+
+                if (CollectionUtils.isEmpty(servers)) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
+                }
+
+                for (JobServer server : servers) {
+                    if (ServerStatus.ONLINE.equals(server.getStatus())) {
+                        logger.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
+                        jobOperationService.runAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(), curatorFrameworkOp);
+                    }
+                }
+            }
+
+        });
+    }
+
+    @Override
+    public void stopJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                String jobType = jobDimensionService.getJobType(jobName, curatorFrameworkOp);
+                // For Msg Job
+                if (JobBriefInfo.JobType.MSG_JOB.name().equals(jobType)) {
+                    boolean jobEnabled = jobDimensionService.isJobEnabled(jobName, curatorFrameworkOp);
+                    if (jobEnabled) {
+                        throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "job cannot be stopped while it is enable");
+                    }
+
+                    stopAtOnce(jobName, curatorFrameworkOp);
+                    return;
+                }
+
+                // For other Job types
+                JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+                if (!JobStatus.STOPPING.equals(js)) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPING.name()));
+                }
+                stopAtOnce(jobName, curatorFrameworkOp);
+            }
+        });
+    }
+
+    @Override
+    public void deleteJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+        ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+            @Override
+            public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+
+                if (!JobStatus.STOPPED.equals(js)) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPED.name()));
+                }
+
+                jobOperationService.deleteJob(jobName, curatorFrameworkOp);
+                logger.info("job:{} deletion done", jobName);
+            }
+        });
+    }
+
+    private void stopAtOnce(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleHttpException {
+        Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
+        if (CollectionUtils.isEmpty(servers)) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
+        }
+
+        for (JobServer server : servers) {
+            logger.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
+            jobOperationService.stopAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName());
+        }
     }
 
     @Override

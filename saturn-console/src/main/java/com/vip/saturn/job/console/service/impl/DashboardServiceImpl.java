@@ -51,7 +51,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
 
-	private static final long INTERVAL_DELTA_IN_SECOND = 30L;
+	private static final long INTERVAL_DELTA_IN_SECOND = 10 * 1000L;
 
 	static {
 		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE", System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));

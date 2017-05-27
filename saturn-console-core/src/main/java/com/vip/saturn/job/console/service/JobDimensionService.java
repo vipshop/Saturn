@@ -28,12 +28,16 @@ import java.util.List;
 public interface JobDimensionService {
 	
 	JobStatus getJobStatus(final String jobName);
+
+    JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 	
     Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace);
     
     String geJobRunningInfo(final String jobName);
     
     String getJobType(final String jobName);
+
+    String getJobType(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
     
     JobSettings getJobSettings(String jobName, RegistryCenterConfiguration configInSession);
 
@@ -42,12 +46,16 @@ public interface JobDimensionService {
     String updateJobSettings(JobSettings jobSettings, RegistryCenterConfiguration configInSession);
     
     Collection<JobServer> getServers(String jobName);
+
+    Collection<JobServer> getServers(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
     
     void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers, RegistryCenterConfiguration registryCenterConfig);
     
     Collection<ExecutionInfo> getExecutionInfo(String jobName);
     
     boolean isJobEnabled(String jobName);
+
+    boolean isJobEnabled(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
     
     
     /**

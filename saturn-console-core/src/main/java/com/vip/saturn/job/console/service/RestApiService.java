@@ -77,6 +77,34 @@ public interface RestApiService {
 
 
     /**
+     * Run the job immediately.
+     *
+     * @param namespace
+     * @param jobName
+     * @throws SaturnJobConsoleException
+     */
+    void runJobAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
+
+    /**
+     * Stop the job immediately. The job status will change to STOPPING.
+     *
+     * @param namespace
+     * @param jobName
+     * @throws SaturnJobConsoleException
+     */
+    void stopJobAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
+
+
+    /**
+     * Delete the job.
+     *
+     * @param namespace
+     * @param jobName
+     * @throws SaturnJobConsoleException
+     */
+    void deleteJob(String namespace, String jobName) throws SaturnJobConsoleException;
+
+    /**
      * Raise alarm for specified job/shard exception.
      *
      * @param namespace

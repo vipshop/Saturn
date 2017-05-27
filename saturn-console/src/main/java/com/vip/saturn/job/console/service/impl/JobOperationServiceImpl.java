@@ -17,30 +17,36 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import javax.annotation.Resource;
-
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.utils.CronExpression;
-import org.springframework.stereotype.Service;
-
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
+import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.List;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
+
+	private final static Logger logger = LoggerFactory.getLogger(JobOperationServiceImpl.class);
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -55,23 +61,32 @@ public class JobOperationServiceImpl implements JobOperationService {
 	private JobDimensionService jobDimensionService;
     
 	@Override
-	public void runAtOnceByJobnameAndExecutorName(String jobName, String exeName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		String path = JobNodePath.getRunOneTimePath(jobName, exeName);
+	public void runAtOnceByJobnameAndExecutorName(String jobName, String executorName) {
+		runAtOnceByJobnameAndExecutorName(jobName, executorName, curatorRepository.inSessionClient());
+	}
+
+	@Override
+	public void runAtOnceByJobnameAndExecutorName(String jobName, String executorName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String path = JobNodePath.getRunOneTimePath(jobName, executorName);
+		createNode(curatorFrameworkOp, path);
+	}
+
+	private void createNode(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String path) {
 		if(curatorFrameworkOp.checkExists(path)){
 			curatorFrameworkOp.delete(path);
 		}
 		curatorFrameworkOp.create(path);
 	}
-	
+
 	@Override
-	public void stopAtOnceByJobnameAndExecutorName(String jobName, String exeName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		String path = JobNodePath.getStopOneTimePath(jobName, exeName);
-		if(curatorFrameworkOp.checkExists(path)){
-			curatorFrameworkOp.delete(path);
-		}
-		curatorFrameworkOp.create(path);
+	public void stopAtOnceByJobnameAndExecutorName(String jobName, String executorName) {
+		stopAtOnceByJobnameAndExecutorName(jobName, executorName, curatorRepository.inSessionClient());
+	}
+
+	@Override
+	public void stopAtOnceByJobnameAndExecutorName(String jobName, String executorName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String path = JobNodePath.getStopOneTimePath(jobName, executorName);
+		createNode(curatorFrameworkOp, path);
 	}
 
 	@Override
@@ -211,6 +226,61 @@ public class JobOperationServiceImpl implements JobOperationService {
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
 		}else{
 			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
+		}
+	}
+
+	@Override
+	public void deleteJob(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		try {
+			String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
+			long creationTime = curatorFrameworkOp.getCtime(enabledNodePath);
+			long timeDiff = System.currentTimeMillis() - creationTime;
+			if (timeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
+				String errMessage = "Job cannot be deleted until " + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 1000) + " seconds after job creation";
+				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), errMessage);
+			}
+
+			//1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
+			String toDeleteNodePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
+			if (curatorFrameworkOp.checkExists(toDeleteNodePath)) {
+				curatorFrameworkOp.deleteRecursive(toDeleteNodePath);
+			}
+			curatorFrameworkOp.create(toDeleteNodePath);
+
+			for (int i = 0; i < 20; i++) {
+				// 2.作业的executor全offline的情况，或有几个online，几个offline的情况
+				String jobServerPath = JobNodePath.getServerNodePath(jobName);
+				if (!curatorFrameworkOp.checkExists(jobServerPath)) {
+					// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+					return;
+				}
+				// (2)如果该作业servers下没有任何executor，可直接删除作业节点
+				List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
+				if (CollectionUtils.isEmpty(executors)) {
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+					return;
+				}
+				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
+				boolean hasOnlineExecutor = false;
+				for (String executor : executors) {
+					if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
+							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))) {
+						hasOnlineExecutor = true;
+						break;
+					}
+				}
+				if (!hasOnlineExecutor) {
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+				}
+
+				Thread.sleep(200);
+			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Throwable t) {
+			logger.error("exception is thrown during delete job", t);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
 		}
 	}
 
