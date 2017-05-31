@@ -32,8 +32,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -182,6 +181,24 @@ public class JobOperationRestApiControllerTest {
                 .andExpect(status().isBadRequest()).andReturn();
 
         assertEquals("error msg is not equal", customErrMsg, fetchErrorMessage(result));
+    }
+
+    @Test
+    public void testRunAtOnceSuccessfully() throws Exception {
+        mvc.perform(post("/rest/v1/domain/jobs/abc/run").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()).andReturn();
+    }
+
+    @Test
+    public void testStopAtOnceSuccessfully() throws Exception {
+        mvc.perform(post("/rest/v1/domain/jobs/abc/stop").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()).andReturn();
+    }
+
+    @Test
+    public void testDeleteJobSuccessfully() throws Exception {
+        mvc.perform(delete("/rest/v1/domain/jobs/abc").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()).andReturn();
     }
 
     private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
