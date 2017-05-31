@@ -1,10 +1,10 @@
 package com.vip.saturn.job.console.controller;
 
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +33,7 @@ import java.util.Map;
 @RequestMapping("/rest/v1")
 public class JobOperationRestApiController {
 
-    public final static String BAD_REQ_MSG_PREFIX =  "Invalid request.";
+    public final static String BAD_REQ_MSG_PREFIX = "Invalid request.";
 
     public final static String INVALID_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Parameter: {%s} %s";
 
@@ -44,14 +44,10 @@ public class JobOperationRestApiController {
     @Resource
     private RestApiService restApiService;
 
-    @Resource
-    private JobOperationService jobOperationService;
-
     @RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
-        try{
+        try {
             JobConfig jobConfig = constructJobConfig(namespace, reqParams);
-            jobOperationService.validateJobConfig(jobConfig);
 
             restApiService.createJob(namespace, jobConfig);
 
@@ -66,8 +62,8 @@ public class JobOperationRestApiController {
     @RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> query(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
         HttpHeaders httpHeaders = new HttpHeaders();
-        try{
-            if(StringUtils.isBlank(namespace)){
+        try {
+            if (StringUtils.isBlank(namespace)) {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
             }
 
@@ -176,7 +172,7 @@ public class JobOperationRestApiController {
         }
     }
 
-    @RequestMapping(value = "/{namespace}/jobs/{jobName}/delete", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
         try {
             if (StringUtils.isBlank(namespace)) {
@@ -198,12 +194,12 @@ public class JobOperationRestApiController {
     private JobConfig constructJobConfig(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
         JobConfig jobConfig = new JobConfig();
 
-        if(StringUtils.isBlank(namespace)){
+        if (StringUtils.isBlank(namespace)) {
             throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
         }
         jobConfig.setNamespace(namespace);
 
-        if(!reqParams.containsKey("jobConfig")){
+        if (!reqParams.containsKey("jobConfig")) {
             throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(INVALID_REQUEST_MSG, "jobConfig", "cannot be blank"));
         }
         Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
@@ -220,7 +216,12 @@ public class JobOperationRestApiController {
 
         jobConfig.setJobParameter(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
-        jobConfig.setJobType(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true));
+        String jobType = ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true);
+        if (JobBriefInfo.JobType.UNKOWN_JOB.equals(JobBriefInfo.JobType.getJobType(jobType))) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
+        }
+        jobConfig.setJobType(jobType);
+
 
         jobConfig.setLoadLevel(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
 

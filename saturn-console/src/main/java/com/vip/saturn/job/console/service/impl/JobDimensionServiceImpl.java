@@ -580,7 +580,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
 		Collection<JobServer> result = new ArrayList<>(serverIps.size());
 		for (String each : serverIps) {
-			result.add(getJobServer(jobName, leaderIp, each));
+			result.add(getJobServer(jobName, leaderIp, each, curatorFrameworkOp));
 		}
 		return result;
 	}
@@ -601,23 +601,22 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         }
     }
 
-    private JobServer getJobServer(final String jobName, final String leaderIp, final String serverIp) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        JobServer result = new JobServer();
-        result.setExecutorName(serverIp);
-        result.setIp(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "ip")));
-        result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "version")));
-        String processSuccessCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processSuccessCount"));
-        result.setProcessSuccessCount(null == processSuccessCount ? 0 : Integer.parseInt(processSuccessCount));
-        String processFailureCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processFailureCount"));
-        result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
-        result.setSharding(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "sharding")));
-        result.setStatus(getServerStatus(jobName, serverIp));
-        result.setLeader(serverIp.equals(leaderIp));
-        result.setJobStatus(getJobStatus(jobName));
-		result.setJobVersion(getJobVersion(jobName, serverIp));
-        return result;
-    }
+	private JobServer getJobServer(final String jobName, final String leaderIp, final String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		JobServer result = new JobServer();
+		result.setExecutorName(serverIp);
+		result.setIp(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "ip")));
+		result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "version")));
+		String processSuccessCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processSuccessCount"));
+		result.setProcessSuccessCount(null == processSuccessCount ? 0 : Integer.parseInt(processSuccessCount));
+		String processFailureCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processFailureCount"));
+		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
+		result.setSharding(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "sharding")));
+		result.setStatus(getServerStatus(jobName, serverIp, curatorFrameworkOp));
+		result.setLeader(serverIp.equals(leaderIp));
+		result.setJobStatus(getJobStatus(jobName, curatorFrameworkOp));
+		result.setJobVersion(getJobVersion(jobName, serverIp, curatorFrameworkOp));
+		return result;
+	}
 
 	private HealthCheckJobServer getJobServerVersion(final String jobName, final String executorName, RegistryCenterConfiguration registryCenterConfig) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
@@ -629,14 +628,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         return result;
     }
 
-    private ServerStatus getServerStatus(final String jobName, final String serverIp) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(serverIp, "ip"));
-        return ServerStatus.getServerStatus(ip);
-    }
+	private ServerStatus getServerStatus(final String jobName, final String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(serverIp, "ip"));
+		return ServerStatus.getServerStatus(ip);
+	}
 
-	private String getJobVersion(String jobName, String serverIp) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+	private String getJobVersion(String jobName, String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String jobVersion = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "jobVersion"));
 		return jobVersion == null ? "" : jobVersion;
 	}
