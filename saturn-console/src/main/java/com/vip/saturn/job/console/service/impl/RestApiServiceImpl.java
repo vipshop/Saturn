@@ -63,9 +63,13 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Override
     public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
-        ReuseUtils.reuse(namespace, jobConfig.getJobName(), registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+        ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() + "} already existed");
+                }
+
                 jobOperationService.validateJobConfig(jobConfig);
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
             }
