@@ -436,7 +436,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (client == null) {
 					return registryCenterClient;
 				}
-				registryCenterClient.setConnected(true);
+				registryCenterClient.setConnected(client.getZookeeperClient().isConnected());
 				registryCenterClient.setCuratorClient(client);
 				registryCenterClientMap.put(nameAndNameSpace, registryCenterClient);
 				return registryCenterClient;
@@ -475,7 +475,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (client == null) {
 					return registryCenterClient;
 				}
-				registryCenterClient.setConnected(true);
+				registryCenterClient.setConnected(client.getZookeeperClient().isConnected());
 				registryCenterClient.setCuratorClient(client);
 				registryCenterClientMap.put(nns, registryCenterClient);
 				return registryCenterClient;
