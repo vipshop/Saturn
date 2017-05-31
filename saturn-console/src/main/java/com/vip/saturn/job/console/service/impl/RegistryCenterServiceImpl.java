@@ -436,26 +436,18 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (client == null) {
 					return registryCenterClient;
 				}
-				AbstractConnectionListener connectionListener = new AbstractConnectionListener("zk-connectionListener-thread-for-registryCenterClient-" + nameAndNameSpace) {
-					@Override
-					public void stop() {
-						registryCenterClient.setConnected(false);
-					}
-
-					@Override
-					public void restart() {
-						registryCenterClient.setConnected(true);
-					}
-				};
 				registryCenterClient.setConnected(true);
 				registryCenterClient.setCuratorClient(client);
-				registryCenterClient.setConnectionListener(connectionListener);
-				client.getConnectionStateListenable().addListener(connectionListener);
 				registryCenterClientMap.put(nameAndNameSpace, registryCenterClient);
 				return registryCenterClient;
 			} else {
 				RegistryCenterClient registryCenterClient2 = registryCenterClientMap.get(nameAndNameSpace);
 				if(registryCenterClient2 != null) {
+					if(registryCenterClient2.getCuratorClient() != null) {
+						registryCenterClient2.setConnected(registryCenterClient2.getCuratorClient().getZookeeperClient().isConnected());
+					} else {
+						registryCenterClient2.setConnected(false);
+					}
 					return registryCenterClient2;
 				}
 				return registryCenterClient;
@@ -483,21 +475,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (client == null) {
 					return registryCenterClient;
 				}
-				AbstractConnectionListener connectionListener = new AbstractConnectionListener("zk-connectionListener-thread-for-registryCenterClient-" + nns) {
-					@Override
-					public void stop() {
-						registryCenterClient.setConnected(false);
-					}
-
-					@Override
-					public void restart() {
-						registryCenterClient.setConnected(true);
-					}
-				};
 				registryCenterClient.setConnected(true);
 				registryCenterClient.setCuratorClient(client);
-				registryCenterClient.setConnectionListener(connectionListener);
-				client.getConnectionStateListenable().addListener(connectionListener);
 				registryCenterClientMap.put(nns, registryCenterClient);
 				return registryCenterClient;
 			} else {
@@ -505,6 +484,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (registryCenterClient == null) {
 					registryCenterClient = new RegistryCenterClient();
 					registryCenterClient.setNameAndNamespace(namespace);
+				} else {
+					if(registryCenterClient.getCuratorClient() != null) {
+						registryCenterClient.setConnected(registryCenterClient.getCuratorClient().getZookeeperClient().isConnected());
+					} else {
+						registryCenterClient.setConnected(false);
+					}
 				}
 				return registryCenterClient;
 			}
