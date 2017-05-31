@@ -253,11 +253,14 @@ $(function() {
 	});
     
     $("#remove-executor-confirm-dialog").on("shown.bs.modal", function (event) {
-    	var button = $(event.relatedTarget);
-    	var executor = button.data('executor');
-    	if(!executor){// 批量删除和单击删除公用一个confirm-dialog，如果取到的executor undefined，说明点击的是批量删除按钮，直接取到executor集合的值
-    		executor = event.relatedTarget;
-    	}
+    	// 批量删除和单击删除公用一个confirm-dialog，如果取到relatedTarget为字符串，则为批量删除
+        var target = event.relatedTarget;
+        if(typeof target == "string") {
+            executor = event.relatedTarget;
+        } else {
+            var button = $(target);
+            var executor = button.data('executor');
+        }
     	$("#remove-executor-confirm-dialog-confirm-btn").unbind('click').click(function() {
     		var $btn = $(this).button('loading');
     		$.post("job/remove/executor", {executor : executor,nns:regName}, function (data) {
