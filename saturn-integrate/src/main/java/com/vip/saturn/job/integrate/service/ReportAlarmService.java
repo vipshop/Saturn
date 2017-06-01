@@ -6,6 +6,7 @@ import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import java.util.List;
 
 /**
+ * Report alarm service. Recommend use async thread to report, when it's heavy.
  * @author hebelala
  */
 public interface ReportAlarmService {

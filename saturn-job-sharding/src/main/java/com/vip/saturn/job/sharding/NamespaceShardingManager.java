@@ -66,7 +66,7 @@ public class NamespaceShardingManager {
 		addNewOrRemoveJobListener();
 	}
 
-	private void stop0() {
+	private void stop0() throws InterruptedException {
 		shardingTreeCacheService.shutdown();
 		namespaceShardingService.shutdown();
 	}
@@ -87,8 +87,12 @@ public class NamespaceShardingManager {
 		shardingConnectionLostListener = new ShardingConnectionLostListener(this) {
 			@Override
 			public void stop() {
-				stop0();
-			}
+                try {
+                    stop0();
+                } catch (Exception e) {
+                    log.error("stop " + namespace + "-NamespaceShardingManager error", e);
+                }
+            }
 
 			@Override
 			public void restart() {
@@ -159,7 +163,7 @@ public class NamespaceShardingManager {
 	/**
 	 * close listeners, delete leadership
 	 */
-	public void stop() {
+	public void stop() throws InterruptedException {
 		synchronized (isStoppedFlag) {
 			if (isStoppedFlag.compareAndSet(false, true)) {
 				stop0();

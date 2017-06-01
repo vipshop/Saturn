@@ -8,11 +8,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.curator.framework.CuratorFramework;
@@ -50,9 +49,9 @@ public class NamespaceShardingService {
 
 	private ReportAlarmService reportAlarmService;
 
-	private Object shutdownLock = new Object();
+	private ReentrantLock lock;
 
-    public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmService reportAlarmService) {
+	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmService reportAlarmService) {
     	this.curatorFramework = curatorFramework;
 		this.hostValue = hostValue;
 		this.reportAlarmService = reportAlarmService;
@@ -61,6 +60,7 @@ public class NamespaceShardingService {
     	this.executorService = newSingleThreadExecutor();
 		this.namespace = curatorFramework.getNamespace();
 		this.namespaceShardingContentService = new NamespaceShardingContentService(curatorFramework);
+		this.lock = new ReentrantLock();
     }
 
 	private ExecutorService newSingleThreadExecutor() {
@@ -90,7 +90,7 @@ public class NamespaceShardingService {
 			boolean isAllShardingTask = this instanceof ExecuteAllShardingTask;
 			try {
 				// 如果当前变为非leader，则直接返回
-				if(!isLeadership()) {
+				if(!isLeadershipOnly()) {
 					return;
 				}
 
@@ -111,7 +111,7 @@ public class NamespaceShardingService {
 					// 放回
 					putBackBalancing(allEnableJobs, shardList, lastOnlineExecutorList);
 					// 如果当前变为非leader，则返回
-					if (!isLeadership()) {
+					if (!isLeadershipOnly()) {
 						return;
 					}
 					// 持久化分片结果
@@ -124,6 +124,9 @@ public class NamespaceShardingService {
 					// sharding count ++
 					increaseShardingCount();
 				}
+			} catch (InterruptedException e) {
+				log.info("{}-{} {} is interrupted", namespace, hostValue, this.getClass().getSimpleName());
+				Thread.currentThread().interrupt();
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
 				if(!isAllShardingTask) { // 如果当前不是全量分片，则需要全量分片来拯救异常
@@ -135,11 +138,19 @@ public class NamespaceShardingService {
 						try {
 							reportAlarmService.allShardingError(namespace, hostValue);
 						} catch (Throwable t2) {
-							log.error(t2.getMessage(), t2);
+							if(t2 instanceof InterruptedException) {
+								log.info("{}-{} {}-allShardingError is interrupted", namespace, hostValue, this.getClass().getSimpleName());
+								Thread.currentThread().interrupt();
+							} else {
+								log.error(t2.getMessage(), t2);
+							}
 						}
 					}
 					try {
 						shutdown();
+					} catch (InterruptedException e) {
+						log.info("{}-{} {}-shutdown is interrupted", namespace, hostValue, this.getClass().getSimpleName());
+						Thread.currentThread().interrupt();
 					} catch (Throwable t3) {
 						log.error(t3.getMessage(), t3);
 					}
@@ -1503,27 +1514,34 @@ public class NamespaceShardingService {
 	 * @throws Exception
 	 */
 	public void leaderElection() throws Exception {
-		synchronized (shutdownLock) {
+		lock.lockInterruptibly();
+		try {
+			if(hasLeadership()) {
+				return;
+			}
 			log.info("{}-{} leadership election", namespace, hostValue);
 			LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH);
 			try {
 				leaderLatch.start();
 				leaderLatch.await();
 				if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH) == null) {
+					// 清理、重置变量
+					executorService.shutdownNow();
+					while (!executorService.isTerminated()) { // 等待全部任务已经退出
+						Thread.sleep(200); //NOSONARA
+						executorService.shutdownNow();
+					}
+					needAllSharding.set(false);
+					shardingCount.set(0);
+					executorService = newSingleThreadExecutor();
+
 					// 持久化$Jobs节点
 					if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
 						curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
 					}
 					// 持久化LeaderValue
 					curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
-					// 清理、重置变量
-					executorService.shutdownNow();
-					while (!executorService.isTerminated()) { // 等待全部任务已经退出
-						Thread.sleep(200); //NOSONARA
-					}
-					needAllSharding.set(false);
-					shardingCount.set(0);
-					executorService = newSingleThreadExecutor();
+
 					// 提交全量分片线程
 					needAllSharding.set(true);
 					shardingCount.incrementAndGet();
@@ -1531,7 +1549,7 @@ public class NamespaceShardingService {
 					log.info("{}-{} become leadership", namespace, hostValue);
 				}
 			} catch (Exception e) {
-				log.error(namespace + "-" + hostValue + " leadership election failed", e);
+				log.error(namespace + "-" + hostValue + " leadership election error", e);
 				throw e;
 			} finally {
 				try {
@@ -1540,6 +1558,8 @@ public class NamespaceShardingService {
 					log.error(e.getMessage(), e);
 				}
 			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -1568,21 +1588,21 @@ public class NamespaceShardingService {
 		}
 	}
 
-	/**
-	 * 关闭
-	 */
-	public void shutdown() {
-		synchronized (shutdownLock) {
+	public void shutdown() throws InterruptedException {
+		lock.lockInterruptibly();
+		try {
 			try {
 				if (curatorFramework.getZookeeperClient().isConnected()) {
 					releaseMyLeadership();
 				}
 			} catch (Exception e) {
-				log.error("delete leadership failed", e);
+				log.error(namespace + "-" + hostValue + " delete leadership error", e);
 			}
 			if (executorService != null) {
 				executorService.shutdownNow();
 			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
