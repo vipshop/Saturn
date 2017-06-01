@@ -39,7 +39,7 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	private void getJobVersionIfNecessary() throws SchedulerException {
-		if (jobBusinessInstance != null && jobVersion != null) {
+		if (jobBusinessInstance != null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			Thread.currentThread().setContextClassLoader(saturnExecutorService.getJobClassLoader());
 			try {
