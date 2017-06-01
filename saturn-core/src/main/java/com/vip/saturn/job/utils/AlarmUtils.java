@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * Util for handling alarm.
- *
+ * <p>
  * Created by jeff.zhu on 17/05/2017.
  */
 public class AlarmUtils {
@@ -32,11 +32,10 @@ public class AlarmUtils {
     /**
      * Send alarm request to Alarm API in Console.
      */
-    //FIXME: Jeff set timeout of http client
     public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
-        logger.info("send alarm of domain {} to console: {}", namespace, alarmInfo.toString());
-
         String targetUrl = SATURN_API_URI_PREFIX + namespace + "/alarms/raise";
+
+        logger.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
 
         CloseableHttpClient httpClient = null;
         try {
@@ -45,7 +44,7 @@ public class AlarmUtils {
             // prepare
             httpClient = HttpClientBuilder.create().build();
             HttpPost request = new HttpPost(targetUrl);
-            final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(3000).build();
+            final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
             request.setConfig(requestConfig);
             StringEntity params = new StringEntity(json.toString());
             request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
