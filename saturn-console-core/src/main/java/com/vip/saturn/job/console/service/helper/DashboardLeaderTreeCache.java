@@ -39,14 +39,14 @@ public class DashboardLeaderTreeCache {
     }
 
     public void start() throws Exception {
-        dashboardLeaderConnectionListener = new DashboardLeaderConnectionListener("zk-connectionListener-thread-for-dashboardLeaderTreeCache-" + zkAlias);
+        dashboardLeaderConnectionListener = new DashboardLeaderConnectionListener("connectionListener-for-dashboardLeaderTreeCache-" + zkAlias);
         curatorFramework.getConnectionStateListenable().addListener(dashboardLeaderConnectionListener);
         createNodeCache();
         electLeaderIfNecessary();
     }
 
     private void createNodeCache() throws Exception {
-        executorService = Executors.newSingleThreadExecutor(new ConsoleThreadFactory("zk-nodeCache-thread-for-dashboardLeaderHost-" + zkAlias, false));
+        executorService = Executors.newSingleThreadExecutor(new ConsoleThreadFactory("nodeCache-for-dashboardLeaderHost-" + zkAlias, false));
         nodeCache = new NodeCache(curatorFramework, SaturnSelfNodePath.SATURN_CONSOLE_DASHBOARD_LEADER_HOST);
         nodeCache.start();
         nodeCache.getListenable().addListener(new NodeCacheListener() {
