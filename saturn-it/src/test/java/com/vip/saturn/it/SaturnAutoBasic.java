@@ -160,7 +160,7 @@ public class SaturnAutoBasic {
         }
     }
 
-    public static void stopNamespaceShardingManager(int index) {
+    public static void stopNamespaceShardingManager(int index) throws InterruptedException {
         assertThat(namespaceShardingManagerList.size()).isGreaterThan(index);
         NamespaceShardingManager namespaceShardingManager = namespaceShardingManagerList.get(index);
         if (namespaceShardingManager != null) {
