@@ -16,8 +16,8 @@ public interface SaturnStatisticsService{
 	int updateByPrimaryKeySelective(SaturnStatistics SaturnStatistics);
 	
 	int deleteByPrimaryKey(Integer id);
-	
-	SaturnStatistics findStatisticsByNameAndZkList(String name, String zklist );
+
+	SaturnStatistics findStatisticsByNameAndZkList(String name, String zkConnectionString);
 	
 	int selectCount(SaturnStatistics SaturnStatistics);
 	

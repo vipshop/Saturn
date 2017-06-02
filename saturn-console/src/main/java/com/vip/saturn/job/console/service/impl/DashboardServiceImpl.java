@@ -1520,7 +1520,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public Map<Integer, Integer> loadJobRankDistribution(String zkBsKey) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_RANK_DISTRIBUTION, zkBsKey);
+		String zkConnectionString = registryCenterService.getZkCluster(zkBsKey).getZkAddr();
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_RANK_DISTRIBUTION, zkConnectionString);
 		if(ss != null) {
 			String result = ss.getResult();
 			return JSON.parseObject(result, new TypeReference<Map<Integer, Integer>>(){});
