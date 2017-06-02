@@ -86,9 +86,9 @@ public interface DashboardService {
 	
 	void cleanOneJobExecutorCount(String jobName, String nns) throws Exception;
 	
-	Map<String, Integer> loadDomainRankDistribution(String zkBsKey);
+	Map<String, Integer> loadDomainRankDistribution(String key);
 	
-	Map<Integer, Integer> loadJobRankDistribution(String zkBsKey);
+	Map<Integer, Integer> loadJobRankDistribution(String key);
 
 	SaturnStatistics abnormalContainer(String currentZkAddr);
 
