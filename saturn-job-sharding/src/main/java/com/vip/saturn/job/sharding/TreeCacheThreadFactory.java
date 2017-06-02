@@ -12,8 +12,8 @@ public class TreeCacheThreadFactory implements ThreadFactory {
 
 	private String threadName;
 
-	public TreeCacheThreadFactory(String namespace) {
-		this.threadName = "treecache-for-NamespaceSharding-" + namespace;
+	public TreeCacheThreadFactory(String threadName) {
+		this.threadName = "treecache-for-" + threadName;
 	}
 
 	@Override

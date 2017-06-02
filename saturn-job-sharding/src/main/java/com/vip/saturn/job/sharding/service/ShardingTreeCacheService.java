@@ -86,7 +86,7 @@ public class ShardingTreeCacheService {
         synchronized (isShutdownFlag) {
             if(isShutdownFlag.compareAndSet(true, false)) {
                 shutdown0();
-                executorService = Executors.newSingleThreadExecutor(new TreeCacheThreadFactory(namespace));
+                executorService = Executors.newSingleThreadExecutor(new TreeCacheThreadFactory("NamespaceSharding-" + namespace));
             } else {
                 logger.warn("{}-ShardingTreeCacheService has already started, unnecessary to start", namespace);
             }
