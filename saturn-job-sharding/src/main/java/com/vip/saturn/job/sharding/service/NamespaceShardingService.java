@@ -1528,7 +1528,7 @@ public class NamespaceShardingService {
 					// 清理、重置变量
 					executorService.shutdownNow();
 					while (!executorService.isTerminated()) { // 等待全部任务已经退出
-						Thread.sleep(200); //NOSONARA
+						Thread.sleep(100L); //NOSONARA
 						executorService.shutdownNow();
 					}
 					needAllSharding.set(false);
@@ -1548,6 +1548,9 @@ public class NamespaceShardingService {
 					executorService.submit(new ExecuteAllShardingTask());
 					log.info("{}-{} become leadership", namespace, hostValue);
 				}
+			} catch (InterruptedException e) {
+				log.info("{}-{} leadership election is interrupted", namespace, hostValue);
+				throw e;
 			} catch (Exception e) {
 				log.error(namespace + "-" + hostValue + " leadership election error", e);
 				throw e;
