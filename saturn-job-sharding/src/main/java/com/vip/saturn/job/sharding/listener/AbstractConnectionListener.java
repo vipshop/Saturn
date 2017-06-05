@@ -76,7 +76,7 @@ public abstract class AbstractConnectionListener implements ConnectionStateListe
                         }
                         long newSessionId = getSessionId(client);
                         if (sessionId != newSessionId) {
-                            LOGGER.info("Try to stop for zk lost");
+                            LOGGER.info("try to stop for zk lost");
                             stop();
                             stopped.set(true);
                             return;
@@ -90,7 +90,7 @@ public abstract class AbstractConnectionListener implements ConnectionStateListe
                 @Override
                 public void run() {
                     if (stopped.compareAndSet(true, false)) {
-                        LOGGER.info("Try to restart for zk reconnected");
+                        LOGGER.info("try to restart for zk reconnected");
                         restart();
                     }
                 }
@@ -103,7 +103,7 @@ public abstract class AbstractConnectionListener implements ConnectionStateListe
         while(true) {
             executor.shutdownNow();
             try {
-                Thread.sleep(500L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 if(!executor.isTerminated()) {
                     LOGGER.error("shutdownNowUntilTerminated is interrupted, but the {} is not terminated", threadName);

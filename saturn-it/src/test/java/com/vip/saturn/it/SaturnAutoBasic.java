@@ -164,8 +164,7 @@ public class SaturnAutoBasic {
         assertThat(namespaceShardingManagerList.size()).isGreaterThan(index);
         NamespaceShardingManager namespaceShardingManager = namespaceShardingManagerList.get(index);
         if (namespaceShardingManager != null) {
-            namespaceShardingManager.stop();
-            namespaceShardingManager.getCuratorFramework().close();
+            namespaceShardingManager.stopWithCurator();
         } else {
             log.warn("the {} NamespaceShardingManager has stopped", index);
         }
@@ -178,8 +177,7 @@ public class SaturnAutoBasic {
         for (int i = 0; i < namespaceShardingManagerList.size(); i++) {
             NamespaceShardingManager namespaceShardingManager = namespaceShardingManagerList.get(i);
             if (namespaceShardingManager != null) {
-                namespaceShardingManager.stop();
-                namespaceShardingManager.getCuratorFramework().close();
+                namespaceShardingManager.stopWithCurator();
             }
             // 等待选举完成
             Thread.sleep(200);

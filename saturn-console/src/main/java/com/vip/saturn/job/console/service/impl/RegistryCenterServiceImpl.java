@@ -122,11 +122,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 									namespaceShardingManager.start();
 									if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
 										try {
-											namespaceShardingManager.stop();
+											namespaceShardingManager.stopWithCurator();
 										} catch (Exception e) {
 											log.error(e.getMessage(), e);
 										}
-										client.close();
 									} else {
 										log.info("Done starting NamespaceShardingManager {}", nns);
 									}
@@ -139,9 +138,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 											log.error(e.getMessage(), e);
 										}
 									}
-									if(client != null) {
-										client.close();
-									}
+									client.close();
 								}
 							}
 						} catch (Exception e) {
@@ -281,8 +278,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					try {
 						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.remove(nns);
 						if (namespaceShardingManager != null) {
-							namespaceShardingManager.stop();
-							namespaceShardingManager.getCuratorFramework().close();
+							namespaceShardingManager.stopWithCurator();
 						}
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);

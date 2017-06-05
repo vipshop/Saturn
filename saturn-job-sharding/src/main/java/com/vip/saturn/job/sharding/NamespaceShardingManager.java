@@ -11,8 +11,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * 
  * @author hebelala
@@ -29,10 +27,7 @@ public class NamespaceShardingManager {
 	private String namespace;
 
 	private ShardingTreeCacheService shardingTreeCacheService;
-
-	private AtomicBoolean isStoppedFlag = new AtomicBoolean(true);
-
-	private ShardingConnectionLostListener shardingConnectionLostListener;
+	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
 	
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmService reportAlarmService) {
 		this.curatorFramework = curatorFramework;
@@ -42,18 +37,6 @@ public class NamespaceShardingManager {
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
-
-	public boolean isStopped() {
-		return isStoppedFlag.get();
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-    public CuratorFramework getCuratorFramework() {
-        return curatorFramework;
-    }
 
     private void start0() throws Exception {
 		shardingTreeCacheService.start();
@@ -66,44 +49,17 @@ public class NamespaceShardingManager {
 		addNewOrRemoveJobListener();
 	}
 
-	private void stop0() throws InterruptedException {
-		shardingTreeCacheService.shutdown();
-		namespaceShardingService.shutdown();
+	private void addConnectionLostListener() {
+		namespaceShardingConnectionListener = new NamespaceShardingConnectionListener("connectionListener-for-NamespaceSharding-" + namespace);
+		curatorFramework.getConnectionStateListenable().addListener(namespaceShardingConnectionListener);
 	}
 
 	/**
 	 * leadership election, add listeners
 	 */
 	public void start() throws Exception {
-		synchronized (isStoppedFlag) {
-			if (isStoppedFlag.compareAndSet(true, false)) {
-				start0();
-				addConnectionLostListener();
-			}
-		}
-	}
-
-	private void addConnectionLostListener() {
-		shardingConnectionLostListener = new ShardingConnectionLostListener(this) {
-			@Override
-			public void stop() {
-                try {
-                    stop0();
-                } catch (Exception e) {
-                    log.error("stop " + namespace + "-NamespaceShardingManager error", e);
-                }
-            }
-
-			@Override
-			public void restart() {
-				try {
-					start0();
-				} catch (Exception e) {
-					log.error("restart " + namespace + "-NamespaceShardingManager error", e);
-				}
-			}
-		};
-		curatorFramework.getConnectionStateListenable().addListener(shardingConnectionLostListener);
+		start0();
+		addConnectionLostListener();
 	}
 
 	/**
@@ -151,11 +107,13 @@ public class NamespaceShardingManager {
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new LeadershipElectionListener(namespaceShardingService));
 	}
 
-	private void createNodePathIfNotExists(String path) {
+	private void createNodePathIfNotExists(String path) throws InterruptedException {
 		try {
 			if (curatorFramework.checkExists().forPath(path) == null) {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
 			}
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) { //NOSONAR
 		}
 	}
@@ -163,18 +121,62 @@ public class NamespaceShardingManager {
 	/**
 	 * close listeners, delete leadership
 	 */
-	public void stop() throws InterruptedException {
-		synchronized (isStoppedFlag) {
-			if (isStoppedFlag.compareAndSet(false, true)) {
-				stop0();
-				curatorFramework.getConnectionStateListenable().removeListener(shardingConnectionLostListener);
-				shardingConnectionLostListener.shutdown();
+	public void stop() {
+		try {
+			if(namespaceShardingConnectionListener != null) {
+				curatorFramework.getConnectionStateListenable().removeListener(namespaceShardingConnectionListener);
+				namespaceShardingConnectionListener.shutdownNowUntilTerminated();
 			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		try {
+			shardingTreeCacheService.shutdown();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		try {
+			namespaceShardingService.shutdown();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
-	public NamespaceShardingService getNamespaceShardingService() {
-		return namespaceShardingService;
+	public void stopWithCurator() {
+		stop();
+		curatorFramework.close();
+	}
+
+	class NamespaceShardingConnectionListener extends  AbstractConnectionListener {
+
+		public NamespaceShardingConnectionListener(String threadName) {
+			super(threadName);
+		}
+
+		@Override
+		public void stop() {
+			try {
+				shardingTreeCacheService.shutdown();
+				namespaceShardingService.shutdown();
+			} catch (InterruptedException e) {
+				log.info("stop interrupted");
+				Thread.currentThread().interrupt();
+			} catch (Exception e) {
+				log.error("stop error", e);
+			}
+		}
+
+		@Override
+		public void restart() {
+			try {
+				start0();
+			} catch (InterruptedException e) {
+				log.info("restart interrupted");
+				Thread.currentThread().interrupt();
+			} catch (Exception e) {
+				log.error("restart error", e);
+			}
+		}
 	}
 
 }

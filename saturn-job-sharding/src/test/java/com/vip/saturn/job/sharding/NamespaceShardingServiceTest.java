@@ -72,8 +72,7 @@ public class NamespaceShardingServiceTest {
         assertThat(new String(curatorFramework.getData().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH), "UTF-8")).isEqualTo(ip1);
 
         // 停止第一个
-        namespaceShardingManager1.stop();
-        namespaceShardingManager1.getCuratorFramework().close();
+        namespaceShardingManager1.stopWithCurator();
 
         Thread.sleep(1000);
 
@@ -81,8 +80,7 @@ public class NamespaceShardingServiceTest {
         assertThat(new String(curatorFramework.getData().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH), "UTF-8")).isIn(ip2, ip3);
 
         // 停止第二个
-        namespaceShardingManager2.stop();
-        namespaceShardingManager2.getCuratorFramework().close();
+        namespaceShardingManager2.stopWithCurator();
 
         Thread.sleep(1000);
 

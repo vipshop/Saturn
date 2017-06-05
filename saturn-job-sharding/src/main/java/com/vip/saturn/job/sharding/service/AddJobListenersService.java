@@ -42,7 +42,7 @@ public class AddJobListenersService {
 		}
 	}
 
-	public void addJobPathListener(String jobName) {
+	public void addJobPathListener(String jobName) throws InterruptedException {
 		addJobConfigPathListener(jobName);
 		addJobServersPathListener(jobName);
 	}
@@ -64,7 +64,7 @@ public class AddJobListenersService {
 		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
 
-	private void addJobConfigPathListener(String jobName) {
+	private void addJobConfigPathListener(String jobName) throws InterruptedException {
 		try {
 			String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/config";
 			int depth = 1;
@@ -84,12 +84,14 @@ public class AddJobListenersService {
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
-	private void addJobServersPathListener(String jobName) {
+	private void addJobServersPathListener(String jobName) throws InterruptedException {
 		try {
 			String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/servers";
 			int depth = 2;
@@ -98,11 +100,15 @@ public class AddJobListenersService {
 				if (curatorFramework.checkExists().forPath(path) == null) {
 					curatorFramework.create().creatingParentsIfNeeded().forPath(path);
 				}
+			} catch (InterruptedException e) {
+				throw e;
 			} catch (Exception e) { //NOSONAR
 			}
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobServersTriggerShardingListener(jobName, namespaceShardingService));
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
