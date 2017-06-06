@@ -418,7 +418,7 @@ public class ScriptPidUtils {
 					if (pid > 0 && ScriptPidUtils.isPidRunning(""+Long.toString(pid))) {
 						String runningPath = JobNodePath.getNodeFullPath(jobName, String.format(ExecutionNode.RUNNING, Integer.parseInt(itemStr)));
 						regCenter.persistEphemeral(runningPath, "");
-						log.info("[{}] msg={}-{} restores running status, path={}", jobName, jobName, jobName, path, runningPath);
+						log.info("[{}] msg={}-{} restores running status, path={}", jobName, jobName, path, runningPath);
 						System.out.println(jobName + "-" + path+ " restores running status, path=" + runningPath);//NOSONAR
 						shardItems.add(itemStr);
 						log.info("[{}] msg={}-{} is running, pid={}", jobName, jobName, path, pid);

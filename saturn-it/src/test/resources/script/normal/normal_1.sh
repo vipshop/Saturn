@@ -1,3 +1,3 @@
 #!/bin/sh
-echo "normal1_begin \n"
-echo "normal1_end \n"
+echo "normal1_begin"
+echo "normal1_end"

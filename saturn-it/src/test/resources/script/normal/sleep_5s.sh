@@ -1,4 +1,4 @@
 #!/bin/sh
-echo "begin sleeping \n"
+echo "begin sleeping"
 sleep 5
-echo "end sleeping \n"
+echo "end sleeping"
