@@ -1,24 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
@@ -38,6 +19,24 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SaturnExecutor {
 
@@ -417,6 +416,8 @@ public class SaturnExecutor {
 			};
 			ShutdownHandler.addShutdownCallback(shutdownHandler);
 		}
+
+		log.info("executor start up successfully");
 	}
 
 	private void shutdownAllCountThread() {
