@@ -49,7 +49,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable{
 	protected static final int FORCE_STOP = 3;
 	protected static final int STOPED = 4;
 	
-	protected boolean breakForceStop = false;
+	protected volatile boolean breakForceStop = false;
 	
 	protected Object contextForJob;
 
