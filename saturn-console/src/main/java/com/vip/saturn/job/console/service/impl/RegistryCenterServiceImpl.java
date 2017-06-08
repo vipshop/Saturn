@@ -207,7 +207,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				createNewConnect(zkCluster);
 			}
 		}
-		// 完善ZkCluster中的注册中心信息
+		// 完善ZkCluster中的注册中心信息，先清空，再赋值
+		Iterator<Entry<String, ZkCluster>> iterator3 = newClusterMap.entrySet().iterator();
+		while(iterator3.hasNext()) {
+			iterator3.next().getValue().getRegCenterConfList().clear();
+		}
 		if (list != null) {
 			for (RegistryCenterConfiguration conf : list) {
 				ZkCluster zkCluster = newClusterMap.get(conf.getZkAddressList());
