@@ -63,7 +63,7 @@ public class SaturnJavaJob extends CrondJob {
 				ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 				Thread.currentThread().setContextClassLoader(jobClassLoader);
 				try {
-					Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
+					Class<?> jobClass = jobClassLoader.loadClass(jobClassStr.trim());
 					try {
 						Method getObject = jobClass.getMethod("getObject");
 						if (getObject != null) {
