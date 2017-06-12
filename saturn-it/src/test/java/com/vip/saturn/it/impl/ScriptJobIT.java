@@ -92,8 +92,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			return;
 		}
 
-		final String executorName = saturnExecutorList.get(0).getExecutorName();
-
 		final int shardCount = 3;
 		final String jobName = "test_B_ForceStop";
 
@@ -108,6 +106,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		startOneNewExecutorList();
 		Thread.sleep(1000);
+		final String executorName = saturnExecutorList.get(0).getExecutorName();
 		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
@@ -150,8 +149,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			return;
 		}
 
-		final String executorName = saturnExecutorList.get(0).getExecutorName();
-
 		final int shardCount = 3;
 		final String jobName = "test_C_ReuseItem";
 
@@ -166,6 +163,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
 		Thread.sleep(1000);
+		final String executorName = saturnExecutorList.get(0).getExecutorName();
 		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
