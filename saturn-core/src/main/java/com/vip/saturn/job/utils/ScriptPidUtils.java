@@ -356,12 +356,12 @@ public class ScriptPidUtils {
 	}
 
 	public static void forceStopRunningShellJob(final String executorName, final String jobName) {
-		String[] pidFromFile = ScriptPidUtils.getItemsPaths(executorName, jobName);
-		if(pidFromFile == null || pidFromFile.length == 0){
+		String[] itemPaths = ScriptPidUtils.getItemsPaths(executorName, jobName);
+		if(itemPaths == null || itemPaths.length == 0){
 			log.info("[{}] msg={} no pids to kill", jobName, jobName);
 			return;
 		}
-		for (String path : pidFromFile) {			
+		for (String path : itemPaths) {
 			String itemStr = StringUtils.substringAfterLast(path, File.separator);
 			int jobItem = Integer.parseInt(itemStr);
 
@@ -472,8 +472,8 @@ public class ScriptPidUtils {
 		}
 	}
 	
-	private static void killRunningShellProcess(String executorName, String jobName, String[] pidFromFile) {
-		for (String path : pidFromFile) {
+	private static void killRunningShellProcess(String executorName, String jobName, String[] itemPaths) {
+		for (String path : itemPaths) {
 			Integer item =  Integer.parseInt(StringUtils.substringAfterLast(path, File.separator));
 			long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, ""+item);
 			System.out.println("pid found for jobName:" + jobName + " executorName:" + executorName+ ", kill -9 " + pid);//NOSONAR
