@@ -3,6 +3,7 @@ package com.vip.saturn.it.impl;
 import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
+import java.util.Random;
 
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
@@ -93,7 +94,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 
 		final int shardCount = 3;
-		final String jobName = "test_B_ForceStop";
+		final String jobName = "test_B_ForceStop_" + new Random(100).nextInt(); // 避免多个IT同时跑该作业
 
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 * * ?");
@@ -104,7 +105,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
-		startOneNewExecutorList();
+		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
 		Thread.sleep(1000);
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
 		enableJob(jobName);
@@ -150,7 +151,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 
 		final int shardCount = 3;
-		final String jobName = "test_C_ReuseItem";
+		final String jobName = "test_C_ReuseItem" + new Random(100).nextInt(); // 避免多个IT同时跑该作业
 
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 * * ?");
