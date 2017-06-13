@@ -16,7 +16,7 @@
  */   
 package com.vip.saturn.job.console.controller;   
 
-import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -55,29 +55,43 @@ public class SaturnJunkDataController extends AbstractController {
     
     @ResponseBody
     @RequestMapping(value = "getJunkdata",method = RequestMethod.GET)
-	public Collection<SaturnJunkData> getJunkData(HttpServletRequest request,HttpSession session,ModelMap model,String zkAddr) {
-		return saturnJunkDataService.getJunkData(zkAddr);
+	public RequestResult getJunkData(HttpServletRequest request, String zkAddr) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<SaturnJunkData> junkData = saturnJunkDataService.getJunkData(zkAddr);
+			requestResult.setSuccess(true);
+			requestResult.setObj(junkData);
+		} catch (Throwable t) {
+			requestResult.setSuccess(false);
+			if (t instanceof SaturnJobConsoleException) {
+				requestResult.setMessage(t.getMessage());
+			} else {
+				requestResult.setMessage(t.toString());
+			}
+			LOGGER.error(t.getMessage(), t);
+		}
+		return requestResult;
     }
     
     @ResponseBody
     @RequestMapping(value = "removeJunkData",method = RequestMethod.POST)
-	public String removeJunkData(HttpServletRequest request,SaturnJunkData saturnJunkData,HttpSession session) {
-		return removeOneJunkData(saturnJunkData,session);
-    }
-    
-    private String removeOneJunkData(SaturnJunkData saturnJunkData,HttpSession session) {
+	public RequestResult removeJunkData(HttpServletRequest request,SaturnJunkData saturnJunkData,HttpSession session) {
+		RequestResult requestResult = new RequestResult();
 		try {
-			LOGGER.info("[removed junk data {}.]", saturnJunkData);
-			if (Strings.isNullOrEmpty(saturnJunkData.getPath()) || saturnJunkData.getType() == null) {
-				LOGGER.info("[{} junk data param error, can't be removed.]", saturnJunkData);
-				return "传入参数有误，清理废弃数据("+saturnJunkData.getPath()+")失败";
+			saturnJunkDataService.removeSaturnJunkData(saturnJunkData);
+			LOGGER.info("[removeJunkData success, saturnJunkData is {}]", saturnJunkData);
+			requestResult.setSuccess(true);
+		} catch (Throwable t) {
+			requestResult.setSuccess(false);
+			if (t instanceof SaturnJobConsoleException) {
+				requestResult.setMessage(t.getMessage());
+			} else {
+				requestResult.setMessage(t.toString());
 			}
-			return saturnJunkDataService.removeSaturnJunkData(saturnJunkData);
-		} catch (Exception e) {
-			LOGGER.error("removeOneExecutor exception:", e);
-			return "清理废弃数据("+saturnJunkData.getPath()+")出现异常："+ e.getMessage();
+			LOGGER.error("[removeJunkData error, saturnJunkData is " + saturnJunkData + "]", t);
 		}
-	}
+		return requestResult;
+    }
 
 	@ResponseBody
 	@RequestMapping(value = "junkData/deleteRunningNode",method = RequestMethod.POST)

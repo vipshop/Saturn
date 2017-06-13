@@ -14,17 +14,17 @@ $(function() {
     	var button = $(event.relatedTarget);
     	var type = button.data('type');
     	var path = button.data('path');
-    	var zkAddr = button.data('zkaddr');
+    	var namespace = button.data('namespace');
     	$("#confirm-dialog-confirm-btn").unbind('click').click(function() {
     		var $btn = $(this).button('loading');
-    		$.post("removeJunkData", {type:type,path:path,zkAddr:zkAddr}, function (data) {
+    		$.post("removeJunkData", {type:type,path:path,namespace:namespace}, function (data) {
     			$("#confirm-dialog").modal("hide");
-    			if(data == "ok") {
-    				showSuccessDialogWithCallback(function(){location.reload(true);});
-    			} else {
-    				$("#failure-dialog .fail-reason").text(data);
-	            	showFailureDialog("failure-dialog");
-    			}
+    			if(data.success) {
+                    showSuccessDialogWithCallback(function(){location.reload(true);});
+                } else {
+                    $("#failure-dialog .fail-reason").text(data.message);
+                    showFailureDialog("failure-dialog");
+                }
     		}).always(function() { $btn.button('reset'); });
     		return false;
     	});
@@ -80,17 +80,22 @@ function renderJunkData(zkAddr) {
     		junkViewDataTable.destroy();
     	}
         $("#junkdata-tbl tbody").empty();
-    	var junkDataList = data;
-        for (var i = 0;i < junkDataList.length;i++) {
-        	var removeButton = "<button operation='removeJunkData' title='点击清理该废弃数据' class='btn btn-danger' data-type='" + junkDataList[i].type + "' data-path='" + junkDataList[i].path + "' data-zkaddr='" + junkDataList[i].zkAddr + "' onclick='showRemoveJunkDataConfirmDialog(this);'>清理</button>";
-            var baseTd = "<td>" + junkDataList[i].namespace + "</td>" 
-            	+ "<td>" + junkDataList[i].zkAddr + "</td>" 
-                + "<td>" + junkDataList[i].path + "</td>" 
-                + "<td>" + junkDataList[i].description + "</td>"
-            	+ "<td>" + removeButton + "</td>";
-            $("#junkdata-tbl tbody").append("<tr>" + baseTd + "</tr>");
-        }
-        junkViewDataTable = $("#junkdata-tbl").DataTable({"destroy": true,"oLanguage": language});
+        if(data.success) {
+            var junkDataList = data.obj;
+            for (var i = 0;i < junkDataList.length;i++) {
+                var removeButton = "<button operation='removeJunkData' title='点击清理该废弃数据' class='btn btn-danger' data-type='" + junkDataList[i].type + "' data-path='" + junkDataList[i].path + "' data-namespace='" + junkDataList[i].namespace + "' onclick='showRemoveJunkDataConfirmDialog(this);'>清理</button>";
+                var baseTd = "<td>" + junkDataList[i].namespace + "</td>"
+                    + "<td>" + junkDataList[i].zkAddr + "</td>"
+                    + "<td>" + junkDataList[i].path + "</td>"
+                    + "<td>" + junkDataList[i].description + "</td>"
+                    + "<td>" + removeButton + "</td>";
+                $("#junkdata-tbl tbody").append("<tr>" + baseTd + "</tr>");
+            }
+            junkViewDataTable = $("#junkdata-tbl").DataTable({"destroy": true,"oLanguage": language});
+        } else {
+              $("#failure-dialog .fail-reason").text(data.message);
+              showFailureDialog("failure-dialog");
+          }
     }).always(function() { $loading.hide(); });
 }
 

@@ -16,7 +16,7 @@
  */   
 package com.vip.saturn.job.console.service;   
 
-import java.util.Collection;
+import java.util.List;
 
 import com.vip.saturn.job.console.domain.SaturnJunkData;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -26,9 +26,9 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
  */
 public interface SaturnJunkDataService {
 
-	Collection<SaturnJunkData> getJunkData(String bootstrapKey);
+	List<SaturnJunkData> getJunkData(String zkClusterKey) throws SaturnJobConsoleException;
 
-	String removeSaturnJunkData(SaturnJunkData saturnJunkData);
+	void removeSaturnJunkData(SaturnJunkData saturnJunkData) throws SaturnJobConsoleException;
 
 	void deleteRunningNode(String namespace, String jobName, Integer item) throws SaturnJobConsoleException;
 

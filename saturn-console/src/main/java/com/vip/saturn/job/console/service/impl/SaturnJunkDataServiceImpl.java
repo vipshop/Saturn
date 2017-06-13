@@ -14,36 +14,25 @@
  * limitations under the License.
  * </p>
  */   
-package com.vip.saturn.job.console.service.impl;   
-
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.SaturnJunkDataService;
 import com.vip.saturn.job.console.service.helper.ReuseCallBack;
 import com.vip.saturn.job.console.service.helper.ReuseUtils;
-import com.vip.saturn.job.console.utils.SaturnConstants;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.KeeperException.NoNodeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.exception.JobConsoleException;
-import com.vip.saturn.job.console.service.SaturnJunkDataService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /** 
  * @author yangjuanying  
@@ -60,161 +49,145 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	private CuratorRepository curatorRepository;
 
 	@Override
-	public Collection<SaturnJunkData> getJunkData(String zkAddr) {
-		if(zkAddr == null) {
-			return Collections.emptyList();
-		}
+	public List<SaturnJunkData> getJunkData(String zkAddr) throws SaturnJobConsoleException {
 		ZkCluster zkCluster = registryCenterService.getZkCluster(zkAddr);
-		if(zkCluster == null) {
-			return Collections.emptyList();
+		if (zkCluster == null) {
+			throw new SaturnJobConsoleException("No zkCluster matched with " + zkAddr);
 		}
-		ArrayList<RegistryCenterConfiguration> registryCenterList = zkCluster.getRegCenterConfList();
-		if(CollectionUtils.isEmpty(registryCenterList)){
-			return Collections.emptyList();
+		if (zkCluster.isOffline()) {
+			throw new SaturnJobConsoleException("Connect zookeeper failed");
 		}
-		List<SaturnJunkData> saturnJunkDataList = new ArrayList<SaturnJunkData>();
-		for(RegistryCenterConfiguration registryCenter : registryCenterList){
-			try {
-				String namespace = registryCenter.getNameAndNamespace();
-				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
-				if (registryCenterClient == null || !registryCenterClient.isConnected()) {
-					continue;
-				}
-				String zkBootstrapKey = registryCenter.getBootstrapKey();
-				CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
-				List<String> jobNames = curatorFramework.getChildren().forPath(JobNodePath.get$JobsNodePath());
+		ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
+		if (regCenterConfList == null || regCenterConfList.isEmpty()) {
+			return new ArrayList<>();
+		}
+		List<SaturnJunkData> saturnJunkDataList = new ArrayList<>();
+		for (RegistryCenterConfiguration conf : regCenterConfList) {
+			String namespace = conf.getNamespace();
+			RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
+			if (registryCenterClient == null || !registryCenterClient.isConnected()) {
+				continue;
+			}
+			String zkAddressList = conf.getZkAddressList();
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(registryCenterClient.getCuratorClient());
+			List<String> jobNames = curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath());
+			if (jobNames != null) {
 				for (String jobName : jobNames) {
-					if(null != curatorFramework.checkExists().forPath(JobNodePath.getConfigNodePath(jobName))) {// $Jobs/jobName/config exists
+					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) { // $Jobs/jobName/config exists
 						String toDeletePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
-						if(null != curatorFramework.checkExists().forPath(toDeletePath)){// toDelete node is junk data
+						if (curatorFrameworkOp.checkExists(toDeletePath)) { // toDelete node is junk data
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
 							saturnJunkData.setPath(toDeletePath);
 							saturnJunkData.setNamespace(namespace);
 							saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
 							saturnJunkData.setDescription("删除toDelete节点");
-							saturnJunkData.setZkAddr(zkBootstrapKey);
+							saturnJunkData.setZkAddr(zkAddressList);
 							saturnJunkDataList.add(saturnJunkData);
 						}
 						String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
-		                if (null != curatorFramework.checkExists().forPath(jobConfigForceShardNodePath)) {// forceShard node is junk data
-		                	SaturnJunkData saturnJunkData = new SaturnJunkData();
+						if (curatorFrameworkOp.checkExists(jobConfigForceShardNodePath)) { // forceShard node is junk data
+							SaturnJunkData saturnJunkData = new SaturnJunkData();
 							saturnJunkData.setPath(jobConfigForceShardNodePath);
 							saturnJunkData.setNamespace(namespace);
 							saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
 							saturnJunkData.setDescription("删除forceShard节点");
-							saturnJunkData.setZkAddr(zkBootstrapKey);
+							saturnJunkData.setZkAddr(zkAddressList);
 							saturnJunkDataList.add(saturnJunkData);
-		                }
-						if(null == curatorFramework.checkExists().forPath(JobNodePath.getServerNodePath(jobName))){
+						}
+						String serverNodePath = JobNodePath.getServerNodePath(jobName);
+						if (!curatorFrameworkOp.checkExists(serverNodePath)) {
 							continue;
 						}
-						List<String> jobExecutors = curatorFramework.getChildren().forPath(JobNodePath.getServerNodePath(jobName));
-						if(CollectionUtils.isEmpty(jobExecutors)){
+						List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
+						if (servers == null || servers.isEmpty()) {
 							continue;
 						}
-						for(String jobExecutor : jobExecutors){
-							String runOneTimePath = JobNodePath.getRunOneTimePath(jobName, jobExecutor);
-							if(null != curatorFramework.checkExists().forPath(runOneTimePath)){// runOneTime node is junk data
+						for (String server : servers) {
+							String runOneTimePath = JobNodePath.getRunOneTimePath(jobName, server);
+							if (curatorFrameworkOp.checkExists(runOneTimePath)) { // runOneTime node is junk data
 								SaturnJunkData saturnJunkData = new SaturnJunkData();
 								saturnJunkData.setPath(runOneTimePath);
 								saturnJunkData.setNamespace(namespace);
 								saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
 								saturnJunkData.setDescription("删除runOneTime节点");
-								saturnJunkData.setZkAddr(zkBootstrapKey);
+								saturnJunkData.setZkAddr(zkAddressList);
 								saturnJunkDataList.add(saturnJunkData);
 							}
-							
-							String stopOneTimePath = JobNodePath.getStopOneTimePath(jobName, jobExecutor);
-							if(null != curatorFramework.checkExists().forPath(stopOneTimePath)){// stopOneTime node is junk data
+
+							String stopOneTimePath = JobNodePath.getStopOneTimePath(jobName, server);
+							if (curatorFrameworkOp.checkExists(stopOneTimePath)) { // stopOneTime node is junk data
 								SaturnJunkData saturnJunkData = new SaturnJunkData();
 								saturnJunkData.setPath(stopOneTimePath);
 								saturnJunkData.setNamespace(namespace);
 								saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
 								saturnJunkData.setDescription("删除stopOneTime节点");
-								saturnJunkData.setZkAddr(zkBootstrapKey);
+								saturnJunkData.setZkAddr(zkAddressList);
 								saturnJunkDataList.add(saturnJunkData);
 							}
-							
-							String shardingPath = JobNodePath.getServerSharding(jobName,jobExecutor);
+
 							// $Jobs/servers/executors/executorName/sharding has contents, but this executor is offline,this contents is junk data
-							if(!Strings.isNullOrEmpty(getData(curatorFramework,shardingPath)) && null == curatorFramework.checkExists().forPath(ExecutorNodePath.getExecutorIpNodePath(jobExecutor))){
-								SaturnJunkData saturnJunkData = new SaturnJunkData();
-								saturnJunkData.setPath(shardingPath);
-								saturnJunkData.setNamespace(namespace);
-								saturnJunkData.setType(SaturnJunkDataOpType.CLEAR.toString());
-								saturnJunkData.setDescription("清除sharding内容（原因：该executor不在线）");
-								saturnJunkData.setZkAddr(zkBootstrapKey);
-								saturnJunkDataList.add(saturnJunkData);
+							String serverShardingPath = JobNodePath.getServerSharding(jobName, server);
+							String data = curatorFrameworkOp.getData(serverShardingPath);
+							if (data != null && !data.trim().isEmpty()) {
+								String executorIpNodePath = ExecutorNodePath.getExecutorIpNodePath(server);
+								if (!curatorFrameworkOp.checkExists(executorIpNodePath)) {
+									SaturnJunkData saturnJunkData = new SaturnJunkData();
+									saturnJunkData.setPath(serverShardingPath);
+									saturnJunkData.setNamespace(namespace);
+									saturnJunkData.setType(SaturnJunkDataOpType.CLEAR.toString());
+									saturnJunkData.setDescription("清除sharding内容（原因：该executor不在线）");
+									saturnJunkData.setZkAddr(zkAddressList);
+									saturnJunkDataList.add(saturnJunkData);
+								}
 							}
 						}
-					}else if(!CollectionUtils.isEmpty(curatorFramework.getChildren().forPath(JobNodePath.getJobNodePath(jobName)))) {
+					} else {
 						// if $Jobs/jobName/config is not exists, but $Jobs/jobName/xxx exists,then $Jobs/jobName is junk data
-						SaturnJunkData saturnJunkData = new SaturnJunkData();
-						saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
-						saturnJunkData.setPath(JobNodePath.getJobNodePath(jobName));
-						saturnJunkData.setNamespace(namespace);
-						saturnJunkData.setDescription("删除整个作业节点（原因：$Jobs/"+jobName+"/config节点不存在）");
-						saturnJunkData.setZkAddr(zkBootstrapKey);
-						saturnJunkDataList.add(saturnJunkData);
+						List<String> children = curatorFrameworkOp.getChildren(JobNodePath.getJobNodePath(jobName));
+						if (children != null && !children.isEmpty()) {
+							SaturnJunkData saturnJunkData = new SaturnJunkData();
+							saturnJunkData.setType(SaturnJunkDataOpType.DELETE.toString());
+							saturnJunkData.setPath(JobNodePath.getJobNodePath(jobName));
+							saturnJunkData.setNamespace(namespace);
+							saturnJunkData.setDescription("删除整个作业节点（原因：$Jobs/" + jobName + "/config节点不存在）");
+							saturnJunkData.setZkAddr(zkAddressList);
+							saturnJunkDataList.add(saturnJunkData);
+						}
 					}
 				}
-			}catch(Exception e){
-				log.error("getJunkData exception:",e);
 			}
 		}
 		return saturnJunkDataList;
 	}
-	
-	public String getData(final CuratorFramework curatorClient, final String znode) {
-		try {
-			if (null != curatorClient.checkExists().forPath(znode)) {
-				byte[] getZnodeData = curatorClient.getData().forPath(znode);
-				if (getZnodeData == null) {// executor的分片可能存在全部飘走的情况，sharding节点有可能获取到的是null，需要对null做判断，否则new
-											// String时会报空指针异常
-					return null;
-				}
-				return new String(getZnodeData, Charset.forName("UTF-8"));
-			} else {
-				return null;
-			}
-		} catch (final NoNodeException ex) {
-			return null;
-			// CHECKSTYLE:OFF
-		} catch (final Exception ex) {
-			// CHECKSTYLE:ON
-			throw new JobConsoleException(ex);
-		}
-	}
 
 	@Override
-	public String removeSaturnJunkData(SaturnJunkData saturnJunkData) {
-		try{
-			ArrayList<RegistryCenterConfiguration> registryCenterList = registryCenterService.getZkCluster(saturnJunkData.getZkAddr()).getRegCenterConfList();
-			if(CollectionUtils.isEmpty(registryCenterList)){
-				return "清理废弃数据失败，根据集群zk key:"+saturnJunkData.getZkAddr()+"，在注册中心没有取到相关信息";
-			}
-			for(RegistryCenterConfiguration registryCenter : registryCenterList){
-				String namespace = registryCenter.getNameAndNamespace();
-				RegistryCenterClient registryCenterClient = registryCenterService.getCuratorByNameAndNamespace(namespace);
-				if(registryCenterClient == null || !registryCenterClient.isConnected()){
-					continue;
+	public void removeSaturnJunkData(final SaturnJunkData saturnJunkData) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(saturnJunkData.getNamespace(), registryCenterService, curatorRepository, new ReuseCallBack<Void>() {
+			@Override
+			public Void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+				String path = saturnJunkData.getPath();
+				String type = saturnJunkData.getType();
+				if(path == null || path.trim().isEmpty()) {
+					throw new SaturnJobConsoleException("The parameter path cannot be null or empty");
 				}
-				CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
-				if(SaturnJunkDataOpType.CLEAR.toString().equals(saturnJunkData.getType())){
-					if(null != curatorFramework.checkExists().forPath(saturnJunkData.getPath())){
-						curatorFramework.inTransaction().check().forPath(saturnJunkData.getPath()).and().setData().forPath(saturnJunkData.getPath(), "".getBytes(Charset.forName("UTF-8"))).and().commit();
-					}
-				}else if(SaturnJunkDataOpType.DELETE.toString().equals(saturnJunkData.getType())){
-					if(null != curatorFramework.checkExists().forPath(saturnJunkData.getPath())){
-						curatorFramework.delete().deletingChildrenIfNeeded().forPath(saturnJunkData.getPath());
-					}
+				if(type == null || type.trim().isEmpty()) {
+					throw new SaturnJobConsoleException("The parameter type cannot be null or empty");
 				}
+
+				if (SaturnJunkDataOpType.CLEAR.toString().equals(type)) {
+					if (curatorFrameworkOp.checkExists(path)) {
+						curatorFrameworkOp.update(path, "");
+					}
+				} else if (SaturnJunkDataOpType.DELETE.toString().equals(type)) {
+					if (curatorFrameworkOp.checkExists(path)) {
+						curatorFrameworkOp.deleteRecursive(path);
+					}
+				} else {
+					throw new SaturnJobConsoleException("The parameter type(" + type + ") is not supported");
+				}
+				return null;
 			}
-			return SaturnConstants.DEAL_SUCCESS;
-		}catch(Exception e){
-			log.error("removeSaturnJunkData exception:",e);
-			return "清理废弃数据失败:"+e.getMessage();
-		}
+		});
 	}
 
 	@Override
