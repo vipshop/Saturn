@@ -94,7 +94,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 
 		final int shardCount = 3;
-		final String jobName = "test_B_ForceStop_" + new Random(100).nextInt(); // 避免多个IT同时跑该作业
+		final String jobName = "test_B_ForceStop_" + new Random().nextInt(100); // 避免多个IT同时跑该作业
 
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 * * ?");
@@ -151,7 +151,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 
 		final int shardCount = 3;
-		final String jobName = "test_C_ReuseItem" + new Random(100).nextInt(); // 避免多个IT同时跑该作业
+		final String jobName = "test_C_ReuseItem" + new Random().nextInt(100); // 避免多个IT同时跑该作业
 
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 * * ?");
