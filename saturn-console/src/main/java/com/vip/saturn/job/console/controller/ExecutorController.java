@@ -112,6 +112,13 @@ public class ExecutorController extends AbstractController {
 					}
 				}
 			}
+            int maxJobNum = executorService.getMaxJobNum();
+            if(executorService.jobIncExceeds(maxJobNum,jobConfigList.size())) {
+            	String errorMsg = String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum);
+                result.setSuccess(false);
+                result.setMessage(errorMsg);
+                return result;
+            }
 			// 再进行添加
 			for (JobConfig jobConfig : jobConfigList) {
 				RequestResult addJobResult = executorService.addJobs(jobConfig);

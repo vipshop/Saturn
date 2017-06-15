@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -20,6 +21,7 @@ import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,6 +62,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Resource
     private ReportAlarmService reportAlarmService;
+    
+    @Resource
+    private ExecutorService executorService;
 
     @Override
     public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -69,7 +74,10 @@ public class RestApiServiceImpl implements RestApiService {
                 if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
                     throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() + "} already existed");
                 }
-
+                int maxJobNum = executorService.getMaxJobNum();
+                if (executorService.jobIncExceeds(maxJobNum,1)) {
+                	throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. The current number of job reach the maximum limit");
+				}
                 jobOperationService.validateJobConfig(jobConfig);
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
             }

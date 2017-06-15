@@ -1,21 +1,11 @@
 package com.vip.saturn.job.console.service.impl;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import javax.annotation.Resource;
-
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.utils.SaturnConstants;
-import jxl.Workbook;
-import jxl.write.Label;
-import jxl.write.WritableCell;
-import jxl.write.WritableCellFeatures;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,8 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -34,10 +23,18 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
-import org.springframework.web.bind.annotation.RequestBody;
+
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableCell;
+import jxl.write.WritableCellFeatures;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
 
 /**
  * 
@@ -88,6 +85,25 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 	
 	@Override
+	public boolean jobIncExceeds(int maxJobNum,int inc) throws SaturnJobConsoleException {
+		if(maxJobNum <=0) {
+			return false;
+		}
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		int curJobSize = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp).size();
+		return maxJobNum >0 && (curJobSize+inc) > maxJobNum;
+	}
+	
+	@Override
+    public int getMaxJobNum() {
+		String maxJobNumStr = SaturnEnvProperties.MAX_JOB_NUM;
+		if(StringUtils.isEmpty(maxJobNumStr)) {
+			return -1;
+		}
+		return Integer.parseInt(maxJobNumStr.trim());
+    }
+	
+	@Override
 	public RequestResult addJobs(JobConfig jobConfig) {
 		RequestResult requestResult = new RequestResult();
 		requestResult.setMessage("");
@@ -96,14 +112,21 @@ public class ExecutorServiceImpl implements ExecutorService {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			String jobName = jobConfig.getJobName();
 			if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-				if(jobConfig.getIsCopyJob()){// 复制作业
-					jobOperationService.copyAndPersistJob(jobConfig, curatorFrameworkOp);
-				}else{
-					jobOperationService.persistJob(jobConfig, curatorFrameworkOp);// 新增作业
+				int maxJobNum = getMaxJobNum();
+				if (jobIncExceeds(maxJobNum, 1)) {
+					requestResult.setSuccess(false);
+					String errorMsg = String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName);
+					requestResult.setMessage(errorMsg);
+				} else {
+					if (jobConfig.getIsCopyJob()) {// 复制作业
+						jobOperationService.copyAndPersistJob(jobConfig, curatorFrameworkOp);
+					} else {
+						jobOperationService.persistJob(jobConfig, curatorFrameworkOp);// 新增作业
+					}
 				}
 			} else {
 				requestResult.setSuccess(false);
-				requestResult.setMessage("作业名" + jobName + "已经存在" );
+				requestResult.setMessage("作业名" + jobName + "已经存在");
 			}
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
