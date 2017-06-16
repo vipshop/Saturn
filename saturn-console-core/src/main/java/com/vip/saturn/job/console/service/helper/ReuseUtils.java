@@ -55,6 +55,8 @@ public class ReuseUtils {
         } catch (Throwable t) {
             LOGGER.error(t.getMessage(), t);
             throw new SaturnJobConsoleException(t);
+        } finally {
+        	ThreadLocalCuratorClient.clear();
         }
     }
 
@@ -90,6 +92,8 @@ public class ReuseUtils {
         } catch (Throwable t) {
             LOGGER.error(t.getMessage(), t);
             throw new SaturnJobConsoleException(t);
+        } finally {
+        	ThreadLocalCuratorClient.clear();
         }
     }
 
