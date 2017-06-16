@@ -76,7 +76,7 @@ public class RestApiServiceImpl implements RestApiService {
                 }
                 int maxJobNum = executorService.getMaxJobNum();
                 if (executorService.jobIncExceeds(maxJobNum,1)) {
-                	throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. The current number of job reach the maximum limit");
+                	throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. The current number of job reach the maximum limit["+maxJobNum+"]");
 				}
                 jobOperationService.validateJobConfig(jobConfig);
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
