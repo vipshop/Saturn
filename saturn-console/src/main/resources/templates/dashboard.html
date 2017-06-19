@@ -18,10 +18,13 @@ layout:decorator="frame-layout">
 	<body>
 		<div th:remove="tag" layout:fragment="content">
 			<div class="panel panel-default">
-			    <div class="panel-heading">
+			    <div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
 			        <h2 class="panel-title">
-			        	<span class="pull-left"><i class="fa fa-pie-chart"></i> Dashboard</span>
+			        	<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-pie-chart"></i> Dashboard</span>
 <!-- 			        	<span class="pull-right"><a href="javascript:location.reload(true);">刷新</a> <span  id="auto-refresh-seconds">30</span></span> -->
+							<span class="pull-right">
+								<span th:class="${multiZkClass}" title="当前zk集群"><select class="form-control" id="zks"></select></span>
+							</span>
 			        	<span class="clearfix"></span>
 			        </h2>
 			    </div>

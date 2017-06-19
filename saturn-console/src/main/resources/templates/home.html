@@ -22,9 +22,11 @@
                 <div class="navbar-header">
                     <span class="navbar-brand">当前命名空间：<span id="activated-reg-center" th:text="${activated_config}?${activated_config.nameAndNamespace}:未连接"></span></span>
                 </div>
+                <div class="navbar-header">
+                    <span class="navbar-brand">当前集群：<span id="activated-zk" th:text="${activated_config}?${activated_config.zkAlias}:未连接"></span></span>
+                </div>
 	            <!-- Top Menu Items -->
 	            <ul class="nav navbar-right top-nav"> 
-	            	<li id="zk-select" title="当前zk集群"> <select class="form-control" id="zks"></select> </li> 
 	            	<li id="dashboardTab" th:class="${dashboard_on}"><a href="dashboard" target="contentFrame"><i class="fa fa-pie-chart">&nbsp;</i>Dashboard</a></li>
 	            	<li id="regTab"><a href="registry_center_page" target="contentFrame"><i class="fa fa-server">&nbsp;</i>注册中心信息</a></li>
 	            	

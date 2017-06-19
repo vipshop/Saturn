@@ -316,11 +316,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					public void stop() {
 						zkCluster.setOffline(true);
 						refreshTreeData(zkCluster);
+						InitRegistryCenterService.reloadDomainRootTreeNode();
 					}
 					@Override
 					public void restart() {
 						zkCluster.setOffline(false);
 						refreshTreeData(zkCluster);
+						InitRegistryCenterService.reloadDomainRootTreeNode();
 					}
 				};
 				zkCluster.setCuratorFramework(tmp);
@@ -401,6 +403,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		for (ZkCluster zkCluster : zkClusters) {
 			refreshTreeData(zkCluster);
 		}
+		InitRegistryCenterService.reloadDomainRootTreeNode();
 	}
 
 	private Object getRegistryCenterClientNnsLock(String nns) {

@@ -138,15 +138,8 @@ public class RegistryCenterController extends AbstractController {
 		if (!Strings.isNullOrEmpty(fp)) {
 			return connectAndLoadJobs(request, fp, session);
 		}
-		String currentZkAddr = getCurrentZkAddr(session);
-		if(currentZkAddr == null) {
-			return new ArrayList<>();
-		}
-		TreeNode treeNode = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.get(currentZkAddr);
-		if(treeNode != null) {
-			return treeNode.getChildren();
-		}
-		return new ArrayList<>();
+		TreeNode resultNode = InitRegistryCenterService.getDomainRootTreeNode();
+		return resultNode.getChildren();
 	}
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)

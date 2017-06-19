@@ -57,6 +57,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private JobOperationService jobOperationService;
 
 	private Random random = new Random();
+	
+	private static final int DEFAULT_MAX_JOB_NUM = 100;
 
 	@Override
 	public List<String> getAliveExecutorNames() {
@@ -98,9 +100,10 @@ public class ExecutorServiceImpl implements ExecutorService {
     public int getMaxJobNum() {
 		String maxJobNumStr = SaturnEnvProperties.MAX_JOB_NUM;
 		if(StringUtils.isEmpty(maxJobNumStr)) {
-			return -1;
+			return DEFAULT_MAX_JOB_NUM;
 		}
-		return Integer.parseInt(maxJobNumStr.trim());
+		int result = Integer.parseInt(maxJobNumStr.trim());
+		return result <=0?DEFAULT_MAX_JOB_NUM:result;
     }
 	
 	@Override
