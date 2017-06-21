@@ -9,7 +9,7 @@
 	<name>saturn-job-spring-demo</name>
 
 	<properties>
-		<saturn-job.version>2.0.6</saturn-job.version>
+		<saturn-job.version>2.0.7</saturn-job.version>
 	</properties>
 
 	<dependencies>
@@ -20,7 +20,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
-			<artifactId>saturn-job-embed</artifactId>
+			<artifactId>saturn-embed</artifactId>
 			<version>${saturn-job.version}</version>
 			<scope>test</scope>
 		</dependency>
