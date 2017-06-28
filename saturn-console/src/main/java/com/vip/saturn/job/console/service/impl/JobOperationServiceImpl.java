@@ -31,7 +31,11 @@ import com.vip.saturn.job.console.service.ServerDimensionService;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+
+import org.codehaus.jackson.map.type.MapType;
+import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,9 +43,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.transaction.Transactional;
+
 import java.lang.reflect.Field;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
@@ -59,6 +67,8 @@ public class JobOperationServiceImpl implements JobOperationService {
 
     @Resource
 	private JobDimensionService jobDimensionService;
+    
+    private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class);
     
 	@Override
 	public void runAtOnceByJobnameAndExecutorName(String jobName, String executorName) {
@@ -94,7 +104,80 @@ public class JobOperationServiceImpl implements JobOperationService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), state);
 	}
+	
+	@Transactional
+	@Override
+	public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws SaturnJobConsoleException {
+		String cron0 = cron;
+		if (cron0 != null && !cron0.trim().isEmpty()) {
+			try {
+				cron0 = cron0.trim();
+				CronExpression.validateExpression(cron0);
+			} catch (ParseException e) {
+				throw new SaturnJobConsoleException("The cron expression is valid: " + cron);
+			}
+		} else {
+			cron0 = "";
+		}
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
+			String newCustomContextStr = null;
+			String newCron = null;
+			String oldCustomContextStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "customContext"));
+			Map<String, String> oldCustomContextMap = toCustomContext(oldCustomContextStr);
+			if (customContext != null && !customContext.isEmpty()) {
+				oldCustomContextMap.putAll(customContext);
+				newCustomContextStr = toCustomContext(oldCustomContextMap);
+				if (newCustomContextStr.getBytes().length > 1024 * 1024) {
+					throw new SaturnJobConsoleException("The all customContext is out of zk limit memory(1M)");
+				}
+			}
+			String oldCron =curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")); 
+			if (cron0 != null && oldCron != null && !cron0.equals(oldCron.trim())) {
+				newCron = cron0;
+			}
+			if (newCustomContextStr != null) {
+				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "customContext"), newCustomContextStr);
+			}
+			if (newCron != null) {
+				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "cron"), newCron);
+			}
+		} else {
+			throw new SaturnJobConsoleException("The job is not found: " + jobName);
+		}
+	}
 
+	/**
+	 * 将str转为map
+	 *
+	 * @param customContextStr str字符串
+	 * @return 自定义上下文map
+	 */
+	private Map<String, String> toCustomContext(String customContextStr) {
+		Map<String, String> customContext = null;
+		if (customContextStr != null) {
+			customContext = JsonUtils.fromJSON(customContextStr, customContextType);
+		}
+		if (customContext == null) {
+			customContext = new HashMap<>();
+		}
+		return customContext;
+	}
+	
+	/**
+	 * 将map转为str字符串
+	 *
+	 * @param customContextMap 自定义上下文map
+	 * @return 自定义上下文str
+	 */
+	private String toCustomContext(Map<String, String> customContextMap) {
+		String result = JsonUtils.toJSON(customContextMap);
+		if (result == null) {
+			result = "";
+		}
+		return result.trim();
+	}
+	
 	@Override
 	public void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 作业名必填
