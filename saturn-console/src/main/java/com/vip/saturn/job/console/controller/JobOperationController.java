@@ -129,7 +129,13 @@ public class JobOperationController extends AbstractController {
 		// enabled job
 		if (state) {
 			if (JobStatus.STOPPED.equals(js)) {
-				jobOperationService.setJobEnabledState(jobName, state);
+				try {
+					jobOperationService.setJobEnabledState(jobName, state);
+				} catch (SaturnJobConsoleException e) {
+					requestResult.setSuccess(false);
+					requestResult.setMessage(e.toString());
+					return requestResult;
+				}
 				requestResult.setSuccess(true);
 				return requestResult;
 			} else {
@@ -139,7 +145,13 @@ public class JobOperationController extends AbstractController {
 			}
 		} else {
 			if (JobStatus.RUNNING.equals(js) || JobStatus.READY.equals(js)) {
-				jobOperationService.setJobEnabledState(jobName, state);
+				try {
+					jobOperationService.setJobEnabledState(jobName, state);
+				} catch (SaturnJobConsoleException e) {
+					requestResult.setSuccess(false);
+					requestResult.setMessage(e.toString());
+					return requestResult;
+				}
 				requestResult.setSuccess(true);
 				return requestResult;
 			} else {
