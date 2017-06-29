@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hebelala
@@ -74,6 +75,17 @@ public interface RestApiService {
      * </ul>
      */
     void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+    
+    /**
+     * udpdate the cron expression config.<br>
+     *
+     * @throws SaturnJobConsoleException for below scenarios:
+     * <ul>
+     * <li>The update interval time cannot less than 3 seconds (statusCode = 403)</li>
+     * <li>Other exceptions (statusCode = 500)</li>
+     * </ul>
+     */
+    void updateJobCron(String namespace, String jobName,String cron,Map<String,String> params) throws SaturnJobConsoleException;
 
 
     /**

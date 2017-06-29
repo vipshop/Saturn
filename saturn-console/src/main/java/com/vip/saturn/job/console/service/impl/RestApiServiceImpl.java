@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hebelala
@@ -364,6 +365,26 @@ public class RestApiServiceImpl implements RestApiService {
         });
     }
 
+	@Override
+	public void updateJobCron(final String namespace, final String jobName, final String cron,final Map<String,String> customContext) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+			@Override
+			public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+				String cronNodePath = JobNodePath.getConfigNodePath(jobName, "cron");
+				long mtime = curatorFrameworkOp.getMtime(cronNodePath);
+				checkUpdateConfigAllowed(mtime);
+				jobOperationService.updateJobCron(jobName, cron, customContext);
+			}
+		});
+	}
+	
+    private void checkUpdateConfigAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
+        if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
+        }
+    }
     @Override
     public void runJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {

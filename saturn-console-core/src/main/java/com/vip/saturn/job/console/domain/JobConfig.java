@@ -109,6 +109,8 @@ public class JobConfig implements Serializable {
     private String originJobName;
 
 	private String jobMode;
+	
+	private String customContext;
 
 	private String dependencies;
 	
@@ -449,6 +451,15 @@ public class JobConfig implements Serializable {
 
 	public void setJobMode(String jobMode) {
 		this.jobMode = jobMode;
+	}
+
+	
+	public String getCustomContext() {
+		return customContext;
+	}
+
+	public void setCustomContext(String customContext) {
+		this.customContext = customContext;
 	}
 
 	public String getDependencies() {

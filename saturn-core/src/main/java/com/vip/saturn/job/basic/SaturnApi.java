@@ -3,6 +3,8 @@ package com.vip.saturn.job.basic;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.utils.AlarmUtils;
+import com.vip.saturn.job.utils.UpdateJobCronUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +21,6 @@ public class SaturnApi {
 
 	private String executorName;
 
-	private ConfigurationService configService;
-
 	public SaturnApi(String namespace, String executorName) {
 		this.namespace = namespace;
 		this.executorName = executorName;
@@ -32,7 +32,7 @@ public class SaturnApi {
 
 	public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
 		try {
-			configService.updateJobCron(jobName, cron, customContext);
+			UpdateJobCronUtils.updateJobCron(namespace, jobName, cron, customContext);
 		} catch (SaturnJobException se) {
 			logger.error("SaturnJobException throws: {}", se.getMessage());
 			throw se;
@@ -51,9 +51,5 @@ public class SaturnApi {
 		// set executorName into the alarmInfo
 		alarmInfo.put("executorName", executorName);
 		AlarmUtils.raiseAlarm(alarmInfo, namespace);
-	}
-
-	public void setConfigService(ConfigurationService configService) {
-		this.configService = configService;
 	}
 }
