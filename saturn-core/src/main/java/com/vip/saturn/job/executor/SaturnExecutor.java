@@ -1,5 +1,23 @@
 package com.vip.saturn.job.executor;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
@@ -19,40 +37,18 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SaturnExecutor {
 
-	protected static Logger log;
-
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+	private static Logger LOGGER;
+	
 	private String executorName;
-	ClassLoader executorClassLoader;
-	ClassLoader jobClassLoader;
+	private ClassLoader executorClassLoader;
+	private ClassLoader jobClassLoader;
 	private Runnable shutdownHandler = null;
 
 	private String namespace;
 	
-	private Object shutdownLock = new Object();
-
 	private ZookeeperConfiguration zkConfig;
 	protected ZookeeperRegistryCenter regCenter;
 
@@ -60,36 +56,30 @@ public class SaturnExecutor {
 
 	private ResetCountService resetCountService;
 
+	private ReentrantLock shutdownLock = new ReentrantLock();
 	private boolean isShutdown;
 	private ExecutorService executor;
+	private AtomicBoolean restarting = new AtomicBoolean(false);
 
 	private static AtomicBoolean inited = new AtomicBoolean(false);
 
 	private static Class<?> extClazz = null;
 
-	private static void initZK() {
+	private String discoverZK() throws Exception {
 		if (extClazz == null) {
-			return;
+			return SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
 		}
-		try {
-			extClazz.getMethod("initZK").invoke(null);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+		return (String) extClazz.getMethod("discoverZK", String.class).invoke(null, namespace);
 	}
 	
 	/**
 	 * 判断zk是否有该域
 	 */
-	private void doValidation() {
+	private void doValidation(String connectString) throws Exception {
 		if (extClazz == null) {
 			return;
 		}
-		try {
-			extClazz.getMethod("doValidation", String.class).invoke(null, namespace);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+		extClazz.getMethod("doValidation", String.class, String.class).invoke(null, namespace, connectString);
 	}
 
 	private static void initExt() {
@@ -151,7 +141,7 @@ public class SaturnExecutor {
 		JobTypeManager.getInstance().registerHandler("JAVA_JOB", SaturnJavaJob.class);
 		JobTypeManager.getInstance().registerHandler("SHELL_JOB", SaturnScriptJob.class);
 		initExt();
-		log = LoggerFactory.getLogger(SaturnExecutor.class);
+		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);
 	}
 
 	/**
@@ -188,39 +178,35 @@ public class SaturnExecutor {
 		return saturnExecutorService;
 	}
 
-	protected void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
+	public void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
 		this.saturnExecutorService = saturnExecutorService;
 	}
 
-	protected String getExecutorName() {
+	public String getExecutorName() {
 		return executorName;
 	}
 
-	protected void setExecutorName(String executorName) {
+	public void setExecutorName(String executorName) {
 		this.executorName = executorName;
 	}
 
-	protected String getNamespace() {
+	public String getNamespace() {
 		return namespace;
 	}
 
-	protected void setNamespace(String namespace) {
+	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
 
-	protected String wrapLogPattern(String message) {
-		return String.format("[%s] >>> %s", sdf.format(new Date()), message);
-	}
-
-	protected boolean scheduleJob(String jobName) {
-		log.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
+	public boolean scheduleJob(String jobName) {
+		LOGGER.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
 		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 		if (jobConfig.getSaturnJobClass() == null) {
-			log.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName, jobConfig.getJobType());
+			LOGGER.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName, jobConfig.getJobType());
 			return false;
 		}
 		if (jobConfig.isDeleting()) {
-			log.warn("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
+			LOGGER.warn("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
 			String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 			if (regCenter.isExisted(serverNodePath)) {
 				regCenter.remove(serverNodePath);
@@ -233,9 +219,9 @@ public class SaturnExecutor {
 	}
 
 	class ConnectionLostListener implements ConnectionStateListener {
-		private AtomicBoolean connected = new AtomicBoolean(false);
-		private AtomicBoolean stoped = new AtomicBoolean(false);
 
+		private AtomicBoolean connected = new AtomicBoolean(false);
+		
 		private long getSessionId(CuratorFramework client) {
 			long sessionId;
 			try {
@@ -246,178 +232,201 @@ public class SaturnExecutor {
 			return sessionId;
 		}
 
-		private void restart() {
-			try {
-				execute(executorClassLoader, jobClassLoader);
-			} catch (Exception e) {
-				log.error("", e);
-			}
-		}
-
 		@Override
 		public void stateChanged(final CuratorFramework client, final ConnectionState newState) {
 			// 使用single thread executor严格保证ZK事件执行的顺序性，避免并发性问题
 			if (ConnectionState.SUSPENDED == newState) {
 				connected.set(false);
-				final long sessionId = getSessionId(client);
-				executor.submit(new Runnable() {
-					@Override
-					public void run() {
-						do {
+				if(restarting.compareAndSet(false, true)) {
+					LOGGER.warn("The executor {} found zk SUSPENDED", executorName);
+					final long sessionId = getSessionId(client);
+					executor.submit(new Runnable() {
+						@Override
+						public void run() {
 							try {
-								Thread.sleep(1000);
-							} catch (InterruptedException e) {
+								do {
+									try {
+										Thread.sleep(1000);
+									} catch (InterruptedException e) {
+									}
+									if (isShutdown) {
+										return;
+									}
+									long newSessionId = getSessionId(client);
+									if (sessionId != newSessionId) {
+										LOGGER.warn("The executor {} is going to restart for zk lost, client: {}", executorName, client);
+										restart();
+										return;
+									}
+								} while (!isShutdown && !connected.get());
+							} finally {
+								restarting.set(false);
 							}
-							if (isShutdown)
-								return;
-							long newSessionId = getSessionId(client);
-							if (sessionId != newSessionId) {
-								log.info(" {} is going to shutdown for zk lost ,client: {}", executorName, client);
-								shutdown();
-								stoped.set(true);
-								return;
-							}
-						} while (!isShutdown && !connected.get());
-					}
-				});
-
-			} else if (ConnectionState.RECONNECTED == newState) {
-				connected.set(true);
-				executor.submit(new Runnable() {
-					@Override
-					public void run() {
-
-						if (stoped.compareAndSet(true, false)) {
-							log.info(" {} is going to restart for zk reconnected ,client: {}", executorName, client);
-							restart();
 						}
-
-					}
-
-				});
+					});
+				}
+			} else if (ConnectionState.RECONNECTED == newState) {
+				LOGGER.warn("The executor {} found zk RECONNECTED", executorName);
+				connected.set(true);
+			}
+		}
+	}
+	
+	private void restart() {
+		while(true) {
+			try {
+				execute();
+				LOGGER.warn("The executor {} restart successfully", executorName);
+				return;
+			} catch (InterruptedException e) {
+				LOGGER.warn("The executor {} restart is Interrupted", executorName);
+				return;
+			} catch (Throwable t) {
+				LOGGER.error("The executor " + executorName + " restart failed, will retry", t);
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				LOGGER.warn("The executor {} restart Interrupted", executorName);
+				return;
 			}
 		}
 	}
 
+	private void execute() throws Exception {
+		shutdownLock.lockInterruptibly();
+		if(isShutdown) {
+			return;
+		}
+		try {
+			shutdown();
+			try {
+				LOGGER.info("Try to start executor {}", executorName);
+				StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
+		
+				String serverLists = discoverZK();
+				if(serverLists != null) {
+					serverLists = serverLists.trim();
+				}
+				try {
+					// 验证namespace是否存在
+					doValidation(serverLists);
+					
+					zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
+					regCenter = new ZookeeperRegistryCenter(zkConfig);
+					saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
+					saturnExecutorService.setJobClassLoader(jobClassLoader);
+					saturnExecutorService.setExecutorClassLoader(executorClassLoader);
+		
+					// 初始化注册中心
+					regCenter.init();
+					ConnectionLostListener connectionLostListener = new ConnectionLostListener();
+					regCenter.addConnectionStateListener(connectionLostListener);
+		
+					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
+				} catch (Exception e) {
+					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.ZK);
+					throw e;
+				}
+		
+				// 注册作业名
+				List<String> zkJobNames = saturnExecutorService.registerJobNames();
+				try {
+					ScriptPidUtils.checkAllExistJobs(regCenter, zkJobNames);
+					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.JOBKILL);
+				} catch (IllegalStateException e) {
+					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
+					throw e;
+				}
+		
+				// 初始化timeout scheduler
+				TimeoutSchedulerExecutor.createScheduler(executorName);
+		
+				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
+				// 注册Executor
+				try {
+					saturnExecutorService.registerExecutor();
+					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.UNIQUE);
+				} catch (Exception e) {
+					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.UNIQUE);
+					throw e;
+				}
+		
+				// 启动作业
+				if (zkJobNames != null) {
+					Iterator<String> iterator = zkJobNames.iterator();
+					while(iterator.hasNext()) {
+						String jobName = iterator.next();
+						if(scheduleJob(jobName)) {
+							LOGGER.info("The job {} initialize successfully", jobName);
+						} else {
+							iterator.remove();
+							LOGGER.warn("The job {} initialize fail", jobName);
+						}
+					}
+				}
+		
+				// 添加新增作业时的回调方法
+				saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
+					@Override
+					public boolean call(String jobName) {
+						try {
+							return scheduleJob(jobName);
+						} catch (Exception e) {
+							LOGGER.error(e.getMessage(), e);
+							return false;
+						}
+					}
+				});
+		
+				// 启动零点清0成功数错误数线程
+				resetCountService = new ResetCountService(executorName);
+				resetCountService.startRestCountTimer();
+		
+				// 注册退出时资源清理回调
+				if (shutdownHandler == null) {
+					shutdownHandler = new Runnable() {
+		
+						@Override
+						public void run() {
+							if (isShutdown) {
+								return;
+							}
+							try {
+								shutdownLock.lockInterruptibly();
+								try {
+									shutdownGracefully();
+									executor.shutdownNow();
+									isShutdown = true;
+								} finally {
+									shutdownLock.unlock();
+								}
+							} catch (Exception e) {
+								LOGGER.error(e.getMessage(), e);
+							}
+						}
+		
+					};
+					ShutdownHandler.addShutdownCallback(shutdownHandler);
+				}
+			} catch (Throwable t) {
+				LOGGER.error("The executor {} start failed", executorName);
+				shutdown();
+				throw t;
+			}
+		} finally {
+			shutdownLock.unlock();
+		}
+	}
+	
 	/**
-	 * 执行入口
-	 * @param executorClassLoader
-	 * @param jobClassLoader
-	 * @throws Exception
+	 * 执行入口。注意，仅仅能执行一次，请不要执行多次。
 	 */
 	public void execute(ClassLoader executorClassLoader, ClassLoader jobClassLoader) throws Exception {
 		this.executorClassLoader = executorClassLoader;
 		this.jobClassLoader = jobClassLoader;
-		StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
-
-		initZK();
-		// 验证namespace是否存在
-		doValidation();
-		String serverLists = SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
-		zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
-		if(saturnExecutorService != null) {
-			saturnExecutorService.shutdown();
-		}
-		if (regCenter != null) {
-			regCenter.close();
-		}
-		regCenter = new ZookeeperRegistryCenter(zkConfig);
-		saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
-
-		saturnExecutorService.setJobClassLoader(jobClassLoader);
-		saturnExecutorService.setExecutorClassLoader(executorClassLoader);
-
-		// 初始化注册中心
-		try {
-			regCenter.init();
-			ConnectionLostListener connectionLostListener = new ConnectionLostListener();
-			regCenter.addConnectionStateListener(connectionLostListener);
-
-			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
-		} catch (Exception e) {
-			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
-			e.printStackTrace(); // NOSONAR
-			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.ZK);
-			throw e;
-		}
-
-		// 注册作业名
-		List<String> zkJobNames = saturnExecutorService.registerJobNames();
-		try {
-			ScriptPidUtils.checkAllExistJobs(regCenter, zkJobNames);
-			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.JOBKILL);
-		} catch (IllegalStateException ex) {
-			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
-			System.out.println(wrapLogPattern("Start error. Please check it first.")); // NOSONAR
-			System.out.println(wrapLogPattern(ex.getMessage())); // NOSONAR
-			throw ex;
-		}
-
-		// 初始化timeout scheduler
-		TimeoutSchedulerExecutor.createScheduler(executorName);
-
-		// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
-		// 注册Executor
-		try {
-			saturnExecutorService.registerExecutor();
-			StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.UNIQUE);
-		} catch (Exception e) {
-			System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
-			e.printStackTrace(); // NOSONAR
-			StartCheckUtil.setError(StartCheckUtil.StartCheckItem.UNIQUE);
-			throw e;
-		}
-
-		// 启动作业
-		if (zkJobNames != null) {
-			Iterator<String> iterator = zkJobNames.iterator();
-			while(iterator.hasNext()) {
-				String jobName = iterator.next();
-				if(scheduleJob(jobName)) {
-					log.info("the job {} initialize successfully", jobName);
-				} else {
-					iterator.remove();
-					log.warn("the job {} initialize fail", jobName);
-				}
-			}
-		}
-
-		// 添加新增作业时的回调方法
-		saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
-			@Override
-			public boolean call(String jobName) {
-				try {
-					return scheduleJob(jobName);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-					return false;
-				}
-			}
-		});
-
-		// 启动零点清0成功数错误数线程
-		resetCountService = new ResetCountService(executorName);
-		resetCountService.startRestCountTimer();
-
-		// 注册退出时资源清理回调
-		if (shutdownHandler == null) {
-			shutdownHandler = new Runnable() {
-
-				@Override
-				public void run() {
-					if (isShutdown) {
-						return;
-					}
-					shutdownGracefully();
-					executor.shutdown();
-					isShutdown = true;
-				}
-
-			};
-			ShutdownHandler.addShutdownCallback(shutdownHandler);
-		}
-
-		log.info("executor start up successfully");
+		execute();
+		LOGGER.info("The executor {} start successfully", executorName);
 	}
 
 	private void shutdownAllCountThread() {
@@ -443,7 +452,7 @@ public class SaturnExecutor {
 				JobScheduler jobScheduler = schdMap.get(jobName);
 				if (jobScheduler != null) {
 					if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-						log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
+						LOGGER.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
 						jobScheduler.stopJob(true);
 					}
 					jobScheduler.shutdown(false);
@@ -455,20 +464,25 @@ public class SaturnExecutor {
 	/**
 	 * Executor关闭
 	 */
-	public void shutdown() {
-		synchronized (shutdownLock) {
+	public void shutdown() throws Exception {
+		shutdownLock.lockInterruptibly();
+		try {
+			LOGGER.info("Try to stop executor {}", executorName);
 			shutdownUnfinishJob();
-			// 关闭SaturnExecutorService
-			saturnExecutorService.shutdown();
-			// 关闭zkClient
-			if (regCenter != null && regCenter.isConnected()) {
+			if(saturnExecutorService != null) {
+				saturnExecutorService.shutdown();
+			}
+			if (regCenter != null) {
 				regCenter.close();
 			}
 			JobRegistry.clearExecutor(executorName);
-			// cancel零点清0成功数错误数线程
-			resetCountService.shutdownRestCountTimer();
-			// shutdown timeout-watchdog-threadpool
+			if(resetCountService != null) {
+				resetCountService.shutdownRestCountTimer();
+			}
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
+			LOGGER.info("The executor {} is stopped", executorName);
+		} finally {
+			shutdownLock.unlock();
 		}
 	}
 	
@@ -477,25 +491,33 @@ public class SaturnExecutor {
 	 * 把自己从集群中拿掉，现有的作业不停； 一直到全部作业都执行完毕，再真正退出； 
 	 * 设置一定超时时间，如果超过这个时间仍未退出，则强行中止
 	 */
-	public void shutdownGracefully() {
-		synchronized (shutdownLock) {
+	public void shutdownGracefully() throws Exception {
+		shutdownLock.lockInterruptibly();
+		try {
+			LOGGER.info("Try to stop executor {} gracefully", executorName);
+			shutdownUnfinishJob();
 			shutdownAllCountThread();
-			
-			// 关闭SaturnExecutorService
-			saturnExecutorService.shutdown();
-			// cancel零点清0成功数错误数线程
-			resetCountService.shutdownRestCountTimer();
+	
+			if (saturnExecutorService != null) {
+				saturnExecutorService.shutdown();
+			}
+			if (resetCountService != null) {
+				resetCountService.shutdownRestCountTimer();
+			}
 			// shutdown timeout-watchdog-threadpool
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
-			try{
+			try {
 				blockUntilJobCompletedIfNotTimeout();
 				shutdownUnfinishJob();
 				JobRegistry.clearExecutor(executorName);
-			}finally{
+			} finally {
 				if (regCenter != null) {
 					regCenter.close();
 				}
 			}
+			LOGGER.info("The executor {} is stopped gracefully", executorName);
+		} finally {
+			shutdownLock.unlock();
 		}
 	}
 
@@ -519,8 +541,7 @@ public class SaturnExecutor {
 			try {			
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
-				System.out.println(wrapLogPattern(e.getMessage())); // NOSONAR
-				e.printStackTrace(); // NOSONAR
+				LOGGER.error(e.getMessage(), e);
 			}
 			for(Entry<String, JobScheduler> entry : entries){
 				JobScheduler  jobScheduler = entry.getValue();

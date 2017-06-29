@@ -25,57 +25,64 @@ import java.util.Map;
  */
 public class AlarmUtils {
 
-    private static final String SATURN_API_URI_PREFIX = SystemEnvProperties.VIP_SATURN_CONSOLE_URI + "/rest/v1/";
-
-    private final static Logger logger = LoggerFactory.getLogger(AlarmUtils.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(AlarmUtils.class);
 
     /**
      * Send alarm request to Alarm API in Console.
      */
-    public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
-        String targetUrl = SATURN_API_URI_PREFIX + namespace + "/alarms/raise";
+	public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
+		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
-        logger.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
+			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
-        CloseableHttpClient httpClient = null;
-        try {
-            checkParameters(alarmInfo);
-            JSONObject json = new JSONObject(alarmInfo);
-            // prepare
-            httpClient = HttpClientBuilder.create().build();
-            HttpPost request = new HttpPost(targetUrl);
-            final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
-            request.setConfig(requestConfig);
-            StringEntity params = new StringEntity(json.toString());
-            request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-            request.setEntity(params);
+			LOGGER.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
 
-            // send request
-            CloseableHttpResponse httpResponse = httpClient.execute(request);
-            // handle response
-            handleResponse(httpResponse);
-        } catch (SaturnJobException se) {
-            logger.error("SaturnJobException throws: {}", se);
-            throw se;
-        } catch (Exception e) {
-            logger.error("Other exception throws: {}", e);
-            throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
-        } finally {
-            if (httpClient != null) {
-                try {
-                    httpClient.close();
-                } catch (IOException e) {
-                    logger.error("Exception during httpclient closed.", e);
-                }
-            }
-        }
-    }
+			CloseableHttpClient httpClient = null;
+			try {
+				checkParameters(alarmInfo);
+				JSONObject json = new JSONObject(alarmInfo);
+				// prepare
+				httpClient = HttpClientBuilder.create().build();
+				HttpPost request = new HttpPost(targetUrl);
+				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
+				request.setConfig(requestConfig);
+				StringEntity params = new StringEntity(json.toString());
+				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+				request.setEntity(params);
+
+				// send request
+				CloseableHttpResponse httpResponse = httpClient.execute(request);
+				// handle response
+				handleResponse(httpResponse);
+				return;
+			} catch (SaturnJobException se) {
+				LOGGER.error("SaturnJobException throws: {}", se);
+				if (i == size - 1) {
+					throw se;
+				}
+			} catch (Exception e) {
+				LOGGER.error("Other exception throws: {}", e);
+				if (i == size - 1) {
+					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
+				}
+			} finally {
+				if (httpClient != null) {
+					try {
+						httpClient.close();
+					} catch (IOException e) {
+						LOGGER.error("Exception during httpclient closed.", e);
+					}
+				}
+			}
+		}
+	}
 
     private static void handleResponse(CloseableHttpResponse httpResponse) throws IOException, SaturnJobException {
         int status = httpResponse.getStatusLine().getStatusCode();
 
         if (status == HttpStatus.SC_CREATED) {
-            logger.info("raise alarm successfully.");
+            LOGGER.info("raise alarm successfully.");
             return;
         }
 

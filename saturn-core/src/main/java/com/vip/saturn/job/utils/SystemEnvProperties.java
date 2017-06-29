@@ -1,6 +1,10 @@
 package com.vip.saturn.job.utils;
 
 import com.google.common.base.Strings;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +55,8 @@ public class SystemEnvProperties {
 	 * Saturn Console URI.
 	 */
 	private static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
-	public static String VIP_SATURN_CONSOLE_URI = System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI));
+	public static String VIP_SATURN_CONSOLE_URI = trim(System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI)));
+	public static List<String> VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
 
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 
@@ -76,8 +81,18 @@ public class SystemEnvProperties {
 		if(VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX){
 			VIP_SATURN_SHUTDOWN_TIMEOUT = VIP_SATURN_SHUTDOWN_TIMEOUT_MAX;
 		}
+		if(VIP_SATURN_CONSOLE_URI != null) {
+			String[] split = VIP_SATURN_CONSOLE_URI.split(",");
+			if(split != null) {
+				for(String tmp : split) {
+					tmp = tmp.trim();
+					if(!tmp.isEmpty()) {
+						VIP_SATURN_CONSOLE_URI_LIST.add(tmp);
+					}
+				}
+			}
+		}
 	}
-
 	
 	protected static String trim(String property) {
 		if (property != null && property.length()>0) {
@@ -85,4 +100,5 @@ public class SystemEnvProperties {
 		}
 		return property;
 	}
+	
 }
