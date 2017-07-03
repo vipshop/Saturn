@@ -12,6 +12,7 @@ package com.vip.saturn.job.console.utils;
  * 文件名称：ContainerNodePath.java  
  * 类说明：  
  */
+@Deprecated
 public class ContainerNodePath {
 
 	public static final String $CONTAINERS_NODE_NAME = "$DCOS";
@@ -30,7 +31,7 @@ public class ContainerNodePath {
     public static String getDcosTaskIdNodePath(final String taskId) {
         return String.format("%s/%s", getDcosTasksNodePath(), taskId);
     }
-    
+
     public static String getDcosTaskConfigNodePath(final String taskId) {
         return String.format("%s/config", getDcosTaskIdNodePath(taskId));
     }

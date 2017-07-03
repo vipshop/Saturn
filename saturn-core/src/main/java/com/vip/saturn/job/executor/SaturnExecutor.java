@@ -1,23 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
@@ -37,33 +19,69 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SaturnExecutor {
 
+	/**
+	 * 日志目录
+	 */
+	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
+
 	private static Logger LOGGER;
-	
+
+	private static AtomicBoolean inited = new AtomicBoolean(false);
+
+	private static Class<?> extClazz;
+
+	protected ZookeeperRegistryCenter regCenter;
+
 	private String executorName;
-	private ClassLoader executorClassLoader;
-	private ClassLoader jobClassLoader;
-	private Runnable shutdownHandler = null;
 
 	private String namespace;
-	
+
+	private ClassLoader executorClassLoader;
+
+	private ClassLoader jobClassLoader;
+
+	private Runnable shutdownHandler;
+
 	private ZookeeperConfiguration zkConfig;
-	protected ZookeeperRegistryCenter regCenter;
+
+	private ExecutorService executor;
 
 	private SaturnExecutorService saturnExecutorService;
 
 	private ResetCountService resetCountService;
 
 	private ReentrantLock shutdownLock = new ReentrantLock();
+
 	private boolean isShutdown;
-	private ExecutorService executor;
+
 	private AtomicBoolean restarting = new AtomicBoolean(false);
 
-	private static AtomicBoolean inited = new AtomicBoolean(false);
-
-	private static Class<?> extClazz = null;
+	private SaturnExecutor(String namespace, String executorName) {
+		this.executorName = executorName;
+		this.namespace = namespace;
+		executor = Executors
+				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
+	}
 
 	private String discoverZK() throws Exception {
 		if (extClazz == null) {
@@ -96,11 +114,6 @@ public class SaturnExecutor {
 			e.printStackTrace(); // NOSONAR
 		}
 	}
-
-	/**
-	 * 日志目录
-	 */
-	private static String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
 
 	/**
 	 * 获取环境变量
@@ -163,41 +176,6 @@ public class SaturnExecutor {
 		return new SaturnExecutor(namespace, _executorName);
 	}
 
-	private SaturnExecutor(String namespace, String executorName) {
-		this.executorName = executorName;
-		this.namespace = namespace;
-		executor = Executors
-				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
-	}
-
-	/**
-	 * 获取saturnExecutorService
-	 * @return
-	 */
-	public SaturnExecutorService getSaturnExecutorService() {
-		return saturnExecutorService;
-	}
-
-	public void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
-		this.saturnExecutorService = saturnExecutorService;
-	}
-
-	public String getExecutorName() {
-		return executorName;
-	}
-
-	public void setExecutorName(String executorName) {
-		this.executorName = executorName;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
-	}
-
 	public boolean scheduleJob(String jobName) {
 		LOGGER.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
 		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
@@ -238,7 +216,7 @@ public class SaturnExecutor {
 			if (ConnectionState.SUSPENDED == newState) {
 				connected.set(false);
 				if(restarting.compareAndSet(false, true)) {
-					LOGGER.warn("The executor {} found zk SUSPENDED", executorName);
+					LOGGER.warn("The executor {} found zk is SUSPENDED", executorName);
 					final long sessionId = getSessionId(client);
 					executor.submit(new Runnable() {
 						@Override
@@ -246,7 +224,7 @@ public class SaturnExecutor {
 							try {
 								do {
 									try {
-										Thread.sleep(1000);
+										Thread.sleep(1000L);
 									} catch (InterruptedException e) {
 									}
 									if (isShutdown) {
@@ -266,7 +244,7 @@ public class SaturnExecutor {
 					});
 				}
 			} else if (ConnectionState.RECONNECTED == newState) {
-				LOGGER.warn("The executor {} found zk RECONNECTED", executorName);
+				LOGGER.warn("The executor {} found zk is RECONNECTED", executorName);
 				connected.set(true);
 			}
 		}
@@ -275,35 +253,37 @@ public class SaturnExecutor {
 	private void restart() {
 		while(true) {
 			try {
-				execute();
-				LOGGER.warn("The executor {} restart successfully", executorName);
-				return;
-			} catch (InterruptedException e) {
-				LOGGER.warn("The executor {} restart is Interrupted", executorName);
-				return;
-			} catch (Throwable t) {
-				LOGGER.error("The executor " + executorName + " restart failed, will retry", t);
-			}
-			try {
+				try {
+					execute();
+					break;
+				} catch (Throwable t) {
+					LOGGER.error("The executor " + executorName + " restart failed, will retry again.", t);
+				}
+
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				LOGGER.warn("The executor {} restart Interrupted", executorName);
-				return;
+				LOGGER.warn("The executor {} restart is interrupted, and exit the restart process.", executorName);
+				break;
 			}
 		}
 	}
 
 	private void execute() throws Exception {
 		shutdownLock.lockInterruptibly();
-		if(isShutdown) {
-			return;
-		}
+
 		try {
+			if (isShutdown) {
+				return;
+			}
+
+			long startTime = System.currentTimeMillis();
+
 			shutdown();
+
 			try {
-				LOGGER.info("Try to start executor {}", executorName);
 				StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
-		
+
+				LOGGER.info("start to discover zk connection string ...", executorName);
 				String serverLists = discoverZK();
 				if(serverLists != null) {
 					serverLists = serverLists.trim();
@@ -319,6 +299,7 @@ public class SaturnExecutor {
 					saturnExecutorService.setExecutorClassLoader(executorClassLoader);
 		
 					// 初始化注册中心
+					LOGGER.info("start to init reg center ...");
 					regCenter.init();
 					ConnectionLostListener connectionLostListener = new ConnectionLostListener();
 					regCenter.addConnectionStateListener(connectionLostListener);
@@ -330,6 +311,7 @@ public class SaturnExecutor {
 				}
 		
 				// 注册作业名
+				LOGGER.info("start to check all exist jobs ...");
 				List<String> zkJobNames = saturnExecutorService.registerJobNames();
 				try {
 					ScriptPidUtils.checkAllExistJobs(regCenter, zkJobNames);
@@ -340,11 +322,13 @@ public class SaturnExecutor {
 				}
 		
 				// 初始化timeout scheduler
+				LOGGER.info("start to create scheduler ...", executorName);
 				TimeoutSchedulerExecutor.createScheduler(executorName);
 		
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
 				// 注册Executor
 				try {
+					LOGGER.info("start to register executor ...");
 					saturnExecutorService.registerExecutor();
 					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.UNIQUE);
 				} catch (Exception e) {
@@ -354,6 +338,7 @@ public class SaturnExecutor {
 		
 				// 启动作业
 				if (zkJobNames != null) {
+					LOGGER.info("start to schedule jobs ...");
 					Iterator<String> iterator = zkJobNames.iterator();
 					while(iterator.hasNext()) {
 						String jobName = iterator.next();
@@ -365,7 +350,8 @@ public class SaturnExecutor {
 						}
 					}
 				}
-		
+
+				LOGGER.info("start to process the remaining steps ...");
 				// 添加新增作业时的回调方法
 				saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
 					@Override
@@ -409,8 +395,10 @@ public class SaturnExecutor {
 					};
 					ShutdownHandler.addShutdownCallback(shutdownHandler);
 				}
+
+				LOGGER.info("The executor {} start successfully which used {} ms", executorName, System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
-				LOGGER.error("The executor {} start failed", executorName);
+				LOGGER.error("Fail to start executor {}", executorName);
 				shutdown();
 				throw t;
 			}
@@ -566,7 +554,31 @@ public class SaturnExecutor {
 				}
 			}
 		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
-		
-		
+
+
+	}
+
+	public SaturnExecutorService getSaturnExecutorService() {
+		return saturnExecutorService;
+	}
+
+	public void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
+		this.saturnExecutorService = saturnExecutorService;
+	}
+
+	public String getExecutorName() {
+		return executorName;
+	}
+
+	public void setExecutorName(String executorName) {
+		this.executorName = executorName;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
 	}
 }
