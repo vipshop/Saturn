@@ -55,6 +55,8 @@ public class RegistryCenterConfiguration implements Serializable {
     private String degree;
 
 	private String version;
+	
+	private String msg;
     
     public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
         this.name = name;
@@ -158,6 +160,16 @@ public class RegistryCenterConfiguration implements Serializable {
 
 	public void setVersion(String version) {
 		this.version = version;
+	}
+	
+	
+
+	public String getMsg() {
+		return msg;
+	}
+
+	public void setMsg(String msg) {
+		this.msg = msg;
 	}
 
 	public boolean equals(Object o) {
