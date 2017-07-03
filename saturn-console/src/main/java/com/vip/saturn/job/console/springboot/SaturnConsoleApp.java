@@ -10,10 +10,12 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.web.servlet.ErrorPage;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /**
  * @author chembo.huang
@@ -31,14 +33,16 @@ public class SaturnConsoleApp {
 	public static void main(String[] args) throws Exception {
 		startEmbeddedZkIfNeeded();
 
-		SpringApplication.run(SaturnConsoleApp.class, args);
+		ApplicationContext ac = SpringApplication.run(SaturnConsoleApp.class, args);
+		DispatcherServlet dispatcherServlet = (DispatcherServlet) ac.getBean("dispatcherServlet");
+		dispatcherServlet.setThrowExceptionIfNoHandlerFound(true);
 	}
 
 	private static void startEmbeddedZkIfNeeded() throws Exception {
-		if (Boolean.getBoolean("saturn.embeddedzk")) {
-			embeddedZookeeper = new TestingServer(2182);
+//		if (Boolean.getBoolean("saturn.embeddedzk")) {
+		embeddedZookeeper = new TestingServer(2181);
 			embeddedZookeeper.start();
-		}
+//		}
 	}
 
 	@Bean

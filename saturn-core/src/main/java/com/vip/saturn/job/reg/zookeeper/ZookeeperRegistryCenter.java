@@ -17,11 +17,10 @@
 
 package com.vip.saturn.job.reg.zookeeper;
 
-import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
@@ -35,10 +34,10 @@ import org.apache.zookeeper.data.ACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.reg.exception.RegExceptionHandler;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * 基于Zookeeper的注册中心.
@@ -86,7 +85,26 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	}
 
 	@Override
-	public void init() {
+    public void init() {
+        client = buildZkClient();
+        client.start();
+
+        try {
+            client.getZookeeperClient().blockUntilConnectedOrTimedOut();
+            if (!client.getZookeeperClient().isConnected()) {
+                throw new RuntimeException("the zk client is not connected while reach connection timeout");
+            }
+
+            client.checkExists().forPath(SLASH_CONSTNAT + zkConfig.getNamespace()); // check namespace node by using client, for UnknownHostException of connection string.
+            //CHECKSTYLE:OFF
+        } catch (final Exception ex) {
+            throw new RuntimeException("zk connect fail, zkList is " + zkConfig.getServerLists(), ex);
+        }
+
+        log.info("zkClient is created successfully.");
+    }
+
+    private CuratorFramework buildZkClient() {
         if (zkConfig.isUseNestedZookeeper()) {
             NestedZookeeperServers.getInstance().startServerIfNotStarted(zkConfig.getNestedPort(), zkConfig.getNestedDataDir());
         }
@@ -106,33 +124,23 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         }
         if (!Strings.isNullOrEmpty(zkConfig.getDigest())) {
             builder.authorization("digest", zkConfig.getDigest().getBytes(Charset.forName("UTF-8")))
-                   .aclProvider(new ACLProvider() {
-                       
-                       @Override
-                       public List<ACL> getDefaultAcl() {
-                           return ZooDefs.Ids.CREATOR_ALL_ACL;
-                       }
-                       
-                       @Override
-                       public List<ACL> getAclForPath(final String path) {
-                           return ZooDefs.Ids.CREATOR_ALL_ACL;
-                       }
-                   });
+                    .aclProvider(new ACLProvider() {
+
+                        @Override
+                        public List<ACL> getDefaultAcl() {
+                            return ZooDefs.Ids.CREATOR_ALL_ACL;
+                        }
+
+                        @Override
+                        public List<ACL> getAclForPath(final String path) {
+                            return ZooDefs.Ids.CREATOR_ALL_ACL;
+                        }
+                    });
         }
-        client = builder.build();
-		client.start();
-        try {
-        	client.getZookeeperClient().blockUntilConnectedOrTimedOut();
-    		if (!client.getZookeeperClient().isConnected()) {
-    			throw new Exception("the zk client is not connected");
-    		}
-        	client.checkExists().forPath(SLASH_CONSTNAT + zkConfig.getNamespace()); // check namespace node by using client, for UnknownHostException of connection string.         
-        //CHECKSTYLE:OFF
-        } catch (final Exception ex) {
-        	throw new RuntimeException("zk connect fail, zkList is " + zkConfig.getServerLists(),ex);
-        }
+
+        return builder.build();
     }
-    
+
     @Override
     public void close() {
        
