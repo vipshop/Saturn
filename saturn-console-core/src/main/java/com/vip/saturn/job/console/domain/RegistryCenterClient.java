@@ -37,6 +37,8 @@ public final class RegistryCenterClient implements Serializable {
     
     private boolean connected;
     
+    private String zkAddr;
+    
     public RegistryCenterClient() {
     	
     }
@@ -51,6 +53,16 @@ public final class RegistryCenterClient implements Serializable {
 
 	public void setNameAndNamespace(String nameAndNamespace) {
 		this.nameAndNamespace = nameAndNamespace;
+	}
+	
+	
+
+	public String getZkAddr() {
+		return zkAddr;
+	}
+
+	public void setZkAddr(String zkAddr) {
+		this.zkAddr = zkAddr;
 	}
 
 	public CuratorFramework getCuratorClient() {

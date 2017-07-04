@@ -55,10 +55,7 @@ public class UpdateJobCronUtils {
 			StringEntity params = new StringEntity(json);
 			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
-
-			// send request
 			CloseableHttpResponse httpResponse = httpClient.execute(request);
-			// handle response
 			handleResponse(httpResponse);
 		} catch (SaturnJobException se) {
 			logger.error("SaturnJobException throws: {}", se);
@@ -94,15 +91,14 @@ public class UpdateJobCronUtils {
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");
 			}
 		} else {
-			// if have unexpected status, then throw RuntimeException directly.
 			String errMsg = "unexpected status returned from Saturn Server.";
 			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, errMsg);
 		}
 	}
 
 	private static void checkParameters(String cron) throws SaturnJobException {
-		if (cron == null) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "cron cannot be null.");
+		if (StringUtils.isEmpty(cron)) {
+			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "cron cannot be null or empty.");
 		}
 	}
 
