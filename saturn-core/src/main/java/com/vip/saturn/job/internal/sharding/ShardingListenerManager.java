@@ -1,14 +1,18 @@
 package com.vip.saturn.job.internal.sharding;
 
-import com.vip.saturn.job.basic.AbstractSaturnJob;
-import com.vip.saturn.job.basic.CrondJob;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.zookeeper.WatchedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vip.saturn.job.basic.AbstractSaturnJob;
+import com.vip.saturn.job.basic.CrondJob;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 
 /**
  * 分片监听管理器.
@@ -24,6 +28,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	private CuratorWatcher necessaryWatcher;
 	
 	private ShardingService shardingService;
+	
+	private ExecutorService executorService;
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
         super(jobScheduler);
@@ -55,6 +61,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	@Override
 	public void start() {
 		if(necessaryWatcher != null) {
+			executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
 			shardingService.registerNecessaryWatcher(necessaryWatcher);
 		}
 	}
@@ -62,6 +69,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	@Override
 	public void shutdown() {
 		super.shutdown();
+		if(executorService != null) {
+			executorService.shutdownNow();
+		}
 		isShutdown = true;
 	}
 	
@@ -74,7 +84,18 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			case NodeDataChanged:
 				doBusiness(event);
 			default:
-				shardingService.registerNecessaryWatcher();
+				// use the thread pool to executor registerNecessaryWatcher by async,
+				// fix the problem:
+				// when zk is reconnected, this watcher thread is earlier than the notice of RECONNECTED EVENT,
+				// registerNecessaryWatcher will wait until reconnected or timeout, 
+				// the bad thing is that this watcher thread will block the notice of RECONNECTED EVENT.
+				// maybe it's better: register watchers in ConnectionState.RECONNECTED of ConnectionStateListener, see NodeCache
+				executorService.execute(new Runnable() {
+					@Override
+					public void run() {
+						shardingService.registerNecessaryWatcher();
+					}
+				});
 			}
 		}
 
