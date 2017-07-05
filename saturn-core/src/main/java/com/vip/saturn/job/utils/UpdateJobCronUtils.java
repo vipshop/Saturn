@@ -36,11 +36,11 @@ public class UpdateJobCronUtils {
 	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
 		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
-			// String consoleUri =
-			// SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
-			String consoleUri = "http://localhost:8080";
+			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
-
+			if (i > 0) {
+				logger.info("Fail to raise alarm. Try again.");
+			}
 			logger.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
 
 			CloseableHttpClient httpClient = null;
