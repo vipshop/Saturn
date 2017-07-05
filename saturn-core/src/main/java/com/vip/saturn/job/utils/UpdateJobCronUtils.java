@@ -58,6 +58,7 @@ public class UpdateJobCronUtils {
 				request.setEntity(params);
 				CloseableHttpResponse httpResponse = httpClient.execute(request);
 				handleResponse(httpResponse);
+				return;
 			} catch (SaturnJobException se) {
 				logger.error("SaturnJobException throws: {}", se);
 				if (i == size - 1) {
