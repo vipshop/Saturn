@@ -1,6 +1,7 @@
 package com.vip.saturn.job.utils;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +36,9 @@ public class UpdateJobCronUtils {
 	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
 		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
-			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			// String consoleUri =
+			// SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			String consoleUri = "http://localhost:8080";
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
 
 			logger.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
@@ -61,14 +64,15 @@ public class UpdateJobCronUtils {
 				return;
 			} catch (SaturnJobException se) {
 				logger.error("SaturnJobException throws: {}", se);
+				throw se;
+			} catch (ConnectException e) {
+				logger.error("connect fail, throws: {}", e);
 				if (i == size - 1) {
-					throw se;
+					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
 				logger.error("Other exception throws: {}", e);
-				if (i == size - 1) {
-					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
-				}
+				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				if (httpClient != null) {
 					try {

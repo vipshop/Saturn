@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Map;
 
 /**
@@ -32,10 +33,13 @@ public class AlarmUtils {
      */
 	public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
 		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
-
+			
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
+			if(i >0 ) {
+				LOGGER.info("Fail to raise alarm. Try again.");
+			}
 			LOGGER.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
 
 			CloseableHttpClient httpClient = null;
@@ -58,14 +62,15 @@ public class AlarmUtils {
 				return;
 			} catch (SaturnJobException se) {
 				LOGGER.error("SaturnJobException throws: {}", se);
+				throw se;
+			} catch (ConnectException e) {
+				LOGGER.error("connect fail, throws: {}", e);
 				if (i == size - 1) {
-					throw se;
+					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
 				LOGGER.error("Other exception throws: {}", e);
-				if (i == size - 1) {
-					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
-				}
+				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				if (httpClient != null) {
 					try {
