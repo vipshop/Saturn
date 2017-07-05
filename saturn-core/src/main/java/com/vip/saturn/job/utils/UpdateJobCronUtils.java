@@ -27,48 +27,54 @@ import com.vip.saturn.job.exception.SaturnJobException;
  */
 public class UpdateJobCronUtils {
 
-	private static final String SATURN_API_URI_PREFIX = SystemEnvProperties.VIP_SATURN_CONSOLE_URI + "/rest/v1/";
-
 	private final static Logger logger = LoggerFactory.getLogger(UpdateJobCronUtils.class);
 
 	/**
 	 * Send update job cron request to UpdateJobCron API in Console.
 	 */
 	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
-		String targetUrl = SATURN_API_URI_PREFIX + namespace + "/jobs/" + jobName + "/cron";
+		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
-		logger.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
+			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
 
-		CloseableHttpClient httpClient = null;
-		try {
-			checkParameters(cron);
-			if (customContext == null) {
-				customContext = new HashMap<String, String>();
-			}
-			customContext.put("cron", cron);
-			String json = JsonUtils.toJSON(customContext);
-			// prepare
-			httpClient = HttpClientBuilder.create().build();
-			HttpPut request = new HttpPut(targetUrl);
-			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
-			request.setConfig(requestConfig);
-			StringEntity params = new StringEntity(json);
-			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			request.setEntity(params);
-			CloseableHttpResponse httpResponse = httpClient.execute(request);
-			handleResponse(httpResponse);
-		} catch (SaturnJobException se) {
-			logger.error("SaturnJobException throws: {}", se);
-			throw se;
-		} catch (Exception e) {
-			logger.error("Other exception throws: {}", e);
-			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
-		} finally {
-			if (httpClient != null) {
-				try {
-					httpClient.close();
-				} catch (IOException e) {
-					logger.error("Exception during httpclient closed.", e);
+			logger.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
+
+			CloseableHttpClient httpClient = null;
+			try {
+				checkParameters(cron);
+				if (customContext == null) {
+					customContext = new HashMap<String, String>();
+				}
+				customContext.put("cron", cron);
+				String json = JsonUtils.toJSON(customContext);
+				// prepare
+				httpClient = HttpClientBuilder.create().build();
+				HttpPut request = new HttpPut(targetUrl);
+				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
+				request.setConfig(requestConfig);
+				StringEntity params = new StringEntity(json);
+				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+				request.setEntity(params);
+				CloseableHttpResponse httpResponse = httpClient.execute(request);
+				handleResponse(httpResponse);
+			} catch (SaturnJobException se) {
+				logger.error("SaturnJobException throws: {}", se);
+				if (i == size - 1) {
+					throw se;
+				}
+			} catch (Exception e) {
+				logger.error("Other exception throws: {}", e);
+				if (i == size - 1) {
+					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
+				}
+			} finally {
+				if (httpClient != null) {
+					try {
+						httpClient.close();
+					} catch (IOException e) {
+						logger.error("Exception during httpclient closed.", e);
+					}
 				}
 			}
 		}
