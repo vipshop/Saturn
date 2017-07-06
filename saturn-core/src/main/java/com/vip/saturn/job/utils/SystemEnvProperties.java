@@ -43,7 +43,7 @@ public class SystemEnvProperties {
 	public static String NAME_VIP_SATURN_OUTPUT_PATH = "VIP_SATURN_OUTPUT_PATH";
 
 	private static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
-	private static String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_POOL_NAME";
+	private static String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_SATURN_K8S_DEPLOYMENT";
 	public static String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 	
 	/**
