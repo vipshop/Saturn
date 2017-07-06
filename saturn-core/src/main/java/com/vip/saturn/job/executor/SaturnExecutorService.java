@@ -1,6 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import com.google.common.base.Strings;
 import com.vip.saturn.job.exception.TimeDiffIntolerableException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
@@ -85,7 +84,8 @@ public class SaturnExecutorService {
 		final Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
 		if (props != null) {
 			String executorVersion = props.getProperty("build.version");
-			if (!Strings.isNullOrEmpty(executorVersion)) {
+			if (StringUtils.isNotBlank(executorVersion)) {
+				log.info("persist znode '/version': {}", executorVersion);
 				coordinatorRegistryCenter.persist(versionNode, executorVersion);
 			}
 		}
@@ -93,14 +93,13 @@ public class SaturnExecutorService {
 		coordinatorRegistryCenter.persist(executorCleanNode,
 				String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));
 
-		//FIXME: may need to update to new environment name
 		// 持久task
-		if (SystemEnvProperties.VIP_SATURN_DCOS_TASK != null) {
-			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_DCOS_TASK);
+		if (StringUtils.isNotBlank(SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID)) {
+			log.info("persist znode '/task': {}", SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
+			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
 		}
 
 		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
-
 	}
 
 	public void reRegister() throws Exception {
