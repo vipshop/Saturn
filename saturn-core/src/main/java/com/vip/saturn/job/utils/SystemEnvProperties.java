@@ -1,12 +1,12 @@
 package com.vip.saturn.job.utils;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SystemEnvProperties {
 	static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
@@ -43,7 +43,8 @@ public class SystemEnvProperties {
 	public static String NAME_VIP_SATURN_OUTPUT_PATH = "VIP_SATURN_OUTPUT_PATH";
 
 	private static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
-	public static String VIP_SATURN_DCOS_TASK = System.getProperty(NAME_VIP_SATURN_DCOS_TASK, System.getenv(NAME_VIP_SATURN_DCOS_TASK));
+	private static String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_POOL_NAME";
+	public static String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 	
 	/**
 	 * Executor优雅退出的全局默认超时时间（单位：精确到秒，默认1分钟）
@@ -91,6 +92,13 @@ public class SystemEnvProperties {
 					}
 				}
 			}
+		}
+
+		String dcosTaskId = System.getProperty(NAME_VIP_SATURN_DCOS_TASK, System.getenv(NAME_VIP_SATURN_DCOS_TASK));
+		if (StringUtils.isNotBlank(dcosTaskId)) {
+			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = dcosTaskId;
+		} else {
+			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = System.getProperty(NAME_VIP_SATURN_K8S_DEPLOYMENT, System.getenv(NAME_VIP_SATURN_K8S_DEPLOYMENT));
 		}
 	}
 	

@@ -1,16 +1,5 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
@@ -21,6 +10,16 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.utils.ItemUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.curator.framework.CuratorFramework;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShardingIT extends AbstractSaturnIT {
@@ -552,11 +551,11 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList(); // 启动一个非容器executor
 
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			final int shardCount = 2;
@@ -636,7 +635,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 
@@ -648,11 +647,11 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList(); // 启动一个非容器executor
 
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
@@ -724,7 +723,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 
@@ -736,11 +735,11 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList(); // 启动一个非容器executor
 
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
@@ -812,7 +811,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 
@@ -824,11 +823,11 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList(); // 启动一个非容器executor
 
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
@@ -900,7 +899,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 	
@@ -912,11 +911,11 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main logicExecutor = startOneNewExecutorList(); // 启动一个非容器executor
 
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main vdosExecutor = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
@@ -986,7 +985,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 	
@@ -996,7 +995,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	@Test
 	public void test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst() throws Exception {
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			int shardCount = 2;
 			String jobName = "test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst";
@@ -1023,12 +1022,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 启动一个容器executor
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main vdosExecutor = startOneNewExecutorList(); 
 
 			// 启动一个非容器executor
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = false;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = null;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = null;
 			Main logicExecutor = startOneNewExecutorList(); 
 			
 			waitForFinish(new FinishCheck() {
@@ -1078,7 +1077,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 	
@@ -1088,7 +1087,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	@Test
 	public void test_M_UseDispreferList_ButInvalidLogicPreferList() throws Exception {
 		boolean cleanOld = SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN;
-		String taskOld = SystemEnvProperties.VIP_SATURN_DCOS_TASK;
+		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			int shardCount = 2;
 			String jobName = "test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst";
@@ -1115,12 +1114,12 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 启动一个容器executor
 			String taskId = "test1";
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = true;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskId;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskId;
 			Main vdosExecutor = startOneNewExecutorList(); 
 
 			// 启动一个非容器executor
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = false;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = null;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = null;
 			Main logicExecutor = startOneNewExecutorList(); 
 			
 			waitForFinish(new FinishCheck() {
@@ -1170,7 +1169,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
-			SystemEnvProperties.VIP_SATURN_DCOS_TASK = taskOld;
+			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
 		}
 	}
 
