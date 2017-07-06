@@ -95,4 +95,6 @@ public interface DashboardService {
 	Map<String, Long> versionDomainNumber(String currentZkAddr);
 
 	Map<String, Long> versionExecutorNumber(String currentZkAddr);
+
+	void setUnnormalJobReadStatus(String currentZkAddr, String uuid, String jobName, boolean status);
 }
