@@ -140,7 +140,7 @@ public class SaturnExecutorService {
 					return;
 				}
 
-				log.warn("{} node found. Try to sleep and wait for this node disappear。", executorNode + "/ip");
+				log.warn("{} node found. Try to sleep and wait for this node disappear.", executorNode + "/ip");
 				Thread.sleep(100L);
 			} while (++count <= WAIT_FOR_IP_NODE_DISAPPEAR_COUNT);
 
