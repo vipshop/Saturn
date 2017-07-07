@@ -59,6 +59,8 @@ public interface CuratorRepository {
 
         interface CuratorTransactionOp {
 
+        	CuratorTransactionOp fillJobNodeIfNotExist(String node, Object value) throws Exception;
+        	
             CuratorTransactionOp replaceIfchanged(String znode, Object value) throws Exception;
 
             CuratorTransactionOp replaceIfchanged(String znode, Object value, BooleanWrapper bw) throws Exception;
