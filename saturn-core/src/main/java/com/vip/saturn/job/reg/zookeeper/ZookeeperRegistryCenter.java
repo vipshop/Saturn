@@ -69,11 +69,15 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
      */
     private static int MAX_SESSION_TIMEOUT = 40 * 1000;
 
-
     /**
      * 会话超时时间
      */
     private int sessionTimeout;
+
+    /**
+     * 连接超时时间
+     */
+    private int connectionTimeout;
 
     private String executorName;
 
@@ -120,21 +124,25 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
             NestedZookeeperServers.getInstance().startServerIfNotStarted(zkConfig.getNestedPort(), zkConfig.getNestedDataDir());
         }
 
-        sessionTimeout = calculateSessionTimeout();
-
         Builder builder = CuratorFrameworkFactory.builder()
                 .connectString(zkConfig.getServerLists())
-                .sessionTimeoutMs(sessionTimeout)
-                .connectionTimeoutMs(CONNECTION_TIMEOUT)
                 .retryPolicy(new ExponentialBackoffRetry(zkConfig.getBaseSleepTimeMilliseconds(), zkConfig.getMaxRetries(), zkConfig.getMaxSleepTimeMilliseconds()))
                 .namespace(zkConfig.getNamespace());
+
         if (0 != zkConfig.getSessionTimeoutMilliseconds()) {
-            builder.sessionTimeoutMs(zkConfig.getSessionTimeoutMilliseconds());
             sessionTimeout = zkConfig.getSessionTimeoutMilliseconds();
+        } else {
+            sessionTimeout = calculateSessionTimeout();
         }
+        builder.sessionTimeoutMs(sessionTimeout);
+
         if (0 != zkConfig.getConnectionTimeoutMilliseconds()) {
-            builder.connectionTimeoutMs(zkConfig.getConnectionTimeoutMilliseconds());
+            connectionTimeout = zkConfig.getConnectionTimeoutMilliseconds();
+        } else {
+            connectionTimeout = CONNECTION_TIMEOUT;
         }
+        builder.connectionTimeoutMs(connectionTimeout);
+
         if (!Strings.isNullOrEmpty(zkConfig.getDigest())) {
             builder.authorization("digest", zkConfig.getDigest().getBytes(Charset.forName("UTF-8")))
                     .aclProvider(new ACLProvider() {
@@ -151,11 +159,12 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
                     });
         }
 
-        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}", zkConfig.getServerLists(), builder.getConnectionTimeoutMs(), sessionTimeout);
+        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}", zkConfig.getServerLists(), connectionTimeout, sessionTimeout);
         return builder.build();
     }
 
     private int calculateSessionTimeout() {
+        // default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1
         if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS <= 20) {
             return MIN_SESSION_TIMEOUT;
         }
