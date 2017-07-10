@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
@@ -52,10 +53,17 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     private ZookeeperConfiguration zkConfig;
     
     private CuratorFramework client;
-    
-	/** 连接超时时间 */
-	private static int CONNECTION_TIMEOUT = 20 * 1000;
-	
+
+    /**
+     * 连接最小超时时间
+     */
+    private static int MIN_CONNECTION_TIMEOUT = 20 * 1000;
+
+    /**
+     * 连接最大超时时间
+     */
+    private static int MAX_CONNECTION_TIMEOUT = 40 * 1000;
+
 	/**
 	 * 默认会话超时时间
 	 */
@@ -108,11 +116,14 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         if (zkConfig.isUseNestedZookeeper()) {
             NestedZookeeperServers.getInstance().startServerIfNotStarted(zkConfig.getNestedPort(), zkConfig.getNestedDataDir());
         }
-        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}.", zkConfig.getServerLists());
+
+        int connectionTimeout = getConnectionTimeout();
+        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}", zkConfig.getServerLists(), connectionTimeout);
+
         Builder builder = CuratorFrameworkFactory.builder()
                 .connectString(zkConfig.getServerLists())
                 .sessionTimeoutMs(SESSION_TIMEOUT)
-                .connectionTimeoutMs(CONNECTION_TIMEOUT)
+                .connectionTimeoutMs(connectionTimeout)
                 .retryPolicy(new ExponentialBackoffRetry(zkConfig.getBaseSleepTimeMilliseconds(), zkConfig.getMaxRetries(), zkConfig.getMaxSleepTimeMilliseconds()))
                 .namespace(zkConfig.getNamespace());
         if (0 != zkConfig.getSessionTimeoutMilliseconds()) {
@@ -139,6 +150,18 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         }
 
         return builder.build();
+    }
+
+    private int getConnectionTimeout() {
+        if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS <= 20) {
+            return MIN_CONNECTION_TIMEOUT;
+        }
+
+        if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS >= 40) {
+            return MAX_CONNECTION_TIMEOUT;
+        }
+
+        return SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
     }
 
     @Override
