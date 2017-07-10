@@ -4,9 +4,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,57 +42,64 @@ import java.util.List;
 
 /**
  * 基于Zookeeper的注册中心.
- * 
- * 
+ *
+ *
  */
 public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
-	static Logger log = LoggerFactory.getLogger(ZookeeperRegistryCenter.class);
+    static Logger log = LoggerFactory.getLogger(ZookeeperRegistryCenter.class);
 
     private static final String SLASH_CONSTNAT = "/";
 
     private ZookeeperConfiguration zkConfig;
-    
+
     private CuratorFramework client;
 
     /**
-     * 连接最小超时时间
+     * 默认连接超时时间
      */
-    private static int MIN_CONNECTION_TIMEOUT = 20 * 1000;
+    private static int CONNECTION_TIMEOUT = 20 * 1000;
 
     /**
-     * 连接最大超时时间
+     * 最小会话超时时间
      */
-    private static int MAX_CONNECTION_TIMEOUT = 40 * 1000;
+    private static int MIN_SESSION_TIMEOUT = 20 * 1000;
 
-	/**
-	 * 默认会话超时时间
-	 */
-	private static int SESSION_TIMEOUT = 20 * 1000;
-	
-	/** 会话超时时间 */
-	private int sessionTimeout = SESSION_TIMEOUT;
-	
-	private String executorName;
-	
+    /**
+     * 最大会话超时时间
+     */
+    private static int MAX_SESSION_TIMEOUT = 40 * 1000;
+
+    /**
+     * 会话超时时间
+     */
+    private int sessionTimeout;
+
+    /**
+     * 连接超时时间
+     */
+    private int connectionTimeout;
+
+    private String executorName;
+
     public ZookeeperRegistryCenter(final ZookeeperConfiguration zkConfig) {
         this.zkConfig = zkConfig;
     }
-    
+
     public ZookeeperConfiguration getZkConfig() {
-		return zkConfig;
-	}
+        return zkConfig;
+    }
 
     @Override
-	public String getExecutorName() {
-		return executorName;
-	}
+    public String getExecutorName() {
+        return executorName;
+    }
 
     @Override
-	public void setExecutorName(String executorName) {
-		this.executorName = executorName;
-	}
+    public void setExecutorName(String executorName) {
+        this.executorName = executorName;
+    }
 
-	@Override
+    @Override
     public void init() {
         client = buildZkClient();
         client.start();
@@ -117,22 +124,25 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
             NestedZookeeperServers.getInstance().startServerIfNotStarted(zkConfig.getNestedPort(), zkConfig.getNestedDataDir());
         }
 
-        int connectionTimeout = getConnectionTimeout();
-        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}", zkConfig.getServerLists(), connectionTimeout);
-
         Builder builder = CuratorFrameworkFactory.builder()
                 .connectString(zkConfig.getServerLists())
-                .sessionTimeoutMs(SESSION_TIMEOUT)
-                .connectionTimeoutMs(connectionTimeout)
                 .retryPolicy(new ExponentialBackoffRetry(zkConfig.getBaseSleepTimeMilliseconds(), zkConfig.getMaxRetries(), zkConfig.getMaxSleepTimeMilliseconds()))
                 .namespace(zkConfig.getNamespace());
+
         if (0 != zkConfig.getSessionTimeoutMilliseconds()) {
-            builder.sessionTimeoutMs(zkConfig.getSessionTimeoutMilliseconds());
             sessionTimeout = zkConfig.getSessionTimeoutMilliseconds();
+        } else {
+            sessionTimeout = calculateSessionTimeout();
         }
+        builder.sessionTimeoutMs(sessionTimeout);
+
         if (0 != zkConfig.getConnectionTimeoutMilliseconds()) {
-            builder.connectionTimeoutMs(zkConfig.getConnectionTimeoutMilliseconds());
+            connectionTimeout = zkConfig.getConnectionTimeoutMilliseconds();
+        } else {
+            connectionTimeout = CONNECTION_TIMEOUT;
         }
+        builder.connectionTimeoutMs(connectionTimeout);
+
         if (!Strings.isNullOrEmpty(zkConfig.getDigest())) {
             builder.authorization("digest", zkConfig.getDigest().getBytes(Charset.forName("UTF-8")))
                     .aclProvider(new ACLProvider() {
@@ -149,16 +159,18 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
                     });
         }
 
+        log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}", zkConfig.getServerLists(), connectionTimeout, sessionTimeout);
         return builder.build();
     }
 
-    private int getConnectionTimeout() {
+    private int calculateSessionTimeout() {
+        // default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1
         if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS <= 20) {
-            return MIN_CONNECTION_TIMEOUT;
+            return MIN_SESSION_TIMEOUT;
         }
 
         if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS >= 40) {
-            return MAX_CONNECTION_TIMEOUT;
+            return MAX_SESSION_TIMEOUT;
         }
 
         return SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
@@ -166,18 +178,18 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
     @Override
     public void close() {
-       
+
         CloseableUtils.closeQuietly(client);
         if (zkConfig.isUseNestedZookeeper()) {
             NestedZookeeperServers.getInstance().closeServer(zkConfig.getNestedPort());
         }
     }
-    
-    
+
+
     @Override
     public String get(final String key) {
-    	 return getDirectly(key);
-    	/* TreeCache cache = findTreeCache(key);
+        return getDirectly(key);
+        /* TreeCache cache = findTreeCache(key);
         if (null == cache) {
             return getDirectly(key);
         }
@@ -187,56 +199,56 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         }
         return null;*/
     }
-    
+
     @Override
     public String getDirectly(final String key) {
         try {
-        	byte[] getZnodeData = client.getData().forPath(key);
-        	if (getZnodeData == null) {
+            byte[] getZnodeData = client.getData().forPath(key);
+            if (getZnodeData == null) {
                 return "";
             }
             return new String(getZnodeData, Charset.forName("UTF-8"));
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
             return null;
         }
     }
-    
+
     @Override
     public List<String> getChildrenKeys(final String key) {
-    	List<String> result = null;
-		try {
-			result = client.getChildren().forPath(key);
-			Collections.sort(result, new Comparator<String>() {
+        List<String> result = null;
+        try {
+            result = client.getChildren().forPath(key);
+            Collections.sort(result, new Comparator<String>() {
 
-				@Override
-				public int compare(final String o1, final String o2) {
-					return o2.compareTo(o1);
-				}
-			});
-			return result;
-			// CHECKSTYLE:OFF
-		} catch (final Exception ex) {
-			// CHECKSTYLE:ON
-			RegExceptionHandler.handleException(ex);
-			return Collections.emptyList();
-		}
+                @Override
+                public int compare(final String o1, final String o2) {
+                    return o2.compareTo(o1);
+                }
+            });
+            return result;
+            // CHECKSTYLE:OFF
+        } catch (final Exception ex) {
+            // CHECKSTYLE:ON
+            RegExceptionHandler.handleException(ex);
+            return Collections.emptyList();
+        }
     }
-    
+
     @Override
     public boolean isExisted(final String key) {
-		try {
-			return null != client.checkExists().forPath(key);
-			// CHECKSTYLE:OFF
-		} catch (final Exception ex) {
-			// CHECKSTYLE:ON
-			RegExceptionHandler.handleException(ex);
-			return false;
-		}
+        try {
+            return null != client.checkExists().forPath(key);
+            // CHECKSTYLE:OFF
+        } catch (final Exception ex) {
+            // CHECKSTYLE:ON
+            RegExceptionHandler.handleException(ex);
+            return false;
+        }
     }
-    
+
     @Override
     public void persist(final String key, final String value) {
         try {
@@ -245,24 +257,24 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
             } else {
                 update(key, value);
             }
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
     }
-    
+
     @Override
     public void update(final String key, final String value) {
         try {
             client.inTransaction().check().forPath(key).and().setData().forPath(key, value.getBytes(Charset.forName("UTF-8"))).and().commit();
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
     }
-    
+
     @Override
     public void persistEphemeral(final String key, final String value) {
         try {
@@ -270,80 +282,80 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
                 client.delete().deletingChildrenIfNeeded().forPath(key);
             }
             client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(key, value.getBytes(Charset.forName("UTF-8")));
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
     }
-    
+
     @Override
     public void persistEphemeralSequential(final String key) {
         try {
             client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(key);
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
     }
-    
+
     @Override
     public void remove(final String key) {
         try {
             client.delete().guaranteed().deletingChildrenIfNeeded().forPath(key);
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
     }
-    
+
     @Override
     public long getRegistryCenterTime(final String key) {
         long result = 0L;
         try {
             String path = client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(key);
             result = client.checkExists().forPath(path).getCtime();
-        //CHECKSTYLE:OFF
+            //CHECKSTYLE:OFF
         } catch (final Exception ex) {
-        //CHECKSTYLE:ON
+            //CHECKSTYLE:ON
             RegExceptionHandler.handleException(ex);
         }
         Preconditions.checkState(0L != result, "Cannot get registry center time.");
         return result;
     }
-    
+
     @Override
     public Object getRawClient() {
         return client;
     }
-    
-    
+
+
     @Override
     public void addConnectionStateListener(final ConnectionStateListener listener) {
         client.getConnectionStateListenable().addListener(listener);
     }
-    
+
     @Override
     public void removeConnectionStateListener(final ConnectionStateListener listener) {
-    	client.getConnectionStateListenable().removeListener(listener);
+        client.getConnectionStateListenable().removeListener(listener);
     }
-    
+
     @Override
     public long getSessionTimeout() {
-		return sessionTimeout;
-	}
+        return sessionTimeout;
+    }
 
-	@Override
-	public String getNamespace() {
-		return zkConfig.getNamespace();
-	}
+    @Override
+    public String getNamespace() {
+        return zkConfig.getNamespace();
+    }
 
 
-	@Override
-	public boolean isConnected() {
-		return client!=null && client.getZookeeperClient().isConnected();
-	}
+    @Override
+    public boolean isConnected() {
+        return client != null && client.getZookeeperClient().isConnected();
+    }
 
 }
