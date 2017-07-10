@@ -351,7 +351,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))) {
 						hasOnlineExecutor = true;
 					} else {
-						curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNodePath(executor));
+						curatorFrameworkOp.deleteRecursive(JobNodePath.getServerNodePath(jobName,executor));
 					}
 				}
 				if (!hasOnlineExecutor) {
