@@ -37,7 +37,7 @@ public class AlarmUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
-			if(i >0 ) {
+			if (i > 0) {
 				LOGGER.info("Fail to raise alarm. Try again.");
 			}
 			LOGGER.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
@@ -64,7 +64,7 @@ public class AlarmUtils {
 				LOGGER.error("SaturnJobException throws: {}", se);
 				throw se;
 			} catch (ConnectException e) {
-				LOGGER.error("connect fail, throws: {}", e);
+				LOGGER.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}

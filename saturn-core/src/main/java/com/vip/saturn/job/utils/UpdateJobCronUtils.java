@@ -1,10 +1,7 @@
 package com.vip.saturn.job.utils;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.alibaba.fastjson.JSONObject;
+import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
@@ -18,8 +15,10 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
-import com.vip.saturn.job.exception.SaturnJobException;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Util for handling update job cron .
@@ -66,7 +65,7 @@ public class UpdateJobCronUtils {
 				logger.error("SaturnJobException throws: {}", se);
 				throw se;
 			} catch (ConnectException e) {
-				logger.error("connect fail, throws: {}", e);
+				logger.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
@@ -113,10 +112,4 @@ public class UpdateJobCronUtils {
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-		String namespace = "vip-monitor.vip.vip.com";
-		String jobName = "aaaa";
-		String cron = "0/15 * * * * ?";
-		UpdateJobCronUtils.updateJobCron(namespace, jobName, cron, null);
-	}
 }
