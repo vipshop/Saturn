@@ -20,6 +20,7 @@ import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
@@ -288,9 +289,13 @@ public class SaturnExecutor {
 
 				LOGGER.info("start to discover zk connection string.");
 				String serverLists = discoverZK();
-				if(serverLists != null) {
-					serverLists = serverLists.trim();
+				if (StringUtils.isBlank(serverLists)) {
+					LOGGER.error("zk connection string is blank!");
+					throw new RuntimeException("zk connection string is blank!");
 				}
+
+				serverLists = serverLists.trim();
+
 				try {
 					// 验证namespace是否存在
 					doValidation(serverLists);

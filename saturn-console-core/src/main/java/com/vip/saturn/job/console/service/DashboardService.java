@@ -96,5 +96,5 @@ public interface DashboardService {
 
 	Map<String, Long> versionExecutorNumber(String currentZkAddr);
 
-	void setUnnormalJobMonitorStatusToRead(String currentZkAddr, String uuid);
+	void setUnnormalJobMonitorStatusToRead(String currentZkAddr, String uuid); 
 }
