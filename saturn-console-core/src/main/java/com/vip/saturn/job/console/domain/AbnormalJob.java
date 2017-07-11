@@ -141,8 +141,6 @@ public class AbnormalJob {
 		this.nextFireTimeAfterEnabledMtime = nextFireTimeAfterEnabledMtime;
 	}
 	
-	
-
 	public boolean isRead() {
 		return read;
 	}
@@ -150,15 +148,16 @@ public class AbnormalJob {
 	public void setRead(boolean read) {
 		this.read = read;
 	}
-	
-    @Override
+
+	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((jobName == null) ? 0 : jobName.hashCode());
+		int result = jobName.hashCode();
+		result = 31 * result + domainName.hashCode();
+		result = 31 * result + cause.hashCode();
+		result = 31 * result + (int) (nextFireTimeAfterEnabledMtime ^ (nextFireTimeAfterEnabledMtime >>> 32));
 		return result;
 	}
-    
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

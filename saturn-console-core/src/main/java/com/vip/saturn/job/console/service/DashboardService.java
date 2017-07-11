@@ -96,5 +96,6 @@ public interface DashboardService {
 
 	Map<String, Long> versionExecutorNumber(String currentZkAddr);
 
+	//FIXME: timmy, remove jobName parameter
 	void setUnnormalJobMonitorStatusToRead(String currentZkAddr, String uuid, String jobName);
 }
