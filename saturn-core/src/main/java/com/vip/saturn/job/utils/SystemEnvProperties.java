@@ -62,10 +62,16 @@ public class SystemEnvProperties {
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 
 	/**
-	 * Executor ZK Client 连接超时时间.
+	 * Executor ZK Client session timeout
 	 */
 	public static String NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT";
 	public static int VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1;
+
+	/**
+	 * Executor ZK Client connection timeout
+	 */
+	public static String NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT";
+	public static int VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1;
 
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS, System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
@@ -111,6 +117,15 @@ public class SystemEnvProperties {
 		if (!Strings.isNullOrEmpty(zkClientSessionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientSessionTimeoutStr);
+			} catch (Throwable t) {
+				log.error("msg=" + t.getMessage(), t);
+			}
+		}
+
+		String zkClientConnectionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
+		if (!Strings.isNullOrEmpty(zkClientConnectionTimeoutStr)) {
+			try {
+				VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientConnectionTimeoutStr);
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}

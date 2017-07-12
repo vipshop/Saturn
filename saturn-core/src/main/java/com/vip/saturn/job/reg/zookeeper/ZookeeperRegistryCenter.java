@@ -55,9 +55,14 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
     private CuratorFramework client;
 
     /**
-     * 默认连接超时时间
+     * 最小连接超时时间
      */
-    private static int CONNECTION_TIMEOUT = 20 * 1000;
+    private static int MIN_CONNECTION_TIMEOUT = 20 * 1000;
+
+    /**
+     * 最大连接超时时间
+     */
+    private static int MAX_CONNECTION_TIMEOUT = 60 * 1000;
 
     /**
      * 最小会话超时时间
@@ -139,7 +144,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         if (0 != zkConfig.getConnectionTimeoutMilliseconds()) {
             connectionTimeout = zkConfig.getConnectionTimeoutMilliseconds();
         } else {
-            connectionTimeout = CONNECTION_TIMEOUT;
+            connectionTimeout = calculateConnectionTimeout();
         }
         builder.connectionTimeoutMs(connectionTimeout);
 
@@ -163,17 +168,34 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         return builder.build();
     }
 
+    private int calculateConnectionTimeout() {
+        // default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1
+        int connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS * 1000;
+
+        if (connectionTimeoutInMillSeconds <= MIN_CONNECTION_TIMEOUT) {
+            return MIN_CONNECTION_TIMEOUT;
+        }
+
+        if (connectionTimeoutInMillSeconds >= MAX_CONNECTION_TIMEOUT) {
+            return MAX_CONNECTION_TIMEOUT;
+        }
+
+        return connectionTimeoutInMillSeconds;
+    }
+
     private int calculateSessionTimeout() {
         // default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1
-        if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS <= 20) {
+        int sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
+
+        if (sessionTimeoutInMillSeconds <= MIN_SESSION_TIMEOUT) {
             return MIN_SESSION_TIMEOUT;
         }
 
-        if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS >= 40) {
+        if (sessionTimeoutInMillSeconds >= MAX_SESSION_TIMEOUT) {
             return MAX_SESSION_TIMEOUT;
         }
 
-        return SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
+        return sessionTimeoutInMillSeconds;
     }
 
     @Override
