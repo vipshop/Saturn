@@ -1,20 +1,5 @@
 package com.vip.saturn.job.console.service.impl;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -28,13 +13,25 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
-
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableCell;
 import jxl.write.WritableCellFeatures;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * 
@@ -93,6 +90,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		int curJobSize = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp).size();
+		//TODO: timmy, remove maxJobNum >0
 		return maxJobNum >0 && (curJobSize+inc) > maxJobNum;
 	}
 	
