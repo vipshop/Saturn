@@ -39,6 +39,7 @@ USAGE()
 	echo -e "\n      '-r|--runmode': optional, default value is $RUN_MODE, you can set it foreground"
 	echo -e "\n      '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
 	echo -e "\n      '-env|--environment': optional."
+	echo -e "\n      '-sdl|--saturnLogDir': optional."
 	echo -e "\n      JVM args: optional."
 }
 
@@ -58,6 +59,7 @@ while true; do
 		-r| --runmode) RUN_MODE="$2"; shift 2;;
 		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
 		-env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
+		-sdl|--saturnLogDir) LOGDIR="$2" ; shift 2 ;;
 		*) break;;
 	esac
 done
@@ -79,11 +81,13 @@ else
   ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
 fi
 
+if [[ "$LOGDIR" = "" ]]; then
+  LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
+fi
 
-LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
 OUTFILE=$LOGDIR/saturn-executor.log
 
-JAVA_OPTS="-Dsaturn.log=${LOGDIR} -XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
+JAVA_OPTS="-Dsaturn.log=${LOGDIR} -DSATURN_LOG_DIR=${LOGDIR} -XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
 MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxTenuringThreshold=6 -XX:+ExplicitGCInvokesConcurrent"
 GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
 CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
