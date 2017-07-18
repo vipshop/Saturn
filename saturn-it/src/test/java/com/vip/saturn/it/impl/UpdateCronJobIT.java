@@ -5,20 +5,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.AbstractSaturnConsoleIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.it.job.UpdateCronJob;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@Ignore //TODO
-public class UpdateCronJobIT extends AbstractSaturnIT {
+public class UpdateCronJobIT extends AbstractSaturnConsoleIT {
 	
 	   @BeforeClass
 	    public static void setUp() throws Exception {
