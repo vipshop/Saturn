@@ -39,10 +39,10 @@ public class SaturnConsoleApp {
 	}
 
 	private static void startEmbeddedZkIfNeeded() throws Exception {
-//		if (Boolean.getBoolean("saturn.embeddedzk")) {
-		embeddedZookeeper = new TestingServer(2181);
+		if (Boolean.getBoolean("saturn.embeddedzk")) {
+			embeddedZookeeper = new TestingServer(2181);
 			embeddedZookeeper.start();
-//		}
+		}
 	}
 
 	@Bean
