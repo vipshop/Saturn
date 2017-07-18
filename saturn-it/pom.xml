@@ -7,8 +7,24 @@
     </parent>
     <artifactId>saturn-it</artifactId>
     <name>${project.artifactId}</name>
-
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<!-- Import dependency management from Spring Boot -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>1.4.0.RELEASE</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
+		<dependency>
+			<groupId>com.vip.saturn</groupId>
+			<artifactId>saturn-console</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<artifactId>saturn-job-sharding</artifactId>
@@ -40,11 +56,12 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
+			<version>1.1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-test</artifactId>
-			<scope>test</scope>
+			<scope>compile</scope>
 		</dependency>
 	    <dependency>
 			<groupId>org.apache.commons</groupId>
@@ -58,6 +75,15 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

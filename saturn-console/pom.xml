@@ -302,6 +302,7 @@
 					<mainClass>com.vip.saturn.job.console.springboot.SaturnConsoleApp</mainClass>
 					<layout>JAR</layout>
 					<executable>true</executable>
+					<classifier>exec</classifier>
 				</configuration>
 				<executions>
 					<execution>

@@ -4,6 +4,7 @@ import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -11,15 +12,21 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
+import com.vip.saturn.it.job.EmbedSaturnConsoleApp;
 import com.vip.saturn.it.utils.NestedZkUtils;
+import com.vip.saturn.job.console.SaturnEnvProperties;
+import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -44,8 +51,11 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
 public class SaturnAutoBasic {
     protected final static int timeout = 15;
     protected static final String NAMESPACE = "it-saturn-java.vip.vip.com";
+    protected static final String CONSOLE_URL = "http://localhost:9088";
     protected static Logger log;
     protected static ZookeeperRegistryCenter regCenter;
+    
+    protected static final String REG_CENTER_JSON_FILE_NAME="it-json-file.json";
 
     protected static NestedZkUtils nestedZkUtils;
 
@@ -566,6 +576,42 @@ public class SaturnAutoBasic {
     public static String getFailureCountOfExecutor(JobConfiguration jobConfiguration, final Main executor) {
         return getJobNode(jobConfiguration, "servers/" + executor.getExecutorName() + "/processFailureCount");
     }
+    
+	/**
+	 * 启动控制台
+	 * 
+	 * @throws Exception
+	 */
+	public static void startConsole() throws Exception {
+		System.setProperty("SATURN_CONSOLE_DB_URL", "");
+		System.setProperty("SATURN_CONSOLE_DB_USERNAME", "");
+		System.setProperty("SATURN_CONSOLE_DB_PASSWORD", "");
+		writeJsonFile();
+		EmbedSaturnConsoleApp.main(new String[] {});
+		List<String> consoleUrls = new ArrayList<String>();
+		consoleUrls.add(CONSOLE_URL);
+		SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST = consoleUrls;
+	}
+	
+	public static void stopConsole() {
+		EmbedSaturnConsoleApp.stop();
+	}
+	
+	private static void writeJsonFile() throws IOException {
+		File root = new File(SaturnAutoBasic.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getParentFile();
+		File jsonFile = new File(root, REG_CENTER_JSON_FILE_NAME);
+		if (jsonFile.exists()) {
+			FileUtils.deleteQuietly(jsonFile);
+		}
+		List<Map<String, String>> jsonContentList = new ArrayList<Map<String, String>>();
+		Map<String, String> jsonContent = new LinkedHashMap<String, String>();
+		jsonContent.put("zkAddressList", nestedZkUtils.getZkString());
+		jsonContent.put("nameAndNamespace", "/it/" + NAMESPACE);
+		jsonContentList.add(jsonContent);
+		String jsonContentStr = JsonUtils.toJSON(jsonContentList);
+		FileUtils.writeStringToFile(jsonFile, jsonContentStr, Charsets.UTF_8);
+		SaturnEnvProperties.REG_CENTER_JSON_FILE=jsonFile.getAbsolutePath();
+	}
 
     /**
      * return true if any shard has timeout znode

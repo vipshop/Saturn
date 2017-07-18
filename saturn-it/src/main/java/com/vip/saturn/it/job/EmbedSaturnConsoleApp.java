@@ -1,6 +1,7 @@
-package com.vip.saturn.job.console.springboot;
+package com.vip.saturn.it.job;
 
-import org.apache.curator.test.TestingServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,34 +11,40 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.web.servlet.ErrorPage;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /**
- * @author chembo.huang
- *
+ * 
+ * @author timmy.hu
  */
 @SpringBootApplication
 @ComponentScan({ "com.vip.saturn.job.console" })
-@EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
-		JpaRepositoriesAutoConfiguration.class })
-@ImportResource("classpath:context/*Context.xml")
-public class SaturnConsoleApp {
+@EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class })
+@ImportResource({ "classpath:context/*Context-test.xml", "classpath:context/webMvcContext.xml" })
+public class EmbedSaturnConsoleApp {
 
-	private static TestingServer embeddedZookeeper;
+	protected static Logger logger = LoggerFactory.getLogger(EmbedSaturnConsoleApp.class);
+
+	private static ApplicationContext ac = null;
 
 	public static void main(String[] args) throws Exception {
-		startEmbeddedZkIfNeeded();
-
-		SpringApplication.run(SaturnConsoleApp.class, args);
+		ac = SpringApplication.run(EmbedSaturnConsoleApp.class, args);
+		DispatcherServlet dispatcherServlet = (DispatcherServlet) ac.getBean("dispatcherServlet");
+		dispatcherServlet.setThrowExceptionIfNoHandlerFound(true);
 	}
 
-	private static void startEmbeddedZkIfNeeded() throws Exception {
-		if (Boolean.getBoolean("saturn.embeddedzk")) {
-			embeddedZookeeper = new TestingServer(2182);
-			embeddedZookeeper.start();
+	public static void stop() {
+		try {
+			if (ac != null) {
+				SpringApplication.exit(ac);
+			}
+		} catch (Throwable t) {
+			logger.error("关闭Saturn Console的时候出错", t);
 		}
 	}
 
