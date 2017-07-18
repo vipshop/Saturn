@@ -3,7 +3,10 @@ package com.vip.saturn.job.internal.sharding;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.zookeeper.WatchedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +26,7 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
 public class ShardingListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ShardingListenerManager.class);
 
-	private boolean isShutdown;
+	private volatile boolean isShutdown;
 	
 	private CuratorWatcher necessaryWatcher;
 	
@@ -63,6 +66,15 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		if(necessaryWatcher != null) {
 			executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
 			shardingService.registerNecessaryWatcher(necessaryWatcher);
+			addConnectionStateListener(new ConnectionStateListener() {
+				@Override
+				public void stateChanged(CuratorFramework client, ConnectionState newState) {
+					if ((newState == ConnectionState.CONNECTED) || (newState == ConnectionState.RECONNECTED)) {
+						doBusinessForReconnected(); // maybe node data have changed, so doBusiness whatever, it's okay for MSG job
+						registerNecessaryWatcher();
+					}
+				}
+			});
 		}
 	}
 
@@ -73,6 +85,43 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			executorService.shutdownNow();
 		}
 		isShutdown = true;
+	}
+	
+	private void registerNecessaryWatcher() {
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (!isShutdown) {
+					shardingService.registerNecessaryWatcher();
+				}
+			}
+		});
+	}
+	
+	private void doBusinessForReconnected() {
+		try {
+			// cannot block reconnected thread, so use thread pool to do business,
+			// and the thread pool is the same with job-tree-cache's
+			zkCacheManager.getExecutorService().execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						if (isShutdown) {
+							return;
+						}
+						if (jobScheduler == null || jobScheduler.getJob() == null) {
+							return;
+						}
+						log.info("[{}] msg={} trigger on-resharding, because of zk RECONNECTED", jobName, jobName);
+						jobScheduler.getJob().onResharding();
+					} catch (Throwable t) {
+						log.error(t.getMessage(), t);
+					}
+				}
+			});
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
 	}
 	
 	class NecessaryWatcher implements CuratorWatcher {
@@ -89,16 +138,10 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				// when zk is reconnected, this watcher thread is earlier than the notice of RECONNECTED EVENT,
 				// registerNecessaryWatcher will wait until reconnected or timeout, 
 				// the bad thing is that this watcher thread will block the notice of RECONNECTED EVENT.
-				// maybe it's better: register watchers in ConnectionState.RECONNECTED of ConnectionStateListener, see NodeCache
-				executorService.execute(new Runnable() {
-					@Override
-					public void run() {
-						shardingService.registerNecessaryWatcher();
-					}
-				});
+				registerNecessaryWatcher();
 			}
 		}
-
+		
 		private void doBusiness(final WatchedEvent event) {
 			try {
 				// cannot block re-registerNecessaryWatcher, so use thread pool to do business,
