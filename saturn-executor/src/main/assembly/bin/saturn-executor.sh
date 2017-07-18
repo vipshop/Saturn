@@ -39,7 +39,7 @@ USAGE()
 	echo -e "\n      '-r|--runmode': optional, default value is $RUN_MODE, you can set it foreground"
 	echo -e "\n      '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
 	echo -e "\n      '-env|--environment': optional."
-	echo -e "\n      '-sdl|--saturnLogDir': optional."
+	echo -e "\n      '-sld|--saturnLogDir': optional."
 	echo -e "\n      JVM args: optional."
 }
 
@@ -59,7 +59,7 @@ while true; do
 		-r| --runmode) RUN_MODE="$2"; shift 2;;
 		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
 		-env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
-		-sdl|--saturnLogDir) LOGDIR="$2" ; shift 2 ;;
+		-sld|--saturnLogDir) LOGDIR="$2" ; shift 2 ;;
 		*) break;;
 	esac
 done
