@@ -5,8 +5,6 @@ import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import com.vip.saturn.it.job.EmbedSaturnConsoleApp;
-
 /**
  * 启动控制台
  * 

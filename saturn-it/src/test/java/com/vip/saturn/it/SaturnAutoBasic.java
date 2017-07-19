@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.vip.saturn.it.job.EmbedSaturnConsoleApp;
 import com.vip.saturn.it.utils.NestedZkUtils;
 import com.vip.saturn.job.console.SaturnEnvProperties;
+import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
 import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
@@ -583,18 +583,19 @@ public class SaturnAutoBasic {
 	 * @throws Exception
 	 */
 	public static void startConsole() throws Exception {
+		System.setProperty("db.profiles.active","H2");
 		System.setProperty("SATURN_CONSOLE_DB_URL", "");
 		System.setProperty("SATURN_CONSOLE_DB_USERNAME", "");
 		System.setProperty("SATURN_CONSOLE_DB_PASSWORD", "");
 		writeJsonFile();
-		EmbedSaturnConsoleApp.main(new String[] {});
+		SaturnConsoleApp.main(new String[] {});
 		List<String> consoleUrls = new ArrayList<String>();
 		consoleUrls.add(CONSOLE_URL);
 		SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST = consoleUrls;
 	}
 	
 	public static void stopConsole() {
-		EmbedSaturnConsoleApp.stop();
+		SaturnConsoleApp.stop();
 	}
 	
 	private static void writeJsonFile() throws IOException {
