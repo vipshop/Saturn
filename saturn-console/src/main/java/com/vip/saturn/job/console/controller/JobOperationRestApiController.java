@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 
@@ -128,6 +130,31 @@ public class JobOperationRestApiController {
             }
 
             restApiService.disableJob(namespace, jobName);
+            return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
+        } catch (SaturnJobConsoleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+        }
+    }
+    
+    @RequestMapping(value = {"/{namespace}/{jobName}/cron", "/{namespace}/jobs/{jobName}/cron"}, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName, @RequestBody Map<String, String> params, HttpServletRequest request) throws SaturnJobConsoleException {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        try {
+            if (StringUtils.isBlank(namespace)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "namespace"));
+            }
+            if (StringUtils.isBlank(jobName)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "jobName"));
+            }
+            String cron = params.remove("cron");
+            if (StringUtils.isBlank(cron)) {
+                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "cron"));
+            }
+
+            logger.info("Call UpdateCron API: ip:{} namespace:{} jobName:{} cron:{} params:{}", ControllerUtils.getClientIp(request), namespace, jobName, cron, params);
+            restApiService.updateJobCron(namespace, jobName, cron, params);
             return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
         } catch (SaturnJobConsoleException e) {
             throw e;
