@@ -583,7 +583,7 @@ public class SaturnAutoBasic {
 	 * @throws Exception
 	 */
 	public static void startConsole() throws Exception {
-		System.setProperty("db.profiles.active","H2");
+		System.setProperty("db.profiles.active","h2");
 		System.setProperty("SATURN_CONSOLE_DB_URL", "");
 		System.setProperty("SATURN_CONSOLE_DB_USERNAME", "");
 		System.setProperty("SATURN_CONSOLE_DB_PASSWORD", "");

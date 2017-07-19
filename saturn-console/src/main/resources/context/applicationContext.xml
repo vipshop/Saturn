@@ -30,5 +30,5 @@
 		<property name="typeAliasesPackage" value="com.vip.saturn.job.console.mybatis.entity" />
 		<property name="mapperLocations" value="classpath*:mapper/*Mapper.xml" />
 	</bean>	
-	<import resource="applicationContext${db.profiles.active:Mysql}.xml"></import>
+	<import resource="applicationContext_datasource_${db.profiles.active:mysql}.xml"></import>
 </beans>
