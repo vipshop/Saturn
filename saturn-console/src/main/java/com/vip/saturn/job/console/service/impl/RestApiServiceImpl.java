@@ -373,7 +373,10 @@ public class RestApiServiceImpl implements RestApiService {
 				String cronNodePath = JobNodePath.getConfigNodePath(jobName, "cron");
 				long mtime = curatorFrameworkOp.getMtime(cronNodePath);
 				checkUpdateConfigAllowed(mtime);
-				jobOperationService.updateJobCron(jobName, cron, customContext);
+				String oldcronStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"));
+				if (!cron.equals(oldcronStr)) {
+					jobOperationService.updateJobCron(jobName, cron, customContext);
+				}
 			}
 		});
 	}
