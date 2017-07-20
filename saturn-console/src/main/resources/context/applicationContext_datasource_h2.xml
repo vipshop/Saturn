@@ -12,8 +12,8 @@
 						http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
                         ">
 	<jdbc:embedded-database id="dataSource" type="H2">
-		<jdbc:script location="classpath*:db/h2/h2_type.sql" />
-		<jdbc:script location="classpath*:db/h2/saturn_console.sql" />
-		<jdbc:script location="classpath*:db/h2/custom*.sql" />
+		<jdbc:script location="classpath:db/h2/H2_TYPE.sql" />
+		<jdbc:script location="classpath:db/h2/saturn_console.sql" />
+		<jdbc:script location="classpath:db/h2/other_*.sql" />
 	</jdbc:embedded-database>
 </beans>

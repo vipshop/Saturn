@@ -2,25 +2,6 @@
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for `itil_order`
--- ----------------------------
-CREATE TABLE `itil_order` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
-  `serialno` varchar(255) NOT NULL COMMENT '工单号',
-  `applier` varchar(255) NOT NULL COMMENT '申请人',
-  `apply_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
-  `domain` varchar(255) NOT NULL COMMENT '当前申请的域',
-  `change_type` varchar(255) NOT NULL COMMENT '变更类型',
-  `event_serialnos` varchar(2000) DEFAULT NULL COMMENT '故障单号',
-  `status` varchar(255) DEFAULT NULL COMMENT '状态',
-  `url` varchar(255) DEFAULT NULL COMMENT '该工单在ITIL的url',
-  PRIMARY KEY (`id`),
-  KEY `serialno_idx` (`serialno`),
-  KEY `applier_domain_apply_time_union_idx` (`applier`,`domain`,`apply_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='ITIL流程工单表';
-
-
--- ----------------------------
 -- Table structure for `job_config`
 -- ----------------------------
 CREATE TABLE `job_config` (
@@ -137,24 +118,6 @@ CREATE TABLE `job_config_history` (
 
 
 -- ----------------------------
--- Table structure for `namespace_zkcluster_mapping`
--- ----------------------------
-CREATE TABLE `namespace_zkcluster_mapping` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
-  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
-  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
-  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
-  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
-  `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_namespace` (`namespace`),
-  KEY `idx_zk_cluster_key` (`zk_cluster_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
-
-
--- ----------------------------
 -- Table structure for `saturn_statistics`
 -- ----------------------------
 CREATE TABLE `saturn_statistics` (
@@ -176,3 +139,28 @@ CREATE TABLE `sys_config` (
   PRIMARY KEY (`id`),
   KEY `property_idx` (`property`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统配置表';
+
+-- ----------------------------
+-- Table structure for `zk_cluster_info`
+-- ----------------------------
+CREATE TABLE `zk_cluster_info` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `key` varchar(255) NOT NULL COMMENT 'key值，唯一',
+  `alias` varchar(255) NOT NULL COMMENT '别名',
+  `connect_string` varchar(255) NOT NULL COMMENT '连接串',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_key` (`key`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='zk集群信息表';
+
+
+-- ----------------------------
+-- Table structure for `namespace_zk_cluster_mapping`
+-- ----------------------------
+CREATE TABLE `namespace_zk_cluster_mapping` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `namespace` varchar(255) NOT NULL COMMENT '域名',
+  `name` varchar(255) NOT NULL COMMENT '业务组',
+  `zk_cluster_key` varchar(255) NOT NULL COMMENT 'zk集群key',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_namespace` (`namespace`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域与zk集群映射表';

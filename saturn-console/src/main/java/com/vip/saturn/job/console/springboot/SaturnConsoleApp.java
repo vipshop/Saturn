@@ -38,7 +38,7 @@ public class SaturnConsoleApp {
 
 	public static void main(String[] args) throws Exception {
 		startEmbeddedZkIfNeeded();
-
+		
 		applicationContext = SpringApplication.run(SaturnConsoleApp.class, args);
 	}
 	
@@ -53,15 +53,13 @@ public class SaturnConsoleApp {
 		}
 	}
 	
-	
-
 	private static void startEmbeddedZkIfNeeded() throws Exception {
 		if (Boolean.getBoolean("saturn.embeddedzk")) {
 			embeddedZookeeper = new TestingServer(2182);
 			embeddedZookeeper.start();
 		}
 	}
-
+	
 	@Bean
 	public ServerProperties getServerProperties() {
 		return new ServerCustomization();

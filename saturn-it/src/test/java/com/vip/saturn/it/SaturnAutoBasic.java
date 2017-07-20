@@ -10,9 +10,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +22,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.vip.saturn.it.utils.NestedZkUtils;
-import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
-import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -584,10 +581,7 @@ public class SaturnAutoBasic {
 	 */
 	public static void startConsole() throws Exception {
 		System.setProperty("db.profiles.active","h2");
-		System.setProperty("SATURN_CONSOLE_DB_URL", "");
-		System.setProperty("SATURN_CONSOLE_DB_USERNAME", "");
-		System.setProperty("SATURN_CONSOLE_DB_PASSWORD", "");
-		writeJsonFile();
+		prepareForItSql();
 		SaturnConsoleApp.main(new String[] {});
 		List<String> consoleUrls = new ArrayList<String>();
 		consoleUrls.add(CONSOLE_URL);
@@ -598,22 +592,24 @@ public class SaturnAutoBasic {
 		SaturnConsoleApp.stop();
 	}
 	
-	private static void writeJsonFile() throws IOException {
-		File root = new File(SaturnAutoBasic.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getParentFile();
-		File jsonFile = new File(root, REG_CENTER_JSON_FILE_NAME);
-		if (jsonFile.exists()) {
-			FileUtils.deleteQuietly(jsonFile);
+	private static void prepareForItSql() throws IOException {
+		System.setProperty("db.profiles.active", "h2");
+		String forItSqlPath = "/db/h2/other_forit.sql";
+		URL resource = SaturnAutoBasic.class.getResource(forItSqlPath);
+		File file = new File(resource.getFile());
+		if (file.exists()) {
+			List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
+			if (readLines != null && readLines.size() > 0) {
+				readLines.set(0,
+						"INSERT INTO `zk_cluster_info`(`key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
+								+ nestedZkUtils.getZkString() + "');");
+			}
+			FileUtils.writeLines(file, readLines, false);
+		} else {
+			log.error("The {} is not existing", forItSqlPath);
 		}
-		List<Map<String, String>> jsonContentList = new ArrayList<Map<String, String>>();
-		Map<String, String> jsonContent = new LinkedHashMap<String, String>();
-		jsonContent.put("zkAddressList", nestedZkUtils.getZkString());
-		jsonContent.put("nameAndNamespace", "/it/" + NAMESPACE);
-		jsonContentList.add(jsonContent);
-		String jsonContentStr = JsonUtils.toJSON(jsonContentList);
-		FileUtils.writeStringToFile(jsonFile, jsonContentStr, Charsets.UTF_8);
-		SaturnEnvProperties.REG_CENTER_JSON_FILE=jsonFile.getAbsolutePath();
 	}
-
+	
     /**
      * return true if any shard has timeout znode
      */

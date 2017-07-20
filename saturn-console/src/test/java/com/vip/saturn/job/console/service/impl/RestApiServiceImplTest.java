@@ -1,14 +1,14 @@
 package com.vip.saturn.job.console.service.impl;
 
-import com.vip.saturn.job.console.domain.*;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -18,18 +18,27 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 
 /**
  * Created by kfchu on 31/05/2017.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RestApiServiceImplTest {
+public class RestApiServiceImplTest extends AbstractSaturnConsoleTest {
 
     private final static String TEST_NAME_SPACE_NAME = "testDomain";
 
@@ -56,7 +65,7 @@ public class RestApiServiceImplTest {
 
     @InjectMocks
     private RestApiServiceImpl restApiService;
-
+    
     @Before
     public void setUp() throws Exception {
         when(registryCenterService.findConfigByNamespace(anyString())).thenReturn(new RegistryCenterConfiguration());
