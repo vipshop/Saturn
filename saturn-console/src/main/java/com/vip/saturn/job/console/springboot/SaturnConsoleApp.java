@@ -30,7 +30,7 @@ import org.springframework.http.HttpStatus;
 @ImportResource("classpath*:context/*Context.xml")
 public class SaturnConsoleApp {
 	
-	private static Logger logger = LoggerFactory.getLogger(SaturnConsoleApp.class);;
+	private static Logger logger = LoggerFactory.getLogger(SaturnConsoleApp.class);
 
 	private static TestingServer embeddedZookeeper;
 	
