@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="zk_cluster_key" property="zkClusterKey" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, `namespace`, name, zk_cluster_key
+    </sql>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_zk_cluster_mapping
+    </select>
+</mapper>

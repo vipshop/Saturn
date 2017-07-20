@@ -17,9 +17,7 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,21 +28,22 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
+import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
+import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
+import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.service.helper.DashboardLeaderTreeCache;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.InitRegistryCenterService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -61,9 +60,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Resource
 	private ReportAlarmService reportAlarmService;
+	
+	@Resource
+	private ZkClusterInfoService zkClusterInfoService;
+	
+	@Resource
+	private NamespaceZkClusterMappingService namespaceZkClusterMappingService;
 
 	private final AtomicBoolean refreshingRegCenter = new AtomicBoolean(false);
-
+	
 	/** 为保证values有序 **/
 	private LinkedHashMap<String/** zkAddr **/, ZkCluster> zkClusterMap = new LinkedHashMap<>();
 
@@ -90,7 +95,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void refreshAll() throws IOException {
-		refreshRegistryCenterFromJsonFile();
+		refreshRegistryCenter();
 		refreshDashboardLeaderTreeCache();
 		refreshNamespaceShardingListenerManagerMap();
 		refreshTreeData();
@@ -150,34 +155,20 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	private void refreshRegistryCenterFromJsonFile() throws IOException {
+	private void refreshRegistryCenter() throws IOException {
 		LinkedHashMap<String/** zkAddr **/, ZkCluster> newClusterMap = new LinkedHashMap<>();
-		ArrayList<RegistryCenterConfiguration> list = null;
-		if (SaturnEnvProperties.REG_CENTER_JSON_FILE != null) {
-			String json = FileUtils.readFileToString(new File(SaturnEnvProperties.REG_CENTER_JSON_FILE), StandardCharsets.UTF_8);
-			list = (ArrayList<RegistryCenterConfiguration>) JSON.parseArray(json, RegistryCenterConfiguration.class);
-		}
 		// 获取新的zkClusters
-		if (list != null) {
-			for (RegistryCenterConfiguration conf : list) {
-				if (conf.getZkAlias() == null) {
-					conf.setZkAlias(conf.getZkAddressList());
-				}
-				if (conf.getBootstrapKey() == null) {
-					conf.setBootstrapKey(conf.getZkAddressList());
-				}
-				String zkAddressList = conf.getZkAddressList();
-				if (zkAddressList != null) {
-					if (!newClusterMap.containsKey(zkAddressList)) {
-						ZkCluster zkCluster = new ZkCluster();
-						zkCluster.setZkAlias(conf.getZkAlias());
-						zkCluster.setZkAddr(conf.getZkAddressList());
-						zkCluster.setDigest(conf.getDigest());
-						newClusterMap.put(zkAddressList, zkCluster);
-					}
-				}
+		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
+		List<NamespaceZkClusterMapping> allNamespaceZkClusterMapping = namespaceZkClusterMappingService.getAllNamespaceZkClusterMapping();
+		if(allZkClusterInfo != null) {
+			for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
+				ZkCluster zkCluster = new ZkCluster();
+				zkCluster.setZkAlias(zkClusterInfo.getAlias());
+				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
+				newClusterMap.put(zkClusterInfo.getConnectString(), zkCluster);
 			}
 		}
+			
 		// 对比旧的。不包含的，关闭操作；包含的，检查属性是否相同，如果相同，则直接赋值，否则，关闭旧的
 		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -212,17 +203,28 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		while(iterator3.hasNext()) {
 			iterator3.next().getValue().getRegCenterConfList().clear();
 		}
-		if (list != null) {
-			for (RegistryCenterConfiguration conf : list) {
-				ZkCluster zkCluster = newClusterMap.get(conf.getZkAddressList());
-				if (!zkCluster.isOffline()) {
-					conf.initNameAndNamespace(conf.getNameAndNamespace());
-					if (SaturnSelfNodePath.ROOT_NAME.equals(conf.getNamespace())) {
-						log.error("The namespace cannot be {} in zkCluster {}", SaturnSelfNodePath.ROOT_NAME, zkCluster.getZkAlias());
-						continue;
+		if(allNamespaceZkClusterMapping != null) {
+			for(NamespaceZkClusterMapping namespaceZkClusterMapping : allNamespaceZkClusterMapping) {
+				String namespace = namespaceZkClusterMapping.getNamespace();
+				if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+					log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
+					continue;
+				}
+				String name = namespaceZkClusterMapping.getName();
+				String zkClusterKey = namespaceZkClusterMapping.getZkClusterKey();
+				if(allZkClusterInfo != null) {
+					for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
+						if(zkClusterInfo.getKey().equals(zkClusterKey)) {
+							String connectString = zkClusterInfo.getConnectString();
+							ZkCluster zkCluster = newClusterMap.get(connectString);
+							if (!zkCluster.isOffline()) {
+								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, connectString);
+								conf.setVersion(getVersion(namespace, zkCluster.getCuratorFramework()));
+								zkCluster.getRegCenterConfList().add(conf);
+							}
+							break;
+						}
 					}
-					conf.setVersion(getVersion(conf.getNamespace(), zkCluster.getCuratorFramework()));
-					zkCluster.getRegCenterConfList().add(conf);
 				}
 			}
 		}

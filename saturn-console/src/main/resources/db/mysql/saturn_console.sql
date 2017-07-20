@@ -137,24 +137,6 @@ CREATE TABLE `job_config_history` (
 
 
 -- ----------------------------
--- Table structure for `namespace_zkcluster_mapping`
--- ----------------------------
-CREATE TABLE `namespace_zkcluster_mapping` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
-  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
-  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
-  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
-  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
-  `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_namespace` (`namespace`),
-  KEY `idx_zk_cluster_key` (`zk_cluster_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
-
-
--- ----------------------------
 -- Table structure for `saturn_statistics`
 -- ----------------------------
 CREATE TABLE `saturn_statistics` (
@@ -176,3 +158,28 @@ CREATE TABLE `sys_config` (
   PRIMARY KEY (`id`),
   KEY `property_idx` (`property`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统配置表';
+
+-- ----------------------------
+-- Table structure for `zk_cluster_info`
+-- ----------------------------
+CREATE TABLE `zk_cluster_info` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `key` varchar(255) NOT NULL COMMENT 'key值，唯一',
+  `alias` varchar(255) NOT NULL COMMENT '别名',
+  `connect_string` varchar(255) NOT NULL COMMENT '连接串',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_key` (`key`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='zk集群信息表';
+
+
+-- ----------------------------
+-- Table structure for `namespace_zk_cluster_mapping`
+-- ----------------------------
+CREATE TABLE `namespace_zk_cluster_mapping` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `namespace` varchar(255) NOT NULL COMMENT '域名',
+  `name` varchar(255) NOT NULL COMMENT '业务组',
+  `zk_cluster_key` varchar(255) NOT NULL COMMENT 'zk集群key',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_namespace` (`namespace`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域与zk集群映射表';

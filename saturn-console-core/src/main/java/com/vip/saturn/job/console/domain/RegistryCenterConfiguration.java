@@ -61,7 +61,7 @@ public class RegistryCenterConfiguration implements Serializable {
     public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
         this.name = name;
         this.namespace = namespace;
-        this.nameAndNamespace = this.name + SLASH + this.nameAndNamespace;
+        this.nameAndNamespace = this.name + SLASH + this.namespace;
         this.zkAddressList = zkAddressList;
     }
     
