@@ -1,12 +1,17 @@
 package com.vip.saturn.job.console.springboot.test;
 
-import com.alibaba.fastjson.JSONObject;
-import com.vip.saturn.job.console.controller.AlarmRestApiController;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.integrate.entity.AlarmInfo;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+
 import org.assertj.core.util.Maps;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -18,35 +23,25 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.alibaba.fastjson.JSONObject;
+import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
+import com.vip.saturn.job.console.controller.AlarmRestApiController;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.integrate.entity.AlarmInfo;
 
 /**
  * Created by kfchu on 24/05/2017.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(AlarmRestApiController.class)
-public class AlarmRestApiControllerTest {
+public class AlarmRestApiControllerTest extends AbstractSaturnConsoleTest {
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private RestApiService restApiService;
     
-    @BeforeClass
-	public static void beforeClass() throws Exception {
-		System.setProperty("db.profiles.active", "h2");
-		System.setProperty("saturn.stdout", "true");
-	}
-
     @Test
     public void testRaiseAlarmSuccessfully() throws Exception {
         final String jobName = "job1";

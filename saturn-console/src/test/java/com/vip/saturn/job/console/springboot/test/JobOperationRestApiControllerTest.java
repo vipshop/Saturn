@@ -1,15 +1,20 @@
 package com.vip.saturn.job.console.springboot.test;
 
-import com.alibaba.fastjson.JSONObject;
-import com.google.gson.Gson;
-import com.vip.saturn.job.console.controller.JobOperationRestApiController;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.RestApiJobConfig;
-import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiJobStatistics;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.RestApiService;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+
 import org.assertj.core.util.Maps;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,25 +27,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.alibaba.fastjson.JSONObject;
+import com.google.gson.Gson;
+import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
+import com.vip.saturn.job.console.controller.JobOperationRestApiController;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.RestApiJobConfig;
+import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.RestApiService;
 
 /**
  * Created by kfchu on 24/05/2017.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(JobOperationRestApiController.class)
-public class JobOperationRestApiControllerTest {
+public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest {
 
     @Autowired
     private MockMvc mvc;

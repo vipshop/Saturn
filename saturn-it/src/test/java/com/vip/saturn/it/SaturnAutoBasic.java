@@ -594,7 +594,7 @@ public class SaturnAutoBasic {
 	
 	private static void prepareForItSql() throws IOException {
 		System.setProperty("db.profiles.active", "h2");
-		String forItSqlPath = "/db/h2/forit.sql";
+		String forItSqlPath = "/db/h2/other_forit.sql";
 		URL resource = SaturnAutoBasic.class.getResource(forItSqlPath);
 		File file = new File(resource.getFile());
 		if (file.exists()) {

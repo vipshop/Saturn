@@ -2,25 +2,6 @@
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for `itil_order`
--- ----------------------------
-CREATE TABLE `itil_order` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
-  `serialno` varchar(255) NOT NULL COMMENT '工单号',
-  `applier` varchar(255) NOT NULL COMMENT '申请人',
-  `apply_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
-  `domain` varchar(255) NOT NULL COMMENT '当前申请的域',
-  `change_type` varchar(255) NOT NULL COMMENT '变更类型',
-  `event_serialnos` varchar(2000) DEFAULT NULL COMMENT '故障单号',
-  `status` varchar(255) DEFAULT NULL COMMENT '状态',
-  `url` varchar(255) DEFAULT NULL COMMENT '该工单在ITIL的url',
-  PRIMARY KEY (`id`),
-  KEY `serialno_idx` (`serialno`),
-  KEY `applier_domain_apply_time_union_idx` (`applier`,`domain`,`apply_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='ITIL流程工单表';
-
-
--- ----------------------------
 -- Table structure for `job_config`
 -- ----------------------------
 CREATE TABLE `job_config` (
