@@ -211,10 +211,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					continue;
 				}
 				String name = namespaceZkClusterMapping.getName();
-				String zkClusterKey = namespaceZkClusterMapping.getZkClusterKey();
+				String clusterKey = namespaceZkClusterMapping.getClusterKey();
 				if(allZkClusterInfo != null) {
 					for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
-						if(zkClusterInfo.getKey().equals(zkClusterKey)) {
+						if(zkClusterInfo.getClusterKey().equals(clusterKey)) {
 							String connectString = zkClusterInfo.getConnectString();
 							ZkCluster zkCluster = newClusterMap.get(connectString);
 							if (!zkCluster.isOffline()) {

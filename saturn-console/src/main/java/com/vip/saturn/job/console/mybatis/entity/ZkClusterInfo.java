@@ -8,7 +8,7 @@ package com.vip.saturn.job.console.mybatis.entity;
 public class ZkClusterInfo {
 
 	private long id;
-	private String key;
+	private String clusterKey;
 	private String alias;
 	private String connectString;
 
@@ -20,12 +20,12 @@ public class ZkClusterInfo {
 		this.id = id;
 	}
 
-	public String getKey() {
-		return key;
+	public String getClusterKey() {
+		return clusterKey;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setClusterKey(String clusterKey) {
+		this.clusterKey = clusterKey;
 	}
 
 	public String getAlias() {

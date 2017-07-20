@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -581,6 +582,7 @@ public class SaturnAutoBasic {
 	 */
 	public static void startConsole() throws Exception {
 		System.setProperty("db.profiles.active","h2");
+		System.setProperty("db.h2.dbname", "dbname" + new Random().nextInt(10000));
 		prepareForItSql();
 		SaturnConsoleApp.main(new String[] {});
 		List<String> consoleUrls = new ArrayList<String>();
@@ -601,7 +603,7 @@ public class SaturnAutoBasic {
 			List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
 			if (readLines != null && readLines.size() > 0) {
 				readLines.set(0,
-						"INSERT INTO `zk_cluster_info`(`key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
+						"INSERT INTO `zk_cluster_info`(`cluster_key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
 								+ nestedZkUtils.getZkString() + "');");
 			}
 			FileUtils.writeLines(file, readLines, false);

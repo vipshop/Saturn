@@ -3,12 +3,12 @@
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.ZkClusterInfoRepository">
     <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="key" property="key" jdbcType="VARCHAR"/>
+        <result column="cluster_key" property="clusterKey" jdbcType="VARCHAR"/>
         <result column="alias" property="alias" jdbcType="VARCHAR"/>
         <result column="connect_string" property="connectString" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, key, alias, connect_string
+        id, cluster_key, alias, connect_string
     </sql>
     <select id="selectAll" resultMap="BaseResultMap">
         select

@@ -10,7 +10,7 @@ public class NamespaceZkClusterMapping {
 	private long id;
 	private String namespace;
 	private String name;
-	private String zkClusterKey;
+	private String clusterKey;
 
 	public long getId() {
 		return id;
@@ -36,12 +36,12 @@ public class NamespaceZkClusterMapping {
 		this.name = name;
 	}
 
-	public String getZkClusterKey() {
-		return zkClusterKey;
+	public String getClusterKey() {
+		return clusterKey;
 	}
 
-	public void setZkClusterKey(String zkClusterKey) {
-		this.zkClusterKey = zkClusterKey;
+	public void setClusterKey(String clusterKey) {
+		this.clusterKey = clusterKey;
 	}
 
 }

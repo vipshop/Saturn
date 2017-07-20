@@ -145,11 +145,11 @@ CREATE TABLE `sys_config` (
 -- ----------------------------
 CREATE TABLE `zk_cluster_info` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `key` varchar(255) NOT NULL COMMENT 'key值，唯一',
+  `cluster_key` varchar(255) NOT NULL COMMENT '集群key值，唯一',
   `alias` varchar(255) NOT NULL COMMENT '别名',
   `connect_string` varchar(255) NOT NULL COMMENT '连接串',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_key` (`key`)
+  UNIQUE KEY `uniq_key` (`cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='zk集群信息表';
 
 
@@ -160,7 +160,7 @@ CREATE TABLE `namespace_zk_cluster_mapping` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `namespace` varchar(255) NOT NULL COMMENT '域名',
   `name` varchar(255) NOT NULL COMMENT '业务组',
-  `zk_cluster_key` varchar(255) NOT NULL COMMENT 'zk集群key',
+  `cluster_key` varchar(255) NOT NULL COMMENT '集群key',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace` (`namespace`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域与zk集群映射表';

@@ -5,10 +5,10 @@
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
-        <result column="zk_cluster_key" property="zkClusterKey" jdbcType="VARCHAR"/>
+        <result column="cluster_key" property="clusterKey" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, `namespace`, name, zk_cluster_key
+        id, `namespace`, name, cluster_key
     </sql>
     <select id="selectAll" resultMap="BaseResultMap">
         select
