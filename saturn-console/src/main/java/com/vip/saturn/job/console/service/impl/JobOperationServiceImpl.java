@@ -23,7 +23,10 @@ import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -34,10 +37,14 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -47,6 +54,7 @@ import javax.transaction.Transactional;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +76,17 @@ public class JobOperationServiceImpl implements JobOperationService {
     @Resource
 	private JobDimensionService jobDimensionService;
     
+    @Resource
+    private CurrentJobConfigService currentJobConfigService;
+    
     private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, String.class);
+    
+    private MapperFacade mapper;
+
+    @Autowired
+    public void setMapperFactory(MapperFactory mapperFactory) {
+        this.mapper = mapperFactory.getMapperFacade();
+    }
     
 	@Override
 	public void runAtOnceByJobnameAndExecutorName(String jobName, String executorName) {
@@ -99,9 +117,24 @@ public class JobOperationServiceImpl implements JobOperationService {
 		createNode(curatorFrameworkOp, path);
 	}
 
+	@Transactional
 	@Override
-	public void setJobEnabledState(String jobName, boolean state) {
+	public void setJobEnabledState(String jobName, boolean state) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
+		CurrentJobConfig oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (oldCurrentJobConfig != null) {
+			oldCurrentJobConfig.setEnabled(state);
+			oldCurrentJobConfig.setLastUpdateTime(new Date());
+			try {
+				currentJobConfigService.updateByPrimaryKey(oldCurrentJobConfig);
+			} catch (Exception e) {
+				logger.error("exception is thrown during change job state in db", e);
+				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+			}
+		} else {
+			logger.warn("job:{} not existed in db", jobName);
+		}
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), state);
 	}
 	
@@ -136,6 +169,9 @@ public class JobOperationServiceImpl implements JobOperationService {
 			if (cron0 != null && oldCron != null && !cron0.equals(oldCron.trim())) {
 				newCron = cron0;
 			}
+			if(newCustomContextStr != null || newCron!=null) {
+				saveCronToDb(jobName, curatorFrameworkOp, newCustomContextStr, newCron);
+			}
 			if (newCustomContextStr != null) {
 				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "customContext"), newCustomContextStr);
 			}
@@ -147,6 +183,31 @@ public class JobOperationServiceImpl implements JobOperationService {
 		}
 	}
 
+	private void saveCronToDb(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String newCustomContextStr, String newCron)
+			throws SaturnJobConsoleException, SaturnJobConsoleHttpException {
+		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
+		CurrentJobConfig oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if(oldCurrentJobConfig == null) {
+			String errorMsg = "在DB找不到该作业的配置, namespace：" + namespace + " jobname:" + jobName;
+			logger.error(errorMsg);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), errorMsg);
+		}
+		CurrentJobConfig newCurrentJobConfig = mapper.map(oldCurrentJobConfig, CurrentJobConfig.class);
+		if (newCustomContextStr != null) {
+			newCurrentJobConfig.setCustomContext(newCustomContextStr);
+		}
+		if (newCron != null) {
+			newCurrentJobConfig.setCron(newCron);
+		}
+		
+		try {
+			currentJobConfigService.updateConfigAndSave2History(newCurrentJobConfig, oldCurrentJobConfig,null);
+		} catch (Exception e) {
+			logger.error("exception is thrown during change job state in db", e);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e); 
+		}
+	}
+	
 	/**
 	 * 将str转为map
 	 *
@@ -261,38 +322,95 @@ public class JobOperationServiceImpl implements JobOperationService {
 		}
 	}
 
+	@Transactional
 	@Override
-	public void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		if(curatorFrameworkOp == null){
-			curatorFrameworkOp = curatorRepository.inSessionClient();
-		}
+	public void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException{
+		correctConfigValueIfNeeded(jobConfig, curatorFrameworkOp);
+		saveJobConfigToDb(jobConfig, curatorFrameworkOp);
+		saveJobConfigToZkWhenPersist(jobConfig, curatorFrameworkOp, false);
+	}
 
+	@Transactional
+	@Override
+	public void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception {
+		correctConfigValueIfNeeded(jobConfig, curatorFrameworkOp);
+		saveJobConfigToDb(jobConfig, curatorFrameworkOp);
+		saveJobConfigToZkWhenCopy(jobConfig, curatorFrameworkOp);
+	}
+
+	/**
+	 * 对作业配置的一些属性进行矫正
+	 * 
+	 * @param jobConfig
+	 * @param curatorFrameworkOp
+	 */
+	private void correctConfigValueIfNeeded(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		jobConfig.setDefaultValues();
+		jobConfig.setEnabled(false);
+		jobConfig.setFailover(jobConfig.getLocalMode() == false);
+		if(JobBriefInfo.JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
+			jobConfig.setCron("");
+		} else if (JobBriefInfo.JobType.SHELL_JOB.name().equals(jobConfig.getJobType())) {
+			int isNewSaturn = jobDimensionService.isNewSaturn(null, curatorFrameworkOp);
+			if (isNewSaturn == 0) {
+				// 旧版executor加shell作业时添加com.vip.saturn.job.executor.script.SaturnScriptJob类
+				jobConfig.setJobClass("com.vip.saturn.job.executor.script.SaturnScriptJob");
+			} else if(isNewSaturn == 1) {
+				// 新版executor加shell作业时JobClass设为空
+				jobConfig.setJobClass("");
+			}
+		}
+	}
+	
+	private void saveJobConfigToDb(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 		String jobName = jobConfig.getJobName();
+		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
+		CurrentJobConfig oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (oldJobConfig != null) {
+			logger.warn("when create a new job, a jobConfig with the same name from db exists, will delete it first. namespace:{} and jobName:{}", namespace, jobName);
+			try {
+				currentJobConfigService.deleteByPrimaryKey(oldJobConfig.getId());
+			} catch (Exception e) {
+				logger.error("exception is thrown during delete job config in db", e);
+				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "创建作业时，数据库存在已经存在该作业的相关配置！并且清理该配置的时候失败", e);
+			}
+		}
+		CurrentJobConfig currentJobConfig = new CurrentJobConfig();
+		mapper.map(jobConfig, currentJobConfig);
+		currentJobConfig.setCreateTime(new Date());
+		currentJobConfig.setLastUpdateTime(new Date());
+		currentJobConfig.setNamespace(namespace);
+		try {
+			currentJobConfigService.create(currentJobConfig);
+		} catch (Exception e) {
+			logger.error("exception is thrown during creating job config in db", e);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+		}
+	}
 
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
+	private void saveJobConfigToZkWhenPersist(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, boolean fromDB) {
+		String jobName = jobConfig.getJobName();
+		if(!fromDB) {
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
+		} else {
+			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), jobConfig.getEnabled());
+		}
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"), jobConfig.getDescription());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "customContext"), jobConfig.getCustomContext());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobType"), jobConfig.getJobType());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobMode"), jobConfig.getJobMode());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"), jobConfig.getShardingItemParameters());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobParameter"), jobConfig.getJobParameter());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "queueName"), jobConfig.getQueueName());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "channelName"), jobConfig.getChannelName());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), "true");
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "failover"), jobConfig.getFailover());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "monitorExecution"), "true");
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"), jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"), jobConfig.getTimeoutSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "timeZone"), jobConfig.getTimeZone());
-		if(JobBriefInfo.JobType.MSG_JOB.name().equals(jobConfig.getJobType())){// MSG作业没有cron表达式
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), "");
-		}else{
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), jobConfig.getCron());
-		}
-		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodDate())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"), jobConfig.getPausePeriodDate());
-		}
-		if(!Strings.isNullOrEmpty(jobConfig.getPausePeriodTime())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"), jobConfig.getPausePeriodTime());
-		}
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "cron"), jobConfig.getCron());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"), jobConfig.getPausePeriodDate());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"), jobConfig.getPausePeriodTime());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"), jobConfig.getProcessCountIntervalSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"), jobConfig.getShardingTotalCount());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "showNormalLog"), jobConfig.getShowNormalLog());
@@ -305,10 +423,43 @@ public class JobOperationServiceImpl implements JobOperationService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "useSerial"), jobConfig.getUseSerial());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "dependencies"), jobConfig.getDependencies());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "groups"), jobConfig.getGroups());
-		if(JobBriefInfo.JobType.SHELL_JOB.name().equals(jobConfig.getJobType())){
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), "");
-		}else{
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "jobClass"), jobConfig.getJobClass());
+	}
+	
+	private void saveJobConfigToZkWhenCopy(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws IllegalAccessException {
+		String originJobName = jobConfig.getOriginJobName();
+		List<String> jobConfigNodes = curatorFrameworkOp.getChildren(JobNodePath.getConfigNodePath(originJobName));
+		if(CollectionUtils.isEmpty(jobConfigNodes)){
+			return;
+		}
+		Class<?> cls = jobConfig.getClass();
+		String jobClassPath = "";
+		String jobClassValue = "";
+		for(String jobConfigNode : jobConfigNodes){
+			String jobConfigPath = JobNodePath.getConfigNodePath(originJobName, jobConfigNode);
+			String jobConfigValue = curatorFrameworkOp.getData(jobConfigPath);
+			try{
+				Field field = cls.getDeclaredField(jobConfigNode);
+				field.setAccessible(true);
+				Object fieldValue = field.get(jobConfig);
+				if(fieldValue != null){
+					jobConfigValue = fieldValue.toString();
+				}
+				if("jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					jobClassPath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					jobClassValue = jobConfigValue;
+				}
+			}catch(NoSuchFieldException e){// 即使JobConfig类中不存在该属性也复制（一般是旧版作业的一些节点，可以在旧版Executor上运行）
+				continue;
+			}finally{
+				if(!"jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
+					String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
+					curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
+				}
+			}
+		}
+		if(!Strings.isNullOrEmpty(jobClassPath)){
+			curatorFrameworkOp.fillJobNodeIfNotExist(jobClassPath,jobClassValue);
 		}
 	}
 
@@ -365,58 +516,6 @@ public class JobOperationServiceImpl implements JobOperationService {
 		} catch (Throwable t) {
 			logger.error("exception is thrown during delete job", t);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
-		}
-	}
-
-	@Override
-	public void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception {
-		if(curatorFrameworkOp == null){
-			curatorFrameworkOp = curatorRepository.inSessionClient();
-		}
-
-		String originJobName = jobConfig.getOriginJobName();
-		List<String> jobConfigNodes = curatorFrameworkOp.getChildren(JobNodePath.getConfigNodePath(originJobName));
-		if(CollectionUtils.isEmpty(jobConfigNodes)){
-			return;
-		}
-		Class<?> cls = jobConfig.getClass();
-		String jobClassPath = "";
-		String jobClassValue = "";
-		for(String jobConfigNode : jobConfigNodes){
-			String jobConfigPath = JobNodePath.getConfigNodePath(originJobName, jobConfigNode);
-			String jobConfigValue = curatorFrameworkOp.getData(jobConfigPath);
-			if("enabled".equals(jobConfigNode)){// enabled固定为false
-				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"false");
-				continue;
-			}
-			if("failover".equals(jobConfigNode)){// failover固定为true
-				String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-				curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,"true");
-				continue;
-			}
-			try{
-				Field field = cls.getDeclaredField(jobConfigNode);
-				field.setAccessible(true);
-				Object fieldValue = field.get(jobConfig);
-				if(fieldValue != null){
-					jobConfigValue = fieldValue.toString();
-				}
-				if("jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
-					jobClassPath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-					jobClassValue = jobConfigValue;
-				}
-			}catch(NoSuchFieldException e){// 即使JobConfig类中不存在该属性也复制（一般是旧版作业的一些节点，可以在旧版Executor上运行）
-				continue;
-			}finally{
-				if(!"jobClass".equals(jobConfigNode)){// 持久化jobClass会触发添加作业，待其他节点全部持久化完毕以后再持久化jobClass
-					String fillJobNodePath = JobNodePath.getConfigNodePath(jobConfig.getJobName(), jobConfigNode);
-					curatorFrameworkOp.fillJobNodeIfNotExist(fillJobNodePath,jobConfigValue);
-				}
-			}
-		}
-		if(!Strings.isNullOrEmpty(jobClassPath)){
-			curatorFrameworkOp.fillJobNodeIfNotExist(jobClassPath,jobClassValue);
 		}
 	}
 }

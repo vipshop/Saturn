@@ -36,13 +36,16 @@
     <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
     <result column="namespace" property="namespace" jdbcType="VARCHAR" />
     <result column="zk_list" property="zkList" jdbcType="VARCHAR" />
+    <result column="is_enabled" property="enabled" jdbcType="BIT" />
+    <result column="job_mode" property="jobMode" jdbcType="VARCHAR" />
+    <result column="custom_context" property="customContext" jdbcType="VARCHAR" />
   </resultMap>
   <sql id="Base_Column_List" >
     id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
     failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
-    namespace, zk_list
+    namespace, zk_list,is_enabled,job_mode,custom_context
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -50,11 +53,17 @@
     from job_config
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <select id="findConfigByZkListAndNamespaceAndJobName" resultMap="BaseResultMap">
+  <select id="findConfigsByNamespace" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from job_config
-    where zk_list = #{zkList,jdbcType=VARCHAR} and namespace = #{namespace,jdbcType=VARCHAR}
+    where namespace = #{namespace,jdbcType=VARCHAR}
+  </select>
+  <select id="findConfigByNamespaceAndJobName" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from job_config
+    where namespace = #{namespace,jdbcType=VARCHAR}
     and job_name = #{jobName,jdbcType=VARCHAR} limit 0,1
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
@@ -70,7 +79,7 @@
       timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
       job_type, queue_name, create_by, 
       create_time, last_update_by, last_update_time,
-      namespace, zk_list
+      namespace, zk_list,is_enabled,job_mode,custom_context
       )
     values (#{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR}, 
       #{shardingTotalCount,jdbcType=INTEGER}, #{loadLevel,jdbcType=INTEGER}, #{jobDegree,jdbcType=INTEGER}, #{enabledReport,jdbcType=BIT},
@@ -82,7 +91,8 @@
       #{timeout4AlarmSeconds,jdbcType=INTEGER}, #{timeoutSeconds,jdbcType=INTEGER}, #{showNormalLog,jdbcType=BIT}, #{channelName,jdbcType=VARCHAR},
       #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
-      #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR}
+      #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR},#{enabled,jdbcType=BIT},#{jobMode,jdbcType=VARCHAR},
+      #{customContext,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
@@ -190,6 +200,15 @@
       <if test="zkList != null" >
         zk_list,
       </if>
+       <if test="enabled != null" >
+        is_enabled,
+      </if>
+       <if test="jobMode != null" >
+        job_mode,
+      </if>
+       <if test="customContext != null" >
+        custom_context,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -293,6 +312,15 @@
       </if>
       <if test="zkList != null" >
         #{zkList,jdbcType=VARCHAR},
+      </if>
+      <if test="enabled != null" >
+        #{enabled,jdbcType=BIT},
+      </if>
+      <if test="jobMode != null" >
+        #{jobMode,jdbcType=VARCHAR},
+      </if>
+      <if test="customContext != null" >
+        #{custom_context,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -398,6 +426,15 @@
       <if test="zkList != null" >
         zk_list = #{zkList,jdbcType=VARCHAR},
       </if>
+      <if test="enabled != null" >
+        is_enabled = #{enabled,jdbcType=BIT},
+      </if>
+      <if test="jobMode != null" >
+        job_mode = #{jobMode,jdbcType=VARCHAR},
+      </if>
+      <if test="customContext != null" >
+        custom_context = #{customContext,jdbcType=VARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -435,7 +472,10 @@
       last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
       last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
       zk_list = #{zkList,jdbcType=VARCHAR},
-      namespace = #{namespace,jdbcType=VARCHAR}
+      namespace = #{namespace,jdbcType=VARCHAR},
+      is_enabled = #{enabled,jdbcType=BIT},
+      job_mode = #{jobMode,jdbcType=VARCHAR},
+      custom_context = #{customContext,jdbcType=VARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
@@ -543,6 +583,15 @@
       <if test="zkList != null" >
         and zk_list = #{zkList,jdbcType=VARCHAR}
       </if>
+      <if test="enabled != null" >
+        and is_enabled = #{enabled,jdbcType=BIT}
+      </if>
+      <if test="jobMode != null" >
+        and job_mode = #{jobMode,jdbcType=VARCHAR}
+      </if>
+      <if test="customContext != null" >
+        and custom_context = #{customContext,jdbcType=VARCHAR}
+      </if>
     </where>
   </select>
   <select id="selectPage" resultMap="BaseResultMap" >
@@ -582,8 +631,8 @@
     <if test="currentJobConfig.cron != null" >
       and cron = #{currentJobConfig.cron,jdbcType=VARCHAR}
     </if>
-    <if test="preferList != null" >
-      and prefer_list = #{preferList,jdbcType=VARCHAR}
+    <if test="currentJobConfig.preferList != null" >
+      and prefer_list = #{currentJobConfig.preferList,jdbcType=VARCHAR}
     </if>
     <if test="currentJobConfig.pausePeriodDate != null" >
       and pause_period_date = #{currentJobConfig.pausePeriodDate,jdbcType=VARCHAR}
@@ -648,6 +697,15 @@
     <if test="currentJobConfig.zkList != null" >
       and zk_list = #{currentJobConfig.zkList,jdbcType=VARCHAR}
     </if>
+    <if test="currentJobConfig.enabled != null" >
+      and is_enabled = #{currentJobConfig.enabled,jdbcType=BIT}
+    </if>
+    <if test="currentJobConfig.jobMode != null" >
+      and job_mode = #{currentJobConfig.jobMode,jdbcType=VARCHAR}
+    </if>
+    <if test="currentJobConfig.customContext != null" >
+      and custom_context = #{currentJobConfig.customContext,jdbcType=VARCHAR}
+    </if>
     <if test="pageable.sort != null" >
       order by 
       <foreach collection="pageable.sort" item="order" separator="," >
@@ -658,4 +716,8 @@
       limit ${pageable.offset}, ${pageable.pageSize}
     </if>
   </select>
+  
+  <delete id="deleteAll" parameterType="java.lang.Integer" >
+  	delete from  job_config limit #{limitNum,jdbcType=INTEGER}
+  </delete>
 </mapper>

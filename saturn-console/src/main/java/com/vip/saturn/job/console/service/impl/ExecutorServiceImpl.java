@@ -4,6 +4,9 @@ import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.ExecutorService;
@@ -24,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -52,6 +56,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private JobDimensionService jobDimensionService;
 	@Resource
 	private JobOperationService jobOperationService;
+	
+    @Resource
+    private CurrentJobConfigService currentJobConfigService;
 
 	private Random random = new Random();
 	
@@ -147,8 +154,10 @@ public class ExecutorServiceImpl implements ExecutorService {
 					return "作业【"+jobName+"】创建后"+ (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60 / 1000) +"分钟内不允许删除";
 				}
 			}
-
+			
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+			deleteJobFromDb(curatorFrameworkOp, jobName);
+			
 			//1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
 			String toDeleteNodePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
 			if(curatorFrameworkOp.checkExists(toDeleteNodePath)){
@@ -192,6 +201,21 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return SaturnConstants.DEAL_SUCCESS;
 	}
 
+	private void deleteJobFromDb(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) throws SaturnJobConsoleHttpException{
+		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
+		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if(currentJobConfig == null) {
+			log.warn("currentJobConfig from db does not exists,namespace and jobName is:"+namespace+" "+jobName);
+			return;
+		}
+		try {
+			currentJobConfigService.deleteByPrimaryKey(currentJobConfig.getId());
+		} catch (Exception e) {
+			log.error("exception is thrown during delete job config from db", e);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e); 
+		}
+	}
+	
 	@Override
 	public File getExportJobFile() throws SaturnJobConsoleException {
 		try {
