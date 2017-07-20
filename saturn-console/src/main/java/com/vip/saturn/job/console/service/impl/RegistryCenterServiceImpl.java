@@ -220,6 +220,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 							if (!zkCluster.isOffline()) {
 								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, connectString);
 								conf.setVersion(getVersion(namespace, zkCluster.getCuratorFramework()));
+								conf.setZkAlias(zkCluster.getZkAlias());
 								zkCluster.getRegCenterConfList().add(conf);
 							}
 							break;

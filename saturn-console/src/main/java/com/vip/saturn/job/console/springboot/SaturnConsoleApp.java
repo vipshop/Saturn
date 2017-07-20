@@ -55,7 +55,7 @@ public class SaturnConsoleApp {
 	
 	private static void startEmbeddedZkIfNeeded() throws Exception {
 		if (Boolean.getBoolean("saturn.embeddedzk")) {
-			embeddedZookeeper = new TestingServer(2182);
+			embeddedZookeeper = new TestingServer(2181);
 			embeddedZookeeper.start();
 		}
 	}

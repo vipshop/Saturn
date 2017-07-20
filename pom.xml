@@ -115,10 +115,19 @@
 
 		<httpclient.version>4.5.2</httpclient.version>
 		<httpcore.version>4.4.4</httpcore.version>
+		<ma.glasnost.version>1.4.5</ma.glasnost.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- bean mapper begin -->
+			<dependency>
+			    <groupId>ma.glasnost.orika</groupId>
+			    <artifactId>orika-core</artifactId>
+			    <version>${ma.glasnost.version}</version>
+			</dependency>
+			<!-- bean mapper end -->
+			
 			<!-- common begin -->
 			<dependency>
 				<groupId>org.projectlombok</groupId>
