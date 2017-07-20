@@ -3,32 +3,74 @@
 xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
 layout:decorator="frame-layout">
 	<head>
+		<title>Saturn 注册中心管理</title>
 		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 	</head>
 	<body>
 		<div th:remove="tag" layout:fragment="content">
+			<div id="wrapper">
+		        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		            <div class="navbar-header">
+		                <a class="navbar-brand" href="#">Saturn Console 注册中心管理</a>
+		            </div>
+		         </nav>
+	   		 </div>
 			<div class="panel panel-default">
 				<div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
 					<div class="panel-title">
 						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 注册中心信息</span>
-						<span class="pull-right" >
-							<span th:class="${multiZkClass}" title="当前zk集群"><select class="form-control" id="zks"></select></span>
-						</span>
+						<div class="pull-right">
+							<button id="refresh_registry_center" class="btn btn-info" data-loading-text="刷新中...">刷新注册中心</button>
+						</div>
 						<span class="clearfix"></span>
 					</div>
 				</div>
 				<div class="panel-body">
-					<table id="regCenters" class="table table-hover table-bordered">
-						<thead>
-							<tr>
-								<th>命名空间</th>
-								<th>业务组</th>
-								<th>Executor版本</th>
-								<th>连接地址</th>
-							</tr>
-						</thead>
-						<tbody></tbody>
-					</table>
+					<ul class="nav nav-tabs" role="tablist">
+			            <li id="namespace_info_tab" role="presentation" class="active"><a href="#namespace_info_tabpanel" aria-controls="namespace_info_tabpanel" role="tab" data-toggle="tab"><i class="fa fa-area-chart"></i> 在线域信息</a></li>
+			            <li id="namespace_zk_cluster_manager_tab" role="presentation"><a href="#namespace_zk_cluster_manager_tabpanel" aria-controls="namespace_zk_cluster_manager_tabpanel" role="tab" data-toggle="tab"><i class="fa fa-server fa-1x"></i> 域与集群管理</a></li>
+			            <li id="zk_cluster_info_tab" role="presentation"><a href="#zk_cluster_info_tabpanel" aria-controls="zk_cluster_info_tabpanel" role="tab" data-toggle="tab"><i class="fa fa-server fa-1x"></i> 集群信息</a></li>
+			        </ul>
+			        <br />
+			        <div class="tab-content">
+			            <div role="tabpanel" class="tab-pane active" id="namespace_info_tabpanel">
+							<table id="namespace_info_table" class="table table-hover table-bordered">
+								<thead>
+									<tr>
+										<th>域名</th>
+										<th>业务组</th>
+										<th>Executor版本</th>
+										<th>clusterKey</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+						<div role="tabpanel" class="tab-pane" id="namespace_zk_cluster_manager_tabpanel">
+							<table id="namespace_zk_cluster_manager_table" class="table table-hover table-bordered">
+								<thead>
+									<tr>
+										<th><input id="namespace_zk_cluster_manager_table_select_all" type="checkbox"/></th>
+										<th>域名</th>
+										<th>clusterKey</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+						<div role="tabpanel" class="tab-pane" id="zk_cluster_info_tabpanel">
+							<table id="zk_cluster_info_table" class="table table-hover table-bordered">
+								<thead>
+									<tr>
+										<th>clusterKey</th>
+										<th>别名</th>
+										<th>连接地址</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div th:replace="fragments :: success-dialog"></div>

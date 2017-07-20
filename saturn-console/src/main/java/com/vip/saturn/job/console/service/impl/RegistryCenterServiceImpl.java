@@ -163,6 +163,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		if(allZkClusterInfo != null) {
 			for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 				ZkCluster zkCluster = new ZkCluster();
+				zkCluster.setKey(zkClusterInfo.getClusterKey());
 				zkCluster.setZkAlias(zkClusterInfo.getAlias());
 				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
 				newClusterMap.put(zkClusterInfo.getConnectString(), zkCluster);

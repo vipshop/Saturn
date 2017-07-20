@@ -55,19 +55,32 @@ public class RegistryCenterController extends AbstractController {
 	@Resource
 	private JobDimensionService jobDimensionService;
 
-	@RequestMapping(method = RequestMethod.GET)
-	public Map<?, ?> load(final HttpSession session) {
-		Map<String, Object> model = new HashMap<String, Object>();
-		String currentZkAddr = getCurrentZkAddr(session);
-		if(currentZkAddr != null) {
-			ZkCluster zkCluster = registryCenterService.getZkCluster(currentZkAddr);
-			if(zkCluster != null && !zkCluster.isOffline()) {
-				model.put("configs", zkCluster.getRegCenterConfList());
-				model.put("currentZk", currentZkAddr);
-			}
+	@RequestMapping(value = "getNamespaceInfo", method = RequestMethod.GET)
+	public RequestResult getNamespaceInfo(final HttpSession session) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+			requestResult.setObj(zkClusterList);
+			requestResult.setSuccess(true);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.toString());
 		}
-		return model;
+		return requestResult;
 	}
+	
+	@RequestMapping(value = "getNamespaceZkCluster", method = RequestMethod.GET)
+	public RequestResult getNamespaceZkCluster(final HttpSession session) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			throw new Exception("todo");
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.toString());
+		}
+		return requestResult;
+	}
+
 
 	@RequestMapping(value = "refreshRegCenter", method = RequestMethod.GET)
 	public RequestResult refreshRegCenter(final String nameAndNamespace, final HttpSession session,

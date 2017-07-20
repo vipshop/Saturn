@@ -21,7 +21,6 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.sharding.NamespaceShardingManager;
 
 import java.util.Collection;
 
