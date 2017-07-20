@@ -25,6 +25,7 @@ public class NamespaceShardingManager {
 	private AddJobListenersService addJobListenersService;
 
 	private String namespace;
+	private String zkAddr;
 
 	private ShardingTreeCacheService shardingTreeCacheService;
 	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
@@ -38,7 +39,17 @@ public class NamespaceShardingManager {
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
 
-    private void start0() throws Exception {
+    public String getZkAddr() {
+		return zkAddr;
+	}
+    
+	public void setZkAddr(String zkAddr) {
+		this.zkAddr = zkAddr;
+	}
+
+
+
+	private void start0() throws Exception {
 		shardingTreeCacheService.start();
 		// create ephemeral node $SaturnExecutors/leader/host & $Jobs.
 		namespaceShardingService.leaderElection();

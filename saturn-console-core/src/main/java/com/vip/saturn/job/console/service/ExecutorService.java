@@ -16,6 +16,10 @@ public interface ExecutorService {
 
 	List<String> getAliveExecutorNames();
 	
+	boolean jobIncExceeds(int maxJobNum,int inc) throws SaturnJobConsoleException;
+	
+	int getMaxJobNum();
+	
 	RequestResult addJobs(JobConfig jobConfig);
 
 	@Deprecated

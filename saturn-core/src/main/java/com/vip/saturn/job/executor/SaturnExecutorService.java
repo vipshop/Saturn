@@ -1,11 +1,13 @@
 package com.vip.saturn.job.executor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.Executors;
-
+import com.vip.saturn.job.exception.TimeDiffIntolerableException;
+import com.vip.saturn.job.internal.config.ConfigurationNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LocalHostService;
+import com.vip.saturn.job.utils.ResourceUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -17,14 +19,10 @@ import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.exception.TimeDiffIntolerableException;
-import com.vip.saturn.job.internal.config.ConfigurationNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.ResourceUtils;
-import com.vip.saturn.job.utils.SystemEnvProperties;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.Executors;
 
 /**
  * 
@@ -33,8 +31,12 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
  */
 public class SaturnExecutorService {
 
-	static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
-	
+	public static final int WAIT_JOBCLASS_ADDED_COUNT = 25;
+
+	private static final int WAIT_FOR_IP_NODE_DISAPPEAR_COUNT = 150;
+
+	private static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
+
 	private String executorName;
 	
 	private List<String> jobNames = new ArrayList<String>();
@@ -48,8 +50,6 @@ public class SaturnExecutorService {
 	private ClassLoader jobClassLoader;
 
 	private ClassLoader executorClassLoader;
-
-	public static final int WAIT_JOBCLASS_ADDED_COUNT =  25;
 
 	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
@@ -84,7 +84,8 @@ public class SaturnExecutorService {
 		final Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
 		if (props != null) {
 			String executorVersion = props.getProperty("build.version");
-			if (!Strings.isNullOrEmpty(executorVersion)) {
+			if (StringUtils.isNotBlank(executorVersion)) {
+				log.info("persist znode '/version': {}", executorVersion);
 				coordinatorRegistryCenter.persist(versionNode, executorVersion);
 			}
 		}
@@ -93,12 +94,12 @@ public class SaturnExecutorService {
 				String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));
 
 		// 持久task
-		if (SystemEnvProperties.VIP_SATURN_DCOS_TASK != null) {
-			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_DCOS_TASK);
+		if (StringUtils.isNotBlank(SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID)) {
+			log.info("persist znode '/task': {}", SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
+			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
 		}
 
 		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
-
 	}
 
 	public void reRegister() throws Exception {
@@ -133,10 +134,18 @@ public class SaturnExecutorService {
 		}
 		// 启动时检查Executor是否已启用（ExecutorName为判断的唯一标识）
 		if (coordinatorRegistryCenter.isExisted(executorNode)) {
-			if (coordinatorRegistryCenter.isExisted(executorNode + "/ip")) { // is running
-				throw new Exception(
-						"The executor name(" + executorName + ") is running, cannot running the instance twice.");
-			}
+			int count = 0;
+			do {
+				if (!coordinatorRegistryCenter.isExisted(executorNode + "/ip")) {
+					return;
+				}
+
+				log.warn("{} node found. Try to sleep and wait for this node disappear.", executorNode + "/ip");
+				Thread.sleep(100L);
+			} while (++count <= WAIT_FOR_IP_NODE_DISAPPEAR_COUNT);
+
+			throw new Exception(
+					"The executor (" + executorName + ") is running, cannot running the instance twice.");
 		} else {
 			coordinatorRegistryCenter.persist(executorNode, "");
 		}

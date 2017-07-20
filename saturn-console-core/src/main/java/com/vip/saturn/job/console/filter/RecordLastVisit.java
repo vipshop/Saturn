@@ -38,8 +38,7 @@ public class RecordLastVisit implements Filter {
 				GET_METHOD.equalsIgnoreCase(method)) {
 			if (currentURL.indexOf("job_detail") >= 0 || 
 					currentURL.indexOf("server_detail") >= 0 ||
-					currentURL.indexOf("registry_center_page") >= 0 ||
-					currentURL.indexOf("dashboard") >= 0 ||
+					(currentURL.indexOf("dashboard") >= 0 && currentURL.indexOf("refresh") <0) ||
 					currentURL.indexOf("overview") >= 0 ) {
 				request.setCharacterEncoding("UTF-8");
 				String queryString = request.getQueryString();

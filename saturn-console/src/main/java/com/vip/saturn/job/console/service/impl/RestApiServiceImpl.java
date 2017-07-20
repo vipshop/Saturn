@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -20,6 +21,7 @@ import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hebelala
@@ -60,6 +63,9 @@ public class RestApiServiceImpl implements RestApiService {
 
     @Resource
     private ReportAlarmService reportAlarmService;
+    
+    @Resource
+    private ExecutorService executorService;
 
     @Override
     public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -69,7 +75,10 @@ public class RestApiServiceImpl implements RestApiService {
                 if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
                     throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() + "} already existed");
                 }
-
+                int maxJobNum = executorService.getMaxJobNum();
+                if (executorService.jobIncExceeds(maxJobNum,1)) {
+                	throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. The current number of job reach the maximum limit["+maxJobNum+"]");
+				}
                 jobOperationService.validateJobConfig(jobConfig);
                 jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
             }
@@ -356,6 +365,29 @@ public class RestApiServiceImpl implements RestApiService {
         });
     }
 
+	@Override
+	public void updateJobCron(final String namespace, final String jobName, final String cron,final Map<String,String> customContext) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+			@Override
+			public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+				String cronNodePath = JobNodePath.getConfigNodePath(jobName, "cron");
+				long mtime = curatorFrameworkOp.getMtime(cronNodePath);
+				checkUpdateConfigAllowed(mtime);
+				String oldcronStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"));
+				if (!cron.equals(oldcronStr)) {
+					jobOperationService.updateJobCron(jobName, cron, customContext);
+				}
+			}
+		});
+	}
+	
+    private void checkUpdateConfigAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
+        if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
+            String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
+            logger.warn(errMsg);
+            throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
+        }
+    }
     @Override
     public void runJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
         ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {

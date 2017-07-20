@@ -58,7 +58,7 @@ public interface CuratorRepository {
         CuratorFramework getCuratorFramework();
 
         interface CuratorTransactionOp {
-
+        	
             CuratorTransactionOp replaceIfchanged(String znode, Object value) throws Exception;
 
             CuratorTransactionOp replaceIfchanged(String znode, Object value, BooleanWrapper bw) throws Exception;

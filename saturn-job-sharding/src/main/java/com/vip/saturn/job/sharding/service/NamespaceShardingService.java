@@ -1523,31 +1523,35 @@ public class NamespaceShardingService {
 			LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH);
 			try {
 				leaderLatch.start();
-				leaderLatch.await();
-				if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH) == null) {
-					// 清理、重置变量
-					executorService.shutdownNow();
-					while (!executorService.isTerminated()) { // 等待全部任务已经退出
-						Thread.sleep(100L); //NOSONARA
+				int timeoutSeconds = 60;
+				if (leaderLatch.await(timeoutSeconds, TimeUnit.SECONDS)) {
+					if (!hasLeadership()) {
+						// 清理、重置变量
 						executorService.shutdownNow();
+						while (!executorService.isTerminated()) { // 等待全部任务已经退出
+							Thread.sleep(100L); //NOSONARA
+							executorService.shutdownNow();
+						}
+						needAllSharding.set(false);
+						shardingCount.set(0);
+						executorService = newSingleThreadExecutor();
+	
+						// 持久化$Jobs节点
+						if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
+							curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+						}
+						// 持久化LeaderValue
+						curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
+	
+						// 提交全量分片线程
+						needAllSharding.set(true);
+						shardingCount.incrementAndGet();
+						executorService.submit(new ExecuteAllShardingTask());
+						log.info("{}-{} become leadership", namespace, hostValue);
 					}
-					needAllSharding.set(false);
-					shardingCount.set(0);
-					executorService = newSingleThreadExecutor();
-
-					// 持久化$Jobs节点
-					if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
-						curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
-					}
-					// 持久化LeaderValue
-					curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
-
-					// 提交全量分片线程
-					needAllSharding.set(true);
-					shardingCount.incrementAndGet();
-					executorService.submit(new ExecuteAllShardingTask());
-					log.info("{}-{} become leadership", namespace, hostValue);
-				}
+				} else {
+					log.error("{}-{} leadership election is timeout({}s)", namespace, hostValue, timeoutSeconds);
+	            }
 			} catch (InterruptedException e) {
 				log.info("{}-{} leadership election is interrupted", namespace, hostValue);
 				throw e;

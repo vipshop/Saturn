@@ -2,9 +2,27 @@
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
+-- Table structure for `itil_order`
+-- ----------------------------
+CREATE TABLE `itil_order` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
+  `serialno` varchar(255) NOT NULL COMMENT '工单号',
+  `applier` varchar(255) NOT NULL COMMENT '申请人',
+  `apply_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  `domain` varchar(255) NOT NULL COMMENT '当前申请的域',
+  `change_type` varchar(255) NOT NULL COMMENT '变更类型',
+  `event_serialnos` varchar(2000) DEFAULT NULL COMMENT '故障单号',
+  `status` varchar(255) DEFAULT NULL COMMENT '状态',
+  `url` varchar(255) DEFAULT NULL COMMENT '该工单在ITIL的url',
+  PRIMARY KEY (`id`),
+  KEY `serialno_idx` (`serialno`),
+  KEY `applier_domain_apply_time_union_idx` (`applier`,`domain`,`apply_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='ITIL流程工单表';
+
+
+-- ----------------------------
 -- Table structure for `job_config`
 -- ----------------------------
-DROP TABLE IF EXISTS `job_config`;
 CREATE TABLE `job_config` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
   `job_name` varchar(255) NOT NULL COMMENT '作业名称',
@@ -62,10 +80,10 @@ CREATE TABLE `job_config` (
 
 
 
+
 -- ----------------------------
 -- Table structure for `job_config_history`
 -- ----------------------------
-DROP TABLE IF EXISTS `job_config_history`;
 CREATE TABLE `job_config_history` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
   `job_name` varchar(255) NOT NULL COMMENT '作业名称',
@@ -108,7 +126,7 @@ CREATE TABLE `job_config_history` (
   `enabled_report` tinyint(1) DEFAULT NULL COMMENT '上报执行信息，对于定时作业，默认开启上报；对于消息作业，默认不开启上报',
   `groups` varchar(255) DEFAULT NULL COMMENT '所属分组',
   `dependencies` text COMMENT '依赖的作业',
-  `enabled` tinyint(1) DEFAULT '0' COMMENT '是否启用标志',
+  `is_enabled` tinyint(1) DEFAULT '0' COMMENT '是否启用标志',
   `job_mode` varchar(255) DEFAULT NULL COMMENT '作业模式',
   `custom_context` varchar(8192) DEFAULT NULL COMMENT '自定义语境参数',
   PRIMARY KEY (`id`),
@@ -119,52 +137,8 @@ CREATE TABLE `job_config_history` (
 
 
 -- ----------------------------
--- Table structure for `saturn_statistics`
--- ----------------------------
-DROP TABLE IF EXISTS `saturn_statistics`;
-CREATE TABLE `saturn_statistics` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '统计表主键ID',
-  `name` varchar(255) NOT NULL COMMENT '统计名称，例如top10FailJob',
-  `zklist` varchar(255) NOT NULL COMMENT '统计所属zk集群',
-  `result` longtext NOT NULL COMMENT '统计结果(json结构)',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='统计表';
-
--- ----------------------------
--- Table structure for `itil_order`
--- ----------------------------
-DROP TABLE IF EXISTS `itil_order`;
-CREATE TABLE `itil_order` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
-  `serialno` varchar(255) NOT NULL COMMENT '工单号',
-  `applier` varchar(255) NOT NULL COMMENT '申请人',
-  `apply_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
-  `domain` varchar(255) NOT NULL COMMENT '当前申请的域',
-  `change_type` varchar(255) NOT NULL COMMENT '变更类型',
-  `event_serialnos` varchar(2000) COMMENT '故障单号',
-  `status` varchar(255) COMMENT '状态',
-  `url` varchar(255) COMMENT '该工单在ITIL的url',
-  PRIMARY KEY (`id`),
-  KEY `serialno_idx` (`serialno`),
-  KEY `applier_domain_apply_time_union_idx` (`applier`,`domain`,`apply_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='ITIL流程工单表';
-
--- ----------------------------
--- Table structure for `sys_config`
--- ----------------------------
-DROP TABLE IF EXISTS `sys_config`;
-CREATE TABLE `sys_config` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `property` varchar(255) NOT NULL COMMENT '属性名',
-  `value` varchar(2000) NOT NULL COMMENT '属性值',
-  PRIMARY KEY (`id`),
-  KEY `property_idx` (`property`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统配置表';
-
--- ----------------------------
 -- Table structure for `namespace_zkcluster_mapping`
 -- ----------------------------
-DROP TABLE IF EXISTS `namespace_zkcluster_mapping`;
 CREATE TABLE `namespace_zkcluster_mapping` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
@@ -175,6 +149,30 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
   `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key',
   PRIMARY KEY (`id`),
-  KEY `idx_zk_cluster_key` (`zk_cluster_key`),
-  KEY `uniq_namespace` (`namespace`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
+  UNIQUE KEY `uniq_namespace` (`namespace`),
+  KEY `idx_zk_cluster_key` (`zk_cluster_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
+
+
+-- ----------------------------
+-- Table structure for `saturn_statistics`
+-- ----------------------------
+CREATE TABLE `saturn_statistics` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '统计表主键ID',
+  `name` varchar(255) NOT NULL COMMENT '统计名称，例如top10FailJob',
+  `zklist` varchar(255) NOT NULL COMMENT '统计所属zk集群',
+  `result` longtext NOT NULL COMMENT '统计结果(json结构)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+-- ----------------------------
+-- Table structure for `sys_config`
+-- ----------------------------
+CREATE TABLE `sys_config` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `property` varchar(255) NOT NULL COMMENT '属性名',
+  `value` varchar(2000) NOT NULL COMMENT '属性值',
+  PRIMARY KEY (`id`),
+  KEY `property_idx` (`property`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='系统配置表';

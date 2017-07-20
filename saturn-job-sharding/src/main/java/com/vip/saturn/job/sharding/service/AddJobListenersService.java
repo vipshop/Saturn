@@ -43,8 +43,9 @@ public class AddJobListenersService {
 	}
 
 	public void addJobPathListener(String jobName) throws InterruptedException {
-		addJobConfigPathListener(jobName);
-		addJobServersPathListener(jobName);
+		if(addJobConfigPathListener(jobName)) {
+			addJobServersPathListener(jobName);
+		}
 	}
 
 	public void removeJobPathTreeCache(String jobName) {
@@ -64,7 +65,7 @@ public class AddJobListenersService {
 		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
 
-	private void addJobConfigPathListener(String jobName) throws InterruptedException {
+	private boolean addJobConfigPathListener(String jobName) throws InterruptedException {
 		try {
 			String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/config";
 			int depth = 1;
@@ -77,17 +78,19 @@ public class AddJobListenersService {
 				}
 				if (waitConfigPathCreatedCounts == 0) {
 					log.error("create TreeCache failed, the path does not exists, full path is {}, depth is {}", fullPath, depth);
-					return;
+					return false;
 				}
 				Thread.sleep(100);
 			}
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
+			return true;
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			return false;
 		}
 	}
 

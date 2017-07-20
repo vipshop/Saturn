@@ -30,6 +30,7 @@ public final class SaturnEnvProperties {
      */
     public static String REG_CENTER_JSON_FILE;
 
+    public static String MAX_JOB_NUM = System.getProperty("MAX_JOB_NUM", System.getenv("MAX_JOB_NUM"));
     public static String CONTAINER_TYPE = System.getProperty("VIP_SATURN_CONTAINER_TYPE", System.getenv("VIP_SATURN_CONTAINER_TYPE"));
     public static String VIP_SATURN_DCOS_REST_URI = System.getProperty("VIP_SATURN_DCOS_REST_URI", System.getenv("VIP_SATURN_DCOS_REST_URI"));
     public static String VIP_SATURN_DCOS_REGISTRY_URI = System.getProperty("VIP_SATURN_DCOS_REGISTRY_URI", System.getenv("VIP_SATURN_DCOS_REGISTRY_URI"));

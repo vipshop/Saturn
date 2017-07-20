@@ -241,45 +241,6 @@ public class ConfigurationService extends AbstractSaturnService {
         return jobConfiguration.getCron();
     }
     
-    /**
-     * 更新作业的cron表达式
-     * @param jobName 作业名
-     * @param cron cron表达式
-     * @param customContext 自定义上下文
-     * @throws SaturnJobException 可能抛的异常有：type为0，表示cron表达式无效；type为1，表示作业名在这个namespace下不存在；type为3，表示customContext内容超出1M。
-     */
-    public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
-    	String cron0 = cron;
-    	if(cron0 != null && !cron0.trim().isEmpty()) {
-			try {
-				cron0 = cron0.trim();
-				CronExpression.validateExpression(cron0);
-			} catch (ParseException e) {
-				throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "The cron expression is valid: " + cron);
-			}
-    	} else {
-    		cron0 = "";
-    	}
-    	if(getJobNodeStorage().isJobExisted(jobName)) {
-			String oldCustomContextStr = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CUSTOM_CONTEXT);
-			Map<String, String> oldCustomContextMap = toCustomContext(oldCustomContextStr);
-			if (customContext != null && !customContext.isEmpty()) {
-				oldCustomContextMap.putAll(customContext);
-				String newCustomContextStr = toCustomContext(oldCustomContextMap);
-				if (newCustomContextStr.getBytes().length > 1024 * 1024) {
-					throw new SaturnJobException(SaturnJobException.OUT_OF_ZK_LIMIT_MEMORY, "The all customContext is out of zk limit memory(1M)");
-				}
-				getJobNodeStorage().replaceJobNode(jobName, ConfigurationNode.CUSTOM_CONTEXT, newCustomContextStr);
-			}
-			String oldCron = getJobNodeStorage().getJobNodeDataDirectly(jobName, ConfigurationNode.CRON);
-			if (cron0 != null && oldCron != null && !cron0.equals(oldCron.trim())) {
-				getJobNodeStorage().updateJobNode(jobName, ConfigurationNode.CRON, cron0);
-			}
-		} else {
-			throw new SaturnJobException(SaturnJobException.JOB_NOT_FOUND, "The job is not found: " + jobName);
-		}
-	}
-
 	/**
 	 * 获取统计作业处理数据数量的间隔时间.
 	 *

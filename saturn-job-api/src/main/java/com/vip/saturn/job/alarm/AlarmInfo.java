@@ -2,7 +2,6 @@ package com.vip.saturn.job.alarm;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Alarm info entity.
@@ -40,18 +39,8 @@ public class AlarmInfo {
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
                 ", message='" + message + '\'' +
-                ", addtionalInfo=" + constructMapContent(customFields) +
+                ", customFields=" + customFields +
                 '}';
-    }
-
-    private String constructMapContent(Map<String, String> customFields) {
-        StringBuilder result = new StringBuilder();
-        Set<String> keySet = customFields.keySet();
-        for (String key : keySet) {
-            result.append(key + ":" + customFields.get(key) + ", ");
-        }
-
-        return result.substring(0, result.length() - 1);
     }
 
     public String getName() {

@@ -311,6 +311,7 @@ layout:decorator="frame-layout">
 				</div>
 				<input type="hidden" id="regNameFromServer" th:value="${session.activated_config}?${session.activated_config.nameAndNamespace}:未连接" />
 				<input type="hidden" id="namespace" th:value="${session.activated_config}?${session.activated_config.namespace}:''" />
+				<input type="hidden" id="zkAlias" th:value="${session.activated_config}?${session.activated_config.zkAlias}:''" />
 				<input type="hidden" id="jobTypeFromController" th:value="${jobType}" />
 				<input type="hidden" id="isJobEnabledVal" th:value="${isEnabled}" />
 				<input type="hidden" id="jobStatus" th:value="${jobStatus}" />

@@ -81,7 +81,6 @@ public class SaturnJavaJob extends CrondJob {
 						jobBusinessInstance = jobClass.newInstance();
 					}
 					SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
-					saturnApi.setConfigService(getConfigService());
 					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 				} catch (Throwable t) {
 					log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "create job business instance error"), t);

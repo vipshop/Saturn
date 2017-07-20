@@ -89,7 +89,7 @@ $(function() {
 		return true;
 	};
 	regName = $("#regNameFromServer").val();
-	window.parent.setRegName(regName, $("#namespace").val());
+	window.parent.setRegName(regName, $("#zkAlias").val(),$("#namespace").val());
     window.parent.reloadTreeAndExpandJob(regName);
     $("#jobviews-status-showall-btn").click(function(){
     	filterJobs("","");
@@ -1201,8 +1201,7 @@ $(function() {
 						window.parent.location.reload(true);
 					});
 				}
-			});
-		$btn.button('reset');
+			}).always(function() { $btn.button('reset'); });
 		return false;
 	});
 

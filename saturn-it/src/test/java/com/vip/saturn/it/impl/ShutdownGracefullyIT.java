@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.Collection;
 
-import com.vip.saturn.it.job.SimpleJavaJob;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
@@ -66,6 +65,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		runAtOnce(jobName);
+		Thread.sleep(1000);
 
 		new ShutdownHandler(false).handle(null);
 
@@ -118,7 +118,8 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		runAtOnce(jobName);
-
+		Thread.sleep(1000);
+		
 		new ShutdownHandler(false).handle(null);
 
 		try {

@@ -12,15 +12,17 @@ public class AbnormalJob {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private final String jobName;
+	private String uuid;
 	
-	private final String domainName;
+	private String jobName;
+	
+	private String domainName;
 	
 	/** name and namespace */
-	private final String nns;
+	private String nns;
 	
 	/** degree of the domain */
-	private final String degree;
+	private  String degree;
 	
 	private String jobDegree;
 
@@ -32,7 +34,13 @@ public class AbnormalJob {
 	
 	private String cause;
 	
+	private boolean read = false;
+	
 	private transient long nextFireTimeAfterEnabledMtime;
+	
+	public AbnormalJob() {
+		
+	}
 	
 	public AbnormalJob(String jobName, String domainName, String nns, String degree){
 		this.jobName = jobName;
@@ -43,6 +51,30 @@ public class AbnormalJob {
 	
 	public enum Cause {
 		NO_SHARDS, NOT_RUN, EXECUTORS_NOT_READY
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
+	}
+
+	public void setNns(String nns) {
+		this.nns = nns;
+	}
+
+	public void setDegree(String degree) {
+		this.degree = degree;
 	}
 
 	public String getJobDegree() {
@@ -107,6 +139,36 @@ public class AbnormalJob {
 
 	public void setNextFireTimeAfterEnabledMtime(long nextFireTimeAfterEnabledMtime) {
 		this.nextFireTimeAfterEnabledMtime = nextFireTimeAfterEnabledMtime;
+	}
+	
+	public boolean isRead() {
+		return read;
+	}
+
+	public void setRead(boolean read) {
+		this.read = read;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = jobName.hashCode();
+		result = 31 * result + domainName.hashCode();
+		result = 31 * result + cause.hashCode();
+		result = 31 * result + (int) (nextFireTimeAfterEnabledMtime ^ (nextFireTimeAfterEnabledMtime >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AbnormalJob other = (AbnormalJob) obj;
+		return this.getJobName().equals(other.getJobName()) && this.getDomainName().equals(other.getDomainName()) && this.getCause().equals(other.getCause())
+				&& this.getNextFireTime() == other.getNextFireTime();
 	}
 
 	@Override

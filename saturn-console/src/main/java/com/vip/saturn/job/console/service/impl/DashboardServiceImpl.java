@@ -1556,4 +1556,9 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
+	@Override
+	public void setUnnormalJobMonitorStatusToRead(String currentZkAddr,String uuid) {
+		// TODO Auto-generated method stub
+	}
+
 }

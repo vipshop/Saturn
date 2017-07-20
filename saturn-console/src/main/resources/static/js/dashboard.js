@@ -2,6 +2,16 @@ var cleanButtonClass = ($("#authorizeSaturnConsoleDashBoardAllPrivilege").val() 
 		causeMap = {"NOT_RUN": "过时未跑", "NO_SHARDS": "没有分片", "EXECUTORS_NOT_READY": "没有executor能运行该作业"};
 $(function() {
 	window.parent.setActiveTab("#dashboardTab");
+	renderZks();
+	$("#zks").change(function(){
+		var newSelected = $("#zks").val();
+		$.post("registry_center/selectZk", {newZkBsKey : newSelected}, function (data) {
+			window.location.reload();
+        }).always(function() {});
+		return false;
+	});
+	
+	
 	$('.collapse').on('hidden.bs.collapse', function () {
 		$(this).parent().find(".fa").removeClass("fa-minus").addClass("fa-plus");
 	}).on('shown.bs.collapse', function () {
@@ -52,6 +62,26 @@ $(function() {
 */
 //	window.setInterval("reload();", 1000);
 });
+
+function renderZks() {
+	$.get("loadZks", {}, function(data) {
+		var zks = data.clusters, currentZk = data.currentZk, options="";
+		for(var i in zks) {
+			var disabled = "", alias = zks[i].zkAlias;
+			
+			if (zks[i].offline) {
+				disabled = " disabled='disabled' ";
+				alias += "[offline]"
+			}
+			if (currentZk == zks[i].zkAddr) {
+				options += "<option " +disabled+ " selected='selected' value='"+zks[i].zkAddr+"'>" + alias + "</option>";
+			} else {
+				options += "<option " +disabled+ " value='"+zks[i].zkAddr+"'>" + alias + "</option>";
+			}
+		}
+		$("#zks").append(options);
+	});
+}
 
 function reload(){
     var s = document.getElementById("auto-refresh-seconds");

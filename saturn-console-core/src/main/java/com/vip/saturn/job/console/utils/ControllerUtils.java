@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
@@ -48,5 +49,18 @@ public class ControllerUtils {
             }
             return Boolean.FALSE;
         }
+    }
+
+    public static String getClientIp(HttpServletRequest request) {
+        String remoteAddr = "";
+
+        if (request != null) {
+            remoteAddr = request.getHeader("X-FORWARDED-FOR");
+            if (remoteAddr == null || "".equals(remoteAddr)) {
+                remoteAddr = request.getRemoteAddr();
+            }
+        }
+
+        return remoteAddr;
     }
 }

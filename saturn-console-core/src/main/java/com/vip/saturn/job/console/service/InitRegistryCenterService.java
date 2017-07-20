@@ -18,10 +18,14 @@
 package com.vip.saturn.job.console.service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +40,9 @@ import com.vip.saturn.job.console.domain.TreeNode;
 public final class InitRegistryCenterService {
 	private static final Logger log = LoggerFactory.getLogger(InitRegistryCenterService.class);
 	public static TreeNode treeData = new TreeNode();
-	public static final Map<String/** zkBsKey **/, TreeNode> ZKBSKEY_TO_TREENODE_MAP = new ConcurrentHashMap<>();
+	public static final Map<String/** zkBsKey **/, TreeNode> ZKBSKEY_TO_TREENODE_MAP = new LinkedHashMap<>();
+	public static TreeNode DOMAIN_ROOT_TREE_NODE = new TreeNode();
+	private static AtomicBoolean domainTreeinited = new AtomicBoolean(false);
 
     /**
      * transfer /a/b/b1, /a/b/b2 to 
@@ -67,6 +73,58 @@ public final class InitRegistryCenterService {
 		}
 		ZKBSKEY_TO_TREENODE_MAP.put(zkBsk, treeData);
 		log.info("init {} tree data: {}", zkBsk, treeData);
+	}
+	
+	public static TreeNode getDomainRootTreeNode() {
+		while(!domainTreeinited.get()) {
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+		return DOMAIN_ROOT_TREE_NODE;
+	}
+	
+	public static void reloadDomainRootTreeNode() {
+		TreeNode resultNode = null;
+		for (TreeNode treeNode : InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.values()) {
+			if (treeNode != null) {
+				treeNode = treeNode.deepCopy();
+				if (resultNode == null) {
+					resultNode = treeNode;
+				} else {
+					for (TreeNode childNode : treeNode.getChildren()) {
+						addToTree(resultNode, childNode);
+					}
+				}
+			}
+		}
+		if (resultNode != null) {
+			DOMAIN_ROOT_TREE_NODE = resultNode;
+		}
+		domainTreeinited.compareAndSet(false, true);
+	}
+	
+    private static void addToTree(TreeNode parentNode, TreeNode childNode) {
+    	if(parentNode.getChildren()!=null&&parentNode.getChildren().size()==0) {
+    		parentNode.getChildren().add(childNode);
+    		return;
+    	}
+    	TreeNode equalNode = null;
+    	for(TreeNode tn: parentNode.getChildren()) { 
+			if (childNode.getTitle().equals(tn.getTitle())) {
+				equalNode = tn;
+				break;
+			} 
+		}
+    	if(equalNode != null) {
+			for(TreeNode childTn:childNode.getChildren() ) {
+				addToTree(equalNode, childTn);
+			}
+    	} else {
+			parentNode.getChildren().add(childNode);
+    	}
 	}
 
     /**

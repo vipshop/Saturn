@@ -1,14 +1,16 @@
 package com.vip.saturn.job.console.service.helper;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 /**
  * @author hebelala
@@ -43,6 +45,7 @@ public class ReuseUtils {
             if (registryCenterClient != null && registryCenterClient.isConnected()) {
                 CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
                 CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
+                ThreadLocalCuratorClient.setCuratorClient(curatorClient);
                 return callBack.call(curatorFrameworkOp);
             } else {
                 throw new SaturnJobConsoleException("Connect zookeeper failed");
@@ -52,6 +55,8 @@ public class ReuseUtils {
         } catch (Throwable t) {
             LOGGER.error(t.getMessage(), t);
             throw new SaturnJobConsoleException(t);
+        } finally {
+        	ThreadLocalCuratorClient.clear();
         }
     }
 
@@ -77,7 +82,7 @@ public class ReuseUtils {
             if (registryCenterClient != null && registryCenterClient.isConnected()) {
                 CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
                 CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
-
+                ThreadLocalCuratorClient.setCuratorClient(curatorClient);
                 callBack.call(curatorFrameworkOp);
             } else {
                 throw new SaturnJobConsoleException("Connect zookeeper failed");
@@ -87,6 +92,8 @@ public class ReuseUtils {
         } catch (Throwable t) {
             LOGGER.error(t.getMessage(), t);
             throw new SaturnJobConsoleException(t);
+        } finally {
+        	ThreadLocalCuratorClient.clear();
         }
     }
 

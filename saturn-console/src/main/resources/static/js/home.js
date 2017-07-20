@@ -1,14 +1,4 @@
 $(function() {
-	renderZks();
-	$("#zks").change(function(){
-		var newSelected = $("#zks").val();
-		$.post("registry_center/selectZk", {newZkBsKey : newSelected}, function (data) {
-			reloadTreeData();
-			window.contentFrame.location="registry_center_page";
-        }).always(function() {});
-		return false;
-	});
-	
 	renderDomainTree();
     $("input[name=searchTree]").keyup(function(e){
         var n, match = $(this).val(), opts = {
@@ -29,26 +19,6 @@ $(function() {
 
 });
 var tree, sideBarOverlay = $("#sidebar-overlay"), rp = $("#activated-reg-center").parent(), $regNameParent = $(rp);
-
-function renderZks() {
-	$.get("loadZks", {}, function(data) {
-		var zks = data.clusters, currentZk = data.currentZk, options="";
-		for(var i in zks) {
-			var disabled = "", alias = zks[i].zkAlias;
-			
-			if (zks[i].offline) {
-				disabled = " disabled='disabled' ";
-				alias += "[offline]"
-			}
-			if (currentZk == zks[i].zkAddr) {
-				options += "<option " +disabled+ " selected='selected' value='"+zks[i].zkAddr+"'>" + alias + "</option>";
-			} else {
-				options += "<option " +disabled+ " value='"+zks[i].zkAddr+"'>" + alias + "</option>";
-			}
-		}
-		$("#zks").append(options);
-	});
-}
 
 function reloadTreeData() {
 	tree.reload();
@@ -171,14 +141,17 @@ function focusAndActiveJob(jobName) {
 	}
 }
 
-function expandJobsAndSetRegCenter(regName) {
+function expandJobsAndSetRegCenter(regName,zkAlias) {
 	expandJobs(tree, regName);
 	setRegName(regName);
 }
 
-function setRegName(regname, ns) {
+function setRegName(regname,zkAlias, ns) {
 	if (regname) {
 		$("#activated-reg-center").html(regname);
+	}
+	if(zkAlias) {
+		$("#activated-zk").html(zkAlias);
 	}
 	if (ns) {
 		$regNameParent.attr("title", "命名空间："+ns);

@@ -126,6 +126,10 @@
 			<artifactId>jcl-over-slf4j</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
 		</dependency>
@@ -200,6 +204,10 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -298,6 +306,7 @@
 					<mainClass>com.vip.saturn.job.console.springboot.SaturnConsoleApp</mainClass>
 					<layout>JAR</layout>
 					<executable>true</executable>
+					<classifier>exec</classifier>
 				</configuration>
 				<executions>
 					<execution>

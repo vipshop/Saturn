@@ -6,7 +6,7 @@ $(function() {
 				jobStatus = $("#jobStatus").val(), $jobstatusSpan = $("#job-status-span"),confirmDialogMsg = undefined,
 				confirmOps,jobConfigShardingTotalCount, regName = $("#regNameFromServer").val();
 	$("[data-toggle='tooltip']").tooltip();
-	window.parent.setRegName(regName, $("#namespace").val());
+	window.parent.setRegName(regName,$("#zkAlias").val(),$("#namespace").val());
 	window.parent.reloadTreeAndExpandJob(regName);
 	
    
