@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import org.assertj.core.util.Maps;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +40,12 @@ public class AlarmRestApiControllerTest {
 
     @MockBean
     private RestApiService restApiService;
+    
+    @BeforeClass
+	public static void beforeClass() throws Exception {
+		System.setProperty("db.profiles.active", "h2");
+		System.setProperty("saturn.stdout", "true");
+	}
 
     @Test
     public void testRaiseAlarmSuccessfully() throws Exception {
