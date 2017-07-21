@@ -16,4 +16,6 @@ public interface ZkClusterInfoRepository {
 	
 	List<ZkClusterInfo> selectAll();
 
+	ZkClusterInfo selectByClusterKey(String clusterKey);
+
 }

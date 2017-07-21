@@ -8,11 +8,17 @@
         <result column="cluster_key" property="clusterKey" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, `namespace`, name, cluster_key
+        `id`, `namespace`, `name`, `cluster_key`
     </sql>
     <select id="selectAll" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-        from namespace_zk_cluster_mapping
+        from `namespace_zk_cluster_mapping`
+    </select>
+    <select id="selectByNamespace" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from `namespace_zk_cluster_mapping`
+        where `namespace` = #{namespace, jdbcType=VARCHAR}
     </select>
 </mapper>

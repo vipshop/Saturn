@@ -8,11 +8,17 @@
         <result column="connect_string" property="connectString" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, cluster_key, alias, connect_string
+        `id`, `cluster_key`, `alias`, `connect_string`
     </sql>
     <select id="selectAll" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-        from zk_cluster_info
+        from `zk_cluster_info`
+    </select>
+    <select id="selectByClusterKey" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from `zk_cluster_info`
+        where `cluster_key` = #{clusterKey, jdbcType=VARCHAR}
     </select>
 </mapper>

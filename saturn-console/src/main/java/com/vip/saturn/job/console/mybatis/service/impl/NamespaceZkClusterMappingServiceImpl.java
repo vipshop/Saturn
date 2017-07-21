@@ -27,4 +27,10 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 		return namespaceZkClusterMappingRepository.selectAll();
 	}
 
+	@Transactional(readOnly = true)
+	@Override
+	public NamespaceZkClusterMapping getByNamespace(String namespace) {
+		return namespaceZkClusterMappingRepository.selectByNamespace(namespace);
+	}
+
 }
