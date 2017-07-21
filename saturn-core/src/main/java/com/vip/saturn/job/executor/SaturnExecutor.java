@@ -106,9 +106,12 @@ public class SaturnExecutor {
 			final Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
 			if (props != null) {
 				String extClass = props.getProperty("saturn.ext");
-				if (!Strings.isNullOrEmpty(extClass)) {
-					extClazz = SaturnExecutor.class.getClassLoader().loadClass(extClass);
-					extClazz.getMethod("init").invoke(null);
+				if(extClass != null){
+					extClass = extClass.trim();
+					if(!extClass.isEmpty()){
+						extClazz = SaturnExecutor.class.getClassLoader().loadClass(extClass);
+						extClazz.getMethod("init").invoke(null);
+					}
 				}
 			}
 		} catch (Exception e) {

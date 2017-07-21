@@ -14,6 +14,10 @@ public class JobClassLoader extends URLClassLoader {
 		if(name == null){
 			return null;
 		}
+		name = name.trim();
+		if(name.isEmpty()){
+			return null;
+		}
 		synchronized (getClassLoadingLock(name)) {
 			Class<?> findClass = findLoadedClass(name);
 			
