@@ -25,9 +25,13 @@ import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 作业服务器节点服务.
@@ -35,6 +39,8 @@ import java.util.Properties;
  */
 public class ServerService extends AbstractSaturnService {
     
+	private static final Logger LOGGER = LoggerFactory.getLogger(ServerService.class);
+	
     private LeaderElectionService leaderElectionService;
     
     public ServerService(final JobScheduler jobScheduler) {
@@ -61,14 +67,17 @@ public class ServerService extends AbstractSaturnService {
     }
 
     public void persistVersion() {
-		final Properties props = ResourceUtils
-				.getResource("properties/saturn-core.properties");
-		if (props != null) {
-			String version = props.getProperty("build.version");
-			if (!Strings.isNullOrEmpty(version)) {
-				getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getVersionNode(executorName), version);
+    		try {
+			Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
+			if (props != null) {
+				String version = props.getProperty("build.version");
+				if (!Strings.isNullOrEmpty(version)) {
+					getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getVersionNode(executorName), version);
+				}
 			}
-		}
+    		} catch (IOException e) {
+    			LOGGER.error(e.getMessage(), e);
+    		}
 	}
     
     public void resetCount() {

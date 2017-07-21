@@ -68,6 +68,7 @@ public class SaturnAutoBasic {
         System.setProperty("saturn.debug", "true");
         // 必须在设置saturn.out后，才加载日志框架
         log = LoggerFactory.getLogger(AbstractSaturnIT.class);
+        SaturnExecutor.IT_TESTING = true;
     }
 
     protected static void initZK() throws Exception {

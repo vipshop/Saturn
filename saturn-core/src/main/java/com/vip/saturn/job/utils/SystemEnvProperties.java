@@ -139,4 +139,18 @@ public class SystemEnvProperties {
 		return property;
 	}
 	
+	public static void init() {
+		if(VIP_SATURN_CONSOLE_URI != null) {
+			String[] split = VIP_SATURN_CONSOLE_URI.split(",");
+			if(split != null) {
+				for(String tmp : split) {
+					tmp = tmp.trim();
+					if(!tmp.isEmpty()) {
+						VIP_SATURN_CONSOLE_URI_LIST.add(tmp);
+					}
+				}
+			}
+		}
+	}
+	
 }

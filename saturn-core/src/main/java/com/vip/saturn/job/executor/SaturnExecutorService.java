@@ -19,6 +19,7 @@ import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -81,14 +82,17 @@ public class SaturnExecutorService {
 		// 持久化最近启动时间
 		coordinatorRegistryCenter.persist(lastBeginTimeNode, String.valueOf(System.currentTimeMillis()));
 		// 持久化版本
-		final Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
-		if (props != null) {
+		try {
+			Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
 			String executorVersion = props.getProperty("build.version");
 			if (StringUtils.isNotBlank(executorVersion)) {
 				log.info("persist znode '/version': {}", executorVersion);
 				coordinatorRegistryCenter.persist(versionNode, executorVersion);
 			}
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
 		}
+		
 		// 持久化clean
 		coordinatorRegistryCenter.persist(executorCleanNode,
 				String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));

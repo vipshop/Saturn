@@ -1,32 +1,7 @@
 package com.vip.saturn.job.executor;
 
-import com.google.common.base.Strings;
-import com.vip.saturn.job.basic.JobRegistry;
-import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.JobTypeManager;
-import com.vip.saturn.job.basic.ShutdownHandler;
-import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.java.SaturnJavaJob;
-import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
-import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
-import com.vip.saturn.job.shell.SaturnScriptJob;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
-import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.ResourceUtils;
-import com.vip.saturn.job.utils.ScriptPidUtils;
-import com.vip.saturn.job.utils.StartCheckUtil;
-import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
-import com.vip.saturn.job.utils.SystemEnvProperties;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,18 +13,50 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Strings;
+import com.vip.saturn.job.basic.JobRegistry;
+import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.ShutdownHandler;
+import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
+import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LocalHostService;
+import com.vip.saturn.job.utils.ResourceUtils;
+import com.vip.saturn.job.utils.ScriptPidUtils;
+import com.vip.saturn.job.utils.StartCheckUtil;
+import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
+import com.vip.saturn.job.utils.SystemEnvProperties;
+
 public class SaturnExecutor {
 
-	/**
-	 * 日志目录
-	 */
-	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
-
+	public static boolean IT_TESTING = false;
+	
 	private static Logger LOGGER;
 
 	private static AtomicBoolean inited = new AtomicBoolean(false);
 
-	private static Class<?> extClazz;
+	private static SaturnExecutorExtension saturnExecutorExtension;
 
 	protected ZookeeperRegistryCenter regCenter;
 
@@ -83,101 +90,104 @@ public class SaturnExecutor {
 		executor = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
 	}
-
-	private String discoverZK() throws Exception {
-		if (extClazz == null) {
-			return SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
-		}
-		return (String) extClazz.getMethod("discoverZK", String.class).invoke(null, namespace);
-	}
 	
-	/**
-	 * 判断zk是否有该域
-	 */
-	private void doValidation(String connectString) throws Exception {
-		if (extClazz == null) {
-			return;
-		}
-		extClazz.getMethod("doValidation", String.class, String.class).invoke(null, namespace, connectString);
-	}
-
-	private static void initExt() {
-		try {
-			final Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
-			if (props != null) {
-				String extClass = props.getProperty("saturn.ext");
-				if (!Strings.isNullOrEmpty(extClass)) {
-					extClazz = SaturnExecutor.class.getClassLoader().loadClass(extClass);
-					extClazz.getMethod("init").invoke(null);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace(); // NOSONAR
-		}
-	}
-
-	/**
-	 * 获取环境变量
-	 * @param key
-	 * @param defaultValue
-	 * @return
-	 */
-	public static String getEnv(String key, String defaultValue) {
-		String v = System.getenv(key);
-		if (v == null || v.isEmpty()) {
-			return defaultValue;
-		}
-		return v;
-	}
-
-	/**
-	 * 获取日志目录
-	 * @return
-	 */
-	public static String getLogDir() {
-		String SATURN_LOG_DIR_DEFAULT = "/apps/logs/saturn/" + System.getProperty("namespace") + "/"
-				+ System.getProperty("log.folder");
-		String SATURN_LOG_DIR = System.getProperty(NAME_SATURN_LOG_DIR,
-				getEnv(NAME_SATURN_LOG_DIR, SATURN_LOG_DIR_DEFAULT));
-		return SATURN_LOG_DIR;
-	}
-
-	/**
-	 * 初始化
-	 * @param executorName
-	 */
-	public static void init(String executorName) {
-		if (!inited.compareAndSet(false, true)) {
-			return;
-		}
-		System.setProperty("log.folder", executorName + "-" + LocalHostService.cachedIpAddress);
-		System.setProperty("saturn.log.dir", getLogDir());
-		JobTypeManager.getInstance().registerHandler("JAVA_JOB", SaturnJavaJob.class);
-		JobTypeManager.getInstance().registerHandler("SHELL_JOB", SaturnScriptJob.class);
-		initExt();
-		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);
-	}
-
 	/**
 	 * SaturnExecutor工厂入口
 	 */
-	public static SaturnExecutor buildExecutor(String namespace, String _executorName) {
+	public static SaturnExecutor buildExecutor(String namespace, String executorName) {
 		if ("$SaturnSelf".equals(namespace)) {
 			throw new RuntimeException("The namespace cannot be $SaturnSelf");
 		}
-		if (_executorName == null || _executorName.isEmpty()) {
+		if (executorName == null || executorName.isEmpty()) {
 			String hostName = LocalHostService.getHostName();
 			if ("localhost".equals(hostName) || "localhost6".equals(hostName)) {
 				throw new RuntimeException(
 						"You are using hostName as executorName, it cannot be localhost or localhost6, please configure hostName.");
 			}
-			_executorName = hostName;// NOSONAR
+			executorName = hostName;// NOSONAR
 		}
-		init(_executorName);
-		return new SaturnExecutor(namespace, _executorName);
+		init(executorName, namespace);
+		return new SaturnExecutor(namespace, executorName);
 	}
+	
+	private static void init(String executorName, String namespace) {
+		if (!inited.compareAndSet(false, true)) {
+			return;
+		}
+		initExtension(executorName, namespace); // log is not allowed to use, before it's ready.
+		saturnExecutorExtension.init();
+		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);	
+	}
+	
+	private static void initExtension(String executorName, String namespace) {
+		try {
+			Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
+			String extClass = props.getProperty("saturn.ext");
+			if (!Strings.isNullOrEmpty(extClass)) {
+				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class.getClassLoader().loadClass(extClass);
+				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class);
+				saturnExecutorExtension = constructor.newInstance(executorName, namespace);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(); // NOSONAR
+		}
+		if(saturnExecutorExtension == null) {
+			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace);
+		}
+	}
+	
+	private String discoverZK() throws Exception {
+		if(IT_TESTING) {
+			return SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
+		}
+		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
+		for(int i=0; i<size; i++) {
+			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			String url = consoleUri + "/rest/v1/discoverZk?namespace=" + namespace;
+			CloseableHttpClient httpClient = null;
+			try {
+				httpClient = HttpClientBuilder.create().build();
+	            HttpGet httpGet = new HttpGet(url);
+	            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
+	            httpGet.setConfig(requestConfig);
+	            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+	            StatusLine statusLine = httpResponse.getStatusLine();
+	            String responseBody = EntityUtils.toString(httpResponse.getEntity());
+	            Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
+	            if(statusLine != null && statusCode == HttpStatus.SC_OK) {
+	            	String connectString = JSON.parseObject(responseBody, String.class);
+					if (StringUtils.isBlank(connectString)) {
+						LOGGER.warn("ZK connection string is blank！");
+						continue;
+					}
 
-	public boolean scheduleJob(String jobName) {
+					LOGGER.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url, connectString);
+					return connectString;
+				} else {
+					if (responseBody != null && !responseBody.trim().isEmpty()) {
+						JSONObject parseObject = JSONObject.parseObject(responseBody);
+						String errMsg = parseObject.getString("message");
+						LOGGER.warn("Fail to discover zk connection string. Url: {}, response statusCode: {}, response message: {}", url, statusCode, errMsg);
+					} else {
+						LOGGER.warn("Fail to discover zk connection string. Url: {}, response statusCode: {}, response no content", url, statusCode);
+					}
+				}
+			} catch (Exception e) {
+				LOGGER.error("Fail to discover zk connection string with exception throws. Url: " + url, e);
+			} finally {
+				if (httpClient != null) {
+					try {
+						httpClient.close();
+					} catch (IOException e) {
+						LOGGER.error("Exception during httpclient closed.", e);
+					}
+				}
+			}
+		}
+		throw new Exception("Fail to discover zk connection string after try " + size + " times!");
+	}
+	
+	private boolean scheduleJob(String jobName) {
 		LOGGER.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
 		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 		if (jobConfig.getSaturnJobClass() == null) {
@@ -298,7 +308,7 @@ public class SaturnExecutor {
 
 				try {
 					// 验证namespace是否存在
-					doValidation(serverLists);
+					saturnExecutorExtension.validateNamespaceExisting(serverLists);
 					
 					zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
 					regCenter = new ZookeeperRegistryCenter(zkConfig);
