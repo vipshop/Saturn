@@ -16,4 +16,6 @@ public interface NamespaceZkClusterMappingRepository {
 
 	List<NamespaceZkClusterMapping> selectAll();
 
+	NamespaceZkClusterMapping selectByNamespace(String namespace);
+
 }

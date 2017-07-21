@@ -27,4 +27,10 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 		return zkClusterInfoRepository.selectAll();
 	}
 
+	@Transactional(readOnly = true)
+	@Override
+	public ZkClusterInfo getByClusterKey(String clusterKey) {
+		return zkClusterInfoRepository.selectByClusterKey(clusterKey);
+	}
+
 }
