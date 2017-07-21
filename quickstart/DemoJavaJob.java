@@ -26,7 +26,7 @@ public class DemoJavaJob extends AbstractSaturnJavaJob {
 	 */
 	public static void main(String[] args) throws Exception {
 		RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-		CuratorFramework client = CuratorFrameworkFactory.builder().connectString("localhost:2182")
+		CuratorFramework client = CuratorFrameworkFactory.builder().connectString("localhost:2181")
 				.namespace("mydomain").sessionTimeoutMs(10000).retryPolicy(retryPolicy).build();
 		client.start();
 		addJavaJob(client, "demoJavaJob");

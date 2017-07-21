@@ -161,4 +161,4 @@ CREATE TABLE `namespace_zk_cluster_mapping` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace` (`namespace`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-INSERT INTO `namespace_zk_cluster_mapping`(`namespace`, `name`, `cluster_key`) VALUES('namespace1', '业务组', 'cluster1');
+INSERT INTO `namespace_zk_cluster_mapping`(`namespace`, `name`, `cluster_key`) VALUES('mydomain', '业务组', 'cluster1');

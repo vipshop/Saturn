@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<property resource="application.properties" />
-    <property name="log.directory" value="${saturn.console.log}" />
+	<if condition='property("saturn.console.log")==""'>
+	    <then>
+	        <property name="log.directory" value="/apps/logs/saturn_console/saturn.vip.vip.com" />
+	    </then>
+	    <else>
+	    	<property name="log.directory" value="${saturn.console.log}" />
+	    </else>
+	</if>
     <property name="log.context.name" value="saturn.console" />
     <property name="log.file.name" value="${log.context.name}" />
     <property name="log.error.file.name" value="${log.context.name}-error" />
