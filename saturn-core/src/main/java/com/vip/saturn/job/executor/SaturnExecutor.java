@@ -292,7 +292,7 @@ public class SaturnExecutor {
 
 			long startTime = System.currentTimeMillis();
 
-			shutdown();
+			shutdown0();
 
 			try {
 				StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
@@ -399,7 +399,7 @@ public class SaturnExecutor {
 							try {
 								shutdownLock.lockInterruptibly();
 								try {
-									shutdownGracefully();
+									shutdownGracefully0();
 									executor.shutdownNow();
 									isShutdown = true;
 								} finally {
@@ -411,13 +411,13 @@ public class SaturnExecutor {
 						}
 		
 					};
-					ShutdownHandler.addShutdownCallback(shutdownHandler);
+					ShutdownHandler.addShutdownCallback(executorName, shutdownHandler);
 				}
 
 				LOGGER.info("The executor {} start successfully which used {} ms", executorName, System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
 				LOGGER.error("Fail to start executor {}", executorName);
-				shutdown();
+				shutdown0();
 				throw t;
 			}
 		} finally {
@@ -469,7 +469,7 @@ public class SaturnExecutor {
 	/**
 	 * Executor关闭
 	 */
-	public void shutdown() throws Exception {
+	private void shutdown0() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
 			LOGGER.info("Try to stop executor {}", executorName);
@@ -496,7 +496,7 @@ public class SaturnExecutor {
 	 * 把自己从集群中拿掉，现有的作业不停； 一直到全部作业都执行完毕，再真正退出； 
 	 * 设置一定超时时间，如果超过这个时间仍未退出，则强行中止
 	 */
-	public void shutdownGracefully() throws Exception {
+	private void shutdownGracefully0() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
 			LOGGER.info("Try to stop executor {} gracefully", executorName);
@@ -573,6 +573,28 @@ public class SaturnExecutor {
 		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
 
 
+	}
+	
+	public void shutdown() throws Exception {
+		shutdownLock.lockInterruptibly();
+		try {
+			shutdown0();
+			ShutdownHandler.removeShutdownCallback(executorName);
+			isShutdown = true;
+		} finally {
+			shutdownLock.unlock();
+		}
+	}
+	
+	public void shutdownGracefully() throws Exception {
+		shutdownLock.lockInterruptibly();
+		try {
+			shutdownGracefully0();
+			ShutdownHandler.removeShutdownCallback(executorName);
+			isShutdown = true;
+		} finally {
+			shutdownLock.unlock();
+		}
 	}
 
 	public SaturnExecutorService getSaturnExecutorService() {
