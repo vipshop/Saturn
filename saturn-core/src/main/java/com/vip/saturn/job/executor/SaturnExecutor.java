@@ -500,7 +500,6 @@ public class SaturnExecutor {
 		shutdownLock.lockInterruptibly();
 		try {
 			LOGGER.info("Try to stop executor {} gracefully", executorName);
-			shutdownUnfinishJob();
 			shutdownAllCountThread();
 	
 			if (saturnExecutorService != null) {
