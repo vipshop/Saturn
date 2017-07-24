@@ -25,7 +25,7 @@ public class NamespaceShardingManager {
 	private AddJobListenersService addJobListenersService;
 
 	private String namespace;
-	private String zkAddr;
+	private String zkClusterKey;
 
 	private ShardingTreeCacheService shardingTreeCacheService;
 	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
@@ -39,13 +39,15 @@ public class NamespaceShardingManager {
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
 
-    public String getZkAddr() {
-		return zkAddr;
+	public String getZkClusterKey() {
+		return zkClusterKey;
 	}
-    
-	public void setZkAddr(String zkAddr) {
-		this.zkAddr = zkAddr;
+
+	public void setZkClusterKey(String zkClusterKey) {
+		this.zkClusterKey = zkClusterKey;
 	}
+
+
 
 
 
