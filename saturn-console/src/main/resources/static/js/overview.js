@@ -2223,14 +2223,14 @@ $(function() {
             if(data.success == true) {
                 msg += "成功";
                 msg += "<hr>";
-                msg += "作业时区：" + data.obj.timeZone;
+                msg += "作业时区：" + timeZone;
                 msg += "<hr>";
                 msg += "预测执行时间点：<br><br>";
                 msg += data.obj.times;
             } else {
                 msg += "失败";
                 msg += "<hr>";
-                msg += "作业时区：" + data.obj.timeZone;
+                msg += "作业时区：" + timeZone;
                 msg += "<hr>";
                 msg += "错误信息：<br><br>";
                 msg += data.message;
