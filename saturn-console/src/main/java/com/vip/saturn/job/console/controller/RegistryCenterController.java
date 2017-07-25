@@ -69,10 +69,11 @@ public class RegistryCenterController extends AbstractController {
 		return requestResult;
 	}
 	
-	@RequestMapping(value = "getNamespaceZkCluster", method = RequestMethod.GET)
+	@RequestMapping(value = "getAllNamespaceZkClusterMappings", method = RequestMethod.GET)
 	public RequestResult getNamespaceZkCluster(final HttpSession session) {
 		RequestResult requestResult = new RequestResult();
 		try {
+			
 			throw new Exception("todo");
 		} catch (Exception e) {
 			requestResult.setSuccess(false);

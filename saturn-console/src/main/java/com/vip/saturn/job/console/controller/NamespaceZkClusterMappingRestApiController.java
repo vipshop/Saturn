@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
-import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
+import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 
 /**
@@ -35,7 +35,7 @@ public class NamespaceZkClusterMappingRestApiController {
 	private ZkClusterInfoService zkClusterInfoService;
 
 	@Resource
-	private NamespaceZkClusterMappingService namespaceZkclusterMappingService;
+	private NamespaceZkClusterMapping4SqlService namespaceZkclusterMapping4SqlService;
 
 	@RequestMapping(value = "/discoverZk", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> discoverZk(String namespace, HttpServletRequest request)
@@ -47,7 +47,7 @@ public class NamespaceZkClusterMappingRestApiController {
 						String.format(MISSING_REQUEST_MSG, "namespace"));
 			}
 
-			String zkClusterKey = namespaceZkclusterMappingService.getZkClusterKey(namespace);
+			String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 
 			if (zkClusterKey == null) {
 				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),

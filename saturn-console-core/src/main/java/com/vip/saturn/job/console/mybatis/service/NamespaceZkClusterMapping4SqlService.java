@@ -9,7 +9,7 @@ import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
  * @author hebelala
  *
  */
-public interface NamespaceZkClusterMappingService {
+public interface NamespaceZkClusterMapping4SqlService {
 
 	List<NamespaceZkClusterMapping> getAllMappings();
 	
