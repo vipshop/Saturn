@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository;
-import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
+import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 
 /**
  * 
@@ -19,7 +19,7 @@ import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingServi
  *
  */
 @Service
-public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterMappingService {
+public class NamespaceZkClusterMapping4SqlServiceImpl implements NamespaceZkClusterMapping4SqlService {
 
 	@Autowired
 	private NamespaceZkClusterMappingRepository namespaceZkClusterMappingRepository;
@@ -119,10 +119,10 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	public Integer update(String namespace, String name, String zkClusterKey, String lastUpdatedBy) {
 		NamespaceZkClusterMapping namespaceZkClusterMapping = namespaceZkClusterMappingRepository
 				.selectByNamespace(namespace);
-		if(name != null) {
+		if (name != null) {
 			namespaceZkClusterMapping.setName(name);
 		}
-		if(zkClusterKey != null) {
+		if (zkClusterKey != null) {
 			namespaceZkClusterMapping.setZkClusterKey(zkClusterKey);
 		}
 		namespaceZkClusterMapping.setLastUpdatedBy(lastUpdatedBy);
