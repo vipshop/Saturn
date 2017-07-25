@@ -159,7 +159,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		LinkedHashMap<String/** zkAddr **/, ZkCluster> newClusterMap = new LinkedHashMap<>();
 		// 获取新的zkClusters
 		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
-		List<NamespaceZkClusterMapping> allNamespaceZkClusterMapping = namespaceZkClusterMappingService.getAllNamespaceZkClusterMapping();
+		List<NamespaceZkClusterMapping> allNamespaceZkClusterMapping = namespaceZkClusterMappingService.getAllMappings();
 		if(allZkClusterInfo != null) {
 			for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 				ZkCluster zkCluster = new ZkCluster();
@@ -212,7 +212,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					continue;
 				}
 				String name = namespaceZkClusterMapping.getName();
-				String clusterKey = namespaceZkClusterMapping.getClusterKey();
+				String clusterKey = namespaceZkClusterMapping.getZkClusterKey();
 				if(allZkClusterInfo != null) {
 					for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 						if(zkClusterInfo.getClusterKey().equals(clusterKey)) {

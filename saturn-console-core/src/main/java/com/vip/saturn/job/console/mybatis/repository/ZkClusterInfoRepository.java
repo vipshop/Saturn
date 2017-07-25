@@ -13,7 +13,7 @@ import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
  */
 @Repository
 public interface ZkClusterInfoRepository {
-	
+
 	List<ZkClusterInfo> selectAll();
 
 	ZkClusterInfo selectByClusterKey(String clusterKey);

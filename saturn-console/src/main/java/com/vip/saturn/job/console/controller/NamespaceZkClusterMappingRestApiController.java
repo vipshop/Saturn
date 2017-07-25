@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
@@ -48,18 +47,16 @@ public class NamespaceZkClusterMappingRestApiController {
 						String.format(MISSING_REQUEST_MSG, "namespace"));
 			}
 
-			NamespaceZkClusterMapping namespaceZkClusterMapping = namespaceZkclusterMappingService
-					.getByNamespace(namespace);
+			String zkClusterKey = namespaceZkclusterMappingService.getZkClusterKey(namespace);
 
-			if (namespaceZkClusterMapping == null) {
+			if (zkClusterKey == null) {
 				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 						"The NamespaceZkClusterMapping is not configured in db for " + namespace);
 			}
-			String clusterKey = namespaceZkClusterMapping.getClusterKey();
-			ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(clusterKey);
+			ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 			if (zkClusterInfo == null) {
 				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-						"The clusterKey(" + clusterKey + ") is not configured in db for " + namespace);
+						"The clusterKey(" + zkClusterKey + ") is not configured in db for " + namespace);
 			}
 			return new ResponseEntity<Object>(zkClusterInfo.getConnectString(), headers, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
