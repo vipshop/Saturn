@@ -25,6 +25,8 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import java.util.Collection;
 
 public interface RegistryCenterService {
+	
+	RequestResult refreshNamespaceFromCmdb(String userName);
 
     RequestResult refreshRegCenter();
 

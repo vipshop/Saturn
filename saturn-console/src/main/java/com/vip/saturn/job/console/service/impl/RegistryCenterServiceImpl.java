@@ -592,4 +592,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return 0;
 	}
 
+	@Override
+	public RequestResult refreshNamespaceFromCmdb(String userName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
