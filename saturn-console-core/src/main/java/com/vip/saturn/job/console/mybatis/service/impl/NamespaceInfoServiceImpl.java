@@ -47,6 +47,9 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 	@Override
 	public void replaceAll(List<NamespaceInfo> namespaceInfos) {
 		deleteAll();
+		if(CollectionUtils.isEmpty(namespaceInfos)) {
+			return;
+		}
 		namespaceInfoRepository.batchInsert(namespaceInfos);
 	}
 
