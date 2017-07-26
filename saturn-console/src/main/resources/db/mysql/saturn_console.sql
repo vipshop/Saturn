@@ -77,7 +77,7 @@ CREATE TABLE `job_config_history` (
   `pause_period_time` text COMMENT '停止周期时间',
   `sharding_item_parameters` text COMMENT '分片序列号/参数对照表',
   `job_parameter` text COMMENT '作业参数',
-  `monitor_execution` tinyint(1) DEFAULT NULL COMMENT '监控异常',
+  `monitor_execution` tinyint(1) DEFAULT '1' COMMENT '监控异常',
   `process_count_interval_seconds` int(11) DEFAULT NULL COMMENT '处理总数间隔秒数',
   `concurrent_data_process_thread_count` int(11) DEFAULT NULL COMMENT '当前数据处理线程总数',
   `fetch_data_count` int(11) DEFAULT NULL COMMENT '获取到的数据总数',
