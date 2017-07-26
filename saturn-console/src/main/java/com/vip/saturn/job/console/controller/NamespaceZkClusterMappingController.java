@@ -29,7 +29,7 @@ import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
+import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 
 @RestController
 @RequestMapping("registry_center")

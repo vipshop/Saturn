@@ -1,10 +1,10 @@
-package com.vip.saturn.job.console.mybatis.service;
-
-import java.util.List;
+package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+
+import java.util.List;
 
 /**
  * @author hebelala
@@ -21,7 +21,7 @@ public interface NamespaceZkClusterMappingService {
 			throws SaturnJobConsoleException;
 
 	void moveNamespaceBatchTo(String namespaces, String bootstrapKeyNew, String lastUpdatedBy, boolean updateDBOnly,
-			long id) throws SaturnJobConsoleException;
+                              long id) throws SaturnJobConsoleException;
 
 	MoveNamespaceBatchStatus getMoveNamespaceBatchStatus(long id) throws SaturnJobConsoleException;
 
