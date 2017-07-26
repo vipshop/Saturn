@@ -3,6 +3,7 @@
  */
 package com.vip.saturn.job.console.mybatis.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +18,6 @@ import org.springframework.util.CollectionUtils;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
-import com.vip.saturn.job.console.service.helper.DashboardLeaderTreeCache;
 
 /**
  * @author timmy.hu
@@ -28,7 +28,7 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceInfoServiceImpl.class);
 
-	private static final int MAX_DELETE_NUM = 2000;
+	private static final int BATCH_NUM = 2000;
 
 	@Autowired
 	private NamespaceInfoRepository namespaceInfoRepository;
@@ -42,31 +42,54 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 	public List<NamespaceInfo> selectAll() {
 		return namespaceInfoRepository.selectAll();
 	}
+	
+	@Override
+	public List<NamespaceInfo> selectAll(List<String> nsList) {
+		return namespaceInfoRepository.selectAllByNamespaces(nsList);
+	}
 
 	@Transactional
 	@Override
 	public void replaceAll(List<NamespaceInfo> namespaceInfos) {
 		deleteAll();
-		if(CollectionUtils.isEmpty(namespaceInfos)) {
+		if (CollectionUtils.isEmpty(namespaceInfos)) {
 			return;
 		}
-		namespaceInfoRepository.batchInsert(namespaceInfos);
+		batchInsert(namespaceInfos);
 	}
 
+	@Transactional
 	@Override
-	public Integer batchInsert(List<NamespaceInfo> namespaceInfos) {
+	public void batchInsert(List<NamespaceInfo> namespaceInfos) {
 		if (CollectionUtils.isEmpty(namespaceInfos)) {
-			return 0;
+			return;
 		}
-		return namespaceInfoRepository.batchInsert(namespaceInfos);
+		List<NamespaceInfo> toInsertList;
+		int insertTime = namespaceInfos.size() / BATCH_NUM + 1;
+		int curIndex = 0;
+		for (int i = 0; i < insertTime; i++) {
+			toInsertList = new ArrayList<NamespaceInfo>();
+			for (int j = 0; j < BATCH_NUM; j++) {
+				if (curIndex == namespaceInfos.size() - 1) {
+					break;
+				}
+				toInsertList.add(namespaceInfos.get(curIndex));
+				curIndex++;
+			}
+			namespaceInfoRepository.batchInsert(namespaceInfos);
+			if (curIndex == namespaceInfos.size() - 1) {
+				break;
+			}
+		}
 	}
 
+	@Transactional
 	@Override
 	public void deleteAll() {
 		int deleteNum = 0;
 		while (true) {
-			deleteNum = namespaceInfoRepository.batchDelete(MAX_DELETE_NUM);
-			if (deleteNum < MAX_DELETE_NUM) {
+			deleteNum = namespaceInfoRepository.batchDelete(BATCH_NUM);
+			if (deleteNum < BATCH_NUM) {
 				return;
 			}
 			try {

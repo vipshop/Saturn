@@ -14,8 +14,10 @@ public interface NamespaceInfoService {
 	NamespaceInfo selectByNamespace(String namespace);
 
 	List<NamespaceInfo> selectAll();
-
-	Integer batchInsert(List<NamespaceInfo> namespaceInfos);
+	
+	List<NamespaceInfo> selectAll(List<String> nsList);
+	
+	void batchInsert(List<NamespaceInfo> namespaceInfos);
 
 	void deleteAll();
 
