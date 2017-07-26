@@ -153,6 +153,31 @@ layout:decorator="frame-layout">
 					</div>
 				</div>
 			</div>
+			<!-- giveMeYes -->
+			<div class="modal" id="confirm-yes-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="z-index:1056;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title" id="confirm-yes-dialog-title">
+							</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<div class="col-sm-12">
+									<input type="text" id="giveMeYes" class="form-control" />
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default input-sm" data-dismiss="modal">关闭</button>
+							<button id="confirm-yes-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div th:replace="fragments :: success-dialog"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='confirm-dialog', text='')"></div>

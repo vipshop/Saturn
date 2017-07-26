@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @author hebelala
  */
-public class MoveDomainBatchStatus {
+public class MoveNamespaceBatchStatus {
 
 	private boolean finished;
 	private int successCount;
@@ -18,7 +18,7 @@ public class MoveDomainBatchStatus {
 	private List<String> failList = new ArrayList<>();
 	private List<String> ignoreList = new ArrayList<>();
 
-	public MoveDomainBatchStatus(int size) {
+	public MoveNamespaceBatchStatus(int size) {
 		this.unDoCount = size;
 		this.totalCount = size;
 	}

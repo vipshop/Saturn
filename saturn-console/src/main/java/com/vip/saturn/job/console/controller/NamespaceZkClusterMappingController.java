@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vip.saturn.job.console.domain.MoveDomainBatchStatus;
+import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -95,8 +95,8 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 		return requestResult;
 	}
 
-	@RequestMapping(value = "moveDomainBatch", method = RequestMethod.POST)
-	public RequestResult moveDomainBatch(HttpServletRequest request, String namespaces, String bootstrapKeyNew,
+	@RequestMapping(value = "moveNamespaceBatch", method = RequestMethod.POST)
+	public RequestResult moveNamespaceBatch(HttpServletRequest request, String namespaces, String bootstrapKeyNew,
 			boolean updateDBOnly, long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
@@ -106,7 +106,7 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 			if (bootstrapKeyNew == null || bootstrapKeyNew.trim().isEmpty()) {
 				throw new SaturnJobConsoleException("The bootstrapKeyNew cannot be null");
 			}
-			namespaceZkClusterMappingService.moveDomainBatchTo(namespaces, bootstrapKeyNew, "", updateDBOnly, id);
+			namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, bootstrapKeyNew, "", updateDBOnly, id);
 			requestResult.setSuccess(true);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);
@@ -119,13 +119,13 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 		return requestResult;
 	}
 
-	@RequestMapping(value = "getMoveDomainBatchStatus", method = RequestMethod.GET)
-	public RequestResult getMoveDomainBatchStatus(HttpServletRequest request, long id) {
+	@RequestMapping(value = "getMoveNamespaceBatchStatus", method = RequestMethod.GET)
+	public RequestResult getMoveNamespaceBatchStatus(HttpServletRequest request, long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			MoveDomainBatchStatus moveDomainBatchStatus = namespaceZkClusterMappingService.getMoveDomainBatchStatus(id);
+			MoveNamespaceBatchStatus moveNamespaceBatchStatus = namespaceZkClusterMappingService.getMoveNamespaceBatchStatus(id);
 			requestResult.setSuccess(true);
-			requestResult.setObj(moveDomainBatchStatus);
+			requestResult.setObj(moveNamespaceBatchStatus);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);
 			requestResult.setMessage(e.getMessage());
@@ -137,11 +137,11 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 		return requestResult;
 	}
 
-	@RequestMapping(value = "clearMoveDomainBatchStatus", method = RequestMethod.GET)
-	public RequestResult clearMoveDomainBatchStatus(HttpServletRequest request, long id) {
+	@RequestMapping(value = "clearMoveNamespaceBatchStatus", method = RequestMethod.GET)
+	public RequestResult clearMoveNamespaceBatchStatus(HttpServletRequest request, long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			namespaceZkClusterMappingService.clearMoveDomainBatchStatus(id);
+			namespaceZkClusterMappingService.clearMoveNamespaceBatchStatus(id);
 			requestResult.setSuccess(true);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);
