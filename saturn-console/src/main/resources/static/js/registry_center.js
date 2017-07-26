@@ -62,7 +62,7 @@ function refreshNamespaceInfo() {
 }
 
 function refreshNamespaceZkCluster() {
-	$.get("registry_center/getNamespaceZkCluster", {}, function(data) {
+	$.get("registry_center/getNamespaceZkclusterMappingList", {}, function(data) {
 		if(namespace_zkcluster_manager_table_DataTable) {
 			namespace_zkcluster_manager_table_DataTable.destroy();
 		}
@@ -86,7 +86,7 @@ function refreshNamespaceZkCluster() {
 	        }
 	        namespace_zkcluster_manager_table_DataTable = $("#namespace_zkcluster_manager_table").DataTable({"oLanguage": language, "displayLength":100});
         } else {
-    		showFailureDialogWithMsg("failure-dialog", data.message);
+            showFailureDialogWithMsg("failure-dialog", data.message);
         }
     });
 }

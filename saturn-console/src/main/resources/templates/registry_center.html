@@ -73,6 +73,86 @@ layout:decorator="frame-layout">
 					</div>
 				</div>
 			</div>
+			<!-- 批量迁移 -->
+			<div class="modal" id="move-namespace-batch-dialog" tabindex="-1" role="dialog">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title">批量域迁移</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label for="move-namespace-batch-dialog-namespace" class="col-sm-3 control-label text-right">域名</label>
+								<div class="col-sm-8">
+									<pre id="move-namespace-batch-dialog-namespace"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="move-namespace-batch-dialog-zkCluster" class="col-sm-3 control-label text-right">目标集群</label>
+								<div class="col-sm-6">
+									<select id="move-namespace-batch-dialog-zkCluster" class="form-control"></select>
+									<input type="text" id="move-namespace-batch-dialog-zkCluster-input" class="form-control typeahead" style="display:none" />
+								</div>
+								<div class="col-sm-2">
+									<button id="move-namespace-batch-dialog-manual" type="button" class="btn btn-success" status="auto">手动输入</button>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="move-namespace-batch-dialog-updateDBOnly" class="col-sm-3 control-label text-right">只更新映射表</label>
+								<div class="col-sm-8">
+									<input id="move-namespace-batch-dialog-updateDBOnly" type="checkbox" style="height:28px" />
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default input-sm" data-dismiss="modal">关闭</button>
+							<button id="move-namespace-batch-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">批量迁移</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 批量迁移状态 -->
+			<div class="modal" id="move-namespace-batch-status-dialog" tabindex="-1" role="dialog" style="z-index:1056;">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title">状态（批量域迁移到<span id="move-namespace-batch-status-dialog-zkCluster"></span>）</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label for="move-namespace-batch-status-dialog-data" class="col-sm-2 control-label text-right">迁移量</label>
+								<div class="col-sm-9">
+									<pre id="move-namespace-batch-status-dialog-data"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="move-namespace-batch-status-dialog-moving" class="col-sm-2 control-label text-right">正在迁移</label>
+								<div class="col-sm-9">
+									<pre id="move-namespace-batch-status-dialog-moving"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="move-namespace-batch-status-dialog-message" class="col-sm-2 control-label text-right">迁移结果</label>
+								<div class="col-sm-9">
+									<pre id="move-namespace-batch-status-dialog-message"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<font class="col-sm-11" color="green" size="2">注：忽略的域，指该域已经处于目标集群</font>
+							</div>
+							<div class="form-group" id="move-namespace-batch-status-dialog-tips">
+								<font class="col-sm-11" color="red">执行中，请耐心等待^v^</font>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" id="move-namespace-batch-status-dialog-x" class="btn btn-default">完成</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div th:replace="fragments :: success-dialog"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='confirm-dialog', text='')"></div>

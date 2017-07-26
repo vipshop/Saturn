@@ -1,0 +1,156 @@
+/**
+ * Copyright 1999-2015 dangdang.com.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * </p>
+ */
+
+package com.vip.saturn.job.console.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.vip.saturn.job.console.domain.MoveDomainBatchStatus;
+import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
+import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMappingService;
+
+@RestController
+@RequestMapping("registry_center")
+public class NamespaceZkClusterMappingController extends AbstractController {
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(NamespaceZkClusterMappingController.class);
+
+	@Resource
+	private NamespaceZkClusterMappingService namespaceZkClusterMappingService;
+
+	@RequestMapping(value = "getNamespaceZkclusterMappingList", method = RequestMethod.GET)
+	public RequestResult getNamespaceZkclusterMappingList(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<NamespaceZkClusterMappingVo> namespaceZkclusterMappingList = namespaceZkClusterMappingService
+					.getNamespaceZkClusterMappingList();
+			requestResult.setObj(namespaceZkclusterMappingList);
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "initNamespaceZkClusterMapping", method = RequestMethod.POST)
+	public RequestResult initNamespaceZkClusterMapping(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			namespaceZkClusterMappingService.initNamespaceZkClusterMapping("");
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "getZkClusterListWithOnlineFromCfg", method = RequestMethod.GET)
+	public RequestResult getZkClusterListWithOnlineFromCfg(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<String> zkClusterListWithOnlineFromCfg = namespaceZkClusterMappingService
+					.getZkClusterListWithOnlineFromCfg();
+			requestResult.setObj(zkClusterListWithOnlineFromCfg);
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "moveDomainBatch", method = RequestMethod.POST)
+	public RequestResult moveDomainBatch(HttpServletRequest request, String namespaces, String bootstrapKeyNew,
+			boolean updateDBOnly, long id) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if (namespaces == null || namespaces.trim().isEmpty()) {
+				throw new SaturnJobConsoleException("The namespace cannot be null");
+			}
+			if (bootstrapKeyNew == null || bootstrapKeyNew.trim().isEmpty()) {
+				throw new SaturnJobConsoleException("The bootstrapKeyNew cannot be null");
+			}
+			namespaceZkClusterMappingService.moveDomainBatchTo(namespaces, bootstrapKeyNew, "", updateDBOnly, id);
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "getMoveDomainBatchStatus", method = RequestMethod.GET)
+	public RequestResult getMoveDomainBatchStatus(HttpServletRequest request, long id) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			MoveDomainBatchStatus moveDomainBatchStatus = namespaceZkClusterMappingService.getMoveDomainBatchStatus(id);
+			requestResult.setSuccess(true);
+			requestResult.setObj(moveDomainBatchStatus);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "clearMoveDomainBatchStatus", method = RequestMethod.GET)
+	public RequestResult clearMoveDomainBatchStatus(HttpServletRequest request, long id) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			namespaceZkClusterMappingService.clearMoveDomainBatchStatus(id);
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+}
