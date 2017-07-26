@@ -338,6 +338,12 @@ public class JobOperationServiceImpl implements JobOperationService {
 		saveJobConfigToZkWhenCopy(jobConfig, curatorFrameworkOp);
 	}
 
+	@Override
+	public void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		jobConfig.setDefaultValues();
+		saveJobConfigToZkWhenPersist(jobConfig, curatorFrameworkOp, true);
+	}
+
 	/**
 	 * 对作业配置的一些属性进行矫正
 	 * 

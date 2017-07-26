@@ -80,8 +80,7 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 	public RequestResult getZkClusterListWithOnlineFromCfg(HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			List<String> zkClusterListWithOnlineFromCfg = namespaceZkClusterMappingService
-					.getZkClusterListWithOnlineFromCfg();
+			List<String> zkClusterListWithOnlineFromCfg = namespaceZkClusterMappingService.getZkClusterListWithOnline();
 			requestResult.setObj(zkClusterListWithOnlineFromCfg);
 			requestResult.setSuccess(true);
 		} catch (SaturnJobConsoleException e) {

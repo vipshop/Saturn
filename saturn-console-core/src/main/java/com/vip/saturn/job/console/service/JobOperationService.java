@@ -45,4 +45,6 @@ public interface JobOperationService {
 
     void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception;
 
+    void persistJobFromDB(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+
 }

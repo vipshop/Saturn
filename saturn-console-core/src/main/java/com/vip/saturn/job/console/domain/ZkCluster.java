@@ -18,7 +18,7 @@ public class ZkCluster implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	private String key;
+	private String clusterKey;
 	
 	private String zkAlias;
 	
@@ -39,12 +39,12 @@ public class ZkCluster implements Serializable {
 	public ZkCluster() {
 	}
 
-	public String getKey() {
-		return key;
+	public String getClusterKey() {
+		return clusterKey;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setClusterKey(String clusterKey) {
+		this.clusterKey = clusterKey;
 	}
 
 	public String getZkAlias() {
@@ -110,7 +110,7 @@ public class ZkCluster implements Serializable {
 
 		ZkCluster zkCluster = (ZkCluster) o;
 
-		if (key != null ? !key.equals(zkCluster.key) : zkCluster.key != null) return false;
+		if (clusterKey != null ? !clusterKey.equals(zkCluster.clusterKey) : zkCluster.clusterKey != null) return false;
 		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null) return false;
 		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) return false;
 		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
@@ -119,7 +119,7 @@ public class ZkCluster implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = key != null ? key.hashCode() : 0;
+		int result = clusterKey != null ? clusterKey.hashCode() : 0;
 		result = 31 * result + (zkAlias != null ? zkAlias.hashCode() : 0);
 		result = 31 * result + (zkAddr != null ? zkAddr.hashCode() : 0);
 		result = 31 * result + (digest != null ? digest.hashCode() : 0);

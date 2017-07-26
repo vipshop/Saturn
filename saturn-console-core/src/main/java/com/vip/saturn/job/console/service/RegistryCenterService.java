@@ -21,6 +21,9 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import org.apache.curator.framework.CuratorFramework;
 
 import java.util.Collection;
 
@@ -42,6 +45,8 @@ public interface RegistryCenterService {
 
     RegistryCenterConfiguration findConfigByNamespace(String namespace);
 
+    CuratorRepository.CuratorFrameworkOp connectOnly(String zkAddr, String namespace) throws SaturnJobConsoleException;
+
     boolean isDashboardLeader(String key);
 
     ZkCluster getZkCluster(String key);
@@ -49,5 +54,7 @@ public interface RegistryCenterService {
     Collection<ZkCluster> getZkClusterList();
 
     int domainCount(String key);
+
+    boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
 
 }

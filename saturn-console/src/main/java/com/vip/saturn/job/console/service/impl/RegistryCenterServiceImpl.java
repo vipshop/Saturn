@@ -30,6 +30,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -181,7 +182,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		if (allZkClusterInfo != null) {
 			for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 				ZkCluster zkCluster = new ZkCluster();
-				zkCluster.setKey(zkClusterInfo.getClusterKey());
+				zkCluster.setClusterKey(zkClusterInfo.getClusterKey());
 				zkCluster.setZkAlias(zkClusterInfo.getAlias());
 				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
 				newClusterMap.put(zkClusterInfo.getConnectString(), zkCluster);
@@ -563,6 +564,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
+	public CuratorRepository.CuratorFrameworkOp connectOnly(String zkAddr, String namespace) throws SaturnJobConsoleException {
+		CuratorFramework curatorFramework = curatorRepository.connect(zkAddr, namespace, null);
+		if (curatorFramework != null) {
+			return curatorRepository.newCuratorFrameworkOp(curatorFramework);
+		}
+		return null;
+	}
+
+	@Override
 	public RequestResult refreshRegCenter() {
 		RequestResult result = new RequestResult();
 		if (refreshingRegCenter.compareAndSet(false, true)) {
@@ -617,6 +627,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 		return 0;
+	}
+
+	@Override
+	public boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException {
+		if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
