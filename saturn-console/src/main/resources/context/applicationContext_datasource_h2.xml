@@ -14,6 +14,6 @@
 	<jdbc:embedded-database id="dataSource" database-name="${db.h2.dbname:dbname}" type="H2">
 		<jdbc:script location="classpath:db/h2/h2_type.sql" />
 		<jdbc:script location="classpath:db/h2/saturn_console.sql" />
-		<jdbc:script location="classpath:db/h2/other_*.sql" />
+		<jdbc:script location="classpath:db/h2/custom_*.sql" />
 	</jdbc:embedded-database>
 </beans>
