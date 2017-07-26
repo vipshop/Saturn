@@ -3,7 +3,6 @@
  */
 package com.vip.saturn.job.console.mybatis.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +41,7 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 	public List<NamespaceInfo> selectAll() {
 		return namespaceInfoRepository.selectAll();
 	}
-	
+
 	@Override
 	public List<NamespaceInfo> selectAll(List<String> nsList) {
 		return namespaceInfoRepository.selectAllByNamespaces(nsList);
@@ -65,21 +64,14 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 			return;
 		}
 		List<NamespaceInfo> toInsertList;
-		int insertTime = namespaceInfos.size() / BATCH_NUM + 1;
-		int curIndex = 0;
-		for (int i = 0; i < insertTime; i++) {
-			toInsertList = new ArrayList<NamespaceInfo>();
-			for (int j = 0; j < BATCH_NUM; j++) {
-				if (curIndex == namespaceInfos.size() - 1) {
-					break;
-				}
-				toInsertList.add(namespaceInfos.get(curIndex));
-				curIndex++;
-			}
-			namespaceInfoRepository.batchInsert(namespaceInfos);
-			if (curIndex == namespaceInfos.size() - 1) {
-				break;
-			}
+		int divNum = namespaceInfos.size() / BATCH_NUM;
+		for (int i = 0; i < divNum; i++) {
+			toInsertList = namespaceInfos.subList(i * BATCH_NUM, (i + 1) * BATCH_NUM);
+			namespaceInfoRepository.batchInsert(toInsertList);
+		}
+		if (namespaceInfos.size() > divNum * BATCH_NUM) {
+			toInsertList = namespaceInfos.subList(divNum * BATCH_NUM, namespaceInfos.size());
+			namespaceInfoRepository.batchInsert(toInsertList);
 		}
 	}
 
