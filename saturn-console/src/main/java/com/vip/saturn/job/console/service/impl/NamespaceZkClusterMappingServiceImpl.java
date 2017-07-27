@@ -208,6 +208,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 				LOGGER.info("update mapping table success, {}-{}", namespace, zkClusterKeyNew);
 			}
 		} catch (SaturnJobConsoleException e) {
+			LOGGER.error(e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
@@ -243,7 +244,6 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							moveNamespaceTo(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
 							moveNamespaceBatchStatus.incrementSuccessCount();
 						} catch (SaturnJobConsoleException e) {
-							LOGGER.error(e.getMessage(), e);
 							if (("The namespace(" + namespace + ") is in " + zkClusterKeyNew).equals(e.getMessage())) {
 								moveNamespaceBatchStatus.incrementIgnoreCount();
 								moveNamespaceBatchStatus.getIgnoreList().add(namespace);
