@@ -7,12 +7,12 @@
         <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
 	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
 	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
-        <result column="cluster_key" property="clusterKey" jdbcType="VARCHAR"/>
+        <result column="zk_cluster_key" property="zkClusterKey" jdbcType="VARCHAR"/>
         <result column="alias" property="alias" jdbcType="VARCHAR"/>
         <result column="connect_string" property="connectString" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, create_time, created_by, last_update_time, last_updated_by, cluster_key, alias, connect_string
+        id, create_time, created_by, last_update_time, last_updated_by, zk_cluster_key, alias, connect_string
     </sql>
     <select id="selectAll" resultMap="BaseResultMap">
         select
@@ -23,6 +23,6 @@
         select
         <include refid="Base_Column_List"/>
         from zk_cluster_info
-        where cluster_key = #{clusterKey, jdbcType=VARCHAR} limit 0,1
+        where zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR} limit 0,1
     </select>
 </mapper>
