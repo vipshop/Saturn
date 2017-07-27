@@ -31,6 +31,7 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.utils.JobNodePath;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -238,9 +239,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 							String connectString = zkClusterInfo.getConnectString();
 							ZkCluster zkCluster = newClusterMap.get(connectString);
 							if (!zkCluster.isOffline()) {
-								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace,
-										connectString);
-								conf.setVersion(getVersion(namespace, zkCluster.getCuratorFramework()));
+								CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
+								initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
+								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, connectString);
+								conf.setVersion(getVersion(namespace, curatorFramework));
 								conf.setZkAlias(zkCluster.getZkAlias());
 								zkCluster.getRegCenterConfList().add(conf);
 							}
@@ -365,6 +367,21 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			zkCluster.setCuratorFramework(null);
 			zkCluster.setConnectionListener(null);
 			zkCluster.setOffline(true);
+		}
+	}
+
+	private void initNamespaceZkNodeIfNecessary(String namespace, CuratorFramework curatorFramework) {
+		try {
+			String executorsNodePath = "/" + namespace + ExecutorNodePath.get$ExecutorNodePath();
+			if (curatorFramework.checkExists().forPath(executorsNodePath) == null) {
+				curatorFramework.create().creatingParentsIfNeeded().forPath(executorsNodePath);
+			}
+			String jobsNodePath = "/" + namespace + JobNodePath.get$JobsNodePath();
+			if (curatorFramework.checkExists().forPath(jobsNodePath) == null) {
+				curatorFramework.create().creatingParentsIfNeeded().forPath(jobsNodePath);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
