@@ -145,14 +145,14 @@ CREATE TABLE `zk_cluster_info` (
   `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
   `last_update_time` timestamp NOT NULL DEFAULT NULL COMMENT '最近更新时间',
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `cluster_key` varchar(255) NOT NULL COMMENT '集群key值，唯一',
+  `zk_cluster_key` varchar(255) NOT NULL COMMENT '集群key值，唯一',
   `alias` varchar(255) NOT NULL COMMENT '别名',
   `connect_string` varchar(255) NOT NULL COMMENT '连接串',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_cluster_key` (`cluster_key`)
+  UNIQUE KEY `uniq_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-INSERT INTO `zk_cluster_info`(`cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'localhost:2181');
+INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'localhost:2181');
 
 
 -- ----------------------------

@@ -109,7 +109,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
 			if(allZkClusterInfo != null) {
 				for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
-					String clusterKey = zkClusterInfo.getClusterKey();
+					String zkClusterKey = zkClusterInfo.getZkClusterKey();
 					String connectString = zkClusterInfo.getConnectString();
 					CuratorFramework curatorFramework = null;
 					CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.connectOnly(connectString, null);
@@ -122,7 +122,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							if(namespaces != null) {
 								for (String namespace : namespaces) {
 									if (registryCenterService.namespaceIsCorrect(namespace, curatorFramework)) {
-										namespaceZkclusterMapping4SqlService.insert(namespace, "", clusterKey, createdBy);
+										namespaceZkclusterMapping4SqlService.insert(namespace, "", zkClusterKey, createdBy);
 									}
 								}
 							}
@@ -147,7 +147,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			while (iterator.hasNext()) {
 				ZkCluster next = iterator.next();
 				if (!next.isOffline()) {
-					zkClusterList.add(next.getClusterKey());
+					zkClusterList.add(next.getZkClusterKey());
 				}
 			}
 		}

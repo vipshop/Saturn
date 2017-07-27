@@ -1,4 +1,4 @@
-var namespace_info_table_DataTable, namespace_zkcluster_manager_table_DataTable;
+var namespace_info_table_DataTable, zk_cluster_info_table_DataTable, namespace_zkcluster_manager_table_DataTable;
 var namespace_zkcluster_manager_operation = '<font color="red" size="2">【请务必同时只能一个人并且只使用一个浏览器来操作】</font>&nbsp;&nbsp;' +
                                             '<button class="btn btn-success" id="batch-move-namespace">批量迁移</button>&nbsp;&nbsp;' +
                                             '<button class="btn btn-warning" id="init-namespace-zkcluster-mapping">初始化映射表</button>&nbsp;&nbsp;';
@@ -118,6 +118,7 @@ $(function() {
 });
 
 function refreshNamespaceInfo() {
+    $loading.show();
 	$.get("registry_center/getNamespaceInfo", {}, function(data) {
 		if(namespace_info_table_DataTable) {
 			namespace_info_table_DataTable.destroy();
@@ -128,13 +129,15 @@ function refreshNamespaceInfo() {
 	        if(list && list instanceof Array) {
 	            for (var i = 0;i < list.length;i++) {
             		var cluster = list[i];
-            		var key = cluster.key;
+            		var key = cluster.zkClusterKey;
             		var regCenterConfList = cluster.regCenterConfList;
             		if(regCenterConfList && regCenterConfList instanceof Array) {
             			for(var j=0; j < regCenterConfList.length; j++) {
 	        				var regCenterConf = regCenterConfList[j];
 			                var baseTd = "<td><a href='overview?name=" + regCenterConf.name + "/" + regCenterConf.namespace + "'>" + regCenterConf.namespace + "</a></td><td>"
-			                    + regCenterConf.name + "</td><td>" + regCenterConf.version + "</td><td>" + key + "</td>";
+			                    + regCenterConf.name + "</td><td>"
+			                    + regCenterConf.version + "</td><td>"
+			                    + key + "</td>";
 			                $("#namespace_info_table tbody").append("<tr>" + baseTd + "</tr>");
             			}
             		}
@@ -144,7 +147,7 @@ function refreshNamespaceInfo() {
         } else {
             showFailureDialogWithMsg("failure-dialog", data.message);
         }
-    });
+    }).always(function() { $loading.hide(); });
 }
 
 function refreshNamespaceZkClusterMappingList() {
@@ -159,18 +162,11 @@ function refreshNamespaceZkClusterMappingList() {
     		var list = data.obj;
 	        if(list && list instanceof Array) {
 	            for (var i = 0;i < list.length;i++) {
-            		var cluster = list[i];
-            		var key = cluster.key;
-            		var regCenterConfList = cluster.regCenterConfList;
-            		if(regCenterConfList && regCenterConfList instanceof Array) {
-            			for(var j=0; j < regCenterConfList.length; j++) {
-            				var regCenterConf = regCenterConfList[j];
-			                var baseTd = "<td><input class='batchInput' type='checkbox' onclick='clickNamespace_zkcluster_manager_table_select_all(this);' namespace='" + regCenterConf.namespace + "'/></td>"
-			                    + "<td><a href='overview?name=" + regCenterConf.name + "/" + regCenterConf.namespace + "'>" + regCenterConf.namespace + "</a></td><td>"
-			                    + regCenterConf.name + "</td><td>" + regCenterConf.version + "</td><td>" + key + "</td>";
-			                $("#namespace_zkcluster_manager_table tbody").append("<tr>" + baseTd + "</tr>");
-            			}
-            		}
+            		var mapping = list[i];
+                    var baseTd = "<td><input class='batchInput' type='checkbox' onclick='clickNamespace_zkcluster_manager_table_select_all(this);' namespace='" + mapping.namespace + "'/></td>"
+                        + "<td>" + mapping.namespace + "</td><td>"
+                        + mapping.zkClusterKey + "</td>";
+                    $("#namespace_zkcluster_manager_table tbody").append("<tr>" + baseTd + "</tr>");
 	            }
 	        }
         } else {
@@ -217,10 +213,10 @@ function refreshNamespaceZkClusterMappingList() {
             if(namespaces == "") {
                 showFailureDialogWithMsg("failure-dialog", "请选择要迁移的域");
             } else {
-                $.get("registry_center/getZkClusterListWithOnlineFromCfg", {}, function(data) {
+                $.get("registry_center/getZkClusterListWithOnline", {}, function(data) {
                     if(data.success) {
                         $("#move-namespace-batch-dialog-namespace").html(namespaces);
-                        $.get("registry_center/getZkClusterListWithOnlineFromCfg", {}, function(data2) {
+                        $.get("registry_center/getZkClusterListWithOnline", {}, function(data2) {
                             if(data2.success) {
                                 var zkClusterListWithOnlineFromCfg = data2.obj;
                                 var options = "";
@@ -264,4 +260,29 @@ function clickNamespace_zkcluster_manager_table_select_all(obj){
 	}else{
 		$("#namespace_zkcluster_manager_table_select_all").prop('checked',false);// 只要有一个没选中，全选复选框就置为false
 	}
+}
+
+function refreshZkClusterInfo() {
+    $loading.show();
+    $.get("registry_center/getAllZkClusterInfo", {}, function(data) {
+        if(data.success) {
+            if(zk_cluster_info_table_DataTable) {
+                zk_cluster_info_table_DataTable.destroy();
+            }
+            $("#zk_cluster_info_table tbody").empty();
+            var list = data.obj;
+            if(list && list instanceof Array) {
+                for(var i=0; i<list.length; i++) {
+                    var zkClusterInfo = list[i];
+                    var baseTd = "<td>" + zkClusterInfo.zkClusterKey + "</td>" +
+                                "<td>" + zkClusterInfo.alias + "</td>" +
+                                "<td>" + zkClusterInfo.connectString + "</td>";
+                    $("#zk_cluster_info_table tbody").append("<tr>" + baseTd + "</tr>");
+                }
+            }
+            zk_cluster_info_table_DataTable = $("#zk_cluster_info_table").DataTable({"oLanguage": language, "displayLength":100});
+        } else {
+            showFailureDialogWithMsg("failure-dialog", data.message);
+        }
+    }).always(function() { $loading.hide(); });
 }

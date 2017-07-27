@@ -15,7 +15,7 @@ public class ZkClusterInfo {
 	private String createdBy;
 	private Date lastUpdateTime;
 	private String lastUpdatedBy;
-	private String clusterKey;
+	private String zkClusterKey;
 	private String alias;
 	private String connectString;
 
@@ -67,12 +67,12 @@ public class ZkClusterInfo {
 		this.lastUpdatedBy = lastUpdatedBy;
 	}
 
-	public String getClusterKey() {
-		return clusterKey;
+	public String getZkClusterKey() {
+		return zkClusterKey;
 	}
 
-	public void setClusterKey(String clusterKey) {
-		this.clusterKey = clusterKey;
+	public void setZkClusterKey(String zkClusterKey) {
+		this.zkClusterKey = zkClusterKey;
 	}
 
 	public String getAlias() {

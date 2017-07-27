@@ -182,7 +182,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		if (allZkClusterInfo != null) {
 			for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 				ZkCluster zkCluster = new ZkCluster();
-				zkCluster.setClusterKey(zkClusterInfo.getClusterKey());
+				zkCluster.setZkClusterKey(zkClusterInfo.getZkClusterKey());
 				zkCluster.setZkAlias(zkClusterInfo.getAlias());
 				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
 				newClusterMap.put(zkClusterInfo.getConnectString(), zkCluster);
@@ -231,10 +231,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					continue;
 				}
 				String name = namespaceZkClusterMapping.getName();
-				String clusterKey = namespaceZkClusterMapping.getZkClusterKey();
+				String zkClusterKey = namespaceZkClusterMapping.getZkClusterKey();
 				if (allZkClusterInfo != null) {
 					for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
-						if (zkClusterInfo.getClusterKey().equals(clusterKey)) {
+						if (zkClusterInfo.getZkClusterKey().equals(zkClusterKey)) {
 							String connectString = zkClusterInfo.getConnectString();
 							ZkCluster zkCluster = newClusterMap.get(connectString);
 							if (!zkCluster.isOffline()) {

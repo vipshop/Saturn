@@ -76,8 +76,8 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 		return requestResult;
 	}
 
-	@RequestMapping(value = "getZkClusterListWithOnlineFromCfg", method = RequestMethod.GET)
-	public RequestResult getZkClusterListWithOnlineFromCfg(HttpServletRequest request) {
+	@RequestMapping(value = "getZkClusterListWithOnline", method = RequestMethod.GET)
+	public RequestResult getZkClusterListWithOnline(HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
 			List<String> zkClusterListWithOnlineFromCfg = namespaceZkClusterMappingService.getZkClusterListWithOnline();

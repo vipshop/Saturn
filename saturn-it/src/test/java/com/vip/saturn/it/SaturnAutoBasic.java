@@ -597,14 +597,14 @@ public class SaturnAutoBasic {
 	
 	private static void prepareForItSql() throws IOException {
 		System.setProperty("db.profiles.active", "h2");
-		String forItSqlPath = "/db/h2/other_forit.sql";
+		String forItSqlPath = "/db/h2/custom_forit.sql";
 		URL resource = SaturnAutoBasic.class.getResource(forItSqlPath);
 		File file = new File(resource.getFile());
 		if (file.exists()) {
 			List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
 			if (readLines != null && readLines.size() > 0) {
 				readLines.set(0,
-						"INSERT INTO `zk_cluster_info`(`cluster_key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
+						"INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
 								+ nestedZkUtils.getZkString() + "');");
 			}
 			FileUtils.writeLines(file, readLines, false);
