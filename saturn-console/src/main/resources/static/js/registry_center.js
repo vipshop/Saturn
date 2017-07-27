@@ -172,7 +172,12 @@ function refreshNamespaceZkClusterMappingList() {
         } else {
             showFailureDialogWithMsg("failure-dialog", data.message);
         }
-        namespace_zkcluster_manager_table_DataTable = $("#namespace_zkcluster_manager_table").DataTable({"oLanguage": language, "displayLength":100});
+        namespace_zkcluster_manager_table_DataTable = $("#namespace_zkcluster_manager_table").DataTable({
+            "oLanguage": language,
+            "aoColumnDefs": [{"bSortable":false,"aTargets":[0]}], // set the first column unSort
+            "aaSorting": [[1, "desc"]], // set sort from the second column
+            "displayLength":100
+            });
         $("#namespace_zkcluster_manager_table_filter label").before(namespace_zkcluster_manager_operation);
 
         $("#init-namespace-zkcluster-mapping").on("click", function() {
