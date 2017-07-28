@@ -146,8 +146,8 @@ public class Main {
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
 			Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
-			saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class).invoke(null, namespace, executorName);
-			startExecutorClass.getMethod("execute", ClassLoader.class, ClassLoader.class).invoke(saturnExecutor, executorClassLoader, jobClassLoader);
+			saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class, ClassLoader.class, ClassLoader.class).invoke(null, namespace, executorName, executorClassLoader, jobClassLoader);
+			startExecutorClass.getMethod("execute").invoke(saturnExecutor);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldCL);
 		}

@@ -1,34 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
@@ -47,6 +18,34 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SaturnExecutor {
 
@@ -84,9 +83,12 @@ public class SaturnExecutor {
 
 	private AtomicBoolean restarting = new AtomicBoolean(false);
 
-	private SaturnExecutor(String namespace, String executorName) {
+	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
+		this.executorClassLoader = executorClassLoader;
+		this.jobClassLoader = jobClassLoader;
+
 		executor = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
 	}
@@ -94,7 +96,7 @@ public class SaturnExecutor {
 	/**
 	 * SaturnExecutor工厂入口
 	 */
-	public static SaturnExecutor buildExecutor(String namespace, String executorName) {
+	public static SaturnExecutor buildExecutor(String namespace, String executorName, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		if ("$SaturnSelf".equals(namespace)) {
 			throw new RuntimeException("The namespace cannot be $SaturnSelf");
 		}
@@ -106,33 +108,33 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
-		init(executorName, namespace);
-		return new SaturnExecutor(namespace, executorName);
+		init(executorName, namespace, jobClassLoader);
+		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader);
 	}
-	
-	private static void init(String executorName, String namespace) {
+
+	private static void init(String executorName, String namespace, ClassLoader jobClassLoader) {
 		if (!inited.compareAndSet(false, true)) {
 			return;
 		}
-		initExtension(executorName, namespace); // log is not allowed to use, before it's ready.
+		initExtension(executorName, namespace, jobClassLoader); // log is not allowed to use, before it's ready.
 		saturnExecutorExtension.init();
 		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);	
 	}
-	
-	private static void initExtension(String executorName, String namespace) {
+
+	private static void initExtension(String executorName, String namespace, ClassLoader jobClassLoader) {
 		try {
 			Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
 			String extClass = props.getProperty("saturn.ext");
 			if (!Strings.isNullOrEmpty(extClass)) {
 				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class.getClassLoader().loadClass(extClass);
-				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class);
-				saturnExecutorExtension = constructor.newInstance(executorName, namespace);
+				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class, ClassLoader.class);
+				saturnExecutorExtension = constructor.newInstance(executorName, namespace, jobClassLoader);
 			}
 		} catch (Exception e) {
 			e.printStackTrace(); // NOSONAR
 		}
 		if(saturnExecutorExtension == null) {
-			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace);
+			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, jobClassLoader);
 		}
 	}
 	
@@ -282,7 +284,8 @@ public class SaturnExecutor {
 		}
 	}
 
-	private void execute() throws Exception {
+
+	public void execute() throws Exception {
 		shutdownLock.lockInterruptibly();
 
 		try {
@@ -425,15 +428,6 @@ public class SaturnExecutor {
 		}
 	}
 	
-	/**
-	 * 执行入口。注意，仅仅能执行一次，请不要执行多次。
-	 */
-	public void execute(ClassLoader executorClassLoader, ClassLoader jobClassLoader) throws Exception {
-		this.executorClassLoader = executorClassLoader;
-		this.jobClassLoader = jobClassLoader;
-		execute();
-	}
-
 	private void shutdownAllCountThread() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {

@@ -14,9 +14,9 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
 public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
-	
-	public SaturnExecutorExtensionDefault(String executorName, String namespace) {
-		super(executorName, namespace);
+
+	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader jobClassLoader) {
+		super(executorName, namespace, jobClassLoader);
 	}
 
 	@Override

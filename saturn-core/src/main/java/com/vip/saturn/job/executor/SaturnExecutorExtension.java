@@ -9,12 +9,14 @@ public abstract class SaturnExecutorExtension {
 	
 	protected String executorName;
 	protected String namespace;
-	
-	public SaturnExecutorExtension(String executorName, String namespace) {
+	protected ClassLoader jobClassLoader;
+
+	public SaturnExecutorExtension(String executorName, String namespace, ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
+		this.jobClassLoader = jobClassLoader;
 	}
-	
+
 	public abstract void initBefore();
 	
 	public abstract void initLogDirEnv();
