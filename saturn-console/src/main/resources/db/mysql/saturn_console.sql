@@ -174,4 +174,4 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace` (`namespace`),
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
