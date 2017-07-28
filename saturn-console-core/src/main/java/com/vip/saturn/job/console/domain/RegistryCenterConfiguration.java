@@ -39,7 +39,7 @@ public class RegistryCenterConfiguration implements Serializable {
     
     private String zkAlias;
     
-    private String bootstrapKey;
+    private String zkClusterKey;
     
     private String digest;
     
@@ -79,12 +79,12 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.zkAlias = zkAlias;
 	}
 
-	public String getBootstrapKey() {
-		return bootstrapKey;
+	public String getZkClusterKey() {
+		return zkClusterKey;
 	}
 
-	public void setBootstrapKey(String bootstrapKey) {
-		this.bootstrapKey = bootstrapKey;
+	public void setZkClusterKey(String zkClusterKey) {
+		this.zkClusterKey = zkClusterKey;
 	}
 
 	public RegistryCenterConfiguration() {
@@ -231,7 +231,7 @@ public class RegistryCenterConfiguration implements Serializable {
 	public String toString() {
 		return "RegistryCenterConfiguration [name=" + name + ", zkAddressList="
 				+ zkAddressList + ", namespace=" + namespace + ", zkAlias="
-				+ zkAlias + ", bootstrapKey=" + bootstrapKey + ", digest="
+				+ zkAlias + ", zkClusterKey=" + zkClusterKey + ", digest="
 				+ digest + ", nameAndNamespace=" + nameAndNamespace
 				+ ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
 				+ ", degree=" + degree + ", version=" + version + "]";

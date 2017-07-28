@@ -79,22 +79,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private final AtomicBoolean refreshingRegCenter = new AtomicBoolean(false);
 
 	/** 为保证values有序 **/
-	private LinkedHashMap<String/** zkAddr **/
-			, ZkCluster> zkClusterMap = new LinkedHashMap<>();
+	private LinkedHashMap<String, ZkCluster> zkClusterMap = new LinkedHashMap<>();
 
-	private ConcurrentHashMap<String /** zkAddr **/
-			, DashboardLeaderTreeCache> dashboardLeaderTreeCacheMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, DashboardLeaderTreeCache> dashboardLeaderTreeCacheMap = new ConcurrentHashMap<>();
 
 	// namespace is unique in all zkClusters
-	private ConcurrentHashMap<String /** nns */
-			, RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
-	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>(); // maybe could
-																										// remove in
-																										// right time
+	private ConcurrentHashMap<String /** nns */ , RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>(); // maybe could remove in right time
 
 	// namespace is unique in all zkClusters
-	private ConcurrentHashMap<String /** nns **/
-			, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String /** nns **/ , NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -174,8 +168,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void refreshRegistryCenter() throws IOException {
-		LinkedHashMap<String/** zkAddr **/
-				, ZkCluster> newClusterMap = new LinkedHashMap<>();
+		LinkedHashMap<String, ZkCluster> newClusterMap = new LinkedHashMap<>();
 		// 获取新的zkClusters
 		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
 		List<NamespaceZkClusterMapping> allNamespaceZkClusterMapping = namespaceZkClusterMapping4SqlService
@@ -186,7 +179,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				zkCluster.setZkClusterKey(zkClusterInfo.getZkClusterKey());
 				zkCluster.setZkAlias(zkClusterInfo.getAlias());
 				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
-				newClusterMap.put(zkClusterInfo.getConnectString(), zkCluster);
+				newClusterMap.put(zkClusterInfo.getZkClusterKey(), zkCluster);
 			}
 		}
 
@@ -194,15 +187,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ZkCluster> next = iterator.next();
-			String zkAddr = next.getKey();
+			String zkClusterKey = next.getKey();
 			ZkCluster zkCluster = next.getValue();
-			if (!newClusterMap.containsKey(zkAddr)) {
+			if (!newClusterMap.containsKey(zkClusterKey)) {
 				iterator.remove();
 				closeZkCluster(zkCluster);
 			} else {
-				ZkCluster newZkCluster = newClusterMap.get(zkAddr);
+				ZkCluster newZkCluster = newClusterMap.get(zkClusterKey);
 				if (zkCluster.equals(newZkCluster)) {
-					newClusterMap.put(zkAddr, zkCluster);
+					newClusterMap.put(zkClusterKey, zkCluster);
 				} else {
 					iterator.remove();
 					closeZkCluster(zkCluster);
@@ -236,12 +229,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (allZkClusterInfo != null) {
 					for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 						if (zkClusterInfo.getZkClusterKey().equals(zkClusterKey)) {
-							String connectString = zkClusterInfo.getConnectString();
-							ZkCluster zkCluster = newClusterMap.get(connectString);
+							ZkCluster zkCluster = newClusterMap.get(zkClusterKey);
 							if (!zkCluster.isOffline()) {
 								CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
 								initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, connectString);
+								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkClusterInfo.getConnectString());
+								conf.setZkClusterKey(zkClusterKey);
 								conf.setVersion(getVersion(namespace, curatorFramework));
 								conf.setZkAlias(zkCluster.getZkAlias());
 								zkCluster.getRegCenterConfList().add(conf);
@@ -260,15 +253,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ZkCluster> next = iterator.next();
-			String zkAddr = next.getKey();
+			String zkClusterKey = next.getKey();
 			ZkCluster zkCluster = next.getValue();
-			if (!zkCluster.isOffline() && !dashboardLeaderTreeCacheMap.containsKey(zkAddr)) {
+			if (!zkCluster.isOffline() && !dashboardLeaderTreeCacheMap.containsKey(zkClusterKey)) {
 				DashboardLeaderTreeCache dashboardLeaderTreeCache = null;
 				try {
-					dashboardLeaderTreeCache = new DashboardLeaderTreeCache(zkCluster.getZkAlias(),
-							zkCluster.getCuratorFramework());
+					dashboardLeaderTreeCache = new DashboardLeaderTreeCache(zkCluster.getZkAlias(), zkCluster.getCuratorFramework());
 					dashboardLeaderTreeCache.start();
-					dashboardLeaderTreeCacheMap.put(zkAddr, dashboardLeaderTreeCache);
+					dashboardLeaderTreeCacheMap.put(zkClusterKey, dashboardLeaderTreeCache);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 					if (dashboardLeaderTreeCache != null) {
@@ -285,8 +277,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private void closeZkCluster(ZkCluster zkCluster) {
 		try {
 			try {
-				DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap
-						.remove(zkCluster.getZkAddr());
+				DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.remove(zkCluster.getZkClusterKey());
 				if (dashboardLeaderTreeCache != null) {
 					dashboardLeaderTreeCache.shutdown();
 				}
@@ -308,8 +299,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						}
 					}
 					try {
-						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap
-								.remove(nns);
+						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.remove(nns);
 						if (namespaceShardingManager != null) {
 							namespaceShardingManager.stopWithCurator();
 						}
@@ -426,22 +416,21 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void refreshTreeData(ZkCluster zkCluster) {
-		String zkAddr = zkCluster.getZkAddr();
+		String zkClusterKey = zkCluster.getZkClusterKey();
 		if (!zkCluster.isOffline()) {
-			InitRegistryCenterService.initTreeJson(zkCluster.getRegCenterConfList(), zkAddr);
+			InitRegistryCenterService.initTreeJson(zkCluster.getRegCenterConfList(), zkClusterKey);
 		} else {
-			InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.remove(zkAddr);
+			InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.remove(zkClusterKey);
 		}
 	}
 
 	private void refreshTreeData() {
 		// clear removed zkCluster treeData
-		Iterator<Entry<String, TreeNode>> iterator = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.entrySet()
-				.iterator();
+		Iterator<Entry<String, TreeNode>> iterator = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, TreeNode> next = iterator.next();
-			String key = next.getKey();
-			if (!zkClusterMap.containsKey(key)) {
+			String zkClusterKey = next.getKey();
+			if (!zkClusterMap.containsKey(zkClusterKey)) {
 				iterator.remove();
 			}
 		}
@@ -616,8 +605,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public boolean isDashboardLeader(String zkList) {
-		DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.get(zkList);
+	public boolean isDashboardLeader(String zkClusterKey) {
+		DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.get(zkClusterKey);
 		if (dashboardLeaderTreeCache != null) {
 			return dashboardLeaderTreeCache.isLeader();
 		}
@@ -625,8 +614,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public ZkCluster getZkCluster(String zkList) {
-		return zkClusterMap.get(zkList);
+	public ZkCluster getZkCluster(String zkClusterKey) {
+		return zkClusterMap.get(zkClusterKey);
 	}
 
 	@Override
@@ -635,8 +624,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public int domainCount(String zkList) {
-		ZkCluster zkCluster = zkClusterMap.get(zkList);
+	public int domainCount(String zkClusterKey) {
+		ZkCluster zkCluster = zkClusterMap.get(zkClusterKey);
 		if (zkCluster != null) {
 			ArrayList<RegistryCenterConfiguration> regList = zkCluster.getRegCenterConfList();
 			if (regList != null) {

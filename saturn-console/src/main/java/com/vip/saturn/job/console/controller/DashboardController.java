@@ -63,15 +63,19 @@ public class DashboardController  extends AbstractController {
     @RequestMapping(value = "count", method = RequestMethod.POST)
     @ResponseBody
 	public Map<String,Integer> count(HttpServletRequest request) {
-    	String zkBsKey = getCurrentZkAddr(request.getSession());
-    	Map<String,Integer> countMap = new HashMap<String,Integer>();
-		if(zkBsKey != null) {
-			countMap.put("executorInDockerCount", dashboardService.executorInDockerCount(zkBsKey));
-			countMap.put("executorNotInDockerCount", dashboardService.executorNotInDockerCount(zkBsKey));
-			countMap.put("jobCount", dashboardService.jobCount(zkBsKey));
-			countMap.put("domainCount", registryCenterService.domainCount(zkBsKey));
+		HttpSession session = request.getSession();
+		String zkAddr = getCurrentZkAddr(session);
+		Map<String, Integer> countMap = new HashMap<String, Integer>();
+		if (zkAddr != null) {
+			countMap.put("executorInDockerCount", dashboardService.executorInDockerCount(zkAddr));
+			countMap.put("executorNotInDockerCount", dashboardService.executorNotInDockerCount(zkAddr));
+			countMap.put("jobCount", dashboardService.jobCount(zkAddr));
 		}
-    	return countMap;
+		String zkClusterKey = getCurrentZkClusterKey(session);
+		if (zkClusterKey != null) {
+			countMap.put("domainCount", registryCenterService.domainCount(zkClusterKey));
+		}
+		return countMap;
     }
     
     @RequestMapping(value = "top10FailJob", method = RequestMethod.POST)
@@ -199,7 +203,7 @@ public class DashboardController  extends AbstractController {
     @RequestMapping(value = "loadDomainRank", method = RequestMethod.POST)
     @ResponseBody
 	public Map<String, Integer> loadDomainRank(HttpSession session) {
-		return dashboardService.loadDomainRankDistribution(getCurrentZkAddr(session));
+		return dashboardService.loadDomainRankDistribution(getCurrentZkClusterKey(session));
     }
     
     @RequestMapping(value = "loadJobRank", method = RequestMethod.POST)

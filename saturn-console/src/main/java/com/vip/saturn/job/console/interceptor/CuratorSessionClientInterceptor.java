@@ -48,7 +48,7 @@ public final class CuratorSessionClientInterceptor extends HandlerInterceptorAda
 				return false;
 			}
 			request.getSession().setAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY, conf);
-			request.getSession().setAttribute(AbstractController.CURRENT_ZK, conf.getZkAddressList());
+			request.getSession().setAttribute(AbstractController.CURRENT_ZK_CLUSTER_KEY, conf.getZkClusterKey());
 			return true;
 		}
     	RegistryCenterConfiguration reg = (RegistryCenterConfiguration) request.getSession().getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);

@@ -162,7 +162,7 @@ public class HomeController  extends AbstractController {
 	public Map<String, Object> loadZks(final HttpSession session) throws IOException, ParseException {
     	Map<String, Object> model = new HashMap<>();
     	model.put("clusters", registryCenterService.getZkClusterList());
-    	model.put("currentZk", getCurrentZkAddr(session));
+    	model.put("currentZk", getCurrentZkClusterKey(session));
     	return model;
 	}
 

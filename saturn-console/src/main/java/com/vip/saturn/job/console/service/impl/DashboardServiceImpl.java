@@ -24,6 +24,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +46,7 @@ import java.util.concurrent.ThreadFactory;
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
-	private static final Logger log = org.slf4j.LoggerFactory.getLogger(DashboardServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(DashboardServiceImpl.class);
 
 	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
 
@@ -167,7 +168,7 @@ public class DashboardServiceImpl implements DashboardService {
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		if (zkClusterList != null) {
 			for (ZkCluster zkCluster : zkClusterList) {
-				if (force || registryCenterService.isDashboardLeader(zkCluster.getZkAddr())) {
+				if (force || registryCenterService.isDashboardLeader(zkCluster.getZkClusterKey())) {
 					refreshStatistics2DB(zkCluster);
 				}
 				// no matter, update caches
@@ -1502,10 +1503,10 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	@Override
-	public Map<String, Integer> loadDomainRankDistribution(String zkBsKey) {
+	public Map<String, Integer> loadDomainRankDistribution(String zkClusterKey) {
 		Map<String, Integer> domainMap = new HashMap<>();
-		if(zkBsKey != null) {
-			ZkCluster zkCluster = registryCenterService.getZkCluster(zkBsKey);
+		if(zkClusterKey != null) {
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
 			if(zkCluster != null) {
 				for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()){
 					Integer count = domainMap.get(config.getDegree());

@@ -49,10 +49,10 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	private CuratorRepository curatorRepository;
 
 	@Override
-	public List<SaturnJunkData> getJunkData(String zkAddr) throws SaturnJobConsoleException {
-		ZkCluster zkCluster = registryCenterService.getZkCluster(zkAddr);
+	public List<SaturnJunkData> getJunkData(String zkClusterKey) throws SaturnJobConsoleException {
+		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
 		if (zkCluster == null) {
-			throw new SaturnJobConsoleException("No zkCluster matched with " + zkAddr);
+			throw new SaturnJobConsoleException("No zkCluster matched with " + zkClusterKey);
 		}
 		if (zkCluster.isOffline()) {
 			throw new SaturnJobConsoleException("Connect zookeeper failed");

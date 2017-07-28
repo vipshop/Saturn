@@ -5,7 +5,7 @@ $(function() {
 	renderZks();
 	$("#zks").change(function(){
 		var newSelected = $("#zks").val();
-		$.post("registry_center/selectZk", {newZkBsKey : newSelected}, function (data) {
+		$.post("registry_center/selectZk", {newZkClusterKey : newSelected}, function (data) {
 			window.location.reload();
         }).always(function() {});
 		return false;
@@ -73,10 +73,10 @@ function renderZks() {
 				disabled = " disabled='disabled' ";
 				alias += "[offline]"
 			}
-			if (currentZk == zks[i].zkAddr) {
-				options += "<option " +disabled+ " selected='selected' value='"+zks[i].zkAddr+"'>" + alias + "</option>";
+			if (currentZk == zks[i].zkClusterKey) {
+				options += "<option " +disabled+ " selected='selected' value='"+zks[i].zkClusterKey+"'>" + alias + "</option>";
 			} else {
-				options += "<option " +disabled+ " value='"+zks[i].zkAddr+"'>" + alias + "</option>";
+				options += "<option " +disabled+ " value='"+zks[i].zkClusterKey+"'>" + alias + "</option>";
 			}
 		}
 		$("#zks").append(options);

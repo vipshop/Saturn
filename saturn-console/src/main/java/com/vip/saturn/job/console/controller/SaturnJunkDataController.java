@@ -55,10 +55,10 @@ public class SaturnJunkDataController extends AbstractController {
     
     @ResponseBody
     @RequestMapping(value = "getJunkdata",method = RequestMethod.GET)
-	public RequestResult getJunkData(HttpServletRequest request, String zkAddr) {
+	public RequestResult getJunkData(HttpServletRequest request, String newZkClusterKey) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			List<SaturnJunkData> junkData = saturnJunkDataService.getJunkData(zkAddr);
+			List<SaturnJunkData> junkData = saturnJunkDataService.getJunkData(newZkClusterKey);
 			requestResult.setSuccess(true);
 			requestResult.setObj(junkData);
 		} catch (Throwable t) {

@@ -88,8 +88,8 @@ public class RegistryCenterController extends AbstractController {
 	}
 	
 	@RequestMapping(value = "selectZk", method = RequestMethod.POST)
-    public String selectZk(final HttpSession session, String newZkBsKey) {
-    	setCurrentZkAddr(newZkBsKey, session);
+    public String selectZk(final HttpSession session, String newZkClusterKey) {
+    	setCurrentZkClusterKey(newZkClusterKey, session);
     	return "ok";
     }
 

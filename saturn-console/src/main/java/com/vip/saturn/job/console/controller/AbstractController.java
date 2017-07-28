@@ -30,7 +30,7 @@ public class AbstractController {
 	
     public static final String ACTIVATED_CONFIG_SESSION_KEY = "activated_config";
     public static final String REQUEST_NAMESPACE_PARAM = "nns";
-    public static final String CURRENT_ZK = "current_zk";
+	public static final String CURRENT_ZK_CLUSTER_KEY = "current_zk_cluster_key";
     
     @Resource
     protected RegistryCenterService registryCenterService;
@@ -58,32 +58,53 @@ public class AbstractController {
 	}
 	
 	public void setSession(final RegistryCenterClient client, final HttpSession session) {
-		 ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
-         RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
-         if(conf == null){
-        	 return;
-         }
-         session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
-         setCurrentZkAddr(conf.getZkAddressList(), session);
+		ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
+		RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
+		if (conf == null) {
+			return;
+		}
+		session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
+		setCurrentZkClusterKey(conf.getZkClusterKey(), session);
 	}
 	
-	public void setCurrentZkAddr(String zkAddr, final HttpSession session) {
-		session.setAttribute(CURRENT_ZK, zkAddr);
+	public void setCurrentZkClusterKey(String zkClusterKey, final HttpSession session) {
+		session.setAttribute(CURRENT_ZK_CLUSTER_KEY, zkClusterKey);
 	}
-	
-	public String getCurrentZkAddr(final HttpSession session) {
-		String zkAddr = (String)session.getAttribute(CURRENT_ZK);
-		if (zkAddr == null) {
-			// if zkAddr doesn't exist in map, use the first online one in map.
+
+	public String getCurrentZkClusterKey(final HttpSession session) {
+		String zkClusterKey = (String) session.getAttribute(CURRENT_ZK_CLUSTER_KEY);
+		if (zkClusterKey == null) {
+			// if zkKey doesn't exist in map, use the first online one in map.
 			Collection<ZkCluster> zks = registryCenterService.getZkClusterList();
-			for (ZkCluster zkCluster : zks) {
-				if(!zkCluster.isOffline()) {
-					setCurrentZkAddr(zkCluster.getZkAddr(), session);
-					return zkCluster.getZkAddr();
+			for (ZkCluster tmp : zks) {
+				ZkCluster zkCluster = tmp;
+				if (!zkCluster.isOffline()) {
+					setCurrentZkClusterKey(zkCluster.getZkClusterKey(), session);
+					return zkCluster.getZkClusterKey();
 				}
 			}
 		}
-		return zkAddr;
+		return zkClusterKey;
+	}
+
+	public String getCurrentZkAddr(final HttpSession session) {
+		String zkClusterKey = (String) session.getAttribute(CURRENT_ZK_CLUSTER_KEY);
+		if(zkClusterKey != null) {
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				return zkCluster.getZkAddr();
+			}
+		}
+		// if zkClusterKey doesn't exist in map, use the first online one in map.
+		Collection<ZkCluster> zks = registryCenterService.getZkClusterList();
+		for (ZkCluster tmp : zks) {
+			ZkCluster zkCluster = tmp;
+			if (!zkCluster.isOffline()) {
+				setCurrentZkClusterKey(zkCluster.getZkClusterKey(), session);
+				return zkCluster.getZkClusterKey();
+			}
+		}
+		return null;
 	}
 	
 	public RegistryCenterConfiguration getActivatedConfigInSession(final HttpSession session) {
