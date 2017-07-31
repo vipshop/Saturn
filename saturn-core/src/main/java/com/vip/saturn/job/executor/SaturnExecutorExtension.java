@@ -23,7 +23,7 @@ public abstract class SaturnExecutorExtension {
 	
 	public abstract void initLogDirEnv();
 	
-	public abstract void initLogBefore();
+	public abstract void initLog();
 	
 	public abstract void initAfter();
 	

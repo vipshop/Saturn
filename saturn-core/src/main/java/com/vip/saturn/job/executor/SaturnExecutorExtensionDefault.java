@@ -5,6 +5,8 @@ import com.vip.saturn.job.java.SaturnJavaJob;
 import com.vip.saturn.job.shell.SaturnScriptJob;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -13,6 +15,7 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
  */
 public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
+	private static Logger LOGGER;
 	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
 
 	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
@@ -43,8 +46,10 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 	}
 
 	@Override
-	public void initLogBefore() {
-		
+	public void initLog() {
+		if(LOGGER == null) {
+			LOGGER = LoggerFactory.getLogger(SaturnExecutorExtensionDefault.class);
+		}
 	}
 
 	@Override
@@ -67,7 +72,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 	public void init() {
 		initBefore();
 		initLogDirEnv();
-		initLogBefore();
+		initLog();
 		initAfter();
 		registerJobType();		
 	}

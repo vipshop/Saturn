@@ -116,8 +116,8 @@ public class SaturnExecutor {
 		if (!inited.compareAndSet(false, true)) {
 			return;
 		}
-		initExtension(executorName, namespace, executorClassLoader, jobClassLoader); // log is not allowed to use, before it's ready.
-		saturnExecutorExtension.init();
+		initExtension(executorName, namespace, executorClassLoader, jobClassLoader);
+		saturnExecutorExtension.init(); // will init log, env, etc
 		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);	
 	}
 
@@ -130,7 +130,7 @@ public class SaturnExecutor {
 				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class, ClassLoader.class, ClassLoader.class);
 				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader, jobClassLoader);
 			}
-		} catch (Exception e) {
+		} catch (Exception e) { // log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
 		}
 		if(saturnExecutorExtension == null) {
