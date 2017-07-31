@@ -8,7 +8,9 @@ $(function() {
 		var $btn = $(this).button("loading");
 		$.get("registry_center/refreshRegCenter", function(data) {
 			if(data.success == true) {
-				window.parent.location.reload(true);
+				window.parent.reloadTreeData();
+                window.parent.reloadTreeAndExpandJob();
+                window.parent.contentFrame.location.href="registry_center_page";
 			} else {
 				showFailureDialogWithMsg("failure-dialog", data.message);
 			}
