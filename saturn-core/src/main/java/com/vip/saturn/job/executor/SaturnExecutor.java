@@ -108,33 +108,33 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
-		init(executorName, namespace, jobClassLoader);
+		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader);
 	}
 
-	private static void init(String executorName, String namespace, ClassLoader jobClassLoader) {
+	private static void init(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		if (!inited.compareAndSet(false, true)) {
 			return;
 		}
-		initExtension(executorName, namespace, jobClassLoader); // log is not allowed to use, before it's ready.
+		initExtension(executorName, namespace, executorClassLoader, jobClassLoader); // log is not allowed to use, before it's ready.
 		saturnExecutorExtension.init();
 		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);	
 	}
 
-	private static void initExtension(String executorName, String namespace, ClassLoader jobClassLoader) {
+	private static void initExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		try {
 			Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
 			String extClass = props.getProperty("saturn.ext");
 			if (!Strings.isNullOrEmpty(extClass)) {
 				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class.getClassLoader().loadClass(extClass);
-				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class, ClassLoader.class);
-				saturnExecutorExtension = constructor.newInstance(executorName, namespace, jobClassLoader);
+				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class, ClassLoader.class, ClassLoader.class);
+				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader, jobClassLoader);
 			}
 		} catch (Exception e) {
 			e.printStackTrace(); // NOSONAR
 		}
 		if(saturnExecutorExtension == null) {
-			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, jobClassLoader);
+			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader, jobClassLoader);
 		}
 	}
 	

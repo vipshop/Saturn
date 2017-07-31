@@ -10,11 +10,13 @@ public abstract class SaturnExecutorExtension {
 	protected String executorName;
 	protected String namespace;
 	protected ClassLoader jobClassLoader;
+	protected ClassLoader executorClassLoader;
 
-	public SaturnExecutorExtension(String executorName, String namespace, ClassLoader jobClassLoader) {
+	public SaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.jobClassLoader = jobClassLoader;
+		this.executorClassLoader = executorClassLoader;
 	}
 
 	public abstract void initBefore();
