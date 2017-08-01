@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -85,7 +85,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns */ , RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
-	private ConcurrentHashMap<String, Object> registryCenterClientNnsLock = new ConcurrentHashMap<>(); // maybe could remove in right time
+	private ConcurrentHashMap<String, Object> nnsLock = new ConcurrentHashMap<>(); // maybe could remove in right time
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns **/ , NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
@@ -171,8 +171,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		LinkedHashMap<String, ZkCluster> newClusterMap = new LinkedHashMap<>();
 		// 获取新的zkClusters
 		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
-		List<NamespaceZkClusterMapping> allNamespaceZkClusterMapping = namespaceZkClusterMapping4SqlService
-				.getAllMappings();
 		if (allZkClusterInfo != null) {
 			for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 				ZkCluster zkCluster = new ZkCluster();
@@ -212,41 +210,99 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				createNewConnect(zkCluster);
 			}
 		}
-		// 完善ZkCluster中的注册中心信息，先清空，再赋值
+		// 完善ZkCluster中的注册中心信息，关闭迁移了的域，新建迁移过来的域
 		Iterator<Entry<String, ZkCluster>> iterator3 = newClusterMap.entrySet().iterator();
 		while (iterator3.hasNext()) {
-			iterator3.next().getValue().getRegCenterConfList().clear();
-		}
-		if (allNamespaceZkClusterMapping != null) {
-			for (NamespaceZkClusterMapping namespaceZkClusterMapping : allNamespaceZkClusterMapping) {
-				String namespace = namespaceZkClusterMapping.getNamespace();
-				if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
-					log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
-					continue;
-				}
-				String name = namespaceZkClusterMapping.getName();
-				String zkClusterKey = namespaceZkClusterMapping.getZkClusterKey();
-				if (allZkClusterInfo != null) {
-					for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
-						if (zkClusterInfo.getZkClusterKey().equals(zkClusterKey)) {
-							ZkCluster zkCluster = newClusterMap.get(zkClusterKey);
-							if (!zkCluster.isOffline()) {
-								CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
-								initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-								RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkClusterInfo.getConnectString());
-								conf.setZkClusterKey(zkClusterKey);
-								conf.setVersion(getVersion(namespace, curatorFramework));
-								conf.setZkAlias(zkCluster.getZkAlias());
-								zkCluster.getRegCenterConfList().add(conf);
+			Entry<String, ZkCluster> next = iterator3.next();
+			String zkClusterKey = next.getKey();
+			ZkCluster zkCluster = next.getValue();
+			List<NamespaceZkClusterMapping> allMappingsOfCluster = namespaceZkClusterMapping4SqlService.getAllMappingsOfCluster(zkClusterKey);
+			ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
+			if (regCenterConfList != null) {
+				Iterator<RegistryCenterConfiguration> regIter = regCenterConfList.iterator();
+				while (regIter.hasNext()) {
+					RegistryCenterConfiguration conf = regIter.next();
+					String namespace = conf.getNamespace();
+					String nns = conf.getNameAndNamespace();
+					boolean include = false;
+					if (allMappingsOfCluster != null) {
+						for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
+							if (namespace.equals(mapping.getNamespace())) {
+								include = true;
+								break;
 							}
-							break;
+						}
+					}
+					if (!include) {
+						synchronized (getNnsLock(nns)) {
+							regIter.remove();
+							closeNamespace(nns);
+							log.info("closed the moved namespace info, namespace is {}, old zkClusterKey is {}", namespace, zkClusterKey);
+						}
+					}
+				}
+				if (allMappingsOfCluster != null && !zkCluster.isOffline()) {
+					for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
+						String namespace = mapping.getNamespace();
+						if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+							log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
+							continue;
+						}
+						boolean include = false;
+						for (RegistryCenterConfiguration conf : regCenterConfList) {
+							if (namespace.equals(conf.getNamespace())) {
+								include = true;
+								break;
+							}
+						}
+						if (!include) {
+							String name = mapping.getName();
+							CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
+							initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
+							RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
+							conf.setZkClusterKey(zkClusterKey);
+							conf.setVersion(getVersion(namespace, curatorFramework));
+							conf.setZkAlias(zkCluster.getZkAlias());
+							zkCluster.getRegCenterConfList().add(conf);
 						}
 					}
 				}
 			}
+
 		}
 		// 直接赋值新的
 		zkClusterMap = newClusterMap;
+	}
+
+	private Object getNnsLock(String nns) {
+		Object lock = nnsLock.get(nns);
+		if (lock == null) {
+			lock = new Object();
+			Object pre = nnsLock.putIfAbsent(nns, lock);
+			if (pre != null) {
+				lock = pre;
+			}
+		}
+		return lock;
+	}
+
+	private void closeNamespace(String nns) {
+		try {
+			RegistryCenterClient registryCenterClient = registryCenterClientMap.remove(nns);
+			if (registryCenterClient != null) {
+				registryCenterClient.close();
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		try {
+			NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.remove(nns);
+			if (namespaceShardingManager != null) {
+				namespaceShardingManager.stopWithCurator();
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 	private void refreshDashboardLeaderTreeCache() {
@@ -288,23 +344,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (regCenterConfList != null) {
 				for (RegistryCenterConfiguration conf : regCenterConfList) {
 					String nns = conf.getNameAndNamespace();
-					synchronized (getRegistryCenterClientNnsLock(nns)) {
-						try {
-							RegistryCenterClient registryCenterClient = registryCenterClientMap.remove(nns);
-							if (registryCenterClient != null) {
-								registryCenterClient.close();
-							}
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						}
-					}
-					try {
-						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.remove(nns);
-						if (namespaceShardingManager != null) {
-							namespaceShardingManager.stopWithCurator();
-						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
+					synchronized (getNnsLock(nns)) {
+						closeNamespace(nns);
 					}
 				}
 			}
@@ -442,18 +483,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		InitRegistryCenterService.reloadDomainRootTreeNode();
 	}
 
-	private Object getRegistryCenterClientNnsLock(String nns) {
-		Object lock = registryCenterClientNnsLock.get(nns);
-		if (lock == null) {
-			lock = new Object();
-			Object pre = registryCenterClientNnsLock.putIfAbsent(nns, lock);
-			if (pre != null) {
-				lock = pre;
-			}
-		}
-		return lock;
-	}
-
 	@Override
 	public RegistryCenterClient connect(final String nameAndNameSpace) {
 		final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
@@ -461,7 +490,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		if (nameAndNameSpace == null) {
 			return registryCenterClient;
 		}
-		synchronized (getRegistryCenterClientNnsLock(nameAndNameSpace)) {
+		synchronized (getNnsLock(nameAndNameSpace)) {
 			if (!registryCenterClientMap.containsKey(nameAndNameSpace)) {
 				RegistryCenterConfiguration registryCenterConfiguration = findConfig(nameAndNameSpace);
 				if (registryCenterConfiguration == null) {
@@ -470,6 +499,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				String zkAddressList = registryCenterConfiguration.getZkAddressList();
 				String namespace = registryCenterConfiguration.getNamespace();
 				String digest = registryCenterConfiguration.getDigest();
+				registryCenterClient.setZkAddr(zkAddressList);
 
 				CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
 				if (client == null) {
@@ -507,10 +537,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		String zkAddressList = registryCenterConfiguration.getZkAddressList();
 		String digest = registryCenterConfiguration.getDigest();
-		synchronized (getRegistryCenterClientNnsLock(nns)) {
+		synchronized (getNnsLock(nns)) {
 			if (!registryCenterClientMap.containsKey(nns)) {
 				final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
 				registryCenterClient.setNameAndNamespace(nns);
+				registryCenterClient.setZkAddr(zkAddressList);
 				CuratorFramework client = curatorRepository.connect(zkAddressList, namespace, digest);
 				if (client == null) {
 					return registryCenterClient;
@@ -524,6 +555,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (registryCenterClient == null) {
 					registryCenterClient = new RegistryCenterClient();
 					registryCenterClient.setNameAndNamespace(namespace);
+					registryCenterClient.setZkAddr(zkAddressList);
 				} else {
 					if (registryCenterClient.getCuratorClient() != null) {
 						registryCenterClient.setConnected(
