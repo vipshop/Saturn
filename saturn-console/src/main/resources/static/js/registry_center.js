@@ -3,13 +3,14 @@ var namespace_zkcluster_manager_operation = '<font color="red" size="2">【请�
                                             '<button class="btn btn-success" id="batch-move-namespace">批量迁移</button>&nbsp;&nbsp;' +
                                             '<button class="btn btn-warning" id="init-namespace-zkcluster-mapping">初始化映射表</button>&nbsp;&nbsp;';
 $(function() {
-	
+    window.parent.setActiveTab("#regTab");
+	window.parent.releaseRegName();
+
 	$("#refresh_registry_center").on("click", function() {
 		var $btn = $(this).button("loading");
 		$.get("registry_center/refreshRegCenter", function(data) {
 			if(data.success == true) {
 				window.parent.reloadTreeData();
-                window.parent.reloadTreeAndExpandJob();
                 window.parent.contentFrame.location.href="registry_center_page";
 			} else {
 				showFailureDialogWithMsg("failure-dialog", data.message);

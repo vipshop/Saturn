@@ -23,22 +23,7 @@ var tree, sideBarOverlay = $("#sidebar-overlay"), rp = $("#activated-reg-center"
 function reloadTreeData() {
 	tree.reload();
 }
-function renderRegistryCenterForDashboardNav() {
-    $.get("registry_center", {}, function(data) {
-        var activatedRegCenter = $("#activated-reg-center").text();
-        var $registryCenterDimension = $("#registry-center-dimension");
-        $registryCenterDimension.empty();
-        for (var i = 0; i < data.length; i++) {
-            var regName = data[i].name;
-            var liContent = "<a href='#' reg-name='" + regName + "' data-loading-text='切换中...'>" + regName + "</a>";
-            if (activatedRegCenter && activatedRegCenter === regName) {
-                $registryCenterDimension.append("<li class='open' id='job-"+data[i].jobName+"'>" + liContent + "</li>");
-            } else {
-                $registryCenterDimension.append("<li id='job-"+data[i].jobName+"'>"  + liContent + "</li>");
-            }
-        }
-    });
-}
+
 function renderDomainTree() {
 	$("#tree").fancytree({
 		extensions: ["filter"],
@@ -69,9 +54,7 @@ function renderDomainTree() {
             setDegreeTitle();
         },
         init: function(event, data) {
-        	tree = $("#tree").fancytree("getTree");
-        	var regName = $("#activated-reg-center").html();
-        	expandJobs(data.tree, regName);
+        	tree = $("#tree").fancytree("getTree")
         	setDegreeTitle();
         }
 	});
@@ -122,9 +105,8 @@ function collapseTree () {
         }
     });
 }*/
-function reloadTreeAndExpandJob() {
+function reloadTreeAndExpandJob(regName) {
 	if (tree && tree.activeNode == null) {
-		var regName = $("#activated-reg-center").text();
 		var node = tree.findFirst(regName);
 		if (node) {
 			node.resetLazy();
@@ -141,21 +123,22 @@ function focusAndActiveJob(jobName) {
 	}
 }
 
-function expandJobsAndSetRegCenter(regName,zkAlias) {
-	expandJobs(tree, regName);
-	setRegName(regName);
-}
-
-function setRegName(regname,zkAlias, ns) {
-	if (regname) {
-		$("#activated-reg-center").html(regname);
+function setRegName(regName,zkAlias, ns) {
+	if (regName) {
+		$("#activated-reg-center").html(regName);
 	}
 	if(zkAlias) {
 		$("#activated-zk").html(zkAlias);
 	}
 	if (ns) {
-		$regNameParent.attr("title", "命名空间："+ns);
+		$regNameParent.attr("title", "域名："+ns);
 	}
+}
+
+function releaseRegName() {
+    $("#activated-reg-center").html("未连接");
+    $("#activated-zk").html("未连接");
+    $regNameParent.removeAttr("title");
 }
 
 function setActiveTab(tabName) {
@@ -172,9 +155,8 @@ function clearActiveTab() {
 	});
 }
 
-function reloadJobsAfterRemove() {
-	var reg = $("#activated-reg-center").html();
-	var node = tree.findFirst(reg);
+function reloadJobsAfterRemove(regName) {
+	var node = tree.findFirst(regName);
 	if (node) {
 		node.resetLazy();
 		node.setFocus();

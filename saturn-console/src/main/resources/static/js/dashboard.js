@@ -2,6 +2,7 @@ var cleanButtonClass = ($("#authorizeSaturnConsoleDashBoardAllPrivilege").val() 
 		causeMap = {"NOT_RUN": "过时未跑", "NO_SHARDS": "没有分片", "EXECUTORS_NOT_READY": "没有executor能运行该作业"};
 $(function() {
 	window.parent.setActiveTab("#dashboardTab");
+	window.parent.releaseRegName();
 	renderZks();
 	$("#zks").change(function(){
 		var newSelected = $("#zks").val();

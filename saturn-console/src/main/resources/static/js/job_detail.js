@@ -133,7 +133,7 @@ $(function() {
               $.post("job/remove/job", {jobName : jobName, nns:regName}, function (data) {
                     $("#remove-job-confirm-dialog").modal("hide");
                     if (data.success) {
-                        showSuccessDialogWithCallback(function() {window.parent.reloadJobsAfterRemove();window.location = "overview";});
+                        showSuccessDialogWithCallback(function() {window.parent.reloadJobsAfterRemove(regName);window.location = "overview";});
                     } else {
                         showFailureDialogWithMsg("update-failure-dialog", data.message);
                     }
