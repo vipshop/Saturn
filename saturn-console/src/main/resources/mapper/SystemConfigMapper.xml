@@ -27,12 +27,12 @@
         where id in
         (select max(id) from sys_config group by property)
     </select>
-    <select id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
         insert into sys_config(property, value) values(#{property,jdbcType=VARCHAR}, #{value,jdbcType=VARCHAR})
-    </select>
-    <select id="updateById" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
+    </insert>
+    <update id="updateById" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
         update sys_config
         set property = #{property,jdbcType=VARCHAR}, value = #{value,jdbcType=VARCHAR}
         where id = #{id,jdbcType=BIGINT}
-    </select>
+    </update>
 </mapper>
