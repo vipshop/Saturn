@@ -95,17 +95,17 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 	}
 
 	@RequestMapping(value = "moveNamespaceBatch", method = RequestMethod.POST)
-	public RequestResult moveNamespaceBatch(HttpServletRequest request, String namespaces, String bootstrapKeyNew,
+	public RequestResult moveNamespaceBatch(HttpServletRequest request, String namespaces, String zkClusterKeyNew,
 			boolean updateDBOnly, long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
 			if (namespaces == null || namespaces.trim().isEmpty()) {
 				throw new SaturnJobConsoleException("The namespace cannot be null");
 			}
-			if (bootstrapKeyNew == null || bootstrapKeyNew.trim().isEmpty()) {
-				throw new SaturnJobConsoleException("The bootstrapKeyNew cannot be null");
+			if (zkClusterKeyNew == null || zkClusterKeyNew.trim().isEmpty()) {
+				throw new SaturnJobConsoleException("The zkClusterKeyNew cannot be null");
 			}
-			namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, bootstrapKeyNew, "", updateDBOnly, id);
+			namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, zkClusterKeyNew, "", updateDBOnly, id);
 			requestResult.setSuccess(true);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);

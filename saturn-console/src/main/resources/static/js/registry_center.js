@@ -45,25 +45,25 @@ $(function() {
     $("#move-namespace-batch-dialog").on("shown.bs.modal", function (event) {
         $("#move-namespace-batch-dialog-confirm-btn").unbind('click').click(function() {
             var namespaces = $("#move-namespace-batch-dialog-namespace").html();
-            var bootstrapKeyNew = "";
+            var zkClusterKeyNew = "";
             if($("#move-namespace-batch-dialog-manual").attr("status") == "auto") {
-                bootstrapKeyNew = $("#move-namespace-batch-dialog-zkCluster").val();
+                zkClusterKeyNew = $("#move-namespace-batch-dialog-zkCluster").val();
             } else {
-                bootstrapKeyNew = $("#move-namespace-batch-dialog-zkCluster-input").val();
+                zkClusterKeyNew = $("#move-namespace-batch-dialog-zkCluster-input").val();
             }
             var updateDBOnly = $("#move-namespace-batch-dialog-updateDBOnly").is(":checked");
-            $("#confirm-yes-dialog-title").html('域名：<pre>' + namespaces + '</pre>目标集群：<pre>' + bootstrapKeyNew + '</pre>只更新映射表：<pre>' + updateDBOnly + '</pre>确认批量迁移，请输入yes！');
+            $("#confirm-yes-dialog-title").html('域名：<pre>' + namespaces + '</pre>目标集群：<pre>' + zkClusterKeyNew + '</pre>只更新映射表：<pre>' + updateDBOnly + '</pre>确认批量迁移，请输入yes！');
             $("#giveMeYes").val("");
             $("#confirm-yes-dialog-confirm-btn").unbind('click').on("click", function() {
                 var yes = $("#giveMeYes").val();
                 if (yes === "yes") {
                     $("#move-namespace-batch-dialog").modal("hide");
                     $("#confirm-yes-dialog").modal("hide");
-                    $("#move-namespace-batch-status-dialog-zkCluster").html(bootstrapKeyNew);
+                    $("#move-namespace-batch-status-dialog-zkCluster").html(zkClusterKeyNew);
                     var split = namespaces.split(",");
                     if(split && split instanceof Array) {
                         var id = parseInt(Math.random() * 10000000);
-                        $.post("registry_center/moveNamespaceBatch", {namespaces: namespaces, bootstrapKeyNew: bootstrapKeyNew, updateDBOnly: updateDBOnly, id: id}, function(data) {
+                        $.post("registry_center/moveNamespaceBatch", {namespaces: namespaces, zkClusterKeyNew: zkClusterKeyNew, updateDBOnly: updateDBOnly, id: id}, function(data) {
                             if(data.success) {
                                 var size = split.length;
                                 $("#move-namespace-batch-status-dialog-data").html("成功：" + 0 + "<br/>失败：" + 0 + "<br/>忽略：" + 0 + "<br/>未做：" + size + "<br/>总共：" + size);
