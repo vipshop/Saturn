@@ -1859,10 +1859,6 @@ $(function() {
             			offlines ++;
             			lastBeginTime = "";
             			removeBtnTitle="点击进行删除该Executor";
-            			if(hasSharding){
-            				removeBtnClass = "disabled";
-            				removeBtnTitle="无法删除分片不为空(有残留分片)的Executor";
-            			}
             		}
             		var removeButton = "<button operation='removeExecutor' title='"+removeBtnTitle+"' class='btn btn-danger "+removeBtnClass+"' data-executor='" + executorName + "' onclick='showRemoveExecutorConfirmDialog(this);' "+removeBtnClass+">删除</button>";
             		var baseTd = "<td><input class='batchDelExecutorInput' executorName='"+executorName+"' removeBtnClass='"+removeBtnClass+"' type='checkbox' onclick='clickBatchDelExecutorInputCheckBox(this);'/></td>"
