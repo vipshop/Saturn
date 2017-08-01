@@ -33,7 +33,7 @@
         where zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
     </select>
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
-        insert into namespace_zkcluster_mapping( create_time, created_by, namespace, name, zk_cluster_key) values(#{createTime, jdbcType=TIMESTAMP}, #{createdBy, jdbcType=VARCHAR}, #{namespace, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{zkClusterKey, jdbcType=VARCHAR})
+        insert into namespace_zkcluster_mapping( create_time, created_by,last_update_time,last_updated_by, namespace, name, zk_cluster_key) values(#{createTime, jdbcType=TIMESTAMP}, #{createdBy, jdbcType=VARCHAR},#{lastUpdateTime, jdbcType=TIMESTAMP},#{lastUpdatedBy, jdbcType=VARCHAR}, #{namespace, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{zkClusterKey, jdbcType=VARCHAR})
     </insert>
     <update id="updateById" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
         update namespace_zkcluster_mapping
