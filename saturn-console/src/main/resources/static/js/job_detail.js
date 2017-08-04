@@ -2,7 +2,7 @@ $(function() {
 	var jobName = $("#job-name").text(), $loading = $(".loading"), jobTypeStr = $("#jobTypeFromController").val(),
 				$historyConfig = $("#history-config"),$settingsForm = $("#job-settings-form"), $historyConfigTable, 
 				detailTmp = $("#detail-block-template").html(), $operationDiv = $("#operation-div"), 
-				isJobEnabledVal = $("#isJobEnabledVal").val(), loadingExecution = false,
+				$historyBtnDdiv = $("#historyBtn-div"),isJobEnabledVal = $("#isJobEnabledVal").val(), loadingExecution = false,
 				jobStatus = $("#jobStatus").val(), $jobstatusSpan = $("#job-status-span"),confirmDialogMsg = undefined,
 				confirmOps,jobConfigShardingTotalCount, regName = $("#regNameFromServer").val();
 	$("[data-toggle='tooltip']").tooltip();
@@ -249,14 +249,99 @@ $(function() {
 
 	/** [作业设置] Tab*/
 	function renderSettings(historyId) {
-	    $.get("job/settings", {jobName : jobName,nns:regName}, function (data) {
+	    $.get("job/settings", {jobName : jobName,historyId : historyId,nns:regName}, function (data) {
 	    	$operationDiv.empty();
+	    	$historyBtnDdiv.empty();
     		$operationDiv.append("&nbsp;<button id=\"update-btn\" type=\"submit\" class=\"btn btn-primary\">更新</button>");;
+    		$historyBtnDdiv.append("<button type=\"button\" id=\"show-history-config\" class=\"btn btn-primary\" title=\"\">查看历史配置</button>");
     	    if (isJobEnabledVal == 'true') {
     	    	$("#update-btn").attr("disabled","disabled").addClass("disabled").attr("title","启用状态下的job不能编辑提交");
     	    }
 	    	
 	    	var jobConfig = data, reinitDate = false, reinitTime = false;
+	    	if (historyId != null) {
+	    		$("#update-btn").text("恢复");
+	        	var currentDesc = $("#description").val();
+	        	if (jobConfig.description != currentDesc) {
+	        		$("#description").addClass("waning-border").next().attr("title","当前配置值为："+currentDesc).show();
+	        	}
+	        	var processCountIntervalSeconds = $("#processCountIntervalSeconds").val();
+	        	if (jobConfig.processCountIntervalSeconds  != processCountIntervalSeconds) {
+	        		$("#processCountIntervalSeconds").addClass("waning-border").next().attr("title","当前配置值为："+processCountIntervalSeconds).show();
+	        	}
+		        var shardingTotalCount = $("#shardingTotalCount").val();
+	        	if (jobConfig.shardingTotalCount  != shardingTotalCount) {
+	        		$("#shardingTotalCount").addClass("waning-border").next().attr("title","当前配置值为："+shardingTotalCount).show();
+	        	}
+		        var loadLevel = $("#loadLevel").val();
+	        	if (jobConfig.loadLevel  != loadLevel) {
+	        		$("#loadLevel").addClass("waning-border").next().attr("title","当前配置值为："+loadLevel).show();
+	        	}
+	        	var jobDegree = $("#jobDegree").val();
+	        	if (jobConfig.jobDegree  != jobDegree) {
+		        	$("#jobDegree").addClass("waning-border");
+		        	$("#jobDegreeSpan").attr("title","当前配置值为："+jobDegree).show();
+	        	}
+	        	var enabledReport = $("#enabledReport").prop("checked") ? true : false;
+	        	if (jobConfig.enabledReport  != enabledReport) {
+		        	$("#enabledReport").addClass("waning-border").next().attr("title","当前配置值为："+enabledReport).show();
+	        	}
+	        	var loadMode = $("#loadMode").val();
+	        	if (jobConfig.loadMode  != loadMode) {
+	        		$("#loadMode").addClass("waning-border").next().attr("title","当前配置值为："+loadMode).show();
+	        	}
+	        	var timeZone = $("#timeZone").val();
+                if (jobConfig.timeZone  != timeZone) {
+                    $("#timeZone").addClass("waning-border");
+                    $("#timeZoneSpan").attr("title","当前配置值为："+timeZone).show();
+                }
+		        var cron = $("#cron").val();
+	        	if (jobConfig.cron  != cron) {
+	        		$("#cron").addClass("waning-border").next().attr("title","当前配置值为："+cron).show();
+	        	}
+		        var pausePeriodDate = $("#pausePeriodDate").val();
+	        	if (jobConfig.pausePeriodDate  != pausePeriodDate) {
+	        		$("#pausePeriodDate").removeAttr("data-tagsinput-init");
+	        		$("#pausePeriodDate_tagsinput").remove();
+	        		reinitDate = true;
+	        	}
+		        var pausePeriodTime = $("#pausePeriodTime").val();
+	        	if (jobConfig.pausePeriodTime  != pausePeriodTime) {
+	        		$("#pausePeriodTime").removeAttr("data-tagsinput-init");
+	        		$("#pausePeriodTime_tagsinput").remove();
+	        		reinitTime = true;
+	        	}
+		        var shardingItemParameters = $("#shardingItemParameters").val();
+	        	if (jobConfig.shardingItemParameters  != shardingItemParameters) {
+	        		$("#shardingItemParameters").addClass("waning-border").next().attr("title","当前配置值为："+shardingItemParameters).show();
+	        	}
+		        var jobParameter = $("#jobParameter").val();
+	        	if (jobConfig.jobParameter  != jobParameter) {
+	        		$("#jobParameter").addClass("waning-border").next().attr("title","当前配置值为："+jobParameter).show();
+	        	}
+	        	var timeout4AlarmSeconds = $("#timeout4AlarmSeconds").val();
+                if (jobConfig.timeout4AlarmSeconds != timeout4AlarmSeconds) {
+                    $("#timeout4AlarmSeconds").addClass("waning-border").next().attr("title","当前配置值为："+timeout4AlarmSeconds).show();
+                }
+		        var timeoutSeconds = $("#timeoutSeconds").val();
+	        	if (jobConfig.timeoutSeconds != timeoutSeconds) {
+	        		$("#timeoutSeconds").addClass("waning-border").next().attr("title","当前配置值为："+timeoutSeconds).show();
+	        	}
+		        var showNormalLog = $("#showNormalLog").prop("checked") ? true : false;
+		        
+	        	if (jobConfig.showNormalLog  != showNormalLog) {
+	        		$("#showNormalLog").addClass("waning-border").next().attr("title","当前配置值为："+showNormalLog).show();
+	        	}
+	        	var queueName = $("#queueName").val();
+	        	if (jobConfig.queueName != queueName) {
+	        		$("#queueName").addClass("waning-border").next().attr("title","当前配置值为："+queueName).show();
+	        	}
+	        	var channelName = $("#channelName").val();
+	        	if (jobConfig.channelName != channelName) {
+	        		$("#channelName").addClass("waning-border").next().attr("title","当前配置值为："+channelName).show();
+	        	}
+	        } 
+	    	
 	    	if (jobConfig.jobType === "SHELL_JOB") {
 	    		$(".hide-when-is-script-job").hide();
 	    		$(".hide-when-is-script-job-but-show-when-is-vshell-job").hide();

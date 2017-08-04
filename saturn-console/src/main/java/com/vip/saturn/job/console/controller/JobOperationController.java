@@ -18,17 +18,24 @@
 package com.vip.saturn.job.console.controller;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
+import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -59,6 +66,9 @@ public class JobOperationController extends AbstractController {
 
     @Resource
     private ExecutorService executorService;
+    
+	@Resource
+	private HistoryJobConfigService historyJobConfigService;
     
     @RequestMapping(value = "toggleJobEnabledState", method = RequestMethod.POST)
   	public RequestResult toggleJobEnabledState(HttpServletRequest request, String jobName, Boolean state, Boolean confirmed) {
@@ -402,4 +412,21 @@ public class JobOperationController extends AbstractController {
 		return SaturnConstants.DEAL_SUCCESS;
 	}
     
+	@RequestMapping(value = "loadHistoryConfig", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> loadHistoryConfig(String jobName, String ns, Integer length, HttpSession session)
+			throws Exception {
+		Map<String, Object> data = new HashMap<String, Object>();
+		HistoryJobConfig history = new HistoryJobConfig();
+		history.setJobName(jobName);
+		history.setNamespace(ns);
+		int total = historyJobConfigService.selectCount(history);
+		total = total > DEFAULT_RECORD_COUNT ? DEFAULT_RECORD_COUNT : total;
+		PageRequest page = new PageRequest(0, DEFAULT_RECORD_COUNT, Direction.DESC, "last_update_time");
+		data.put("data", historyJobConfigService.selectPage(history, page));
+		data.put("recordsTotal", total);
+		data.put("recordsFiltered", length);
+		data.put("draw", 1);
+		return data;
+	}
 }

@@ -54,11 +54,14 @@ public class JobController extends AbstractController {
 	}
 
 	@RequestMapping(value = "settings", method = RequestMethod.GET)
-	public JobSettings getJobSettings(final String jobName, final Long historyId, final ModelMap model,
+	public JobConfig getJobSettings(final String jobName, final Long historyId, final ModelMap model,
 			HttpServletRequest request) throws Exception {
 		model.put("jobName", jobName);
 		model.put("jobStatus", jobDimensionService.getJobStatus(jobName));
 		model.put("isJobEnabled", jobDimensionService.getJobStatus(jobName));
+		if (historyId != null) {
+			return jobDimensionService.getHistoryJobConfigByHistoryId(historyId);
+		}
 		return jobDimensionService.getJobSettings(jobName, getActivatedConfigInSession(request.getSession()));
 	}
 
