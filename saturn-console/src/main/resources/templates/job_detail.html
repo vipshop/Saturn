@@ -30,7 +30,38 @@ layout:decorator="frame-layout">
 				    </ul>
 				    <div class="tab-content">
 				        <div role="tabpanel" class="tab-pane active" id="settings">
-					        <form id="job-settings-form" class="form-horizontal">
+					        <div id="history-config" style="display:none;">
+					        	<table id="history-config-table" class="table table-hover table-bordered" style="width: 100%;">
+					                <thead>
+					                    <tr>
+					                        <th>行号</th>
+					                        <th>负荷</th>
+					                        <th>本地模式</th>
+					                        <th>只使用优先Executor</th>
+					                        <th>分片数</th>
+											<th>超时（告警）</th>
+					                        <th>超时（Kill线程/进程）</th>
+					                        <th class="hide-when-is-msg-job-in-history">cron表达式</th>
+					                        <th class="show-when-is-msg-job-in-history">Queue名</th>
+					                        <th class="show-when-is-msg-job-in-history">Channel名</th>
+					                        <th>更新人</th>
+					                        <th>更新时间</th>
+					                        <th>操作</th>
+					                        <th class="hide">隐藏供搜索列</th>
+					                    </tr>
+					                </thead>
+					                <tbody>
+					                </tbody>
+					            </table>
+					            <div class="pull-left">
+					            	<button type="button" id="reload-history-config" class="btn btn-primary" title="">重新加载</button>
+					            </div>
+					            <div class="pull-right">
+					            	<button type="button" id="show-current-config" class="btn btn-primary" title="">查看当前配置</button>
+					            </div>
+					            <div class="clearfix"></div>
+				            </div>
+				            <form id="job-settings-form" class="form-horizontal">
 				            	<div class="panel panel-default">
 									<div class="panel-heading">
 										<a data-toggle="collapse" href="#base-config-body">
