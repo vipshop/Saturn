@@ -177,10 +177,24 @@ function refreshNamespaceZkClusterMappingList() {
         }
         namespace_zkcluster_manager_table_DataTable = $("#namespace_zkcluster_manager_table").DataTable({
             "oLanguage": language,
-            "aoColumnDefs": [{"bSortable":false,"aTargets":[0]}], // set the first column unSort
-            "aaSorting": [[1, "desc"]], // set sort from the second column
-            "displayLength":100
-            });
+            "aoColumnDefs": [{"bSortable":false,"aTargets":[0, 2]}], // set the 0,2 column unSort
+            "aaSorting": [[1, "asc"]], // set sort from the second column
+            "displayLength":100,
+            "initComplete": function () {
+                var column = this.api().column(2);
+                var column_header = $(column.header());
+                column_header.find("select").remove();
+                var select = $('<select><option value=""></option></select>')
+                    .appendTo( column_header )
+                    .on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        column.search( val ? '^'+val+'$' : '', true, false ).draw();
+                    } );
+                column.data().unique().sort().each( function ( d, j ) {
+                    select.append( '<option value="'+d+'">'+d+'</option>' )
+                } );
+            }
+        });
         $("#namespace_zkcluster_manager_table_filter label").before(namespace_zkcluster_manager_operation);
 
         $("#init-namespace-zkcluster-mapping").on("click", function() {
