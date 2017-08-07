@@ -1421,7 +1421,9 @@ $(function() {
                 $("#showPreferList_"+i).text(preferList);// 使用text来赋值，防止&gt;等被转义成>
                 $("#showDescription_"+i).text(list[i].description);// 使用text来赋值，防止&gt;等被转义成>
             }
-            jobsViewDataTable = $("#jobs-overview-tbl").DataTable({"destroy": true, 
+            jobsViewDataTable = $("#jobs-overview-tbl").DataTable({
+                "sDom":"<'row'<'col-sm-2'l><'col-sm-10'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>", // see dataTables.bootstrap.min.js
+                "destroy": true,
             	"oLanguage": language,
                 "search": {"regex":true,"smart":false},
                 "initComplete": function() {
@@ -1878,7 +1880,9 @@ $(function() {
             $("#executors-count").text(onlines+offlines);
             $("#executors-online-count").text(onlines);
             $("#executors-offline-count").text(offlines);
-            serversViewDataTable = $("#servers-overview-tbl").DataTable({"destroy": true,
+            serversViewDataTable = $("#servers-overview-tbl").DataTable({
+                "sDom":"<'row'<'col-sm-2'l><'col-sm-10'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>", // see dataTables.bootstrap.min.js
+                "destroy": true,
             	"oLanguage": language,
             	"order": [[5, "desc"],[2, "asc"]], 
     			"aoColumns": [ 

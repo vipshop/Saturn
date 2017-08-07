@@ -1,10 +1,15 @@
 var namespace_info_table_DataTable, zk_cluster_info_table_DataTable, namespace_zkcluster_manager_table_DataTable;
-var namespace_zkcluster_manager_operation = '<font color="red" size="2">【请务必同时只能一个人并且只使用一个浏览器来操作】</font>&nbsp;&nbsp;' +
-                                            '<button class="btn btn-success" id="batch-move-namespace">批量迁移</button>&nbsp;&nbsp;' +
-                                            '<button class="btn btn-warning" id="init-namespace-zkcluster-mapping">初始化映射表</button>&nbsp;&nbsp;';
+var namespace_zkcluster_manager_operation;
 $(function() {
     window.parent.setActiveTab("#regTab");
 	window.parent.releaseRegName();
+
+	$("#namespace_zkcluster_manager_operation_div").remove();
+	namespace_zkcluster_manager_operation = '<div id="namespace_zkcluster_manager_operation_div" style="display: inline;">' +
+                                                '<font color="red" size="2">【请务必同时只能一个人并且只使用一个浏览器来操作】</font>&nbsp;' +
+                                                '<button class="btn btn-success" id="batch-move-namespace">批量迁移</button>&nbsp;' +
+                                                '<button class="btn btn-warning" id="init-namespace-zkcluster-mapping">初始化映射表</button>&nbsp;' +
+                                                '</div>';
 
 	$("#refresh_registry_center").on("click", function() {
 		var $btn = $(this).button("loading");
@@ -176,16 +181,21 @@ function refreshNamespaceZkClusterMappingList() {
             showFailureDialogWithMsg("failure-dialog", data.message);
         }
         namespace_zkcluster_manager_table_DataTable = $("#namespace_zkcluster_manager_table").DataTable({
+            "sDom":"<'row'<'col-sm-2'l><'col-sm-10'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>", // see dataTables.bootstrap.min.js
+            "destroy": true,
             "oLanguage": language,
-            "aoColumnDefs": [{"bSortable":false,"aTargets":[0, 2]}], // set the 0,2 column unSort
+            "aoColumnDefs": [{"bSortable":false,"aTargets":[0]}], // set the 0 column unSort
             "aaSorting": [[1, "asc"]], // set sort from the second column
             "displayLength":100,
             "initComplete": function () {
+                $("#namespace_zkcluster_manager_table_filter label").before(namespace_zkcluster_manager_operation);
+
                 var column = this.api().column(2);
-                var column_header = $(column.header());
-                column_header.find("select").remove();
-                var select = $('<select><option value=""></option></select>')
-                    .appendTo( column_header )
+                var opDiv = $("#namespace_zkcluster_manager_operation_div");
+                opDiv.find("select").remove();
+                opDiv.find('span [name="oneBlank"]').remove();
+                var select = $('<select class="form-control"><option value="">全部集群</option></select>')
+                    .appendTo(opDiv)
                     .on('change', function () {
                         var val = $.fn.dataTable.util.escapeRegex($(this).val());
                         column.search( val ? '^'+val+'$' : '', true, false ).draw();
@@ -193,9 +203,9 @@ function refreshNamespaceZkClusterMappingList() {
                 column.data().unique().sort().each( function ( d, j ) {
                     select.append( '<option value="'+d+'">'+d+'</option>' )
                 } );
+                $('<span name="oneBlank"> </span>').appendTo(opDiv);
             }
         });
-        $("#namespace_zkcluster_manager_table_filter label").before(namespace_zkcluster_manager_operation);
 
         $("#init-namespace-zkcluster-mapping").on("click", function() {
             $("#confirm-yes-dialog-title").html('确认初始化映射表，请输入yes！');
