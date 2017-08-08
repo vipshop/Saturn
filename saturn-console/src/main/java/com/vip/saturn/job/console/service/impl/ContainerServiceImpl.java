@@ -1,7 +1,6 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.container.*;
@@ -10,10 +9,8 @@ import com.vip.saturn.job.console.domain.container.vo.ContainerScaleJobVo;
 import com.vip.saturn.job.console.domain.container.vo.ContainerVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.ContainerRestService;
-import com.vip.saturn.job.console.service.ContainerService;
-import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
@@ -25,12 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -51,52 +43,12 @@ public class ContainerServiceImpl implements ContainerService {
     @Resource
     private ExecutorService executorService;
 
+    @Resource
+    private SystemConfigService systemConfigService;
+
     @Autowired
     @Qualifier("marathonRestAdapter")
     private ContainerRestService marathonRestAdapter;
-
-    private Map<String, String> systemConfig = new HashMap<>();
-    private static final String NAME_CONTAINER_SENSITIVE_PARAMS = "CONTAINER_SENSITIVE_PARAMS";
-
-	@PostConstruct
-	public void init() {
-		FileInputStream fis = null;
-		BufferedReader in = null;
-		try {
-			if (SaturnEnvProperties.VIP_SATURN_SYSTEM_CONFIG_PATH != null) {
-				fis = new FileInputStream(new File(SaturnEnvProperties.VIP_SATURN_SYSTEM_CONFIG_PATH));
-				in = new BufferedReader(new InputStreamReader(fis));
-				StringBuffer sb = new StringBuffer();
-				int maxLen = 1024;
-				char[] cBuf = new char[maxLen];
-				int readLen = -1;
-				while ((readLen = in.read(cBuf, 0, maxLen)) != -1) {
-					sb.append(cBuf, 0, readLen);
-				}
-				Map<String, String> obj = JSON.parseObject(sb.toString(), new TypeReference<Map<String, String>>() {
-				}.getType());
-				systemConfig.clear();
-				systemConfig.putAll(obj);
-			} else {
-				LOGGER.info("The env " + SaturnEnvProperties.NAME_VIP_SATURN_SYSTEM_CONFIG_PATH + " is not set");
-			}
-		} catch (Throwable t) {
-			LOGGER.error(t.getMessage(), t);
-		} finally {
-			if (fis != null) {
-				try {
-					fis.close();
-				} catch (Throwable t) {
-				}
-			}
-			if (in != null) {
-				try {
-					in.close();
-				} catch (Throwable t) {
-				}
-			}
-		}
-	}
 
     private ContainerRestService getContainerRestService() {
         String containerType = SaturnEnvProperties.CONTAINER_TYPE;
@@ -464,7 +416,7 @@ public class ContainerServiceImpl implements ContainerService {
             if (containerScaleJobConfig.getInstances() != null) {
                 containerScaleJobVo.setInstances(containerScaleJobConfig.getInstances().toString());
             }
-            if(containerScaleJobConfig.getTimeZone() == null) {
+            if (containerScaleJobConfig.getTimeZone() == null) {
                 containerScaleJobVo.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
             } else {
                 containerScaleJobVo.setTimeZone(containerScaleJobConfig.getTimeZone());
@@ -693,7 +645,7 @@ public class ContainerServiceImpl implements ContainerService {
     }
 
     private void replaceEnvSensitiveParams(ContainerConfig containerConfig) {
-        String sensitiveParams = systemConfig.get(NAME_CONTAINER_SENSITIVE_PARAMS);
+        String sensitiveParams = systemConfigService.getValue(SystemConfigProperties.CONTAINER_SENSITIVE_PARAMS);
         List<String> sensitiveWords = extractSensitiveWords(sensitiveParams);
         if (containerConfig.getEnv() != null) {
             Map<String, String> env = containerConfig.getEnv();

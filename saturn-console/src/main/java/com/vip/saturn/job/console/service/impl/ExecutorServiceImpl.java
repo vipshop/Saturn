@@ -12,6 +12,8 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
@@ -60,6 +62,9 @@ public class ExecutorServiceImpl implements ExecutorService {
     @Resource
     private CurrentJobConfigService currentJobConfigService;
 
+	@Resource
+	private SystemConfigService systemConfigService;
+
 	private Random random = new Random();
 	
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
@@ -103,13 +108,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 	
 	@Override
     public int getMaxJobNum() {
-		String maxJobNumStr = SaturnEnvProperties.MAX_JOB_NUM;
-		if(StringUtils.isEmpty(maxJobNumStr)) {
-			return DEFAULT_MAX_JOB_NUM;
-		}
-		int result = Integer.parseInt(maxJobNumStr.trim());
-		return result <=0?DEFAULT_MAX_JOB_NUM:result;
-    }
+		int result = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, DEFAULT_MAX_JOB_NUM);
+		return result <= 0 ? DEFAULT_MAX_JOB_NUM : result;
+	}
 	
 	@Override
 	public RequestResult addJobs(JobConfig jobConfig) {
