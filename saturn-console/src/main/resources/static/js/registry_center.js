@@ -172,8 +172,12 @@ function refreshNamespaceZkClusterMappingList() {
 	            for (var i = 0;i < list.length;i++) {
             		var mapping = list[i];
                     var baseTd = "<td><input class='batchInput' type='checkbox' onclick='clickNamespace_zkcluster_manager_table_select_all(this);' namespace='" + mapping.namespace + "'/></td>"
-                        + "<td>" + mapping.namespace + "</td><td>"
-                        + mapping.zkClusterKey + "</td>";
+                        + "<td>" + mapping.namespace + "</td>"
+                        + "<td>" + mapping.zkClusterKey + "</td>"
+                        + "<td>" + mapping.createTime + "</td>"
+                        + "<td>" + mapping.createdBy + "</td>"
+                        + "<td>" + mapping.lastUpdateTime + "</td>"
+                        + "<td>" + mapping.lastUpdatedBy + "</td>";
                     $("#namespace_zkcluster_manager_table tbody").append("<tr>" + baseTd + "</tr>");
 	            }
 	        }
