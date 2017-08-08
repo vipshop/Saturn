@@ -1443,24 +1443,10 @@ $(function() {
                     	$(row).find(".nft").html(nextFireTime);
                     });
                 },
-            	"columnDefs": [{ "type": "zn-datetime", targets: 10 }],
-            	"order": [[5, "desc" ]], 
-            	"aoColumns": [ 
-            	    { "asSorting": []},
-    	            { "asSorting": [ "desc", "asc"]  },
-    	            { "asSorting": [ "desc", "asc"]  },
-  					{ "asSorting": [ "desc", "asc"]  },  
-					{ "asSorting": [ "desc", "asc"]  },  
-					{ "asSorting": [ "desc", "asc"]  },  
-					{ "asSorting": [ "desc", "asc"]  },  
-					{ "asSorting": [ "desc", "asc"]  },
-					{ "asSorting": []  },
-					{ "asSorting": [ "desc", "asc"]  },
-					{ "asSorting": [ "desc", "asc"]  },
-					{ "asSorting": [ "desc", "asc"] },
-					{ "asSorting": [ "desc", "asc"]  },
-					{ "asSorting": []} 
-				]});
+            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 8, 13]}], // set the columns unSort
+                "aaSorting": [[4, "desc" ],[3, "asc" ],[1, "asc" ]], // set init sorting
+                "columnDefs": [{ "type": "zn-datetime", targets: 10 }]
+			});
             $("#jobs-overview-tbl_filter label").before(jobOperation);
             
             $.get("job/getAllJobGroups", {}, function (data) {
@@ -1884,19 +1870,9 @@ $(function() {
                 "sDom":"<'row'<'col-sm-2'l><'col-sm-10'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>", // see dataTables.bootstrap.min.js
                 "destroy": true,
             	"oLanguage": language,
-            	"order": [[5, "desc"],[2, "asc"]], 
-    			"aoColumns": [ 
-    			              	{ "asSorting": []}, 
-    			              	{ "asSorting": [ "desc", "asc"]  },
-    		    	            { "asSorting": [ "desc", "asc"]  },
-    		  					{ "asSorting": [ "desc", "asc"]  },  
-    							{ "asSorting": [ "desc", "asc"]  },  
-    							{ "asSorting": [ "desc", "asc"]  },  
-    							{ "asSorting": [ "desc", "asc"]  }, 
-    							{ "asSorting": [ "desc", "asc"]  },
-    							{ "asSorting": []}
-    						]
-    			});
+            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 8]}], // set the columns unSort
+                "aaSorting": [[5, "desc" ],[2, "asc" ]], // set init sorting
+    		});
             $("#servers-overview-tbl_filter label").before(executorOperation);
             $("#serverviews-status-showall").show().css("display","inline");// 显示批量删除executor按钮
             $('#executors-donuts').highcharts({

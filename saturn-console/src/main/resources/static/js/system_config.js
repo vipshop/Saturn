@@ -25,11 +25,7 @@ $(function() {
                 queryValueResultDataTable = queryValueResultTbl.DataTable({
                     "destroy": true,
                     "oLanguage": language,
-                    "order": [[1, "asc"]],
-                    "aoColumns": [
-                                    { "asSorting": [ "desc", "asc"]  },
-                                    { "asSorting": []}
-                                ]
+                    "aoColumnDefs": [{"bSortable": false,"aTargets": [1]}] // set the columns unSort
                 });
             } else {
                 showFailureDialogWithMsg("failure-dialog", data.message);
