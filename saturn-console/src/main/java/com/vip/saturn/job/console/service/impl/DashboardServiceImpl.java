@@ -52,6 +52,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
 
+	private static final long ALLOW_CONTAINER_DELAY_MILLIONSECONDS = 60L * 1000L * 3;
+
 	private static final long INTERVAL_DELTA_IN_SECOND = 10 * 1000L;
 
 	static {
@@ -1195,6 +1197,11 @@ public class DashboardServiceImpl implements DashboardService {
 			String lastScalaJob = null;
 			if (scaleJobs != null && !taskId.isEmpty()) {
 				for (String scaleJob : scaleJobs) {
+					// 如果存在running节点，则不做检查
+					if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(scaleJob, "0", "running"))){
+						return null;
+					}
+
 					String completedNodePath = JobNodePath.getExecutionNodePath(scaleJob, "0", "completed");
 					long completedMtime = curatorFrameworkOp.getMtime(completedNodePath);
 					if (completedMtime > maxItemMtime) {
@@ -1204,11 +1211,13 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 			}
 			Integer myInstance = -1;
+			long lastMtime = 0L;
 			if (configMtime > maxItemMtime) {
 				String taskConfigData = curatorFrameworkOp.getData(dcosTaskConfigNodePath);
 				if (taskConfigData != null && taskConfigData.trim().length() > 0) {
 					ContainerConfig containerConfig = JSON.parseObject(taskConfigData, ContainerConfig.class);
 					myInstance = containerConfig.getInstances();
+					lastMtime = configMtime;
 				}
 			} else if (configMtime < maxItemMtime) {
 				String dcosTaskScaleJobNodePath = ContainerNodePath.getDcosTaskScaleJobNodePath(taskId, lastScalaJob);
@@ -1216,9 +1225,15 @@ public class DashboardServiceImpl implements DashboardService {
 				if (scaleJobData != null && scaleJobData.trim().length() > 0) {
 					ContainerScaleJob containerScaleJob = JSON.parseObject(scaleJobData, ContainerScaleJob.class);
 					myInstance = containerScaleJob.getContainerScaleJobConfig().getInstances();
+					lastMtime = maxItemMtime;
 				}
 			}
 			if (myInstance != -1) {
+				boolean timeAllowed = Math.abs(System.currentTimeMillis() - lastMtime) <= ALLOW_CONTAINER_DELAY_MILLIONSECONDS;
+				if (timeAllowed) {
+					return null;
+				}
+
 				int count = containerService.getContainerRunningInstances(taskId, curatorFrameworkOp);
 				if(myInstance != count) {
 					abnormalContainer.setCause(AbnormalContainer.Cause.CONTAINER_INSTANCE_MISMATCH.name());
