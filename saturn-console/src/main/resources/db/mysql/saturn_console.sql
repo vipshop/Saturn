@@ -59,9 +59,6 @@ CREATE TABLE `job_config` (
   KEY `idx_job_name` (`job_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-
-
-
 -- ----------------------------
 -- Table structure for `job_config_history`
 -- ----------------------------
@@ -154,7 +151,7 @@ CREATE TABLE `zk_cluster_info` (
   `alias` varchar(255) NOT NULL COMMENT '别名',
   `connect_string` varchar(255) NOT NULL COMMENT '连接串',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_zk_cluster_key` (`zk_cluster_key`)
+  UNIQUE KEY `uniq_zk_cluster_info_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='zk集群信息表';
 
 
@@ -172,6 +169,6 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT '业务组',
   `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_namespace` (`namespace`),
-  KEY `idx_zk_cluster_key` (`zk_cluster_key`)
+  UNIQUE KEY `uniq_namespace_zkcluster_mapping_namespace` (`namespace`),
+  KEY `idx_namespace_zkcluster_mapping_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
