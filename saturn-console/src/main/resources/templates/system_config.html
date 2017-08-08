@@ -1,0 +1,97 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorator="frame-layout">
+<head>
+    <link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+<div th:remove="tag" layout:fragment="content">
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Saturn Console</a>
+            </div>
+        </nav>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
+            <div class="panel-title">
+                <span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 系统配置表操作</span>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <h3>已知缓存中的properties</h3>
+            <pre><span th:text="${propertiesSupported}"></span></pre>
+            <hr/>
+            <form class="form-horizontal" id="queryValue-form">
+                <h3>查询</h3>
+                <div class="form-group">
+                    <label for="property1" class="control-label col-sm-1">properties</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="property1" title="多个property使用英文逗号隔开，不输入将查询全部"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-1 col-sm-3">
+                        <button type="submit" class="btn btn-default">查询value</button>
+                    </div>
+                </div>
+                <h5>查询结果：</h5>
+                <div class="form-group">
+                    <div class="col-sm-offset-1 col-sm-9">
+                        <table id="queryValueResult-tbl" class="table table-hover table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width:30%">property</th>
+                                    <th>value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+            <form class="form-horizontal" id="insertOrUpdate-form">
+                <h3>配置</h3>
+                <div class="form-group">
+                    <label for="property2" class="control-label col-sm-1">property</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="property2"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="value2" class="control-label col-sm-1">value</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="value2"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-1 col-sm-9">
+                        <button type="submit" class="btn btn-default">提交配置</button>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+            <h3>配置字段说明</h3>
+            <ul>
+                <li><font color="red">CONTAINER_SENSITIVE_PARAMS</font><pre>容器资源环境变量配置敏感字，多个使用英文逗号隔开。</pre></li>
+                <li><font color="red">MAX_JOB_NUM</font><pre>每个域最大作业数。</pre></li>
+                <li><font color="red">CONSOLE_ZK_CLUSTER_MAPPING</font><pre>Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3。</pre></li>
+            </ul>
+        </div>
+    </div>
+    <div th:replace="fragments :: success-dialog"></div>
+    <div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
+    <div th:replace="fragments :: confirm-dialog(id='confirm-dialog', text='')"></div>
+</div>
+<div th:remove="tag" layout:fragment="footer-scripts">
+    <script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+    <script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
+    <script src="js/system_config.js?v=saturn-console-ui-version"></script>
+</div>
+</body>
+</html>
