@@ -322,6 +322,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (allMappingsOfCluster != null && !zkCluster.isOffline()) {
 					for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
 						String namespace = mapping.getNamespace();
+						String name = mapping.getName();
 						if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
 							log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
 							continue;
@@ -330,11 +331,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						for (RegistryCenterConfiguration conf : regCenterConfList) {
 							if (namespace.equals(conf.getNamespace())) {
 								include = true;
+								// update the conf info
+								conf.initNameAndNamespace(name + RegistryCenterConfiguration.SLASH + namespace);
 								break;
 							}
 						}
 						if (!include) {
-							String name = mapping.getName();
 							CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
 							initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
 							RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
