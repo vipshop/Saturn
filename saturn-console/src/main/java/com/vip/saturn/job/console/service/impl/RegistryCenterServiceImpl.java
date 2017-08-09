@@ -16,6 +16,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,20 +31,22 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.utils.JobNodePath;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
+import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.TreeNode;
 import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
@@ -51,8 +54,11 @@ import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.InitRegistryCenterService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.DashboardLeaderTreeCache;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.LocalHostService;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
@@ -63,6 +69,8 @@ import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	protected static Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
+	
+	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -72,6 +80,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
+	
+	@Resource
+	private SystemConfigService systemConfigService;
 
 	@Resource
 	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
@@ -89,9 +100,20 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns **/ , NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
+	
+	private String consoleClusterId;
+	
+	private List<String> restrictComputeZkClusterKeys = new ArrayList<String>();
 
 	@PostConstruct
 	public void init() throws Exception {
+		if (StringUtils.isBlank(SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID)) {
+			String warnMsg = "No environment variable or system property of [VIP_SATURN_CONSOLE_CLUSTER] is set! Use the default Id";
+			log.warn(warnMsg);
+			consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
+		} else {
+			consoleClusterId = SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID;
+		}
 		refreshAll();
 	}
 
@@ -103,13 +125,57 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	private void refreshAll() throws IOException {
+	private void refreshAll() throws Exception {
+		refreshRestrictComputeZkClusters();
 		refreshRegistryCenter();
 		refreshDashboardLeaderTreeCache();
 		refreshNamespaceShardingListenerManagerMap();
 		refreshTreeData();
 	}
+	
+	/**
+	 * 解析Console集群和zk的映射关系
+	 * 
+	 * 数据库中配置的例子如下： CONSOLE-1:/saturn,/forVdos;CONSOLE-2:/zk3;
+	 * 
+	 * @throws SaturnJobConsoleException
+	 */
+	private void refreshRestrictComputeZkClusters() throws SaturnJobConsoleException {
+		String allMappingStr = systemConfigService.getValueDirectly(SystemConfigProperties.CONSOLE_ZK_CLUSTER_MAPPING);
+		if (StringUtils.isBlank(allMappingStr)) {
+			throw new SaturnJobConsoleException("sys_config表没有设置CONSOLE_ZK_CLUSTER_MAPPING");
+		}
 
+		allMappingStr = StringUtils.deleteWhitespace(allMappingStr);
+		String[] singleConsoleMappingArray = allMappingStr.split(";");
+		for (String singleConsoleMappingStr : singleConsoleMappingArray) {
+			String[] consoleAndClusterKeyArray = singleConsoleMappingStr.split(":");
+			if (consoleAndClusterKeyArray.length != 2) {
+				throw new SaturnJobConsoleException("集群映射配置[" + consoleAndClusterKeyArray + "]格式不对，正确格式例如console:zk1");
+			}
+			String tempConsoleClusterId = consoleAndClusterKeyArray[0];
+			String zkClusterKeyStr = consoleAndClusterKeyArray[1];
+			if (consoleClusterId.equals(tempConsoleClusterId)) {
+				String[] zkClusterKeyArray = zkClusterKeyStr.trim().split(",");
+				restrictComputeZkClusterKeys = Arrays.asList(zkClusterKeyArray);
+				log.info("当前console server可以做以下zk集群的sharding和dashboard计算:{}", restrictComputeZkClusterKeys);
+				return;
+			}
+		}
+
+		throw new SaturnJobConsoleException("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
+	}
+
+	/**
+	 * 判断该集群是否能被本Console计算
+	 */
+	private boolean isZKClusterCanBeComputed(String clusterKey) {
+		if (CollectionUtils.isEmpty(restrictComputeZkClusterKeys)) {
+			return false;
+		}
+		return restrictComputeZkClusterKeys.contains(clusterKey);
+	}
+	
 	private String generateShardingLeadershipHostValue() {
 		return LocalHostService.cachedIpAddress + "-" + UUID.randomUUID().toString();
 	}
@@ -124,6 +190,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				for (RegistryCenterConfiguration conf : regCenterConfList) {
 					String nns = conf.getNameAndNamespace();
 					if (!namespaceShardingListenerManagerMap.containsKey(nns)) {
+						if(!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+							continue;
+						}
 						try {
 							log.info("Start NamespaceShardingManager {}", nns);
 							String namespace = conf.getNamespace();
@@ -160,6 +229,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 							}
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
+						}
+					} else {
+						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.get(nns);
+						if (!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+							namespaceShardingManager.stopWithCurator();
+							namespaceShardingListenerManagerMap.remove(nns);
 						}
 					}
 				}
@@ -306,12 +381,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void refreshDashboardLeaderTreeCache() {
+		closeDeprecatedDashboardLeaderTreeCache();
 		Iterator<Entry<String, ZkCluster>> iterator = zkClusterMap.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ZkCluster> next = iterator.next();
 			String zkClusterKey = next.getKey();
 			ZkCluster zkCluster = next.getValue();
-			if (!zkCluster.isOffline() && !dashboardLeaderTreeCacheMap.containsKey(zkClusterKey)) {
+			if (needToRefreshDashboardTreeCache(zkCluster, zkClusterKey)) {
 				DashboardLeaderTreeCache dashboardLeaderTreeCache = null;
 				try {
 					dashboardLeaderTreeCache = new DashboardLeaderTreeCache(zkCluster.getZkAlias(), zkCluster.getCuratorFramework());
@@ -322,6 +398,36 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					if (dashboardLeaderTreeCache != null) {
 						dashboardLeaderTreeCache.shutdown();
 					}
+				}
+			}
+		}
+	}
+	
+	private boolean needToRefreshDashboardTreeCache(ZkCluster zkCluster, String zkClusterKey) {
+		if (zkCluster.isOffline()) {
+			return false;
+		}
+
+		if (dashboardLeaderTreeCacheMap.containsKey(zkClusterKey)) {
+			return false;
+		}
+
+		return isZKClusterCanBeComputed(zkClusterKey);
+	}
+	
+	/**
+	 * 将不在本console服务器中进行Dashboard计算的DashboardLeaderTreeCache关闭
+	 */
+	private void closeDeprecatedDashboardLeaderTreeCache() {
+		if (dashboardLeaderTreeCacheMap == null || dashboardLeaderTreeCacheMap.isEmpty()) {
+			return;
+		}
+		for (String zkClusterKey : dashboardLeaderTreeCacheMap.keySet()) {
+			if (!isZKClusterCanBeComputed(zkClusterKey)) {
+				log.info("close the deprecated dashboard leader tree Cache, {}", zkClusterKey);
+				DashboardLeaderTreeCache oldDashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.remove(zkClusterKey);
+				if (oldDashboardLeaderTreeCache != null) {
+					oldDashboardLeaderTreeCache.shutdown();
 				}
 			}
 		}
