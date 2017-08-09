@@ -190,45 +190,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				for (RegistryCenterConfiguration conf : regCenterConfList) {
 					String nns = conf.getNameAndNamespace();
 					if (!namespaceShardingListenerManagerMap.containsKey(nns)) {
-						if(!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
-							continue;
-						}
-						try {
-							log.info("Start NamespaceShardingManager {}", nns);
-							String namespace = conf.getNamespace();
-							String digest = conf.getDigest();
-							CuratorFramework client = curatorRepository.connect(conf.getZkAddressList(), namespace,
-									digest);
-							if (client != null) {
-								NamespaceShardingManager namespaceShardingManager = null;
-								try {
-									namespaceShardingManager = new NamespaceShardingManager(client, namespace,
-											generateShardingLeadershipHostValue(), reportAlarmService);
-									namespaceShardingManager.start();
-									if (namespaceShardingListenerManagerMap.putIfAbsent(nns,
-											namespaceShardingManager) != null) {
-										try {
-											namespaceShardingManager.stopWithCurator();
-										} catch (Exception e) {
-											log.error(e.getMessage(), e);
-										}
-									} else {
-										log.info("Done starting NamespaceShardingManager {}", nns);
-									}
-								} catch (Exception e) {
-									log.error(e.getMessage(), e);
-									if (namespaceShardingManager != null) {
-										try {
-											namespaceShardingManager.stop();
-										} catch (Exception e2) {
-											log.error(e.getMessage(), e);
-										}
-									}
-									client.close();
-								}
-							}
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
+						if(isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+							createNamespaceShardingManager(conf, nns);
 						}
 					} else {
 						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.get(nns);
@@ -239,6 +202,46 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					}
 				}
 			}
+		}
+	}
+
+	private void createNamespaceShardingManager(RegistryCenterConfiguration conf, String nns) {
+		try {
+			log.info("Start NamespaceShardingManager {}", nns);
+			String namespace = conf.getNamespace();
+			String digest = conf.getDigest();
+			CuratorFramework client = curatorRepository.connect(conf.getZkAddressList(), namespace,
+					digest);
+			if (client != null) {
+				NamespaceShardingManager namespaceShardingManager = null;
+				try {
+					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
+							generateShardingLeadershipHostValue(), reportAlarmService);
+					namespaceShardingManager.start();
+					if (namespaceShardingListenerManagerMap.putIfAbsent(nns,
+							namespaceShardingManager) != null) {
+						try {
+							namespaceShardingManager.stopWithCurator();
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					} else {
+						log.info("Done starting NamespaceShardingManager {}", nns);
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					if (namespaceShardingManager != null) {
+						try {
+							namespaceShardingManager.stop();
+						} catch (Exception e2) {
+							log.error(e.getMessage(), e);
+						}
+					}
+					client.close();
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
