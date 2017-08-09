@@ -173,3 +173,4 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 INSERT INTO `namespace_zkcluster_mapping`(`namespace`, `name`, `zk_cluster_key`) VALUES('mydomain', '业务组', 'cluster1');
+INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','default:cluster1,it_cluster');

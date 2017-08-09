@@ -1,9 +1,8 @@
 package com.vip.saturn.job.console;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.charset.Charset;
 
 /**
  * @author xiaopeng.he
@@ -14,6 +13,12 @@ public final class SaturnEnvProperties {
 
     private SaturnEnvProperties() {
     }
+    
+	/**
+	 * 指定Console在进行sharding计算和dashbaord统计等计算的服务器集群标识
+	 */
+	public static String NAME_VIP_SATURN_CONSOLE_CLUSTER = "VIP_SATURN_CONSOLE_CLUSTER";
+	public static String VIP_SATURN_CONSOLE_CLUSTER_ID = StringUtils.trim(System.getProperty(NAME_VIP_SATURN_CONSOLE_CLUSTER, System.getenv(NAME_VIP_SATURN_CONSOLE_CLUSTER)));
 
     /**
      * zk注册中心

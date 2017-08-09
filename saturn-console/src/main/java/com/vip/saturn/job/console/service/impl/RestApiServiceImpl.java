@@ -47,6 +47,8 @@ public class RestApiServiceImpl implements RestApiService {
 
     private final static String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
 
+    private final static String ALL_EXECUTORS_ARE_OFFLINE = "all executors are offline";
+
     private final static String NO_EXECUTOR_FOUND = "no executor found for this job";
 
     @Resource
@@ -405,11 +407,17 @@ public class RestApiServiceImpl implements RestApiService {
                     throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
                 }
 
+                boolean everExecute = false;
                 for (JobServer server : servers) {
                     if (ServerStatus.ONLINE.equals(server.getStatus())) {
                         logger.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
                         jobOperationService.runAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(), curatorFrameworkOp);
+                        everExecute = true;
                     }
+                }
+
+                if(!everExecute){
+                    throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), ALL_EXECUTORS_ARE_OFFLINE);
                 }
             }
 
