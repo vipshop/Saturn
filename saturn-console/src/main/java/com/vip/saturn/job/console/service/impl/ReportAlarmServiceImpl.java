@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Report alarm, maybe you could re-implement this class
@@ -31,7 +33,10 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 
     @Override
     public void dashboardAbnormalJob(String namespace, String jobName, String timeZone, long shouldFiredTime) throws ReportAlarmException {
-        LOGGER.error("dashboardAbnormalJob, namespace is {}, jobName is {}, timeZone is {}, shouldFiredTime is {}", namespace, jobName, timeZone, shouldFiredTime);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        String shouldFiredTimeFormatted = timeZone + " " + format.format(shouldFiredTime);
+        LOGGER.error("dashboardAbnormalJob, namespace is {}, jobName is {}, timeZone is {}, shouldFiredTime is {}", namespace, jobName, timeZone, shouldFiredTimeFormatted);
     }
 
     @Override
