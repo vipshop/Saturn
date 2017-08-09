@@ -149,7 +149,7 @@ CREATE TABLE `zk_cluster_info` (
   `alias` varchar(255) NOT NULL COMMENT '别名',
   `connect_string` varchar(255) NOT NULL COMMENT '连接串',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_zk_cluster_key` (`zk_cluster_key`)
+  UNIQUE KEY `uniq_zk_cluster_info_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'localhost:2181');
