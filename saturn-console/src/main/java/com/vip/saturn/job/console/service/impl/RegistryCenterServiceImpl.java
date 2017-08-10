@@ -15,15 +15,8 @@
 package com.vip.saturn.job.console.service.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -105,6 +98,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	
 	private List<String> restrictComputeZkClusterKeys = new ArrayList<String>();
 
+	private Timer refreshAllTimer = null;
+
 	@PostConstruct
 	public void init() throws Exception {
 		if (StringUtils.isBlank(SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID)) {
@@ -114,7 +109,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		} else {
 			consoleClusterId = SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID;
 		}
-		refreshAll();
+		refreshRegCenter();
+		startRefreshAllTimer();
 	}
 
 	@PreDestroy
@@ -123,6 +119,21 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		while (iterator.hasNext()) {
 			closeZkCluster(iterator.next().getValue());
 		}
+		if(refreshAllTimer != null) {
+			refreshAllTimer.cancel();
+		}
+	}
+
+	private void startRefreshAllTimer() {
+		refreshAllTimer = new Timer("refresh-RegCenter-timer", true);
+		// 每隔5分钟刷新一次
+		refreshAllTimer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				log.info("refresh-RegCenter-timmer begin to refresh registry center");
+				refreshRegCenter();
+			}
+		}, 1000 * 60 * 5, 1000 * 60 * 5);
 	}
 
 	private void refreshAll() throws Exception {
