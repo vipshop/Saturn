@@ -145,9 +145,9 @@ CREATE TABLE `zk_cluster_info` (
   `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
   `last_update_time` timestamp NOT NULL DEFAULT NULL COMMENT '最近更新时间',
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `zk_cluster_key` varchar(255) NOT NULL COMMENT '集群key值，唯一',
-  `alias` varchar(255) NOT NULL COMMENT '别名',
-  `connect_string` varchar(255) NOT NULL COMMENT '连接串',
+  `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key值，唯一',
+  `alias` varchar(255) NOT NULL DEFAULT '' COMMENT '别名',
+  `connect_string` varchar(255) NOT NULL DEFAULT '' COMMENT '连接串',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_zk_cluster_info_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

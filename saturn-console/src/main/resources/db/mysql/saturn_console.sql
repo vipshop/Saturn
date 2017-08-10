@@ -141,15 +141,15 @@ CREATE TABLE `sys_config` (
 -- Table structure for `zk_cluster_info`
 -- ----------------------------
 CREATE TABLE `zk_cluster_info` (
-  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
   `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
   `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `zk_cluster_key` varchar(255) NOT NULL COMMENT '集群key值，唯一',
-  `alias` varchar(255) NOT NULL COMMENT '别名',
-  `connect_string` varchar(255) NOT NULL COMMENT '连接串',
+  `zk_cluster_key` varchar(255) NOT NULL DEFAULT '' COMMENT '集群key值，唯一',
+  `alias` varchar(255) NOT NULL DEFAULT '' COMMENT '别名',
+  `connect_string` varchar(255) NOT NULL DEFAULT '' COMMENT '连接串',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_zk_cluster_info_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='zk集群信息表';
