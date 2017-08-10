@@ -67,7 +67,6 @@ public class RegistryCenterConfiguration implements Serializable {
     
     public RegistryCenterConfiguration(final String nameAndNamespace, final String zkAddressList) {
     	initNameAndNamespace(nameAndNamespace);
-    	this.nameAndNamespace = nameAndNamespace;
     	this.zkAddressList = zkAddressList;
     }
 
@@ -223,6 +222,7 @@ public class RegistryCenterConfiguration implements Serializable {
 	}
 
 	public void initNameAndNamespace(String nameAndNamespace) {
+		this.nameAndNamespace = nameAndNamespace;
 		this.namespace = StringUtils.substringAfterLast(nameAndNamespace, SLASH);
     	this.name = StringUtils.substringBeforeLast(nameAndNamespace, SLASH);
 	}
