@@ -527,12 +527,20 @@ public class ScriptPidUtils {
 	public static Map<String, String> parseString2Map(String source) {
 		Map<String,String> map = new HashMap<>();
 		String[] lines = source.split(System.getProperty("line.separator"));
+		String lastKey = null;
  		for (String oneLine: lines) {
 			String[] kvs = oneLine.split("=");
 			if (kvs.length == 2) {
 				map.put(kvs[0], kvs[1]);
+				lastKey = kvs[0];
 			} else if (kvs.length > 2) {
 				map.put(kvs[0], oneLine.replace(kvs[0] + "=", ""));
+				lastKey = kvs[0];
+			} else if (kvs.length == 1){
+				if(StringUtils.isNotBlank(lastKey)) {
+					String lastValue = map.get(lastKey);
+					map.put(lastKey, lastValue + kvs[0]);
+				}
 			}
 		}
  		return map;
