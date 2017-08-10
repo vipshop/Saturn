@@ -330,36 +330,46 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						}
 					}
 				}
-				if (allMappingsOfCluster != null && !zkCluster.isOffline()) {
-					for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
-						String namespace = mapping.getNamespace();
-						String name = mapping.getName();
-						if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
-							log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
-							continue;
-						}
-						boolean include = false;
+			}
+			if (allMappingsOfCluster != null && !zkCluster.isOffline()) {
+				for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
+					String namespace = mapping.getNamespace();
+					String name = mapping.getName();
+					if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+						log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
+						continue;
+					}
+					boolean include = false;
+					if(regCenterConfList != null) {
 						for (RegistryCenterConfiguration conf : regCenterConfList) {
 							if (namespace.equals(conf.getNamespace())) {
 								include = true;
-								// update the conf info
-								conf.initNameAndNamespace(name + RegistryCenterConfiguration.SLASH + namespace);
+								String nnsOld = conf.getNameAndNamespace();
+								// update name
+								conf.setName(name);
+								conf.initNameAndNamespace();
+								String nnsNew = conf.getNameAndNamespace();
+								if (!nnsOld.equals(nnsNew)) {
+									synchronized (getNnsLock(nnsOld)) {
+										closeNamespace(nnsOld);
+										log.info("closed the namespace info because it's nns is changed, namespace is {}", namespace);
+									}
+								}
 								break;
 							}
 						}
-						if (!include) {
-							CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
-							initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-							RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
-							conf.setZkClusterKey(zkClusterKey);
-							conf.setVersion(getVersion(namespace, curatorFramework));
-							conf.setZkAlias(zkCluster.getZkAlias());
-							zkCluster.getRegCenterConfList().add(conf);
-						}
+					}
+					if (!include) {
+						CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
+						initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
+						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
+						conf.setZkClusterKey(zkClusterKey);
+						conf.setVersion(getVersion(namespace, curatorFramework));
+						conf.setZkAlias(zkCluster.getZkAlias());
+						zkCluster.getRegCenterConfList().add(conf);
 					}
 				}
 			}
-
 		}
 		// 直接赋值新的
 		zkClusterMap = newClusterMap;

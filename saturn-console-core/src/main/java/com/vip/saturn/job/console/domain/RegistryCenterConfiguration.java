@@ -61,14 +61,21 @@ public class RegistryCenterConfiguration implements Serializable {
     public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
         this.name = name;
         this.namespace = namespace;
-        this.nameAndNamespace = this.name + SLASH + this.namespace;
+		initNameAndNamespace();
         this.zkAddressList = zkAddressList;
     }
-    
-    public RegistryCenterConfiguration(final String nameAndNamespace, final String zkAddressList) {
-    	initNameAndNamespace(nameAndNamespace);
-    	this.zkAddressList = zkAddressList;
-    }
+
+	/**
+	 * before invoke this method, be sure that the name and namespace are set, and the namespace cannot be null
+	 */
+	public void initNameAndNamespace() {
+		// namespace cannot be null, i am sure. But the name could be.
+		if(name != null) {
+			this.nameAndNamespace = name + SLASH + namespace;
+		} else {
+			this.nameAndNamespace = SLASH + namespace;;
+		}
+	}
 
 	public String getZkAlias() {
 		return zkAlias;
@@ -137,6 +144,9 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.digest = digest;
 	}
 
+	/**
+	 * please use initNameAndNamespace method
+	 */
 	public void setNameAndNamespace(String nameAndNamespace) {
 		this.nameAndNamespace = nameAndNamespace;
 	}
@@ -219,12 +229,6 @@ public class RegistryCenterConfiguration implements Serializable {
 		result = result * 59 + ($techAdmin == null ? 43 : $techAdmin.hashCode());
 		Object $degree = getDegree();
 		return result * 59 + ($degree == null ? 43 : $degree.hashCode());
-	}
-
-	public void initNameAndNamespace(String nameAndNamespace) {
-		this.nameAndNamespace = nameAndNamespace;
-		this.namespace = StringUtils.substringAfterLast(nameAndNamespace, SLASH);
-    	this.name = StringUtils.substringBeforeLast(nameAndNamespace, SLASH);
 	}
 
 	@Override
