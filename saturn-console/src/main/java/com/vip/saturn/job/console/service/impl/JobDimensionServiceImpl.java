@@ -767,7 +767,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
         if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
         	isEnabledReport = Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
         }else{
-        	String jobType = JobNodePath.getConfigNodePath(jobName, "jobType");
+        	String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
         	if(JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)){
         		isEnabledReport = true;
         	}
