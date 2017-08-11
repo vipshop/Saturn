@@ -68,10 +68,6 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
-	private Map<String, Integer> executorInDockerCountMapCache = new HashMap<>();
-	private Map<String, Integer> executorNotInDockerCountMapCache = new HashMap<>();
-	private Map<String, Integer> jobCountMapCache = new HashMap<>();
-
 	private Map<String/** domainName_jobName_shardingItemStr **/, AbnormalShardingState/** abnormal sharding state */> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
 	private Timer refreshStatisticsTimmer;
@@ -173,46 +169,9 @@ public class DashboardServiceImpl implements DashboardService {
 				if (force || registryCenterService.isDashboardLeader(zkCluster.getZkClusterKey())) {
 					refreshStatistics2DB(zkCluster);
 				}
-				// no matter, update caches
-				updateExecutorInDockerCountCache(zkCluster.getZkAddr());
-				updateExecutorNotInDockerCountCache(zkCluster.getZkAddr());
-				updateExecutorJobCountCache(zkCluster.getZkAddr());
 			}
 		}
 		log.info("end refresh statistics, takes " + (new Date().getTime() - start.getTime()));
-	}
-
-	private void updateExecutorJobCountCache(String zkAddr) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_COUNT, zkAddr);
-		if(ss != null) {
-			String result = ss.getResult();
-			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
-			jobCountMapCache.put(zkAddr, count == null ? 0 : count);
-		} else {
-			jobCountMapCache.put(zkAddr, 0);
-		}
-	}
-
-	private void updateExecutorNotInDockerCountCache(String zkAddr) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkAddr);
-		if(ss != null) {
-			String result = ss.getResult();
-			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
-			executorNotInDockerCountMapCache.put(zkAddr, count == null ? 0 : count);
-		} else {
-			executorNotInDockerCountMapCache.put(zkAddr, 0);
-		}
-	}
-
-	private void updateExecutorInDockerCountCache(String zkAddr) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkAddr);
-		if(ss != null) {
-			String result = ss.getResult();
-			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
-			executorInDockerCountMapCache.put(zkAddr, count == null ? 0 : count);
-		} else {
-			executorInDockerCountMapCache.put(zkAddr, 0);
-		}
 	}
 
 	private void refreshStatistics2DB(ZkCluster zkCluster) {
@@ -1314,20 +1273,38 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public int executorInDockerCount(String zkList) {
-		Integer count = executorInDockerCountMapCache.get(zkList);
-		return count == null ? 0 : count;
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkList);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			return count == null ? 0 : count;
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
 	public int executorNotInDockerCount(String zkList) {
-		Integer count = executorNotInDockerCountMapCache.get(zkList);
-		return count == null ? 0 : count;
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkList);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			return count == null ? 0 : count;
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
 	public int jobCount(String zkList) {
-		Integer count = jobCountMapCache.get(zkList);
-		return count == null ? 0 : count;
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_COUNT, zkList);
+		if(ss != null) {
+			String result = ss.getResult();
+			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
+			return count == null ? 0 : count;
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
