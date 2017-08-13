@@ -153,7 +153,6 @@ public class JobOperationRestApiController {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, "cron"));
             }
 
-            logger.info("Call UpdateCron API: ip:{} namespace:{} jobName:{} cron:{} params:{}", ControllerUtils.getClientIp(request), namespace, jobName, cron, params);
             restApiService.updateJobCron(namespace, jobName, cron, params);
             return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
         } catch (SaturnJobConsoleException e) {
