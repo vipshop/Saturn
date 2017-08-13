@@ -594,11 +594,10 @@ public class SaturnAutoBasic {
 	public static void stopConsole() {
 		SaturnConsoleApp.stop();
 	}
-	
+
 	private static void prepareForItSql() throws IOException {
-		System.setProperty("db.profiles.active", "h2");
-		String forItSqlPath = "/db/h2/custom_forit.sql";
-		URL resource = SaturnAutoBasic.class.getResource(forItSqlPath);
+		String itSqlFilePath = "/db/h2/custom_forit.sql";
+		URL resource = SaturnAutoBasic.class.getResource(itSqlFilePath);
 		File file = new File(resource.getFile());
 		if (file.exists()) {
 			List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
@@ -609,7 +608,7 @@ public class SaturnAutoBasic {
 			}
 			FileUtils.writeLines(file, readLines, false);
 		} else {
-			log.error("The {} is not existing", forItSqlPath);
+			log.error("The {} is not existing", itSqlFilePath);
 		}
 	}
 	
