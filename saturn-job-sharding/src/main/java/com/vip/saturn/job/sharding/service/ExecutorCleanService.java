@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 
 /**
- * Created by xiaopeng.he on 2016/8/22.
+ * This class should be modified, when the curator bug is fixed. The bug is <a href="https://issues.apache.org/jira/browse/CURATOR-430">CURATOR-430</a>
+ *
+ * @author hebelala
  */
 public class ExecutorCleanService {
-	static Logger log = LoggerFactory.getLogger(ExecutorCleanService.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(ExecutorCleanService.class);
 
     private CuratorFramework curatorFramework;
 
@@ -36,7 +40,7 @@ public class ExecutorCleanService {
                     String cleanNodeData = new String(cleanNodeBytes, "UTF-8");
                     if (Boolean.parseBoolean(cleanNodeData)) {
                         if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) == null) {
-                            log.info("Clean the executor {}", executorName);
+                            LOGGER.info("Clean the executor {}", executorName);
                             // delete $SaturnExecutors/executors/xxx
                             deleteExecutor(executorName);
 
@@ -47,15 +51,15 @@ public class ExecutorCleanService {
                                 deleteJobConfigPreferListContentAboutXxx(jobName, executorName);
                             }
                         } else {
-                            log.info("The executor {} is online now, no necessary to clean", executorName);
+                            LOGGER.info("The executor {} is online now, no necessary to clean", executorName);
                         }
                     }
                 }
             }
-        } catch (NoNodeException ex) { // NOSONAR
-        	ex.printStackTrace();
+        } catch (NoNodeException e) { // NOSONAR
+        	// ignore
         } catch (Exception e) {
-            log.error("Clean the executor " + executorName + " error", e);
+            LOGGER.error("Clean the executor " + executorName + " error", e);
         }
     }
 
@@ -69,10 +73,10 @@ public class ExecutorCleanService {
                     jobList.addAll(tmp);
                 }
             }
-        } catch (NoNodeException ex) { // NOSONAR
-            ex.printStackTrace();
+        } catch (NoNodeException e) { // NOSONAR
+            // ignore
         } catch (Exception e) {
-            log.error("Clean the executor, getJobList error", e);
+            LOGGER.error("Clean the executor, getJobList error", e);
         }
         return jobList;
     }
@@ -90,19 +94,19 @@ public class ExecutorCleanService {
                     for (String tmp : executorChildren) {
                         try {
                             curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath + "/" + tmp);
-                        } catch (NoNodeException ex) {
-                            ex.printStackTrace();
+                        } catch (NoNodeException e) {
+                            // ignore
                         } catch (Exception e) {
-                            log.error("Clean the executor " + executorName + " error", e);
+                            LOGGER.error("Clean the executor " + executorName + " error", e);
                         }
                     }
                 }
                 curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath);
             }
-        } catch (NoNodeException ex) { // NOSONAR
-            ex.printStackTrace();
+        } catch (NoNodeException e) { // NOSONAR
+            // ignore
         } catch (Exception e) {
-            log.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
+            LOGGER.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
         }
     }
 
@@ -119,19 +123,19 @@ public class ExecutorCleanService {
                     for (String tmp : jobServersChildren) {
                         try {
                             curatorFramework.delete().deletingChildrenIfNeeded().forPath(jobServersExecutorNodePath + "/" + tmp);
-                        } catch (NoNodeException ex) {
-                            ex.printStackTrace();
+                        } catch (NoNodeException e) {
+                            // ignore
                         } catch (Exception e) {
-                            log.error("Clean the executor " + executorName + " error", e);
+                            LOGGER.error("Clean the executor " + executorName + " error", e);
                         }
                     }
                 }
                 curatorFramework.delete().deletingChildrenIfNeeded().forPath(jobServersExecutorNodePath);
             }
-        } catch (NoNodeException ex) { // NOSONAR
-            ex.printStackTrace();
+        } catch (NoNodeException e) { // NOSONAR
+            // ignore
         } catch (Exception e) {
-            log.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
+            LOGGER.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
         }
     }
 
@@ -142,7 +146,8 @@ public class ExecutorCleanService {
         try {
             String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
             if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {
-                byte[] jobConfigPreferListNodeBytes = curatorFramework.getData().forPath(jobConfigPreferListNodePath);
+                Stat stat = new Stat();
+                byte[] jobConfigPreferListNodeBytes = curatorFramework.getData().storingStatIn(stat).forPath(jobConfigPreferListNodePath);
                 if (jobConfigPreferListNodeBytes != null) {
                     StringBuilder sb = new StringBuilder();
                     String[] split = new String(jobConfigPreferListNodeBytes, "UTF-8").split(",");
@@ -155,13 +160,15 @@ public class ExecutorCleanService {
                             sb.append(tmpTrim);
                         }
                     }
-                    curatorFramework.setData().forPath(jobConfigPreferListNodePath, sb.toString().getBytes("UTF-8"));
+                    curatorFramework.setData().withVersion(stat.getVersion()).forPath(jobConfigPreferListNodePath, sb.toString().getBytes("UTF-8"));
                 }
             }
-        } catch (NoNodeException ex) { // NOSONAR
-            ex.printStackTrace();
+        } catch (NoNodeException e) { // NOSONAR
+            // ignore
+        } catch (KeeperException.BadVersionException e) {
+            // ignore
         } catch (Exception e) {
-            log.error("Clean the executor, deleteJobConfigPreferListContentAboutXxx(" + jobName + ", " + executorName + ") error", e);
+            LOGGER.error("Clean the executor, deleteJobConfigPreferListContentAboutXxx(" + jobName + ", " + executorName + ") error", e);
         }
     }
 
