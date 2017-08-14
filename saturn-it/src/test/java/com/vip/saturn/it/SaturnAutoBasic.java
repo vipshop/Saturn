@@ -48,7 +48,7 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
  */
 public class SaturnAutoBasic {
     protected final static int timeout = 15;
-    protected static final String NAMESPACE = "it-saturn-java.vip.vip.com";
+    protected static final String NAMESPACE = "it-saturn";
     protected static final String CONSOLE_URL = "http://localhost:9088";
     protected static Logger log;
     protected static ZookeeperRegistryCenter regCenter;
