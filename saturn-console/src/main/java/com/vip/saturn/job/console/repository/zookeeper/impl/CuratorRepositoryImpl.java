@@ -207,7 +207,6 @@ public class CuratorRepositoryImpl implements CuratorRepository {
                     curatorFramework.delete().deletingChildrenIfNeeded().forPath(znode);
                 }
             } catch (final NoNodeException ex) {
-                ex.printStackTrace();
                 //CHECKSTYLE:OFF
             } catch (final Exception ex) {
                 //CHECKSTYLE:ON
