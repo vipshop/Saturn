@@ -827,19 +827,22 @@ $(function() {
             	$(row).attr("title","单击查看详细配置").attr("dataIndex",displayIndex);
             },
             "fnCreatedRow": function(nRow, aData, iDataIndex) {
-            	if (jobTypeStr == "MSG_JOB") {
+                if(aData.timeout4AlarmSeconds == "") {
+                    $('td:eq(5)', nRow).html(0);
+                }
+            	if (jobTypeStr == "MSG_JOB" || jobTypeStr == "VSHELL") {
             		$('td:eq(3)', nRow).html((!aData.useDispreferList).toString());
-            		$('td:eq(6)', nRow).html(aData.queueName);
-            		$('td:eq(7)', nRow).html(aData.channelName);
+            		$('td:eq(7)', nRow).html(aData.queueName);
+            		$('td:eq(8)', nRow).html(aData.channelName);
+                	$('td:eq(9)', nRow).html(aData.lastUpdateBy);
+                	$('td:eq(10)', nRow).html(new Date(aData.lastUpdateTime).format("yyyy-MM-dd HH:mm:ss"));
+                	$('td:eq(11)', nRow).html("<button class='recover-btn btn btn-primary' data-id='"+aData.id+"'>恢复</button>");
+            	}else{
+            		$('td:eq(3)', nRow).html((!aData.useDispreferList).toString());
                 	$('td:eq(8)', nRow).html(aData.lastUpdateBy);
                 	$('td:eq(9)', nRow).html(new Date(aData.lastUpdateTime).format("yyyy-MM-dd HH:mm:ss"));
                 	$('td:eq(10)', nRow).html("<button class='recover-btn btn btn-primary' data-id='"+aData.id+"'>恢复</button>");
-            	}else{
-            		$('td:eq(3)', nRow).html((!aData.useDispreferList).toString());
-                	$('td:eq(7)', nRow).html(aData.lastUpdateBy);
-                	$('td:eq(8)', nRow).html(new Date(aData.lastUpdateTime).format("yyyy-MM-dd HH:mm:ss"));
-                	$('td:eq(9)', nRow).html("<button class='recover-btn btn btn-primary' data-id='"+aData.id+"'>恢复</button>");
-                	$('td:eq(10)', nRow).remove();
+                	$('td:eq(11)', nRow).remove();
             	}
             },
             "columns": [

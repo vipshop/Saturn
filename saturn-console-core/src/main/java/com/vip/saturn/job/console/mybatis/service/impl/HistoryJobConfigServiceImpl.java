@@ -65,7 +65,9 @@ public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {
 	public List<HistoryJobConfig> selectPage(HistoryJobConfig historyjobconfig, Pageable pageable) throws Exception  {
 		List<HistoryJobConfig> historyJobConfigs = historyJobConfigRepo.selectPage(historyjobconfig, pageable);
 		if(historyJobConfigs != null) {
+			int i=1;
 			for(HistoryJobConfig historyJobConfig : historyJobConfigs) {
+				historyJobConfig.setRownum(i++);
 				historyJobConfig.setDefaultValues();
 			}
 		}

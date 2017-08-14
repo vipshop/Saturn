@@ -94,11 +94,9 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@PostConstruct
 	public void init() throws Exception {
-		if(ConsoleUtil.isDashboardOn()){
 			initUpdateStatisticsThreadPool();
 			startRefreshStatisticsTimmer();
 			startCleanAbnormalShardingCacheTimer();
-		}
 	}
 
 	@PreDestroy
@@ -1483,7 +1481,6 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	private void asyncForceRefreshStatistics() {
-		if(ConsoleUtil.isDashboardOn()){
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
@@ -1491,7 +1488,6 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 			};
 			updateStatisticsThreadPool.submit(runnable);
-		}
 	}
 
 	@Override

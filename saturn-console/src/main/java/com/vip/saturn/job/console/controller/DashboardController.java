@@ -20,7 +20,6 @@ package com.vip.saturn.job.console.controller;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.utils.ConsoleUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,13 +50,9 @@ public class DashboardController  extends AbstractController {
     @RequestMapping(value = "refresh", method = RequestMethod.GET)
     @ResponseBody
 	public String refresh(HttpServletRequest request) {
-		if(ConsoleUtil.isDashboardOn()) {
 			Date start = new Date();
 			dashboardService.refreshStatistics2DB(true);
 			return "done refresh. takes:" + (new Date().getTime() - start.getTime());
-		} else {
-			return "dashboard is off";
-		}
     }
     
     @RequestMapping(value = "count", method = RequestMethod.POST)
