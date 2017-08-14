@@ -42,7 +42,6 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.utils.ConsoleUtil;
 
 @Controller
 @RequestMapping("/")
@@ -66,7 +65,6 @@ public class HomeController  extends AbstractController {
         	model.addAttribute("ns", "");
         }
     	model.put("version", version);
-    	model.put("dashboard_on", ConsoleUtil.isDashboardOn() ? "show" : "hide");
     	return "home";
     }
     
