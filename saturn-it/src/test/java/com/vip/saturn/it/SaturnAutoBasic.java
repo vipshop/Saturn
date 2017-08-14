@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.vip.saturn.job.console.SaturnEnvProperties;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -52,8 +53,6 @@ public class SaturnAutoBasic {
     protected static final String CONSOLE_URL = "http://localhost:9088";
     protected static Logger log;
     protected static ZookeeperRegistryCenter regCenter;
-    
-    protected static final String REG_CENTER_JSON_FILE_NAME="it-json-file.json";
 
     protected static NestedZkUtils nestedZkUtils;
 
@@ -584,6 +583,7 @@ public class SaturnAutoBasic {
 	public static void startConsole() throws Exception {
 		System.setProperty("db.profiles.active","h2");
 		System.setProperty("db.h2.dbname", "dbname" + new Random().nextInt(10000));
+        SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID = "CONSOLE-IT";
 		prepareForItSql();
 		SaturnConsoleApp.main(new String[] {});
 		List<String> consoleUrls = new ArrayList<String>();
