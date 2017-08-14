@@ -48,7 +48,7 @@ public class ExecutorCleanService {
                                 // delete $Jobs/job/servers/xxx
                                 deleteJobServerExecutor(jobName, executorName);
                                 // delete $Jobs/job/config/preferList content about xxx
-                                deleteJobConfigPreferListContentAboutXxx(jobName, executorName);
+                                updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName, executorName);
                             }
                         } else {
                             LOGGER.info("The executor {} is online now, no necessary to clean", executorName);
@@ -94,7 +94,7 @@ public class ExecutorCleanService {
                     for (String tmp : executorChildren) {
                         try {
                             curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath + "/" + tmp);
-                        } catch (NoNodeException e) {
+                        } catch (NoNodeException e) { // NOSONAR
                             // ignore
                         } catch (Exception e) {
                             LOGGER.error("Clean the executor " + executorName + " error", e);
@@ -142,13 +142,14 @@ public class ExecutorCleanService {
     /**
      * delete $Jobs/job/config/preferList content about xxx
      */
-    private void deleteJobConfigPreferListContentAboutXxx(String jobName, String executorName) {
+    private void updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) {
         try {
             String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
             if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {
                 Stat stat = new Stat();
                 byte[] jobConfigPreferListNodeBytes = curatorFramework.getData().storingStatIn(stat).forPath(jobConfigPreferListNodePath);
                 if (jobConfigPreferListNodeBytes != null) {
+                    // build the new prefer list string
                     StringBuilder sb = new StringBuilder();
                     String[] split = new String(jobConfigPreferListNodeBytes, "UTF-8").split(",");
                     for (String tmp : split) {
@@ -165,10 +166,10 @@ public class ExecutorCleanService {
             }
         } catch (NoNodeException e) { // NOSONAR
             // ignore
-        } catch (KeeperException.BadVersionException e) {
+        } catch (KeeperException.BadVersionException e) { // NOSONAR
             // ignore
         } catch (Exception e) {
-            LOGGER.error("Clean the executor, deleteJobConfigPreferListContentAboutXxx(" + jobName + ", " + executorName + ") error", e);
+            LOGGER.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", " + executorName + ") error", e);
         }
     }
 
