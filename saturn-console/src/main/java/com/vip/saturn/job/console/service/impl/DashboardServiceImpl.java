@@ -1271,36 +1271,31 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public int executorInDockerCount(String zkList) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkList);
-		if(ss != null) {
-			String result = ss.getResult();
-			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
-			return count == null ? 0 : count;
-		} else {
-			return 0;
-		}
+		return getCountFromDB(StatisticsTableKeyConstant.EXECUTOR_IN_DOCKER_COUNT, zkList);
 	}
 
 	@Override
 	public int executorNotInDockerCount(String zkList) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkList);
-		if(ss != null) {
-			String result = ss.getResult();
-			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
-			return count == null ? 0 : count;
-		} else {
-			return 0;
-		}
+		return getCountFromDB(StatisticsTableKeyConstant.EXECUTOR_NOT_IN_DOCKER_COUNT, zkList);
 	}
 
 	@Override
 	public int jobCount(String zkList) {
-		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.JOB_COUNT, zkList);
-		if(ss != null) {
-			String result = ss.getResult();
+		return getCountFromDB(StatisticsTableKeyConstant.JOB_COUNT, zkList);
+	}
+
+	private int getCountFromDB(String name, String zkList) {
+		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(name, zkList);
+		if(ss == null || ss.getResult() == null){
+			return 0;
+		}
+
+		String result = ss.getResult();
+		try{
 			Integer count = JSON.parseObject(result, new TypeReference<Integer>() {});
 			return count == null ? 0 : count;
-		} else {
+		} catch (Exception e){
+			log.error("exception throws during get count from DB. name:" + name, e);
 			return 0;
 		}
 	}
