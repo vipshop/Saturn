@@ -1286,7 +1286,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private int getCountFromDB(String name, String zkList) {
 		SaturnStatistics ss = saturnStatisticsService.findStatisticsByNameAndZkList(name, zkList);
-		if(ss == null || ss.getResult() == null){
+		if(ss == null || StringUtils.isBlank(ss.getResult())){
 			return 0;
 		}
 
