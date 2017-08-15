@@ -133,11 +133,16 @@ public class SaturnExecutor {
 		} catch (Exception e) { // log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
 		}
+
+		initSaturnExecutorExtension(executorName, namespace, executorClassLoader, jobClassLoader);
+	}
+
+	private synchronized static void initSaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		if(saturnExecutorExtension == null) {
 			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader, jobClassLoader);
 		}
 	}
-	
+
 	private String discoverZK() throws Exception {
 		if(IT_TESTING) {
 			return SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;

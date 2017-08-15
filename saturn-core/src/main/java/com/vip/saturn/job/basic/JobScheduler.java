@@ -305,7 +305,7 @@ public class JobScheduler {
 			try {
 				if (job != null) {
 					job.shutdown();
-					Thread.sleep(500);
+					Thread.sleep(500);// NOSONAR
 				}
 			} catch (final Exception e) {
 				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
@@ -326,7 +326,7 @@ public class JobScheduler {
 
 			zkCacheManager.shutdown();
 			try {
-				Thread.sleep(500);
+				Thread.sleep(500);// NOSONAR
 			} catch (InterruptedException e) {
 			}
 			if (removejob) {
