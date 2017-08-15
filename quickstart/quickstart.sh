@@ -19,7 +19,7 @@ fi
 
 echo "[Step 2] Running Saturn Console, visit  http://localhost:9088 after a few seconds"
 nohup java -Dfile.encoding=UTF-8 -Dsaturn.embeddedzk=true -Ddb.profiles.active=h2 -Dspring.h2.console.enabled=true -Dsaturn.stdout=true -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar > ./saturn-console.log 2>&1 &
-sleep 20
+sleep 30
 
 echo "[Step 3] Running Saturn Executor"
 cd saturn-executor/target
