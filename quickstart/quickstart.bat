@@ -18,7 +18,6 @@ ping -n 10 127.0.0.1 > nul
 
 echo [Step 4] Add a demo java job
 cd %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT
-mkdir %base_dir%\saturn-executor\target\saturn-executor-master-SNAPSHOT\demo
 set LIB_JARS=lib\*;%CLASSPATH%
 java -Dfile.encoding=UTF-8 -cp "%LIB_JARS%" demo/DemoJavaJob
 
