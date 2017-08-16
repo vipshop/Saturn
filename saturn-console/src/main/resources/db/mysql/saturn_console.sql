@@ -125,6 +125,22 @@ CREATE TABLE `saturn_statistics` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+-- ----------------------------
+-- Table structure for `namespace_info`
+-- ----------------------------
+CREATE TABLE `namespace_info` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
+  `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
+  `content` varchar(16383) NOT NULL DEFAULT '' COMMENT '域名详细信息内容',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_namespace_info_namespace` (`namespace`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名信息表';
+
 
 -- ----------------------------
 -- Table structure for `sys_config`
