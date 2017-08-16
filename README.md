@@ -8,7 +8,7 @@ Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdo
 
 The product roadmap refer to [RoadMap](https://github.com/vipshop/Saturn/wiki/Saturn-Roadmap-CN)
 
-WeChat Group: Please add group owner named `duffqiu` to join us!
+WeChat Group: Please add group owner named `dylan_xueke` to join us!
 
 ## 1 Product Description
 
