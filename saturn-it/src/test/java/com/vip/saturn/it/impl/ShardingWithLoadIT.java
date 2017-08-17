@@ -28,12 +28,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ShardingWithLoadIT extends AbstractSaturnIT{
     @BeforeClass
     public static void setUp() throws Exception {
-        startNamespaceShardingManagerList(1);
+        startSaturnConsoleList(1);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        stopNamespaceShardingManagerList();
+        stopSaturnConsoleList();
     }
 
     //添加指定配置和分片的SimpleJavaJob

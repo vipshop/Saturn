@@ -1,30 +1,9 @@
 package com.vip.saturn.it;
 
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import com.vip.saturn.job.console.SaturnEnvProperties;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.it.utils.NestedZkUtils;
+import com.vip.saturn.job.console.SaturnEnvProperties;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
@@ -40,9 +19,35 @@ import com.vip.saturn.job.internal.storage.JobNodeStorage;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
-import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Basic for Saturn test automation
@@ -50,16 +55,30 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
 public class SaturnAutoBasic {
     protected final static int timeout = 15;
     protected static final String NAMESPACE = "it-saturn";
-    protected static final String CONSOLE_URL = "http://localhost:9088";
     protected static Logger log;
     protected static ZookeeperRegistryCenter regCenter;
 
     protected static NestedZkUtils nestedZkUtils;
 
     protected static List<Main> saturnExecutorList = new ArrayList<>();
-    protected static List<NamespaceShardingManager> namespaceShardingManagerList = new ArrayList<>();
+    protected static List<SaturnConsoleInstance> saturnConsoleInstanceList = new ArrayList<>();
 
-    protected static Map<String, ClassLoader> classloaders = new HashMap<String, ClassLoader>();
+    private static class SaturnConsoleInstance {
+
+        public ApplicationContext applicationContext;
+        public int port;
+        public String url;
+
+        public SaturnConsoleInstance(ApplicationContext applicationContext, int port, String url) {
+            this.applicationContext = applicationContext;
+            this.port = port;
+            this.url = url;
+        }
+
+        public void stop() {
+            SaturnConsoleApp.stop(applicationContext);
+        }
+    }
 
     protected static void initSysEnv() {
         System.setProperty("namespace", NAMESPACE);
@@ -67,7 +86,6 @@ public class SaturnAutoBasic {
         System.setProperty("saturn.debug", "true");
         // 必须在设置saturn.out后，才加载日志框架
         log = LoggerFactory.getLogger(AbstractSaturnIT.class);
-        SaturnExecutor.IT_TESTING = true;
     }
 
     protected static void initZK() throws Exception {
@@ -75,10 +93,72 @@ public class SaturnAutoBasic {
         nestedZkUtils.startServer();
         assertThat(nestedZkUtils.isStarted());
         String zkString = nestedZkUtils.getZkString();
-        SystemEnvProperties.VIP_SATURN_ZK_CONNECTION = nestedZkUtils.getZkString();
 
         regCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(zkString, NAMESPACE, 1000, 3000, 3));
         regCenter.init();
+    }
+
+    public static void prepare4Console() throws Exception {
+        // fix this exception
+        // org.springframework.jmx.export.UnableToRegisterMBeanException: Unable to register MBean [org.springframework.cloud.context.environment.EnvironmentManager@77fecd2c] with key 'environmentManager';
+        System.setProperty("spring.jmx.enabled", "false");
+        SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID = "CONSOLE-IT";
+        prepareForItSql();
+        SaturnConsoleApp.startEmbeddedDb();
+    }
+
+    private static void prepareForItSql() throws IOException {
+        String itSqlFilePath = "/db/h2/custom.sql";
+        URL resource = SaturnAutoBasic.class.getResource(itSqlFilePath);
+        File file = new File(resource.getFile());
+        if (file.exists()) {
+            List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
+            if (readLines != null && readLines.size() > 0) {
+                readLines.set(0,
+                        "INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
+                                + nestedZkUtils.getZkString() + "');");
+            }
+            FileUtils.writeLines(file, readLines, false);
+        } else {
+            log.error("The {} is not existing", itSqlFilePath);
+        }
+    }
+
+    public static void stopConsoleDb() {
+        SaturnConsoleApp.stopEmbeddedDb();
+    }
+
+    protected static void refreshRegCenter(String url) throws Exception {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        try {
+            HttpGet post = new HttpGet(url + "/registry_center/refreshRegCenter");
+
+            CloseableHttpResponse httpResponse = httpClient.execute(post);
+            StatusLine statusLine = httpResponse.getStatusLine();
+            if (statusLine != null && statusLine.getStatusCode() == 200) {
+                log.info("refreshRegCenter one...");
+            } else {
+                String response = EntityUtils.toString(httpResponse.getEntity());
+                throw new Exception(response);
+            }
+
+            // wait refreshRegCenter completed
+            while(true) {
+                httpResponse = httpClient.execute(post);
+                String response = EntityUtils.toString(httpResponse.getEntity());
+                statusLine = httpResponse.getStatusLine();
+                if (statusLine != null && statusLine.getStatusCode() == 200) {
+                    if(JSONObject.parseObject(response, RequestResult.class).isSuccess()) {
+                        return;
+                    }
+                } else {
+                    throw new Exception(response);
+                }
+                Thread.sleep(1000L);
+            }
+        } finally {
+            httpClient.close();
+        }
     }
 
     public static URL[] getAppClassLoaderUrls(ClassLoader jobClassLoader) {
@@ -157,40 +237,48 @@ public class SaturnAutoBasic {
         saturnExecutorList.clear();
     }
 
-    public static void startNamespaceShardingManagerList(int count) throws Exception {
+    public static void startSaturnConsoleList(int count) throws Exception {
         assertThat(nestedZkUtils.isStarted());
+        SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
+        String urlStr = "";
         for (int i = 0; i < count; i++) {
-            ZookeeperRegistryCenter shardingRegCenter = new ZookeeperRegistryCenter(new ZookeeperConfiguration(nestedZkUtils.getZkString(), NAMESPACE, 1000, 3000, 3));
-            shardingRegCenter.init();
-            NamespaceShardingManager namespaceShardingManager = new NamespaceShardingManager((CuratorFramework) shardingRegCenter.getRawClient(),NAMESPACE, "127.0.0.1-" + i, null);
-            namespaceShardingManager.start();
-            namespaceShardingManagerList.add(namespaceShardingManager);
+            int serverPort = (++SaturnConsoleApp.serverPort);
+            SaturnConsoleInstance saturnConsoleInstance = new SaturnConsoleInstance(SaturnConsoleApp.start(), serverPort, "http://localhost:" + serverPort);
+            saturnConsoleInstanceList.add(saturnConsoleInstance);
+            refreshRegCenter(saturnConsoleInstance.url);
+            if(i == 0) {
+                urlStr = saturnConsoleInstance.url;
+            } else {
+                urlStr = urlStr + "," + saturnConsoleInstance.url;
+            }
+            SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.add(saturnConsoleInstance.url);
         }
+        SystemEnvProperties.VIP_SATURN_CONSOLE_URI = urlStr;
     }
 
-    public static void stopNamespaceShardingManager(int index) throws InterruptedException {
-        assertThat(namespaceShardingManagerList.size()).isGreaterThan(index);
-        NamespaceShardingManager namespaceShardingManager = namespaceShardingManagerList.get(index);
-        if (namespaceShardingManager != null) {
-            namespaceShardingManager.stopWithCurator();
+    public static void stopSaturnConsole(int index) throws InterruptedException {
+        assertThat(saturnConsoleInstanceList.size()).isGreaterThan(index);
+        SaturnConsoleInstance saturnConsoleInstance = saturnConsoleInstanceList.get(index);
+        if (saturnConsoleInstance != null) {
+            saturnConsoleInstance.stop();
         } else {
-            log.warn("the {} NamespaceShardingManager has stopped", index);
+            log.warn("the {} saturnConsoleInstance has stopped", index);
         }
-        namespaceShardingManagerList.set(index, null);
+        saturnConsoleInstanceList.set(index, null);
     }
 
-    public static void stopNamespaceShardingManagerList() throws InterruptedException {
+    public static void stopSaturnConsoleList() throws InterruptedException {
         // 等待做完一些事情
         Thread.sleep(200);
-        for (int i = 0; i < namespaceShardingManagerList.size(); i++) {
-            NamespaceShardingManager namespaceShardingManager = namespaceShardingManagerList.get(i);
-            if (namespaceShardingManager != null) {
-                namespaceShardingManager.stopWithCurator();
+        for (int i = 0; i < saturnConsoleInstanceList.size(); i++) {
+            SaturnConsoleInstance saturnConsoleInstance = saturnConsoleInstanceList.get(i);
+            if (saturnConsoleInstance != null) {
+                saturnConsoleInstance.stop();
             }
             // 等待选举完成
             Thread.sleep(200);
         }
-        namespaceShardingManagerList.clear();
+        saturnConsoleInstanceList.clear();
     }
 
     public static CoordinatorRegistryCenter getExecutorRegistryCenter(Main executorMain) {
@@ -574,43 +662,6 @@ public class SaturnAutoBasic {
     public static String getFailureCountOfExecutor(JobConfiguration jobConfiguration, final Main executor) {
         return getJobNode(jobConfiguration, "servers/" + executor.getExecutorName() + "/processFailureCount");
     }
-    
-	/**
-	 * 启动控制台
-	 * 
-	 * @throws Exception
-	 */
-	public static void startConsole() throws Exception {
-		System.setProperty("db.profiles.active","h2");
-		System.setProperty("db.h2.dbname", "dbname" + new Random().nextInt(10000));
-        SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID = "CONSOLE-IT";
-		prepareForItSql();
-		SaturnConsoleApp.main(new String[] {});
-		List<String> consoleUrls = new ArrayList<String>();
-		consoleUrls.add(CONSOLE_URL);
-		SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST = consoleUrls;
-	}
-	
-	public static void stopConsole() {
-		SaturnConsoleApp.stop();
-	}
-
-	private static void prepareForItSql() throws IOException {
-		String itSqlFilePath = "/db/h2/custom_forit.sql";
-		URL resource = SaturnAutoBasic.class.getResource(itSqlFilePath);
-		File file = new File(resource.getFile());
-		if (file.exists()) {
-			List<String> readLines = FileUtils.readLines(file, Charset.forName("utf-8"));
-			if (readLines != null && readLines.size() > 0) {
-				readLines.set(0,
-						"INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('it_cluster', 'IT集群', '"
-								+ nestedZkUtils.getZkString() + "');");
-			}
-			FileUtils.writeLines(file, readLines, false);
-		} else {
-			log.error("The {} is not existing", itSqlFilePath);
-		}
-	}
 	
     /**
      * return true if any shard has timeout znode

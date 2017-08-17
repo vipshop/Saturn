@@ -7,20 +7,22 @@ import java.io.IOException;
 
 /**
  * IT flow
- * Created by xiaopeng.he on 2016/7/13.
+ * @author hebelala
  */
 public class AbstractSaturnIT extends SaturnAutoBasic {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        initZK();
         initSysEnv();
+        initZK();
+        prepare4Console();
     }
 
     @AfterClass
     public static void afterClass() throws IOException, InterruptedException {
         regCenter.close();
         nestedZkUtils.stopServer();
+        stopConsoleDb();
     }
 
 }

@@ -28,10 +28,14 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
 
     @AfterClass
     public static void tearDown() throws Exception {
+        stopSaturnConsoleList();
     }
 
     @Test
     public void test_A_StopNamespaceShardingManagerLeader() throws Exception {
+        startSaturnConsoleList(2);
+        Thread.sleep(1000);
+
         String jobName = "test_A_StopNamespaceShardingManagerLeader";
         final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
         jobConfiguration.setCron("* * 1 * * ?");
@@ -46,15 +50,14 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
         Main executor = startOneNewExecutorList();
         Thread.sleep(1000);
 
-        startNamespaceShardingManagerList(2);
+        String hostValue = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
+        assertThat(hostValue).isNotNull();
+
+        stopSaturnConsole(0);
         Thread.sleep(1000);
 
-        assertThat(regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH)).isEqualTo("127.0.0.1-0");
-
-        stopNamespaceShardingManager(0);
-        Thread.sleep(1000);
-
-        assertThat(regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH)).isEqualTo("127.0.0.1-1");
+        String hostValue2 = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
+        assertThat(hostValue2).isNotNull().isNotEqualTo(hostValue);
 
         enableJob(jobConfiguration.getJobName());
         Thread.sleep(1000);
@@ -78,7 +81,7 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
         removeJob(jobName);
 
         stopExecutorList();
-        stopNamespaceShardingManagerList();
+        stopSaturnConsoleList();
         Thread.sleep(2000);
         forceRemoveJob(jobName);
     }

@@ -48,8 +48,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SaturnExecutor {
-
-	public static boolean IT_TESTING = false;
 	
 	private static Logger LOGGER;
 
@@ -139,10 +137,10 @@ public class SaturnExecutor {
 	}
 	
 	private String discoverZK() throws Exception {
-		if(IT_TESTING) {
-			return SystemEnvProperties.VIP_SATURN_ZK_CONNECTION;
-		}
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
+		if(size == 0) {
+			throw new Exception("Please configure the parameter " + SystemEnvProperties.NAME_VIP_SATURN_CONSOLE_URI + " with env or -D");
+		}
 		for(int i=0; i<size; i++) {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String url = consoleUri + "/rest/v1/discoverZk?namespace=" + namespace;

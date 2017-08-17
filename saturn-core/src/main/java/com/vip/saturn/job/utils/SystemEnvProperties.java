@@ -11,12 +11,6 @@ import java.util.List;
 public class SystemEnvProperties {
 	static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
 
-	private static String NAME_VIP_SATURN_ZK_CONNECTION = "VIP_SATURN_ZK_CONNECTION";	
-	/**
-	 * ZK连接串
-	 */
-	public static String VIP_SATURN_ZK_CONNECTION = trim(System.getProperty(SystemEnvProperties.NAME_VIP_SATURN_ZK_CONNECTION, System.getenv(SystemEnvProperties.NAME_VIP_SATURN_ZK_CONNECTION)));
-
 	private static String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";	
 	/**
 	 * 每个域最大作业数量
@@ -55,7 +49,7 @@ public class SystemEnvProperties {
 	/**
 	 * Saturn Console URI.
 	 */
-	private static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
+	public static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
 	public static String VIP_SATURN_CONSOLE_URI = trim(System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI)));
 	public static List<String> VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
 
@@ -93,17 +87,6 @@ public class SystemEnvProperties {
 		}
 		if(VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX){
 			VIP_SATURN_SHUTDOWN_TIMEOUT = VIP_SATURN_SHUTDOWN_TIMEOUT_MAX;
-		}
-		if(VIP_SATURN_CONSOLE_URI != null) {
-			String[] split = VIP_SATURN_CONSOLE_URI.split(",");
-			if(split != null) {
-				for(String tmp : split) {
-					tmp = tmp.trim();
-					if(!tmp.isEmpty()) {
-						VIP_SATURN_CONSOLE_URI_LIST.add(tmp);
-					}
-				}
-			}
 		}
 
 		String dcosTaskId = System.getProperty(NAME_VIP_SATURN_DCOS_TASK, System.getenv(NAME_VIP_SATURN_DCOS_TASK));

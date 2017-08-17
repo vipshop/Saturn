@@ -21,14 +21,14 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
 
 	@BeforeClass
     public static void setUp() throws Exception {
-        startNamespaceShardingManagerList(1);
+		startSaturnConsoleList(1);
         startExecutorList(3);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         stopExecutorList();
-        stopNamespaceShardingManagerList();
+        stopSaturnConsoleList();
     }
 
 	@Before

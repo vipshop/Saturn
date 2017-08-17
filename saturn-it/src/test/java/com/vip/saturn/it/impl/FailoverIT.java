@@ -25,12 +25,12 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	@BeforeClass
 	public static void setUp() throws Exception {
-		startNamespaceShardingManagerList(1);
+		startSaturnConsoleList(1);
 	}
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopNamespaceShardingManagerList();
+		stopSaturnConsoleList();
 	}
 
 	@Before

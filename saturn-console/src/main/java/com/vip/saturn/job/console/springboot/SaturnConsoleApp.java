@@ -1,8 +1,6 @@
 package com.vip.saturn.job.console.springboot;
 
 import org.apache.curator.test.TestingServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,7 +14,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 
 /**
@@ -29,41 +35,69 @@ import org.springframework.http.HttpStatus;
 		JpaRepositoriesAutoConfiguration.class })
 @ImportResource("classpath*:context/*Context.xml")
 public class SaturnConsoleApp {
-	
-	private static Logger logger = LoggerFactory.getLogger(SaturnConsoleApp.class);
 
 	private static TestingServer embeddedZookeeper;
-	
-	private static ApplicationContext applicationContext;
+	private static EmbeddedDatabase embeddedDatabase;
+
+	public static volatile int serverPort = 9088;
 
 	public static void main(String[] args) throws Exception {
-		startEmbeddedZkIfNeeded();
+		if (Boolean.getBoolean("saturn.embeddedZk")) {
+			startEmbeddedZk();
+		}
+		if(Boolean.getBoolean("saturn.embeddedDb")) {
+            startEmbeddedDb();
+		}
 		
-		applicationContext = SpringApplication.run(SaturnConsoleApp.class, args);
+		SpringApplication.run(SaturnConsoleApp.class, args);
+	}
+
+	public static ApplicationContext start() {
+		return SpringApplication.run(SaturnConsoleApp.class);
+	}
+
+	public static void stop(ApplicationContext applicationContext) {
+		SpringApplication.exit(applicationContext);
 	}
 	
-	public static void stop() {
-		if(applicationContext != null) {
-			try {
-				SpringApplication.exit(applicationContext);
-			}
-			catch(Throwable t) {
-				logger.error("关闭applicationContext失败",t);
-			}
+	public static void startEmbeddedZk() throws Exception {
+		embeddedZookeeper = new TestingServer(2181);
+		embeddedZookeeper.start();
+	}
+
+	public static void stopEmbeddedZk() throws IOException {
+		if(embeddedZookeeper != null) {
+			embeddedZookeeper.close();
 		}
 	}
-	
-	private static void startEmbeddedZkIfNeeded() throws Exception {
-		if (Boolean.getBoolean("saturn.embeddedzk")) {
-			embeddedZookeeper = new TestingServer(2181);
-			embeddedZookeeper.start();
+
+	public static void startEmbeddedDb() throws SQLException {
+		EmbeddedDatabaseBuilder embeddedDatabaseBuilder = new EmbeddedDatabaseBuilder();
+		embeddedDatabaseBuilder
+				.setType(EmbeddedDatabaseType.H2)
+				.addScript("classpath:db/h2/global.sql")
+				.addScript("classpath:db/h2/schema.sql")
+				.addScript("classpath:db/h2/data.sql");
+		String customSql = "classpath:db/h2/custom.sql";
+		Resource resource = new DefaultResourceLoader().getResource(customSql);
+		if(resource.exists()) {
+			embeddedDatabaseBuilder.addScript(customSql);
+		}
+		embeddedDatabase = embeddedDatabaseBuilder.build();
+        System.setProperty("db.profiles.active", "h2");
+	}
+
+	public static void stopEmbeddedDb() {
+		if (embeddedDatabase != null) {
+			embeddedDatabase.shutdown();
 		}
 	}
-	
+
 	@Bean
 	public ServerProperties getServerProperties() {
 		return new ServerCustomization();
 	}
+
 }
 
 class ServerCustomization extends ServerProperties {
@@ -74,5 +108,6 @@ class ServerCustomization extends ServerProperties {
 		container.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/404"));
 		container.addErrorPages(new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500"));
 		container.addErrorPages(new ErrorPage("/500"));
+		container.setPort(SaturnConsoleApp.serverPort);
 	}
 }

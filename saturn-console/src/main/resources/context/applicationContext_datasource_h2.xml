@@ -8,12 +8,22 @@
                         http://www.springframework.org/schema/context 
                         http://www.springframework.org/schema/context/spring-context.xsd
                         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
-                    	http://www.springframework.org/schema/jdbc 
-						http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
                         ">
-	<jdbc:embedded-database id="dataSource" database-name="${db.h2.dbname:dbname}" type="H2">
-		<jdbc:script location="classpath:db/h2/h2_type.sql" />
-		<jdbc:script location="classpath:db/h2/saturn_console.sql" />
-		<jdbc:script location="classpath:db/h2/custom_*.sql" />
-	</jdbc:embedded-database>
+
+	<bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close" lazy-init="true">
+		<property name="url" value="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false" />
+		<property name="username" value="sa" />
+		<property name="password" value="" />
+		<!-- 初始化连接大小 -->
+		<property name="initialSize" value="0" />
+		<!-- 连接池最大使用连接数量 -->
+		<property name="maxActive" value="20" />
+		<!-- 连接池最大空闲 -->
+		<property name="maxIdle" value="20" />
+		<!-- 连接池最小空闲 -->
+		<property name="minIdle" value="0" />
+		<!-- 获取连接最大等待时间 -->
+		<property name="maxWait" value="60000" />
+	</bean>
+
 </beans>

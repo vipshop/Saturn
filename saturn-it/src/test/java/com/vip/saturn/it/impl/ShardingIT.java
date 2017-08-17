@@ -26,13 +26,13 @@ public class ShardingIT extends AbstractSaturnIT {
 
 	@BeforeClass
 	public static void setUp() throws Exception {
-		startNamespaceShardingManagerList(1);
+		startSaturnConsoleList(1);
 	}
 
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopExecutorList();
-		stopNamespaceShardingManagerList();
+		stopSaturnConsoleList();
 	}
 
 	@Test
@@ -451,6 +451,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		// executor2下线
 		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 		stopExecutor(1);
+		Thread.sleep(1000L);
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
 			@Override
@@ -519,6 +520,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		// executor2下线
 		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 		stopExecutor(1);
+		Thread.sleep(1000L);
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
 			@Override
@@ -603,6 +605,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutor(1);
+			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -699,6 +702,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutor(1);
+			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -787,6 +791,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutor(1);
+			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -875,6 +880,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutor(1);
+			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -1055,6 +1061,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
+			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
@@ -1147,6 +1154,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutor(0);
+			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {

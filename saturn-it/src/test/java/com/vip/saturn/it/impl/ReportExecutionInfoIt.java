@@ -17,15 +17,15 @@ import com.vip.saturn.job.internal.config.JobConfiguration;
 public class ReportExecutionInfoIt extends AbstractSaturnIT {
 
 	@BeforeClass
-	public static void setUp() throws Exception {		
-		startNamespaceShardingManagerList(1);
+	public static void setUp() throws Exception {
+		startSaturnConsoleList(1);
 		startExecutorList(1);
 	}
 
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopExecutorList();
-		stopNamespaceShardingManagerList();
+		stopSaturnConsoleList();
 	}
 
 	@Test

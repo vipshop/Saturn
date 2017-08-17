@@ -152,8 +152,6 @@ CREATE TABLE `zk_cluster_info` (
   UNIQUE KEY `uniq_zk_cluster_info_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'localhost:2181');
-
 
 -- ----------------------------
 -- Table structure for `namespace_zk_cluster_mapping`
@@ -172,5 +170,3 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   UNIQUE KEY `uniq_namespace` (`namespace`),
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-INSERT INTO `namespace_zkcluster_mapping`(`namespace`, `name`, `zk_cluster_key`) VALUES('mydomain', '业务组', 'cluster1');
-INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','CONSOLE-IT:it_cluster;default:cluster1,it_cluster');

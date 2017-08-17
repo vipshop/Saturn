@@ -19,8 +19,8 @@ public class LocalModeIT extends AbstractSaturnIT {
 	public static String NORMAL_SH_PATH;
 
 	@BeforeClass
-	public static void setUp() throws Exception {		
-		startNamespaceShardingManagerList(1);
+	public static void setUp() throws Exception {
+		startSaturnConsoleList(1);
 		startExecutorList(2);
 		File file1 = new File("src/test/resources/script/normal/normal_0.sh");
 		NORMAL_SH_PATH = file1.getAbsolutePath();
@@ -29,7 +29,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopExecutorList();
-		stopNamespaceShardingManagerList();
+		stopSaturnConsoleList();
 	}
 
 	@Test

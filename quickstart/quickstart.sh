@@ -19,7 +19,7 @@ fi
 
 echo "[Step 2] Running Saturn Console, visit  http://localhost:9088 after a few seconds"
 export REG_CENTER_JSON_PATH=${BASEDIR}/quickstart/quickstart-json.txt
-nohup java -Dfile.encoding=UTF-8 -Dsaturn.embeddedzk=true -Dsaturn.stdout=true -Ddb.profiles.active=h2 -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar > ./saturn-console.log 2>&1 &
+nohup java -Dfile.encoding=UTF-8 -Dsaturn.embeddedZk=true -Dsaturn.embeddedDb=true -Dsaturn.stdout=true -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar > ./saturn-console.log 2>&1 &
 
 echo "[Step 3] Running Saturn Executor"
 cd saturn-executor/target

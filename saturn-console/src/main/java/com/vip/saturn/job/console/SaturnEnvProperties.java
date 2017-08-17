@@ -30,10 +30,6 @@ public final class SaturnEnvProperties {
     public static String VIP_SATURN_DCOS_REGISTRY_URI = System.getProperty("VIP_SATURN_DCOS_REGISTRY_URI", System.getenv("VIP_SATURN_DCOS_REGISTRY_URI"));
     public static String NAME_VIP_SATURN_EXECUTOR_CLEAN = "VIP_SATURN_EXECUTOR_CLEAN";
     public static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
-    
-    public static String SATURN_CONSOLE_DB_URL = System.getProperty("SATURN_CONSOLE_DB_URL", System.getenv("SATURN_CONSOLE_DB_URL"));
-    public static String SATURN_CONSOLE_DB_USERNAME = System.getProperty("SATURN_CONSOLE_DB_USERNAME", System.getenv("SATURN_CONSOLE_DB_USERNAME"));
-    public static String SATURN_CONSOLE_DB_PASSWORD = System.getProperty("SATURN_CONSOLE_DB_PASSWORD", System.getenv("SATURN_CONSOLE_DB_PASSWORD"));
 
     static {
         if(CONTAINER_TYPE == null) {

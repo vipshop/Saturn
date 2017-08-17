@@ -6,7 +6,7 @@ call mvn clean package -Dmaven.javadoc.skip=true -Dmaven.test.skip=true
 
 echo [Step 2] Running Saturn Console, visit %CONSOLR_URI% after a few seconds
 set base_dir=%cd%
-start "saturn console" java -Dfile.encoding=UTF-8 -Dsaturn.embeddedzk=true -Ddb.profiles.active=h2 -Dspring.h2.console.enabled=true -Dsaturn.stdout=true -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar
+start "saturn console" java -Dfile.encoding=UTF-8 -Dsaturn.embeddedZk=true -Dsaturn.embeddedDb=true -Dspring.h2.console.enabled=true -Dsaturn.stdout=true -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar
 sleep 10
 
 echo [Step 3] Running Saturn Executor

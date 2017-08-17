@@ -23,13 +23,13 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
     @BeforeClass
     public static void setUp() throws Exception {
         stopExecutorList();
-        startNamespaceShardingManagerList(1);
+        startSaturnConsoleList(1);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         stopExecutorList();
-        stopNamespaceShardingManagerList();
+        stopSaturnConsoleList();
         SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = false;
     }
 

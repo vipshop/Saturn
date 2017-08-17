@@ -1,38 +1,36 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.Calendar;
-import java.util.TimeZone;
-
+import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.execution.ExecutionNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnConsoleIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.execution.ExecutionNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class UpdateConfigIT extends AbstractSaturnConsoleIT {
+public class UpdateConfigIT extends AbstractSaturnIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        startNamespaceShardingManagerList(1);
+        startSaturnConsoleList(1);
         startExecutorList(1);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         stopExecutorList();
-        stopNamespaceShardingManagerList();
-
+        stopSaturnConsoleList();
     }
 
     @Test

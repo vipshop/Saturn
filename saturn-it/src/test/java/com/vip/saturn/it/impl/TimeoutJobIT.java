@@ -29,7 +29,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 	
 	@BeforeClass
     public static void setUp() throws Exception {
-        startNamespaceShardingManagerList(1);
+		startSaturnConsoleList(1);
         startExecutorList(3);
         
 		File file1 = new File("src/test/resources/script/normal/longtime.sh");
@@ -40,7 +40,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
     @AfterClass
     public static void tearDown() throws Exception {
         stopExecutorList();
-        stopNamespaceShardingManagerList();
+        stopSaturnConsoleList();
     }
 
     @Before

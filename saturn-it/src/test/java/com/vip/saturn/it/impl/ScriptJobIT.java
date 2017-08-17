@@ -23,7 +23,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 	@BeforeClass
 	public static void setUp() throws Exception {
-		startNamespaceShardingManagerList(1);
+		startSaturnConsoleList(1);
 
 		NORMAL_SH_PATH = new File("src/test/resources/script/normal/normal_0.sh").getAbsolutePath();
 		LONG_TIME_SH_PATH = new File("src/test/resources/script/normal/longtime.sh").getAbsolutePath();
@@ -32,7 +32,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 	@AfterClass
 	public static void tearDown() throws Exception {
 		stopExecutorList();
-		stopNamespaceShardingManagerList();
+		stopSaturnConsoleList();
 	}
 
 	@After
