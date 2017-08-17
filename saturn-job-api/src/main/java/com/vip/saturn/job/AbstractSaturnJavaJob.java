@@ -9,6 +9,8 @@ import java.util.Map;
 public abstract class AbstractSaturnJavaJob {
     private Object saturnApi;
 
+    private static final String EMPTY_VERSION = "";
+
     public static Object getObject() {
         return null;
     }
@@ -39,8 +41,8 @@ public abstract class AbstractSaturnJavaJob {
     /**
      * @return version of the job
      */
-    public String getJobVersion() {
-        return "";
+    public String getJobVersion() { // NOSONAR
+        return EMPTY_VERSION;
     }
 
     /**

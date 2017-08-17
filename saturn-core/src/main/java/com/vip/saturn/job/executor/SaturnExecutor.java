@@ -131,11 +131,16 @@ public class SaturnExecutor {
 		} catch (Exception e) { // log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
 		}
+
+		initSaturnExecutorExtension(executorName, namespace, executorClassLoader, jobClassLoader);
+	}
+
+	private synchronized static void initSaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		if(saturnExecutorExtension == null) {
 			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader, jobClassLoader);
 		}
 	}
-	
+
 	private String discoverZK() throws Exception {
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
 		if(size == 0) {
@@ -155,14 +160,14 @@ public class SaturnExecutor {
 	            String responseBody = EntityUtils.toString(httpResponse.getEntity());
 	            Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
 	            if(statusLine != null && statusCode == HttpStatus.SC_OK) {
-	            	String connectString = JSON.parseObject(responseBody, String.class);
-					if (StringUtils.isBlank(connectString)) {
+	            	String connectionString = JSON.parseObject(responseBody, String.class);
+					if (StringUtils.isBlank(connectionString)) {
 						LOGGER.warn("ZK connection string is blank！");
 						continue;
 					}
 
-					LOGGER.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url, connectString);
-					return connectString;
+					LOGGER.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url, connectionString);
+					return connectionString;
 				} else {
 					if (responseBody != null && !responseBody.trim().isEmpty()) {
 						JSONObject parseObject = JSONObject.parseObject(responseBody);
@@ -173,18 +178,19 @@ public class SaturnExecutor {
 					}
 				}
 			} catch (Exception e) {
-				LOGGER.error("Fail to discover zk connection string with exception throws. Url: " + url, e);
+				LOGGER.error("Fail to discover zk connection. Url: " + url, e);
 			} finally {
 				if (httpClient != null) {
 					try {
 						httpClient.close();
 					} catch (IOException e) {
-						LOGGER.error("Exception during httpclient closed.", e);
+						LOGGER.error("Fail to close httpclient.", e);
 					}
 				}
 			}
 		}
-		throw new Exception("Fail to discover zk connection string after try " + size + " times!");
+
+		throw new Exception("Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
 	}
 	
 	private boolean scheduleJob(String jobName) {

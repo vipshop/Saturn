@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractSaturnMsgJob {
+	private static final String EMPTY_VERSION = "";
+
 	private Object saturnApi;
 
 	public static Object getObject() {
@@ -40,8 +42,8 @@ public abstract class AbstractSaturnMsgJob {
 	/**
 	 * @return version of the job
 	 */
-	public String getJobVersion() {
-		return "";
+	public String getJobVersion() { // NOSONAR
+		return EMPTY_VERSION;
 	}
 
 	/**

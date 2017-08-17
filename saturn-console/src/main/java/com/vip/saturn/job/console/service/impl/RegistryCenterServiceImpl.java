@@ -804,7 +804,20 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
 			return false;
 		}
-		return true;
+		try {
+			String executorsPath = "/" + namespace + ExecutorNodePath.getExecutorNodePath();
+			if (curatorFramework.checkExists().forPath(executorsPath) != null) {
+				return true;
+			}
+			String jobsPath = "/" + namespace + JobNodePath.get$JobsNodePath();
+			if (curatorFramework.checkExists().forPath(jobsPath) != null) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return false;
+		}
 	}
 
 	@Override
