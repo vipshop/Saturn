@@ -78,8 +78,9 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
         assertThat(items).contains(0);
 
         disableJob(jobName);
+        Thread.sleep(1000);
         removeJob(jobName);
-
+        Thread.sleep(1000);
         stopExecutorList();
         stopSaturnConsoleList();
         Thread.sleep(2000);

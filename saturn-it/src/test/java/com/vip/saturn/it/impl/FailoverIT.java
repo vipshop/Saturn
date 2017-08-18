@@ -200,7 +200,9 @@ public class FailoverIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-		
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();
@@ -353,7 +355,9 @@ public class FailoverIT extends AbstractSaturnIT {
 				fail("runningCount should be 1");
 			}
 		}
-		
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();

@@ -240,10 +240,12 @@ public class ShardingWithLoadIT extends AbstractSaturnIT{
         disableJob(jobName1);
         disableJob(jobName2);
         disableJob(jobName3);
+        Thread.sleep(1000);
         removeJob(jobName1);
         removeJob(jobName2);
         removeJob(jobName3);
 
+        Thread.sleep(1000);
         stopExecutorList();
         Thread.sleep(2000);
         forceRemoveJob(jobName1);

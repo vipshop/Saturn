@@ -159,12 +159,13 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 		
 		//分片全部落到第3个executor
-		 items = ItemUtils.toItemList(
+        items = ItemUtils.toItemList(
 					regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor3.getExecutorName()))));
 		assertThat(items).contains(0, 1, 2);
 
 		disableJob(jobName);
-		removeJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
+		removeJob(jobName);
 		
 		stopExecutorList();
 		Thread.sleep(2000);
@@ -392,7 +393,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 
 		disableJob(jobName);
-		removeJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
+		removeJob(jobName);
 		
 		Thread.sleep(1000);
 		

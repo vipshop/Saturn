@@ -108,6 +108,7 @@ public class UpdateCronJobIT extends AbstractSaturnIT {
         }, 30);
 
         disableJob(jobName);
+        Thread.sleep(1000);
         removeJob(jobName);
         Thread.sleep(2000);
         SimpleJavaJob.statusMap.clear();

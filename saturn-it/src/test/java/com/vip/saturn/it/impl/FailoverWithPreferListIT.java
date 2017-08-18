@@ -131,7 +131,9 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
 			assertThat(status.runningCount).isEqualTo(0);
 		}
-		
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();

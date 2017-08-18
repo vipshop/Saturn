@@ -87,8 +87,10 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-    	
-    	removeJob(jobConfiguration.getJobName());	
+
+		disableJob(jobName);
+		Thread.sleep(1000);
+    	removeJob(jobName);
     	SimpleJavaJob.statusMap.clear();
     }
     
@@ -155,7 +157,9 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-    	removeJob(jobConfiguration.getJobName());	
+		disableJob(jobName);
+		Thread.sleep(1000);
+    	removeJob(jobName);
     	LongtimeJavaJob.statusMap.clear();
     	
     }

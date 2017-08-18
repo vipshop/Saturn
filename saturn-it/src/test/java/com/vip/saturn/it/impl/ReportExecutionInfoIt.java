@@ -97,9 +97,9 @@ public class ReportExecutionInfoIt extends AbstractSaturnIT {
 				return false;
 			}
 		}, 3);
-        
-        
-        
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		forceRemoveJob(jobConfiguration.getJobName());

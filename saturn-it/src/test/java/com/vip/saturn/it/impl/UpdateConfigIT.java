@@ -129,6 +129,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
 
         SimpleJavaJob.statusMap.clear();
         disableJob(jobName);
+        Thread.sleep(1000);
         removeJob(jobName);
         Thread.sleep(2000);
     }
@@ -194,6 +195,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
         }
 
         disableJob(jobName);
+        Thread.sleep(1000);
         removeJob(jobName);
         Thread.sleep(2000);
     }

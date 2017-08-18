@@ -136,6 +136,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
+        disableJob(jobName);
+        Thread.sleep(1000);
 		removeJob(jobName);
 		Thread.sleep(2000);
 		forceRemoveJob(jobName);

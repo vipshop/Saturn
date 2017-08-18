@@ -69,6 +69,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		},10);
 		
 		disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000L);
 		removeJob(jobConfiguration.getJobName());
 		
 		Thread.sleep(1000);
@@ -120,6 +121,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 60);
 
 		disableJob(jobName);
+        Thread.sleep(1000L);
 		removeJob(jobConfiguration.getJobName());
 		
 		Thread.sleep(1000);
@@ -182,6 +184,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 30);
 
 		disableJob(jobName);
+        Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 
 		Thread.sleep(1000);

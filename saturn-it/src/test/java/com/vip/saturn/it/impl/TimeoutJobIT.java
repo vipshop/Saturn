@@ -128,7 +128,9 @@ public class TimeoutJobIT extends AbstractSaturnIT {
     		assertThat(regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, ExecutionNode.getTimeoutNode(j)))).isEqualTo(true);
     		assertThat(regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, ExecutionNode.getCompletedNode(j)))).isEqualTo(true);
     	}
-    	
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
     	removeJob(jobConfiguration.getJobName());
     	LongtimeJavaJob.statusMap.clear();
     }
@@ -198,7 +200,9 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-    	
+
+        disableJob(jobConfiguration.getJobName());
+        Thread.sleep(1000);
     	removeJob(jobConfiguration.getJobName());
     	LongtimeJavaJob.statusMap.clear();
     }
