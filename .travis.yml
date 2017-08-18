@@ -8,8 +8,4 @@ branches:
   only:
     - develop
 
-env:
-  global:
-    - MAVEN_OPTS: "-Xmx2048m -Xms1024m -Dorg.slf4j.simpleLogger.defaultLogLevel=error"
-
-script: mvn clean test -Dsaturn.log.level=WARN
+script: mvn clean test -Dsaturn.it.log.level=WARN
