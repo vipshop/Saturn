@@ -4,11 +4,20 @@ jdk:
   - oraclejdk8
   - openjdk7
 
-script: "mvn clean install"
-
 branches:
   only:
     - develop
-    
-#after_success:
-#  - mvn clean cobertura:cobertura-integration-test coveralls:report
+
+before_install: sudo echo "MAVEN_OPTS='-Xmx2048m -Xms1024m -Dorg.slf4j.simpleLogger.defaultLogLevel=error'" > ~/.mavenrc
+
+script: mvn clean test
+
+env:
+  global:
+    - MAVEN_OPTS: "-Xmx2048m -Xms1024m -Dorg.slf4j.simpleLogger.defaultLogLevel=error"
+
+sudo: required
+
+cache:
+  directories:
+    - $HOME/.m2
