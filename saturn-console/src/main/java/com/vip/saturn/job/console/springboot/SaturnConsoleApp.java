@@ -39,8 +39,6 @@ public class SaturnConsoleApp {
 	private static TestingServer embeddedZookeeper;
 	private static EmbeddedDatabase embeddedDatabase;
 
-	public static volatile int serverPort = 9088;
-
 	public static void main(String[] args) throws Exception {
 		if (Boolean.getBoolean("saturn.embeddedZk")) {
 			startEmbeddedZk();
@@ -108,6 +106,5 @@ class ServerCustomization extends ServerProperties {
 		container.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/404"));
 		container.addErrorPages(new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500"));
 		container.addErrorPages(new ErrorPage("/500"));
-		container.setPort(SaturnConsoleApp.serverPort);
 	}
 }

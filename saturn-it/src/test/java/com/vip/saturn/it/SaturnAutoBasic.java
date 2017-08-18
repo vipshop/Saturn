@@ -241,8 +241,9 @@ public class SaturnAutoBasic {
         assertThat(nestedZkUtils.isStarted());
         SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
         String urlStr = "";
+        int serverPort = 9088;
         for (int i = 0; i < count; i++) {
-            int serverPort = (++SaturnConsoleApp.serverPort);
+            System.setProperty("server.port", (++serverPort) + "");
             SaturnConsoleInstance saturnConsoleInstance = new SaturnConsoleInstance(SaturnConsoleApp.start(), serverPort, "http://localhost:" + serverPort);
             saturnConsoleInstanceList.add(saturnConsoleInstance);
             refreshRegCenter(saturnConsoleInstance.url);
