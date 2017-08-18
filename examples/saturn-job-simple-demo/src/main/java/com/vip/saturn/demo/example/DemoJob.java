@@ -12,4 +12,30 @@ public class DemoJob extends AbstractSaturnJavaJob {
 		System.out.println("我会出现在运行日志里.running handleJavaJob:" + jobName + "; " + shardItem + ";" + shardParam);
 		return new SaturnJobReturn("我是分片" + shardItem + "的处理结果");
 	}
+
+	@Override
+	public void postForceStop(String jobName, Integer key, String value, SaturnJobExecutionContext shardingContext) {
+		//
+	}
+
+	@Override
+	public void onEnabled(String jobName) {
+		//
+	}
+
+	@Override
+	public void onDisabled(String jobName) {
+		//
+	}
+
+	@Override
+	public void onTimeout(String jobName, Integer key, String value, SaturnJobExecutionContext shardingContext) {
+		//
+	}
+
+	@Override
+	public void beforeTimeout(String jobName, Integer key, String value, SaturnJobExecutionContext shardingContext) {
+		//
+	}
+
 }

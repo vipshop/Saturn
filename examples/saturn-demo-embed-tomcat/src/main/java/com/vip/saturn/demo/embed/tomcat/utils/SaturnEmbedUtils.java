@@ -28,7 +28,7 @@ public class SaturnEmbedUtils {
     public void start2() {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-            System.setProperty("saturn.home", "E:/saturn-job-executor-2.0.6");
+            System.setProperty("saturn.home", "E:/saturn-job-executor-2.1.2");
             System.setProperty("saturn.app.namespace", "yfb-saturn-java.vip.vip.com");
             System.setProperty("saturn.app.executorName", "executor_001");
 //            System.setProperty("saturn.stdout", "true"); // 注意，开启saturn-executor的日志输出到控制台，只用于开发环境
