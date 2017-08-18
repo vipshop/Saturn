@@ -154,7 +154,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private void refreshRestrictComputeZkClusters() throws SaturnJobConsoleException {
 		String allMappingStr = systemConfigService.getValueDirectly(SystemConfigProperties.CONSOLE_ZK_CLUSTER_MAPPING);
 		if (StringUtils.isBlank(allMappingStr)) {
-			throw new SaturnJobConsoleException("sys_config表没有设置CONSOLE_ZK_CLUSTER_MAPPING");
+			throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING is not configured in sys_config");
 		}
 
 		allMappingStr = StringUtils.deleteWhitespace(allMappingStr);
@@ -162,19 +162,19 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		for (String singleConsoleMappingStr : singleConsoleMappingArray) {
 			String[] consoleAndClusterKeyArray = singleConsoleMappingStr.split(":");
 			if (consoleAndClusterKeyArray.length != 2) {
-				throw new SaturnJobConsoleException("集群映射配置[" + consoleAndClusterKeyArray + "]格式不对，正确格式例如console:zk1");
+				throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING(" + consoleAndClusterKeyArray + ") format is not correct, should be like console:zk1");
 			}
 			String tempConsoleClusterId = consoleAndClusterKeyArray[0];
 			String zkClusterKeyStr = consoleAndClusterKeyArray[1];
 			if (consoleClusterId.equals(tempConsoleClusterId)) {
 				String[] zkClusterKeyArray = zkClusterKeyStr.trim().split(",");
 				restrictComputeZkClusterKeys = Arrays.asList(zkClusterKeyArray);
-				log.info("当前console server可以做以下zk集群的sharding和dashboard计算:{}", restrictComputeZkClusterKeys);
+				log.info("the current console {} can do sharding and dashboard to {}", consoleClusterId, restrictComputeZkClusterKeys);
 				return;
 			}
 		}
 
-		throw new SaturnJobConsoleException("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
+		throw new SaturnJobConsoleException("the console " + consoleClusterId + " cannot do sharding and dashboard to any cluster");
 	}
 
 	/**
