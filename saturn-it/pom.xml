@@ -107,6 +107,8 @@
 			        	<exclude>**/AbstractSaturnIT.java</exclude>
 			        </excludes>
 			        <runOrder>alphabetical</runOrder>
+                    <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit</argLine>
+                    <forkMode>always</forkMode>
 			    </configuration>
 			</plugin>
 			<plugin>
@@ -164,6 +166,8 @@
 					        	<exclude>**/AbstractSaturnIT.java</exclude>
 					        </excludes>
 					        <runOrder>alphabetical</runOrder>
+                            <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit</argLine>
+                            <forkMode>always</forkMode>
 						</configuration>
 					</plugin>
 				</plugins>
