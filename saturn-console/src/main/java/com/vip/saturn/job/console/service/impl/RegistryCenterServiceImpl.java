@@ -54,7 +54,7 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.LocalHostService;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 
@@ -69,7 +69,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private CuratorRepository curatorRepository;
 
 	@Resource
-	private ReportAlarmService reportAlarmService;
+	private ReportAlarmProxyService reportAlarmProxyService;
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
@@ -227,7 +227,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				NamespaceShardingManager namespaceShardingManager = null;
 				try {
 					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
-							generateShardingLeadershipHostValue(), reportAlarmService);
+							generateShardingLeadershipHostValue(), reportAlarmProxyService);
 					namespaceShardingManager.start();
 					if (namespaceShardingListenerManagerMap.putIfAbsent(nns,
 							namespaceShardingManager) != null) {

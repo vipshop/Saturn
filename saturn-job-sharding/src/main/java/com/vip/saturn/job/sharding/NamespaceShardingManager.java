@@ -1,6 +1,6 @@
 package com.vip.saturn.job.sharding;
 
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 import com.vip.saturn.job.sharding.listener.*;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.AddJobListenersService;
@@ -30,11 +30,11 @@ public class NamespaceShardingManager {
 	private ShardingTreeCacheService shardingTreeCacheService;
 	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
 	
-	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmService reportAlarmService) {
+	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmProxyService reportAlarmProxyService) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
-		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue, reportAlarmService);
+		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue, reportAlarmProxyService);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}
@@ -46,10 +46,6 @@ public class NamespaceShardingManager {
 	public void setZkClusterKey(String zkClusterKey) {
 		this.zkClusterKey = zkClusterKey;
 	}
-
-
-
-
 
 	private void start0() throws Exception {
 		shardingTreeCacheService.start();

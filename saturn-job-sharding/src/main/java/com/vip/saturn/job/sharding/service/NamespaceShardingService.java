@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.zookeeper.CreateMode;
@@ -47,14 +47,14 @@ public class NamespaceShardingService {
 
 	private NamespaceShardingContentService namespaceShardingContentService;
 
-	private ReportAlarmService reportAlarmService;
+	private ReportAlarmProxyService reportAlarmProxyService;
 
 	private ReentrantLock lock;
 
-	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmService reportAlarmService) {
+	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmProxyService reportAlarmProxyService) {
     	this.curatorFramework = curatorFramework;
 		this.hostValue = hostValue;
-		this.reportAlarmService = reportAlarmService;
+		this.reportAlarmProxyService = reportAlarmProxyService;
     	this.shardingCount = new AtomicInteger(0);
     	this.needAllSharding = new AtomicBoolean(false);
     	this.executorService = newSingleThreadExecutor();
@@ -134,9 +134,9 @@ public class NamespaceShardingService {
 					shardingCount.incrementAndGet();
 					executorService.submit(new ExecuteAllShardingTask());
 				} else { // 如果当前是全量分片，则告警并关闭当前服务，重选leader来做事情
-					if(reportAlarmService != null) {
+					if(reportAlarmProxyService != null) {
 						try {
-							reportAlarmService.allShardingError(namespace, hostValue);
+							reportAlarmProxyService.getTarget().allShardingError(namespace, hostValue);
 						} catch (Throwable t2) {
 							if(t2 instanceof InterruptedException) {
 								log.info("{}-{} {}-allShardingError is interrupted", namespace, hostValue, this.getClass().getSimpleName());

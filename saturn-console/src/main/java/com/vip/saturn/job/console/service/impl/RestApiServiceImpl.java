@@ -18,10 +18,9 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -64,7 +63,7 @@ public class RestApiServiceImpl implements RestApiService {
     private JobOperationService jobOperationService;
 
     @Resource
-    private ReportAlarmService reportAlarmService;
+    private ReportAlarmProxyService reportAlarmProxyService;
     
     @Resource
     private ExecutorService executorService;
@@ -497,7 +496,7 @@ public class RestApiServiceImpl implements RestApiService {
                         throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format("The executor {%s} does not exists.", executorName));
                     }
 
-                    reportAlarmService.raise(namespace, jobName, executorName, shardItem, alarmInfo);
+                    reportAlarmProxyService.getTarget().raise(namespace, jobName, executorName, shardItem, alarmInfo);
                 } catch (ReportAlarmException e) {
                     throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
                 }
@@ -527,23 +526,4 @@ public class RestApiServiceImpl implements RestApiService {
         }
     }
 
-    public void setRegistryCenterService(RegistryCenterService registryCenterService) {
-        this.registryCenterService = registryCenterService;
-    }
-
-    public void setCuratorRepository(CuratorRepository curatorRepository) {
-        this.curatorRepository = curatorRepository;
-    }
-
-    public void setJobDimensionService(JobDimensionService jobDimensionService) {
-        this.jobDimensionService = jobDimensionService;
-    }
-
-    public void setJobOperationService(JobOperationService jobOperationService) {
-        this.jobOperationService = jobOperationService;
-    }
-
-    public void setReportAlarmService(ReportAlarmService reportAlarmService) {
-        this.reportAlarmService = reportAlarmService;
-    }
 }

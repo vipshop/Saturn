@@ -32,7 +32,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 
 /**
  * Created by kfchu on 31/05/2017.
@@ -55,7 +55,7 @@ public class RestApiServiceImplTest extends AbstractSaturnConsoleTest {
     private JobOperationService jobOperationService;
 
     @Mock
-    private ReportAlarmService reportAlarmService;
+    private ReportAlarmProxyService reportAlarmProxyService;
 
     @Mock
     private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;

@@ -10,5 +10,7 @@ public class SystemConfigProperties {
     public static final String MAX_JOB_NUM = "MAX_JOB_NUM";
 
     public static final String CONSOLE_ZK_CLUSTER_MAPPING = "CONSOLE_ZK_CLUSTER_MAPPING";
+    
+    public static final String REPORT_ALARM_TYPE = "REPORT_ALARM_TYPE";
 
 }
