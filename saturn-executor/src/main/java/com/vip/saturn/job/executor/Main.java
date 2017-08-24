@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ * Entrance of Saturn executor.
+ *
  * @author xiaopeng.he
  *
  */
@@ -16,22 +17,18 @@ public class Main {
 
 	private String namespace;
 	private String executorName;
-	
 	private String saturnLibDir = getLibDir("lib");
 	private String appLibDir = getLibDir("lib");
-	
 	private ClassLoader executorClassLoader;
 	private ClassLoader jobClassLoader;
-
 	private Object saturnExecutor;
-	public Object getSaturnExecutor(){
-		return saturnExecutor;
-	}
+
 	protected void parseArgs(String[] inArgs) throws Exception {
 		String[] args = inArgs.clone();
 		
-		for(int i=0; i<args.length; i++) {
+		for(int i = 0; i < args.length; i ++) {
 			String param = args[i].trim();
+
 			if("-namespace".equals(param)) {
 				try {
 					this.namespace = args[++i].trim();//NOSONAR
@@ -41,60 +38,44 @@ public class Main {
 					throw new Exception("Please set namespace value, exception message: " + e.getMessage(),e);
 				}
 			} else if("-executorName".equals(param)) {
-				//String executorName;
 				try {
 					executorName = args[++i].trim();//NOSONAR
 				} catch (Exception e) {
 					throw new Exception("Please set executorName value, exception message: " + e.getMessage(),e);
 				}
-				//this.executorName = executorName;
 			} else if("-saturnLibDir".equals(param)) {
-				//String saturnLibDir;
 				try {
 					saturnLibDir = args[++i].trim();//NOSONAR
 				} catch (Exception e) {
 					throw new Exception("Please set saturnLibDir value, exception message: " + e.getMessage(),e);
 				}
-				//this.saturnLibDir = saturnLibDir;
 			} else if("-appLibDir".equals(param)) {
-				//String appLibDir;
 				try {
 					appLibDir = args[++i].trim();//NOSONAR
 				} catch (Exception e) {
 					throw new Exception("Please set appLibDir value, exception message: " + e.getMessage(),e);
 				}
-				//this.appLibDir = appLibDir;
-			} 
-		}		
-		if(namespace == null) {
-			throw new Exception("Please add the namespace parameter");
+			}
 		}
+
+		validateParameters();
 	}
 
-	public String getNamespace() {
-		return namespace;
-	}
-
-
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
+	private void validateParameters() {
+		if(namespace == null) {
+			throw new RuntimeException("Please add the namespace parameter");
+		}
 	}
 
 	public String getExecutorName() {
 		if(saturnExecutor != null) {
 			try {
 				return (String) saturnExecutor.getClass().getMethod("getExecutorName").invoke(saturnExecutor);
-			} catch( Exception e) {//NOSONAR
+			} catch(Exception e) {//NOSONAR
 			}
 		}
 		return executorName;
 	}
-
-
-	public void setExecutorName(String executorName) {
-		this.executorName = executorName;
-	}
-
 
 	private static String getLibDir(String dirName) {
 		File root = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getParentFile();
@@ -145,14 +126,14 @@ public class Main {
 		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
-			Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
+			Class<?> startExecutorClass = getSaturnExecutorClass();
 			saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class, ClassLoader.class, ClassLoader.class).invoke(null, namespace, executorName, executorClassLoader, jobClassLoader);
 			startExecutorClass.getMethod("execute").invoke(saturnExecutor);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldCL);
 		}
 	}
-	
+
 	public void launch(String[] args, ClassLoader jobClassLoader) throws Exception{
 		parseArgs(args);
 		initClassLoader();
@@ -171,11 +152,16 @@ public class Main {
 		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
-			Class<?> startExecutorClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
+			Class<?> startExecutorClass = getSaturnExecutorClass();
 			startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldCL);
 		}
+	}
+
+
+	private Class<?> getSaturnExecutorClass() throws ClassNotFoundException {
+		return executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
 	}
 	
 	public static void main(String[] args) {
@@ -189,5 +175,20 @@ public class Main {
 			System.exit(1);
 		}
 	}
-	
+
+	public Object getSaturnExecutor(){
+		return saturnExecutor;
+	}
+
+	public void setExecutorName(String executorName) {
+		this.executorName = executorName;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
+	}
 }

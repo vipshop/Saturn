@@ -4,11 +4,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 public class SaturnClassLoader extends URLClassLoader {
+
 	public SaturnClassLoader(URL[] urls, ClassLoader parent) {
 		super(urls, parent);
 	}
 
-	
 	@Override
 	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		synchronized (getClassLoadingLock(name)) {
