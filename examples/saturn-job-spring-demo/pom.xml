@@ -42,7 +42,7 @@
 			<plugin>
 				<groupId>com.vip.saturn</groupId>
 				<artifactId>saturn-plugin</artifactId>
-				<version>master-SNAPSHOT</version>
+				<version>${saturn-job.version}</version>
 			</plugin>
 		</plugins>
 	</build>
