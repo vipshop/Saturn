@@ -43,7 +43,7 @@ import com.vip.saturn.job.console.service.SaturnJunkDataService;
 @RequestMapping("/")
 public class SaturnJunkDataController extends AbstractController {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(SaturnJunkDataController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SaturnJunkDataController.class);
 	
 	@Resource
 	private SaturnJunkDataService saturnJunkDataService;

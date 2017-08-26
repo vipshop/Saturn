@@ -40,7 +40,7 @@ import java.util.*;
 @RequestMapping("job")
 public class JobController extends AbstractController {
 
-	protected static Logger LOGGER = LoggerFactory.getLogger(JobController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobController.class);
 
 	@Resource
 	private JobDimensionService jobDimensionService;

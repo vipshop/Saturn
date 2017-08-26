@@ -26,7 +26,7 @@ import com.vip.saturn.job.console.service.JobConfigInitializationService;
 @RequestMapping("/")
 public class JobConfigController extends AbstractController {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(JobConfigController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobConfigController.class);
 
 	@Resource
 	private JobConfigInitializationService jobConfigInitializationService;

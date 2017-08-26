@@ -35,7 +35,7 @@ import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 @RequestMapping("registry_center")
 public class NamespaceZkClusterMappingController extends AbstractController {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(NamespaceZkClusterMappingController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceZkClusterMappingController.class);
 
 	@Resource
 	private NamespaceZkClusterMappingService namespaceZkClusterMappingService;

@@ -39,8 +39,8 @@ import java.util.Map;
 @RequestMapping("dashboard")
 public class DashboardController  extends AbstractController {
 	
-	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
-	protected static Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
+
     @Resource
     private RegistryCenterService registryCenterService;
    

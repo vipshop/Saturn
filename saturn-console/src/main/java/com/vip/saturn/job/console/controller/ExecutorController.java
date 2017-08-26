@@ -42,7 +42,7 @@ import java.util.List;
 @RequestMapping("executor")
 public class ExecutorController extends AbstractController {
 
-	protected static Logger LOGGER = LoggerFactory.getLogger(ExecutorController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorController.class);
 
 	@Resource
 	private ExecutorService executorService;

@@ -47,7 +47,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 @RequestMapping("/")
 public class HomeController  extends AbstractController {
 
-	protected static Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
 
     @Resource
     private JobDimensionService jobDimensionService;

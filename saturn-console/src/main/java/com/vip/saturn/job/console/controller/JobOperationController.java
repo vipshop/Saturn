@@ -51,9 +51,11 @@ import com.vip.saturn.job.console.service.ServerDimensionService;
 @RequestMapping("job")
 public class JobOperationController extends AbstractController {
 
-	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
-	protected static Logger LOGGER = LoggerFactory.getLogger(JobOperationController.class);
-	protected static final int DEFAULT_RECORD_COUNT = 100;
+	private static final Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobOperationController.class);
+
+	private static final int DEFAULT_RECORD_COUNT = 100;
 	
 	@Resource
     private JobDimensionService jobDimensionService;
