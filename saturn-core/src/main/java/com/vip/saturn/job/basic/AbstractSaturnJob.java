@@ -20,7 +20,7 @@ import java.util.Properties;
  * @author linzhaoming
  */
 public abstract class AbstractSaturnJob extends AbstractElasticJob {
-	private static Logger log = LoggerFactory.getLogger(AbstractSaturnJob.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractSaturnJob.class);
 
 	protected static PropertyPlaceholderHelper placeHolderHelper = new PropertyPlaceholderHelper("{", "}");
 	
@@ -70,7 +70,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 			}
 		}
 		long end = System.currentTimeMillis();
-		log.info("[{}] msg={} finished, totalCost={}, return={}", jobName, jobName, (end - start), retMap);
+		log.info("[{}] msg={} finished, totalCost={}ms, return={}", jobName, jobName, (end - start), retMap);
 	}
 	
 	protected void updateExecuteResult(SaturnJobReturn saturnJobReturn, SaturnExecutionContext saturnContext, int item) {

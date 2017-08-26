@@ -244,7 +244,58 @@ public abstract class AbstractElasticJob implements Stopable {
 			return false;
 		}
 	}
-	
+
+	protected abstract void executeJob(final JobExecutionMultipleShardingContext shardingContext);
+
+	/**
+	 * 当涉及到主线程开子线程异步执行时，在主线程完成后提供的回调
+	 */
+	public void afterMainThreadDone(final JobExecutionMultipleShardingContext shardingContext) {
+	}
+
+	public void callbackWhenShardingItemIsEmpty(final JobExecutionMultipleShardingContext shardingContext) {
+	}
+
+	public abstract boolean isFailoverSupported();
+
+	@Override
+	public void stop() {
+		stopped = true;
+	}
+
+	@Override
+	public void forceStop() {
+		forceStopped = true;
+	}
+
+	@Override
+	public void abort() {
+		aborted = true;
+	}
+
+	@Override
+	public void resume() {
+		stopped = false;
+	}
+
+	public abstract SaturnTrigger getTrigger();
+
+	public abstract void enableJob();
+
+	public abstract void disableJob();
+
+	public abstract void onResharding();
+
+	public abstract void onForceStop(int item);
+
+	public abstract void onTimeout(int item);
+
+	public abstract void onNeedRaiseAlarm(int item, String alarmMessage);
+
+	public void notifyJobEnabled() {}
+
+	public void notifyJobDisabled() {}
+
 	/**
 	 * 设置shardingService
 	 * @param shardingService
@@ -272,7 +323,7 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected void setServerService(ServerService serverService) {
 		this.serverService = serverService;
 	}
-	
+
 	protected void setReportService(ReportService reportService) {
 		this.reportService = reportService;
 	}
@@ -372,56 +423,5 @@ public abstract class AbstractElasticJob implements Stopable {
 	public void setJobVersion(String jobVersion) {
 		this.jobVersion = jobVersion;
 	}
-
-	protected abstract void executeJob(final JobExecutionMultipleShardingContext shardingContext);
-
-	/**
-	 * 当涉及到主线程开子线程异步执行时，在主线程完成后提供的回调
-	 */
-	public void afterMainThreadDone(final JobExecutionMultipleShardingContext shardingContext) {
-	}
-
-	public void callbackWhenShardingItemIsEmpty(final JobExecutionMultipleShardingContext shardingContext) {
-	}
-
-	public abstract boolean isFailoverSupported();
-
-	@Override
-	public void stop() {
-		stopped = true;
-	}
-
-	@Override
-	public void forceStop() {
-		forceStopped = true;
-	}
-
-	@Override
-	public void abort() {
-		aborted = true;
-	}
-
-	@Override
-	public void resume() {
-		stopped = false;
-	}
-
-	public abstract SaturnTrigger getTrigger();
-
-	public abstract void enableJob();
-
-	public abstract void disableJob();
-
-	public abstract void onResharding();
-
-	public abstract void onForceStop(int item);
-
-	public abstract void onTimeout(int item);
-
-	public abstract void onNeedRaiseAlarm(int item, String alarmMessage);
-
-	public void notifyJobEnabled() {}
-
-	public void notifyJobDisabled() {}
 
 }

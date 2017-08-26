@@ -47,7 +47,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable{
 	protected static final int TIMEOUT = 1;
 	protected static final int SUCCESS = 2;
 	protected static final int FORCE_STOP = 3;
-	protected static final int STOPED = 4;
+	protected static final int STOPPED = 4;
 	
 	protected boolean breakForceStop = false;
 	
@@ -207,7 +207,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable{
 			case FORCE_STOP:
 				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "the job was forced to stop", SaturnSystemErrorGroup.FAIL);
 				break;
-			case STOPED:
+			case STOPPED:
 				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "the job was stopped, will not run the business code", SaturnSystemErrorGroup.FAIL);
 				break;
 			default:
