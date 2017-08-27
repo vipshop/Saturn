@@ -49,7 +49,7 @@ import ma.glasnost.orika.MapperFactory;
 @Service
 public class JobConfigInitializationServiceImpl implements JobConfigInitializationService {
 	
-	protected static Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(JobConfigInitializationServiceImpl.class);
 
 	private static List<RegistryCenterConfiguration> regCenterConfList = null;
 

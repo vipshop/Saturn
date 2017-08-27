@@ -55,7 +55,7 @@ import java.util.*;
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
 
-	protected static Logger log = LoggerFactory.getLogger(JobDimensionServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(JobDimensionServiceImpl.class);
 
     @Resource
     private CuratorRepository curatorRepository;

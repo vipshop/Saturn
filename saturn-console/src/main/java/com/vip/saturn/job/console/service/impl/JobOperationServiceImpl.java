@@ -62,7 +62,7 @@ import java.util.Map;
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
 
-	private final static Logger logger = LoggerFactory.getLogger(JobOperationServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(JobOperationServiceImpl.class);
 
     @Resource
     private RegistryCenterService registryCenterService;
@@ -129,11 +129,11 @@ public class JobOperationServiceImpl implements JobOperationService {
 			try {
 				currentJobConfigService.updateByPrimaryKey(oldCurrentJobConfig);
 			} catch (Exception e) {
-				logger.error("exception is thrown during change job state in db", e);
+				log.error("exception is thrown during change job state in db", e);
 				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 			}
 		} else {
-			logger.warn("job:{} not existed in db", jobName);
+			log.warn("job:{} not existed in db", jobName);
 		}
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), state);
 	}
@@ -189,7 +189,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 		CurrentJobConfig oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if(oldCurrentJobConfig == null) {
 			String errorMsg = "在DB找不到该作业的配置, namespace：" + namespace + " jobname:" + jobName;
-			logger.error(errorMsg);
+			log.error(errorMsg);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), errorMsg);
 		}
 		CurrentJobConfig newCurrentJobConfig = mapper.map(oldCurrentJobConfig, CurrentJobConfig.class);
@@ -203,7 +203,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 		try {
 			currentJobConfigService.updateConfigAndSave2History(newCurrentJobConfig, oldCurrentJobConfig,null);
 		} catch (Exception e) {
-			logger.error("exception is thrown during change job state in db", e);
+			log.error("exception is thrown during change job state in db", e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e); 
 		}
 	}
@@ -373,11 +373,11 @@ public class JobOperationServiceImpl implements JobOperationService {
 		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
 		CurrentJobConfig oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
-			logger.warn("when create a new job, a jobConfig with the same name from db exists, will delete it first. namespace:{} and jobName:{}", namespace, jobName);
+			log.warn("when create a new job, a jobConfig with the same name from db exists, will delete it first. namespace:{} and jobName:{}", namespace, jobName);
 			try {
 				currentJobConfigService.deleteByPrimaryKey(oldJobConfig.getId());
 			} catch (Exception e) {
-				logger.error("exception is thrown during delete job config in db", e);
+				log.error("exception is thrown during delete job config in db", e);
 				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "创建作业时，数据库存在已经存在该作业的相关配置！并且清理该配置的时候失败", e);
 			}
 		}
@@ -389,7 +389,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 		try {
 			currentJobConfigService.create(currentJobConfig);
 		} catch (Exception e) {
-			logger.error("exception is thrown during creating job config in db", e);
+			log.error("exception is thrown during creating job config in db", e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
 	}
@@ -520,7 +520,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Throwable t) {
-			logger.error("exception is thrown during delete job", t);
+			log.error("exception is thrown during delete job", t);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
 		}
 	}

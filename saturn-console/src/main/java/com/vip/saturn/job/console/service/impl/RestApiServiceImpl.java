@@ -38,7 +38,7 @@ import java.util.Map;
 @Service
 public class RestApiServiceImpl implements RestApiService {
 
-    private final static Logger logger = LoggerFactory.getLogger(RestApiServiceImpl.class);
+    private final static Logger log = LoggerFactory.getLogger(RestApiServiceImpl.class);
 
     private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
 
@@ -114,7 +114,7 @@ public class RestApiServiceImpl implements RestApiService {
                             RestApiJobInfo restApiJobInfo = constructJobInfo(curatorFrameworkOp, job);
                             restApiJobInfos.add(restApiJobInfo);
                         } catch (Exception e) {
-                            logger.error("getRestApiJobInfos exception:", e);
+                            log.error("getRestApiJobInfos exception:", e);
                             continue;
                         }
                     }
@@ -228,7 +228,7 @@ public class RestApiServiceImpl implements RestApiService {
             try {
                 restApiJobStatistics.setProcessCount(Long.valueOf(processCountStr));
             } catch (NumberFormatException e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
         String errorCountPath = JobNodePath.getErrorCountPath(jobName);
@@ -237,7 +237,7 @@ public class RestApiServiceImpl implements RestApiService {
             try {
                 restApiJobStatistics.setProcessErrorCount(Long.valueOf(errorCountPathStr));
             } catch (NumberFormatException e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -277,7 +277,7 @@ public class RestApiServiceImpl implements RestApiService {
                 try {
                     restApiJobStatistics.setLastBeginTime(Long.parseLong(lastBeginTimeList.get(0))); // 所有分片中最近最早的开始时间
                 } catch (NumberFormatException e) {
-                    logger.error(e.getMessage(), e);
+                    log.error(e.getMessage(), e);
                 }
             }
             if (!CollectionUtils.isEmpty(lastCompleteTimeList) && lastCompleteTimeList.size() == runningItemSize) { // 所有分配都完成才显示最近最晚的完成时间
@@ -285,7 +285,7 @@ public class RestApiServiceImpl implements RestApiService {
                 try {
                     restApiJobStatistics.setLastCompleteTime(Long.parseLong(lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
                 } catch (NumberFormatException e) {
-                    logger.error(e.getMessage(), e);
+                    log.error(e.getMessage(), e);
                 }
             }
             if (!CollectionUtils.isEmpty(nextFireTimeList)) {
@@ -293,7 +293,7 @@ public class RestApiServiceImpl implements RestApiService {
                 try {
                     restApiJobStatistics.setNextFireTime(Long.parseLong(nextFireTimeList.get(0))); // 所有分片中下次最早的开始时间
                 } catch (NumberFormatException e) {
-                    logger.error(e.getMessage(), e);
+                    log.error(e.getMessage(), e);
                 }
             }
         }
@@ -385,7 +385,7 @@ public class RestApiServiceImpl implements RestApiService {
     private void checkUpdateConfigAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
         if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
             String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
-            logger.warn(errMsg);
+            log.warn(errMsg);
             throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
     }
@@ -409,7 +409,7 @@ public class RestApiServiceImpl implements RestApiService {
                 boolean everExecute = false;
                 for (JobServer server : servers) {
                     if (ServerStatus.ONLINE.equals(server.getStatus())) {
-                        logger.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
+                        log.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
                         jobOperationService.runAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(), curatorFrameworkOp);
                         everExecute = true;
                     }
@@ -431,7 +431,7 @@ public class RestApiServiceImpl implements RestApiService {
                 // if job is already STOPPED then return
                 JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
                 if (JobStatus.STOPPED.equals(js)) {
-                    logger.debug("job is already stopped");
+                    log.debug("job is already stopped");
                     return;
                 }
 
@@ -468,7 +468,7 @@ public class RestApiServiceImpl implements RestApiService {
                 }
 
                 jobOperationService.deleteJob(jobName, curatorFrameworkOp);
-                logger.info("job:{} deletion done", jobName);
+                log.info("job:{} deletion done", jobName);
             }
         });
     }
@@ -480,7 +480,7 @@ public class RestApiServiceImpl implements RestApiService {
         }
 
         for (JobServer server : servers) {
-            logger.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
+            log.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
             jobOperationService.stopAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(), curatorFrameworkOp);
         }
     }
@@ -507,13 +507,13 @@ public class RestApiServiceImpl implements RestApiService {
     private void checkUpdateStatusToEnableAllowed(long ctime, long mtime) throws SaturnJobConsoleHttpException {
         if (Math.abs(System.currentTimeMillis() - ctime) < OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS){
             String errMsg = "Cannot enable the job until " + OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS / 1000 + " seconds after job creation!";
-            logger.warn(errMsg);
+            log.warn(errMsg);
             throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
 
         if (Math.abs(System.currentTimeMillis() - mtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS) {
             String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
-            logger.warn(errMsg);
+            log.warn(errMsg);
             throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
     }
@@ -521,7 +521,7 @@ public class RestApiServiceImpl implements RestApiService {
     private void checkUpdateStatusToDisableAllowed(long lastMtime) throws SaturnJobConsoleHttpException {
         if (Math.abs(System.currentTimeMillis() - lastMtime) < STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS){
             String errMsg = "The update interval time cannot less than " + STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS / 1000 + " seconds";
-            logger.warn(errMsg);
+            log.warn(errMsg);
             throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
         }
     }

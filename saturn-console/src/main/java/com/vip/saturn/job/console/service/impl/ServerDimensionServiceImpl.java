@@ -41,8 +41,7 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 @Service
 public class ServerDimensionServiceImpl implements ServerDimensionService {
 	
-	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
-	private static final Logger logger = LoggerFactory.getLogger(ServerDimensionServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ServerDimensionServiceImpl.class);
 	
 	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, Locale.SIMPLIFIED_CHINESE);
     @Resource
@@ -59,7 +58,7 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 		try {
 			jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
 		} catch (SaturnJobConsoleException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 
         Map<String, Map<String, Integer>> jobNameExecutorNameTotalLevel = new HashMap<>();
@@ -155,7 +154,7 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 		try {
 			jobNames = jobDimensionService.getAllJobs(curatorFrameworkOp);
 		} catch (SaturnJobConsoleException e) {
-			logger.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 		if (CollectionUtils.isEmpty(jobNames)) {
 			return;

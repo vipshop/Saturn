@@ -36,9 +36,6 @@ public class SpringFactory {
 			throw e;
 		}
 
-		// ApplicationContext context = new ClassPathXmlApplicationContext(configs);
-		// ApplicationContext context = new FileSystemXmlApplicationContext(configs);
-
 	}
 
 }

@@ -61,7 +61,7 @@ import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 @Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
-	protected static Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
 	
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 

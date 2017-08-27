@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 public class ContainerServiceImpl implements ContainerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
     @Resource
     private CuratorRepository curatorRepository;
@@ -121,7 +121,7 @@ public class ContainerServiceImpl implements ContainerService {
         } catch (SaturnJobConsoleException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             throw new SaturnJobConsoleException(e);
         }
     }
@@ -380,7 +380,7 @@ public class ContainerServiceImpl implements ContainerService {
             String dcosTaskScaleJobNodePath = ContainerNodePath.getDcosTaskScaleJobNodePath(taskId, jobName);
             curatorFrameworkOp.fillJobNodeIfNotExist(dcosTaskScaleJobNodePath, containerScaleJobStr);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             throw new SaturnJobConsoleException(e.getMessage(), e);
         }
     }
@@ -397,7 +397,7 @@ public class ContainerServiceImpl implements ContainerService {
                 containerScaleJob.setEnabled(Boolean.valueOf(enabledStr));
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             throw new SaturnJobConsoleException(e);
         }
         return containerScaleJob;
@@ -426,7 +426,7 @@ public class ContainerServiceImpl implements ContainerService {
         } catch (SaturnJobConsoleException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             throw new SaturnJobConsoleException(e);
         }
         return containerScaleJobVo;
@@ -530,7 +530,7 @@ public class ContainerServiceImpl implements ContainerService {
         } catch (SaturnJobConsoleException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             throw new SaturnJobConsoleException(e.getMessage(), e);
         }
     }

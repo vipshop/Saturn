@@ -38,7 +38,7 @@ import java.util.concurrent.Executors;
 @Service
 public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterMappingService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceZkClusterMappingServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(NamespaceZkClusterMappingServiceImpl.class);
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
@@ -96,7 +96,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 						result.add(vo);
 					}
 				} catch (Exception e) {
-					LOGGER.error(e.getMessage(), e);
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -133,7 +133,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		}
 	}
@@ -159,7 +159,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	public void moveNamespaceTo(String namespace, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly)
 			throws SaturnJobConsoleException {
 		try {
-			LOGGER.info("start move {} to {}", namespace, zkClusterKeyNew);
+			log.info("start move {} to {}", namespace, zkClusterKeyNew);
 			if (updateDBOnly) {
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
 			} else {
@@ -192,29 +192,29 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							.forPath(jobsNodePath);
 
 					List<CurrentJobConfig> configs = currentJobConfigService.findConfigsByNamespace(namespace);
-					LOGGER.info("get configs success, {}", namespace);
+					log.info("get configs success, {}", namespace);
 					if (configs != null) {
 						for (CurrentJobConfig jobConfig : configs) {
 							jobOperationService.persistJobFromDB(jobConfig, curatorFrameworkOpByNamespace);
-							LOGGER.info("move {}-{} to zk success", namespace, jobConfig.getJobName());
+							log.info("move {}-{} to zk success", namespace, jobConfig.getJobName());
 						}
 					}
 				} finally {
 					curatorFramework.close();
 					curatorFrameworkByNamespace.close();
 				}
-				LOGGER.info("move {} to zk {} success", namespace, zkClusterKeyNew);
+				log.info("move {} to zk {} success", namespace, zkClusterKeyNew);
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
-				LOGGER.info("update mapping table success, {}-{}", namespace, zkClusterKeyNew);
+				log.info("update mapping table success, {}-{}", namespace, zkClusterKeyNew);
 			}
 		} catch (SaturnJobConsoleException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
-			LOGGER.info("end move {} to {}", namespace, zkClusterKeyNew);
+			log.info("end move {} to {}", namespace, zkClusterKeyNew);
 		}
 	}
 

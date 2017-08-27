@@ -47,10 +47,13 @@ import java.util.Random;
 @Service
 public class ExecutorServiceImpl implements ExecutorService {
 
-	protected static Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 	public static final String ROOT = ExecutorNodePath.get$ExecutorNodePath();
 
 	public static final String IP_NODE_NAME = "ip";
+
+	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
+
+	private static final int DEFAULT_MAX_JOB_NUM = 100;
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -67,8 +70,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	private Random random = new Random();
 	
-	private static final int DEFAULT_MAX_JOB_NUM = 100;
-
 	@Override
 	public List<String> getAliveExecutorNames() {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
@@ -102,10 +103,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		int curJobSize = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp).size();
-		//TODO: timmy, remove maxJobNum >0
-		return maxJobNum >0 && (curJobSize+inc) > maxJobNum;
+		return (curJobSize+inc) > maxJobNum;
 	}
-	
+
 	@Override
     public int getMaxJobNum() {
 		int result = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, DEFAULT_MAX_JOB_NUM);

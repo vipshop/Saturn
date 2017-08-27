@@ -50,7 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private static final Logger log = LoggerFactory.getLogger(DashboardServiceImpl.class);
 
-	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
+	private static int REFRESH_INTERVAL_IN_MINUTE = 7;
 
 	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
 

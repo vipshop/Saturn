@@ -40,7 +40,7 @@ import java.util.List;
 @Service
 public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	
-	protected static Logger log = LoggerFactory.getLogger(SaturnJunkDataServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(SaturnJunkDataServiceImpl.class);
 
 	@Resource
 	private RegistryCenterService registryCenterService;

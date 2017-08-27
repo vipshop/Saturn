@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class SystemConfigServiceImpl implements SystemConfigService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SystemConfigServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SystemConfigServiceImpl.class);
 
     @Autowired
     private SystemConfig4SqlService systemConfig4SqlService;
@@ -47,7 +47,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
     private void loadAll() {
         try {
-            LOGGER.info("get system config from db");
+            log.info("get system config from db");
             List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByLastly();
             synchronized (systemConfigCache) {
                 systemConfigCache.clear();
@@ -58,7 +58,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         } finally {
             hasGotSystemConfigData.compareAndSet(false, true);
         }
@@ -100,7 +100,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         try {
             return Integer.parseInt(strValue.trim());
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             return defaultValue;
         }
     }
