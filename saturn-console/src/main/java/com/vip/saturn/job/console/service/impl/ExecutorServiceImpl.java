@@ -120,7 +120,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		try {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			String jobName = jobConfig.getJobName();
-			if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
+			if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
 				int maxJobNum = getMaxJobNum();
 				if (jobIncExceeds(maxJobNum, 1)) {
 					requestResult.setSuccess(false);

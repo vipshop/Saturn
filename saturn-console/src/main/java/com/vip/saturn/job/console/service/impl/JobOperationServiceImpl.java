@@ -325,6 +325,9 @@ public class JobOperationServiceImpl implements JobOperationService {
 	@Transactional
 	@Override
 	public void persistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException{
+		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
+		}
 		correctConfigValueIfNeeded(jobConfig, curatorFrameworkOp);
 		saveJobConfigToDb(jobConfig, curatorFrameworkOp);
 		saveJobConfigToZkWhenPersist(jobConfig, curatorFrameworkOp, false);
@@ -333,6 +336,9 @@ public class JobOperationServiceImpl implements JobOperationService {
 	@Transactional
 	@Override
 	public void copyAndPersistJob(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws Exception {
+		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
+		}
 		correctConfigValueIfNeeded(jobConfig, curatorFrameworkOp);
 		saveJobConfigToDb(jobConfig, curatorFrameworkOp);
 		saveJobConfigToZkWhenCopy(jobConfig, curatorFrameworkOp);

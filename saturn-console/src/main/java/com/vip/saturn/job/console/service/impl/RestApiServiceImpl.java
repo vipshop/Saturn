@@ -73,7 +73,7 @@ public class RestApiServiceImpl implements RestApiService {
         ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
             @Override
             public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-                if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+                if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobConfig.getJobName()))) {
                     throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Job: {" + jobConfig.getJobName() + "} already existed");
                 }
                 int maxJobNum = executorService.getMaxJobNum();
