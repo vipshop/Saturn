@@ -21,17 +21,16 @@ import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.JsonUtils;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
-import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,6 +76,9 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobEnabledOrNot() {
+		if (!needSendJobEnabledOrDisabledEvent()) {
+			return;
+		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -96,6 +98,9 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobEnabled() {
+		if (!needSendJobEnabledOrDisabledEvent()) {
+			return;
+		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -111,6 +116,9 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobDisabled() {
+		if (!needSendJobEnabledOrDisabledEvent()) {
+			return;
+		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -123,6 +131,25 @@ public class ConfigurationService extends AbstractSaturnService {
 				}
 			}
 		});
+	}
+	
+	/**
+	 * 判断是否需要发送Enabled或者Disabled事件
+	 * 
+	 * 非Local模式的作业，所有的Executor都会收到事件
+	 * 
+	 * 对于Local模式的作业，如果配置了优先Executor，那么事件只会给优先Executor的服务器发送
+	 * 
+	 * @return
+	 */
+	private boolean needSendJobEnabledOrDisabledEvent() {
+		if (!this.isLocalMode()) {
+			return true;
+		}
+		if (CollectionUtils.isEmpty(getPreferList())) {
+			return true;
+		}
+		return this.getPreferList().contains(this.executorName);
 	}
 
     /**
