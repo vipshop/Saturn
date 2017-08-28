@@ -47,7 +47,7 @@ public class ControllerUtils {
             if (isMandatory) {
                 throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(MISSING_REQUEST_MSG, key));
             }
-            return Boolean.FALSE;
+            return null;
         }
     }
 
