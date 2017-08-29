@@ -18,6 +18,8 @@ public interface SystemConfigService {
 
 	Integer getIntegerValue(String property, int defaultValue);
 
+	boolean getBooleanValue(String property, boolean defaultValue);
+
 	List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException;
 
 	String getPropertiesCached() throws SaturnJobConsoleException;

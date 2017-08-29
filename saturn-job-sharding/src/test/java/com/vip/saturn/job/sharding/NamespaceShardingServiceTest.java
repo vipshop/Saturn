@@ -41,7 +41,7 @@ public class NamespaceShardingServiceTest {
         // 启动第一个
         String ip1 = "127.0.0.1";
         CuratorFramework curatorFramework1 = nestedZkUtils.createClient(namespace);
-        NamespaceShardingManager namespaceShardingManager1 = new NamespaceShardingManager(curatorFramework1, namespace, ip1, null);
+        NamespaceShardingManager namespaceShardingManager1 = new NamespaceShardingManager(curatorFramework1, namespace, ip1, null, true);
         namespaceShardingManager1.start();
 
         Thread.sleep(1000);
@@ -52,7 +52,7 @@ public class NamespaceShardingServiceTest {
         // 启动第二个
         String ip2 = "127.0.0.2";
         CuratorFramework curatorFramework2 = nestedZkUtils.createClient(namespace);
-        NamespaceShardingManager namespaceShardingManager2 = new NamespaceShardingManager(curatorFramework2, namespace, ip2, null);
+        NamespaceShardingManager namespaceShardingManager2 = new NamespaceShardingManager(curatorFramework2, namespace, ip2, null, true);
         namespaceShardingManager2.start();
 
         Thread.sleep(1000);
@@ -63,7 +63,7 @@ public class NamespaceShardingServiceTest {
         // 启动第三个
         String ip3 = "127.0.0.3";
         CuratorFramework curatorFramework3 = nestedZkUtils.createClient(namespace);
-        NamespaceShardingManager namespaceShardingManager3 = new NamespaceShardingManager(curatorFramework3,namespace, ip3, null);
+        NamespaceShardingManager namespaceShardingManager3 = new NamespaceShardingManager(curatorFramework3,namespace, ip3, null, true);
         namespaceShardingManager3.start();
 
         Thread.sleep(1000);

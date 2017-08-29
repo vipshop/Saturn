@@ -17,24 +17,29 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class NamespaceShardingManager {
-	static Logger log = LoggerFactory.getLogger(NamespaceShardingManager.class);
+	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingManager.class);
 
 	private NamespaceShardingService namespaceShardingService;
+
 	private ExecutorCleanService executorCleanService;
+
 	private CuratorFramework curatorFramework;
+
 	private AddJobListenersService addJobListenersService;
 
+	private ShardingTreeCacheService shardingTreeCacheService;
+
+	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
+
 	private String namespace;
+
 	private String zkClusterKey;
 
-	private ShardingTreeCacheService shardingTreeCacheService;
-	private NamespaceShardingConnectionListener namespaceShardingConnectionListener;
-	
-	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmProxyService reportAlarmProxyService) {
+	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue, ReportAlarmProxyService reportAlarmProxyService, boolean isDifferentiateContainer) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
-		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue, reportAlarmProxyService);
+		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue, reportAlarmProxyService, isDifferentiateContainer);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService, shardingTreeCacheService);
 	}

@@ -29,9 +29,15 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
  * @author hebelala
  */
 public class NamespaceShardingService {
-	static Logger log = LoggerFactory.getLogger(NamespaceShardingService.class);
+	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingService.class);
 
 	private static final int LOAD_LEVEL_DEFAULT = 1;
+
+	private String namespace;
+
+	private String hostValue;
+
+	private boolean isDifferentiateContainer;
 
 	private CuratorFramework curatorFramework;
 
@@ -41,20 +47,17 @@ public class NamespaceShardingService {
 
 	private ExecutorService executorService;
 
-	private String namespace;
-
-	private String hostValue;
-
 	private NamespaceShardingContentService namespaceShardingContentService;
 
 	private ReportAlarmProxyService reportAlarmProxyService;
 
 	private ReentrantLock lock;
 
-	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmProxyService reportAlarmProxyService) {
+	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue, ReportAlarmProxyService reportAlarmProxyService, boolean isDifferentiateContainer) {
     	this.curatorFramework = curatorFramework;
 		this.hostValue = hostValue;
 		this.reportAlarmProxyService = reportAlarmProxyService;
+		this.isDifferentiateContainer = isDifferentiateContainer;
     	this.shardingCount = new AtomicInteger(0);
     	this.needAllSharding = new AtomicBoolean(false);
     	this.executorService = newSingleThreadExecutor();
@@ -400,16 +403,23 @@ public class NamespaceShardingService {
 			});
     	}
 
-		private List<Executor> getNotDockerExecutors(List<Executor> lastOnlineExecutorList) throws Exception {
-			List<Executor> notDockerExecutors = new ArrayList<>();
+		/**
+		 * if isDifferentiateContainer = false, return all executors; otherwise, return all non-container executors.
+		 */
+		private List<Executor> getExecutors(List<Executor> lastOnlineExecutorList) throws Exception {
+    		if(!isDifferentiateContainer){
+    			return lastOnlineExecutorList;
+			}
+
+			List<Executor> nonDockerExecutors = new ArrayList<>();
 			for(int i=0; i<lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
 				String executorName = executor.getExecutorName();
 				if(curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executorName)) == null) {
-					notDockerExecutors.add(executor);
+					nonDockerExecutors.add(executor);
 				}
 			}
-			return notDockerExecutors;
+			return nonDockerExecutors;
 		}
 
     	protected void putBackBalancing(List<String> allEnableJobs, List<Shard> shardList, List<Executor> lastOnlineExecutorList) throws Exception {
@@ -420,11 +430,11 @@ public class NamespaceShardingService {
 
         	sortShardList(shardList);
 
-			// 获取非容器executor
-			List<Executor> notDockerExecutors = getNotDockerExecutors(lastOnlineExecutorList);
+			// 获取所有executor
+			List<Executor> allExecutors = getExecutors(lastOnlineExecutorList);
 
 			// 获取shardList中的作业能够被接管的executors
-			Map<String, List<Executor>> notDockerExecutorsMapByJob = new HashMap<>();
+			Map<String, List<Executor>> executorsMapByJob = new HashMap<>();
 			Map<String, List<Executor>> lastOnlineExecutorListMapByJob = new HashMap<>();
 			// 是否为本地模式作业的映射
 			Map<String, Boolean> localModeMap = new HashMap<>();
@@ -437,8 +447,8 @@ public class NamespaceShardingService {
 			Iterator<Shard> iterator0 = shardList.iterator();
 			while(iterator0.hasNext()) {
 				String jobName = iterator0.next().getJobName();
-				if(!notDockerExecutorsMapByJob.containsKey(jobName)) {
-					notDockerExecutorsMapByJob.put(jobName, filterExecutorsByJob(notDockerExecutors, jobName));
+				if(!executorsMapByJob.containsKey(jobName)) {
+					executorsMapByJob.put(jobName, filterExecutorsByJob(allExecutors, jobName));
 				}
 				if(!lastOnlineExecutorListMapByJob.containsKey(jobName)) {
 					lastOnlineExecutorListMapByJob.put(jobName, filterExecutorsByJob(lastOnlineExecutorList, jobName));
@@ -484,7 +494,7 @@ public class NamespaceShardingService {
 							}
 						}
 					} else {
-						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(notDockerExecutorsMapByJob.get(jobName), jobName);
+						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(executorsMapByJob.get(jobName), jobName);
 						putShardIntoExecutor(shard, executor);
 					}
 					shardIterator.remove();
@@ -525,7 +535,7 @@ public class NamespaceShardingService {
 			Iterator<Shard> shardIterator3 = shardList.iterator();
 			while(shardIterator3.hasNext()) {
 				Shard shard = shardIterator3.next();
-				Executor executor = getExecutorWithMinLoadLevel(notDockerExecutorsMapByJob.get(shard.getJobName()));
+				Executor executor = getExecutorWithMinLoadLevel(executorsMapByJob.get(shard.getJobName()));
 				putShardIntoExecutor(shard, executor);
 				shardIterator3.remove();
 			}
