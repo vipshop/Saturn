@@ -147,6 +147,15 @@ public class SaturnWorker implements Runnable {
 				if (goAhead) {
 					job.execute();
 				}
+
+				if (noFireTime) { // no fire time, sleep to prevent consuming cpu all the time, https://github.com/vipshop/Saturn/issues/224
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						log.warn("Thread interrupt is signaled.", e);
+						Thread.interrupted();
+					}
+				}
 				
 			} catch (RuntimeException e) {
 				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, job.getJobName(), e.getMessage()), e);
