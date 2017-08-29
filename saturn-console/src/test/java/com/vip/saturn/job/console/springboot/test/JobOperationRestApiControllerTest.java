@@ -237,18 +237,10 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
         jobConfig.setShardingTotalCount((Integer) jobEntity.getConfig("shardingTotalCount"));
         jobConfig.setShardingItemParameters((String) jobEntity.getConfig("shardingItemParameters"));
         jobConfig.setDescription(jobEntity.getDescription());
-        Boolean showNormalLog = (Boolean) jobEntity.getConfig("showNormalLog");
-        if (showNormalLog == null) {
-            showNormalLog = Boolean.FALSE;
-        }
-        jobConfig.setShowNormalLog(showNormalLog);
-
-        Boolean useDispreferList = (Boolean) jobEntity.getConfig("useDispreferList");
-        if (useDispreferList == null) {
-            useDispreferList = false;
-        }
-        jobConfig.setUseDispreferList(useDispreferList);
-
+      
+        jobConfig.setLocalMode(null);
+        jobConfig.setUseSerial(null);
+        jobConfig.setIsCopyJob(false);
 
         return jobConfig;
     }
