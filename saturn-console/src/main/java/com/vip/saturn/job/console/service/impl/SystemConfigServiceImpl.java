@@ -107,6 +107,21 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
 
     @Override
+    public boolean getBooleanValue(String property, boolean defaultValue) {
+        String strValue = getValue(property);
+        if (strValue == null) {
+            return defaultValue;
+        }
+        try {
+            return Boolean.parseBoolean(strValue.trim());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return defaultValue;
+        }
+    }
+
+
+    @Override
     public List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException {
         return properties != null && !properties.isEmpty() ? systemConfig4SqlService.selectByPropertiesAndLastly(properties) : systemConfig4SqlService.selectByLastly();
     }
