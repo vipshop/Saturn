@@ -22,10 +22,12 @@ import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.exception.ShardingItemParametersException;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.JsonUtils;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
@@ -485,21 +487,60 @@ public class ConfigurationService extends AbstractSaturnService {
 	
 	
 	public List<String> getPreferList(){
-		List<String> executorList = new ArrayList<String>();
-		
+		List<String> result = new ArrayList<String>();
 		String prefer = jobConfiguration.getPreferList();
-		if(prefer == null || prefer.isEmpty()){
-			return executorList;
+		if(StringUtils.isBlank(prefer)){
+			return result;
 		}
 		String[] executors = prefer.split(",");
 		if(executors.length == 0){
-			return executorList;
+			return result;
 		}
+		List<String> allExistsExecutors = this.getAllExistingExecutors();
 		for(String executor:executors){
-			executorList.add(executor);
+			executor = executor.trim();
+			if(!"".equals(executor)) {
+				fillRealPreferListIfIsDockerOrNot(result, executor, allExistsExecutors);
+			}
 		}
-		
-		return executorList;
+		return result;
+	}
+	
+	
+	private List<String> getAllExistingExecutors() {
+		List<String> allExistsExecutors = new ArrayList<>();
+		if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorsNodePath())) {
+			List<String> executors = coordinatorRegistryCenter.getChildrenKeys(SaturnExecutorsNode.getExecutorsNodePath());
+			if(executors != null) {
+				allExistsExecutors.addAll(executors);
+			}
+		}
+		return allExistsExecutors;
+	}
+
+	/**
+	 *  如果prefer不是docker容器，并且preferList不包含，则直接添加；<br>
+	 *  如果prefer是docker容器（以@开头），则prefer为task，获取该task下的所有executor，如果不包含，添加进preferList。
+	 */
+	private void fillRealPreferListIfIsDockerOrNot(List<String> preferList, String prefer, List<String> allExistsExecutors) {
+		if(!prefer.startsWith("@")) { // not docker server
+			if(!preferList.contains(prefer)) {
+				preferList.add(prefer);
+			}
+		} else { // docker server, get the real executorList by task
+			String task = prefer.substring(1);
+			for(int i=0; i<allExistsExecutors.size(); i++) {
+				String executor = allExistsExecutors.get(i);
+				if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
+					String taskData = coordinatorRegistryCenter.get(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
+					if(taskData != null && task.equals(taskData)) {
+						if(!preferList.contains(executor)) {
+							preferList.add(executor);
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	public boolean isUseDispreferList() {
