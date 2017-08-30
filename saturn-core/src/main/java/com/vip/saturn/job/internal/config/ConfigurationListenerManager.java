@@ -77,6 +77,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
+				boolean sendEventFlag = configurationService.needSendJobEnabledOrDisabledEvent();
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
 					if (jobScheduler != null && jobScheduler.getJob() != null) {
@@ -85,13 +86,17 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 						}
 						failoverService.removeFailoverInfo();
 						jobScheduler.getJob().enableJob();
-						configurationService.notifyJobEnabled();
+						if (sendEventFlag) {
+							configurationService.notifyJobEnabled();
+						}
 					}
 				} else {
 					if (jobScheduler != null && jobScheduler.getJob() != null) {
 						jobScheduler.getJob().disableJob();
 						failoverService.removeFailoverInfo(); // clear failover info when disable job.
-						configurationService.notifyJobDisabled();
+						if (sendEventFlag) {
+							configurationService.notifyJobDisabled();
+						}
 					}
 				}
 			}

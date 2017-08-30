@@ -153,10 +153,10 @@ public class JobScheduler {
 			startAll();
 			createJob();
 			serverService.persistServerOnline(job);
-
-			// Notify job enabled or disabled after that all are ready, include job was initialized.
-			configService.notifyJobEnabledOrNot();
-
+			if (configService.needSendJobEnabledOrDisabledEvent()) {
+				// Notify job enabled or disabled after that all are ready, include job was initialized.
+				configService.notifyJobEnabledOrNot();
+			}
 			return true;
 		} catch (Throwable t) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);

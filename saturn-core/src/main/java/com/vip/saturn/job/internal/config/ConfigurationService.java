@@ -76,9 +76,6 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobEnabledOrNot() {
-		if (!needSendJobEnabledOrDisabledEvent()) {
-			return;
-		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -98,9 +95,6 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobEnabled() {
-		if (!needSendJobEnabledOrDisabledEvent()) {
-			return;
-		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -116,9 +110,6 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobDisabled() {
-		if (!needSendJobEnabledOrDisabledEvent()) {
-			return;
-		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -142,7 +133,7 @@ public class ConfigurationService extends AbstractSaturnService {
 	 * 
 	 * @return
 	 */
-	private boolean needSendJobEnabledOrDisabledEvent() {
+	public boolean needSendJobEnabledOrDisabledEvent() {
 		if (!this.isLocalMode()) {
 			return true;
 		}
