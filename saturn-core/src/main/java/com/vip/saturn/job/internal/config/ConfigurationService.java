@@ -139,10 +139,11 @@ public class ConfigurationService extends AbstractSaturnService {
 		if (!this.isLocalMode()) {
 			return true;
 		}
-		if (CollectionUtils.isEmpty(getPreferList())) {
+		List<String> perferList = this.getPreferList();
+		if (CollectionUtils.isEmpty(perferList)) {
 			return true;
 		}
-		return this.getPreferList().contains(this.executorName);
+		return perferList.contains(this.executorName);
 	}
 
     /**
@@ -493,9 +494,6 @@ public class ConfigurationService extends AbstractSaturnService {
 			return result;
 		}
 		String[] executors = prefer.split(",");
-		if(executors.length == 0){
-			return result;
-		}
 		List<String> allExistsExecutors = this.getAllExistingExecutors();
 		for(String executor:executors){
 			executor = executor.trim();
