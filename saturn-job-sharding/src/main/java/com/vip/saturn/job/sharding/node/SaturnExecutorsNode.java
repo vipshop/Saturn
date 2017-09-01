@@ -23,15 +23,17 @@ public class SaturnExecutorsNode {
 	public final static String LEADERNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER;
 	public final static String EXECUTORSNODE_PATH = "/" + $SATURNEXECUTORS + "/" + EXECUTORS;
 	public final static String SHARDINGNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING;
-    public static String LEADER_LATCHNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + LATCH;
-    public static String SHARDING_CONTENTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT;
-    public final static String JOBCONFIG_ENABLE_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/" + "enabled";
-    public static final String EXECUTOR_IPNODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*" + "/" + IP;
-    public static final String CONFIG_VERSION_PATH = "/" + $SATURNEXECUTORS + "/config/version";
-    
-	public static final String $JOBSNODE_PATH = "/" + $JOBS;   
+	public static String LEADER_LATCHNODE_PATH = "/" + $SATURNEXECUTORS + "/" + LEADER + "/" + LATCH;
+	public static String SHARDING_CONTENTNODE_PATH = "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT;
+	public final static String JOBCONFIG_ENABLE_NODE_PATH_REGEX = "/\\" + $JOBS + "/" + "[^/]*" + "/" + "config" + "/"
+			+ "enabled";
+	public static final String EXECUTOR_IPNODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*"
+			+ "/" + IP;
+	public static final String CONFIG_VERSION_PATH = "/" + $SATURNEXECUTORS + "/config/version";
+
+	public static final String $JOBSNODE_PATH = "/" + $JOBS;
 	public static final String $SATURNEXECUTORS_PATH = "/" + $SATURNEXECUTORS;
-	
+
 	/**
 	 * 获取$SaturnExecutors结点完整路径
 	 * @return
@@ -39,15 +41,15 @@ public class SaturnExecutorsNode {
 	public static String get$SaturnExecutorsNodeName() {
 		return $SATURNEXECUTORS;
 	}
-	
+
 	/**
-	 *  获取$SaturnExecutors/executors结点完整路径
+	 * 获取$SaturnExecutors/executors结点完整路径
 	 * @return
 	 */
 	public static String getExecutorsNodePath() {
-		return "/" + $SATURNEXECUTORS  + "/" + EXECUTORS;
+		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS;
 	}
-	
+
 	/**
 	 * 获取ip结点名称
 	 * @return
@@ -73,7 +75,7 @@ public class SaturnExecutorsNode {
 	public static String getExecutorIpNodePath(String executor) {
 		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + executor + "/" + IP;
 	}
-	
+
 	/**
 	 * 获取$SaturnExecutors/executors/xx/clean结点完整路径
 	 * @param executor
@@ -91,7 +93,7 @@ public class SaturnExecutorsNode {
 	public static String getExecutorTaskNodePath(String executor) {
 		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + executor + "/" + TASK;
 	}
-	
+
 	/**
 	 * 从路径中抽取出executorName
 	 * @param path
@@ -109,18 +111,18 @@ public class SaturnExecutorsNode {
 	 * @param nodeName
 	 * @return
 	 */
-    public static String getExecutorShardingNodePath(String nodeName) {
+	public static String getExecutorShardingNodePath(String nodeName) {
 		return "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + nodeName;
 	}
-    
+
 	/**
 	 * 获取$SaturnExecutors/sharding/content结点完整路径
 	 * @param element
 	 * @return
 	 */
-    public static String getShardingContentElementNodePath(String element) {
-    	return "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT + "/" + element;
-    }
+	public static String getShardingContentElementNodePath(String element) {
+		return "/" + $SATURNEXECUTORS + "/" + SHARDING + "/" + CONTENT + "/" + element;
+	}
 
 	/**
 	 * 获取作业结点完整路径
@@ -129,65 +131,65 @@ public class SaturnExecutorsNode {
 		return String.format("/%s/%s", $JOBS, jobName);
 	}
 
-    /**
-     * 获取$Jobs/xx/config/shardingTotalCount结点完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobConfigShardingTotalCountNodePath(String jobName) {
-    	return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "shardingTotalCount");
-    }
-    
-    /**
-     * 获取$Jobs/xx/config/loadLevel结点完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobConfigLoadLevelNodePath(String jobName) {
-    	return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "loadLevel");
-    }
-    
-    /**
-     * 获取$Jobs/xx/config/preferList结点完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobConfigPreferListNodePath(String jobName) {
-    	return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "preferList");
-    }
-  
-    /**
-     * 获取$Jobs/xx/config/enabled结点完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobConfigEnableNodePath(String jobName) {
-    	return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "enabled");
-    }
+	/**
+	 * 获取$Jobs/xx/config/shardingTotalCount结点完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobConfigShardingTotalCountNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "shardingTotalCount");
+	}
 
-    /**
-     * 获取$Jobs/xx/config/localMode结点完整路径
-     * @param jobName
-     * @return
-     */
+	/**
+	 * 获取$Jobs/xx/config/loadLevel结点完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobConfigLoadLevelNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "loadLevel");
+	}
+
+	/**
+	 * 获取$Jobs/xx/config/preferList结点完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobConfigPreferListNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "preferList");
+	}
+
+	/**
+	 * 获取$Jobs/xx/config/enabled结点完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobConfigEnableNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "enabled");
+	}
+
+	/**
+	 * 获取$Jobs/xx/config/localMode结点完整路径
+	 * @param jobName
+	 * @return
+	 */
 	public static String getJobConfigLocalModeNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "localMode");
 	}
-	
-    /**
-     * 获取$Jobs/xx/config/useSerial结点完整路径
-     * @param jobName
-     * @return
-     */
+
+	/**
+	 * 获取$Jobs/xx/config/useSerial结点完整路径
+	 * @param jobName
+	 * @return
+	 */
 	public static String getJobConfigUseSerialNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "useSerial");
 	}
-	
-    /**
-     * 获取$Jobs/xx/config/useDispreferList结点完整路径
-     * @param jobName
-     * @return
-     */
+
+	/**
+	 * 获取$Jobs/xx/config/useDispreferList结点完整路径
+	 * @param jobName
+	 * @return
+	 */
 	public static String getJobConfigUseDispreferListNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "useDispreferList");
 	}
@@ -200,40 +202,40 @@ public class SaturnExecutorsNode {
 	public static String getJobConfigForceShardNodePath(String jobName) {
 		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "config", "forceShard");
 	}
-    
-    /**
-     * 获取$Jobs/xx/leader/sharding/necessary完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobLeaderShardingNecessaryNodePath(String jobName) {
-    	return String.format("/%s/%s/%s/%s/%s", $JOBS, jobName, "leader", "sharding", "necessary");
-    }
-    
-    /**
-     * 获取$Jobs/xx/leader/sharding完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobLeaderShardingNodePath(String jobName) {
-		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "leader", "sharding");
-    }
-    
-    /**
-     * 获取$Jobs/xx/execution完整路径
-     * @param jobName
-     * @return
-     */
-    public static String getJobExecutionNodePath(final String jobName) {
-        return String.format("/%s/%s/execution", $JOBS, jobName);
-    }
 
-    /**
-     * 获取$Jobs/xx/servers/yy完整路径
-     * @param jobName
-     * @param executorName
-     * @return
-     */
+	/**
+	 * 获取$Jobs/xx/leader/sharding/necessary完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobLeaderShardingNecessaryNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s/%s", $JOBS, jobName, "leader", "sharding", "necessary");
+	}
+
+	/**
+	 * 获取$Jobs/xx/leader/sharding完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobLeaderShardingNodePath(String jobName) {
+		return String.format("/%s/%s/%s/%s", $JOBS, jobName, "leader", "sharding");
+	}
+
+	/**
+	 * 获取$Jobs/xx/execution完整路径
+	 * @param jobName
+	 * @return
+	 */
+	public static String getJobExecutionNodePath(final String jobName) {
+		return String.format("/%s/%s/execution", $JOBS, jobName);
+	}
+
+	/**
+	 * 获取$Jobs/xx/servers/yy完整路径
+	 * @param jobName
+	 * @param executorName
+	 * @return
+	 */
 	public static String getJobServersExecutorNodePath(String jobName, String executorName) {
 		return String.format("/%s/%s/servers/%s", $JOBS, jobName, executorName);
 	}
@@ -246,7 +248,7 @@ public class SaturnExecutorsNode {
 	}
 
 	public static String getJobServersExecutorStatusNodePathRegex(String jobName) {
-		return "/\\" + $JOBS + "/"+ jobName + "/"  + "servers" + "/" + "[^/]*" + "/" + "status";
+		return "/\\" + $JOBS + "/" + jobName + "/" + "servers" + "/" + "[^/]*" + "/" + "status";
 	}
 
 	public static String getJobServersExecutorNameByStatusPath(String path) {

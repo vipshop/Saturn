@@ -17,7 +17,7 @@ public class JobConfigTriggerShardingListener extends AbstractTreeCacheListener 
 	private NamespaceShardingService namespaceShardingService;
 	private String enabledPath;
 	private String forceShardPath;
-	
+
 	public JobConfigTriggerShardingListener(String jobName, NamespaceShardingService namespaceShardingService) {
 		this.jobName = jobName;
 		this.namespaceShardingService = namespaceShardingService;
@@ -27,8 +27,8 @@ public class JobConfigTriggerShardingListener extends AbstractTreeCacheListener 
 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
-		if(isJobEnabledPath(type, path)) {
-			if(Boolean.valueOf(nodeData)) {
+		if (isJobEnabledPath(type, path)) {
+			if (Boolean.valueOf(nodeData)) {
 				namespaceShardingService.asyncShardingWhenJobEnable(jobName);
 			} else {
 				namespaceShardingService.asyncShardingWhenJobDisable(jobName);

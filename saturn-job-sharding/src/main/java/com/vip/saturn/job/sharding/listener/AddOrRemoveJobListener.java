@@ -17,7 +17,7 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	static Logger log = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
 
 	private AddJobListenersService addJobListenersService;
-	
+
 	public AddOrRemoveJobListener(AddJobListenersService addJobListenersService) {
 		this.addJobListenersService = addJobListenersService;
 	}
@@ -42,10 +42,10 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	}
 
 	private boolean isAddJob(TreeCacheEvent.Type type) {
-		return type == TreeCacheEvent.Type.NODE_ADDED ;
+		return type == TreeCacheEvent.Type.NODE_ADDED;
 	}
 
 	private boolean isRemoveJob(TreeCacheEvent.Type type) {
-		return type == TreeCacheEvent.Type.NODE_REMOVED ;
+		return type == TreeCacheEvent.Type.NODE_REMOVED;
 	}
 }

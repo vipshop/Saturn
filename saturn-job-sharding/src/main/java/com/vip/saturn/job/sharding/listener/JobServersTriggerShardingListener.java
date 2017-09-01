@@ -9,32 +9,32 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
  */
 public class JobServersTriggerShardingListener extends AbstractTreeCacheListener {
 
-    private String jobName;
-    private NamespaceShardingService namespaceShardingService;
+	private String jobName;
+	private NamespaceShardingService namespaceShardingService;
 
-    public JobServersTriggerShardingListener(String jobName, NamespaceShardingService namespaceShardingService) {
-        this.jobName = jobName;
-        this.namespaceShardingService = namespaceShardingService;
-    }
+	public JobServersTriggerShardingListener(String jobName, NamespaceShardingService namespaceShardingService) {
+		this.jobName = jobName;
+		this.namespaceShardingService = namespaceShardingService;
+	}
 
-    @Override
-    public void childEvent(TreeCacheEvent.Type type, String path, String nodeData) throws Exception {
-        if(isJobServerStatus(path)) {
-            String executorName = SaturnExecutorsNode.getJobServersExecutorNameByStatusPath(path);
-            switch (type) {
-                case NODE_ADDED:
-                    namespaceShardingService.asyncShardingWhenJobServerOnline(jobName, executorName);
-                    break;
-                case NODE_REMOVED:
-                    namespaceShardingService.asyncShardingWhenJobServerOffline(jobName, executorName);
-                    break;
-                default:
-            }
-        }
-    }
+	@Override
+	public void childEvent(TreeCacheEvent.Type type, String path, String nodeData) throws Exception {
+		if (isJobServerStatus(path)) {
+			String executorName = SaturnExecutorsNode.getJobServersExecutorNameByStatusPath(path);
+			switch (type) {
+			case NODE_ADDED:
+				namespaceShardingService.asyncShardingWhenJobServerOnline(jobName, executorName);
+				break;
+			case NODE_REMOVED:
+				namespaceShardingService.asyncShardingWhenJobServerOffline(jobName, executorName);
+				break;
+			default:
+			}
+		}
+	}
 
-    private boolean isJobServerStatus(String path) {
-        return path.matches(SaturnExecutorsNode.getJobServersExecutorStatusNodePathRegex(jobName));
-    }
+	private boolean isJobServerStatus(String path) {
+		return path.matches(SaturnExecutorsNode.getJobServersExecutorStatusNodePathRegex(jobName));
+	}
 
 }

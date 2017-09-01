@@ -13,33 +13,34 @@ import java.net.ServerSocket;
  */
 public class NestedZkUtils {
 
-    private TestingServer testingServer;
+	private TestingServer testingServer;
 
-    private int port;
+	private int port;
 
-    public void startServer() throws Exception {
-        try (ServerSocket socket = new ServerSocket(0);) {
-            port = socket.getLocalPort();
-        } catch (IOException e) {
-        }
-        testingServer = new TestingServer(port);
-    }
+	public void startServer() throws Exception {
+		try (ServerSocket socket = new ServerSocket(0);) {
+			port = socket.getLocalPort();
+		} catch (IOException e) {
+		}
+		testingServer = new TestingServer(port);
+	}
 
-    public void stopServer() throws IOException {
-        if(testingServer != null) {
-            testingServer.close();
-        }
-    }
+	public void stopServer() throws IOException {
+		if (testingServer != null) {
+			testingServer.close();
+		}
+	}
 
-    public CuratorFramework createClient(String namespace) throws InterruptedException {
-        CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
-        CuratorFramework curatorFramework = builder.connectString("127.0.0.1:" + port)
-                .sessionTimeoutMs(600 * 1000) // long long, could to debug
-                .retryPolicy(new RetryNTimes(3, 1000))
-                .namespace(namespace)
-                .build();
-        curatorFramework.start();
-        curatorFramework.blockUntilConnected();
-        return curatorFramework;
-    }
+	public CuratorFramework createClient(String namespace) throws InterruptedException {
+		CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
+		CuratorFramework curatorFramework = builder.connectString("127.0.0.1:" + port).sessionTimeoutMs(600 * 1000) // long
+																													// long,
+																													// could
+																													// to
+																													// debug
+				.retryPolicy(new RetryNTimes(3, 1000)).namespace(namespace).build();
+		curatorFramework.start();
+		curatorFramework.blockUntilConnected();
+		return curatorFramework;
+	}
 }

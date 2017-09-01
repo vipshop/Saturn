@@ -23,7 +23,8 @@ public class AddJobListenersService {
 	private String namespace;
 	private ShardingTreeCacheService shardingTreeCacheService;
 
-	public AddJobListenersService(String namespace, CuratorFramework curatorFramework, NamespaceShardingService namespaceShardingService, ShardingTreeCacheService shardingTreeCacheService) {
+	public AddJobListenersService(String namespace, CuratorFramework curatorFramework,
+			NamespaceShardingService namespaceShardingService, ShardingTreeCacheService shardingTreeCacheService) {
 		this.curatorFramework = curatorFramework;
 		this.namespaceShardingService = namespaceShardingService;
 		this.namespace = namespace;
@@ -43,7 +44,7 @@ public class AddJobListenersService {
 	}
 
 	public void addJobPathListener(String jobName) throws InterruptedException {
-		if(addJobConfigPathListener(jobName)) {
+		if (addJobConfigPathListener(jobName)) {
 			addJobServersPathListener(jobName);
 		}
 	}
@@ -77,14 +78,16 @@ public class AddJobListenersService {
 					break;
 				}
 				if (waitConfigPathCreatedCounts == 0) {
-					log.error("create TreeCache failed, the path does not exists, full path is {}, depth is {}", fullPath, depth);
+					log.error("create TreeCache failed, the path does not exists, full path is {}, depth is {}",
+							fullPath, depth);
 					return false;
 				}
 				Thread.sleep(100);
 			}
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
-			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
+					new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
 			return true;
 		} catch (InterruptedException e) {
 			throw e;
@@ -105,11 +108,12 @@ public class AddJobListenersService {
 				}
 			} catch (InterruptedException e) {
 				throw e;
-			} catch (Exception e) { //NOSONAR
+			} catch (Exception e) { // NOSONAR
 			}
 
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
-			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobServersTriggerShardingListener(jobName, namespaceShardingService));
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
+					new JobServersTriggerShardingListener(jobName, namespaceShardingService));
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {

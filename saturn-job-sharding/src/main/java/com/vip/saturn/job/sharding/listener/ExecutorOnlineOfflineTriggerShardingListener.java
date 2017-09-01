@@ -20,18 +20,19 @@ public class ExecutorOnlineOfflineTriggerShardingListener extends AbstractTreeCa
 
 	private NamespaceShardingService namespaceShardingService;
 	private ExecutorCleanService executorCleanService;
-	
-	public ExecutorOnlineOfflineTriggerShardingListener(NamespaceShardingService namespaceShardingService, ExecutorCleanService executorCleanService) {
+
+	public ExecutorOnlineOfflineTriggerShardingListener(NamespaceShardingService namespaceShardingService,
+			ExecutorCleanService executorCleanService) {
 		this.namespaceShardingService = namespaceShardingService;
 		this.executorCleanService = executorCleanService;
 	}
 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
-		if(isExecutorOnline(type, path)) {
+		if (isExecutorOnline(type, path)) {
 			String executorName = SaturnExecutorsNode.getExecutorNameByIpPath(path);
 			namespaceShardingService.asyncShardingWhenExecutorOnline(executorName, nodeData);
-		} else if(isExecutorOffline(type, path)) {
+		} else if (isExecutorOffline(type, path)) {
 			String executorName = SaturnExecutorsNode.getExecutorNameByIpPath(path);
 			try {
 				executorCleanService.clean(executorName);
