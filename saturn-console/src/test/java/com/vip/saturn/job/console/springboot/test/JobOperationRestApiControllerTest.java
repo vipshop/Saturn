@@ -46,268 +46,280 @@ import com.vip.saturn.job.console.service.RestApiService;
 @WebMvcTest(JobOperationRestApiController.class)
 public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest {
 
-    @Autowired
-    private MockMvc mvc;
-
-    @MockBean
-    private RestApiService restApiService;
-
-    @Test
-    public void testCreateSuccessfully() throws Exception {
-        JobEntity jobEntity = constructJobEntity("job1");
-        mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isCreated());
-
-        JobConfig jobConfig = convert2JobConfig("domain", jobEntity);
-        ArgumentCaptor<JobConfig> argument = ArgumentCaptor.forClass(JobConfig.class);
-
-        verify(restApiService).createJob(eq("domain"), argument.capture());
-        assertTrue("jobconfig is not equal", jobConfig.equals(argument.getValue()));
-    }
+	@Autowired
+	private MockMvc mvc;
+
+	@MockBean
+	private RestApiService restApiService;
+
+	@Test
+	public void testCreateSuccessfully() throws Exception {
+		JobEntity jobEntity = constructJobEntity("job1");
+		mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isCreated());
+
+		JobConfig jobConfig = convert2JobConfig("domain", jobEntity);
+		ArgumentCaptor<JobConfig> argument = ArgumentCaptor.forClass(JobConfig.class);
+
+		verify(restApiService).createJob(eq("domain"), argument.capture());
+		assertTrue("jobconfig is not equal", jobConfig.equals(argument.getValue()));
+	}
+
+	@Test
+	public void testCreateFailAsMissingMandatoryField() throws Exception {
+		JobEntity jobEntity = constructJobEntity("job1");
+		// jobType should be mandatory
+		jobEntity.setConfig("jobType", null);
+
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isBadRequest()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {jobType}", message);
+	}
+
+	@Test
+	public void testCreateFailAsInvalidJobType() throws Exception {
+		JobEntity jobEntity = constructJobEntity("job1");
+		// jobType should be mandatory
+		jobEntity.setConfig("jobType", "abc");
+
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isBadRequest()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", "Invalid request. Parameter: {jobType} is malformed", message);
+	}
+
+	@Test
+	public void testCreateFailAsSaturnJobExceptionThrows() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class),
+				any(JobConfig.class));
+
+		JobEntity jobEntity = constructJobEntity("job1");
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isInternalServerError()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", customErrMsg, message);
+
+		// Created
+		customErrMsg = "jobname does not exists";
+		willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class),
+				any(JobConfig.class));
+
+		result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isNotFound()).andReturn();
+
+		message = fetchErrorMessage(result);
+		assertEquals("error message not equal", customErrMsg, message);
+	}
+
+	@Test
+	public void testCreateFailAsSaturnJobHttpExceptionThrows() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService)
+				.createJob(any(String.class), any(JobConfig.class));
+
+		JobEntity jobEntity = constructJobEntity("job1");
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isBadRequest()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", customErrMsg, message);
+	}
+
+	@Test
+	public void testCreateFailAsSaturnHttpJobExceptionThrows() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService)
+				.createJob(any(String.class), any(JobConfig.class));
+
+		JobEntity jobEntity = constructJobEntity("job1");
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isBadRequest()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", customErrMsg, message);
+	}
+
+	@Test
+	public void testCreateFailAsUnExpectedExceptionThrows() throws Exception {
+		String customErrMsg = "unexpected exception";
+		willThrow(new RuntimeException(customErrMsg)).given(restApiService).createJob(any(String.class),
+				any(JobConfig.class));
+
+		JobEntity jobEntity = constructJobEntity("job1");
+		MvcResult result = mvc.perform(
+				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
+				.andExpect(status().isInternalServerError()).andReturn();
+
+		String message = fetchErrorMessage(result);
+		assertEquals("error message not equal", customErrMsg, message);
+	}
+
+	@Test
+	public void testQuerySuccessfully() throws Exception {
+		String jobName = "job1";
+
+		RestApiJobInfo jobInfo = constructJobInfo("domain", jobName);
+
+		given(restApiService.getRestAPIJobInfo("domain", jobName)).willReturn(jobInfo);
+
+		MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/" + jobName)).andExpect(status().isOk()).andReturn();
 
-    @Test
-    public void testCreateFailAsMissingMandatoryField() throws Exception {
-        JobEntity jobEntity = constructJobEntity("job1");
-        // jobType should be mandatory
-        jobEntity.setConfig("jobType", null);
+		String body = result.getResponse().getContentAsString();
+		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
+		assertEquals("jobname not equal", jobName, resultMap.get("jobName"));
+		assertEquals("description not equal", jobInfo.getDescription(), resultMap.get("description"));
 
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+		Map<String, Object> jobConfigMap = (Map<String, Object>) resultMap.get("jobConfig");
+		assertEquals("cron not equal", jobInfo.getJobConfig().getCron(), jobConfigMap.get("cron"));
 
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {jobType}", message);
-    }
+		Map<String, Object> statisticsMap = (Map<String, Object>) resultMap.get("statistics");
+		assertEquals("nextFireTime not equal", jobInfo.getStatistics().getNextFireTime(),
+				new Long((Integer) statisticsMap.get("nextFireTime")));
+	}
 
-    @Test
-    public void testCreateFailAsInvalidJobType() throws Exception {
-        JobEntity jobEntity = constructJobEntity("job1");
-        // jobType should be mandatory
-        jobEntity.setConfig("jobType", "abc");
-
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+	@Test
+	public void testQueryFailAsSaturnJobExceptionThrows() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService)
+				.getRestAPIJobInfo("domain", "job1");
 
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", "Invalid request. Parameter: {jobType} is malformed", message);
-    }
+		MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/job1")).andExpect(status().isBadRequest()).andReturn();
 
-    @Test
-    public void testCreateFailAsSaturnJobExceptionThrows() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
-
-        JobEntity jobEntity = constructJobEntity("job1");
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isInternalServerError()).andReturn();
-
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", customErrMsg, message);
-
-        // Created
-        customErrMsg = "jobname does not exists";
-        willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
-
-        result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isNotFound()).andReturn();
-
-        message = fetchErrorMessage(result);
-        assertEquals("error message not equal", customErrMsg, message);
-    }
-
-    @Test
-    public void testCreateFailAsSaturnJobHttpExceptionThrows() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
-
-        JobEntity jobEntity = constructJobEntity("job1");
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
-
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", customErrMsg, message);
-    }
-
-    @Test
-    public void testCreateFailAsSaturnHttpJobExceptionThrows() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
-
-        JobEntity jobEntity = constructJobEntity("job1");
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
-
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", customErrMsg, message);
-    }
-
-    @Test
-    public void testCreateFailAsUnExpectedExceptionThrows() throws Exception {
-        String customErrMsg = "unexpected exception";
-        willThrow(new RuntimeException(customErrMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
-
-        JobEntity jobEntity = constructJobEntity("job1");
-        MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
-                .andExpect(status().isInternalServerError()).andReturn();
-
-        String message = fetchErrorMessage(result);
-        assertEquals("error message not equal", customErrMsg, message);
-    }
-
-    @Test
-    public void testQuerySuccessfully() throws Exception {
-        String jobName = "job1";
-
-        RestApiJobInfo jobInfo = constructJobInfo("domain", jobName);
-
-        given(restApiService.getRestAPIJobInfo("domain", jobName)).willReturn(jobInfo);
-
-        MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/" + jobName))
-                .andExpect(status().isOk()).andReturn();
-
-        String body = result.getResponse().getContentAsString();
-        Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
-        assertEquals("jobname not equal", jobName, resultMap.get("jobName"));
-        assertEquals("description not equal", jobInfo.getDescription(), resultMap.get("description"));
+		assertEquals("error msg is not equal", customErrMsg, fetchErrorMessage(result));
+	}
 
-        Map<String, Object> jobConfigMap = (Map<String, Object>) resultMap.get("jobConfig");
-        assertEquals("cron not equal", jobInfo.getJobConfig().getCron(), jobConfigMap.get("cron"));
+	@Test
+	public void testRunAtOnceSuccessfully() throws Exception {
+		mvc.perform(post("/rest/v1/domain/jobs/abc/run").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent()).andReturn();
+	}
 
-        Map<String, Object> statisticsMap = (Map<String, Object>) resultMap.get("statistics");
-        assertEquals("nextFireTime not equal", jobInfo.getStatistics().getNextFireTime(), new Long((Integer) statisticsMap.get("nextFireTime")));
-    }
+	@Test
+	public void testStopAtOnceSuccessfully() throws Exception {
+		mvc.perform(post("/rest/v1/domain/jobs/abc/stop").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent()).andReturn();
+	}
 
-    @Test
-    public void testQueryFailAsSaturnJobExceptionThrows() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).getRestAPIJobInfo("domain", "job1");
+	@Test
+	public void testDeleteJobSuccessfully() throws Exception {
+		mvc.perform(delete("/rest/v1/domain/jobs/abc").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent()).andReturn();
+	}
 
-        MvcResult result = mvc.perform(get("/rest/v1/domain/jobs/job1"))
-                .andExpect(status().isBadRequest()).andReturn();
+	private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
+		return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
+	}
 
-        assertEquals("error msg is not equal", customErrMsg, fetchErrorMessage(result));
-    }
+	private RestApiJobInfo constructJobInfo(String domain, String jobName) {
+		RestApiJobInfo jobInfo = new RestApiJobInfo();
+		jobInfo.setJobName(jobName);
+		jobInfo.setEnabled(true);
+		jobInfo.setDescription("this is a decription of " + jobName);
 
-    @Test
-    public void testRunAtOnceSuccessfully() throws Exception {
-        mvc.perform(post("/rest/v1/domain/jobs/abc/run").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent()).andReturn();
-    }
+		RestApiJobConfig jobConfig = new RestApiJobConfig();
+		jobConfig.setCron("0 */1 * * * ?");
 
-    @Test
-    public void testStopAtOnceSuccessfully() throws Exception {
-        mvc.perform(post("/rest/v1/domain/jobs/abc/stop").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent()).andReturn();
-    }
+		jobInfo.setJobConfig(jobConfig);
 
-    @Test
-    public void testDeleteJobSuccessfully() throws Exception {
-        mvc.perform(delete("/rest/v1/domain/jobs/abc").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent()).andReturn();
-    }
+		RestApiJobStatistics statistics = new RestApiJobStatistics();
+		statistics.setNextFireTime(1234567L);
+		jobInfo.setStatistics(statistics);
 
-    private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
-        return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
-    }
+		return jobInfo;
+	}
 
-    private RestApiJobInfo constructJobInfo(String domain, String jobName) {
-        RestApiJobInfo jobInfo = new RestApiJobInfo();
-        jobInfo.setJobName(jobName);
-        jobInfo.setEnabled(true);
-        jobInfo.setDescription("this is a decription of " + jobName);
+	private JobConfig convert2JobConfig(String namespace, JobEntity jobEntity) {
+		JobConfig jobConfig = new JobConfig();
 
-        RestApiJobConfig jobConfig = new RestApiJobConfig();
-        jobConfig.setCron("0 */1 * * * ?");
+		jobConfig.setJobName(jobEntity.getJobName());
+		jobConfig.setNamespace(namespace);
+		jobConfig.setCron((String) jobEntity.getConfig("cron"));
+		jobConfig.setJobType((String) jobEntity.getConfig("jobType"));
+		jobConfig.setShardingTotalCount((Integer) jobEntity.getConfig("shardingTotalCount"));
+		jobConfig.setShardingItemParameters((String) jobEntity.getConfig("shardingItemParameters"));
+		jobConfig.setDescription(jobEntity.getDescription());
 
-        jobInfo.setJobConfig(jobConfig);
+		jobConfig.setLocalMode(null);
+		jobConfig.setUseSerial(null);
+		jobConfig.setIsCopyJob(false);
 
-        RestApiJobStatistics statistics = new RestApiJobStatistics();
-        statistics.setNextFireTime(1234567L);
-        jobInfo.setStatistics(statistics);
+		return jobConfig;
+	}
 
-        return jobInfo;
-    }
+	private JobEntity constructJobEntity(String job) {
+		JobEntity jobEntity = new JobEntity("job");
 
-    private JobConfig convert2JobConfig(String namespace, JobEntity jobEntity) {
-        JobConfig jobConfig = new JobConfig();
+		jobEntity.setDescription("this is a description of " + job);
+		jobEntity.setConfig("cron", "0 */1 * * * ?");
+		jobEntity.setConfig("jobType", "SHELL_JOB");
+		jobEntity.setConfig("shardingTotalCount", 2);
+		jobEntity.setConfig("shardingItemParameters", "0=echo 0;sleep $SLEEP_SECS,1=echo 1");
 
-        jobConfig.setJobName(jobEntity.getJobName());
-        jobConfig.setNamespace(namespace);
-        jobConfig.setCron((String) jobEntity.getConfig("cron"));
-        jobConfig.setJobType((String) jobEntity.getConfig("jobType"));
-        jobConfig.setShardingTotalCount((Integer) jobEntity.getConfig("shardingTotalCount"));
-        jobConfig.setShardingItemParameters((String) jobEntity.getConfig("shardingItemParameters"));
-        jobConfig.setDescription(jobEntity.getDescription());
-      
-        jobConfig.setLocalMode(null);
-        jobConfig.setUseSerial(null);
-        jobConfig.setIsCopyJob(false);
+		return jobEntity;
+	}
 
-        return jobConfig;
-    }
+	public class JobEntity {
+		private final Gson gson = new Gson();
 
-    private JobEntity constructJobEntity(String job) {
-        JobEntity jobEntity = new JobEntity("job");
+		private String jobName;
 
-        jobEntity.setDescription("this is a description of " + job);
-        jobEntity.setConfig("cron", "0 */1 * * * ?");
-        jobEntity.setConfig("jobType", "SHELL_JOB");
-        jobEntity.setConfig("shardingTotalCount", 2);
-        jobEntity.setConfig("shardingItemParameters", "0=echo 0;sleep $SLEEP_SECS,1=echo 1");
+		private String description;
 
-        return jobEntity;
-    }
+		private Map<String, Object> jobConfig = Maps.newHashMap();
 
-    public class JobEntity {
-        private final Gson gson = new Gson();
+		public JobEntity(String jobName) {
+			this.jobName = jobName;
+		}
 
-        private String jobName;
+		public void setConfig(String key, Object value) {
+			jobConfig.put(key, value);
+		}
 
-        private String description;
+		public Object getConfig(String key) {
+			return jobConfig.get(key);
+		}
 
-        private Map<String, Object> jobConfig = Maps.newHashMap();
+		public String toJSON() {
+			return gson.toJson(this);
+		}
 
-        public JobEntity(String jobName) {
-            this.jobName = jobName;
-        }
+		public Gson getGson() {
+			return gson;
+		}
 
-        public void setConfig(String key, Object value) {
-            jobConfig.put(key, value);
-        }
+		public String getJobName() {
+			return jobName;
+		}
 
-        public Object getConfig(String key) {
-            return jobConfig.get(key);
-        }
+		public void setJobName(String jobName) {
+			this.jobName = jobName;
+		}
 
-        public String toJSON() {
-            return gson.toJson(this);
-        }
+		public String getDescription() {
+			return description;
+		}
 
-        public Gson getGson() {
-            return gson;
-        }
+		public void setDescription(String description) {
+			this.description = description;
+		}
 
-        public String getJobName() {
-            return jobName;
-        }
+		public Map<String, Object> getJobConfig() {
+			return jobConfig;
+		}
 
-        public void setJobName(String jobName) {
-            this.jobName = jobName;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public Map<String, Object> getJobConfig() {
-            return jobConfig;
-        }
-
-        public void setJobConfig(Map<String, Object> jobConfig) {
-            this.jobConfig = jobConfig;
-        }
-    }
+		public void setJobConfig(Map<String, Object> jobConfig) {
+			this.jobConfig = jobConfig;
+		}
+	}
 }

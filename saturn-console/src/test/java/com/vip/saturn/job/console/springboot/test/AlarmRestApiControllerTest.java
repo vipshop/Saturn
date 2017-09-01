@@ -36,203 +36,211 @@ import com.vip.saturn.job.integrate.entity.AlarmInfo;
 @RunWith(SpringRunner.class)
 @WebMvcTest(AlarmRestApiController.class)
 public class AlarmRestApiControllerTest extends AbstractSaturnConsoleTest {
-    @Autowired
-    private MockMvc mvc;
+	@Autowired
+	private MockMvc mvc;
 
-    @MockBean
-    private RestApiService restApiService;
-    
-    @Test
-    public void testRaiseAlarmSuccessfully() throws Exception {
-        final String jobName = "job1";
-        final String executorName = "exec001";
-        final String alarmName = "name";
-        final String alarmTitle = "title";
+	@MockBean
+	private RestApiService restApiService;
 
-        AlarmEntity alarmEntity = new AlarmEntity(jobName, executorName, alarmName, alarmTitle, "CRITICAL");
-        alarmEntity.getAdditionalInfo().put("key1", "value1");
-        alarmEntity.setShardItem(1);
-        alarmEntity.setMessage("message");
+	@Test
+	public void testRaiseAlarmSuccessfully() throws Exception {
+		final String jobName = "job1";
+		final String executorName = "exec001";
+		final String alarmName = "name";
+		final String alarmTitle = "title";
 
-        mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isCreated());
+		AlarmEntity alarmEntity = new AlarmEntity(jobName, executorName, alarmName, alarmTitle, "CRITICAL");
+		alarmEntity.getAdditionalInfo().put("key1", "value1");
+		alarmEntity.setShardItem(1);
+		alarmEntity.setMessage("message");
 
-        ArgumentCaptor<AlarmInfo> argument = ArgumentCaptor.forClass(AlarmInfo.class);
+		mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isCreated());
 
-        verify(restApiService).raiseAlarm(eq("mydomain"), eq(jobName), eq(executorName), eq(1), argument.capture());
-        compareAlarmInfo(alarmEntity, argument.getValue());
-    }
+		ArgumentCaptor<AlarmInfo> argument = ArgumentCaptor.forClass(AlarmInfo.class);
 
-    @Test
-    public void testRaiseAlarmFailAsMissingMandatoryField() throws Exception {
-        // missing jobName
-        AlarmEntity alarmEntity = new AlarmEntity(null, "exec", "name", "title", "CRITICAL");
+		verify(restApiService).raiseAlarm(eq("mydomain"), eq(jobName), eq(executorName), eq(1), argument.capture());
+		compareAlarmInfo(alarmEntity, argument.getValue());
+	}
 
-        MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+	@Test
+	public void testRaiseAlarmFailAsMissingMandatoryField() throws Exception {
+		// missing jobName
+		AlarmEntity alarmEntity = new AlarmEntity(null, "exec", "name", "title", "CRITICAL");
 
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {jobName}", fetchErrorMessage(result));
-        // missing executorname
-        alarmEntity = new AlarmEntity("job1", null, "name", "title", "CRITICAL");
+		MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-        result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {jobName}",
+				fetchErrorMessage(result));
+		// missing executorname
+		alarmEntity = new AlarmEntity("job1", null, "name", "title", "CRITICAL");
 
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {executorName}", fetchErrorMessage(result));
+		result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-        // missing name
-        alarmEntity = new AlarmEntity("job1", "exec",  null, "title", "CRITICAL");
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {executorName}",
+				fetchErrorMessage(result));
 
-        result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+		// missing name
+		alarmEntity = new AlarmEntity("job1", "exec", null, "title", "CRITICAL");
 
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {name}", fetchErrorMessage(result));
+		result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-        // missing title
-        alarmEntity = new AlarmEntity("job1", "exec", "name", null, "CRITICAL");
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {name}",
+				fetchErrorMessage(result));
 
-        result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+		// missing title
+		alarmEntity = new AlarmEntity("job1", "exec", "name", null, "CRITICAL");
 
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {title}", fetchErrorMessage(result));
+		result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-        // missing level
-        alarmEntity = new AlarmEntity("job1", "exec", "name", "title", null);
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {title}",
+				fetchErrorMessage(result));
 
-        result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+		// missing level
+		alarmEntity = new AlarmEntity("job1", "exec", "name", "title", null);
 
-        assertEquals("error message not equal", "Invalid request. Missing parameter: {level}", fetchErrorMessage(result));
-    }
+		result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-    @Test
-    public void testRaiseAlarmFailWithExpectedException() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).raiseAlarm(any(String.class),any(String.class),any(String.class),any(Integer.class), any(AlarmInfo.class));
+		assertEquals("error message not equal", "Invalid request. Missing parameter: {level}",
+				fetchErrorMessage(result));
+	}
 
-        AlarmEntity alarmEntity = new AlarmEntity("job", "exec", "name", "title", "CRITICAL");
-        MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isBadRequest()).andReturn();
+	@Test
+	public void testRaiseAlarmFailWithExpectedException() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new SaturnJobConsoleHttpException(400, customErrMsg)).given(restApiService).raiseAlarm(
+				any(String.class), any(String.class), any(String.class), any(Integer.class), any(AlarmInfo.class));
 
-        assertEquals("error message not equal", customErrMsg, fetchErrorMessage(result));
-    }
+		AlarmEntity alarmEntity = new AlarmEntity("job", "exec", "name", "title", "CRITICAL");
+		MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
-    @Test
-    public void testRaiseAlarmFailWithUnExpectedException() throws Exception {
-        String customErrMsg = "some exception throws";
-        willThrow(new RuntimeException(customErrMsg)).given(restApiService).raiseAlarm(any(String.class),any(String.class),any(String.class),any(Integer.class), any(AlarmInfo.class));
+		assertEquals("error message not equal", customErrMsg, fetchErrorMessage(result));
+	}
 
-        AlarmEntity alarmEntity = new AlarmEntity("job", "exec", "name", "title", "CRITICAL");
-        MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON).content(alarmEntity.toJSON()))
-                .andExpect(status().isInternalServerError()).andReturn();
+	@Test
+	public void testRaiseAlarmFailWithUnExpectedException() throws Exception {
+		String customErrMsg = "some exception throws";
+		willThrow(new RuntimeException(customErrMsg)).given(restApiService).raiseAlarm(any(String.class),
+				any(String.class), any(String.class), any(Integer.class), any(AlarmInfo.class));
 
-        assertEquals("error message not equal", customErrMsg, fetchErrorMessage(result));
-    }
+		AlarmEntity alarmEntity = new AlarmEntity("job", "exec", "name", "title", "CRITICAL");
+		MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
+				.content(alarmEntity.toJSON())).andExpect(status().isInternalServerError()).andReturn();
 
-    private void compareAlarmInfo(AlarmEntity expectAlarmInfo, AlarmInfo actualAlarmInfo) {
-        assertEquals("name is not equal", expectAlarmInfo.getName(), actualAlarmInfo.getName());
-        assertEquals("title is not equal", expectAlarmInfo.getTitle(), actualAlarmInfo.getTitle());
-        assertEquals("level is not equal", expectAlarmInfo.getLevel(), actualAlarmInfo.getLevel());
-        assertEquals("message is not equal", expectAlarmInfo.getMessage(), actualAlarmInfo.getMessage());
-        assertEquals("additional info is not equal", expectAlarmInfo.getAdditionalInfo().get("key1"), actualAlarmInfo.getCustomFields().get("key1"));
-    }
+		assertEquals("error message not equal", customErrMsg, fetchErrorMessage(result));
+	}
 
-    private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
-        return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
-    }
+	private void compareAlarmInfo(AlarmEntity expectAlarmInfo, AlarmInfo actualAlarmInfo) {
+		assertEquals("name is not equal", expectAlarmInfo.getName(), actualAlarmInfo.getName());
+		assertEquals("title is not equal", expectAlarmInfo.getTitle(), actualAlarmInfo.getTitle());
+		assertEquals("level is not equal", expectAlarmInfo.getLevel(), actualAlarmInfo.getLevel());
+		assertEquals("message is not equal", expectAlarmInfo.getMessage(), actualAlarmInfo.getMessage());
+		assertEquals("additional info is not equal", expectAlarmInfo.getAdditionalInfo().get("key1"),
+				actualAlarmInfo.getCustomFields().get("key1"));
+	}
 
-    public class AlarmEntity {
+	private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
+		return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
+	}
 
-        private String jobName;
+	public class AlarmEntity {
 
-        private String executorName;
+		private String jobName;
 
-        private int shardItem;
+		private String executorName;
 
-        private String name;
+		private int shardItem;
 
-        private String level;
+		private String name;
 
-        private String title;
+		private String level;
 
-        private String message;
+		private String title;
 
-        private Map<String, String> additionalInfo = Maps.newHashMap();
+		private String message;
 
-        public AlarmEntity(String jobName, String executorName, String name, String title, String level) {
-            this.jobName = jobName;
-            this.executorName = executorName;
-            this.name = name;
-            this.title = title;
-            this.level = level;
-        }
+		private Map<String, String> additionalInfo = Maps.newHashMap();
 
-        public String toJSON(){
-            return JSONObject.toJSONString(this);
-        }
+		public AlarmEntity(String jobName, String executorName, String name, String title, String level) {
+			this.jobName = jobName;
+			this.executorName = executorName;
+			this.name = name;
+			this.title = title;
+			this.level = level;
+		}
 
-        public String getJobName() {
-            return jobName;
-        }
+		public String toJSON() {
+			return JSONObject.toJSONString(this);
+		}
 
-        public void setJobName(String jobName) {
-            this.jobName = jobName;
-        }
+		public String getJobName() {
+			return jobName;
+		}
 
-        public String getExecutorName() {
-            return executorName;
-        }
+		public void setJobName(String jobName) {
+			this.jobName = jobName;
+		}
 
-        public void setExecutorName(String executorName) {
-            this.executorName = executorName;
-        }
+		public String getExecutorName() {
+			return executorName;
+		}
 
-        public int getShardItem() {
-            return shardItem;
-        }
+		public void setExecutorName(String executorName) {
+			this.executorName = executorName;
+		}
 
-        public void setShardItem(int shardItem) {
-            this.shardItem = shardItem;
-        }
+		public int getShardItem() {
+			return shardItem;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public void setShardItem(int shardItem) {
+			this.shardItem = shardItem;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public String getLevel() {
-            return level;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public void setLevel(String level) {
-            this.level = level;
-        }
+		public String getLevel() {
+			return level;
+		}
 
-        public String getTitle() {
-            return title;
-        }
+		public void setLevel(String level) {
+			this.level = level;
+		}
 
-        public void setTitle(String title) {
-            this.title = title;
-        }
+		public String getTitle() {
+			return title;
+		}
 
-        public String getMessage() {
-            return message;
-        }
+		public void setTitle(String title) {
+			this.title = title;
+		}
 
-        public void setMessage(String message) {
-            this.message = message;
-        }
+		public String getMessage() {
+			return message;
+		}
 
-        public Map<String, String> getAdditionalInfo() {
-            return additionalInfo;
-        }
+		public void setMessage(String message) {
+			this.message = message;
+		}
 
-        public void setAdditionalInfo(Map<String, String> additionalInfo) {
-            this.additionalInfo = additionalInfo;
-        }
-    }
+		public Map<String, String> getAdditionalInfo() {
+			return additionalInfo;
+		}
+
+		public void setAdditionalInfo(Map<String, String> additionalInfo) {
+			this.additionalInfo = additionalInfo;
+		}
+	}
 }
