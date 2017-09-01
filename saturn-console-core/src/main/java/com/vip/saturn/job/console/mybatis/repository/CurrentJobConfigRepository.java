@@ -10,27 +10,29 @@ import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 
 @Repository
 public interface CurrentJobConfigRepository {
-	
-    int deleteByPrimaryKey(Long id);
 
-    int insert(CurrentJobConfig currentjobconfig);
+	int deleteByPrimaryKey(Long id);
 
-    int insertSelective(CurrentJobConfig currentjobconfig);
+	int insert(CurrentJobConfig currentjobconfig);
 
-    CurrentJobConfig selectByPrimaryKey(Long id);
+	int insertSelective(CurrentJobConfig currentjobconfig);
 
-    int updateByPrimaryKeySelective(CurrentJobConfig currentjobconfig);
+	CurrentJobConfig selectByPrimaryKey(Long id);
 
-    int updateByPrimaryKey(CurrentJobConfig currentjobconfig);
+	int updateByPrimaryKeySelective(CurrentJobConfig currentjobconfig);
 
-    int selectCount(CurrentJobConfig currentjobconfig);
-    
-    List<CurrentJobConfig> findConfigsByNamespace(@Param("namespace")String namespace);
-    
-    CurrentJobConfig findConfigByNamespaceAndJobName(@Param("namespace")String namespace, @Param("jobName")String jobName);
+	int updateByPrimaryKey(CurrentJobConfig currentjobconfig);
 
-    List<CurrentJobConfig> selectPage(@Param("currentJobConfig") CurrentJobConfig currentjobconfig, @Param("pageable") Pageable pageable);
-    
-    int deleteAll(int limitNum);
-    
+	int selectCount(CurrentJobConfig currentjobconfig);
+
+	List<CurrentJobConfig> findConfigsByNamespace(@Param("namespace") String namespace);
+
+	CurrentJobConfig findConfigByNamespaceAndJobName(@Param("namespace") String namespace,
+			@Param("jobName") String jobName);
+
+	List<CurrentJobConfig> selectPage(@Param("currentJobConfig") CurrentJobConfig currentjobconfig,
+			@Param("pageable") Pageable pageable);
+
+	int deleteAll(int limitNum);
+
 }

@@ -13,7 +13,7 @@ public interface SystemConfigService {
 	boolean hasGotSystemConfigData() throws SaturnJobConsoleException;
 
 	String getValue(String property);
-	
+
 	String getValueDirectly(String property);
 
 	Integer getIntegerValue(String property, int defaultValue);

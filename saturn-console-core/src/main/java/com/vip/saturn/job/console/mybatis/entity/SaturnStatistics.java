@@ -2,23 +2,23 @@ package com.vip.saturn.job.console.mybatis.entity;
 
 import java.io.Serializable;
 
-
 public class SaturnStatistics implements Serializable {
-    
+
 	private static final long serialVersionUID = 1l;
-	
+
 	private Integer id;
 	private String name;
 	private String zklist;
 	private String result;
-	
-	public SaturnStatistics(){}
-		
+
+	public SaturnStatistics() {
+	}
+
 	public SaturnStatistics(String name, String zklist) {
 		this.name = name;
 		this.zklist = zklist;
 	}
-	
+
 	public SaturnStatistics(String name, String zklist, String result) {
 		this.name = name;
 		this.zklist = zklist;
@@ -59,24 +59,7 @@ public class SaturnStatistics implements Serializable {
 
 	@Override
 	public String toString() {
-		return "SaturnStatistics [id=" + id + ", name=" + name + ", zklist="
-				+ zklist + ", result=" + result + "]";
+		return "SaturnStatistics [id=" + id + ", name=" + name + ", zklist=" + zklist + ", result=" + result + "]";
 	}
-	
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

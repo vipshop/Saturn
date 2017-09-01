@@ -10,39 +10,41 @@ import java.io.Serializable;
  *
  */
 public class ExecutorStatistics implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	private final String executorName;
-	
+
 	private final String domain;
-	
+
 	private int loadLevel;
-	
+
 	private String nns;
-	
+
 	private String ip;
-	
+
 	private boolean runInDocker = false;
-	
+
 	private int processCountOfTheDay = 0;
-	
+
 	private int failureCountOfTheDay = 0;
-	
+
 	/** e.g. job1:1,3;job2:0,4,6;job3:0 */
 	private String jobAndShardings;
-	
+
 	private float failureRateOfTheDay;
-	
-	public ExecutorStatistics(String executorName, String domain){
+
+	public ExecutorStatistics(String executorName, String domain) {
 		this.executorName = executorName;
 		this.domain = domain;
 	}
-	
+
 	public float getFailureRateOfTheDay() {
-		if (processCountOfTheDay == 0) { return 0;}
+		if (processCountOfTheDay == 0) {
+			return 0;
+		}
 		float rate = (float) failureCountOfTheDay / processCountOfTheDay;
-		return (float)(Math.floor(rate*10000)/10000.0);
+		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public int getLoadLevel() {
@@ -115,13 +117,10 @@ public class ExecutorStatistics implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ExecutorStatistics [executorName=" + executorName + ", domain="
-				+ domain + ", loadLevel=" + loadLevel + ", nns=" + nns
-				+ ", ip=" + ip + ", runInDocker=" + runInDocker
-				+ ", processCountOfTheDay=" + processCountOfTheDay
-				+ ", failureCountOfTheDay=" + failureCountOfTheDay
-				+ ", jobAndShardings=" + jobAndShardings
-				+ ", failureRateOfTheDay=" + failureRateOfTheDay + "]";
+		return "ExecutorStatistics [executorName=" + executorName + ", domain=" + domain + ", loadLevel=" + loadLevel
+				+ ", nns=" + nns + ", ip=" + ip + ", runInDocker=" + runInDocker + ", processCountOfTheDay="
+				+ processCountOfTheDay + ", failureCountOfTheDay=" + failureCountOfTheDay + ", jobAndShardings="
+				+ jobAndShardings + ", failureRateOfTheDay=" + failureRateOfTheDay + "]";
 	}
-	
+
 }

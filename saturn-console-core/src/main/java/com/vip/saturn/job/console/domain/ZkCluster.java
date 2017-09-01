@@ -17,23 +17,23 @@ import java.util.ArrayList;
 public class ZkCluster implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private String zkClusterKey;
-	
+
 	private String zkAlias;
-	
+
 	private String zkAddr;
 
 	private String digest;
-	
+
 	private boolean offline = false;
-	
+
 	@JsonIgnore
-	private transient  CuratorFramework curatorFramework;
+	private transient CuratorFramework curatorFramework;
 
 	@JsonIgnore
 	private transient AbstractConnectionListener connectionListener;
-	
+
 	private ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
 
 	public ZkCluster() {
@@ -105,14 +105,19 @@ public class ZkCluster implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ZkCluster)) return false;
+		if (this == o)
+			return true;
+		if (!(o instanceof ZkCluster))
+			return false;
 
 		ZkCluster zkCluster = (ZkCluster) o;
 
-		if (zkClusterKey != null ? !zkClusterKey.equals(zkCluster.zkClusterKey) : zkCluster.zkClusterKey != null) return false;
-		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null) return false;
-		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) return false;
+		if (zkClusterKey != null ? !zkClusterKey.equals(zkCluster.zkClusterKey) : zkCluster.zkClusterKey != null)
+			return false;
+		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null)
+			return false;
+		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null)
+			return false;
 		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
 
 	}

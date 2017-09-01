@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -20,37 +17,36 @@ package com.vip.saturn.job.console.domain;
 import java.io.Serializable;
 
 public final class ExecutionInfo implements Serializable, Comparable<ExecutionInfo> {
-    
+
 	private static final long serialVersionUID = 8587397581949456718L;
-    
-    private String jobName;
+
+	private String jobName;
 
 	private String timeZone;
 
-    private int item;
-    
-    private ExecutionStatus status;
-    
-    private String jobMsg;
-    
-    private String failoverExecutor;
-    
-    private String lastBeginTime;
-    
-    private String nextFireTime;
-    
-    private String lastCompleteTime;
-    /**
-     * 作业运行时间，与zk lastCompleteTime比较
-     * 需保证zk与console时间同步
-     */
-    private long timeConsumed;
-    
-    /** 运行作业服务器*/
-    private String runningIp;
-    
-    /** 作业分片运行日志 */
-    private String logMsg;
+	private int item;
+
+	private ExecutionStatus status;
+
+	private String jobMsg;
+
+	private String failoverExecutor;
+
+	private String lastBeginTime;
+
+	private String nextFireTime;
+
+	private String lastCompleteTime;
+	/**
+	 * 作业运行时间，与zk lastCompleteTime比较 需保证zk与console时间同步
+	 */
+	private long timeConsumed;
+
+	/** 运行作业服务器 */
+	private String runningIp;
+
+	/** 作业分片运行日志 */
+	private String logMsg;
 
 	public String getTimeZone() {
 		return timeZone;
@@ -148,13 +144,12 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 		this.logMsg = logMsg;
 	}
 
-    @Override
-    public int compareTo(final ExecutionInfo o) {
-        return getItem() - o.getItem();
-    }
-    
-    
-    @Override
+	@Override
+	public int compareTo(final ExecutionInfo o) {
+		return getItem() - o.getItem();
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -182,20 +177,15 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 		return true;
 	}
 
-
-
 	public enum ExecutionStatus {
-        RUNNING, 
-        COMPLETED, 
-        //执行失败
-        FAILED,
-        //执行超时
-        TIMEOUT,
-        PENDING,
-        BLANK;
-        
-		public static ExecutionStatus getExecutionStatus(final boolean running, final boolean completed,
-				boolean failed, boolean timeout, boolean isEnabledReport) {
+		RUNNING, COMPLETED,
+		// 执行失败
+		FAILED,
+		// 执行超时
+		TIMEOUT, PENDING, BLANK;
+
+		public static ExecutionStatus getExecutionStatus(final boolean running, final boolean completed, boolean failed,
+				boolean timeout, boolean isEnabledReport) {
 			if (!isEnabledReport) {
 				return ExecutionStatus.BLANK;
 			}
@@ -205,13 +195,13 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 			if (completed) {
 				if (failed) {
 					return ExecutionStatus.FAILED;
-				}else if(timeout){
+				} else if (timeout) {
 					return ExecutionStatus.TIMEOUT;
-				}else {
+				} else {
 					return ExecutionStatus.COMPLETED;
 				}
 			}
 			return ExecutionStatus.PENDING;
 		}
-    }
+	}
 }

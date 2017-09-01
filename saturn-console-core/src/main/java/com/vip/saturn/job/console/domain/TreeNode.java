@@ -13,10 +13,10 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author chembo.huang
  *
  */
-public class TreeNode{
+public class TreeNode {
 
 	private String title;
-	
+
 	@JsonInclude(Include.NON_EMPTY)
 	private String domain;
 
@@ -25,16 +25,15 @@ public class TreeNode{
 
 	@JsonInclude(Include.NON_EMPTY)
 	private String icon;
-	
+
 	@JsonInclude(Include.NON_EMPTY)
 	private boolean lazy;
-	
+
 	@JsonInclude(Include.NON_EMPTY)
 	private String extraClasses;
-	
-	
+
 	private boolean folder = true;
-	
+
 	private int bid;
 
 	@JsonInclude(Include.NON_EMPTY)
@@ -124,7 +123,7 @@ public class TreeNode{
 				+ getIcon() + ", lazy=" + isLazy() + ", extraClasses=" + getExtraClasses() + ", folder=" + isFolder()
 				+ ", bid=" + getBid() + ", children=" + getChildren() + ")";
 	}
-	
+
 	public TreeNode deepCopy() {
 		TreeNode result = new TreeNode();
 		result.setBid(bid);
@@ -137,7 +136,7 @@ public class TreeNode{
 		result.setTitle(title);
 		List<TreeNode> childs = new ArrayList<TreeNode>();
 		TreeNode child = null;
-		for(TreeNode thisChild:this.getChildren()) {
+		for (TreeNode thisChild : this.getChildren()) {
 			child = thisChild.deepCopy();
 			childs.add(child);
 		}

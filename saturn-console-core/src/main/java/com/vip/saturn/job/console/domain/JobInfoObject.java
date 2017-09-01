@@ -1,20 +1,16 @@
 /**
- * vips Inc.
- * Copyright (c) 2016 All Rights Reserved.
- */   
-package com.vip.saturn.job.console.domain;   
+ * vips Inc. Copyright (c) 2016 All Rights Reserved.
+ */
+package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * 项目名称：saturn-job-console 
- * 创建时间：2016年7月26日 下午7:02:29   
- * @author yangjuanying  
- * @version 1.0   
- * @since JDK 1.7.0_05
- * 文件名称：JobInfoObject.java
- * 类说明：  
+ * 项目名称：saturn-job-console 创建时间：2016年7月26日 下午7:02:29
+ * @author yangjuanying
+ * @version 1.0
+ * @since JDK 1.7.0_05 文件名称：JobInfoObject.java 类说明：
  */
 public class JobInfoObject implements Serializable {
 
@@ -24,14 +20,14 @@ public class JobInfoObject implements Serializable {
 	 * 判断是新域还是旧域（新域是有version节点的，即1.1.0及其之后的版本）
 	 */
 	int isNewSaturn;
-	
+
 	/**
 	 * 当前域的所有Executor版本和指定的版本进行比较
 	 */
 	int compareSpecifiedVersion;
-	
+
 	Collection<JobBriefInfo> jobsBriefInfos;
-	
+
 	public JobInfoObject() {
 	}
 
@@ -66,4 +62,3 @@ public class JobInfoObject implements Serializable {
 	}
 
 }
-  

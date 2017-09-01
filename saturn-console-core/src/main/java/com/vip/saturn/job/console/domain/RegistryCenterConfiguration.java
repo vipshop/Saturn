@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -26,54 +23,55 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public class RegistryCenterConfiguration implements Serializable {
-    
-    private static final long serialVersionUID = -5996257770767863699L;
-    
-    public static final String SLASH = "/";
-    
-    private String name;
-    
-    private String zkAddressList;
-    
-    private String namespace;
-    
-    private String zkAlias;
-    
-    private String zkClusterKey;
-    
-    private String digest;
-    
-    private String nameAndNamespace;
-    
-    /** 系统负责人 **/
-    private String sysAdmin;
-    
-    /** 开发负责人 **/
-    private String techAdmin;
-    
-    /** 系统重要程度 **/
-    private String degree;
+
+	private static final long serialVersionUID = -5996257770767863699L;
+
+	public static final String SLASH = "/";
+
+	private String name;
+
+	private String zkAddressList;
+
+	private String namespace;
+
+	private String zkAlias;
+
+	private String zkClusterKey;
+
+	private String digest;
+
+	private String nameAndNamespace;
+
+	/** 系统负责人 **/
+	private String sysAdmin;
+
+	/** 开发负责人 **/
+	private String techAdmin;
+
+	/** 系统重要程度 **/
+	private String degree;
 
 	private String version;
-	
+
 	private String msg;
-    
-    public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
-        this.name = name;
-        this.namespace = namespace;
+
+	public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
+		this.name = name;
+		this.namespace = namespace;
 		initNameAndNamespace();
-        this.zkAddressList = zkAddressList;
-    }
+		this.zkAddressList = zkAddressList;
+	}
 
 	/**
 	 * before invoke this method, be sure that the name and namespace are set, and the namespace cannot be null
 	 */
 	public void initNameAndNamespace() {
 		// namespace cannot be null, i am sure. But the name could be.
-		if(name != null) {
+		if (name != null) {
 			this.nameAndNamespace = name + SLASH + namespace;
 		} else {
-			this.nameAndNamespace = SLASH + namespace;;
+			this.nameAndNamespace = SLASH + namespace;
+			;
 		}
 	}
 
@@ -95,7 +93,7 @@ public class RegistryCenterConfiguration implements Serializable {
 
 	public RegistryCenterConfiguration() {
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}
@@ -170,8 +168,6 @@ public class RegistryCenterConfiguration implements Serializable {
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	
-	
 
 	public String getMsg() {
 		return msg;
@@ -233,12 +229,10 @@ public class RegistryCenterConfiguration implements Serializable {
 
 	@Override
 	public String toString() {
-		return "RegistryCenterConfiguration [name=" + name + ", zkAddressList="
-				+ zkAddressList + ", namespace=" + namespace + ", zkAlias="
-				+ zkAlias + ", zkClusterKey=" + zkClusterKey + ", digest="
-				+ digest + ", nameAndNamespace=" + nameAndNamespace
-				+ ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
+		return "RegistryCenterConfiguration [name=" + name + ", zkAddressList=" + zkAddressList + ", namespace="
+				+ namespace + ", zkAlias=" + zkAlias + ", zkClusterKey=" + zkClusterKey + ", digest=" + digest
+				+ ", nameAndNamespace=" + nameAndNamespace + ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
 				+ ", degree=" + degree + ", version=" + version + "]";
 	}
-	
+
 }

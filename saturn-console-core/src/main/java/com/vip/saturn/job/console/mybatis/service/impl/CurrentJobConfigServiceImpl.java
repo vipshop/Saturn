@@ -23,20 +23,20 @@ import ma.glasnost.orika.MapperFactory;
 
 @Service
 public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
-    @Resource
-    private HistoryJobConfigService historyJobConfigService;
-    
+	@Resource
+	private HistoryJobConfigService historyJobConfigService;
+
 	@Autowired
 	private CurrentJobConfigRepository currentJobConfigRepo;
-	
-	private MapperFacade mapper;
-	 
-    @Autowired
-    public void setMapperFactory(MapperFactory mapperFactory) {
-        this.mapper = mapperFactory.getMapperFacade();
-    }
 
-	@Transactional (readOnly = false)
+	private MapperFacade mapper;
+
+	@Autowired
+	public void setMapperFactory(MapperFactory mapperFactory) {
+		this.mapper = mapperFactory.getMapperFacade();
+	}
+
+	@Transactional(readOnly = false)
 	@Override
 	public int create(CurrentJobConfig currentJobConfig) throws Exception {
 		return currentJobConfigRepo.insert(currentJobConfig);
@@ -88,10 +88,11 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	public CurrentJobConfig findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
 	}
-	
+
 	@Transactional
 	@Override
-	public void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings, final String userName) throws Exception {
+	public void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings,
+			final String userName) throws Exception {
 		HistoryJobConfig history = mapper.map(jobconfig, HistoryJobConfig.class);
 		mapper.map(jobSettings, jobconfig);
 		jobconfig.setLastUpdateBy(userName);
@@ -100,12 +101,13 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		history.setId(null);
 		historyJobConfigService.create(history);
 	}
-	
+
 	@Transactional
 	@Override
-	public void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig, final String userName) throws Exception {
+	public void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig,
+			final String userName) throws Exception {
 		HistoryJobConfig history = mapper.map(oldJobconfig, HistoryJobConfig.class);
-		if(userName!=null) {
+		if (userName != null) {
 			newJobconfig.setLastUpdateBy(userName);
 		}
 		newJobconfig.setLastUpdateTime(new Date());
@@ -124,5 +126,5 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	public int deleteAll(int limitNum) {
 		return currentJobConfigRepo.deleteAll(limitNum);
 	}
-	
+
 }

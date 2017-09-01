@@ -7,33 +7,33 @@ import java.util.List;
  */
 public class JobMigrateInfo {
 
-    private String jobName;
+	private String jobName;
 
-    private List<String> tasksOld;
+	private List<String> tasksOld;
 
-    private List<String> tasksMigrateEnabled;
+	private List<String> tasksMigrateEnabled;
 
-    public String getJobName() {
-        return jobName;
-    }
+	public String getJobName() {
+		return jobName;
+	}
 
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
-    }
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
 
-    public List<String> getTasksOld() {
-        return tasksOld;
-    }
+	public List<String> getTasksOld() {
+		return tasksOld;
+	}
 
-    public void setTasksOld(List<String> tasksOld) {
-        this.tasksOld = tasksOld;
-    }
+	public void setTasksOld(List<String> tasksOld) {
+		this.tasksOld = tasksOld;
+	}
 
-    public List<String> getTasksMigrateEnabled() {
-        return tasksMigrateEnabled;
-    }
+	public List<String> getTasksMigrateEnabled() {
+		return tasksMigrateEnabled;
+	}
 
-    public void setTasksMigrateEnabled(List<String> tasksMigrateEnabled) {
-        this.tasksMigrateEnabled = tasksMigrateEnabled;
-    }
+	public void setTasksMigrateEnabled(List<String> tasksMigrateEnabled) {
+		this.tasksMigrateEnabled = tasksMigrateEnabled;
+	}
 }

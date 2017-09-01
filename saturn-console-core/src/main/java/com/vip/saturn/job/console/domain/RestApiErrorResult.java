@@ -5,20 +5,20 @@ package com.vip.saturn.job.console.domain;
  */
 public class RestApiErrorResult {
 
-    private String message;
+	private String message;
 
-    public RestApiErrorResult() {
-    }
+	public RestApiErrorResult() {
+	}
 
-    public RestApiErrorResult(String message) {
-        this.message = message;
-    }
+	public RestApiErrorResult(String message) {
+		this.message = message;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 }

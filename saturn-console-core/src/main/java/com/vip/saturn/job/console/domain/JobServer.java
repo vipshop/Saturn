@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -30,30 +27,30 @@ public final class JobServer implements Serializable {
 	private static final long serialVersionUID = -7862835299298383387L;
 
 	private String jobName;
-    
-    private String ip;
-    
-    private String executorName;
-    
-    private ServerStatus status;
-    
-    private int processSuccessCount;
-    
-    private int processFailureCount;
-    
-    private String sharding;
-    
-    private boolean leader;
-    
-    private String version;
 
-    private String jobVersion;
-    
-    private boolean leaderStopped;
-    
-    private JobStatus jobStatus;
-    
-    public String getPercentage() {
+	private String ip;
+
+	private String executorName;
+
+	private ServerStatus status;
+
+	private int processSuccessCount;
+
+	private int processFailureCount;
+
+	private String sharding;
+
+	private boolean leader;
+
+	private String version;
+
+	private String jobVersion;
+
+	private boolean leaderStopped;
+
+	private JobStatus jobStatus;
+
+	public String getPercentage() {
 		int count = processSuccessCount;
 		int total = processSuccessCount + processFailureCount;
 		if (total == 0) {
@@ -154,7 +151,6 @@ public final class JobServer implements Serializable {
 	public void setJobStatus(JobStatus jobStatus) {
 		this.jobStatus = jobStatus;
 	}
-
 
 	public String getJobVersion() {
 		return jobVersion;

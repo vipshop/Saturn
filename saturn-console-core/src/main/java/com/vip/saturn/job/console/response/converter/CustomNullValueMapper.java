@@ -26,38 +26,41 @@ import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase;
  */
 
 public class CustomNullValueMapper extends ObjectMapper {
-	
+
 	private static final long serialVersionUID = 1L;
 
-	class CustomStringSerializer extends NonTypedScalarSerializerBase<String>
-	{
-	    public CustomStringSerializer() { super(String.class); }
+	class CustomStringSerializer extends NonTypedScalarSerializerBase<String> {
+		public CustomStringSerializer() {
+			super(String.class);
+		}
 
-	    @Override
-	    public boolean isEmpty(String value) {
-	        return (value == null) || (value.length() == 0);
-	    }
-	    
-	    @Override
-	    public void serialize(String value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-	        jgen.writeString(value == null?"":("null".equals(value)?"":value));
-	    }
+		@Override
+		public boolean isEmpty(String value) {
+			return (value == null) || (value.length() == 0);
+		}
 
-	    @Override
-	    public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
-	        return createSchemaNode("string", true);
-	    }
-	    
-	    @Override
-	    public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException {
-	        if (visitor != null) visitor.expectStringFormat(typeHint);
-	    }
+		@Override
+		public void serialize(String value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+			jgen.writeString(value == null ? "" : ("null".equals(value) ? "" : value));
+		}
+
+		@Override
+		public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
+			return createSchemaNode("string", true);
+		}
+
+		@Override
+		public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint)
+				throws JsonMappingException {
+			if (visitor != null)
+				visitor.expectStringFormat(typeHint);
+		}
 	}
-	
+
 	public CustomNullValueMapper() {
 		DefaultSerializerProvider sp = new DefaultSerializerProvider.Impl();
 		sp.setNullValueSerializer(new JsonSerializer<Object>() {
-			
+
 			@Override
 			public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider)
 					throws IOException, JsonProcessingException {

@@ -8,8 +8,5 @@ package com.vip.saturn.job.console.domain;
  *
  */
 public enum JobStatus {
-    READY,
-    STOPPED,
-    RUNNING,
-    STOPPING,
+	READY, STOPPED, RUNNING, STOPPING,
 }

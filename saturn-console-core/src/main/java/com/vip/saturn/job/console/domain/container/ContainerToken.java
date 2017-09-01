@@ -7,13 +7,13 @@ import java.util.Map;
  */
 public class ContainerToken {
 
-    private Map<String, String> keyValue;
+	private Map<String, String> keyValue;
 
-    public Map<String, String> getKeyValue() {
-        return keyValue;
-    }
+	public Map<String, String> getKeyValue() {
+		return keyValue;
+	}
 
-    public void setKeyValue(Map<String, String> keyValue) {
-        this.keyValue = keyValue;
-    }
+	public void setKeyValue(Map<String, String> keyValue) {
+		this.keyValue = keyValue;
+	}
 }

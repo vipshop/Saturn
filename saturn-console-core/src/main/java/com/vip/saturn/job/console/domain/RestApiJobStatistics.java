@@ -5,53 +5,53 @@ package com.vip.saturn.job.console.domain;
  */
 public class RestApiJobStatistics {
 
-    private Long lastBeginTime;
+	private Long lastBeginTime;
 
-    private Long lastCompleteTime;
+	private Long lastCompleteTime;
 
-    private Long nextFireTime;
+	private Long nextFireTime;
 
-    private Long processCount;
+	private Long processCount;
 
-    private Long processErrorCount;
+	private Long processErrorCount;
 
-    public Long getLastBeginTime() {
-        return lastBeginTime;
-    }
+	public Long getLastBeginTime() {
+		return lastBeginTime;
+	}
 
-    public void setLastBeginTime(Long lastBeginTime) {
-        this.lastBeginTime = lastBeginTime;
-    }
+	public void setLastBeginTime(Long lastBeginTime) {
+		this.lastBeginTime = lastBeginTime;
+	}
 
-    public Long getLastCompleteTime() {
-        return lastCompleteTime;
-    }
+	public Long getLastCompleteTime() {
+		return lastCompleteTime;
+	}
 
-    public void setLastCompleteTime(Long lastCompleteTime) {
-        this.lastCompleteTime = lastCompleteTime;
-    }
+	public void setLastCompleteTime(Long lastCompleteTime) {
+		this.lastCompleteTime = lastCompleteTime;
+	}
 
-    public Long getNextFireTime() {
-        return nextFireTime;
-    }
+	public Long getNextFireTime() {
+		return nextFireTime;
+	}
 
-    public void setNextFireTime(Long nextFireTime) {
-        this.nextFireTime = nextFireTime;
-    }
+	public void setNextFireTime(Long nextFireTime) {
+		this.nextFireTime = nextFireTime;
+	}
 
-    public Long getProcessCount() {
-        return processCount;
-    }
+	public Long getProcessCount() {
+		return processCount;
+	}
 
-    public void setProcessCount(Long processCount) {
-        this.processCount = processCount;
-    }
+	public void setProcessCount(Long processCount) {
+		this.processCount = processCount;
+	}
 
-    public Long getProcessErrorCount() {
-        return processErrorCount;
-    }
+	public Long getProcessErrorCount() {
+		return processErrorCount;
+	}
 
-    public void setProcessErrorCount(Long processErrorCount) {
-        this.processErrorCount = processErrorCount;
-    }
+	public void setProcessErrorCount(Long processErrorCount) {
+		this.processErrorCount = processErrorCount;
+	}
 }

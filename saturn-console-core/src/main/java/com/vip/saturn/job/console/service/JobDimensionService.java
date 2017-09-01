@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -24,93 +21,91 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import java.util.Collection;
 import java.util.List;
 
-//TODO: merge JobOperationService with JobDimensionService
+// TODO: merge JobOperationService with JobDimensionService
 public interface JobDimensionService {
-	
+
 	JobStatus getJobStatus(final String jobName);
 
-    JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
-	
-    Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace);
-    
-    String geJobRunningInfo(final String jobName);
-    
-    String getJobType(final String jobName);
+	JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
-    String getJobType(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
-    
-    JobSettings getJobSettings(String jobName, RegistryCenterConfiguration configInSession);
+	Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace);
 
-    JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException;
-    
-    String updateJobSettings(JobSettings jobSettings, RegistryCenterConfiguration configInSession);
-    
-    Collection<JobServer> getServers(String jobName);
+	String geJobRunningInfo(final String jobName);
 
-    Collection<JobServer> getServers(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
-    
-    void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers, RegistryCenterConfiguration registryCenterConfig);
-    
-    Collection<ExecutionInfo> getExecutionInfo(String jobName);
-    
-    boolean isJobEnabled(String jobName);
+	String getJobType(final String jobName);
 
-    boolean isJobEnabled(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
-    
-    
-    /**
-     * 获取作业执行日志信息
-     * @param jobName 作业名称
-     * @param item 分片号
-     * @return 日志信息
-     */
-    ExecutionInfo getExecutionJobLog(String jobName, int item);
-    
-    /**
-	 * 检查否是新版本的executor(新的域)
-	 * 旧域：该域下必须至少有一个executor并且所有的executor都没有版本号version节点
+	String getJobType(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
+	JobSettings getJobSettings(String jobName, RegistryCenterConfiguration configInSession);
+
+	JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException;
+
+	String updateJobSettings(JobSettings jobSettings, RegistryCenterConfiguration configInSession);
+
+	Collection<JobServer> getServers(String jobName);
+
+	Collection<JobServer> getServers(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
+	void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers,
+			RegistryCenterConfiguration registryCenterConfig);
+
+	Collection<ExecutionInfo> getExecutionInfo(String jobName);
+
+	boolean isJobEnabled(String jobName);
+
+	boolean isJobEnabled(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+
+	/**
+	 * 获取作业执行日志信息
+	 * @param jobName 作业名称
+	 * @param item 分片号
+	 * @return 日志信息
+	 */
+	ExecutionInfo getExecutionJobLog(String jobName, int item);
+
+	/**
+	 * 检查否是新版本的executor(新的域) 旧域：该域下必须至少有一个executor并且所有的executor都没有版本号version节点
 	 * 新域：该域下必须至少有一个executor并且所有的executor都有版本号version节点(新版本的executor才在启动时添加了这个节点)
 	 * 未知域：该域下没有任何executor或executor中既有新版的又有旧版的Executor
 	 * 
 	 * @param version executor的版本号
-	 * @return 当version参数为空时：1：新域 0：旧域 -1：未知域(无法判断新旧域)
-	 *         当version参数不为空时，说明要判断是否大于该版本，仅适用于1.1.0及其之后的版本比较：
-	 *         	 2：该域下所有Executor的版本都大于等于指定的版本
-     *        	 3：该域下所有Executor的版本都小于指定的版本
-     *         	-2：Executor的版本存在大于、等于或小于指定的版本
+	 * @return 当version参数为空时：1：新域 0：旧域 -1：未知域(无法判断新旧域) 当version参数不为空时，说明要判断是否大于该版本，仅适用于1.1.0及其之后的版本比较：
+	 * 2：该域下所有Executor的版本都大于等于指定的版本 3：该域下所有Executor的版本都小于指定的版本 -2：Executor的版本存在大于、等于或小于指定的版本
 	 */
-    int isNewSaturn(String version);
+	int isNewSaturn(String version);
 
-    int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+	int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
-    String getAllExecutors(String jobName);
-    
-    String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
-    
-    JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException;
+	String getAllExecutors(String jobName);
 
-    JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
+	String getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
-    void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
-    
-    void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException;
+	JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException;
+
+	JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
+
+	void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
+
+	void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException;
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
 
-    String formatTimeByJobTimeZone(String jobName, Long time);
+	String formatTimeByJobTimeZone(String jobName, Long time);
 
-    Long calculateJobNextTime(String jobName);
+	Long calculateJobNextTime(String jobName);
 
-	Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+	Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
-    List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+	List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
-    List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+	List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException;
 
-    List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException;
+	List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException;
 
-    List<JobConfig> getDependedJobsStatus(String jobName) throws SaturnJobConsoleException;
+	List<JobConfig> getDependedJobsStatus(String jobName) throws SaturnJobConsoleException;
 
-    List<String> getAllJobGroups();
+	List<String> getAllJobGroups();
 
 }

@@ -14,5 +14,5 @@ public interface ZkClusterInfoService {
 	List<ZkClusterInfo> getAllZkClusterInfo();
 
 	ZkClusterInfo getByClusterKey(String clusterKey);
-	
+
 }

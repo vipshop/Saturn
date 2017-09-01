@@ -3,44 +3,45 @@
  */
 package com.vip.saturn.job.console.domain;
 
-
 /**
  * @author chembo.huang
  *
  */
 public class DomainStatistics {
-	
+
 	private static final long serialVersionUID = 1L;
-	
+
 	private int processCountOfAllTime;
-	
+
 	private int errorCountOfAllTime;
-	
+
 	private int processCountOfTheDay;
-	
+
 	private int errorCountOfTheDay;
-	
+
 	private final String domainName;
-	
+
 	private int shardingCount;
-	
+
 	private final String zkList;
-	
+
 	/** name & namespace */
 	private final String nns;
 
 	private float failureRateOfAllTime;
-	
+
 	public DomainStatistics(String domainName, String zkList, String nns) {
 		this.domainName = domainName;
 		this.zkList = zkList;
 		this.nns = nns;
 	}
-	
+
 	public float getFailureRateOfAllTime() {
-		if (processCountOfAllTime == 0) { return 0;}
+		if (processCountOfAllTime == 0) {
+			return 0;
+		}
 		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
-		return (float)(Math.floor(rate*10000)/10000.0);
+		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public int getProcessCountOfAllTime() {
@@ -101,14 +102,10 @@ public class DomainStatistics {
 
 	@Override
 	public String toString() {
-		return "DomainStatistics [processCountOfAllTime="
-				+ processCountOfAllTime + ", errorCountOfAllTime="
-				+ errorCountOfAllTime + ", processCountOfTheDay="
-				+ processCountOfTheDay + ", errorCountOfTheDay="
-				+ errorCountOfTheDay + ", domainName=" + domainName
-				+ ", shardingCount=" + shardingCount + ", zkList=" + zkList
-				+ ", nns=" + nns + ", failureRateOfAllTime="
-				+ failureRateOfAllTime + "]";
+		return "DomainStatistics [processCountOfAllTime=" + processCountOfAllTime + ", errorCountOfAllTime="
+				+ errorCountOfAllTime + ", processCountOfTheDay=" + processCountOfTheDay + ", errorCountOfTheDay="
+				+ errorCountOfTheDay + ", domainName=" + domainName + ", shardingCount=" + shardingCount + ", zkList="
+				+ zkList + ", nns=" + nns + ", failureRateOfAllTime=" + failureRateOfAllTime + "]";
 	}
-	
+
 }

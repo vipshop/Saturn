@@ -9,25 +9,25 @@ import org.springframework.stereotype.Repository;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 
 @Repository
-public interface SaturnStatisticsRepository{
+public interface SaturnStatisticsRepository {
 
-  	int deleteByPrimaryKey(Integer id);
-	
+	int deleteByPrimaryKey(Integer id);
+
 	SaturnStatistics selectByPrimaryKey(Integer id);
-	
-    int updateByPrimaryKey(SaturnStatistics saturnStatistics);
 
-    int updateByPrimaryKeySelective(SaturnStatistics saturnStatistics);
+	int updateByPrimaryKey(SaturnStatistics saturnStatistics);
 
-  	int insert(SaturnStatistics saturnStatistics);
-  	
+	int updateByPrimaryKeySelective(SaturnStatistics saturnStatistics);
+
+	int insert(SaturnStatistics saturnStatistics);
+
 	int insertSelective(SaturnStatistics saturnStatistics);
 
+	int selectCount(SaturnStatistics saturnStatistics);
 
-    int selectCount(SaturnStatistics saturnStatistics);
-    
-    SaturnStatistics findStatisticsByNameAndZkList( @Param("name") String name, @Param("zklist") String zklist );
+	SaturnStatistics findStatisticsByNameAndZkList(@Param("name") String name, @Param("zklist") String zklist);
 
-    List<SaturnStatistics> selectPage(@Param("saturnStatistics") SaturnStatistics saturnStatistics, @Param("pageable") Pageable pageable);
-	
+	List<SaturnStatistics> selectPage(@Param("saturnStatistics") SaturnStatistics saturnStatistics,
+			@Param("pageable") Pageable pageable);
+
 }

@@ -16,7 +16,7 @@ public interface NamespaceInfoRepository {
 	NamespaceInfo selectByNamespace(String namespace);
 
 	List<NamespaceInfo> selectAll();
-	
+
 	List<NamespaceInfo> selectAllByNamespaces(List<String> nsList);
 
 	Integer batchDelete(int limitNum);

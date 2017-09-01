@@ -1,16 +1,15 @@
 package com.vip.saturn.job.console.domain;
 
-
 /**
  * @author xiaopeng.he
  */
 public class AbnormalShardingState {
 
 	private final long alertTime;
-	
+
 	private final int zkNodeCVersion;
-	
-	public AbnormalShardingState(long alertTime, int zkNodeCVersion){
+
+	public AbnormalShardingState(long alertTime, int zkNodeCVersion) {
 		this.alertTime = alertTime;
 		this.zkNodeCVersion = zkNodeCVersion;
 	}
@@ -25,7 +24,6 @@ public class AbnormalShardingState {
 
 	@Override
 	public String toString() {
-		return "AbnormalShardingState [alertTime=" + alertTime
-				+ ", zkNodeCVersion=" + zkNodeCVersion + "]";
+		return "AbnormalShardingState [alertTime=" + alertTime + ", zkNodeCVersion=" + zkNodeCVersion + "]";
 	}
 }

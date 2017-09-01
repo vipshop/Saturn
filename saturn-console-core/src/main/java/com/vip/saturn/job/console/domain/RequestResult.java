@@ -8,9 +8,9 @@ package com.vip.saturn.job.console.domain;
 public class RequestResult {
 
 	private boolean success;
-	
+
 	private String message;
-	
+
 	private Object obj;
 
 	public void setSuccess(boolean success) {

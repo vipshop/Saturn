@@ -8,6 +8,6 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
  */
 public interface ReuseCallBack<T> {
 
-    T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+	T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
 }

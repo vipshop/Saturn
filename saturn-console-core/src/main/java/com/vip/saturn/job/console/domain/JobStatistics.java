@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author chembo.huang
  *
  */
-public class JobStatistics implements Serializable   {
+public class JobStatistics implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -25,17 +25,18 @@ public class JobStatistics implements Serializable   {
 	/** e.g. exe01:1,3;exe02:0,2 */
 	private String executorsAndShards;
 	private float failureRateOfAllTime;
-	
-	public JobStatistics(String jobName, String domainName, String nns){
+
+	public JobStatistics(String jobName, String domainName, String nns) {
 		this.jobName = jobName;
 		this.domainName = domainName;
 		this.nns = nns;
 	}
-	
+
 	public float getFailureRateOfAllTime() {
-		if(processCountOfAllTime == 0) return 0;
+		if (processCountOfAllTime == 0)
+			return 0;
 		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
-		return (float)(Math.floor(rate*10000)/10000.0);
+		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public int getProcessCountOfAllTime() {
@@ -112,14 +113,10 @@ public class JobStatistics implements Serializable   {
 
 	@Override
 	public String toString() {
-		return "JobStatistics [processCountOfAllTime=" + processCountOfAllTime
-				+ ", errorCountOfAllTime=" + errorCountOfAllTime
-				+ ", processCountOfTheDay=" + processCountOfTheDay
-				+ ", failureCountOfTheDay=" + failureCountOfTheDay
-				+ ", totalLoadLevel=" + totalLoadLevel + ", jobDegree="
-				+ jobDegree + ", jobName=" + jobName + ", domainName="
-				+ domainName + ", nns=" + nns + ", executorsAndShards="
-				+ executorsAndShards + ", failureRateOfAllTime="
-				+ failureRateOfAllTime + "]";
+		return "JobStatistics [processCountOfAllTime=" + processCountOfAllTime + ", errorCountOfAllTime="
+				+ errorCountOfAllTime + ", processCountOfTheDay=" + processCountOfTheDay + ", failureCountOfTheDay="
+				+ failureCountOfTheDay + ", totalLoadLevel=" + totalLoadLevel + ", jobDegree=" + jobDegree
+				+ ", jobName=" + jobName + ", domainName=" + domainName + ", nns=" + nns + ", executorsAndShards="
+				+ executorsAndShards + ", failureRateOfAllTime=" + failureRateOfAllTime + "]";
 	}
 }

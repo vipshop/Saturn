@@ -5,21 +5,21 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-/** 
- * @author yangjuanying  
+/**
+ * @author yangjuanying
  */
 public class SaturnJunkData implements Serializable {
-	
+
 	private static final long serialVersionUID = -3244143761577185890L;
 
 	private String path;
-	
+
 	private String namespace;
-	
+
 	private String description;
-	
+
 	private String type;
-	
+
 	private String zkAddr;
 
 	public String getPath() {
@@ -63,8 +63,7 @@ public class SaturnJunkData implements Serializable {
 	}
 
 	public String toString() {
-        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-    }
-	
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
+
 }
-  

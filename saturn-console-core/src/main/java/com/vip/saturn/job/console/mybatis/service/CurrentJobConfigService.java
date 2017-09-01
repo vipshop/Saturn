@@ -8,30 +8,32 @@ import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 
 public interface CurrentJobConfigService {
-	
-	int create(CurrentJobConfig currentJobConfigModel ) throws Exception ;
-	
-	int createSelective(CurrentJobConfig currentJobConfigModel ) throws Exception ;
-	
-	int deleteByPrimaryKey( Long id ) throws Exception ;
-	
-	CurrentJobConfig findByPrimaryKey( Long id ) throws Exception ;
-	
-	int selectCount(CurrentJobConfig currentJobConfigModel ) throws Exception ;
-	
-	int updateByPrimaryKey(CurrentJobConfig currentJobConfigModel ) throws Exception ;
-	
-	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel ) throws Exception ;
-	
+
+	int create(CurrentJobConfig currentJobConfigModel) throws Exception;
+
+	int createSelective(CurrentJobConfig currentJobConfigModel) throws Exception;
+
+	int deleteByPrimaryKey(Long id) throws Exception;
+
+	CurrentJobConfig findByPrimaryKey(Long id) throws Exception;
+
+	int selectCount(CurrentJobConfig currentJobConfigModel) throws Exception;
+
+	int updateByPrimaryKey(CurrentJobConfig currentJobConfigModel) throws Exception;
+
+	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel) throws Exception;
+
 	List<CurrentJobConfig> findConfigsByNamespace(String namespace);
-	
+
 	CurrentJobConfig findConfigByNamespaceAndJobName(String namespace, String jobName);
-	
-	List<CurrentJobConfig> selectPage(CurrentJobConfig historyjobconfig, Pageable pageable) throws Exception ;
-	
-	void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings, final String userName) throws Exception;
-	
-	void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig, final String userName) throws Exception;
-	
+
+	List<CurrentJobConfig> selectPage(CurrentJobConfig historyjobconfig, Pageable pageable) throws Exception;
+
+	void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings,
+			final String userName) throws Exception;
+
+	void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig,
+			final String userName) throws Exception;
+
 	int deleteAll(int limitNum);
 }

@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -24,83 +21,83 @@ import java.io.Serializable;
  *
  */
 public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo> {
-    
-    private static final long serialVersionUID = 8405751873086755148L;
-    
-    private String jobName;
-    
-    private JobStatus status;
-    
-    private String description;
+
+	private static final long serialVersionUID = 8405751873086755148L;
+
+	private String jobName;
+
+	private JobStatus status;
+
+	private String description;
 
 	private String timeZone;
 
-    private String cron;
-    
-    private String jobClass;
+	private String cron;
 
-    private String nextFireTime;// 下次开始时间：所有分片中下次最早的开始时间
-    
-    private String lastBeginTime;// 最近开始时间：所有分片中最近最早的开始时间
-    
-    private String lastCompleteTime;// 最近完成时间：所有分片中最近最晚的完成时间
-    
-    private JobType jobType;
-    
-    private String loadLevel;
-    
-    private String jobDegree;
-    
-    private Boolean enabledReport;// 点分片页签时，控制信息是否上报
-    
-    private String shardingTotalCount;
-    
-    private String preferList;
-    
-    private String shardingList;
-    
-    private Boolean isJobEnabled;
-    
-    private Boolean useDispreferList;
-    
-    private Boolean localMode;
-    
-    private String jobParameter;
-    
-    private String shardingItemParameters;
-    
-    private String queueName;
-    
-    private String channelName;
-    
-    private Integer processCountIntervalSeconds;
+	private String jobClass;
+
+	private String nextFireTime;// 下次开始时间：所有分片中下次最早的开始时间
+
+	private String lastBeginTime;// 最近开始时间：所有分片中最近最早的开始时间
+
+	private String lastCompleteTime;// 最近完成时间：所有分片中最近最晚的完成时间
+
+	private JobType jobType;
+
+	private String loadLevel;
+
+	private String jobDegree;
+
+	private Boolean enabledReport;// 点分片页签时，控制信息是否上报
+
+	private String shardingTotalCount;
+
+	private String preferList;
+
+	private String shardingList;
+
+	private Boolean isJobEnabled;
+
+	private Boolean useDispreferList;
+
+	private Boolean localMode;
+
+	private String jobParameter;
+
+	private String shardingItemParameters;
+
+	private String queueName;
+
+	private String channelName;
+
+	private Integer processCountIntervalSeconds;
 
 	private Integer timeout4AlarmSeconds;
 
-    private Integer timeoutSeconds;
-    
-    private String pausePeriodDate;
-    
-    private String pausePeriodTime;
-    
-    private Boolean showNormalLog;
-    
-    private Boolean useSerial;
-    
-    private Boolean isNewSaturn;// 判断是否是新版本的executor(1.0.11及其以后的新版本支持动态添加JAVA和MSG作业)
-    
-    private String jobRate;
+	private Integer timeoutSeconds;
+
+	private String pausePeriodDate;
+
+	private String pausePeriodTime;
+
+	private Boolean showNormalLog;
+
+	private Boolean useSerial;
+
+	private Boolean isNewSaturn;// 判断是否是新版本的executor(1.0.11及其以后的新版本支持动态添加JAVA和MSG作业)
+
+	private String jobRate;
 
 	private Boolean migrateEnabled;
-	
+
 	private String groups;
-    
-    @Override
-    public int compareTo(final JobBriefInfo o) {
-        return getJobName().compareTo(o.getJobName());
-    }
-    
-    @Override
+
+	@Override
+	public int compareTo(final JobBriefInfo o) {
+		return getJobName().compareTo(o.getJobName());
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -125,23 +122,17 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 		return true;
 	}
 
-
-
 	public enum JobType {
-    	JAVA_JOB,
-    	MSG_JOB,
-    	SHELL_JOB,
-    	VSHELL,
-    	UNKOWN_JOB;
-    	
-    	public static final JobType getJobType(String jobType) {
-    		try {
+		JAVA_JOB, MSG_JOB, SHELL_JOB, VSHELL, UNKOWN_JOB;
+
+		public static final JobType getJobType(String jobType) {
+			try {
 				return valueOf(jobType);
 			} catch (Exception e) {
 				return UNKOWN_JOB;
 			}
-    	}
-    }
+		}
+	}
 
 	public String getJobName() {
 		return jobName;
@@ -230,7 +221,7 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 	public void setLoadLevel(String loadLevel) {
 		this.loadLevel = loadLevel;
 	}
-	
+
 	public String getJobDegree() {
 		return jobDegree;
 	}
@@ -414,5 +405,5 @@ public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo
 	public void setGroups(String groups) {
 		this.groups = groups;
 	}
-	
+
 }

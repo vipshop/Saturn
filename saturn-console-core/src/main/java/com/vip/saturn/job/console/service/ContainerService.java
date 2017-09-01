@@ -14,40 +14,43 @@ import java.util.List;
  */
 public interface ContainerService {
 
-    void checkContainerTokenNotNull(ContainerToken containerToken) throws SaturnJobConsoleException;
+	void checkContainerTokenNotNull(ContainerToken containerToken) throws SaturnJobConsoleException;
 
-    void saveOrUpdateContainerToken(ContainerToken containerToken) throws SaturnJobConsoleException;
+	void saveOrUpdateContainerToken(ContainerToken containerToken) throws SaturnJobConsoleException;
 
-    void saveOrUpdateContainerTokenIfNecessary(ContainerToken containerToken) throws SaturnJobConsoleException;
+	void saveOrUpdateContainerTokenIfNecessary(ContainerToken containerToken) throws SaturnJobConsoleException;
 
-    ContainerToken getContainerToken() throws SaturnJobConsoleException;
+	ContainerToken getContainerToken() throws SaturnJobConsoleException;
 
-    ContainerToken getContainerToken(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+	ContainerToken getContainerToken(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException;
 
-    List<ContainerVo> getContainerVos() throws SaturnJobConsoleException;
+	List<ContainerVo> getContainerVos() throws SaturnJobConsoleException;
 
-    void addContainer(ContainerConfig containerConfig) throws SaturnJobConsoleException;
+	void addContainer(ContainerConfig containerConfig) throws SaturnJobConsoleException;
 
-    void updateContainerInstances(String taskId, Integer instances) throws SaturnJobConsoleException;
+	void updateContainerInstances(String taskId, Integer instances) throws SaturnJobConsoleException;
 
-    void removeContainer(String taskId) throws SaturnJobConsoleException;
+	void removeContainer(String taskId) throws SaturnJobConsoleException;
 
-    String getContainerDetail(String taskId) throws SaturnJobConsoleException;
+	String getContainerDetail(String taskId) throws SaturnJobConsoleException;
 
-    int getContainerRunningInstances(String taskId, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
+	int getContainerRunningInstances(String taskId, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException;
 
-    String getRegistryCatalog() throws SaturnJobConsoleException;
+	String getRegistryCatalog() throws SaturnJobConsoleException;
 
-    String getRegistryRepositoryTags(String repository) throws SaturnJobConsoleException;
+	String getRegistryRepositoryTags(String repository) throws SaturnJobConsoleException;
 
-    void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron) throws SaturnJobConsoleException;
+	void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron)
+			throws SaturnJobConsoleException;
 
-    ContainerScaleJobVo getContainerScaleJobVo(String taskId, String jobName) throws SaturnJobConsoleException;
+	ContainerScaleJobVo getContainerScaleJobVo(String taskId, String jobName) throws SaturnJobConsoleException;
 
-    List<ContainerScaleJobVo> getContainerScaleJobVos(String taskId) throws SaturnJobConsoleException;
+	List<ContainerScaleJobVo> getContainerScaleJobVos(String taskId) throws SaturnJobConsoleException;
 
-    void enableContainerScaleJob(String jobName, Boolean enable) throws SaturnJobConsoleException;
+	void enableContainerScaleJob(String jobName, Boolean enable) throws SaturnJobConsoleException;
 
-    void deleteContainerScaleJob(String taskId, String jobName) throws SaturnJobConsoleException;
+	void deleteContainerScaleJob(String taskId, String jobName) throws SaturnJobConsoleException;
 
 }
