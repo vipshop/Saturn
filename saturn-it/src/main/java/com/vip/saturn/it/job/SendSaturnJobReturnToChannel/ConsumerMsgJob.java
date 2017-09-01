@@ -17,13 +17,14 @@ import com.vip.saturn.job.msg.MsgHolder;
 public class ConsumerMsgJob extends AbstractSaturnMsgJob {
 	static Logger log = LoggerFactory.getLogger(ConsumerMsgJob.class);
 
-    public static List<String> messageList = new ArrayList<>();
+	public static List<String> messageList = new ArrayList<>();
 
-    @Override
-    public SaturnJobReturn handleMsgJob(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder, SaturnJobExecutionContext shardingContext) throws InterruptedException {
-        messageList.add(msgHolder.getPayload());
-        log.info("messageList:" + messageList);
-        return new SaturnJobReturn();
-    }
+	@Override
+	public SaturnJobReturn handleMsgJob(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder,
+			SaturnJobExecutionContext shardingContext) throws InterruptedException {
+		messageList.add(msgHolder.getPayload());
+		log.info("messageList:" + messageList);
+		return new SaturnJobReturn();
+	}
 
 }

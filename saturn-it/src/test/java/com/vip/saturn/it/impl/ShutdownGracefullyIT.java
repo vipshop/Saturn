@@ -122,7 +122,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(50);
-		
+
 		ShutdownHandler.exitAfterHandler(false);
 		Signal.raise(new Signal("INT"));
 

@@ -22,69 +22,69 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-    }
+	@BeforeClass
+	public static void setUp() throws Exception {
+	}
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        stopSaturnConsoleList();
-    }
+	@AfterClass
+	public static void tearDown() throws Exception {
+		stopSaturnConsoleList();
+	}
 
-    @Test
-    public void test_A_StopNamespaceShardingManagerLeader() throws Exception {
-        startSaturnConsoleList(2);
-        Thread.sleep(1000);
+	@Test
+	public void test_A_StopNamespaceShardingManagerLeader() throws Exception {
+		startSaturnConsoleList(2);
+		Thread.sleep(1000);
 
-        String jobName = "test_A_StopNamespaceShardingManagerLeader";
-        final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-        jobConfiguration.setCron("* * 1 * * ?");
-        jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-        jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-        jobConfiguration.setShardingTotalCount(1);
-        jobConfiguration.setShardingItemParameters("0=0");
+		String jobName = "test_A_StopNamespaceShardingManagerLeader";
+		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
+		jobConfiguration.setCron("* * 1 * * ?");
+		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
+		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfiguration.setShardingTotalCount(1);
+		jobConfiguration.setShardingItemParameters("0=0");
 
-        addJob(jobConfiguration);
-        Thread.sleep(1000);
+		addJob(jobConfiguration);
+		Thread.sleep(1000);
 
-        Main executor = startOneNewExecutorList();
-        Thread.sleep(1000);
+		Main executor = startOneNewExecutorList();
+		Thread.sleep(1000);
 
-        String hostValue = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
-        assertThat(hostValue).isNotNull();
+		String hostValue = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
+		assertThat(hostValue).isNotNull();
 
-        stopSaturnConsole(0);
-        Thread.sleep(1000);
+		stopSaturnConsole(0);
+		Thread.sleep(1000);
 
-        String hostValue2 = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
-        assertThat(hostValue2).isNotNull().isNotEqualTo(hostValue);
+		String hostValue2 = regCenter.get(SaturnExecutorsNode.LEADER_HOSTNODE_PATH);
+		assertThat(hostValue2).isNotNull().isNotEqualTo(hostValue);
 
-        enableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
-        runAtOnce(jobName);
-        Thread.sleep(1000);
+		enableJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
+		runAtOnce(jobName);
+		Thread.sleep(1000);
 
-        waitForFinish(new FinishCheck() {
-            @Override
-            public boolean docheck() {
-                if (isNeedSharding(jobConfiguration)) {
-                    return false;
-                }
-                return true;
-            }
-        }, 10);
-        List<Integer> items = ItemUtils.toItemList(
-                regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor.getExecutorName()))));
-        assertThat(items).contains(0);
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean docheck() {
+				if (isNeedSharding(jobConfiguration)) {
+					return false;
+				}
+				return true;
+			}
+		}, 10);
+		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor.getExecutorName()))));
+		assertThat(items).contains(0);
 
-        disableJob(jobName);
-        Thread.sleep(1000);
-        removeJob(jobName);
-        Thread.sleep(1000);
-        stopExecutorList();
-        stopSaturnConsoleList();
-        Thread.sleep(2000);
-        forceRemoveJob(jobName);
-    }
+		disableJob(jobName);
+		Thread.sleep(1000);
+		removeJob(jobName);
+		Thread.sleep(1000);
+		stopExecutorList();
+		stopSaturnConsoleList();
+		Thread.sleep(2000);
+		forceRemoveJob(jobName);
+	}
 
 }

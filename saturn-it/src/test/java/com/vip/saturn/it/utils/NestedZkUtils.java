@@ -18,58 +18,59 @@ import java.net.ServerSocket;
 public class NestedZkUtils {
 	static Logger log = LoggerFactory.getLogger(NestedZkUtils.class);
 
-    private TestingServer testingServer;
+	private TestingServer testingServer;
 
-    public int PORT = 3181;
-	
-    public void startServer() throws Exception {
-    	try (ServerSocket socket = new ServerSocket(0);) {
+	public int PORT = 3181;
+
+	public void startServer() throws Exception {
+		try (ServerSocket socket = new ServerSocket(0);) {
 			PORT = socket.getLocalPort();
 		} catch (IOException e) {
 		}
-        System.err.println("zkTestServer starting. Port: " + PORT);
+		System.err.println("zkTestServer starting. Port: " + PORT);
 		log.error("zk starts at: {}", PORT);
-        testingServer = new TestingServer(PORT);
-    }
+		testingServer = new TestingServer(PORT);
+	}
 
-    public void stopServer() throws IOException {
-        if(testingServer != null) {
-            testingServer.stop();
-        }
-    }
+	public void stopServer() throws IOException {
+		if (testingServer != null) {
+			testingServer.stop();
+		}
+	}
 
-    public void startStoppedServer() throws Exception {
-    	testingServer.start();
-    }
-    
-    public void reStartServer() throws Exception {
-        if(testingServer != null) {
-            testingServer.restart();
-        }
-    }
+	public void startStoppedServer() throws Exception {
+		testingServer.start();
+	}
 
-    public boolean isStarted() {
-        return testingServer != null;
-    }
+	public void reStartServer() throws Exception {
+		if (testingServer != null) {
+			testingServer.restart();
+		}
+	}
 
-    public String getZkString() {
-        return "127.0.0.1:" + PORT;
-    }
+	public boolean isStarted() {
+		return testingServer != null;
+	}
 
-    public void killSession(ZooKeeper client) throws Exception {
-        KillSession.kill(client, getZkString());
-    }
+	public String getZkString() {
+		return "127.0.0.1:" + PORT;
+	}
 
-    public CuratorFramework createClient(String namespace) throws InterruptedException {
-        CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
-        CuratorFramework curatorFramework = builder.connectString("127.0.0.1:" + PORT)
-                .sessionTimeoutMs(600 * 1000) // long long, could to debug
-                .retryPolicy(new RetryNTimes(3, 1000))
-                .namespace(namespace)
-                .build();
-        curatorFramework.start();
-        curatorFramework.blockUntilConnected();
-        return curatorFramework;
-    }
+	public void killSession(ZooKeeper client) throws Exception {
+		KillSession.kill(client, getZkString());
+	}
+
+	public CuratorFramework createClient(String namespace) throws InterruptedException {
+		CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
+		CuratorFramework curatorFramework = builder.connectString("127.0.0.1:" + PORT).sessionTimeoutMs(600 * 1000) // long
+																													// long,
+																													// could
+																													// to
+																													// debug
+				.retryPolicy(new RetryNTimes(3, 1000)).namespace(namespace).build();
+		curatorFramework.start();
+		curatorFramework.blockUntilConnected();
+		return curatorFramework;
+	}
 
 }

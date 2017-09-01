@@ -60,7 +60,7 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
-		//1 新建一个执行时间为10S的作业，它只能手工触发，它设置了preferList为executor0，并且只能使用优先结点
+		// 1 新建一个执行时间为10S的作业，它只能手工触发，它设置了preferList为executor0，并且只能使用优先结点
 		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 1 * ?");
 		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
@@ -71,13 +71,13 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
-		
-		//2 启动作业并立刻执行一次
+
+		// 2 启动作业并立刻执行一次
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(2000);
 		runAtOnce(jobName);
 
-		//3 保证全部作业分片正在运行中
+		// 3 保证全部作业分片正在运行中
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -100,8 +100,8 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 		Thread.sleep(2000);
 		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
 				ShardingNode.getShardingNode(saturnExecutorList.get(0).getExecutorName()))));
-		
-		//4 停止第一个executor，在该executor上运行的分片不会失败转移(因为优先结点已经全部死掉了)
+
+		// 4 停止第一个executor，在该executor上运行的分片不会失败转移(因为优先结点已经全部死掉了)
 		stopExecutor(0);
 
 		System.out.println("items:" + items);
@@ -125,15 +125,15 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		//5 没有失败转移，executor0上面运行的分片不会被执行
+		// 5 没有失败转移，executor0上面运行的分片不会被执行
 		for (Integer item : items) {
 			String key = jobName + "_" + item;
 			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
 			assertThat(status.runningCount).isEqualTo(0);
 		}
 
-        disableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
+		disableJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();

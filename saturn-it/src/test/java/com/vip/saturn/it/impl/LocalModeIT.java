@@ -42,7 +42,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
 		jobConfiguration.setProcessCountIntervalSeconds(1);
 		jobConfiguration.setShardingItemParameters("*=sh " + NORMAL_SH_PATH);
-		jobConfiguration.setLocalMode(true);		
+		jobConfiguration.setLocalMode(true);
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
@@ -50,30 +50,32 @@ public class LocalModeIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		startOneNewExecutorList();
 		Thread.sleep(1000);
-		waitForFinish(new FinishCheck(){
+		waitForFinish(new FinishCheck() {
 
 			@Override
 			public boolean docheck() {
-				for(Main executor:saturnExecutorList){
+				for (Main executor : saturnExecutorList) {
 					String count = getJobNode(jobConfiguration,
 							"servers/" + executor.getExecutorName() + "/processSuccessCount");
-					System.out.println("count:"+count+";executor:"+executor.getExecutorName());
-					if(count == null) return false;
+					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
+					if (count == null)
+						return false;
 					int times = Integer.parseInt(count);
-					if(times <= 0) return false;
+					if (times <= 0)
+						return false;
 				}
-				
+
 				return true;
 			}
-			
-		},10);
-		
+
+		}, 10);
+
 		disableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000L);
+		Thread.sleep(1000L);
 		removeJob(jobConfiguration.getJobName());
-		
+
 		Thread.sleep(1000);
-		
+
 		forceRemoveJob(jobConfiguration.getJobName());
 	}
 
@@ -93,15 +95,14 @@ public class LocalModeIT extends AbstractSaturnIT {
 		jobConfiguration.setProcessCountIntervalSeconds(1);
 		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);		
-		
+		jobConfiguration.setLocalMode(true);
+
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
-		
+
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(1 * 1000);
 
-		
 		waitForFinish(new FinishCheck() {
 
 			@Override
@@ -110,9 +111,11 @@ public class LocalModeIT extends AbstractSaturnIT {
 					String count = getJobNode(jobConfiguration,
 							"servers/" + executor.getExecutorName() + "/processSuccessCount");
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
-					if (count == null) return false;
+					if (count == null)
+						return false;
 					int times = Integer.parseInt(count);
-					if (times <= 0) return false;
+					if (times <= 0)
+						return false;
 				}
 
 				return true;
@@ -121,9 +124,9 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 60);
 
 		disableJob(jobName);
-        Thread.sleep(1000L);
+		Thread.sleep(1000L);
 		removeJob(jobConfiguration.getJobName());
-		
+
 		Thread.sleep(1000);
 
 		forceRemoveJob(jobName);
@@ -163,9 +166,11 @@ public class LocalModeIT extends AbstractSaturnIT {
 				String count0 = getJobNode(jobConfiguration,
 						"servers/" + preferExecutor.getExecutorName() + "/processSuccessCount");
 				System.out.println("count:" + count0 + ";executor:" + preferExecutor.getExecutorName());
-				if (count0 == null) return false;
+				if (count0 == null)
+					return false;
 				int times0 = Integer.parseInt(count0);
-				if (times0 <= 0) return false;
+				if (times0 <= 0)
+					return false;
 
 				for (int i = 1; i < saturnExecutorList.size(); i++) {
 					Main executor = saturnExecutorList.get(i);
@@ -174,7 +179,8 @@ public class LocalModeIT extends AbstractSaturnIT {
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
 					if (count != null) {
 						int times = Integer.parseInt(count);
-						if (times != 0) return false;
+						if (times != 0)
+							return false;
 					}
 				}
 
@@ -184,7 +190,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 30);
 
 		disableJob(jobName);
-        Thread.sleep(1000);
+		Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 
 		Thread.sleep(1000);

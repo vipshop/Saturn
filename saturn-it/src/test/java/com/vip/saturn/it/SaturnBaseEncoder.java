@@ -6,7 +6,6 @@ package com.vip.saturn.it;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-
 /**
  * @author chembo.huang
  *
@@ -45,7 +44,6 @@ public class SaturnBaseEncoder {
 			'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
 			'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
 			'4', '5', '6', '7', '8', '9', '-', '_' };
-
 
 	static final SaturnBaseEncoder RFC4648 = new SaturnBaseEncoder(false, null, -1, true);
 

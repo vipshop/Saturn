@@ -36,33 +36,33 @@ public class ReportExecutionInfoIt extends AbstractSaturnIT {
 		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		jobConfiguration.setShardingTotalCount(1);
 		jobConfiguration.setShardingItemParameters("0=0");
-		
-        addJob(jobConfiguration);
-        configJob(jobConfiguration.getJobName(), "config/enabledReport", "true");
-        Thread.sleep(1000);
-        enableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
-        runAtOnce(jobConfiguration.getJobName());
-        Thread.sleep(1000);
-        
+
+		addJob(jobConfiguration);
+		configJob(jobConfiguration.getJobName(), "config/enabledReport", "true");
+		Thread.sleep(1000);
+		enableJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
+		runAtOnce(jobConfiguration.getJobName());
+		Thread.sleep(1000);
+
 		assertThat(getJobNode(jobConfiguration, "execution/0/lastBeginTime")).isNull();
 		assertThat(getJobNode(jobConfiguration, "execution/0/nextFireTime")).isNull();
 		assertThat(getJobNode(jobConfiguration, "execution/0/lastCompleteTime")).isNull();
 		assertThat(getJobNode(jobConfiguration, "execution/0/jobMsg")).isNull();
 		assertThat(getJobNode(jobConfiguration, "execution/0/jobLog")).isNull();
 		assertThat(getJobNode(jobConfiguration, "execution/0/completed")).isNotNull();
-		
+
 		doReport(jobConfiguration);
 		waitForFinish(new FinishCheck() {
 			@Override
 			public boolean docheck() {
-				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null && 
-						getJobNode(jobConfiguration, "execution/0/nextFireTime") != null &&
-						getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null &&
-						getJobNode(jobConfiguration, "execution/0/jobMsg") != null &&
-						getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
+				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/nextFireTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/jobMsg") != null
+						&& getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
 					return true;
-				} 
+				}
 				return false;
 			}
 		}, 3);
@@ -73,33 +73,33 @@ public class ReportExecutionInfoIt extends AbstractSaturnIT {
 		removeJobNode(jobConfiguration, "execution/0/jobMsg");
 		removeJobNode(jobConfiguration, "execution/0/jobLog");
 		removeJobNode(jobConfiguration, "execution/0/completed");
-		
+
 		disableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
-        updateJobConfig(jobConfiguration, "enabledReport", false);
-        Thread.sleep(1000);
-        enableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
-        runAtOnce(jobConfiguration.getJobName());
-        Thread.sleep(1000);
+		Thread.sleep(1000);
+		updateJobConfig(jobConfiguration, "enabledReport", false);
+		Thread.sleep(1000);
+		enableJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
+		runAtOnce(jobConfiguration.getJobName());
+		Thread.sleep(1000);
 		assertThat(getJobNode(jobConfiguration, "execution/0/completed")).isNull();
-        doReport(jobConfiguration);
+		doReport(jobConfiguration);
 		waitForFinish(new FinishCheck() {
 			@Override
 			public boolean docheck() {
-				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null && 
-						getJobNode(jobConfiguration, "execution/0/nextFireTime") != null &&
-						getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null &&
-						getJobNode(jobConfiguration, "execution/0/jobMsg") != null &&
-						getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
+				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/nextFireTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null
+						&& getJobNode(jobConfiguration, "execution/0/jobMsg") != null
+						&& getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
 					return true;
-				} 
+				}
 				return false;
 			}
 		}, 3);
 
-        disableJob(jobConfiguration.getJobName());
-        Thread.sleep(1000);
+		disableJob(jobConfiguration.getJobName());
+		Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		forceRemoveJob(jobConfiguration.getJobName());

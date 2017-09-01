@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SimpleJavaJob extends AbstractSaturnJavaJob {
-	public static Map<String,Integer> statusMap = new HashMap<String,Integer>();
+	public static Map<String, Integer> statusMap = new HashMap<String, Integer>();
 
 	@Override
 	public String getJobVersion() {
@@ -21,30 +21,29 @@ public class SimpleJavaJob extends AbstractSaturnJavaJob {
 
 	public static AtomicBoolean lock = new AtomicBoolean(false);
 
-
-	private static synchronized void countInc(String key){
+	private static synchronized void countInc(String key) {
 		Integer status = statusMap.get(key);
 		int count = 0;
-		if(status != null){
+		if (status != null) {
 			count = status;
 		}
 		count++;
 		statusMap.put(key, count);
 	}
-	
-	
+
 	@Override
-	public SaturnJobReturn handleJavaJob(String jobName, Integer shardItem, String shardParam,  SaturnJobExecutionContext shardingContext) {
-		String key = jobName+"_"+shardItem;
-		System.out.println(new Date() + " running:"+jobName+"; "+shardItem +";"+ shardParam);
+	public SaturnJobReturn handleJavaJob(String jobName, Integer shardItem, String shardParam,
+			SaturnJobExecutionContext shardingContext) {
+		String key = jobName + "_" + shardItem;
+		System.out.println(new Date() + " running:" + jobName + "; " + shardItem + ";" + shardParam);
 		countInc(key);
-		return new SaturnJobReturn(" result:"+jobName+"; "+shardItem +";"+ shardParam);
+		return new SaturnJobReturn(" result:" + jobName + "; " + shardItem + ";" + shardParam);
 	}
 
 	@Override
 	public void onEnabled(String jobName) {
 		enabled.set(true);
-		if(lock.get()) {
+		if (lock.get()) {
 			synchronized (lock) {
 				try {
 					lock.wait();

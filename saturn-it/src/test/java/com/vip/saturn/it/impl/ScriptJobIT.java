@@ -67,7 +67,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 							"servers/" + saturnExecutorList.get(0).getExecutorName() + "/processSuccessCount");
 					log.info("success count: {}", count);
 					int cc = Integer.parseInt(count);
-					if( cc > 0){
+					if (cc > 0) {
 						return true;
 					}
 					return false;
@@ -136,8 +136,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-        disableJob(jobName);
-        Thread.sleep(1000);
+		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		Thread.sleep(2000);
 		forceRemoveJob(jobName);
@@ -145,7 +145,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 	/**
 	 * 作业禁用状态，关闭Executor，分片进程不强杀。 下次启动Executor，将其正在运行分片，重新持久化分片状态（running节点），并监听其状态（运行完，删除running节点，持久化completed节点）
-	 * */
+	 */
 	@Test
 	public void test_C_ReuseItem() throws Exception {
 		if (!OS.isFamilyUnix()) {
