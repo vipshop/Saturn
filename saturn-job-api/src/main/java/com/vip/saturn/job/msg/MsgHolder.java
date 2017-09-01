@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class MsgHolder  implements Serializable{
+public class MsgHolder implements Serializable {
 	private static final long serialVersionUID = 6371889076371714759L;
 
 	private byte[] payloadBytes;
@@ -14,31 +14,31 @@ public class MsgHolder  implements Serializable{
 	/** 消息内容 */
 	@Deprecated
 	private String payload;
-	
-	/** 来自消息服务器的Context信息*/
+
+	/** 来自消息服务器的Context信息 */
 	private Set<Entry<String, Object>> prop;
-	
+
 	/** 消息id */
 	private String messageId;
 
 	@Deprecated
-	public MsgHolder(String payload, Set<Entry<String, Object>> prop, String messageId){
+	public MsgHolder(String payload, Set<Entry<String, Object>> prop, String messageId) {
 		this.payload = payload;
 		this.prop = prop;
 		this.messageId = messageId;
 	}
 
-	public MsgHolder(byte[] payloadBytes, Set<Entry<String, Object>> prop, String messageId){//NOSONAR
+	public MsgHolder(byte[] payloadBytes, Set<Entry<String, Object>> prop, String messageId) {// NOSONAR
 		this.payloadBytes = payloadBytes;
 		this.prop = prop;
 		this.messageId = messageId;
 	}
-	
-	public MsgHolder(){
-		
+
+	public MsgHolder() {
+
 	}
-	
-	public void copyFrom(Object source){
+
+	public void copyFrom(Object source) {
 		Class<?> clazz = source.getClass();
 		try {
 			Field field = null;
@@ -51,7 +51,7 @@ public class MsgHolder  implements Serializable{
 				if (res != null) {
 					this.payloadBytes = (byte[]) res;
 				}
-			} catch (NoSuchFieldException e) {//NOSONAR
+			} catch (NoSuchFieldException e) {// NOSONAR
 			}
 
 			field = clazz.getDeclaredField("payload");
@@ -74,10 +74,10 @@ public class MsgHolder  implements Serializable{
 			if (res != null) {
 				this.messageId = (String) res;
 			}
-			
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
-		} 
+		}
 	}
 
 	public byte[] getPayloadBytes() {
@@ -115,6 +115,5 @@ public class MsgHolder  implements Serializable{
 	public String getMessageId() {
 		return messageId;
 	}
-	
-	
+
 }

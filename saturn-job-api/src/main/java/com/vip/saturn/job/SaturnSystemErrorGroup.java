@@ -16,5 +16,5 @@ public final class SaturnSystemErrorGroup {
 
 	// alarm will be raised with this error code
 	public static final int FAIL_NEED_RAISE_ALARM = 551;
-	
+
 }

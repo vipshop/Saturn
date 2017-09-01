@@ -5,21 +5,20 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
- * 作为作业执行的返回, 每个分片对应一个SaturnJobReturn对象<p>
+ * 作为作业执行的返回, 每个分片对应一个SaturnJobReturn对象
+ * <p>
  * @author dylan.xue
  */
 
-public class SaturnJobReturn implements Serializable{
-	
+public class SaturnJobReturn implements Serializable {
+
 	private static final long serialVersionUID = 940032321608832191L;
 
 	public static final String MSG_CONSUME_STATUS_PROP_KEY = "consumeStatus";
-	
+
 	/**
-	 * 支持16个延时等级的投递，默认情况按照重试次数依次使用不同延时来进行消息再投递；用户亦可修改每次重试的延时。
-     * 16个延时级别为：
-     * 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h; 用户可修改每次延迟的时间间隔; 
-     * 其中delayLevel为1对应5s,16对应1h
+	 * 支持16个延时等级的投递，默认情况按照重试次数依次使用不同延时来进行消息再投递；用户亦可修改每次重试的延时。 16个延时级别为： 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m
+	 * 30m 1h; 用户可修改每次延迟的时间间隔; 其中delayLevel为1对应5s,16对应1h
 	 */
 	public static final String DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY = "delayLevel";
 
@@ -27,30 +26,31 @@ public class SaturnJobReturn implements Serializable{
 	 * Job执行返回值, 默认0。
 	 */
 	private int returnCode = SaturnSystemReturnCode.SUCCESS;
-	
+
 	/**
 	 * Job执行返回字符串信息
 	 */
 	private String returnMsg;
-	
+
 	/**
 	 * 异常组，默认200
 	 */
 	private int errorGroup = SaturnSystemErrorGroup.SUCCESS;
-	
+
 	/**
 	 * 返回的属性，消息服务的作业会将该属性设置到发送的Channel中
 	 */
 	private Map<String, String> prop;
-	
+
 	/**
 	 * returnCode默认0（成功），errorGroup默认200（成功）。
 	 * @see SaturnSystemReturnCode
 	 * @see SaturnSystemErrorGroup
 	 */
-	public SaturnJobReturn() {}
-	
-	public void copyFrom(Object source){
+	public SaturnJobReturn() {
+	}
+
+	public void copyFrom(Object source) {
 		Class<?> clazz = source.getClass();
 		try {
 			Field field = null;
@@ -86,9 +86,9 @@ public class SaturnJobReturn implements Serializable{
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
-		} 
+		}
 	}
-	
+
 	/**
 	 * returnCode默认0（成功），errorGroup默认200（成功）。
 	 * @param returnMsg 作业执行返回字符串信息
@@ -98,7 +98,7 @@ public class SaturnJobReturn implements Serializable{
 	public SaturnJobReturn(String returnMsg) {
 		this.returnMsg = returnMsg;
 	}
-	
+
 	public SaturnJobReturn(int returnCode, String returnMsg, int errorGroup) {
 		this.returnCode = returnCode;
 		this.returnMsg = returnMsg;
@@ -143,5 +143,4 @@ public class SaturnJobReturn implements Serializable{
 				+ ", prop=" + prop + "]";
 	}
 
-	
 }

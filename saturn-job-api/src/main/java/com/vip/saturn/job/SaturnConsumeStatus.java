@@ -8,7 +8,5 @@ package com.vip.saturn.job;
  *
  */
 public enum SaturnConsumeStatus {
-    CONSUME_SUCCESS,
-    CONSUME_DISCARD,
-    RECONSUME_LATER
+	CONSUME_SUCCESS, CONSUME_DISCARD, RECONSUME_LATER
 }

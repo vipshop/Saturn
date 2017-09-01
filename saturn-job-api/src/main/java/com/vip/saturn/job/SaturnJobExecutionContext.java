@@ -5,46 +5,44 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
-
-public class SaturnJobExecutionContext  implements Serializable{
+public class SaturnJobExecutionContext implements Serializable {
 	private static final long serialVersionUID = -5213585560266060611L;
 
 	/**
-     * 作业名称.
-     */
-    private String jobName;
-    
-    /**
-     * 分片总数.
-     */
-    private int shardingTotalCount;
-    
-    /**
-     * 作业自定义参数.
-     * 可以配置多个相同的作业, 但是用不同的参数作为不同的调度实例.
-     */
-    private String jobParameter;
-    
-    /**
-     * 获取到的本片
-     */
-    private List<Integer> shardingItems;
-    
-    /**
-     * 运行在本作业项的分片序列号和个性化参数列表.
-     */
-    private Map<Integer, String> shardingItemParameters;
-    
-    /**
-     * 自定义上下文
-     */
-    private Map<String, String> customContext;
+	 * 作业名称.
+	 */
+	private String jobName;
 
-	public SaturnJobExecutionContext(){
-		
+	/**
+	 * 分片总数.
+	 */
+	private int shardingTotalCount;
+
+	/**
+	 * 作业自定义参数. 可以配置多个相同的作业, 但是用不同的参数作为不同的调度实例.
+	 */
+	private String jobParameter;
+
+	/**
+	 * 获取到的本片
+	 */
+	private List<Integer> shardingItems;
+
+	/**
+	 * 运行在本作业项的分片序列号和个性化参数列表.
+	 */
+	private Map<Integer, String> shardingItemParameters;
+
+	/**
+	 * 自定义上下文
+	 */
+	private Map<String, String> customContext;
+
+	public SaturnJobExecutionContext() {
+
 	}
-	
-	public void copyFrom(Object source){
+
+	public void copyFrom(Object source) {
 		Class<?> clazz = source.getClass();
 		try {
 			Field field = null;
@@ -94,9 +92,9 @@ public class SaturnJobExecutionContext  implements Serializable{
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
-		} 
+		}
 	}
-	
+
 	public String getJobName() {
 		return jobName;
 	}
@@ -144,5 +142,5 @@ public class SaturnJobExecutionContext  implements Serializable{
 	public void setCustomContext(Map<String, String> customContext) {
 		this.customContext = customContext;
 	}
-    
+
 }
