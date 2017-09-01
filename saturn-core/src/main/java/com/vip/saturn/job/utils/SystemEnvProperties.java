@@ -11,7 +11,7 @@ import java.util.List;
 public class SystemEnvProperties {
 	static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
 
-	private static String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";	
+	private static String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";
 	/**
 	 * 每个域最大作业数量
 	 */
@@ -21,7 +21,8 @@ public class SystemEnvProperties {
 	/**
 	 * Executor离线时，其zk节点信息是否被清理
 	 */
-	public static boolean VIP_SATURN_EXECUTOR_CLEAN = Boolean.parseBoolean(System.getProperty(NAME_VIP_SATURN_EXECUTOR_CLEAN, System.getenv(NAME_VIP_SATURN_EXECUTOR_CLEAN)));
+	public static boolean VIP_SATURN_EXECUTOR_CLEAN = Boolean.parseBoolean(
+			System.getProperty(NAME_VIP_SATURN_EXECUTOR_CLEAN, System.getenv(NAME_VIP_SATURN_EXECUTOR_CLEAN)));
 
 	/**
 	 * <pre>
@@ -39,18 +40,19 @@ public class SystemEnvProperties {
 	private static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
 	private static String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_SATURN_K8S_DEPLOYMENT";
 	public static String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
-	
+
 	/**
 	 * Executor优雅退出的全局默认超时时间（单位：精确到秒，默认1分钟）
 	 */
 	public static int VIP_SATURN_SHUTDOWN_TIMEOUT = 60;
-	public static int VIP_SATURN_SHUTDOWN_TIMEOUT_MAX = 5*60 - 10;
+	public static int VIP_SATURN_SHUTDOWN_TIMEOUT_MAX = 5 * 60 - 10;
 
 	/**
 	 * Saturn Console URI.
 	 */
 	public static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
-	public static String VIP_SATURN_CONSOLE_URI = trim(System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI)));
+	public static String VIP_SATURN_CONSOLE_URI = trim(
+			System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI)));
 	public static List<String> VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
 
 	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
@@ -68,24 +70,26 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1;
 
 	static {
-		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS, System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
-		if(!Strings.isNullOrEmpty(maxNumberOfJobs)) {
+		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
+				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
+		if (!Strings.isNullOrEmpty(maxNumberOfJobs)) {
 			try {
 				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.valueOf(maxNumberOfJobs);
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}
 		}
-		
-		String shutdownTimeout = System.getProperty(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT, System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
-		if(!Strings.isNullOrEmpty(shutdownTimeout)) {
+
+		String shutdownTimeout = System.getProperty(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT,
+				System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
+		if (!Strings.isNullOrEmpty(shutdownTimeout)) {
 			try {
 				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.valueOf(shutdownTimeout);
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}
 		}
-		if(VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX){
+		if (VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX) {
 			VIP_SATURN_SHUTDOWN_TIMEOUT = VIP_SATURN_SHUTDOWN_TIMEOUT_MAX;
 		}
 
@@ -93,10 +97,12 @@ public class SystemEnvProperties {
 		if (StringUtils.isNotBlank(dcosTaskId)) {
 			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = dcosTaskId;
 		} else {
-			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = System.getProperty(NAME_VIP_SATURN_K8S_DEPLOYMENT, System.getenv(NAME_VIP_SATURN_K8S_DEPLOYMENT));
+			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = System.getProperty(NAME_VIP_SATURN_K8S_DEPLOYMENT,
+					System.getenv(NAME_VIP_SATURN_K8S_DEPLOYMENT));
 		}
 
-		String zkClientSessionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS));
+		String zkClientSessionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS,
+				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS));
 		if (!Strings.isNullOrEmpty(zkClientSessionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientSessionTimeoutStr);
@@ -105,7 +111,9 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String zkClientConnectionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
+		String zkClientConnectionTimeoutStr = System.getProperty(
+				NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS,
+				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
 		if (!Strings.isNullOrEmpty(zkClientConnectionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientConnectionTimeoutStr);
@@ -114,26 +122,26 @@ public class SystemEnvProperties {
 			}
 		}
 	}
-	
+
 	protected static String trim(String property) {
-		if (property != null && property.length()>0) {
+		if (property != null && property.length() > 0) {
 			return property.trim();
 		}
 		return property;
 	}
-	
+
 	public static void init() {
-		if(VIP_SATURN_CONSOLE_URI != null) {
+		if (VIP_SATURN_CONSOLE_URI != null) {
 			String[] split = VIP_SATURN_CONSOLE_URI.split(",");
-			if(split != null) {
-				for(String tmp : split) {
+			if (split != null) {
+				for (String tmp : split) {
 					tmp = tmp.trim();
-					if(!tmp.isEmpty()) {
+					if (!tmp.isEmpty()) {
 						VIP_SATURN_CONSOLE_URI_LIST.add(tmp);
 					}
 				}
 			}
 		}
 	}
-	
+
 }

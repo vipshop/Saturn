@@ -12,7 +12,6 @@ import org.quartz.Trigger;
 
 import com.vip.saturn.job.basic.AbstractElasticJob;
 
-
 /**
  * @author chembo.huang
  *
@@ -21,7 +20,7 @@ public class SaturnScheduler {
 
 	private static final String SATURN_QUARTZ_WORKER = "-saturnQuartz-worker";
 	private final AbstractElasticJob job;
-	
+
 	private Trigger trigger;
 	private final ExecutorService executor;
 	private SaturnWorker saturnQuartzWorker;
@@ -33,7 +32,8 @@ public class SaturnScheduler {
 
 			@Override
 			public Thread newThread(Runnable r) {
-				Thread t = new Thread(r, job.getExecutorName()+"_"+job.getConfigService().getJobName() + SATURN_QUARTZ_WORKER);
+				Thread t = new Thread(r,
+						job.getExecutorName() + "_" + job.getConfigService().getJobName() + SATURN_QUARTZ_WORKER);
 				if (t.isDaemon()) {
 					t.setDaemon(false);
 				}
@@ -49,7 +49,6 @@ public class SaturnScheduler {
 		saturnQuartzWorker = new SaturnWorker(job, trigger);
 		executor.submit(saturnQuartzWorker);
 	}
-
 
 	public Trigger getTrigger() {
 		return trigger;

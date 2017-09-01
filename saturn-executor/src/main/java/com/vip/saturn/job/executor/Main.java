@@ -25,35 +25,35 @@ public class Main {
 
 	protected void parseArgs(String[] inArgs) throws Exception {
 		String[] args = inArgs.clone();
-		
-		for(int i = 0; i < args.length; i ++) {
+
+		for (int i = 0; i < args.length; i++) {
 			String param = args[i].trim();
 
-			if("-namespace".equals(param)) {
+			if ("-namespace".equals(param)) {
 				try {
-					this.namespace = args[++i].trim();//NOSONAR
+					this.namespace = args[++i].trim();// NOSONAR
 					System.setProperty("app.instance.name", this.namespace); // For logback.
 					System.setProperty("namespace", this.namespace); // For logback.
-				} catch(Exception e) {
-					throw new Exception("Please set namespace value, exception message: " + e.getMessage(),e);
-				}
-			} else if("-executorName".equals(param)) {
-				try {
-					executorName = args[++i].trim();//NOSONAR
 				} catch (Exception e) {
-					throw new Exception("Please set executorName value, exception message: " + e.getMessage(),e);
+					throw new Exception("Please set namespace value, exception message: " + e.getMessage(), e);
 				}
-			} else if("-saturnLibDir".equals(param)) {
+			} else if ("-executorName".equals(param)) {
 				try {
-					saturnLibDir = args[++i].trim();//NOSONAR
+					executorName = args[++i].trim();// NOSONAR
 				} catch (Exception e) {
-					throw new Exception("Please set saturnLibDir value, exception message: " + e.getMessage(),e);
+					throw new Exception("Please set executorName value, exception message: " + e.getMessage(), e);
 				}
-			} else if("-appLibDir".equals(param)) {
+			} else if ("-saturnLibDir".equals(param)) {
 				try {
-					appLibDir = args[++i].trim();//NOSONAR
+					saturnLibDir = args[++i].trim();// NOSONAR
 				} catch (Exception e) {
-					throw new Exception("Please set appLibDir value, exception message: " + e.getMessage(),e);
+					throw new Exception("Please set saturnLibDir value, exception message: " + e.getMessage(), e);
+				}
+			} else if ("-appLibDir".equals(param)) {
+				try {
+					appLibDir = args[++i].trim();// NOSONAR
+				} catch (Exception e) {
+					throw new Exception("Please set appLibDir value, exception message: " + e.getMessage(), e);
 				}
 			}
 		}
@@ -62,16 +62,16 @@ public class Main {
 	}
 
 	private void validateParameters() {
-		if(namespace == null) {
+		if (namespace == null) {
 			throw new RuntimeException("Please add the namespace parameter");
 		}
 	}
 
 	public String getExecutorName() {
-		if(saturnExecutor != null) {
+		if (saturnExecutor != null) {
 			try {
 				return (String) saturnExecutor.getClass().getMethod("getExecutorName").invoke(saturnExecutor);
-			} catch(Exception e) {//NOSONAR
+			} catch (Exception e) {// NOSONAR
 			}
 		}
 		return executorName;
@@ -80,75 +80,76 @@ public class Main {
 	private static String getLibDir(String dirName) {
 		File root = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getParentFile();
 		File lib = new File(root, dirName);
-		if(!lib.isDirectory()){
+		if (!lib.isDirectory()) {
 			return null;
 		}
 		return lib.getAbsolutePath();
 	}
-	
 
 	private static List<URL> getUrls(File file) throws MalformedURLException {
 		List<URL> urls = new ArrayList<>();
-		if(!file.exists()) {
+		if (!file.exists()) {
 			return urls;
 		}
-		if(file.isDirectory()) {
-			if("classes".equals(file.getName())){
+		if (file.isDirectory()) {
+			if ("classes".equals(file.getName())) {
 				urls.add(file.toURI().toURL());
 				return urls;
 			}
 			File[] files = file.listFiles();
-			if(files != null && files.length >0){
-				for(File tmp : files) {
+			if (files != null && files.length > 0) {
+				for (File tmp : files) {
 					urls.addAll(getUrls(tmp));
 				}
 			}
 			return urls;
 		}
-		if(file.isFile()) {
+		if (file.isFile()) {
 			urls.add(file.toURI().toURL());
 		}
 		return urls;
 	}
 
-	private void initClassLoader() throws Exception{
-		List<URL> urls = getUrls(new File(saturnLibDir));	
-		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());//NOSONAR
-		if(new File(appLibDir).isDirectory()){
-			urls = getUrls(new File(appLibDir));	
-			jobClassLoader = new JobClassLoader(urls.toArray(new URL[urls.size()]));//NOSONAR
-		}else{
+	private void initClassLoader() throws Exception {
+		List<URL> urls = getUrls(new File(saturnLibDir));
+		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());// NOSONAR
+		if (new File(appLibDir).isDirectory()) {
+			urls = getUrls(new File(appLibDir));
+			jobClassLoader = new JobClassLoader(urls.toArray(new URL[urls.size()]));// NOSONAR
+		} else {
 			jobClassLoader = executorClassLoader;
 		}
 	}
 
-	private void startExecutor() throws Exception{
+	private void startExecutor() throws Exception {
 		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
 			Class<?> startExecutorClass = getSaturnExecutorClass();
-			saturnExecutor = startExecutorClass.getMethod("buildExecutor", String.class, String.class, ClassLoader.class, ClassLoader.class).invoke(null, namespace, executorName, executorClassLoader, jobClassLoader);
+			saturnExecutor = startExecutorClass
+					.getMethod("buildExecutor", String.class, String.class, ClassLoader.class, ClassLoader.class)
+					.invoke(null, namespace, executorName, executorClassLoader, jobClassLoader);
 			startExecutorClass.getMethod("execute").invoke(saturnExecutor);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldCL);
 		}
 	}
 
-	public void launch(String[] args, ClassLoader jobClassLoader) throws Exception{
+	public void launch(String[] args, ClassLoader jobClassLoader) throws Exception {
 		parseArgs(args);
 		initClassLoader();
 		this.jobClassLoader = jobClassLoader;
 		startExecutor();
 	}
-	
-	public void launchInner(String[] args, ClassLoader saturnClassLoader, ClassLoader jobClassLoader) throws Exception{
+
+	public void launchInner(String[] args, ClassLoader saturnClassLoader, ClassLoader jobClassLoader) throws Exception {
 		parseArgs(args);
 		this.executorClassLoader = saturnClassLoader;
 		this.jobClassLoader = jobClassLoader;
 		startExecutor();
 	}
-	
-	public void shutdown() throws Exception{
+
+	public void shutdown() throws Exception {
 		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
@@ -159,24 +160,23 @@ public class Main {
 		}
 	}
 
-
 	private Class<?> getSaturnExecutorClass() throws ClassNotFoundException {
 		return executorClassLoader.loadClass("com.vip.saturn.job.executor.SaturnExecutor");
 	}
-	
+
 	public static void main(String[] args) {
 		try {
 			Main main = new Main();
 			main.parseArgs(args);
 			main.initClassLoader();
 			main.startExecutor();
-		} catch (Throwable t) {//NOSONAR
-			t.printStackTrace();	//NOSONAR
+		} catch (Throwable t) {// NOSONAR
+			t.printStackTrace(); // NOSONAR
 			System.exit(1);
 		}
 	}
 
-	public Object getSaturnExecutor(){
+	public Object getSaturnExecutor() {
 		return saturnExecutor;
 	}
 

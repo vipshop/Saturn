@@ -32,7 +32,8 @@ public class UpdateJobCronUtils {
 	/**
 	 * Send update job cron request to UpdateJobCron API in Console.
 	 */
-	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
+	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
+			throws SaturnJobException {
 		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
@@ -53,7 +54,8 @@ public class UpdateJobCronUtils {
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPut request = new HttpPut(targetUrl);
-				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
+				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
+						.setSocketTimeout(10000).build();
 				request.setConfig(requestConfig);
 				StringEntity params = new StringEntity(json);
 				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");

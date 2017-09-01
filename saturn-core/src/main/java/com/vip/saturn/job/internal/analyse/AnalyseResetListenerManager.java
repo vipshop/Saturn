@@ -33,23 +33,26 @@ public class AnalyseResetListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(AnalyseResetListenerManager.class);
 
 	private boolean isShutdown = false;
-	
+
 	public AnalyseResetListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
-	
+
 	@Override
 	public void start() {
 		// addDataListener(new AnalyseResetPathListener(), jobName);
-		zkCacheManager.addTreeCacheListener(new AnalyseResetPathListener(), JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET), 0);
+		zkCacheManager.addTreeCacheListener(new AnalyseResetPathListener(),
+				JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET), 0);
 	}
 
 	class AnalyseResetPathListener extends AbstractJobListener {
-		
+
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
-			if (JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET).equals(path) && (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
+			if (isShutdown)
+				return;
+			if (JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET).equals(path)
+					&& (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
 				if (ResetCountType.RESET_ANALYSE.equals(new String(event.getData().getData()))) {
 					log.info("[{}] msg=job:{} reset anaylse count.", jobName, jobName);
 					ProcessCountStatistics.resetAnalyseCount(executorName, jobName);

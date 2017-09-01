@@ -40,22 +40,23 @@ public class SaturnWorker implements Runnable {
 			sigLock.notifyAll();
 		}
 	}
-	
+
 	private void initTrigger(Trigger trigger) throws SchedulerException {
-		if(trigger == null) return;
-		
+		if (trigger == null)
+			return;
+
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
 		if (ft == null) {
-			log.warn("[{}] msg=Based on configured schedule, the given trigger '" + trigger.getKey() + "' will never fire.", job.getJobName());
+			log.warn("[{}] msg=Based on configured schedule, the given trigger '" + trigger.getKey()
+					+ "' will never fire.", job.getJobName());
 		}
 	}
-	
 
 	public boolean isShutDown() {
 		return halted.get();
 	}
-	
+
 	void togglePause(boolean pause) {
 		synchronized (sigLock) {
 			paused = pause;
@@ -94,39 +95,39 @@ public class SaturnWorker implements Runnable {
 				}
 				boolean noFireTime = false; // 没有下次执行时间，初始化为false
 				long timeUntilTrigger = 1000;
-				if(triggerObj != null){
+				if (triggerObj != null) {
 					triggerObj.updateAfterMisfire(null);
 					long now = System.currentTimeMillis();
 					Date nextFireTime = triggerObj.getNextFireTime();
-					if(nextFireTime != null) {
-                        timeUntilTrigger = nextFireTime.getTime() - now;
-                    } else {
-                        noFireTime = true;
-                    }
+					if (nextFireTime != null) {
+						timeUntilTrigger = nextFireTime.getTime() - now;
+					} else {
+						noFireTime = true;
+					}
 				}
-				
+
 				while (!noFireTime && timeUntilTrigger > 2) {
 					synchronized (sigLock) {
 						if (halted.get()) {
 							break;
 						}
-						if (triggered){
+						if (triggered) {
 							break;
 						}
-						
+
 						try {
 							sigLock.wait(timeUntilTrigger);
 						} catch (InterruptedException ignore) {
 						}
-						
-						if(triggerObj != null){
+
+						if (triggerObj != null) {
 							long now = System.currentTimeMillis();
-                            Date nextFireTime = triggerObj.getNextFireTime();
-                            if(nextFireTime != null) {
-                                timeUntilTrigger = nextFireTime.getTime() - now;
-                            } else {
-                                noFireTime = true;
-                            }
+							Date nextFireTime = triggerObj.getNextFireTime();
+							if (nextFireTime != null) {
+								timeUntilTrigger = nextFireTime.getTime() - now;
+							} else {
+								noFireTime = true;
+							}
 						}
 					}
 				}
@@ -138,16 +139,16 @@ public class SaturnWorker implements Runnable {
 					if (triggered) {
 						triggered = false;
 					} else { // 非立即执行。即，执行时间到了，或者没有下次执行时间。
-                        goAhead = goAhead && !noFireTime;
-                        if(goAhead && triggerObj != null) { // 执行时间到了，更新执行时间；没有下次执行时间，不更新时间，并且不执行作业
-                            triggerObj.triggered(null);
-                        }
-                    }
+						goAhead = goAhead && !noFireTime;
+						if (goAhead && triggerObj != null) { // 执行时间到了，更新执行时间；没有下次执行时间，不更新时间，并且不执行作业
+							triggerObj.triggered(null);
+						}
+					}
 				}
 				if (goAhead) {
 					job.execute();
 				}
-				
+
 			} catch (RuntimeException e) {
 				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, job.getJobName(), e.getMessage()), e);
 			}

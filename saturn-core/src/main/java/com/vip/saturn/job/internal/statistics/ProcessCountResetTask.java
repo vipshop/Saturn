@@ -28,13 +28,13 @@ public class ProcessCountResetTask extends TimerTask {
 	@Override
 	public void run() {
 		Map<String, ConcurrentHashMap<String, JobScheduler>> schedulerMap = JobRegistry.getSchedulerMap();
-		if(schedulerMap != null) {
+		if (schedulerMap != null) {
 			// 只清零本executor的统计信息数据
-			if(schedulerMap.containsKey(executorName)) {
+			if (schedulerMap.containsKey(executorName)) {
 				ConcurrentHashMap<String, JobScheduler> jobSchedulerMap = schedulerMap.get(executorName);
-				if(jobSchedulerMap != null) {
+				if (jobSchedulerMap != null) {
 					Iterator<Map.Entry<String, JobScheduler>> iterator = jobSchedulerMap.entrySet().iterator();
-					while(iterator.hasNext()) {
+					while (iterator.hasNext()) {
 						Map.Entry<String, JobScheduler> next = iterator.next();
 						String jobName = next.getKey();
 						JobScheduler jobScheduler = next.getValue();

@@ -10,7 +10,7 @@ import java.util.Date;
 public class NextFireTimePausePeriodEffected {
 
 	private Date nextFireTime;
-	
+
 	public Date getNextFireTime() {
 		return nextFireTime;
 	}

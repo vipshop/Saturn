@@ -3,7 +3,7 @@ package com.vip.saturn.job.basic;
 import com.vip.saturn.job.trigger.OnetimeTrigger;
 import com.vip.saturn.job.trigger.SaturnTrigger;
 
-public abstract class OnetimeJob extends AbstractSaturnJob{
+public abstract class OnetimeJob extends AbstractSaturnJob {
 
 	@Override
 	public SaturnTrigger getTrigger() {

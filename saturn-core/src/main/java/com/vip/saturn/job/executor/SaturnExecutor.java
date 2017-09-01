@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SaturnExecutor {
-	
+
 	private static Logger LOGGER;
 
 	private static AtomicBoolean inited = new AtomicBoolean(false);
@@ -81,7 +81,8 @@ public class SaturnExecutor {
 
 	private AtomicBoolean restarting = new AtomicBoolean(false);
 
-	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.executorClassLoader = executorClassLoader;
@@ -90,11 +91,12 @@ public class SaturnExecutor {
 		executor = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
 	}
-	
+
 	/**
 	 * SaturnExecutor工厂入口
 	 */
-	public static SaturnExecutor buildExecutor(String namespace, String executorName, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	public static SaturnExecutor buildExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		if ("$SaturnSelf".equals(namespace)) {
 			throw new RuntimeException("The namespace cannot be $SaturnSelf");
 		}
@@ -110,23 +112,28 @@ public class SaturnExecutor {
 		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader);
 	}
 
-	private static void init(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	private static void init(String executorName, String namespace, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		if (!inited.compareAndSet(false, true)) {
 			return;
 		}
 		initExtension(executorName, namespace, executorClassLoader, jobClassLoader);
 		saturnExecutorExtension.init(); // will init log, env, etc
-		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);	
+		LOGGER = LoggerFactory.getLogger(SaturnExecutor.class);
 	}
 
-	private static void initExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	private static void initExtension(String executorName, String namespace, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		try {
 			Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
 			String extClass = props.getProperty("saturn.ext");
 			if (!Strings.isNullOrEmpty(extClass)) {
-				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class.getClassLoader().loadClass(extClass);
-				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class, ClassLoader.class, ClassLoader.class);
-				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader, jobClassLoader);
+				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class
+						.getClassLoader().loadClass(extClass);
+				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class,
+						ClassLoader.class, ClassLoader.class);
+				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader,
+						jobClassLoader);
 			}
 		} catch (Exception e) { // log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
@@ -135,46 +142,55 @@ public class SaturnExecutor {
 		initSaturnExecutorExtension(executorName, namespace, executorClassLoader, jobClassLoader);
 	}
 
-	private synchronized static void initSaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
-		if(saturnExecutorExtension == null) {
-			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader, jobClassLoader);
+	private synchronized static void initSaturnExecutorExtension(String executorName, String namespace,
+			ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+		if (saturnExecutorExtension == null) {
+			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader,
+					jobClassLoader);
 		}
 	}
 
 	private String discoverZK() throws Exception {
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
-		if(size == 0) {
-			throw new Exception("Please configure the parameter " + SystemEnvProperties.NAME_VIP_SATURN_CONSOLE_URI + " with env or -D");
+		if (size == 0) {
+			throw new Exception("Please configure the parameter " + SystemEnvProperties.NAME_VIP_SATURN_CONSOLE_URI
+					+ " with env or -D");
 		}
-		for(int i=0; i<size; i++) {
+		for (int i = 0; i < size; i++) {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String url = consoleUri + "/rest/v1/discoverZk?namespace=" + namespace;
 			CloseableHttpClient httpClient = null;
 			try {
 				httpClient = HttpClientBuilder.create().build();
-	            HttpGet httpGet = new HttpGet(url);
-	            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
-	            httpGet.setConfig(requestConfig);
-	            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
-	            StatusLine statusLine = httpResponse.getStatusLine();
-	            String responseBody = EntityUtils.toString(httpResponse.getEntity());
-	            Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
-	            if(statusLine != null && statusCode == HttpStatus.SC_OK) {
-	            	String connectionString = JSON.parseObject(responseBody, String.class);
+				HttpGet httpGet = new HttpGet(url);
+				RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000)
+						.build();
+				httpGet.setConfig(requestConfig);
+				CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+				StatusLine statusLine = httpResponse.getStatusLine();
+				String responseBody = EntityUtils.toString(httpResponse.getEntity());
+				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
+				if (statusLine != null && statusCode == HttpStatus.SC_OK) {
+					String connectionString = JSON.parseObject(responseBody, String.class);
 					if (StringUtils.isBlank(connectionString)) {
 						LOGGER.warn("ZK connection string is blank！");
 						continue;
 					}
 
-					LOGGER.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url, connectionString);
+					LOGGER.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url,
+							connectionString);
 					return connectionString;
 				} else {
 					if (responseBody != null && !responseBody.trim().isEmpty()) {
 						JSONObject parseObject = JSONObject.parseObject(responseBody);
 						String errMsg = parseObject.getString("message");
-						LOGGER.warn("Fail to discover zk connection string. Url: {}, response statusCode: {}, response message: {}", url, statusCode, errMsg);
+						LOGGER.warn(
+								"Fail to discover zk connection string. Url: {}, response statusCode: {}, response message: {}",
+								url, statusCode, errMsg);
 					} else {
-						LOGGER.warn("Fail to discover zk connection string. Url: {}, response statusCode: {}, response no content", url, statusCode);
+						LOGGER.warn(
+								"Fail to discover zk connection string. Url: {}, response statusCode: {}, response no content",
+								url, statusCode);
 					}
 				}
 			} catch (Exception e) {
@@ -190,14 +206,16 @@ public class SaturnExecutor {
 			}
 		}
 
-		throw new Exception("Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
+		throw new Exception(
+				"Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
 	}
-	
+
 	private boolean scheduleJob(String jobName) {
 		LOGGER.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
 		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 		if (jobConfig.getSaturnJobClass() == null) {
-			LOGGER.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName, jobConfig.getJobType());
+			LOGGER.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName,
+					jobConfig.getJobType());
 			return false;
 		}
 		if (jobConfig.isDeleting()) {
@@ -216,7 +234,7 @@ public class SaturnExecutor {
 	class ConnectionLostListener implements ConnectionStateListener {
 
 		private AtomicBoolean connected = new AtomicBoolean(false);
-		
+
 		private long getSessionId(CuratorFramework client) {
 			long sessionId;
 			try {
@@ -232,7 +250,7 @@ public class SaturnExecutor {
 			// 使用single thread executor严格保证ZK事件执行的顺序性，避免并发性问题
 			if (ConnectionState.SUSPENDED == newState) {
 				connected.set(false);
-				if(restarting.compareAndSet(false, true)) {
+				if (restarting.compareAndSet(false, true)) {
 					LOGGER.warn("The executor {} found zk is SUSPENDED", executorName);
 					final long sessionId = getSessionId(client);
 					executor.submit(new Runnable() {
@@ -249,7 +267,8 @@ public class SaturnExecutor {
 									}
 									long newSessionId = getSessionId(client);
 									if (sessionId != newSessionId) {
-										LOGGER.warn("The executor {} is going to restart for zk lost, client: {}", executorName, client);
+										LOGGER.warn("The executor {} is going to restart for zk lost, client: {}",
+												executorName, client);
 										restart();
 										return;
 									}
@@ -266,7 +285,7 @@ public class SaturnExecutor {
 			}
 		}
 	}
-	
+
 	private void restart() {
 		while (true) {
 			try {
@@ -287,7 +306,6 @@ public class SaturnExecutor {
 			}
 		}
 	}
-
 
 	public void execute() throws Exception {
 		shutdownLock.lockInterruptibly();
@@ -316,25 +334,25 @@ public class SaturnExecutor {
 				try {
 					// 验证namespace是否存在
 					saturnExecutorExtension.validateNamespaceExisting(serverLists);
-					
+
 					zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
 					regCenter = new ZookeeperRegistryCenter(zkConfig);
 					saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
 					saturnExecutorService.setJobClassLoader(jobClassLoader);
 					saturnExecutorService.setExecutorClassLoader(executorClassLoader);
-		
+
 					// 初始化注册中心
 					LOGGER.info("start to init reg center.");
 					regCenter.init();
 					ConnectionLostListener connectionLostListener = new ConnectionLostListener();
 					regCenter.addConnectionStateListener(connectionLostListener);
-		
+
 					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
 				} catch (Exception e) {
 					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.ZK);
 					throw e;
 				}
-		
+
 				// 注册作业名
 				LOGGER.info("start to check all exist jobs.");
 				List<String> zkJobNames = saturnExecutorService.registerJobNames();
@@ -345,11 +363,11 @@ public class SaturnExecutor {
 					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
 					throw e;
 				}
-		
+
 				// 初始化timeout scheduler
 				LOGGER.info("start to create scheduler.");
 				TimeoutSchedulerExecutor.createScheduler(executorName);
-		
+
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
 				// 注册Executor
 				try {
@@ -360,14 +378,14 @@ public class SaturnExecutor {
 					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.UNIQUE);
 					throw e;
 				}
-		
+
 				// 启动作业
 				if (zkJobNames != null) {
 					LOGGER.info("start to schedule jobs.");
 					Iterator<String> iterator = zkJobNames.iterator();
-					while(iterator.hasNext()) {
+					while (iterator.hasNext()) {
 						String jobName = iterator.next();
-						if(scheduleJob(jobName)) {
+						if (scheduleJob(jobName)) {
 							LOGGER.info("The job {} initialize successfully", jobName);
 						} else {
 							iterator.remove();
@@ -389,15 +407,15 @@ public class SaturnExecutor {
 						}
 					}
 				});
-		
+
 				// 启动零点清0成功数错误数线程
 				resetCountService = new ResetCountService(executorName);
 				resetCountService.startRestCountTimer();
-		
+
 				// 注册退出时资源清理回调
 				if (shutdownHandler == null) {
 					shutdownHandler = new Runnable() {
-		
+
 						@Override
 						public void run() {
 							if (isShutdown) {
@@ -416,12 +434,13 @@ public class SaturnExecutor {
 								LOGGER.error(e.getMessage(), e);
 							}
 						}
-		
+
 					};
 					ShutdownHandler.addShutdownCallback(executorName, shutdownHandler);
 				}
 
-				LOGGER.info("The executor {} start successfully which used {} ms", executorName, System.currentTimeMillis() - startTime);
+				LOGGER.info("The executor {} start successfully which used {} ms", executorName,
+						System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
 				LOGGER.error("Fail to start executor {}", executorName);
 				shutdown0();
@@ -431,7 +450,7 @@ public class SaturnExecutor {
 			shutdownLock.unlock();
 		}
 	}
-	
+
 	private void shutdownAllCountThread() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {
@@ -445,7 +464,7 @@ public class SaturnExecutor {
 			}
 		}
 	}
-	
+
 	private void shutdownUnfinishJob() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {
@@ -472,14 +491,14 @@ public class SaturnExecutor {
 		try {
 			LOGGER.info("Try to stop executor {}", executorName);
 			shutdownUnfinishJob();
-			if(saturnExecutorService != null) {
+			if (saturnExecutorService != null) {
 				saturnExecutorService.shutdown();
 			}
 			if (regCenter != null) {
 				regCenter.close();
 			}
 			JobRegistry.clearExecutor(executorName);
-			if(resetCountService != null) {
+			if (resetCountService != null) {
 				resetCountService.shutdownRestCountTimer();
 			}
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
@@ -488,18 +507,16 @@ public class SaturnExecutor {
 			shutdownLock.unlock();
 		}
 	}
-	
+
 	/**
-	 * Executor优雅退出：
-	 * 把自己从集群中拿掉，现有的作业不停； 一直到全部作业都执行完毕，再真正退出； 
-	 * 设置一定超时时间，如果超过这个时间仍未退出，则强行中止
+	 * Executor优雅退出： 把自己从集群中拿掉，现有的作业不停； 一直到全部作业都执行完毕，再真正退出； 设置一定超时时间，如果超过这个时间仍未退出，则强行中止
 	 */
 	private void shutdownGracefully0() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
 			LOGGER.info("Try to stop executor {} gracefully", executorName);
 			shutdownAllCountThread();
-	
+
 			if (saturnExecutorService != null) {
 				saturnExecutorService.shutdown();
 			}
@@ -528,50 +545,50 @@ public class SaturnExecutor {
 	 */
 	private void blockUntilJobCompletedIfNotTimeout() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
-		if(schdMap == null){
+		if (schdMap == null) {
 			return;
 		}
 		Set<Entry<String, JobScheduler>> entries = schdMap.entrySet();
-		
-		if(CollectionUtils.isEmpty(entries)){
+
+		if (CollectionUtils.isEmpty(entries)) {
 			return;
 		}
 		long start = System.currentTimeMillis();
-		
+
 		boolean hasRunning = false;
-		do{		
-			try {			
+		do {
+			try {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
-			for(Entry<String, JobScheduler> entry : entries){
-				JobScheduler  jobScheduler = entry.getValue();
-				if("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType())){
+			for (Entry<String, JobScheduler> entry : entries) {
+				JobScheduler jobScheduler = entry.getValue();
+				if ("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType())) {
 					if (jobScheduler.getJob().isRunning()) {
 						hasRunning = true;
 						break;
-					}else{
+					} else {
 						hasRunning = false;
 					}
-				}else if("SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType())){
-					if(jobScheduler.getCurrentConf().isEnabled()){
+				} else if ("SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType())) {
+					if (jobScheduler.getCurrentConf().isEnabled()) {
 						if (jobScheduler.getJob().isRunning()) {
 							hasRunning = true;
 							break;
-						}else{
+						} else {
 							hasRunning = false;
 						}
 					}
-				}else{
+				} else {
 					jobScheduler.stopJob(false);
 				}
 			}
-		}while(hasRunning && System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
-
+		} while (hasRunning
+				&& System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
 
 	}
-	
+
 	public void shutdown() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
@@ -582,7 +599,7 @@ public class SaturnExecutor {
 			shutdownLock.unlock();
 		}
 	}
-	
+
 	public void shutdownGracefully() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {

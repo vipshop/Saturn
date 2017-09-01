@@ -53,7 +53,6 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 		return monitoringProcess;
 	}
 
-
 	public String getJobName() {
 		return jobName;
 	}

@@ -20,189 +20,173 @@ import static org.assertj.core.api.Assertions.assertThat;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JsonParseObjectTest {
 
-    private SaturnJobReturn readSaturnJobReturn(String filepath) throws Exception {
-        Map<String, String> envMap = new HashMap<>();
-        envMap.put(SystemEnvProperties.NAME_VIP_SATURN_OUTPUT_PATH, this.getClass().getResource(filepath).getFile());
-        ScriptJobRunner scriptJobRunner = new ScriptJobRunner(envMap, null, null, null, null);
-        Method createSaturnJobReturnFileMethod = scriptJobRunner.getClass().getDeclaredMethod("createSaturnJobReturnFile");
-        createSaturnJobReturnFileMethod.setAccessible(true);
-        createSaturnJobReturnFileMethod.invoke(scriptJobRunner);
-        Method readSaturnJobReturnMethod = scriptJobRunner.getClass().getDeclaredMethod("readSaturnJobReturn");
-        readSaturnJobReturnMethod.setAccessible(true);
-        return (SaturnJobReturn) readSaturnJobReturnMethod.invoke(scriptJobRunner);
-    }
+	private SaturnJobReturn readSaturnJobReturn(String filepath) throws Exception {
+		Map<String, String> envMap = new HashMap<>();
+		envMap.put(SystemEnvProperties.NAME_VIP_SATURN_OUTPUT_PATH, this.getClass().getResource(filepath).getFile());
+		ScriptJobRunner scriptJobRunner = new ScriptJobRunner(envMap, null, null, null, null);
+		Method createSaturnJobReturnFileMethod = scriptJobRunner.getClass()
+				.getDeclaredMethod("createSaturnJobReturnFile");
+		createSaturnJobReturnFileMethod.setAccessible(true);
+		createSaturnJobReturnFileMethod.invoke(scriptJobRunner);
+		Method readSaturnJobReturnMethod = scriptJobRunner.getClass().getDeclaredMethod("readSaturnJobReturn");
+		readSaturnJobReturnMethod.setAccessible(true);
+		return (SaturnJobReturn) readSaturnJobReturnMethod.invoke(scriptJobRunner);
+	}
 
-    @Test
-    public void test_A_normal() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnNormal");
+	@Test
+	public void test_A_normal() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnNormal");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    @Test
-    public void test_B_overFields() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnMoreFields");
+	@Test
+	public void test_B_overFields() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnMoreFields");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 少errorGroup，默认为200
-     */
-    @Test
-    public void test_C_lessFieldErrorGroup() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldErrorGroup");
+	/**
+	 * 少errorGroup，默认为200
+	 */
+	@Test
+	public void test_C_lessFieldErrorGroup() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldErrorGroup");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 少prop，默认为空
-     */
-    @Test
-    public void test_D_lessFieldProp() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldProp");
+	/**
+	 * 少prop，默认为空
+	 */
+	@Test
+	public void test_D_lessFieldProp() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldProp");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
+		SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 少returnCode，默认为0
-     */
-    @Test
-    public void test_E_lessFieldReturnCode() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
+	/**
+	 * 少returnCode，默认为0
+	 */
+	@Test
+	public void test_E_lessFieldReturnCode() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
 
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldReturnCode");
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldReturnCode");
 
-        SaturnJobReturn expect = new SaturnJobReturn(0, "hello world", 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(0, "hello world", 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 少returnMsg，默认为空
-     */
-    @Test
-    public void test_F_lessFieldReturnMsg() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
+	/**
+	 * 少returnMsg，默认为空
+	 */
+	@Test
+	public void test_F_lessFieldReturnMsg() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
 
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldReturnMsg");
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnLessFieldReturnMsg");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, null, 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(500, null, 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 少全部字段，只有{}
-     */
-    @Test
-    public void test_G_NoFields() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
+	/**
+	 * 少全部字段，只有{}
+	 */
+	@Test
+	public void test_G_NoFields() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
 
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnNoFields");
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnNoFields");
 
-        SaturnJobReturn expect = new SaturnJobReturn();
+		SaturnJobReturn expect = new SaturnJobReturn();
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
-    /**
-     * 没有内容
-     */
-    @Test
-    public void test_H_blank() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
+	/**
+	 * 没有内容
+	 */
+	@Test
+	public void test_H_blank() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
 
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnBlank");
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnBlank");
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn).isNull();
-    }
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNull();
+	}
 
-    @Test
-    public void test_I_trim() throws Exception {
-        LogbackListAppender logbackListAppender = new LogbackListAppender();
-        logbackListAppender.addToLogger(ScriptJobRunner.class);
-        logbackListAppender.start();
+	@Test
+	public void test_I_trim() throws Exception {
+		LogbackListAppender logbackListAppender = new LogbackListAppender();
+		logbackListAppender.addToLogger(ScriptJobRunner.class);
+		logbackListAppender.start();
 
-        SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnTrim");
+		SaturnJobReturn saturnJobReturn = readSaturnJobReturn("/SaturnJobReturnTrim");
 
-        SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
-        HashMap<String, String> prop = new HashMap();
-        prop.put("key", "value");
-        expect.setProp(prop);
+		SaturnJobReturn expect = new SaturnJobReturn(500, "hello world", 200);
+		HashMap<String, String> prop = new HashMap();
+		prop.put("key", "value");
+		expect.setProp(prop);
 
-        assertThat(logbackListAppender.getLastMessage()).isNull();
-        assertThat(saturnJobReturn)
-                .isNotNull()
-                .isEqualToComparingFieldByField(expect);
-    }
-
+		assertThat(logbackListAppender.getLastMessage()).isNull();
+		assertThat(saturnJobReturn).isNotNull().isEqualToComparingFieldByField(expect);
+	}
 
 }

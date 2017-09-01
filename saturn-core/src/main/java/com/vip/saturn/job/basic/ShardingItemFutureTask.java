@@ -26,7 +26,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 
 	private Future<?> callFuture;
 
-	private boolean done = false; //NOSONAR
+	private boolean done = false; // NOSONAR
 
 	public Future<?> getCallFuture() {
 		return callFuture;
@@ -68,20 +68,22 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 
 	@Override
 	public SaturnJobReturn call() throws Exception {
-		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler(){
+		Thread.currentThread().setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
-				if(e instanceof IllegalMonitorStateException || e instanceof ThreadDeath){		
-					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(), "business thread pool maybe crashed"), e);
-					if(callFuture != null){
+				if (e instanceof IllegalMonitorStateException || e instanceof ThreadDeath) {
+					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(),
+							"business thread pool maybe crashed"), e);
+					if (callFuture != null) {
 						callFuture.cancel(false);
 					}
-					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(), "close the old business thread pool, and re-create new one"));
+					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(),
+							"close the old business thread pool, and re-create new one"));
 					callable.getSaturnJob().getJobScheduler().reCreateExecutorService();
 				}
 			}
-			
+
 		});
 		try {
 			SaturnJobReturn ret = callable.call();
@@ -147,7 +149,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 						break;
 					}
 				}
-				
+
 			} catch (InterruptedException e) {// NOSONAR
 			}
 		}

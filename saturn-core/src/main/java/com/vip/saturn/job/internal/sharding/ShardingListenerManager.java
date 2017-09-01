@@ -27,26 +27,27 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	private static Logger log = LoggerFactory.getLogger(ShardingListenerManager.class);
 
 	private volatile boolean isShutdown;
-	
+
 	private CuratorWatcher necessaryWatcher;
-	
+
 	private ShardingService shardingService;
-	
+
 	private ExecutorService executorService;
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
-        super(jobScheduler);
+		super(jobScheduler);
 		shardingService = jobScheduler.getShardingService();
 		// because crondJob do nothing in onResharding method, no need this watcher.
-		if(!isCrondJob(jobScheduler.getCurrentConf().getSaturnJobClass())) {
+		if (!isCrondJob(jobScheduler.getCurrentConf().getSaturnJobClass())) {
 			necessaryWatcher = new NecessaryWatcher();
 		}
-    }
+	}
 
 	@Override
 	public void start() {
-		if(necessaryWatcher != null) {
-			executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
+		if (necessaryWatcher != null) {
+			executorService = Executors.newSingleThreadExecutor(
+					new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
 			shardingService.registerNecessaryWatcher(necessaryWatcher);
 			addConnectionStateListener(new ConnectionStateListener() {
 				@Override
@@ -65,15 +66,15 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	@Override
 	public void shutdown() {
 		super.shutdown();
-		if(executorService != null) {
+		if (executorService != null) {
 			executorService.shutdownNow();
 		}
 		isShutdown = true;
 	}
 
 	/**
-	 * If saturnJobClass is null, then return false;
-	 * Otherwise, check the superclass canonical name recursively to see if is subclass of CronJob
+	 * If saturnJobClass is null, then return false; Otherwise, check the superclass canonical name recursively to see
+	 * if is subclass of CronJob
 	 */
 	private boolean isCrondJob(Class<?> saturnJobClass) {
 		if (saturnJobClass != null) {
@@ -85,7 +86,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				if (superClassCanonicalName.equals(crondJobCanonicalName)) {
 					return true;
 				}
-				if(superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is CrondJob's parent
+				if (superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is CrondJob's
+																						// parent
 					return false;
 				}
 				superClass = superClass.getSuperclass();
@@ -93,7 +95,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		}
 		return false;
 	}
-	
+
 	private void registerNecessaryWatcher() {
 		executorService.execute(new Runnable() {
 			@Override
@@ -144,7 +146,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				// use the thread pool to executor registerNecessaryWatcher by async,
 				// fix the problem:
 				// when zk is reconnected, this watcher thread is earlier than the notice of RECONNECTED EVENT,
-				// registerNecessaryWatcher will wait until reconnected or timeout, 
+				// registerNecessaryWatcher will wait until reconnected or timeout,
 				// the drawback is that this watcher thread will block the notice of RECONNECTED EVENT.
 				registerNecessaryWatcher();
 			}

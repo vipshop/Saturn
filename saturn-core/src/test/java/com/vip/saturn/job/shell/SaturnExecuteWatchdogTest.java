@@ -12,6 +12,6 @@ public class SaturnExecuteWatchdogTest {
 			Process process = Runtime.getRuntime().exec("echo 123");
 			long pid = SaturnExecuteWatchdog.getPidByProcess(process);
 			assertThat(pid).isGreaterThan(0);
-		} 
+		}
 	}
 }

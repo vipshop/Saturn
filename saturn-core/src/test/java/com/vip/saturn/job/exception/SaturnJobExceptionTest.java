@@ -18,12 +18,13 @@ public class SaturnJobExceptionTest {
 		assertThat(SaturnJobException.OUT_OF_ZK_LIMIT_MEMORY).isEqualTo(3);
 		assertThat(SaturnJobException.JOB_NAME_INVALID).isEqualTo(4);
 	}
-	
+
 	@Test
 	public void testGet() {
-		SaturnJobException saturnJobException = new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "cron valid");
+		SaturnJobException saturnJobException = new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT,
+				"cron valid");
 		assertThat(saturnJobException.getType()).isEqualTo(SaturnJobException.ILLEGAL_ARGUMENT);
 		assertThat(saturnJobException.getMessage()).isEqualTo("cron valid");
 	}
-	
+
 }

@@ -23,41 +23,41 @@ public class ShutdownHandler implements SignalHandler {
 
 	private static ConcurrentHashMap<String, List<Runnable>> listeners = new ConcurrentHashMap<>();
 	private static List<Runnable> globalListeners = new ArrayList<>();
-	
+
 	private static ShutdownHandler handler;
 	private static volatile boolean exit = true;
-	
-	static{
+
+	static {
 		handler = new ShutdownHandler();
 		Signal.handle(new Signal("TERM"), handler); // 相当于kill -15
-		Signal.handle(new Signal("INT"), handler); // 相当于Ctrl+C	
+		Signal.handle(new Signal("INT"), handler); // 相当于Ctrl+C
 	}
-	
+
 	public static void addShutdownCallback(Runnable c) {
 		globalListeners.add(c);
 	}
-	
+
 	public static void addShutdownCallback(String executorName, Runnable c) {
-		if(!listeners.containsKey(executorName)) {
+		if (!listeners.containsKey(executorName)) {
 			listeners.putIfAbsent(executorName, new ArrayList<Runnable>());
 		}
 		listeners.get(executorName).add(c);
 	}
-	
+
 	public static void removeShutdownCallback(String executorName) {
 		listeners.remove(executorName);
 	}
-	
+
 	public static void exitAfterHandler(boolean exit) {
 		ShutdownHandler.exit = exit;
 	}
-	
+
 	@Override
 	public void handle(Signal sn) {
 		log.info("msg=Saturn is shutdown...");
-		
+
 		Iterator<Entry<String, List<Runnable>>> iterator = listeners.entrySet().iterator();
-		while(iterator.hasNext()) {
+		while (iterator.hasNext()) {
 			Entry<String, List<Runnable>> next = iterator.next();
 			List<Runnable> value = next.getValue();
 			for (Runnable runnable : value) {
@@ -71,7 +71,7 @@ public class ShutdownHandler implements SignalHandler {
 			}
 		}
 		listeners.clear();
-		
+
 		for (Runnable runnable : globalListeners) {
 			try {
 				if (runnable != null) {
@@ -82,19 +82,19 @@ public class ShutdownHandler implements SignalHandler {
 			}
 		}
 		globalListeners.clear();
-		
-		if(exit) {
+
+		if (exit) {
 			LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 			loggerContext.stop();
-			
+
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
-				log.error("msg=" + e.getMessage(),e);
+				log.error("msg=" + e.getMessage(), e);
 			}
-			
+
 			System.exit(-1);
 		}
 	}
-	
+
 }

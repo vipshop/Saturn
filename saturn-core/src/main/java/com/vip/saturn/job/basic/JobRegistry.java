@@ -31,12 +31,13 @@ public class JobRegistry {
 	public static Map<String, ConcurrentHashMap<String, JobScheduler>> getSchedulerMap() {
 		return SCHEDULER_MAP;
 	}
-	
+
 	/**
 	 * 添加作业控制器.
 	 * 
 	 */
-	public static void addJobScheduler(final String executorName, final String jobName, final JobScheduler jobScheduler) {
+	public static void addJobScheduler(final String executorName, final String jobName,
+			final JobScheduler jobScheduler) {
 		if (SCHEDULER_MAP.containsKey(executorName)) {
 			SCHEDULER_MAP.get(executorName).put(jobName, jobScheduler);
 		} else {
@@ -46,15 +47,15 @@ public class JobRegistry {
 		}
 	}
 
-	public static void clearExecutor(String executorName){
+	public static void clearExecutor(String executorName) {
 		SCHEDULER_MAP.remove(executorName);
 	}
-	
-	public static void clearJob(String executorName,String jobName) {
-		Map<String, JobScheduler> scedMap =  SCHEDULER_MAP.get(executorName);
+
+	public static void clearJob(String executorName, String jobName) {
+		Map<String, JobScheduler> scedMap = SCHEDULER_MAP.get(executorName);
 		if (scedMap != null) {
 			JobScheduler jobScheduler = scedMap.remove(jobName);
-			if(jobScheduler != null && jobScheduler.getJob()!=null){
+			if (jobScheduler != null && jobScheduler.getJob() != null) {
 				jobScheduler.getJob().shutdown();
 			}
 		}

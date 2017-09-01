@@ -13,7 +13,7 @@ import org.quartz.impl.triggers.AbstractTrigger;
 import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.exception.JobException;
 
-public class CrondTrigger implements SaturnTrigger{
+public class CrondTrigger implements SaturnTrigger {
 
 	/**
 	 * 验证cron表达式的合法性
@@ -27,8 +27,8 @@ public class CrondTrigger implements SaturnTrigger{
 			}
 		}
 	}
-	
-	public Trigger createTrigger(AbstractElasticJob job){
+
+	public Trigger createTrigger(AbstractElasticJob job) {
 		String cron = job.getConfigService().getCron();
 		validateCron(cron);
 		CronScheduleBuilder cronScheduleBuilder;
@@ -37,20 +37,18 @@ public class CrondTrigger implements SaturnTrigger{
 		} else {
 			cronScheduleBuilder = CronScheduleBuilder.cronSchedule("* * * * * ? 2099");
 		}
-		cronScheduleBuilder = cronScheduleBuilder
-				.inTimeZone(job.getConfigService().getTimeZone())
+		cronScheduleBuilder = cronScheduleBuilder.inTimeZone(job.getConfigService().getTimeZone())
 				.withMisfireHandlingInstructionDoNothing();
 		Trigger cronTrigger = TriggerBuilder.newTrigger().withIdentity(job.getExecutorName() + "_" + job.getJobName())
 				.withSchedule(cronScheduleBuilder).build();
-		((AbstractTrigger<CronTrigger>) cronTrigger)
-				.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-		
+		((AbstractTrigger<CronTrigger>) cronTrigger).setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+
 		return cronTrigger;
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
-	public SaturnScheduler build(AbstractElasticJob job) throws SchedulerException{
+	public SaturnScheduler build(AbstractElasticJob job) throws SchedulerException {
 		SaturnScheduler scheduler = new SaturnScheduler(job, createTrigger(job));
 		scheduler.start();
 		return scheduler;

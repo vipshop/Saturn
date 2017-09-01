@@ -11,7 +11,7 @@ public class StartCheckUtil {
 	private static final String OUT_FILE = System.getProperty("start.check.outfile");
 
 	public enum StartCheckItem {
-		ZK, PORT, UNIQUE,  JOBKILL;
+		ZK, PORT, UNIQUE, JOBKILL;
 	}
 
 	public enum CheckStatus {

@@ -77,7 +77,7 @@ public class JobScheduler {
 	private final LeaderElectionService leaderElectionService;
 
 	private final ServerService serverService;
-	
+
 	private final ReportService reportService;
 
 	private final ShardingService shardingService;
@@ -97,9 +97,9 @@ public class JobScheduler {
 	private final LimitMaxJobsService limitMaxJobsService;
 
 	private final JobNodeStorage jobNodeStorage;
-	
+
 	private final ZkCacheManager zkCacheManager;
-	
+
 	private ExecutorService executorService;
 
 	private AbstractElasticJob job;
@@ -117,8 +117,9 @@ public class JobScheduler {
 		this.jobNodeStorage = new JobNodeStorage(coordinatorRegistryCenter, jobConfiguration);
 		initExecutorService();
 		JobRegistry.addJobScheduler(executorName, jobName, this);
-		
-		zkCacheManager = new ZkCacheManager((CuratorFramework) coordinatorRegistryCenter.getRawClient(), jobName, executorName);
+
+		zkCacheManager = new ZkCacheManager((CuratorFramework) coordinatorRegistryCenter.getRawClient(), jobName,
+				executorName);
 		configService = new ConfigurationService(this);
 		leaderElectionService = new LeaderElectionService(this);
 		serverService = new ServerService(this);
@@ -211,7 +212,7 @@ public class JobScheduler {
 		job.setSaturnExecutorService(saturnExecutorService);
 		job.init();
 	}
-	
+
 	private void initExecutorService() {
 		ThreadFactory factory = new SaturnThreadFactory(jobName);
 		executorService = new ExtendableThreadPoolExecutor(0, 100, 2, TimeUnit.MINUTES, new TaskQueue(), factory);
@@ -219,8 +220,9 @@ public class JobScheduler {
 
 	public void reCreateExecutorService() {
 		synchronized (isShutdownFlag) {
-			if(isShutdownFlag.get()) {
-				log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "the jobScheduler was shutdown, cannot re-create business thread pool"));
+			if (isShutdownFlag.get()) {
+				log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
+						"the jobScheduler was shutdown, cannot re-create business thread pool"));
 				return;
 			}
 			executionService.shutdown();
@@ -234,8 +236,8 @@ public class JobScheduler {
 	 * @return 下次作业触发时间
 	 */
 	public Date getNextFireTimePausePeriodEffected() {
-		SaturnScheduler saturnScheduler =  job.getScheduler();
-		if(saturnScheduler == null){
+		SaturnScheduler saturnScheduler = job.getScheduler();
+		if (saturnScheduler == null) {
 			return null;
 		}
 		Trigger trigger = saturnScheduler.getTrigger();
@@ -254,7 +256,7 @@ public class JobScheduler {
 		}
 		return nextFireTime;
 	}
-	
+
 	/**
 	 * 停止作业.
 	 * @param stopJob 是否强制停止作业
@@ -292,10 +294,10 @@ public class JobScheduler {
 	/**
 	 * 关闭process count thread
 	 */
-	public void shutdownCountThread(){
+	public void shutdownCountThread() {
 		statisticsService.shutdown();
 	}
-	
+
 	/**
 	 * 关闭调度器.
 	 */
@@ -419,7 +421,7 @@ public class JobScheduler {
 	public ConfigurationService getConfigService() {
 		return configService;
 	}
-	
+
 	public ReportService getReportService() {
 		return reportService;
 	}
@@ -467,7 +469,7 @@ public class JobScheduler {
 	public JobNodeStorage getJobNodeStorage() {
 		return jobNodeStorage;
 	}
-	
+
 	public ZkCacheManager getZkCacheManager() {
 		return zkCacheManager;
 	}
@@ -475,5 +477,5 @@ public class JobScheduler {
 	public ExecutorService getExecutorService() {
 		return executorService;
 	}
-	
+
 }

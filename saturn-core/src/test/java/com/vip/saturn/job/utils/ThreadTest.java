@@ -12,10 +12,12 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
 
 public class ThreadTest {
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
-		ScheduledThreadPoolExecutor timeoutExecutor = new ScheduledThreadPoolExecutor(Math.max(2, Runtime.getRuntime().availableProcessors() / 2), new SaturnThreadFactory( "-timeout-watchdog"));
+		ScheduledThreadPoolExecutor timeoutExecutor = new ScheduledThreadPoolExecutor(
+				Math.max(2, Runtime.getRuntime().availableProcessors() / 2),
+				new SaturnThreadFactory("-timeout-watchdog"));
 		timeoutExecutor.setRemoveOnCancelPolicy(true);
-		
-		ExecutorService executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory( "test"));
+
+		ExecutorService executorService = Executors.newSingleThreadExecutor(new SaturnThreadFactory("test"));
 
 		ThreadA a = new ThreadA();
 		Future<String> future = executorService.submit(a);
@@ -32,12 +34,13 @@ public class ThreadTest {
 
 }
 
-class TimeoutHandleTask  implements Runnable {
+class TimeoutHandleTask implements Runnable {
 	private ThreadA threadA;
-	public TimeoutHandleTask(ThreadA threadA){
+
+	public TimeoutHandleTask(ThreadA threadA) {
 		this.threadA = threadA;
 	}
-	
+
 	@Override
 	public void run() {
 		try {
@@ -45,12 +48,13 @@ class TimeoutHandleTask  implements Runnable {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 }
+
 class ThreadA implements Callable<String> {
 	private Thread currentThread;
-	
+
 	public Thread getCurrentThread() {
 		return currentThread;
 	}
@@ -59,7 +63,7 @@ class ThreadA implements Callable<String> {
 	public String call() throws Exception {
 		currentThread = Thread.currentThread();
 		try {
-			System.out.println("i am threadA ;"+currentThread.toString());
+			System.out.println("i am threadA ;" + currentThread.toString());
 			for (int i = 0; i < 1000; i++) {
 				Thread.sleep(10);
 			}

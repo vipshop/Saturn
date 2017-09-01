@@ -6,5 +6,6 @@ import com.vip.saturn.job.basic.AbstractElasticJob;
 
 public interface SaturnTrigger {
 	SaturnScheduler build(AbstractElasticJob job) throws SchedulerException;
-	void retrigger(SaturnScheduler scheduler,AbstractElasticJob job) throws SchedulerException;
+
+	void retrigger(SaturnScheduler scheduler, AbstractElasticJob job) throws SchedulerException;
 }

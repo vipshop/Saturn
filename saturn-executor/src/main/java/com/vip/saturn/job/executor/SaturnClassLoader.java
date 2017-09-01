@@ -13,7 +13,7 @@ public class SaturnClassLoader extends URLClassLoader {
 	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		synchronized (getClassLoadingLock(name)) {
 			Class<?> findClass = findLoadedClass(name);
-			
+
 			if (findClass == null) {
 				findClass = super.loadClass(name, resolve);
 			}

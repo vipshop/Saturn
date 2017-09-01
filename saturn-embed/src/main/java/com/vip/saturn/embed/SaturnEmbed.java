@@ -16,60 +16,60 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 public class SaturnEmbed {
-    /**
-     * 递归删除目录下的所有文件及子目录下所有文件
-     * @param dir 将要删除的文件目录
-     * @return boolean Returns "true" if all deletions were successful.
-     *                 If a deletion fails, the method stops attempting to
-     *                 delete and returns "false".
-     */
-    private static boolean deleteDir(File dir) {
-        if (dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i=0; i<children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
-                if (!success) {
-                    return false;
-                }
-            }
-        }
-        // 目录此时为空，可以删除
-        return dir.delete();
-    }
-    
-	public static void start() throws Exception{
-		try{
-			String saturnZip = System.getProperty("saturn.zipfile",System.getenv("SATURN_ZIP_FILE"));
-			if(saturnZip != null && !saturnZip.isEmpty()){
-				File zipFile = new File(saturnZip);
-				File saturnHome = null;
-				if(zipFile.canRead()){
-					//saturnHome = zipFile.getParentFile().getAbsolutePath() + File.separator + "saturn";
-					saturnHome = new File(System.getProperty("user.home") + File.separator + "saturn" );
-					deleteDir(saturnHome);
-					unzip(zipFile, saturnHome);
-					System.setProperty("saturn.home",saturnHome.listFiles()[0].getAbsolutePath());
+	/**
+	 * 递归删除目录下的所有文件及子目录下所有文件
+	 * @param dir 将要删除的文件目录
+	 * @return boolean Returns "true" if all deletions were successful. If a deletion fails, the method stops attempting
+	 * to delete and returns "false".
+	 */
+	private static boolean deleteDir(File dir) {
+		if (dir.isDirectory()) {
+			String[] children = dir.list();
+			for (int i = 0; i < children.length; i++) {
+				boolean success = deleteDir(new File(dir, children[i]));
+				if (!success) {
+					return false;
 				}
 			}
-		}catch(Exception e){//NOSONAR
+		}
+		// 目录此时为空，可以删除
+		return dir.delete();
+	}
+
+	public static void start() throws Exception {
+		try {
+			String saturnZip = System.getProperty("saturn.zipfile", System.getenv("SATURN_ZIP_FILE"));
+			if (saturnZip != null && !saturnZip.isEmpty()) {
+				File zipFile = new File(saturnZip);
+				File saturnHome = null;
+				if (zipFile.canRead()) {
+					// saturnHome = zipFile.getParentFile().getAbsolutePath() + File.separator + "saturn";
+					saturnHome = new File(System.getProperty("user.home") + File.separator + "saturn");
+					deleteDir(saturnHome);
+					unzip(zipFile, saturnHome);
+					System.setProperty("saturn.home", saturnHome.listFiles()[0].getAbsolutePath());
+				}
+			}
+		} catch (Exception e) {// NOSONAR
 			e.printStackTrace();
 		}
-		
-		String saturnHome = System.getProperty("saturn.home",System.getenv("SATURN_HOME"));
-		if(saturnHome == null || saturnHome.isEmpty()){
+
+		String saturnHome = System.getProperty("saturn.home", System.getenv("SATURN_HOME"));
+		if (saturnHome == null || saturnHome.isEmpty()) {
 			throw new Exception("saturn.home is not set");
 		}
-		if(!new File(saturnHome).isDirectory()){
-			throw new Exception("saturn executor not found in "+saturnHome);
+		if (!new File(saturnHome).isDirectory()) {
+			throw new Exception("saturn executor not found in " + saturnHome);
 		}
-		
-		String namespace =  System.getProperty("saturn.app.namespace",System.getenv("SATURN_APP_NAMESPACE"));
-		String executorName =  System.getProperty("saturn.app.executorName",System.getenv("SATURN_APP_EXECUTOR_NAME"));
-		if(namespace == null || namespace.isEmpty()){
+
+		String namespace = System.getProperty("saturn.app.namespace", System.getenv("SATURN_APP_NAMESPACE"));
+		String executorName = System.getProperty("saturn.app.executorName", System.getenv("SATURN_APP_EXECUTOR_NAME"));
+		if (namespace == null || namespace.isEmpty()) {
 			throw new Exception("saturn.app.namespace is not set");
 		}
-		
-		URLClassLoader executorClassLoader = new URLClassLoader(new URL[]{new File(saturnHome, "saturn-executor.jar").toURI().toURL()}, null); 
+
+		URLClassLoader executorClassLoader = new URLClassLoader(
+				new URL[] { new File(saturnHome, "saturn-executor.jar").toURI().toURL() }, null);
 		final List<String> argList = new ArrayList<>();
 		String saturnLibDir = saturnHome + System.getProperty("file.separator") + "lib";
 		argList.add("-saturnLibDir");
@@ -78,7 +78,7 @@ public class SaturnEmbed {
 		argList.add("-namespace");
 		argList.add(namespace);
 
-		if(executorName != null && !executorName.isEmpty()) {
+		if (executorName != null && !executorName.isEmpty()) {
 			argList.add("-executorName");
 			argList.add(executorName);
 		}
@@ -86,17 +86,17 @@ public class SaturnEmbed {
 		Class<?> mainClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.Main");
 		Object main = mainClass.newInstance();
 		Method mainMethod = mainClass.getMethod("launch", String[].class, ClassLoader.class);
-		
+
 		String[] args = new String[argList.size()];
-		int i=0;
-		for(String arg : argList){
+		int i = 0;
+		for (String arg : argList) {
 			args[i] = arg;
 			i++;
 		}
 
 		mainMethod.invoke(main, args, SaturnEmbed.class.getClassLoader());
 	}
-	
+
 	public static void unzip(File zip, File directory) throws ZipException, IOException {
 		ZipFile zipFile = new ZipFile(zip);
 		try {
@@ -128,5 +128,5 @@ public class SaturnEmbed {
 			zipFile.close();
 		}
 	}
-	
+
 }

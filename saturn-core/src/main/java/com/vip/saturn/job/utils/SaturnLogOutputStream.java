@@ -11,7 +11,7 @@ import org.apache.commons.exec.LogOutputStream;
  */
 public class SaturnLogOutputStream extends LogOutputStream {
 	private static final int MAX_LINE = 100;
-	
+
 	private static ThreadLocal<LRUList<String>> lists = new InheritableThreadLocal<LRUList<String>>() {
 		@Override
 		protected LRUList<String> initialValue() {
@@ -19,12 +19,12 @@ public class SaturnLogOutputStream extends LogOutputStream {
 		}
 	};
 	private static PrintStream catchedOut = new PrintStream(new SaturnLogOutputStream(1));
-	private static PrintStream out = System.out; //NOSONAR
+	private static PrintStream out = System.out; // NOSONAR
 
 	static {
 		System.setOut(catchedOut);
 	}
-	
+
 	private SaturnLogOutputStream(int level) {
 		super(level);
 	}
@@ -39,12 +39,12 @@ public class SaturnLogOutputStream extends LogOutputStream {
 		lists.get().clear();
 	}
 
-	private static void clearCache(){
+	private static void clearCache() {
 		lists.remove();
 	}
-	
+
 	public static String clearAndGetLog() {
-		try{
+		try {
 			StringBuilder sb = new StringBuilder();
 			LRUList<String> lruList = (LRUList<String>) lists.get();
 			for (String line : lruList) {
@@ -53,7 +53,7 @@ public class SaturnLogOutputStream extends LogOutputStream {
 			lruList.clear();
 			clearCache();
 			return sb.toString();
-		}catch(Exception e){//NOSONAR
+		} catch (Exception e) {// NOSONAR
 			return "";
 		}
 	}
