@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -57,30 +54,31 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	private static final Logger log = LoggerFactory.getLogger(JobDimensionServiceImpl.class);
 
-    @Resource
-    private CuratorRepository curatorRepository;
+	@Resource
+	private CuratorRepository curatorRepository;
 
 	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
 
-    @Resource
-    private HistoryJobConfigService historyJobConfigService;
+	@Resource
+	private HistoryJobConfigService historyJobConfigService;
 
-    @Resource
-    private CurrentJobConfigService currentJobConfigService;
-    
-    private MapperFacade mapper;
-    
-    @Autowired
-    public void setMapperFactory(MapperFactory mapperFactory) {
-        this.mapper = mapperFactory.getMapperFacade();
-    }
-    
-    private JobBriefInfo genJobBriefInfo4tree(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-    	JobBriefInfo jobBriefInfo = new JobBriefInfo();
+	@Resource
+	private CurrentJobConfigService currentJobConfigService;
+
+	private MapperFacade mapper;
+
+	@Autowired
+	public void setMapperFactory(MapperFactory mapperFactory) {
+		this.mapper = mapperFactory.getMapperFacade();
+	}
+
+	private JobBriefInfo genJobBriefInfo4tree(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		JobBriefInfo jobBriefInfo = new JobBriefInfo();
 		jobBriefInfo.setJobName(jobName);
 		jobBriefInfo.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
 		jobBriefInfo.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
-		jobBriefInfo.setJobType(JobType.getJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
+		jobBriefInfo.setJobType(
+				JobType.getJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
 		if (JobType.UNKOWN_JOB.equals(jobBriefInfo.getJobType())) {
 			if (jobBriefInfo.getJobClass() != null && jobBriefInfo.getJobClass().indexOf("SaturnScriptJob") != -1) {
 				jobBriefInfo.setJobType(JobType.SHELL_JOB);
@@ -89,33 +87,34 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
 		return jobBriefInfo;
-    }
-    
-    @Override
-    public Collection<JobBriefInfo> getAllJobsBriefInfo4Tree() {
-    	CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+	}
+
+	@Override
+	public Collection<JobBriefInfo> getAllJobsBriefInfo4Tree() {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		List<String> jobNames = new ArrayList<>();
 		try {
 			jobNames = getAllUnSystemJobs(curatorFrameworkOp);
 		} catch (SaturnJobConsoleException e) {
 			log.error(e.getMessage(), e);
 		}
-        List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
-        for (String jobName : jobNames) {
-            try {
-            	JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
-            	result.add(jobBriefInfo);
-            } catch (Exception e) {
+		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
+		for (String jobName : jobNames) {
+			try {
+				JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
+				result.add(jobBriefInfo);
+			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
-        }
-        return result;
-    }
+		}
+		return result;
+	}
 
 	@Override
-	public List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+	public List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException {
 		List<String> allJobs = new ArrayList<>();
-		if(curatorFrameworkOp == null) {
+		if (curatorFrameworkOp == null) {
 			curatorFrameworkOp = curatorRepository.inSessionClient();
 		}
 		String jobsNodePath = JobNodePath.get$JobsNodePath();
@@ -134,18 +133,19 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-		if(curatorFrameworkOp == null) {
+	public List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException {
+		if (curatorFrameworkOp == null) {
 			curatorFrameworkOp = curatorRepository.inSessionClient();
 		}
 		List<String> allJobs = getAllJobs(curatorFrameworkOp);
 		Iterator<String> iterator = allJobs.iterator();
-		while(iterator.hasNext()) {
+		while (iterator.hasNext()) {
 			String job = iterator.next();
 			String jobMode = JobNodePath.getConfigNodePath(job, "jobMode");
-			if(curatorFrameworkOp.checkExists(jobMode)) {
+			if (curatorFrameworkOp.checkExists(jobMode)) {
 				String data = curatorFrameworkOp.getData(jobMode);
-				if(data != null && data.startsWith(JobMode.SYSTEM_PREFIX)) {
+				if (data != null && data.startsWith(JobMode.SYSTEM_PREFIX)) {
 					iterator.remove();
 				}
 			}
@@ -158,18 +158,19 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		List<JobConfig> jobConfigs = new ArrayList<>();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		String dependencies = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"));
-		if(dependencies != null) {
+		if (dependencies != null) {
 			List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
 			String[] split = dependencies.split(",");
-			if(split != null) {
-				for(String tmp : split) {
-					if(tmp != null) {
+			if (split != null) {
+				for (String tmp : split) {
+					if (tmp != null) {
 						String dependency = tmp.trim();
-						if(dependency.length() > 0) {
-							if(!dependency.equals(jobName) && allUnSystemJobs.contains(dependency)) {
+						if (dependency.length() > 0) {
+							if (!dependency.equals(jobName) && allUnSystemJobs.contains(dependency)) {
 								JobConfig jobConfig = new JobConfig();
 								jobConfig.setJobName(dependency);
-								jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(dependency, "enabled"))));
+								jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp
+										.getData(JobNodePath.getConfigNodePath(dependency, "enabled"))));
 								jobConfigs.add(jobConfig);
 							}
 						}
@@ -185,10 +186,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		List<JobConfig> jobConfigs = new ArrayList<>();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
-		if(allUnSystemJobs != null) {
-			for(String job : allUnSystemJobs) {
-				if(!job.equals(jobName)) {
-					String dependencies = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "dependencies"));
+		if (allUnSystemJobs != null) {
+			for (String job : allUnSystemJobs) {
+				if (!job.equals(jobName)) {
+					String dependencies = curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(job, "dependencies"));
 					if (dependencies != null) {
 						String[] split = dependencies.split(",");
 						if (split != null) {
@@ -198,7 +200,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 									if (dependency.equals(jobName)) {
 										JobConfig jobConfig = new JobConfig();
 										jobConfig.setJobName(job);
-										jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "enabled"))));
+										jobConfig.setEnabled(Boolean.valueOf(curatorFrameworkOp
+												.getData(JobNodePath.getConfigNodePath(job, "enabled"))));
 										jobConfigs.add(jobConfig);
 										break;
 									}
@@ -213,7 +216,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-    public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionZkKey, String namespace) {
+	public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionZkKey, String namespace) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		List<String> jobNames = new ArrayList<>();
 		try {
@@ -222,122 +225,136 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			log.error(e.getMessage(), e);
 		}
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
-        for (String jobName : jobNames) {
-        	try{
-        		if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
-        			continue;
-        		}
-        		JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
-	            jobBriefInfo.setIsJobEnabled(isJobEnabled(jobName));
-	            jobBriefInfo.setStatus(getJobStatus(jobName));
-	            jobBriefInfo.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
-	            jobBriefInfo.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
-	            jobBriefInfo.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
-	            jobBriefInfo.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
-	            jobBriefInfo.setLoadLevel(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel")));
-	            String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
-                if(Strings.isNullOrEmpty(jobDegree)){
+		for (String jobName : jobNames) {
+			try {
+				if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
+					continue;
+				}
+				JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, curatorFrameworkOp);
+				jobBriefInfo.setIsJobEnabled(isJobEnabled(jobName));
+				jobBriefInfo.setStatus(getJobStatus(jobName));
+				jobBriefInfo.setJobParameter(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
+				jobBriefInfo.setShardingItemParameters(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
+				jobBriefInfo
+						.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
+				jobBriefInfo.setChannelName(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
+				jobBriefInfo
+						.setLoadLevel(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel")));
+				String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
+				if (Strings.isNullOrEmpty(jobDegree)) {
 					jobDegree = "0";
 				}
-                jobBriefInfo.setJobDegree(jobDegree);
-	            jobBriefInfo.setShardingTotalCount(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")));
-                String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
-				if(Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
+				jobBriefInfo.setJobDegree(jobDegree);
+				jobBriefInfo.setShardingTotalCount(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")));
+				String timeout4AlarmSecondsStr = curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
+				if (Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
 					jobBriefInfo.setTimeout4AlarmSeconds(0);
 				} else {
 					jobBriefInfo.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
 				}
-	            jobBriefInfo.setTimeoutSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
-	            jobBriefInfo.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
-	            jobBriefInfo.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
-	            jobBriefInfo.setShowNormalLog(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
-	            jobBriefInfo.setLocalMode(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
-	            jobBriefInfo.setUseSerial(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
-	            jobBriefInfo.setUseDispreferList((Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList")))));
-	            jobBriefInfo.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
-	            jobBriefInfo.setJobRate(geJobRunningInfo(jobName));
-	            jobBriefInfo.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups")));
-	            String preferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"));
-	    		StringBuilder allPreferExecutorsBuilder = new StringBuilder();
-	    		if(!Strings.isNullOrEmpty(preferList)){
-	    			List<String> executors = null;
-	                String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
-	        		if(curatorFrameworkOp.checkExists(executorsNodePath)) {
-	        			executors = curatorFrameworkOp.getChildren(executorsNodePath);
-	        		}
+				jobBriefInfo.setTimeoutSeconds(Integer.parseInt(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
+				jobBriefInfo.setPausePeriodDate(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
+				jobBriefInfo.setPausePeriodTime(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
+				jobBriefInfo.setShowNormalLog(Boolean
+						.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
+				jobBriefInfo.setLocalMode(Boolean
+						.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
+				jobBriefInfo.setUseSerial(Boolean
+						.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+				jobBriefInfo.setUseDispreferList((Boolean.valueOf(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList")))));
+				jobBriefInfo.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
+				jobBriefInfo.setJobRate(geJobRunningInfo(jobName));
+				jobBriefInfo.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups")));
+				String preferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"));
+				StringBuilder allPreferExecutorsBuilder = new StringBuilder();
+				if (!Strings.isNullOrEmpty(preferList)) {
+					List<String> executors = null;
+					String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+					if (curatorFrameworkOp.checkExists(executorsNodePath)) {
+						executors = curatorFrameworkOp.getChildren(executorsNodePath);
+					}
 					List<String> containerTaskIds = null;
 					String containerTaskIdsNodePath = ContainerNodePath.getDcosTasksNodePath();
 					if (curatorFrameworkOp.checkExists(containerTaskIdsNodePath)) {
 						containerTaskIds = curatorFrameworkOp.getChildren(containerTaskIdsNodePath);
 					}
-	    			boolean hasExecutors = !CollectionUtils.isEmpty(executors);
+					boolean hasExecutors = !CollectionUtils.isEmpty(executors);
 					String[] preferExecutorList = preferList.split(",");
-					for(String preferExecutor : preferExecutorList){
+					for (String preferExecutor : preferExecutorList) {
 						boolean isContainerPrefer = preferExecutor.startsWith("@");
-						if(hasExecutors && !executors.contains(preferExecutor) && !isContainerPrefer){ //NOSONAR
+						if (hasExecutors && !executors.contains(preferExecutor) && !isContainerPrefer) { // NOSONAR
 							allPreferExecutorsBuilder.append(preferExecutor + "(已删除)").append(",");
 						} else if (isContainerPrefer) {
 							String preferTaskId = preferExecutor.substring(1);// 容器资源去掉@符号
 							if (!CollectionUtils.isEmpty(containerTaskIds) && containerTaskIds.contains(preferTaskId)) {// 过滤掉preferList中有，但实际上已被销毁的容器
 								allPreferExecutorsBuilder.append(preferTaskId + "(容器资源)").append(",");
 							}
-						} else{
+						} else {
 							allPreferExecutorsBuilder.append(preferExecutor).append(",");
 						}
 					}
-					if(!Strings.isNullOrEmpty(allPreferExecutorsBuilder.toString())){
-						jobBriefInfo.setPreferList(allPreferExecutorsBuilder.substring(0,allPreferExecutorsBuilder.length()-1));
+					if (!Strings.isNullOrEmpty(allPreferExecutorsBuilder.toString())) {
+						jobBriefInfo.setPreferList(
+								allPreferExecutorsBuilder.substring(0, allPreferExecutorsBuilder.length() - 1));
 					}
 					jobBriefInfo.setMigrateEnabled(isMigrateEnabled(preferList, containerTaskIds));
 				} else {
 					jobBriefInfo.setMigrateEnabled(false);
 				}
 				String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-				if(Strings.isNullOrEmpty(timeZone)) {
+				if (Strings.isNullOrEmpty(timeZone)) {
 					jobBriefInfo.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
 				} else {
 					jobBriefInfo.setTimeZone(timeZone);
 				}
 				jobBriefInfo.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
-	            
-	            if(!JobStatus.STOPPED.equals(jobBriefInfo.getStatus())){// 作业如果是STOPPED状态，不需要显示已分配的executor
-	            	String executorsPath = JobNodePath.getServerNodePath(jobName);
-	            	if(curatorFrameworkOp.checkExists(executorsPath)) {
-	            		List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
-	            		if (executors != null && !executors.isEmpty()) {
-	            			StringBuilder shardingListSb = new StringBuilder();
-	            			for(String executor : executors){
-	            				String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName,executor,"sharding"));
-	            				if(!Strings.isNullOrEmpty(sharding)){
-	            					shardingListSb.append(executor).append(",");
-	            				}
-	            			}
-	            			if(shardingListSb != null && shardingListSb.length() > 0){
-	            				jobBriefInfo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
-	            			}
-	            		}
-	            	}
-	            }
-	         // set nextfireTime
-                /*String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
-                if (curatorFrameworkOp.checkExists(executionRootpath)) {
-                    List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
-                    if (items != null && !items.isEmpty()) {
-                    	String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, "0", "nextFireTime"));
-                    	if (nextFireTime != null) {
-                    		jobBriefInfo.setNextFireTime(nextFireTime);
-                    	}
-                    }
-                }*/
-	            result.add(jobBriefInfo);
-        	}catch(Exception e){
-        		log.error(e.getMessage(), e);
-        		continue;
-        	}
-        }
-        Collections.sort(result);
-        return result;
-    }
+
+				if (!JobStatus.STOPPED.equals(jobBriefInfo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
+					String executorsPath = JobNodePath.getServerNodePath(jobName);
+					if (curatorFrameworkOp.checkExists(executorsPath)) {
+						List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
+						if (executors != null && !executors.isEmpty()) {
+							StringBuilder shardingListSb = new StringBuilder();
+							for (String executor : executors) {
+								String sharding = curatorFrameworkOp
+										.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
+								if (!Strings.isNullOrEmpty(sharding)) {
+									shardingListSb.append(executor).append(",");
+								}
+							}
+							if (shardingListSb != null && shardingListSb.length() > 0) {
+								jobBriefInfo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
+							}
+						}
+					}
+				}
+				// set nextfireTime
+				/*
+				 * String executionRootpath = JobNodePath.getExecutionNodePath(jobName); if
+				 * (curatorFrameworkOp.checkExists(executionRootpath)) { List<String> items =
+				 * curatorFrameworkOp.getChildren(executionRootpath); if (items != null && !items.isEmpty()) { String
+				 * nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, "0",
+				 * "nextFireTime")); if (nextFireTime != null) { jobBriefInfo.setNextFireTime(nextFireTime); } } }
+				 */
+				result.add(jobBriefInfo);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				continue;
+			}
+		}
+		Collections.sort(result);
+		return result;
+	}
 
 	private boolean isMigrateEnabled(String preferList, List<String> tasks) {
 		if (tasks == null || tasks.isEmpty()) {
@@ -351,7 +368,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				preferTasks.add(prefer.substring(1));
 			}
 		}
-		if(!preferTasks.isEmpty()) {
+		if (!preferTasks.isEmpty()) {
 			for (String task : tasks) {
 				if (!preferTasks.contains(task)) {
 					return true;
@@ -414,8 +431,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		boolean isAllShardsFinished = true;
 		if (executionItems != null && !executionItems.isEmpty()) {
 			for (String itemStr : executionItems) {
-				boolean isItemCompleted = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "completed"));
-				boolean isItemRunning = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
+				boolean isItemCompleted = curatorFrameworkOp
+						.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "completed"));
+				boolean isItemRunning = curatorFrameworkOp
+						.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
 				// if executor is kill by -9 while it is running, completed node won't exists as well as running node.
 				// under this circumstance, we consider it is completed.
 				if (!isItemCompleted && isItemRunning) {
@@ -423,223 +442,263 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					break;
 				}
 			}
-    	}
-    	// see if the job is enabled or not.
-    	boolean enabled = Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled")));
-    	if (enabled) {
-    		if (isAllShardsFinished) {
-        		return JobStatus.READY;
+		}
+		// see if the job is enabled or not.
+		boolean enabled = Boolean
+				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled")));
+		if (enabled) {
+			if (isAllShardsFinished) {
+				return JobStatus.READY;
 			}
-    		return JobStatus.RUNNING;
-    	} else {
-    		if (isAllShardsFinished) {
-        		return JobStatus.STOPPED;
+			return JobStatus.RUNNING;
+		} else {
+			if (isAllShardsFinished) {
+				return JobStatus.STOPPED;
 			}
-    		return JobStatus.STOPPING;
-    	}
-    }
+			return JobStatus.STOPPING;
+		}
+	}
 
-    @Override
-    public JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration configInSession) {
-        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        JobSettings result = new JobSettings();
-        result.setJobName(jobName);
-        result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
-        result.setShardingTotalCount(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
-        String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-        if(Strings.isNullOrEmpty(timeZone)) {
-            result.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
-        } else {
-            result.setTimeZone(timeZone);
-        }
-        result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-        result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
-        result.setPausePeriodDate(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
-        result.setPausePeriodTime(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
-        result.setShardingItemParameters(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
-        result.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
-        result.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
-        String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
-        if(Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
-            result.setTimeout4AlarmSeconds(0);
-        } else {
-            result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
-        }
-        result.setTimeoutSeconds(
-                Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
-        String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
-        if (Strings.isNullOrEmpty(lv)) {
-            result.setLoadLevel(1);
-        } else {
-            result.setLoadLevel(Integer.parseInt(lv));
-        }
-        String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
-        if (Strings.isNullOrEmpty(jobDegree)) {
-            result.setJobDegree(0);
-        } else {
-            result.setJobDegree(Integer.parseInt(jobDegree));
-        }
-        result.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));//默认是禁用的
-        result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
-        result.setPreferListCandidate(getAllExecutors(jobName));
-        String useDispreferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
-        if (Strings.isNullOrEmpty(useDispreferList)) {
-            result.setUseDispreferList(null);
-        } else {
-            result.setUseDispreferList(Boolean.valueOf(useDispreferList));
-        }
-        result.setUseSerial(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
-        result.setLocalMode(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
-        // result.setFailover(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "failover"))));
-        result.setDependencies(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies")));
-        result.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups")));
-        try {
-            List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
-            if(allUnSystemJobs != null) {
-                allUnSystemJobs.remove(jobName);
-                result.setDependenciesProvided(allUnSystemJobs);
-            }
-        } catch (SaturnJobConsoleException e) {
-            log.error(e.getMessage(), e);
-        }
-        result.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
-        result.setJobMode(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode")));
-        result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
-        result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
-        if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName, "showNormalLog")) == false) {
-            curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, "showNormalLog"));
-        }
-        String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-        result.setJobType(jobType);
-        String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
-        Boolean enabledReportValue = Boolean.valueOf(enabledReport);
-        if (Strings.isNullOrEmpty(enabledReport)) {
-            if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
-                enabledReportValue = true;
-            } else {
-                enabledReportValue = false;
-            }
-        }
-        result.setEnabledReport(enabledReportValue);
-        // 兼容旧版没有msg_job。
-        if (StringUtils.isBlank(result.getJobType())) {
-            if (result.getJobClass().indexOf("script") > 0) {
-                result.setJobType(JobType.SHELL_JOB.name());
-            } else {
-                result.setJobType(JobType.JAVA_JOB.name());
-            }
-        }
-        result.setShowNormalLog(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
-        try {
-            CurrentJobConfig jobconfig = currentJobConfigService.findConfigByNamespaceAndJobName(
-                    configInSession.getNamespace(), result.getJobName());
-            // config not exists, save it to current config.
-            if (jobconfig == null) {
-                CurrentJobConfig current = mapper.map(result, CurrentJobConfig.class);
-                current.setCreateTime(new Date());
-                current.setLastUpdateTime(new Date());
-                current.setNamespace(configInSession.getNamespace());
-                currentJobConfigService.create(current);
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-        return result;
-    }
+	@Override
+	public JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration configInSession) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		JobSettings result = new JobSettings();
+		result.setJobName(jobName);
+		result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		result.setShardingTotalCount(Integer
+				.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
+		String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if (Strings.isNullOrEmpty(timeZone)) {
+			result.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
+		} else {
+			result.setTimeZone(timeZone);
+		}
+		result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
+		result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
+		result.setPausePeriodDate(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
+		result.setPausePeriodTime(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime")));
+		result.setShardingItemParameters(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters")));
+		result.setJobParameter(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter")));
+		result.setProcessCountIntervalSeconds(Integer.parseInt(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
+		String timeout4AlarmSecondsStr = curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"));
+		if (Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
+			result.setTimeout4AlarmSeconds(0);
+		} else {
+			result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+		}
+		result.setTimeoutSeconds(
+				Integer.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
+		String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
+		if (Strings.isNullOrEmpty(lv)) {
+			result.setLoadLevel(1);
+		} else {
+			result.setLoadLevel(Integer.parseInt(lv));
+		}
+		String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"));
+		if (Strings.isNullOrEmpty(jobDegree)) {
+			result.setJobDegree(0);
+		} else {
+			result.setJobDegree(Integer.parseInt(jobDegree));
+		}
+		result.setEnabled(
+				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
+		result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
+		result.setPreferListCandidate(getAllExecutors(jobName));
+		String useDispreferList = curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
+		if (Strings.isNullOrEmpty(useDispreferList)) {
+			result.setUseDispreferList(null);
+		} else {
+			result.setUseDispreferList(Boolean.valueOf(useDispreferList));
+		}
+		result.setUseSerial(
+				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+		result.setLocalMode(
+				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
+		// result.setFailover(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName,
+		// "failover"))));
+		result.setDependencies(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies")));
+		result.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups")));
+		try {
+			List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
+			if (allUnSystemJobs != null) {
+				allUnSystemJobs.remove(jobName);
+				result.setDependenciesProvided(allUnSystemJobs);
+			}
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
+		result.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
+		result.setJobMode(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode")));
+		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
+		result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
+		if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName, "showNormalLog")) == false) {
+			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, "showNormalLog"));
+		}
+		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+		result.setJobType(jobType);
+		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
+		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
+		if (Strings.isNullOrEmpty(enabledReport)) {
+			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
+				enabledReportValue = true;
+			} else {
+				enabledReportValue = false;
+			}
+		}
+		result.setEnabledReport(enabledReportValue);
+		// 兼容旧版没有msg_job。
+		if (StringUtils.isBlank(result.getJobType())) {
+			if (result.getJobClass().indexOf("script") > 0) {
+				result.setJobType(JobType.SHELL_JOB.name());
+			} else {
+				result.setJobType(JobType.JAVA_JOB.name());
+			}
+		}
+		result.setShowNormalLog(
+				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
+		try {
+			CurrentJobConfig jobconfig = currentJobConfigService
+					.findConfigByNamespaceAndJobName(configInSession.getNamespace(), result.getJobName());
+			// config not exists, save it to current config.
+			if (jobconfig == null) {
+				CurrentJobConfig current = mapper.map(result, CurrentJobConfig.class);
+				current.setCreateTime(new Date());
+				current.setLastUpdateTime(new Date());
+				current.setNamespace(configInSession.getNamespace());
+				currentJobConfigService.create(current);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return result;
+	}
 
-    @Override
-    public JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException {
-        JobConfig jobConfig = null;
-        try {
-            jobConfig = historyJobConfigService.findByPrimaryKey(historyId);
-            try {
-                jobConfig.setTimeZonesProvided(SaturnConstants.TIME_ZONE_IDS);
-                CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-                List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
-                if(allUnSystemJobs != null) {
-                    allUnSystemJobs.remove(jobConfig.getJobName());
-                    jobConfig.setDependenciesProvided(allUnSystemJobs);
-                }
-            } catch (SaturnJobConsoleException e) {
-                log.error(e.getMessage(), e);
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage() ,e);
-            throw new SaturnJobConsoleException(e.getMessage(), e);
-        }
-        return jobConfig;
-    }
+	@Override
+	public JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException {
+		JobConfig jobConfig = null;
+		try {
+			jobConfig = historyJobConfigService.findByPrimaryKey(historyId);
+			try {
+				jobConfig.setTimeZonesProvided(SaturnConstants.TIME_ZONE_IDS);
+				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+				List<String> allUnSystemJobs = getAllUnSystemJobs(curatorFrameworkOp);
+				if (allUnSystemJobs != null) {
+					allUnSystemJobs.remove(jobConfig.getJobName());
+					jobConfig.setDependenciesProvided(allUnSystemJobs);
+				}
+			} catch (SaturnJobConsoleException e) {
+				log.error(e.getMessage(), e);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleException(e.getMessage(), e);
+		}
+		return jobConfig;
+	}
 
-    @Transactional
-    @Override
-    public String updateJobSettings(final JobSettings jobSettings, RegistryCenterConfiguration configInSession) {
-        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        // Modify JobSettings.updateFields() sync, if the update fields changed.
-        jobSettings.setDefaultValues();
-        BooleanWrapper bw = new BooleanWrapper(false);
-        CuratorTransactionOp curatorTransactionOp = null;
-        try {
-        	curatorTransactionOp =curatorFrameworkOp.inTransaction()
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobMode"), jobSettings.getJobMode(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingTotalCount"), jobSettings.getShardingTotalCount(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"), jobSettings.getLoadLevel(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"), jobSettings.getJobDegree(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "enabledReport"), jobSettings.getEnabledReport(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeZone"), StringUtils.trim(jobSettings.getTimeZone()), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "cron"), StringUtils.trim(jobSettings.getCron()), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodDate"), jobSettings.getPausePeriodDate(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodTime"), jobSettings.getPausePeriodTime(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingItemParameters"), jobSettings.getShardingItemParameters(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobParameter"), jobSettings.getJobParameter(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "processCountIntervalSeconds"), jobSettings.getProcessCountIntervalSeconds(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeout4AlarmSeconds"), jobSettings.getTimeout4AlarmSeconds(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeoutSeconds"), jobSettings.getTimeoutSeconds(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "dependencies"), jobSettings.getDependencies(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "groups"), jobSettings.getGroups(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "description"), jobSettings.getDescription(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "channelName"), StringUtils.trim(jobSettings.getChannelName()), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "queueName"), StringUtils.trim(jobSettings.getQueueName()), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "showNormalLog"), jobSettings.getShowNormalLog(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "preferList"), jobSettings.getPreferList(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useDispreferList"), jobSettings.getUseDispreferList(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "failover"), jobSettings.getFailover(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "localMode"), jobSettings.getLocalMode(), bw)
-                    .replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useSerial"), jobSettings.getUseSerial(), bw);
-            if(jobSettings.getEnabledReport() != null && !jobSettings.getEnabledReport()){// 当enabledReport关闭上报时，要清理execution节点
-                log.info("the switch of enabledReport set to false, now deleteJob the execution zk node");
-                String executionNodePath = JobNodePath.getExecutionNodePath(jobSettings.getJobName());
-                if (curatorFrameworkOp.checkExists(executionNodePath)) {
-                    curatorFrameworkOp.deleteRecursive(executionNodePath);
-                }
-            }
-        } catch (Exception e) {
-            log.error("update settings to zk failed: {}", e.getMessage());
-            log.error(e.getMessage(), e);
-            return e.getMessage();
-        }
-        try {
-            CurrentJobConfig jobconfig = currentJobConfigService.findConfigByNamespaceAndJobName(configInSession.getNamespace(), jobSettings.getJobName());
-            // config not exists, save it to current config.
-            if (jobconfig == null) {
-                CurrentJobConfig current = mapper.map(jobSettings, CurrentJobConfig.class);
-                current.setNamespace(configInSession.getNamespace());
-                current.setCreateTime(new Date());
-                current.setLastUpdateTime(new Date());
-                currentJobConfigService.create(current);
-            } else if (bw.isValue()) { // config changed, update current config and save a copy to history config.
-                currentJobConfigService.updateConfigAndSave2History(jobconfig, jobSettings, null);
-            }
-            
-            if(curatorTransactionOp != null) {
-            	curatorTransactionOp.commit();
-            }
-        } catch (Exception e) {
-            log.error("update settings to db failed: {}", e.getMessage());
-            log.error(e.getMessage(), e);
-            return e.getMessage();
-        }
-        return null;
-    }
+	@Transactional
+	@Override
+	public String updateJobSettings(final JobSettings jobSettings, RegistryCenterConfiguration configInSession) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		// Modify JobSettings.updateFields() sync, if the update fields changed.
+		jobSettings.setDefaultValues();
+		BooleanWrapper bw = new BooleanWrapper(false);
+		CuratorTransactionOp curatorTransactionOp = null;
+		try {
+			curatorTransactionOp = curatorFrameworkOp.inTransaction()
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobMode"),
+							jobSettings.getJobMode(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingTotalCount"),
+							jobSettings.getShardingTotalCount(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "loadLevel"),
+							jobSettings.getLoadLevel(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobDegree"),
+							jobSettings.getJobDegree(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "enabledReport"),
+							jobSettings.getEnabledReport(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeZone"),
+							StringUtils.trim(jobSettings.getTimeZone()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "cron"),
+							StringUtils.trim(jobSettings.getCron()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodDate"),
+							jobSettings.getPausePeriodDate(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "pausePeriodTime"),
+							jobSettings.getPausePeriodTime(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "shardingItemParameters"),
+							jobSettings.getShardingItemParameters(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "jobParameter"),
+							jobSettings.getJobParameter(), bw)
+					.replaceIfchanged(
+							JobNodePath.getConfigNodePath(jobSettings.getJobName(), "processCountIntervalSeconds"),
+							jobSettings.getProcessCountIntervalSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeout4AlarmSeconds"),
+							jobSettings.getTimeout4AlarmSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "timeoutSeconds"),
+							jobSettings.getTimeoutSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "dependencies"),
+							jobSettings.getDependencies(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "groups"),
+							jobSettings.getGroups(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "description"),
+							jobSettings.getDescription(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "channelName"),
+							StringUtils.trim(jobSettings.getChannelName()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "queueName"),
+							StringUtils.trim(jobSettings.getQueueName()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "showNormalLog"),
+							jobSettings.getShowNormalLog(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "preferList"),
+							jobSettings.getPreferList(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useDispreferList"),
+							jobSettings.getUseDispreferList(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "failover"),
+							jobSettings.getFailover(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "localMode"),
+							jobSettings.getLocalMode(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useSerial"),
+							jobSettings.getUseSerial(), bw);
+			if (jobSettings.getEnabledReport() != null && !jobSettings.getEnabledReport()) {// 当enabledReport关闭上报时，要清理execution节点
+				log.info("the switch of enabledReport set to false, now deleteJob the execution zk node");
+				String executionNodePath = JobNodePath.getExecutionNodePath(jobSettings.getJobName());
+				if (curatorFrameworkOp.checkExists(executionNodePath)) {
+					curatorFrameworkOp.deleteRecursive(executionNodePath);
+				}
+			}
+		} catch (Exception e) {
+			log.error("update settings to zk failed: {}", e.getMessage());
+			log.error(e.getMessage(), e);
+			return e.getMessage();
+		}
+		try {
+			CurrentJobConfig jobconfig = currentJobConfigService
+					.findConfigByNamespaceAndJobName(configInSession.getNamespace(), jobSettings.getJobName());
+			// config not exists, save it to current config.
+			if (jobconfig == null) {
+				CurrentJobConfig current = mapper.map(jobSettings, CurrentJobConfig.class);
+				current.setNamespace(configInSession.getNamespace());
+				current.setCreateTime(new Date());
+				current.setLastUpdateTime(new Date());
+				currentJobConfigService.create(current);
+			} else if (bw.isValue()) { // config changed, update current config and save a copy to history config.
+				currentJobConfigService.updateConfigAndSave2History(jobconfig, jobSettings, null);
+			}
+
+			if (curatorTransactionOp != null) {
+				curatorTransactionOp.commit();
+			}
+		} catch (Exception e) {
+			log.error("update settings to db failed: {}", e.getMessage());
+			log.error(e.getMessage(), e);
+			return e.getMessage();
+		}
+		return null;
+	}
 
 	@Override
 	public Collection<JobServer> getServers(final String jobName) {
@@ -647,7 +706,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public Collection<JobServer> getServers(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	public Collection<JobServer> getServers(final String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
 		List<String> serverIps = new ArrayList<>();
 		if (curatorFrameworkOp.checkExists(serverNodePath)) {
@@ -662,29 +722,33 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers, RegistryCenterConfiguration registryCenterConfig) {
+	public void getServersVersion(final String jobName, List<HealthCheckJobServer> allJobServers,
+			RegistryCenterConfiguration registryCenterConfig) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	String serverNodePath = JobNodePath.getServerNodePath(jobName);
-    	List<String> executorNames = new ArrayList<>();
-    	if(curatorFrameworkOp.checkExists(serverNodePath)) {
-    		executorNames = curatorFrameworkOp.getChildren(serverNodePath);
-    	}
-        for (String executorName : executorNames) {
-        	if(allJobServers.size() >= SaturnConstants.HEALTH_CHECK_VERSION_MAX_SIZE){// 容量控制，最多查询10000条
-        		break;
-        	}
-        	allJobServers.add(getJobServerVersion(jobName, executorName, registryCenterConfig));
-        }
-    }
+		String serverNodePath = JobNodePath.getServerNodePath(jobName);
+		List<String> executorNames = new ArrayList<>();
+		if (curatorFrameworkOp.checkExists(serverNodePath)) {
+			executorNames = curatorFrameworkOp.getChildren(serverNodePath);
+		}
+		for (String executorName : executorNames) {
+			if (allJobServers.size() >= SaturnConstants.HEALTH_CHECK_VERSION_MAX_SIZE) {// 容量控制，最多查询10000条
+				break;
+			}
+			allJobServers.add(getJobServerVersion(jobName, executorName, registryCenterConfig));
+		}
+	}
 
-	private JobServer getJobServer(final String jobName, final String leaderIp, final String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private JobServer getJobServer(final String jobName, final String leaderIp, final String serverIp,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		JobServer result = new JobServer();
 		result.setExecutorName(serverIp);
 		result.setIp(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "ip")));
 		result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "version")));
-		String processSuccessCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processSuccessCount"));
+		String processSuccessCount = curatorFrameworkOp
+				.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processSuccessCount"));
 		result.setProcessSuccessCount(null == processSuccessCount ? 0 : Integer.parseInt(processSuccessCount));
-		String processFailureCount = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processFailureCount"));
+		String processFailureCount = curatorFrameworkOp
+				.getData(JobNodePath.getServerNodePath(jobName, serverIp, "processFailureCount"));
 		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
 		result.setSharding(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "sharding")));
 		result.setStatus(getServerStatus(jobName, serverIp, curatorFrameworkOp));
@@ -694,108 +758,117 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	private HealthCheckJobServer getJobServerVersion(final String jobName, final String executorName, RegistryCenterConfiguration registryCenterConfig) {
+	private HealthCheckJobServer getJobServerVersion(final String jobName, final String executorName,
+			RegistryCenterConfiguration registryCenterConfig) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	HealthCheckJobServer result = new HealthCheckJobServer();
-        result.setExecutorName(executorName);
-        result.setJobName(jobName);
-        result.setNamespace(registryCenterConfig.getNamespace());
-        result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "version")));
-        return result;
-    }
+		HealthCheckJobServer result = new HealthCheckJobServer();
+		result.setExecutorName(executorName);
+		result.setJobName(jobName);
+		result.setNamespace(registryCenterConfig.getNamespace());
+		result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "version")));
+		return result;
+	}
 
-	private ServerStatus getServerStatus(final String jobName, final String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private ServerStatus getServerStatus(final String jobName, final String serverIp,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(serverIp, "ip"));
 		return ServerStatus.getServerStatus(ip);
 	}
 
-	private String getJobVersion(String jobName, String serverIp, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private String getJobVersion(String jobName, String serverIp,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String jobVersion = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, serverIp, "jobVersion"));
 		return jobVersion == null ? "" : jobVersion;
 	}
 
-    @Override
-    public Collection<ExecutionInfo> getExecutionInfo(final String jobName) {
+	@Override
+	public Collection<ExecutionInfo> getExecutionInfo(final String jobName) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	if(JobStatus.STOPPED.equals(getJobStatus(jobName))){
-    		return Collections.emptyList();
-    	}
-        // update report node
-        curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
-        try {
+		if (JobStatus.STOPPED.equals(getJobStatus(jobName))) {
+			return Collections.emptyList();
+		}
+		// update report node
+		curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
+		try {
 			Thread.sleep(500);
 		} catch (InterruptedException e) {
 			log.error(e.getMessage(), e);
 		}
-        String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
-        if (!curatorFrameworkOp.checkExists(executionRootpath)) {
-            return Collections.emptyList();
-        }
-        
-        List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
-        List<ExecutionInfo> result = new ArrayList<>(items.size());
-        for (String each : items) {
-            if(getRunningIP(each, jobName) != null) { //  || hasFailoverExecutor(each, jobName)
-                result.add(getExecutionInfo(jobName, each));
-            }
-        }
-        Collections.sort(result);
-        return result;
-    }
+		String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
+		if (!curatorFrameworkOp.checkExists(executionRootpath)) {
+			return Collections.emptyList();
+		}
+
+		List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
+		List<ExecutionInfo> result = new ArrayList<>(items.size());
+		for (String each : items) {
+			if (getRunningIP(each, jobName) != null) { // || hasFailoverExecutor(each, jobName)
+				result.add(getExecutionInfo(jobName, each));
+			}
+		}
+		Collections.sort(result);
+		return result;
+	}
 
 	@Override
 	public ExecutionInfo getExecutionJobLog(String jobName, int item) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		ExecutionInfo result = new ExecutionInfo();
-		String logMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "jobLog"));
+		String logMsg = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "jobLog"));
 		result.setLogMsg(logMsg);
 		return result;
 	}
 
-    private ExecutionInfo getExecutionInfo(final String jobName, final String item) {
+	private ExecutionInfo getExecutionInfo(final String jobName, final String item) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        ExecutionInfo result = new ExecutionInfo();
-        result.setJobName(jobName);
-        result.setItem(Integer.parseInt(item));
-        boolean running = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
-        boolean completed = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
-        boolean failed = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failed"));
-        boolean timeout = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "timeout"));
+		ExecutionInfo result = new ExecutionInfo();
+		result.setJobName(jobName);
+		result.setItem(Integer.parseInt(item));
+		boolean running = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
+		boolean completed = curatorFrameworkOp
+				.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
+		boolean failed = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failed"));
+		boolean timeout = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "timeout"));
 
-        String enabledReportNodePath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
-        boolean isEnabledReport = false;
-        if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
-        	isEnabledReport = Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
-        }else{
-        	String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-        	if(JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)){
-        		isEnabledReport = true;
-        	}
-        }
-        result.setStatus(ExecutionStatus.getExecutionStatus(running, completed, failed, timeout, isEnabledReport));
+		String enabledReportNodePath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
+		boolean isEnabledReport = false;
+		if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
+			isEnabledReport = Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
+		} else {
+			String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
+				isEnabledReport = true;
+			}
+		}
+		result.setStatus(ExecutionStatus.getExecutionStatus(running, completed, failed, timeout, isEnabledReport));
 
-        String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "jobMsg"));
-        result.setJobMsg(jobMsg);
+		String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "jobMsg"));
+		result.setJobMsg(jobMsg);
 
 		String runningIp = getRunningIP(item, jobName);
 		result.setRunningIp(runningIp == null ? "未找到" : runningIp);
 
-        if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failover"))) {
-            result.setFailoverExecutor(curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "failover")));
-        }
+		if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failover"))) {
+			result.setFailoverExecutor(
+					curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "failover")));
+		}
 		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+		if (timeZoneStr == null || timeZoneStr.trim().length() == 0) {
 			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
 		}
 		result.setTimeZone(timeZoneStr);
 		TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		sdf.setTimeZone(timeZone);
-        String lastBeginTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
-        result.setLastBeginTime(null == lastBeginTime ? null : sdf.format(new Date(Long.parseLong(lastBeginTime))));
-        String nextFireTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
-        result.setNextFireTime(null == nextFireTime ? null : sdf.format(new Date(Long.parseLong(nextFireTime))));
-        String lastCompleteTime = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
+		String lastBeginTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
+		result.setLastBeginTime(null == lastBeginTime ? null : sdf.format(new Date(Long.parseLong(lastBeginTime))));
+		String nextFireTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
+		result.setNextFireTime(null == nextFireTime ? null : sdf.format(new Date(Long.parseLong(nextFireTime))));
+		String lastCompleteTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
 		if (lastCompleteTime != null) {
 			long lastCompleteTimeLong = Long.parseLong(lastCompleteTime);
 			if (lastBeginTime == null) {
@@ -807,12 +880,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				}
 			}
 		}
-        if (running) {
-        	long mtime = curatorFrameworkOp.getMtime(JobNodePath.getExecutionNodePath(jobName, item, "running"));
-            result.setTimeConsumed( (new Date().getTime() - mtime)/1000 );
-        }
-        return result;
-    }
+		if (running) {
+			long mtime = curatorFrameworkOp.getMtime(JobNodePath.getExecutionNodePath(jobName, item, "running"));
+			result.setTimeConsumed((new Date().getTime() - mtime) / 1000);
+		}
+		return result;
+	}
 
 	/**
 	 * 查找运行item的服务器IP
@@ -825,7 +898,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		String runningIp = null;
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
-		if(!curatorFrameworkOp.checkExists(serverNodePath)) {
+		if (!curatorFrameworkOp.checkExists(serverNodePath)) {
 			return runningIp;
 		}
 		List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
@@ -860,7 +933,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
 	}
 
-
 	/**
 	 * 查找所有$SaturnExecutors下online的executor加上preferList配置中被删除的executor
 	 *
@@ -874,25 +946,26 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public String getAllExecutors(String jobName,CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	public String getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
-		if(!curatorFrameworkOp.checkExists(executorsNodePath)) {
+		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
 			return null;
 		}
 		StringBuilder allExecutorsBuilder = new StringBuilder();
 		StringBuilder offlineExecutorsBuilder = new StringBuilder();
 		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
-		if(executors != null && executors.size()>0){
+		if (executors != null && executors.size() > 0) {
 			for (String executor : executors) {
 				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
 					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
 				}
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
-				if(StringUtils.isNotBlank(ip)){// if ip exists, means the executor is online
-					allExecutorsBuilder.append(executor+"("+ip+")").append(",");
+				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
+					allExecutorsBuilder.append(executor + "(" + ip + ")").append(",");
 					continue;
 				}
-				offlineExecutorsBuilder.append(executor+"(该executor已离线)").append(",");// if ip is not exists,means the executor is offline
+				offlineExecutorsBuilder.append(executor + "(该executor已离线)").append(",");// if ip is not exists,means the
+																						// executor is offline
 			}
 		}
 		StringBuilder containerTaskIdsBuilder = new StringBuilder();
@@ -908,12 +981,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		allExecutorsBuilder.append(containerTaskIdsBuilder.toString());
 		allExecutorsBuilder.append(offlineExecutorsBuilder.toString());
 		String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
-		if(curatorFrameworkOp.checkExists(preferListNodePath)) {
+		if (curatorFrameworkOp.checkExists(preferListNodePath)) {
 			String preferList = curatorFrameworkOp.getData(preferListNodePath);
-			if(!Strings.isNullOrEmpty(preferList)){
+			if (!Strings.isNullOrEmpty(preferList)) {
 				String[] preferExecutorList = preferList.split(",");
-				for(String preferExecutor : preferExecutorList){
-					if(executors != null && !executors.contains(preferExecutor) && !preferExecutor.startsWith("@")){
+				for (String preferExecutor : preferExecutorList) {
+					if (executors != null && !executors.contains(preferExecutor) && !preferExecutor.startsWith("@")) {
 						allExecutorsBuilder.append(preferExecutor + "(该executor已删除)").append(",");
 					}
 				}
@@ -961,68 +1034,69 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return jobMigrateInfo;
 	}
 
-    @Transactional
-    @Override
-    public void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException {
-        try {
-            CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-            String jobNodePath = SaturnExecutorsNode.getJobNodePath(jobName);
-            if (!curatorFrameworkOp.checkExists(jobNodePath)) {
-                throw new SaturnJobConsoleException("The job " + jobName + " does not exists");
-            }
-            String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
-            if (!curatorFrameworkOp.checkExists(jobConfigPreferListNodePath)) {
-                throw new SaturnJobConsoleException("The job has not set a docker task");
-            }
-            String jobConfigPreferList = curatorFrameworkOp.getData(jobConfigPreferListNodePath);
-            if (jobConfigPreferList == null) {
-                throw new SaturnJobConsoleException("The job has not set a docker task");
-            }
-            if (!jobConfigPreferList.contains("@")) {
-                throw new SaturnJobConsoleException("The job has not set a docker task");
-            }
-            List<String> tasks = getTasks(jobConfigPreferList);
-            if (tasks.isEmpty()) {
-                throw new SaturnJobConsoleException("The job has not set a docker task");
-            }
-            if (tasks.contains(taskNew)) {
-                throw new SaturnJobConsoleException("the new task is already set");
-            }
-            String dcosTaskNodePath = SaturnExecutorsNode.getDcosTaskNodePath(taskNew);
-            if (!curatorFrameworkOp.checkExists(dcosTaskNodePath)) {
-                throw new SaturnJobConsoleException("The new task does not exists");
-            }
-            // replace the old task by new task
-            String newJobConfigPreferList = replaceTaskInPreferList(jobConfigPreferList, taskNew);
-            savePreferListToDb(jobName, curatorFrameworkOp, newJobConfigPreferList);
-            curatorFrameworkOp.update(jobConfigPreferListNodePath, newJobConfigPreferList);
-            // delete and create the forceShard node
-            String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
-            curatorFrameworkOp.delete(jobConfigForceShardNodePath);
-            curatorFrameworkOp.create(jobConfigForceShardNodePath);
-        } catch (SaturnJobConsoleException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new SaturnJobConsoleException(e);
-        }
-    }
-    
-	private void savePreferListToDb(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String newJobConfigPreferList)
-			throws SaturnJobConsoleException, SaturnJobConsoleHttpException {
+	@Transactional
+	@Override
+	public void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException {
+		try {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+			String jobNodePath = SaturnExecutorsNode.getJobNodePath(jobName);
+			if (!curatorFrameworkOp.checkExists(jobNodePath)) {
+				throw new SaturnJobConsoleException("The job " + jobName + " does not exists");
+			}
+			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
+			if (!curatorFrameworkOp.checkExists(jobConfigPreferListNodePath)) {
+				throw new SaturnJobConsoleException("The job has not set a docker task");
+			}
+			String jobConfigPreferList = curatorFrameworkOp.getData(jobConfigPreferListNodePath);
+			if (jobConfigPreferList == null) {
+				throw new SaturnJobConsoleException("The job has not set a docker task");
+			}
+			if (!jobConfigPreferList.contains("@")) {
+				throw new SaturnJobConsoleException("The job has not set a docker task");
+			}
+			List<String> tasks = getTasks(jobConfigPreferList);
+			if (tasks.isEmpty()) {
+				throw new SaturnJobConsoleException("The job has not set a docker task");
+			}
+			if (tasks.contains(taskNew)) {
+				throw new SaturnJobConsoleException("the new task is already set");
+			}
+			String dcosTaskNodePath = SaturnExecutorsNode.getDcosTaskNodePath(taskNew);
+			if (!curatorFrameworkOp.checkExists(dcosTaskNodePath)) {
+				throw new SaturnJobConsoleException("The new task does not exists");
+			}
+			// replace the old task by new task
+			String newJobConfigPreferList = replaceTaskInPreferList(jobConfigPreferList, taskNew);
+			savePreferListToDb(jobName, curatorFrameworkOp, newJobConfigPreferList);
+			curatorFrameworkOp.update(jobConfigPreferListNodePath, newJobConfigPreferList);
+			// delete and create the forceShard node
+			String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
+			curatorFrameworkOp.delete(jobConfigForceShardNodePath);
+			curatorFrameworkOp.create(jobConfigForceShardNodePath);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private void savePreferListToDb(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			String newJobConfigPreferList) throws SaturnJobConsoleException, SaturnJobConsoleHttpException {
 		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
-		CurrentJobConfig oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
-		if(oldCurrentJobConfig == null) {
-			log.error("找不到该作业的配置,namespace jobname is:"+namespace+" "+jobName);
+		CurrentJobConfig oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
+				jobName);
+		if (oldCurrentJobConfig == null) {
+			log.error("找不到该作业的配置,namespace jobname is:" + namespace + " " + jobName);
 			return;
 		}
 		CurrentJobConfig newCurrentJobConfig = mapper.map(oldCurrentJobConfig, CurrentJobConfig.class);
-			newCurrentJobConfig.setPreferList(newJobConfigPreferList);
+		newCurrentJobConfig.setPreferList(newJobConfigPreferList);
 		try {
-			currentJobConfigService.updateConfigAndSave2History(newCurrentJobConfig, oldCurrentJobConfig,null);
+			currentJobConfigService.updateConfigAndSave2History(newCurrentJobConfig, oldCurrentJobConfig, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change perfer list in db", e);
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e); 
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
 	}
 
@@ -1067,19 +1141,23 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	/**
-	 * <blockquote><pre>
+	 * <blockquote>
+	 * 
+	 * <pre>
 	 * 检查否是新版本的executor(新的域)
 	 * 旧域：该域下必须至少有一个executor并且所有的executor都没有版本号version节点
 	 * 新域：该域下必须至少有一个executor并且所有的executor都有版本号version节点(新版本的executor才在启动时添加了这个节点)
 	 * 未知域：该域下没有任何executor或executor中既有新版的又有旧版的Executor
 	 *
-	 * @param version 指定的executor的版本
-	 * @return 当version参数为空时：1：新域 0：旧域 -1：未知域(无法判断新旧域)
+	 * &#64;param version 指定的executor的版本
+	 * &#64;return 当version参数为空时：1：新域 0：旧域 -1：未知域(无法判断新旧域)
 	 *         当version参数不为空时，说明要判断是否大于该版本，仅适用于1.1.0及其之后的版本比较：
 	 *         	 2：该域下所有Executor的版本都大于等于指定的版本
-     *        	-2：该域下所有Executor的版本都小于指定的版本
-     *         	-3：Executor的版本存在大于、等于或小于指定的版本
-     * </pre></blockquote>
+	 *        	-2：该域下所有Executor的版本都小于指定的版本
+	 *         	-3：Executor的版本存在大于、等于或小于指定的版本
+	 * </pre>
+	 * 
+	 * </blockquote>
 	 */
 	@Override
 	public int isNewSaturn(String version) {
@@ -1088,7 +1166,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	@Override
 	public int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp cfo) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = cfo == null ? curatorRepository.inSessionClient() : cfo;
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = cfo == null ? curatorRepository.inSessionClient()
+				: cfo;
 
 		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath())) {
 			return -1;
@@ -1152,40 +1231,41 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	/**
 	 * 比较两个executor的版本，以“.”分割成数组，从第一个数开始逐一比较
 	 * 
-	 * <p>Examples:
-     * <blockquote><pre>
-     *     1.0.1 < 1.1.0
+	 * <p>
+	 * Examples: <blockquote>
+	 * 
+	 * <pre>
+	 *     1.0.1 < 1.1.0
 	 *     1.0.1 < 1.0.10
 	 *     1.0.9 < 1.0.10
 	 *     1.0.1 = 1.0.1
 	 *     2.0.0 > 1.1.9
 	 *     1.0.1.0 > 1.0.0.10
-	 * </blockquote></pre>
+	 * </blockquote>
+	 * </pre>
 	 * 
 	 * @param version1 executor1的版本
 	 * @param version2 executor2的版本
-	 * @return 1:version1的版本大于version2的版本
-	 *         0:version1的版本等于version2的版本
-	 *         -1:version1的版本小于version2的版本
+	 * @return 1:version1的版本大于version2的版本 0:version1的版本等于version2的版本 -1:version1的版本小于version2的版本
 	 */
-	private int compareVersion(String version1, String version2) throws NumberFormatException{
+	private int compareVersion(String version1, String version2) throws NumberFormatException {
 		String[] version1Arr = version1.split("\\.");
 		String[] version2Arr = version2.split("\\.");
 		int versionLength = Math.min(version1Arr.length, version2Arr.length);
-		for(int i=0;i<versionLength;i++){
+		for (int i = 0; i < versionLength; i++) {
 			int v1 = Integer.parseInt(version1Arr[i]);
 			int v2 = Integer.parseInt(version2Arr[i]);
-			if(v1 > v2){// 只要比较到某一位v1大于v2，就认为version1比version2大，如1.1.0和1.0.1.1的第二位就可以看出1.1.0>1.0.1.1
+			if (v1 > v2) {// 只要比较到某一位v1大于v2，就认为version1比version2大，如1.1.0和1.0.1.1的第二位就可以看出1.1.0>1.0.1.1
 				return 1;
 			}
-			if(v1 < v2){
+			if (v1 < v2) {
 				return -1;
 			}
 		}
-		if(version1Arr.length == version2Arr.length){// 1.0.1 = 1.0.1
+		if (version1Arr.length == version2Arr.length) {// 1.0.1 = 1.0.1
 			return 0;
 		}
-		if(version1Arr.length > version2Arr.length){// 1.0.0.1 > 1.0.0
+		if (version1Arr.length > version2Arr.length) {// 1.0.0.1 > 1.0.0
 			return 1;
 		}
 		return -1;// 1.0.0 < 1.0.0.1
@@ -1193,7 +1273,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	@Override
 	public String formatTimeByJobTimeZone(String jobName, Long time) {
-		if(time != null) {
+		if (time != null) {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			String timeZoneStr = getTimeZone(jobName, curatorFrameworkOp);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1205,7 +1285,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	private String getTimeZone(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
-		if(timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+		if (timeZoneStr == null || timeZoneStr.trim().length() == 0) {
 			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
 		}
 		return timeZoneStr;
@@ -1229,43 +1309,47 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 						long nextFireTimeAfterThis = 0l;
 						String executionRootpath = JobNodePath.getExecutionNodePath(jobName);
 						// 有execution节点
-			            if (curatorFrameworkOp.checkExists(executionRootpath)) {
-			            	List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
-			            	// 有分片
-			            	if (items != null && !items.isEmpty()) {
-            					for (String itemStr : items) {
-    					    		// 针对stock-update域的不上报节点信息但又有分片残留的情况
-    					    		List<String> itemChildren = curatorFrameworkOp.getChildren(JobNodePath.getExecutionItemNodePath(jobName, itemStr));
-        				    		if (itemChildren.size() == 2) {
-        					    		return null;
-        				    		} else {
-        				    			String runningNodePath = JobNodePath.getExecutionNodePath(jobName, itemStr, "running");
-        					    		boolean isItemRunning = curatorFrameworkOp.checkExists(runningNodePath);
-        					    		if (isItemRunning) {
-        					    			try { // 以防节点不存在
-        					    				return curatorFrameworkOp.getMtime(runningNodePath);
-        					    			} catch (Exception e) {
-        					    				log.error(e.getMessage(), e);
-        					    			}
-        					    		}
-        				    			String completedPath = JobNodePath.getExecutionNodePath(jobName, itemStr, "completed");
-        				    			boolean isItemCompleted = curatorFrameworkOp.checkExists(completedPath);
-        				    			if (isItemCompleted) {
-	        					    		long thisCompleteMtime = curatorFrameworkOp.getMtime(completedPath);
-	        					    		if (thisCompleteMtime > nextFireTimeAfterThis) {
-	        					    			nextFireTimeAfterThis = thisCompleteMtime;
-	        					    		}
-        				    			}
-        				    		}
-    				    		}
-			            	}
-			            }
-			            // 对比enabled's mtime 和 completed's mtime
-			    		long enabledMtime = curatorFrameworkOp.getMtime(enabledPath);
-			    		if (enabledMtime > nextFireTimeAfterThis) {
-			    			nextFireTimeAfterThis = enabledMtime;
-			    		}
-			    		return getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, jobName, curatorFrameworkOp);
+						if (curatorFrameworkOp.checkExists(executionRootpath)) {
+							List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
+							// 有分片
+							if (items != null && !items.isEmpty()) {
+								for (String itemStr : items) {
+									// 针对stock-update域的不上报节点信息但又有分片残留的情况
+									List<String> itemChildren = curatorFrameworkOp
+											.getChildren(JobNodePath.getExecutionItemNodePath(jobName, itemStr));
+									if (itemChildren.size() == 2) {
+										return null;
+									} else {
+										String runningNodePath = JobNodePath.getExecutionNodePath(jobName, itemStr,
+												"running");
+										boolean isItemRunning = curatorFrameworkOp.checkExists(runningNodePath);
+										if (isItemRunning) {
+											try { // 以防节点不存在
+												return curatorFrameworkOp.getMtime(runningNodePath);
+											} catch (Exception e) {
+												log.error(e.getMessage(), e);
+											}
+										}
+										String completedPath = JobNodePath.getExecutionNodePath(jobName, itemStr,
+												"completed");
+										boolean isItemCompleted = curatorFrameworkOp.checkExists(completedPath);
+										if (isItemCompleted) {
+											long thisCompleteMtime = curatorFrameworkOp.getMtime(completedPath);
+											if (thisCompleteMtime > nextFireTimeAfterThis) {
+												nextFireTimeAfterThis = thisCompleteMtime;
+											}
+										}
+									}
+								}
+							}
+						}
+						// 对比enabled's mtime 和 completed's mtime
+						long enabledMtime = curatorFrameworkOp.getMtime(enabledPath);
+						if (enabledMtime > nextFireTimeAfterThis) {
+							nextFireTimeAfterThis = enabledMtime;
+						}
+						return getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, jobName,
+								curatorFrameworkOp);
 					} else {
 						// 关闭上报视为正常
 						return null;
@@ -1282,12 +1366,14 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	/**
-     * 该时间是否在作业暂停时间段范围内。
-     * <p>特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
-     *
-     * @return 该时间是否在作业暂停时间段范围内。
-     */
-	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime, TimeZone timeZone) {
+	 * 该时间是否在作业暂停时间段范围内。
+	 * <p>
+	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+	 *
+	 * @return 该时间是否在作业暂停时间段范围内。
+	 */
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
+			TimeZone timeZone) {
 		Calendar calendar = Calendar.getInstance(timeZone);
 		calendar.setTime(date);
 		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
@@ -1296,8 +1382,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		int m = calendar.get(Calendar.MINUTE);
 
 		boolean dateIn = false;
-		boolean pausePeriodDateIsEmpty = (pausePeriodDate==null || pausePeriodDate.trim().isEmpty());
-		if(!pausePeriodDateIsEmpty){
+		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
+		if (!pausePeriodDateIsEmpty) {
 			String[] periodsDate = pausePeriodDate.split(",");
 			if (periodsDate != null) {
 				for (String period : periodsDate) {
@@ -1313,7 +1399,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 								int dLeft = Integer.parseInt(MdLeft[1]);
 								int MRight = Integer.parseInt(MdRight[0]);
 								int dRight = Integer.parseInt(MdRight[1]);
-								dateIn = (M > MLeft || M == MLeft && d >= dLeft) && (M < MRight || M == MRight && d <= dRight);//NOSONAR
+								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
+										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
 								if (dateIn) {
 									break;
 								}
@@ -1333,8 +1420,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
 		boolean timeIn = false;
-		boolean pausePeriodTimeIsEmpty = (pausePeriodTime==null||pausePeriodTime.trim().isEmpty());
-		if(!pausePeriodTimeIsEmpty){
+		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
+		if (!pausePeriodTimeIsEmpty) {
 			String[] periodsTime = pausePeriodTime.split(",");
 			if (periodsTime != null) {
 				for (String period : periodsTime) {
@@ -1350,7 +1437,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 								int mLeft = Integer.parseInt(hmLeft[1]);
 								int hRight = Integer.parseInt(hmRight[0]);
 								int mRight = Integer.parseInt(hmRight[1]);
-								timeIn = (h > hLeft || h == hLeft && m >= mLeft) && (h < hRight || h == hRight && m <= mRight);//NOSONAR
+								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
+										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
 								if (timeIn) {
 									break;
 								}
@@ -1370,15 +1458,14 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			}
 		}
 
-
-		if(pausePeriodDateIsEmpty) {
-			if(pausePeriodTimeIsEmpty) {
+		if (pausePeriodDateIsEmpty) {
+			if (pausePeriodTimeIsEmpty) {
 				return false;
 			} else {
 				return timeIn;
 			}
 		} else {
-			if(pausePeriodTimeIsEmpty) {
+			if (pausePeriodTimeIsEmpty) {
 				return dateIn;
 			} else {
 				return dateIn && timeIn;
@@ -1387,7 +1474,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
 		String cronVal = curatorFrameworkOp.getData(cronPath);
 		CronExpression cronExpression = null;
@@ -1403,8 +1491,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 		Date nextFireTime = cronExpression.getTimeAfter(new Date(nextFireTimeAfterThis));
 		String pausePeriodDatePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodDate");
-		String pausePeriodDate =  curatorFrameworkOp.getData(pausePeriodDatePath);
-		String pausePeriodTimePath =  JobNodePath.getConfigNodePath(jobName, "pausePeriodTime");
+		String pausePeriodDate = curatorFrameworkOp.getData(pausePeriodDatePath);
+		String pausePeriodTimePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodTime");
 		String pausePeriodTime = curatorFrameworkOp.getData(pausePeriodTimePath);
 
 		while (nextFireTime != null && isInPausePeriod(nextFireTime, pausePeriodDate, pausePeriodTime, timeZone)) {
@@ -1426,85 +1514,83 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			log.error(e.getMessage(), e);
 		}
 		List<String> result = new ArrayList<>(jobNames.size());
-        for (String jobName : jobNames) {
-        	String groups = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"));
-        	if(Strings.isNullOrEmpty(groups) || result.contains(groups)){
-        		continue;
-        	}
-        	result.add(groups);
-        }
+		for (String jobName : jobNames) {
+			String groups = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"));
+			if (Strings.isNullOrEmpty(groups) || result.contains(groups)) {
+				continue;
+			}
+			result.add(groups);
+		}
 		return result;
 	}
 
 	@Override
-	public JobMigrateInfo getAllJobMigrateInfo()
-			throws SaturnJobConsoleException {
-        JobMigrateInfo jobMigrateInfo = new JobMigrateInfo();
-        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+	public JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException {
+		JobMigrateInfo jobMigrateInfo = new JobMigrateInfo();
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 
-        List<String> tasksMigrateEnabled = new ArrayList<>();
-        List<String> tasks = new ArrayList<>();
-        String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
-        if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
-            tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
-        }
-        if (tasks != null && !tasks.isEmpty()) {
-            for (String tmp : tasks) {
-            	tasksMigrateEnabled.add(tmp);
-            }
-        }
+		List<String> tasksMigrateEnabled = new ArrayList<>();
+		List<String> tasks = new ArrayList<>();
+		String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
+		if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
+			tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
+		}
+		if (tasks != null && !tasks.isEmpty()) {
+			for (String tmp : tasks) {
+				tasksMigrateEnabled.add(tmp);
+			}
+		}
 
-        jobMigrateInfo.setTasksMigrateEnabled(tasksMigrateEnabled);
-        return jobMigrateInfo;
+		jobMigrateInfo.setTasksMigrateEnabled(tasksMigrateEnabled);
+		return jobMigrateInfo;
 	}
 
 	@Override
-	public void batchMigrateJobNewTask(String jobNames, String taskNew)
-			throws SaturnJobConsoleException {
+	public void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException {
 		for (String jobName : jobNames.split(",")) {
 			List<String> preferTasks = getPreferTasksByJobName(jobName);
-			if(preferTasks.size() == 0){
+			if (preferTasks.size() == 0) {
 				throw new SaturnJobConsoleException(jobName + ":The job has not set a docker task");
 			}
-			if(preferTasks.contains(taskNew)){
+			if (preferTasks.contains(taskNew)) {
 				throw new SaturnJobConsoleException(jobName + ":The taskNew is equals to current task");
 			}
 		}
-		
+
 		for (String jobName : jobNames.split(",")) {
-			try{
+			try {
 				this.migrateJobNewTask(jobName, taskNew);
-			}catch(SaturnJobConsoleException e){
+			} catch (SaturnJobConsoleException e) {
 				throw new SaturnJobConsoleException(jobName + ":" + e.getMessage());
 			}
 		}
 	}
-	
-	private List<String> getPreferTasksByJobName(String jobName){
+
+	private List<String> getPreferTasksByJobName(String jobName) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 
-        List<String> tasks = new ArrayList<>();
-        String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
-        if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
-            tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
-        }
-        List<String> preferTasks = new ArrayList<>();
-        if (tasks != null && !tasks.isEmpty()) {
-            String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
-            if (curatorFrameworkOp.checkExists(preferListNodePath)) {
-                String preferList = curatorFrameworkOp.getData(preferListNodePath);
-                if (preferList != null) {
-                    String[] split = preferList.split(",");
-                    for (int i = 0; i < split.length; i++) {
-                        String prefer = split[i].trim();
-                        if (prefer.startsWith("@")) {
-                            preferTasks.add(prefer.substring(1));
-                        }
-                    }
-                }
-            }
-        }
-        
-        return preferTasks;
-	}	
+		List<String> tasks = new ArrayList<>();
+		String dcosTasksNodePath = ContainerNodePath.getDcosTasksNodePath();
+		if (curatorFrameworkOp.checkExists(dcosTasksNodePath)) {
+			tasks = curatorFrameworkOp.getChildren(dcosTasksNodePath);
+		}
+		List<String> preferTasks = new ArrayList<>();
+		if (tasks != null && !tasks.isEmpty()) {
+			String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
+			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
+				String preferList = curatorFrameworkOp.getData(preferListNodePath);
+				if (preferList != null) {
+					String[] split = preferList.split(",");
+					for (int i = 0; i < split.length; i++) {
+						String prefer = split[i].trim();
+						if (prefer.startsWith("@")) {
+							preferTasks.add(prefer.substring(1));
+						}
+					}
+				}
+			}
+		}
+
+		return preferTasks;
+	}
 }

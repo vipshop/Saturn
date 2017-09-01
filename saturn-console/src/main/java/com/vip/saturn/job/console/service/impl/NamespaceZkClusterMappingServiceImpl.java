@@ -80,7 +80,8 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	@Override
 	public List<NamespaceZkClusterMappingVo> getNamespaceZkClusterMappingList() throws SaturnJobConsoleException {
 		List<NamespaceZkClusterMappingVo> result = new ArrayList<>();
-		List<NamespaceZkClusterMapping> namespaceZkClusterMappingList = namespaceZkclusterMapping4SqlService.getAllMappings();
+		List<NamespaceZkClusterMapping> namespaceZkClusterMappingList = namespaceZkclusterMapping4SqlService
+				.getAllMappings();
 		if (namespaceZkClusterMappingList != null) {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			for (NamespaceZkClusterMapping tmp : namespaceZkClusterMappingList) {
@@ -107,22 +108,24 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	public void initNamespaceZkClusterMapping(String createdBy) throws SaturnJobConsoleException {
 		try {
 			List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
-			if(allZkClusterInfo != null) {
-				for(ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
+			if (allZkClusterInfo != null) {
+				for (ZkClusterInfo zkClusterInfo : allZkClusterInfo) {
 					String zkClusterKey = zkClusterInfo.getZkClusterKey();
 					String connectString = zkClusterInfo.getConnectString();
 					CuratorFramework curatorFramework = null;
-					CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.connectOnly(connectString, null);
-					if(curatorFrameworkOp != null) {
+					CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+							.connectOnly(connectString, null);
+					if (curatorFrameworkOp != null) {
 						curatorFramework = curatorFrameworkOp.getCuratorFramework();
 					}
 					if (curatorFramework != null) { // not offline
 						try {
 							List<String> namespaces = curatorFramework.getChildren().forPath("/");
-							if(namespaces != null) {
+							if (namespaces != null) {
 								for (String namespace : namespaces) {
 									if (registryCenterService.namespaceIsCorrect(namespace, curatorFramework)) {
-										namespaceZkclusterMapping4SqlService.insert(namespace, "", zkClusterKey, createdBy);
+										namespaceZkclusterMapping4SqlService.insert(namespace, "", zkClusterKey,
+												createdBy);
 									}
 								}
 							}
@@ -165,7 +168,10 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			} else {
 				String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 				if (zkClusterKey != null && zkClusterKey.equals(zkClusterKeyNew)) {
-					throw new SaturnJobConsoleException("The namespace(" + namespace + ") is in " + zkClusterKey); // see moveNamespaceBatchTo before modify
+					throw new SaturnJobConsoleException("The namespace(" + namespace + ") is in " + zkClusterKey); // see
+																													// moveNamespaceBatchTo
+																													// before
+																													// modify
 				}
 				ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKeyNew);
 				if (zkCluster == null) {
@@ -175,12 +181,14 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
 				String zkAddr = zkCluster.getZkAddr();
-				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.connectOnly(zkAddr, null);
+				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.connectOnly(zkAddr,
+						null);
 				if (curatorFrameworkOp == null) {
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
 				CuratorFramework curatorFramework = curatorFrameworkOp.getCuratorFramework();
-				CuratorRepository.CuratorFrameworkOp curatorFrameworkOpByNamespace = registryCenterService.connectOnly(zkAddr, namespace);
+				CuratorRepository.CuratorFrameworkOp curatorFrameworkOpByNamespace = registryCenterService
+						.connectOnly(zkAddr, namespace);
 				CuratorFramework curatorFrameworkByNamespace = curatorFrameworkOpByNamespace.getCuratorFramework();
 				try {
 					String namespaceNodePath = "/" + namespace;

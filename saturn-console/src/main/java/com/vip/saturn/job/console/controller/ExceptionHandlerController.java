@@ -18,24 +18,24 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 public class ExceptionHandlerController {
 
-    @ExceptionHandler
-    @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RestApiErrorResult handleMessageNotReadableException(HttpMessageNotReadableException e) {
-        return new RestApiErrorResult("The http message is not readable. Please check your request.");
-    }
+	@ExceptionHandler
+	@ResponseBody
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public RestApiErrorResult handleMessageNotReadableException(HttpMessageNotReadableException e) {
+		return new RestApiErrorResult("The http message is not readable. Please check your request.");
+	}
 
-    @ExceptionHandler
-    @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RestApiErrorResult handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        return new RestApiErrorResult("Method or argument not valid");
-    }
+	@ExceptionHandler
+	@ResponseBody
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public RestApiErrorResult handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+		return new RestApiErrorResult("Method or argument not valid");
+	}
 
-    @ExceptionHandler
-    @ResponseBody
-    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-    public RestApiErrorResult handleMessageNotReadableException(HttpMediaTypeNotSupportedException e) {
-        return new RestApiErrorResult("Media type not supported.");
-    }
+	@ExceptionHandler
+	@ResponseBody
+	@ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+	public RestApiErrorResult handleMessageNotReadableException(HttpMediaTypeNotSupportedException e) {
+		return new RestApiErrorResult("Media type not supported.");
+	}
 }

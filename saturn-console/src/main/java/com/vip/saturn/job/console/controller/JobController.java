@@ -50,7 +50,7 @@ public class JobController extends AbstractController {
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)
 	public Collection<JobBriefInfo> getAllJobsBriefInfo(final ModelMap model, HttpServletRequest request) {
-		return jobDimensionService.getAllJobsBriefInfo(null,null);
+		return jobDimensionService.getAllJobsBriefInfo(null, null);
 	}
 
 	@RequestMapping(value = "settings", method = RequestMethod.GET)
@@ -68,19 +68,19 @@ public class JobController extends AbstractController {
 	@RequestMapping(value = "checkAndForecastCron", method = RequestMethod.POST)
 	public RequestResult checkAndForecastCron(final String timeZone, final String cron, HttpServletRequest request) {
 		RequestResult result = new RequestResult();
-		if(timeZone == null || timeZone.trim().isEmpty()) {
+		if (timeZone == null || timeZone.trim().isEmpty()) {
 			result.setSuccess(false);
 			result.setMessage("timeZone cannot be null or empty");
 			return result;
 		}
-		if(cron == null || cron.trim().isEmpty()) {
+		if (cron == null || cron.trim().isEmpty()) {
 			result.setSuccess(false);
 			result.setMessage("cron cannot be null or empty");
 			return result;
 		}
 		String timeZoneTrim = timeZone.trim();
 		String cronTrim = cron.trim();
-		if(!SaturnConstants.TIME_ZONE_IDS.contains(timeZoneTrim)) {
+		if (!SaturnConstants.TIME_ZONE_IDS.contains(timeZoneTrim)) {
 			result.setSuccess(false);
 			result.setMessage("timeZone is not available");
 			return result;
@@ -136,7 +136,7 @@ public class JobController extends AbstractController {
 		}
 		return requestResult;
 	}
-	
+
 	@RequestMapping(value = "batchTasksMigrateEnabled", method = RequestMethod.GET)
 	public RequestResult batchTasksMigrateEnabled(HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
@@ -149,10 +149,11 @@ public class JobController extends AbstractController {
 			requestResult.setMessage(e.getMessage());
 		}
 		return requestResult;
-	}	
-	
+	}
+
 	@RequestMapping(value = "batchMigrateJobNewTask", method = RequestMethod.POST)
-	public RequestResult batchMigrateJobNewTask(final String jobNames, final String newTask, HttpServletRequest request) {
+	public RequestResult batchMigrateJobNewTask(final String jobNames, final String newTask,
+			HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
 			if (jobNames == null) {
@@ -174,7 +175,7 @@ public class JobController extends AbstractController {
 			requestResult.setMessage(e.getMessage());
 		}
 		return requestResult;
-	}		
+	}
 
 	@RequestMapping(value = "migrateJobNewTask", method = RequestMethod.POST)
 	public RequestResult migrateJobNewTask(final String jobName, final String newTask, HttpServletRequest request) {
@@ -202,7 +203,7 @@ public class JobController extends AbstractController {
 	}
 
 	@RequestMapping(value = "settings", method = RequestMethod.POST)
-	public RequestResult updateJobSettings(final JobSettings jobSettings,HttpServletRequest request) {
+	public RequestResult updateJobSettings(final JobSettings jobSettings, HttpServletRequest request) {
 		RequestResult result = new RequestResult();
 		if (!JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobSettings.getJobName()))) {
 			result.setSuccess(false);
@@ -210,7 +211,7 @@ public class JobController extends AbstractController {
 			return result;
 		}
 		JobBriefInfo.JobType jobType = JobBriefInfo.JobType.getJobType(jobSettings.getJobType());
-		if(jobType == JobBriefInfo.JobType.JAVA_JOB || jobType == JobBriefInfo.JobType.SHELL_JOB) {
+		if (jobType == JobBriefInfo.JobType.JAVA_JOB || jobType == JobBriefInfo.JobType.SHELL_JOB) {
 			String cron = jobSettings.getCron();
 			if (cron != null && !cron.trim().isEmpty()) {
 				try {
@@ -225,14 +226,16 @@ public class JobController extends AbstractController {
 			} else {
 				result.setSuccess(false);
 				result.setMessage("The cron cannot be null or empty for cron-job");
-				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(), getActivatedConfigInSession(request.getSession())));
+				result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(),
+						getActivatedConfigInSession(request.getSession())));
 				return result;
 			}
 		}
-		if(jobSettings.getJobMode() != null && jobSettings.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
+		if (jobSettings.getJobMode() != null && jobSettings.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
 			result.setSuccess(false);
 			result.setMessage("The jobMode cannot be start with " + JobMode.SYSTEM_PREFIX);
-			result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(), getActivatedConfigInSession(request.getSession())));
+			result.setObj(jobDimensionService.getJobSettings(jobSettings.getJobName(),
+					getActivatedConfigInSession(request.getSession())));
 			return result;
 		}
 		String returnMsg = jobDimensionService.updateJobSettings(jobSettings,
@@ -278,19 +281,19 @@ public class JobController extends AbstractController {
 	public String getAllExecutors() {
 		return jobDimensionService.getAllExecutors(null);
 	}
-	
+
 	@RequestMapping(value = "getJobNextFireTime", method = RequestMethod.GET)
-    public String getJobNextFireTime(String jobName) {
+	public String getJobNextFireTime(String jobName) {
 		Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
 		String formatTimeByJobTimeZone = jobDimensionService.formatTimeByJobTimeZone(jobName, calculateJobNextTime);
 		return formatTimeByJobTimeZone;
-    }
-	
-	 /**
-     * 获取所有作业的分组列表
-     */
-    @RequestMapping(value = "getAllJobGroups", method = RequestMethod.GET)
-    public List<String> getAllJobGroups() {
-        return jobDimensionService.getAllJobGroups();
-    }
+	}
+
+	/**
+	 * 获取所有作业的分组列表
+	 */
+	@RequestMapping(value = "getAllJobGroups", method = RequestMethod.GET)
+	public List<String> getAllJobGroups() {
+		return jobDimensionService.getAllJobGroups();
+	}
 }

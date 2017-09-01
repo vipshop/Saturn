@@ -122,7 +122,8 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 	public RequestResult getMoveNamespaceBatchStatus(HttpServletRequest request, long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			MoveNamespaceBatchStatus moveNamespaceBatchStatus = namespaceZkClusterMappingService.getMoveNamespaceBatchStatus(id);
+			MoveNamespaceBatchStatus moveNamespaceBatchStatus = namespaceZkClusterMappingService
+					.getMoveNamespaceBatchStatus(id);
 			requestResult.setSuccess(true);
 			requestResult.setObj(moveNamespaceBatchStatus);
 		} catch (SaturnJobConsoleException e) {

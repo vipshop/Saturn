@@ -24,7 +24,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import java.io.IOException;
 import java.sql.SQLException;
 
-
 /**
  * @author chembo.huang
  *
@@ -43,10 +42,10 @@ public class SaturnConsoleApp {
 		if (Boolean.getBoolean("saturn.embeddedZk")) {
 			startEmbeddedZk();
 		}
-		if(Boolean.getBoolean("saturn.embeddedDb")) {
-            startEmbeddedDb();
+		if (Boolean.getBoolean("saturn.embeddedDb")) {
+			startEmbeddedDb();
 		}
-		
+
 		SpringApplication.run(SaturnConsoleApp.class, args);
 	}
 
@@ -57,32 +56,29 @@ public class SaturnConsoleApp {
 	public static void stop(ApplicationContext applicationContext) {
 		SpringApplication.exit(applicationContext);
 	}
-	
+
 	public static void startEmbeddedZk() throws Exception {
 		embeddedZookeeper = new TestingServer(2181);
 		embeddedZookeeper.start();
 	}
 
 	public static void stopEmbeddedZk() throws IOException {
-		if(embeddedZookeeper != null) {
+		if (embeddedZookeeper != null) {
 			embeddedZookeeper.close();
 		}
 	}
 
 	public static void startEmbeddedDb() throws SQLException {
 		EmbeddedDatabaseBuilder embeddedDatabaseBuilder = new EmbeddedDatabaseBuilder();
-		embeddedDatabaseBuilder
-				.setType(EmbeddedDatabaseType.H2)
-				.addScript("classpath:db/h2/global.sql")
-				.addScript("classpath:db/h2/schema.sql")
-				.addScript("classpath:db/h2/data.sql");
+		embeddedDatabaseBuilder.setType(EmbeddedDatabaseType.H2).addScript("classpath:db/h2/global.sql")
+				.addScript("classpath:db/h2/schema.sql").addScript("classpath:db/h2/data.sql");
 		String customSql = "classpath:db/h2/custom.sql";
 		Resource resource = new DefaultResourceLoader().getResource(customSql);
-		if(resource.exists()) {
+		if (resource.exists()) {
 			embeddedDatabaseBuilder.addScript(customSql);
 		}
 		embeddedDatabase = embeddedDatabaseBuilder.build();
-        System.setProperty("db.profiles.active", "h2");
+		System.setProperty("db.profiles.active", "h2");
 	}
 
 	public static void stopEmbeddedDb() {

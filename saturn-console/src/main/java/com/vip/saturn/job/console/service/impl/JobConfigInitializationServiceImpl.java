@@ -48,7 +48,7 @@ import ma.glasnost.orika.MapperFactory;
  */
 @Service
 public class JobConfigInitializationServiceImpl implements JobConfigInitializationService {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(JobConfigInitializationServiceImpl.class);
 
 	private static List<RegistryCenterConfiguration> regCenterConfList = null;
@@ -204,66 +204,99 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		}
 	}
 
-	private JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration rcc, CuratorFramework curatorFramework) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+	private JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration rcc,
+			CuratorFramework curatorFramework) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository
+				.newCuratorFrameworkOp(curatorFramework);
 		JobSettings result = new JobSettings();
 		result.setJobName(jobName);
-		result.setJobClass(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobClass"))));
-		result.setShardingTotalCount(parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")))));
-		String timeZone = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "timeZone")));
+		result.setJobClass(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "jobClass"))));
+		result.setShardingTotalCount(
+				parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+						JobNodePath.getConfigNodePath(jobName, "shardingTotalCount")))));
+		String timeZone = curatorFrameworkOp.getData(
+				getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "timeZone")));
 		if (Strings.isNullOrEmpty(timeZone)) {
 			result.setTimeZone(SaturnConstants.TIME_ZONE_ID_DEFAULT);
 		} else {
 			result.setTimeZone(timeZone);
 		}
 		result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-		result.setCron(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "cron"))));
-		result.setCustomContext(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "customContext"))));
-		result.setPausePeriodDate(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
-		result.setPausePeriodTime(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
-		result.setShardingItemParameters(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"))));
-		result.setJobParameter(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobParameter"))));
+		result.setCron(curatorFrameworkOp.getData(
+				getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "cron"))));
+		result.setCustomContext(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "customContext"))));
+		result.setPausePeriodDate(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
+		result.setPausePeriodTime(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
+		result.setShardingItemParameters(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"))));
+		result.setJobParameter(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "jobParameter"))));
 		result.setProcessCountIntervalSeconds(
-				parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds")))));
-		String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds")));
+				parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+						JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds")))));
+		String timeout4AlarmSecondsStr = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds")));
 		if (Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
 			result.setTimeout4AlarmSeconds(0);
 		} else {
 			result.setTimeout4AlarmSeconds(parseInt(timeout4AlarmSecondsStr));
 		}
-		result.setTimeoutSeconds(parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "timeoutSeconds")))));
-		String lv = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "loadLevel")));
+		result.setTimeoutSeconds(parseInt(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "timeoutSeconds")))));
+		String lv = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "loadLevel")));
 		if (Strings.isNullOrEmpty(lv)) {
 			result.setLoadLevel(1);
 		} else {
 			result.setLoadLevel(parseInt(lv));
 		}
-		String jobDegree = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobDegree")));
+		String jobDegree = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "jobDegree")));
 		if (Strings.isNullOrEmpty(jobDegree)) {
 			result.setJobDegree(0);
 		} else {
 			result.setJobDegree(parseInt(jobDegree));
 		}
-		result.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "enabled")))));// 默认是禁用的
-		result.setPreferList(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "preferList"))));
-		String useDispreferList = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "useDispreferList")));
+		result.setEnabled(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "enabled")))));// 默认是禁用的
+		result.setPreferList(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "preferList"))));
+		String useDispreferList = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "useDispreferList")));
 		if (Strings.isNullOrEmpty(useDispreferList)) {
 			result.setUseDispreferList(null);
 		} else {
 			result.setUseDispreferList(Boolean.valueOf(useDispreferList));
 		}
-		result.setUseSerial(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "useSerial")))));
-		result.setLocalMode(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "localMode")))));
-		result.setFailover(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "failover")))));
-		result.setDependencies(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "dependencies"))));
-		result.setGroups(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "groups"))));
-		result.setDescription(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "description"))));
-		result.setJobMode(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobMode"))));
-		result.setQueueName(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "queueName"))));
-		result.setChannelName(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "channelName"))));
-		String jobType = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobType")));
+		result.setUseSerial(
+				Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+						JobNodePath.getConfigNodePath(jobName, "useSerial")))));
+		result.setLocalMode(
+				Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+						JobNodePath.getConfigNodePath(jobName, "localMode")))));
+		result.setFailover(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "failover")))));
+		result.setDependencies(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "dependencies"))));
+		result.setGroups(curatorFrameworkOp.getData(
+				getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "groups"))));
+		result.setDescription(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "description"))));
+		result.setJobMode(curatorFrameworkOp.getData(
+				getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobMode"))));
+		result.setQueueName(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "queueName"))));
+		result.setChannelName(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "channelName"))));
+		String jobType = curatorFrameworkOp.getData(
+				getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "jobType")));
 		result.setJobType(jobType);
-		String enabledReport = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "enabledReport")));
+		String enabledReport = curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+				JobNodePath.getConfigNodePath(jobName, "enabledReport")));
 		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
 		if (Strings.isNullOrEmpty(enabledReport)) {
 			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
@@ -286,7 +319,9 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 			}
 
 		}
-		result.setShowNormalLog(Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(), JobNodePath.getConfigNodePath(jobName, "showNormalLog")))));
+		result.setShowNormalLog(
+				Boolean.valueOf(curatorFrameworkOp.getData(getConfigNodePathWithNamespace(rcc.getNamespace(),
+						JobNodePath.getConfigNodePath(jobName, "showNormalLog")))));
 		return result;
 	}
 
@@ -294,8 +329,10 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		return "/" + namespace + configNodePath;
 	}
 
-	private List<String> getAllUnSystemJobs(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+	private List<String> getAllUnSystemJobs(String namespace, CuratorFramework curatorFramework)
+			throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository
+				.newCuratorFrameworkOp(curatorFramework);
 		List<String> allJobs = getAllJobs(namespace, curatorFramework);
 		Iterator<String> iterator = allJobs.iterator();
 		while (iterator.hasNext()) {
@@ -311,15 +348,18 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		return allJobs;
 	}
 
-	private List<String> getAllJobs(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+	private List<String> getAllJobs(String namespace, CuratorFramework curatorFramework)
+			throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository
+				.newCuratorFrameworkOp(curatorFramework);
 		List<String> allJobs = new ArrayList<>();
 		String jobsNodePath = getConfigNodePathWithNamespace(namespace, JobNodePath.get$JobsNodePath());
 		if (curatorFrameworkOp.checkExists(jobsNodePath)) {
 			List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
 			if (jobs != null && jobs.size() > 0) {
 				for (String job : jobs) {
-					if (curatorFrameworkOp.checkExists(getConfigNodePathWithNamespace(namespace, JobNodePath.getConfigNodePath(job)))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
+					if (curatorFrameworkOp.checkExists(
+							getConfigNodePathWithNamespace(namespace, JobNodePath.getConfigNodePath(job)))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
 						allJobs.add(job);
 					}
 				}

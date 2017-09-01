@@ -27,36 +27,36 @@ import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
  *
  */
 public class AbstractController {
-	
-    public static final String ACTIVATED_CONFIG_SESSION_KEY = "activated_config";
-    public static final String REQUEST_NAMESPACE_PARAM = "nns";
+
+	public static final String ACTIVATED_CONFIG_SESSION_KEY = "activated_config";
+	public static final String REQUEST_NAMESPACE_PARAM = "nns";
 	public static final String CURRENT_ZK_CLUSTER_KEY = "current_zk_cluster_key";
-    
-    @Resource
-    protected RegistryCenterService registryCenterService;
-    @Resource
-    private JobDimensionService jobDimensionService;
-    @Resource
-    private JobOperationService jobOperationService;
-	
+
+	@Resource
+	protected RegistryCenterService registryCenterService;
+	@Resource
+	private JobDimensionService jobDimensionService;
+	@Resource
+	private JobOperationService jobOperationService;
+
 	@Value("${console.version}")
 	protected String version;
-	
-	public static String getStackTrace(Throwable aThrowable) {
-	    //add the class name and any message passed to constructor
-	    final StringBuilder result = new StringBuilder("Trace: ");
-	    result.append(aThrowable.toString());
-	    final String NEW_LINE = "<br>";
-	    result.append(NEW_LINE);
 
-	    //add each element of the stack trace
-	    for (StackTraceElement element : aThrowable.getStackTrace()) {
-	        result.append(element);
-	        result.append(NEW_LINE);
-	    }
-	    return result.toString();
+	public static String getStackTrace(Throwable aThrowable) {
+		// add the class name and any message passed to constructor
+		final StringBuilder result = new StringBuilder("Trace: ");
+		result.append(aThrowable.toString());
+		final String NEW_LINE = "<br>";
+		result.append(NEW_LINE);
+
+		// add each element of the stack trace
+		for (StackTraceElement element : aThrowable.getStackTrace()) {
+			result.append(element);
+			result.append(NEW_LINE);
+		}
+		return result.toString();
 	}
-	
+
 	public void setSession(final RegistryCenterClient client, final HttpSession session) {
 		ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
 		RegistryCenterConfiguration conf = registryCenterService.findConfig(client.getNameAndNamespace());
@@ -66,7 +66,7 @@ public class AbstractController {
 		session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
 		setCurrentZkClusterKey(conf.getZkClusterKey(), session);
 	}
-	
+
 	public void setCurrentZkClusterKey(String zkClusterKey, final HttpSession session) {
 		session.setAttribute(CURRENT_ZK_CLUSTER_KEY, zkClusterKey);
 	}
@@ -89,9 +89,9 @@ public class AbstractController {
 
 	public String getCurrentZkAddr(final HttpSession session) {
 		String zkClusterKey = (String) session.getAttribute(CURRENT_ZK_CLUSTER_KEY);
-		if(zkClusterKey != null) {
+		if (zkClusterKey != null) {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				return zkCluster.getZkAddr();
 			}
 		}
@@ -106,27 +106,30 @@ public class AbstractController {
 		}
 		return null;
 	}
-	
+
 	public RegistryCenterConfiguration getActivatedConfigInSession(final HttpSession session) {
 		return (RegistryCenterConfiguration) session.getAttribute(ACTIVATED_CONFIG_SESSION_KEY);
 	}
-	
+
 	public RegistryCenterClient getClientInSession(final HttpSession session) {
-		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) session.getAttribute(ACTIVATED_CONFIG_SESSION_KEY);
+		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) session
+				.getAttribute(ACTIVATED_CONFIG_SESSION_KEY);
 		if (reg == null) {
 			return null;
 		}
 		return registryCenterService.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
 	}
-	
+
 	public void setJobStatusAndIsEnabled(ModelMap model, String jobName) {
 		model.put("jobStatus", jobDimensionService.getJobStatus(jobName));
 		model.put("isEnabled", jobDimensionService.isJobEnabled(jobName));
 	}
 
 	public String getNamespace() {
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		RegistryCenterConfiguration configuration = (RegistryCenterConfiguration) request.getSession().getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+				.getRequest();
+		RegistryCenterConfiguration configuration = (RegistryCenterConfiguration) request.getSession()
+				.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
 		if (configuration != null) {
 			return configuration.getNamespace();
 		}

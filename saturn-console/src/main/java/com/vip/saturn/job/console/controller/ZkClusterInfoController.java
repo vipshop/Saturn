@@ -20,24 +20,24 @@ import java.util.List;
 @RequestMapping("registry_center")
 public class ZkClusterInfoController extends AbstractController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterInfoController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterInfoController.class);
 
-    @Resource
-    private ZkClusterInfoService zkClusterInfoService;
+	@Resource
+	private ZkClusterInfoService zkClusterInfoService;
 
-    @RequestMapping(value = "getAllZkClusterInfo", method = RequestMethod.GET)
-    public RequestResult getAllZkClusterInfo(HttpServletRequest request) {
-        RequestResult requestResult = new RequestResult();
-        try {
-            List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
-            requestResult.setObj(allZkClusterInfo);
-            requestResult.setSuccess(true);
-        } catch (Throwable t) {
-            LOGGER.error(t.getMessage(), t);
-            requestResult.setSuccess(false);
-            requestResult.setMessage(t.toString());
-        }
-        return requestResult;
-    }
+	@RequestMapping(value = "getAllZkClusterInfo", method = RequestMethod.GET)
+	public RequestResult getAllZkClusterInfo(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
+			requestResult.setObj(allZkClusterInfo);
+			requestResult.setSuccess(true);
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
 
 }

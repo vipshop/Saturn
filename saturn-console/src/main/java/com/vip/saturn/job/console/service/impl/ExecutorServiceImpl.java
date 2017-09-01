@@ -61,15 +61,15 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private JobDimensionService jobDimensionService;
 	@Resource
 	private JobOperationService jobOperationService;
-	
-    @Resource
-    private CurrentJobConfigService currentJobConfigService;
+
+	@Resource
+	private CurrentJobConfigService currentJobConfigService;
 
 	@Resource
 	private SystemConfigService systemConfigService;
 
 	private Random random = new Random();
-	
+
 	@Override
 	public List<String> getAliveExecutorNames() {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
@@ -81,7 +81,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 					if (executorName != null) {
 						String ip = null;
 						try {
-							ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executorName,IP_NODE_NAME));
+							ip = curatorFrameworkOp
+									.getData(ExecutorNodePath.getExecutorNodePath(executorName, IP_NODE_NAME));
 						} catch (Throwable t) {
 							log.error(t.getMessage(), t);
 						}
@@ -95,23 +96,23 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 		return null;
 	}
-	
+
 	@Override
-	public boolean jobIncExceeds(int maxJobNum,int inc) throws SaturnJobConsoleException {
-		if(maxJobNum <=0) {
+	public boolean jobIncExceeds(int maxJobNum, int inc) throws SaturnJobConsoleException {
+		if (maxJobNum <= 0) {
 			return false;
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		int curJobSize = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp).size();
-		return (curJobSize+inc) > maxJobNum;
+		return (curJobSize + inc) > maxJobNum;
 	}
 
 	@Override
-    public int getMaxJobNum() {
+	public int getMaxJobNum() {
 		int result = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, DEFAULT_MAX_JOB_NUM);
 		return result <= 0 ? DEFAULT_MAX_JOB_NUM : result;
 	}
-	
+
 	@Override
 	public RequestResult addJobs(JobConfig jobConfig) {
 		RequestResult requestResult = new RequestResult();
@@ -148,49 +149,51 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public String removeJob(String jobName) {
 		try {
-			Stat itemStat = ThreadLocalCuratorClient.getCuratorClient().checkExists().forPath(JobNodePath.getJobNodePath(jobName));
-			if(itemStat != null){
+			Stat itemStat = ThreadLocalCuratorClient.getCuratorClient().checkExists()
+					.forPath(JobNodePath.getJobNodePath(jobName));
+			if (itemStat != null) {
 				long createTimeDiff = System.currentTimeMillis() - itemStat.getCtime();
-				if(createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT){
-					return "作业【"+jobName+"】创建后"+ (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60 / 1000) +"分钟内不允许删除";
+				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
+					return "作业【" + jobName + "】创建后" + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60 / 1000)
+							+ "分钟内不允许删除";
 				}
 			}
-			
+
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			deleteJobFromDb(curatorFrameworkOp, jobName);
-			
-			//1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
+
+			// 1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
 			String toDeleteNodePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
-			if(curatorFrameworkOp.checkExists(toDeleteNodePath)){
+			if (curatorFrameworkOp.checkExists(toDeleteNodePath)) {
 				curatorFrameworkOp.deleteRecursive(toDeleteNodePath);
 			}
 			curatorFrameworkOp.create(toDeleteNodePath);
-			
-			for(int i=0;i<20;i++){
+
+			for (int i = 0; i < 20; i++) {
 				// 2.作业的executor全offline的情况，或有几个online，几个offline的情况
 				String jobServerPath = JobNodePath.getServerNodePath(jobName);
-				if(!curatorFrameworkOp.checkExists(jobServerPath)){
+				if (!curatorFrameworkOp.checkExists(jobServerPath)) {
 					// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
 					return SaturnConstants.DEAL_SUCCESS;
 				}
 				// (2)如果该作业servers下没有任何executor，可直接删除作业节点
 				List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
-				if(CollectionUtils.isEmpty(executors)){
+				if (CollectionUtils.isEmpty(executors)) {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
 					return SaturnConstants.DEAL_SUCCESS;
 				}
 				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
 				boolean hasOnlineExecutor = false;
-				for(String executor : executors){
-					if(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
-							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))){
+				for (String executor : executors) {
+					if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
+							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))) {
 						hasOnlineExecutor = true;
 					} else {
-						curatorFrameworkOp.deleteRecursive(JobNodePath.getServerNodePath(jobName,executor));
+						curatorFrameworkOp.deleteRecursive(JobNodePath.getServerNodePath(jobName, executor));
 					}
 				}
-				if(!hasOnlineExecutor){
+				if (!hasOnlineExecutor) {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
 				}
 				Thread.sleep(200);
@@ -202,27 +205,30 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return SaturnConstants.DEAL_SUCCESS;
 	}
 
-	private void deleteJobFromDb(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) throws SaturnJobConsoleHttpException{
+	private void deleteJobFromDb(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName)
+			throws SaturnJobConsoleHttpException {
 		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
 		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
-		if(currentJobConfig == null) {
-			log.warn("currentJobConfig from db does not exists,namespace and jobName is:"+namespace+" "+jobName);
+		if (currentJobConfig == null) {
+			log.warn("currentJobConfig from db does not exists,namespace and jobName is:" + namespace + " " + jobName);
 			return;
 		}
 		try {
 			currentJobConfigService.deleteByPrimaryKey(currentJobConfig.getId());
 		} catch (Exception e) {
 			log.error("exception is thrown during delete job config from db", e);
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e); 
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
 	}
-	
+
 	@Override
 	public File getExportJobFile() throws SaturnJobConsoleException {
 		try {
 			String sep = System.getProperty("file.separator");
-			File tmp = new File(System.getProperty("user.home") + sep + ".saturn" + sep + "saturn_console" + sep + "caches" + sep + "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
-			if(!tmp.exists()) {
+			File tmp = new File(
+					System.getProperty("user.home") + sep + ".saturn" + sep + "saturn_console" + sep + "caches" + sep
+							+ "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
+			if (!tmp.exists()) {
 				FileUtils.forceMkdir(tmp.getParentFile());
 				tmp.createNewFile();
 			}
@@ -289,9 +295,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 			setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
 			sheet1.addCell(groupsLabel);
 
-            Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
-            setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
-            sheet1.addCell(timeout4AlarmSecondsLabel);
+			Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
+			setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
+			sheet1.addCell(timeout4AlarmSecondsLabel);
 
 			Label timeZoneLabel = new Label(26, 0, "时区");
 			setCellComment(timeZoneLabel, "作业运行时区");
@@ -299,40 +305,66 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			List<String> jobNames = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-			for (int i=0; i<jobNames.size(); i++) {
+			for (int i = 0; i < jobNames.size(); i++) {
 				try {
 					String jobName = jobNames.get(i);
 					sheet1.addCell(new Label(0, i + 1, jobName));
-					sheet1.addCell(new Label(1, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
-					sheet1.addCell(new Label(2, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass"))));
-					sheet1.addCell(new Label(3, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"))));
-					sheet1.addCell(new Label(4, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description"))));
-					sheet1.addCell(new Label(5, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
-					sheet1.addCell(new Label(6, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
-					sheet1.addCell(new Label(7, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
-					sheet1.addCell(new Label(8, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter"))));
-					sheet1.addCell(new Label(9, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"))));
-					sheet1.addCell(new Label(10, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName"))));
-					sheet1.addCell(new Label(11, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName"))));
-					sheet1.addCell(new Label(12, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"))));
-					String useDispreferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
-					if(useDispreferList != null) {
+					sheet1.addCell(new Label(1, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
+					sheet1.addCell(new Label(2, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass"))));
+					sheet1.addCell(new Label(3, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"))));
+					sheet1.addCell(new Label(4, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description"))));
+					sheet1.addCell(new Label(5, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
+					sheet1.addCell(new Label(6, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
+					sheet1.addCell(new Label(7, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
+					sheet1.addCell(new Label(8, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter"))));
+					sheet1.addCell(new Label(9, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"))));
+					sheet1.addCell(new Label(10, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName"))));
+					sheet1.addCell(new Label(11, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName"))));
+					sheet1.addCell(new Label(12, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"))));
+					String useDispreferList = curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
+					if (useDispreferList != null) {
 						useDispreferList = String.valueOf(!Boolean.valueOf(useDispreferList));
 					}
 					sheet1.addCell(new Label(13, i + 1, useDispreferList));
-					sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
-					sheet1.addCell(new Label(15, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"))));
-					sheet1.addCell(new Label(16, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
-					sheet1.addCell(new Label(17, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
-					sheet1.addCell(new Label(18, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
-					sheet1.addCell(new Label(19, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
-					sheet1.addCell(new Label(20, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
-					sheet1.addCell(new Label(21, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
-					sheet1.addCell(new Label(22, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
-					sheet1.addCell(new Label(23, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
-					sheet1.addCell(new Label(24, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
-                    sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"))));
-					sheet1.addCell(new Label(26, i + 1, curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"))));
+					sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
+					sheet1.addCell(new Label(15, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"))));
+					sheet1.addCell(new Label(16, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
+					sheet1.addCell(new Label(17, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
+					sheet1.addCell(new Label(18, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
+					sheet1.addCell(new Label(19, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+					sheet1.addCell(new Label(20, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
+					sheet1.addCell(new Label(21, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
+					sheet1.addCell(new Label(22, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
+					sheet1.addCell(new Label(23, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
+					sheet1.addCell(new Label(24, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
+					sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"))));
+					sheet1.addCell(new Label(26, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"))));
 				} catch (Exception e) {
 					log.error("export job exception:", e);
 					continue;
@@ -357,11 +389,11 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	@Override
 	public RequestResult shardAllAtOnce() throws SaturnJobConsoleException {
-		try{
+		try {
 			RequestResult requestResult = new RequestResult();
 			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 			String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
-			if(curatorFrameworkOp.checkExists(shardAllAtOnceNodePath)){
+			if (curatorFrameworkOp.checkExists(shardAllAtOnceNodePath)) {
 				curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
 			}
 			curatorFrameworkOp.create(shardAllAtOnceNodePath);

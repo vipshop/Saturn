@@ -1,19 +1,16 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
- */   
+ */
 package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.*;
@@ -34,12 +31,12 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 
- * @author yangjuanying  
+/**
+ * @author yangjuanying
  */
 @Service
 public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(SaturnJunkDataServiceImpl.class);
 
 	@Resource
@@ -69,11 +66,13 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 				continue;
 			}
 			String zkAddressList = conf.getZkAddressList();
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(registryCenterClient.getCuratorClient());
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository
+					.newCuratorFrameworkOp(registryCenterClient.getCuratorClient());
 			List<String> jobNames = curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath());
 			if (jobNames != null) {
 				for (String jobName : jobNames) {
-					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) { // $Jobs/jobName/config exists
+					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) { // $Jobs/jobName/config
+																									// exists
 						String toDeletePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
 						if (curatorFrameworkOp.checkExists(toDeletePath)) { // toDelete node is junk data
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
@@ -84,8 +83,10 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 							saturnJunkData.setZkAddr(zkAddressList);
 							saturnJunkDataList.add(saturnJunkData);
 						}
-						String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
-						if (curatorFrameworkOp.checkExists(jobConfigForceShardNodePath)) { // forceShard node is junk data
+						String jobConfigForceShardNodePath = SaturnExecutorsNode
+								.getJobConfigForceShardNodePath(jobName);
+						if (curatorFrameworkOp.checkExists(jobConfigForceShardNodePath)) { // forceShard node is junk
+																							// data
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
 							saturnJunkData.setPath(jobConfigForceShardNodePath);
 							saturnJunkData.setNamespace(namespace);
@@ -125,7 +126,8 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 								saturnJunkDataList.add(saturnJunkData);
 							}
 
-							// $Jobs/servers/executors/executorName/sharding has contents, but this executor is offline,this contents is junk data
+							// $Jobs/servers/executors/executorName/sharding has contents, but this executor is
+							// offline,this contents is junk data
 							String serverShardingPath = JobNodePath.getServerSharding(jobName, server);
 							String data = curatorFrameworkOp.getData(serverShardingPath);
 							if (data != null && !data.trim().isEmpty()) {
@@ -142,7 +144,8 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 							}
 						}
 					} else {
-						// if $Jobs/jobName/config is not exists, but $Jobs/jobName/xxx exists,then $Jobs/jobName is junk data
+						// if $Jobs/jobName/config is not exists, but $Jobs/jobName/xxx exists,then $Jobs/jobName is
+						// junk data
 						List<String> children = curatorFrameworkOp.getChildren(JobNodePath.getJobNodePath(jobName));
 						if (children != null && !children.isEmpty()) {
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
@@ -162,42 +165,45 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 
 	@Override
 	public void removeSaturnJunkData(final SaturnJunkData saturnJunkData) throws SaturnJobConsoleException {
-		ReuseUtils.reuse(saturnJunkData.getNamespace(), registryCenterService, curatorRepository, new ReuseCallBack<Void>() {
-			@Override
-			public Void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-				String path = saturnJunkData.getPath();
-				String type = saturnJunkData.getType();
-				if(path == null || path.trim().isEmpty()) {
-					throw new SaturnJobConsoleException("The parameter path cannot be null or empty");
-				}
-				if(type == null || type.trim().isEmpty()) {
-					throw new SaturnJobConsoleException("The parameter type cannot be null or empty");
-				}
+		ReuseUtils.reuse(saturnJunkData.getNamespace(), registryCenterService, curatorRepository,
+				new ReuseCallBack<Void>() {
+					@Override
+					public Void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+							throws SaturnJobConsoleException {
+						String path = saturnJunkData.getPath();
+						String type = saturnJunkData.getType();
+						if (path == null || path.trim().isEmpty()) {
+							throw new SaturnJobConsoleException("The parameter path cannot be null or empty");
+						}
+						if (type == null || type.trim().isEmpty()) {
+							throw new SaturnJobConsoleException("The parameter type cannot be null or empty");
+						}
 
-				if (SaturnJunkDataOpType.CLEAR.toString().equals(type)) {
-					if (curatorFrameworkOp.checkExists(path)) {
-						curatorFrameworkOp.update(path, "");
+						if (SaturnJunkDataOpType.CLEAR.toString().equals(type)) {
+							if (curatorFrameworkOp.checkExists(path)) {
+								curatorFrameworkOp.update(path, "");
+							}
+						} else if (SaturnJunkDataOpType.DELETE.toString().equals(type)) {
+							if (curatorFrameworkOp.checkExists(path)) {
+								curatorFrameworkOp.deleteRecursive(path);
+							}
+						} else {
+							throw new SaturnJobConsoleException("The parameter type(" + type + ") is not supported");
+						}
+						return null;
 					}
-				} else if (SaturnJunkDataOpType.DELETE.toString().equals(type)) {
-					if (curatorFrameworkOp.checkExists(path)) {
-						curatorFrameworkOp.deleteRecursive(path);
-					}
-				} else {
-					throw new SaturnJobConsoleException("The parameter type(" + type + ") is not supported");
-				}
-				return null;
-			}
-		});
+				});
 	}
 
 	@Override
-	public void deleteRunningNode(String namespace, final String jobName, final Integer item) throws SaturnJobConsoleException {
+	public void deleteRunningNode(String namespace, final String jobName, final Integer item)
+			throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBack<Void>() {
 			@Override
 			public Void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 				try {
 					String runningPath = JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "running");
-					if(!curatorFrameworkOp.checkExists(runningPath)) {
+					if (!curatorFrameworkOp.checkExists(runningPath)) {
 						throw new SaturnJobConsoleException("The running path is not existing");
 					}
 					curatorFrameworkOp.deleteRecursive(runningPath);
@@ -213,4 +219,3 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 	}
 
 }
-  

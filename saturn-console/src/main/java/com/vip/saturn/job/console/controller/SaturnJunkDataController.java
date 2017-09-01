@@ -1,20 +1,17 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
- */   
-package com.vip.saturn.job.console.controller;   
+ */
+package com.vip.saturn.job.console.controller;
 
 import java.util.List;
 
@@ -36,25 +33,25 @@ import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.SaturnJunkData;
 import com.vip.saturn.job.console.service.SaturnJunkDataService;
 
-/** 
- * @author yangjuanying  
+/**
+ * @author yangjuanying
  */
 @Controller
 @RequestMapping("/")
 public class SaturnJunkDataController extends AbstractController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SaturnJunkDataController.class);
-	
+
 	@Resource
 	private SaturnJunkDataService saturnJunkDataService;
-	
-	@RequestMapping(value = "junkdata",method = RequestMethod.GET)
-	public String junkdata(HttpServletRequest request,HttpSession session,ModelMap model) {
+
+	@RequestMapping(value = "junkdata", method = RequestMethod.GET)
+	public String junkdata(HttpServletRequest request, HttpSession session, ModelMap model) {
 		return "junkdata";
-    }
-    
-    @ResponseBody
-    @RequestMapping(value = "getJunkdata",method = RequestMethod.GET)
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "getJunkdata", method = RequestMethod.GET)
 	public RequestResult getJunkData(HttpServletRequest request, String newZkClusterKey) {
 		RequestResult requestResult = new RequestResult();
 		try {
@@ -71,11 +68,12 @@ public class SaturnJunkDataController extends AbstractController {
 			LOGGER.error(t.getMessage(), t);
 		}
 		return requestResult;
-    }
-    
-    @ResponseBody
-    @RequestMapping(value = "removeJunkData",method = RequestMethod.POST)
-	public RequestResult removeJunkData(HttpServletRequest request,SaturnJunkData saturnJunkData,HttpSession session) {
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "removeJunkData", method = RequestMethod.POST)
+	public RequestResult removeJunkData(HttpServletRequest request, SaturnJunkData saturnJunkData,
+			HttpSession session) {
 		RequestResult requestResult = new RequestResult();
 		try {
 			saturnJunkDataService.removeSaturnJunkData(saturnJunkData);
@@ -91,28 +89,29 @@ public class SaturnJunkDataController extends AbstractController {
 			LOGGER.error("[removeJunkData error, saturnJunkData is " + saturnJunkData + "]", t);
 		}
 		return requestResult;
-    }
+	}
 
 	@ResponseBody
-	@RequestMapping(value = "junkData/deleteRunningNode",method = RequestMethod.POST)
+	@RequestMapping(value = "junkData/deleteRunningNode", method = RequestMethod.POST)
 	public RequestResult deleteRunningNode(String namespace, String jobName, Integer item) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			if(namespace == null || namespace.trim().isEmpty()) {
+			if (namespace == null || namespace.trim().isEmpty()) {
 				throw new SaturnJobConsoleException("The namespace can not be null or empty");
 			}
-			if(jobName == null || jobName.trim().isEmpty()) {
+			if (jobName == null || jobName.trim().isEmpty()) {
 				throw new SaturnJobConsoleException("The jobName can not be null or empty");
 			}
-			if(item == null) {
+			if (item == null) {
 				throw new SaturnJobConsoleException("The item can not be null");
 			}
 			saturnJunkDataService.deleteRunningNode(namespace, jobName, item);
-			LOGGER.info("do junkData/deleteRunningNode success, namespace is {}, jobName is {}, item is {}", namespace, jobName, item);
+			LOGGER.info("do junkData/deleteRunningNode success, namespace is {}, jobName is {}, item is {}", namespace,
+					jobName, item);
 			requestResult.setSuccess(true);
 		} catch (Throwable t) {
 			requestResult.setSuccess(false);
-			if(t instanceof SaturnJobConsoleException) {
+			if (t instanceof SaturnJobConsoleException) {
 				requestResult.setMessage(t.getMessage());
 			} else {
 				requestResult.setMessage(t.toString());
@@ -122,4 +121,3 @@ public class SaturnJunkDataController extends AbstractController {
 		return requestResult;
 	}
 }
-  

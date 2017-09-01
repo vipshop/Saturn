@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -40,20 +37,21 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 
 @Service
 public class ServerDimensionServiceImpl implements ServerDimensionService {
-	
-	private static final Logger log = LoggerFactory.getLogger(ServerDimensionServiceImpl.class);
-	
-	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, Locale.SIMPLIFIED_CHINESE);
-    @Resource
-    private CuratorRepository curatorRepository;
-    @Resource
-    private JobDimensionService jobDimensionService;
 
-    @Override
-    public Map<String, Object> getAllServersBriefInfo() {
+	private static final Logger log = LoggerFactory.getLogger(ServerDimensionServiceImpl.class);
+
+	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM,
+			Locale.SIMPLIFIED_CHINESE);
+	@Resource
+	private CuratorRepository curatorRepository;
+	@Resource
+	private JobDimensionService jobDimensionService;
+
+	@Override
+	public Map<String, Object> getAllServersBriefInfo() {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-    	HashMap<String,Object> model = new HashMap<String,Object>();
-    	Map<String,ServerBriefInfo> sbfMap = new LinkedHashMap<String,ServerBriefInfo>();
+		HashMap<String, Object> model = new HashMap<String, Object>();
+		Map<String, ServerBriefInfo> sbfMap = new LinkedHashMap<String, ServerBriefInfo>();
 		List<String> jobs = new ArrayList<>();
 		try {
 			jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
@@ -61,89 +59,95 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 			log.error(e.getMessage(), e);
 		}
 
-        Map<String, Map<String, Integer>> jobNameExecutorNameTotalLevel = new HashMap<>();
-    	String executorNodePath = ExecutorNodePath.getExecutorNodePath();
-    	if(curatorFrameworkOp.checkExists(executorNodePath)) {
-    		List<String> executors = curatorFrameworkOp.getChildren(executorNodePath);
-    		if(!CollectionUtils.isEmpty(executors)){
-    			for(String executor : executors){
-    				ServerBriefInfo sbf = new ServerBriefInfo(executor);
-    				String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
-    				sbf.setServerIp(ip);
-    				String lastBeginTime = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(sbf.getExecutorName(),"lastBeginTime"));
-    				sbf.setLastBeginTime(null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
-            		if(!Strings.isNullOrEmpty(ip)){
-            			sbf.setStatus(ServerStatus.ONLINE);
-            		} else {
-            			sbf.setStatus(ServerStatus.OFFLINE);
-            		}
-            		sbf.setVersion(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "version")));
-            		if(!CollectionUtils.isEmpty(jobs)){
-        				for (String jobName : jobs) {
-        					String serverNodePath = JobNodePath.getServerNodePath(jobName);
-        		        	if(!curatorFrameworkOp.checkExists(serverNodePath)) {
-        		        		continue;
-        		        	}
-        		        	if(Strings.isNullOrEmpty(sbf.getServerIp())){
-			            		String serverIp = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "ip"));
-			            		sbf.setServerIp(serverIp);
-			            	}
+		Map<String, Map<String, Integer>> jobNameExecutorNameTotalLevel = new HashMap<>();
+		String executorNodePath = ExecutorNodePath.getExecutorNodePath();
+		if (curatorFrameworkOp.checkExists(executorNodePath)) {
+			List<String> executors = curatorFrameworkOp.getChildren(executorNodePath);
+			if (!CollectionUtils.isEmpty(executors)) {
+				for (String executor : executors) {
+					ServerBriefInfo sbf = new ServerBriefInfo(executor);
+					String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
+					sbf.setServerIp(ip);
+					String lastBeginTime = curatorFrameworkOp
+							.getData(ExecutorNodePath.getExecutorNodePath(sbf.getExecutorName(), "lastBeginTime"));
+					sbf.setLastBeginTime(
+							null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
+					if (!Strings.isNullOrEmpty(ip)) {
+						sbf.setStatus(ServerStatus.ONLINE);
+					} else {
+						sbf.setStatus(ServerStatus.OFFLINE);
+					}
+					sbf.setVersion(
+							curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "version")));
+					if (!CollectionUtils.isEmpty(jobs)) {
+						for (String jobName : jobs) {
+							String serverNodePath = JobNodePath.getServerNodePath(jobName);
+							if (!curatorFrameworkOp.checkExists(serverNodePath)) {
+								continue;
+							}
+							if (Strings.isNullOrEmpty(sbf.getServerIp())) {
+								String serverIp = curatorFrameworkOp
+										.getData(JobNodePath.getServerNodePath(jobName, executor, "ip"));
+								sbf.setServerIp(serverIp);
+							}
 							Map<String, Integer> executorNameWithTotalLevel = null;
-							if(jobNameExecutorNameTotalLevel.containsKey(jobName)) {
+							if (jobNameExecutorNameTotalLevel.containsKey(jobName)) {
 								executorNameWithTotalLevel = jobNameExecutorNameTotalLevel.get(jobName);
 							} else {
 								executorNameWithTotalLevel = new LinkedHashMap<>();
 								jobNameExecutorNameTotalLevel.put(jobName, executorNameWithTotalLevel);
 							}
-							if(ServerStatus.ONLINE.equals(sbf.getStatus())){// 负荷分布图只显示online的Executor
+							if (ServerStatus.ONLINE.equals(sbf.getStatus())) {// 负荷分布图只显示online的Executor
 								executorNameWithTotalLevel.put(executor, 0);
-			            	}
-			            	String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
-			            	if(!Strings.isNullOrEmpty(sharding)){
-			            		sbf.setHasSharding(true);// 如果有分片信息则前端需要屏蔽删除按钮
-	        		        	if(JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName))){
-	                    			continue;// 作业状态为STOPPED的即使有残留分片也不显示该分片
-	                    		}
-	        		        	if(ServerStatus.OFFLINE.equals(sbf.getStatus())){// offline的executor即使有残留分片也不显示该分片
-				            		continue;
-				            	}
-	        		        	// concat executorSharding
-	        		        	String executorSharding = jobName + ":" + sharding;
-				            	if(Strings.isNullOrEmpty(sbf.getSharding())){// 如果有分片信息则前端需要屏蔽删除按钮
-				            		sbf.setSharding(executorSharding);
-				            	}else{
-				            		sbf.setSharding(sbf.getSharding() + "<br/>" + executorSharding);
-				            	}
-				            	// calculate totalLoadLevel
-			            		String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
-			            		Integer loadLevel = 1;
-			            		if(!Strings.isNullOrEmpty(loadLevelNode)){
-			            			loadLevel = Integer.parseInt(loadLevelNode);
-			            		}
-			            		Integer totalLoadLevel = sbf.getTotalLoadLevel();
-			            		int thisJobsLoad = (sharding.split(",").length * loadLevel);
-			            		sbf.setTotalLoadLevel((sbf.getTotalLoadLevel() == null?0:totalLoadLevel) + thisJobsLoad);
-				            	executorNameWithTotalLevel.put(executor, thisJobsLoad);
-			            	}
-        		        }
-        			}
-            		sbfMap.put(executor, sbf);
-    			}
-    		}
-        	model.put("serverInfos", sbfMap.values());
-        	model.put("jobShardLoadLevels", jobNameExecutorNameTotalLevel);
-        }
-        return model;
-    }
-    
+							}
+							String sharding = curatorFrameworkOp
+									.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
+							if (!Strings.isNullOrEmpty(sharding)) {
+								sbf.setHasSharding(true);// 如果有分片信息则前端需要屏蔽删除按钮
+								if (JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName))) {
+									continue;// 作业状态为STOPPED的即使有残留分片也不显示该分片
+								}
+								if (ServerStatus.OFFLINE.equals(sbf.getStatus())) {// offline的executor即使有残留分片也不显示该分片
+									continue;
+								}
+								// concat executorSharding
+								String executorSharding = jobName + ":" + sharding;
+								if (Strings.isNullOrEmpty(sbf.getSharding())) {// 如果有分片信息则前端需要屏蔽删除按钮
+									sbf.setSharding(executorSharding);
+								} else {
+									sbf.setSharding(sbf.getSharding() + "<br/>" + executorSharding);
+								}
+								// calculate totalLoadLevel
+								String loadLevelNode = curatorFrameworkOp
+										.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
+								Integer loadLevel = 1;
+								if (!Strings.isNullOrEmpty(loadLevelNode)) {
+									loadLevel = Integer.parseInt(loadLevelNode);
+								}
+								Integer totalLoadLevel = sbf.getTotalLoadLevel();
+								int thisJobsLoad = (sharding.split(",").length * loadLevel);
+								sbf.setTotalLoadLevel(
+										(sbf.getTotalLoadLevel() == null ? 0 : totalLoadLevel) + thisJobsLoad);
+								executorNameWithTotalLevel.put(executor, thisJobsLoad);
+							}
+						}
+					}
+					sbfMap.put(executor, sbf);
+				}
+			}
+			model.put("serverInfos", sbfMap.values());
+			model.put("jobShardLoadLevels", jobNameExecutorNameTotalLevel);
+		}
+		return model;
+	}
 
 	@Override
 	public ServerStatus getExecutorStatus(String executor) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-        if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))) {
-            return ServerStatus.ONLINE;
-        }
-        return ServerStatus.OFFLINE;
+		if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))) {
+			return ServerStatus.ONLINE;
+		}
+		return ServerStatus.OFFLINE;
 	}
 
 	@Override
@@ -177,7 +181,7 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public boolean isReady(String jobName, String executor) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();

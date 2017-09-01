@@ -44,7 +44,8 @@ public class JobConfigController extends AbstractController {
 	@ResponseBody
 	public Map<?, ?> load() {
 		Map<String, Object> model = new HashMap<String, Object>();
-		List<RegistryCenterConfiguration> regCenterConfList = jobConfigInitializationService.getRegistryCenterConfigurations();
+		List<RegistryCenterConfiguration> regCenterConfList = jobConfigInitializationService
+				.getRegistryCenterConfigurations();
 		model.put("configs", regCenterConfList);
 		return model;
 	}

@@ -62,7 +62,7 @@ import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private static final Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
-	
+
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 
 	@Resource
@@ -73,7 +73,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
-	
+
 	@Resource
 	private SystemConfigService systemConfigService;
 
@@ -88,14 +88,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private ConcurrentHashMap<String, DashboardLeaderTreeCache> dashboardLeaderTreeCacheMap = new ConcurrentHashMap<>();
 
 	// namespace is unique in all zkClusters
-	private ConcurrentHashMap<String /** nns */ , RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String /** nns */
+			, RegistryCenterClient> registryCenterClientMap = new ConcurrentHashMap<>();
 	private ConcurrentHashMap<String, Object> nnsLock = new ConcurrentHashMap<>(); // maybe could remove in right time
 
 	// namespace is unique in all zkClusters
-	private ConcurrentHashMap<String /** nns **/ , NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
-	
+	private ConcurrentHashMap<String /** nns **/
+			, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
+
 	private String consoleClusterId;
-	
+
 	private List<String> restrictComputeZkClusterKeys = new ArrayList<String>();
 
 	private Timer refreshAllTimer = null;
@@ -119,7 +121,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		while (iterator.hasNext()) {
 			closeZkCluster(iterator.next().getValue());
 		}
-		if(refreshAllTimer != null) {
+		if (refreshAllTimer != null) {
 			refreshAllTimer.cancel();
 		}
 	}
@@ -143,7 +145,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		refreshNamespaceShardingListenerManagerMap();
 		refreshTreeData();
 	}
-	
+
 	/**
 	 * 解析Console集群和zk的映射关系
 	 * 
@@ -162,19 +164,22 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		for (String singleConsoleMappingStr : singleConsoleMappingArray) {
 			String[] consoleAndClusterKeyArray = singleConsoleMappingStr.split(":");
 			if (consoleAndClusterKeyArray.length != 2) {
-				throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING(" + consoleAndClusterKeyArray + ") format is not correct, should be like console:zk1");
+				throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING(" + consoleAndClusterKeyArray
+						+ ") format is not correct, should be like console:zk1");
 			}
 			String tempConsoleClusterId = consoleAndClusterKeyArray[0];
 			String zkClusterKeyStr = consoleAndClusterKeyArray[1];
 			if (consoleClusterId.equals(tempConsoleClusterId)) {
 				String[] zkClusterKeyArray = zkClusterKeyStr.trim().split(",");
 				restrictComputeZkClusterKeys = Arrays.asList(zkClusterKeyArray);
-				log.info("the current console {} can do sharding and dashboard to {}", consoleClusterId, restrictComputeZkClusterKeys);
+				log.info("the current console {} can do sharding and dashboard to {}", consoleClusterId,
+						restrictComputeZkClusterKeys);
 				return;
 			}
 		}
 
-		throw new SaturnJobConsoleException("the console " + consoleClusterId + " cannot do sharding and dashboard to any cluster");
+		throw new SaturnJobConsoleException(
+				"the console " + consoleClusterId + " cannot do sharding and dashboard to any cluster");
 	}
 
 	/**
@@ -186,7 +191,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		return restrictComputeZkClusterKeys.contains(clusterKey);
 	}
-	
+
 	private String generateShardingLeadershipHostValue() {
 		return LocalHostService.cachedIpAddress + "-" + UUID.randomUUID().toString();
 	}
@@ -201,11 +206,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				for (RegistryCenterConfiguration conf : regCenterConfList) {
 					String nns = conf.getNameAndNamespace();
 					if (!namespaceShardingListenerManagerMap.containsKey(nns)) {
-						if(isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+						if (isZKClusterCanBeComputed(conf.getZkClusterKey())) {
 							createNamespaceShardingManager(conf, nns);
 						}
 					} else {
-						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.get(nns);
+						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap
+								.get(nns);
 						if (!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
 							namespaceShardingManager.stopWithCurator();
 							namespaceShardingListenerManagerMap.remove(nns);
@@ -221,17 +227,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			log.info("Start NamespaceShardingManager {}", nns);
 			String namespace = conf.getNamespace();
 			String digest = conf.getDigest();
-			CuratorFramework client = curatorRepository.connect(conf.getZkAddressList(), namespace,
-					digest);
+			CuratorFramework client = curatorRepository.connect(conf.getZkAddressList(), namespace, digest);
 			if (client != null) {
 				NamespaceShardingManager namespaceShardingManager = null;
 				try {
-					boolean isDifferentiateContainer = systemConfigService.getBooleanValue(SystemConfigProperties.IS_CONTAINER_DIFFERENTIATE, true);
+					boolean isDifferentiateContainer = systemConfigService
+							.getBooleanValue(SystemConfigProperties.IS_CONTAINER_DIFFERENTIATE, true);
 					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
 							generateShardingLeadershipHostValue(), reportAlarmProxyService, isDifferentiateContainer);
 					namespaceShardingManager.start();
-					if (namespaceShardingListenerManagerMap.putIfAbsent(nns,
-							namespaceShardingManager) != null) {
+					if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
 						try {
 							namespaceShardingManager.stopWithCurator();
 						} catch (Exception e) {
@@ -306,7 +311,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			Entry<String, ZkCluster> next = iterator3.next();
 			String zkClusterKey = next.getKey();
 			ZkCluster zkCluster = next.getValue();
-			List<NamespaceZkClusterMapping> allMappingsOfCluster = namespaceZkClusterMapping4SqlService.getAllMappingsOfCluster(zkClusterKey);
+			List<NamespaceZkClusterMapping> allMappingsOfCluster = namespaceZkClusterMapping4SqlService
+					.getAllMappingsOfCluster(zkClusterKey);
 			ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
 			if (regCenterConfList != null) {
 				Iterator<RegistryCenterConfiguration> regIter = regCenterConfList.iterator();
@@ -327,7 +333,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						synchronized (getNnsLock(nns)) {
 							regIter.remove();
 							closeNamespace(nns);
-							log.info("closed the moved namespace info, namespace is {}, old zkClusterKey is {}", namespace, zkClusterKey);
+							log.info("closed the moved namespace info, namespace is {}, old zkClusterKey is {}",
+									namespace, zkClusterKey);
 						}
 					}
 				}
@@ -341,7 +348,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						continue;
 					}
 					boolean include = false;
-					if(regCenterConfList != null) {
+					if (regCenterConfList != null) {
 						for (RegistryCenterConfiguration conf : regCenterConfList) {
 							if (namespace.equals(conf.getNamespace())) {
 								include = true;
@@ -353,7 +360,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 								if (!nnsOld.equals(nnsNew)) {
 									synchronized (getNnsLock(nnsOld)) {
 										closeNamespace(nnsOld);
-										log.info("closed the namespace info because it's nns is changed, namespace is {}", namespace);
+										log.info(
+												"closed the namespace info because it's nns is changed, namespace is {}",
+												namespace);
 									}
 								}
 								break;
@@ -363,7 +372,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					if (!include) {
 						CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
 						initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
+						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace,
+								zkCluster.getZkAddr());
 						conf.setZkClusterKey(zkClusterKey);
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
@@ -417,7 +427,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (needToRefreshDashboardTreeCache(zkCluster, zkClusterKey)) {
 				DashboardLeaderTreeCache dashboardLeaderTreeCache = null;
 				try {
-					dashboardLeaderTreeCache = new DashboardLeaderTreeCache(zkCluster.getZkAlias(), zkCluster.getCuratorFramework());
+					dashboardLeaderTreeCache = new DashboardLeaderTreeCache(zkCluster.getZkAlias(),
+							zkCluster.getCuratorFramework());
 					dashboardLeaderTreeCache.start();
 					dashboardLeaderTreeCacheMap.put(zkClusterKey, dashboardLeaderTreeCache);
 				} catch (Exception e) {
@@ -429,7 +440,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 	}
-	
+
 	private boolean needToRefreshDashboardTreeCache(ZkCluster zkCluster, String zkClusterKey) {
 		if (zkCluster.isOffline()) {
 			return false;
@@ -441,7 +452,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 		return isZKClusterCanBeComputed(zkClusterKey);
 	}
-	
+
 	/**
 	 * 将不在本console服务器中进行Dashboard计算的DashboardLeaderTreeCache关闭
 	 */
@@ -466,7 +477,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private void closeZkCluster(ZkCluster zkCluster) {
 		try {
 			try {
-				DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.remove(zkCluster.getZkClusterKey());
+				DashboardLeaderTreeCache dashboardLeaderTreeCache = dashboardLeaderTreeCacheMap
+						.remove(zkCluster.getZkClusterKey());
 				if (dashboardLeaderTreeCache != null) {
 					dashboardLeaderTreeCache.shutdown();
 				}
@@ -600,7 +612,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private void refreshTreeData() {
 		// clear removed zkCluster treeData
-		Iterator<Entry<String, TreeNode>> iterator = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.entrySet().iterator();
+		Iterator<Entry<String, TreeNode>> iterator = InitRegistryCenterService.ZKBSKEY_TO_TREENODE_MAP.entrySet()
+				.iterator();
 		while (iterator.hasNext()) {
 			Entry<String, TreeNode> next = iterator.next();
 			String zkClusterKey = next.getKey();
@@ -735,7 +748,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public CuratorRepository.CuratorFrameworkOp connectOnly(String zkAddr, String namespace) throws SaturnJobConsoleException {
+	public CuratorRepository.CuratorFrameworkOp connectOnly(String zkAddr, String namespace)
+			throws SaturnJobConsoleException {
 		CuratorFramework curatorFramework = curatorRepository.connect(zkAddr, namespace, null);
 		if (curatorFramework != null) {
 			return curatorRepository.newCuratorFrameworkOp(curatorFramework);
@@ -801,7 +815,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException {
+	public boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework)
+			throws SaturnJobConsoleException {
 		if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
 			return false;
 		}

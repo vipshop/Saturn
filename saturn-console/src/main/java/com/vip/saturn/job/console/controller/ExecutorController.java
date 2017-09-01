@@ -46,9 +46,9 @@ public class ExecutorController extends AbstractController {
 
 	@Resource
 	private ExecutorService executorService;
-    @Resource
-    private JobDimensionService jobDimensionService;
-    @Resource
+	@Resource
+	private JobDimensionService jobDimensionService;
+	@Resource
 	private JobOperationService jobOperationService;
 
 	@RequestMapping(value = "checkAndAddJobs", method = RequestMethod.POST)
@@ -91,7 +91,7 @@ public class ExecutorController extends AbstractController {
 				return result;
 			}
 			String originalFilename = file.getOriginalFilename();
-			if(originalFilename == null || !originalFilename.endsWith(".xls")) {
+			if (originalFilename == null || !originalFilename.endsWith(".xls")) {
 				result.setSuccess(false);
 				result.setMessage("仅支持.xls文件导入");
 				return result;
@@ -107,18 +107,18 @@ public class ExecutorController extends AbstractController {
 				for (int row = 1; row < rows; row++) {
 					Cell[] rowCells = sheet.getRow(row);
 					// 如果这一行的表格全为空，则跳过这一行。
-					if(!isBlankRow(rowCells)) {
+					if (!isBlankRow(rowCells)) {
 						jobConfigList.add(convertJobConfig(i + 1, row + 1, rowCells));
 					}
 				}
 			}
-            int maxJobNum = executorService.getMaxJobNum();
-            if(executorService.jobIncExceeds(maxJobNum,jobConfigList.size())) {
-            	String errorMsg = String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum);
-                result.setSuccess(false);
-                result.setMessage(errorMsg);
-                return result;
-            }
+			int maxJobNum = executorService.getMaxJobNum();
+			if (executorService.jobIncExceeds(maxJobNum, jobConfigList.size())) {
+				String errorMsg = String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum);
+				result.setSuccess(false);
+				result.setMessage(errorMsg);
+				return result;
+			}
 			// 再进行添加
 			for (JobConfig jobConfig : jobConfigList) {
 				RequestResult addJobResult = executorService.addJobs(jobConfig);
@@ -148,8 +148,8 @@ public class ExecutorController extends AbstractController {
 	}
 
 	private boolean isBlankRow(Cell[] rowCells) {
-		for(int i=0; i<rowCells.length; i++) {
-			if(!CellType.EMPTY.equals(rowCells[i].getType())) {
+		for (int i = 0; i < rowCells.length; i++) {
+			if (!CellType.EMPTY.equals(rowCells[i].getType())) {
 				return false;
 			}
 		}
@@ -160,15 +160,17 @@ public class ExecutorController extends AbstractController {
 		return "内容格式有误，错误发生在表格页:" + sheetNumber + "，行号:" + rowNumber + "，列号:" + columnNumber + "，错误信息：" + message;
 	}
 
-	private JobConfig convertJobConfig(int sheetNumber, int rowNumber, Cell[] rowCells) throws SaturnJobConsoleException {
+	private JobConfig convertJobConfig(int sheetNumber, int rowNumber, Cell[] rowCells)
+			throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 
 		String jobName = getContents(rowCells, 0);
 		if (jobName == null || jobName.trim().isEmpty()) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名必填。"));
 		}
-		if(!jobName.matches("[0-9a-zA-Z_]*")) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
+		if (!jobName.matches("[0-9a-zA-Z_]*")) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 1, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
 		}
 		jobConfig.setJobName(jobName);
 
@@ -179,28 +181,35 @@ public class ExecutorController extends AbstractController {
 		if (JobBriefInfo.JobType.getJobType(jobType).equals(JobBriefInfo.JobType.UNKOWN_JOB)) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型未知。"));
 		}
-		if (JobBriefInfo.JobType.getJobType(jobType).equals(JobBriefInfo.JobType.VSHELL) && jobDimensionService.isNewSaturn("1.1.2") != 2) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "Shell消息作业不能导入到包含1.1.2以下版本Executor所在的域。"));
+		if (JobBriefInfo.JobType.getJobType(jobType).equals(JobBriefInfo.JobType.VSHELL)
+				&& jobDimensionService.isNewSaturn("1.1.2") != 2) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 2, "Shell消息作业不能导入到包含1.1.2以下版本Executor所在的域。"));
 		}
 		jobConfig.setJobType(jobType);
 
 		String jobClass = getContents(rowCells, 2);
-		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.MSG_JOB.name())) {
+		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name())
+				|| jobType.equals(JobBriefInfo.JobType.MSG_JOB.name())) {
 			if (jobClass == null || jobClass.trim().isEmpty()) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA/MSG作业，作业实现类必填。"));
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA/MSG作业，作业实现类必填。"));
 			}
 		}
 		jobConfig.setJobClass(jobClass);
 
 		String cron = getContents(rowCells, 3);
-		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name())
+				|| jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
 			if (cron == null || cron.trim().isEmpty()) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 4, "对于JAVA/SHELL作业，cron表达式必填。"));
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 4, "对于JAVA/SHELL作业，cron表达式必填。"));
 			}
 			try {
 				CronExpression.validateExpression(cron);
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e.toString()));
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e.toString()));
 			}
 		} else {
 			cron = "";// 其他类型的不需要持久化保存cron表达式
@@ -213,7 +222,7 @@ public class ExecutorController extends AbstractController {
 		jobConfig.setLocalMode(Boolean.valueOf(getContents(rowCells, 5)));
 
 		int shardingTotalCount = 1;
-		if(jobConfig.getLocalMode()) {
+		if (jobConfig.getLocalMode()) {
 			jobConfig.setShardingTotalCount(shardingTotalCount);
 		} else {
 			String tmp = getContents(rowCells, 6);
@@ -221,12 +230,13 @@ public class ExecutorController extends AbstractController {
 				try {
 					shardingTotalCount = Integer.parseInt(tmp);
 				} catch (NumberFormatException e) {
-					throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e.toString()));
+					throw new SaturnJobConsoleException(
+							createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e.toString()));
 				}
 			} else {
 				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数必填"));
 			}
-			if(shardingTotalCount < 1) {
+			if (shardingTotalCount < 1) {
 				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数不能小于1"));
 			}
 			jobConfig.setShardingTotalCount(shardingTotalCount);
@@ -239,33 +249,38 @@ public class ExecutorController extends AbstractController {
 				timeoutSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e.toString()));
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e.toString()));
 		}
 		jobConfig.setTimeoutSeconds(timeoutSeconds);
 
 		jobConfig.setJobParameter(getContents(rowCells, 8));
 
 		String shardingItemParameters = getContents(rowCells, 9);
-		if(jobConfig.getLocalMode()) {
-			if(shardingItemParameters == null) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必填。"));
+		if (jobConfig.getLocalMode()) {
+			if (shardingItemParameters == null) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必填。"));
 			} else {
 				String[] split = shardingItemParameters.split(",");
 				boolean includeXing = false;
-				for(String tmp : split) {
+				for (String tmp : split) {
 					String[] split2 = tmp.split("=");
-					if("*".equalsIgnoreCase(split2[0].trim())) {
+					if ("*".equalsIgnoreCase(split2[0].trim())) {
 						includeXing = true;
 						break;
 					}
 				}
-				if(!includeXing) {
-					throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
+				if (!includeXing) {
+					throw new SaturnJobConsoleException(
+							createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
 				}
 			}
 		} else if (shardingTotalCount > 0) {
-			if (shardingItemParameters == null ||  shardingItemParameters.trim().isEmpty() || shardingItemParameters.split(",").length < shardingTotalCount) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
+			if (shardingItemParameters == null || shardingItemParameters.trim().isEmpty()
+					|| shardingItemParameters.split(",").length < shardingTotalCount) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
 			}
 		}
 		jobConfig.setShardingItemParameters(shardingItemParameters);
@@ -282,7 +297,8 @@ public class ExecutorController extends AbstractController {
 				processCountIntervalSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e.toString()));
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e.toString()));
 		}
 		jobConfig.setProcessCountIntervalSeconds(processCountIntervalSeconds);
 
@@ -293,7 +309,8 @@ public class ExecutorController extends AbstractController {
 				loadLevel = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e.toString()));
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e.toString()));
 		}
 		jobConfig.setLoadLevel(loadLevel);
 
@@ -312,15 +329,17 @@ public class ExecutorController extends AbstractController {
 				jobDegree = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e.toString()));
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e.toString()));
 		}
 		jobConfig.setJobDegree(jobDegree);
 
 		// 对于定时作业，默认为true；对于消息作业，默认为false
 		boolean enabledReport;
 		String enabledReportStr = getContents(rowCells, 21);
-		if(enabledReportStr == null || enabledReportStr.trim().isEmpty()) {
-			if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+		if (enabledReportStr == null || enabledReportStr.trim().isEmpty()) {
+			if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name())
+					|| jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
 				enabledReport = true;
 			} else {
 				enabledReport = false;
@@ -330,37 +349,41 @@ public class ExecutorController extends AbstractController {
 		}
 		jobConfig.setEnabledReport(enabledReport);
 
-		String jobMode = getContents(rowCells, 22);;
-		if(jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
+		String jobMode = getContents(rowCells, 22);
+		;
+		if (jobMode != null && jobMode.startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "作业模式有误，不能添加系统作业"));
 		}
 		jobConfig.setJobMode(jobMode);
 
-		String dependencies = getContents(rowCells, 23);;
-		if(dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 24, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+		String dependencies = getContents(rowCells, 23);
+		;
+		if (dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 24, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
 		}
 		jobConfig.setDependencies(dependencies);
-		
+
 		jobConfig.setGroups(getContents(rowCells, 24));
 
-        int timeout4AlarmSeconds = 0;
-        try {
-            String tmp = getContents(rowCells, 25);
-            if (tmp != null && !tmp.trim().isEmpty()) {
-                timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
-            }
-        } catch (NumberFormatException e) {
-            throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e.toString()));
-        }
-        jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
+		int timeout4AlarmSeconds = 0;
+		try {
+			String tmp = getContents(rowCells, 25);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e.toString()));
+		}
+		jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
 		String timeZone = getContents(rowCells, 26);
-		if(timeZone == null || timeZone.trim().length() == 0) {
+		if (timeZone == null || timeZone.trim().length() == 0) {
 			timeZone = SaturnConstants.TIME_ZONE_ID_DEFAULT;
 		} else {
 			timeZone = timeZone.trim();
-			if(!SaturnConstants.TIME_ZONE_IDS.contains(timeZone)) {
+			if (!SaturnConstants.TIME_ZONE_IDS.contains(timeZone)) {
 				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 27, "时区有误"));
 			}
 		}
@@ -386,7 +409,8 @@ public class ExecutorController extends AbstractController {
 			String fileName = getNamespace() + "_allJobs_" + currentTime + ".xls";
 
 			response.setContentType("application/octet-stream");
-			response.setHeader("Content-disposition", "attachment; filename=" + new String(fileName.getBytes("UTF-8"), "ISO8859-1"));
+			response.setHeader("Content-disposition",
+					"attachment; filename=" + new String(fileName.getBytes("UTF-8"), "ISO8859-1"));
 
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(exportJobFile));
 			BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream());
@@ -401,7 +425,7 @@ public class ExecutorController extends AbstractController {
 			printErrorToResponse("导出全域作业出错：" + e.toString(), response);
 			return;
 		} finally {
-			if(exportJobFile != null) {
+			if (exportJobFile != null) {
 				exportJobFile.delete();
 			}
 		}
@@ -409,31 +433,26 @@ public class ExecutorController extends AbstractController {
 
 	private void printErrorToResponse(String errorMsg, HttpServletResponse response) throws IOException {
 		response.setContentType("text/html; charset=utf-8");
-		StringBuilder msg = new StringBuilder()
-				.append("<script language='javascript'>")
-				.append("alert(\"")
-				.append(errorMsg.replaceAll("\"", "\\\""))
-				.append("\");")
-				.append("history.back();")
-				.append("</script>");
+		StringBuilder msg = new StringBuilder().append("<script language='javascript'>").append("alert(\"")
+				.append(errorMsg.replaceAll("\"", "\\\"")).append("\");").append("history.back();").append("</script>");
 		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
-	
+
 	@RequestMapping(value = "shardAllAtOnce", method = RequestMethod.POST)
-    public RequestResult shardAllAtOnce(String nns,HttpServletRequest request,HttpSession httpSession) {
-        RequestResult requestResult = new RequestResult();
-        LOGGER.info("[tries to sharding all at once.]");
-        try {
-            requestResult = executorService.shardAllAtOnce();
-        } catch (SaturnJobConsoleException e) {
-            requestResult.setSuccess(false);
-            requestResult.setMessage(e.getMessage());
-        } catch (Throwable t) {
-            requestResult.setSuccess(false);
-            requestResult.setMessage(t.toString());
-            LOGGER.error("shardingAllAtOnce exception:",t);
-        }
-        return requestResult;
-    }
+	public RequestResult shardAllAtOnce(String nns, HttpServletRequest request, HttpSession httpSession) {
+		RequestResult requestResult = new RequestResult();
+		LOGGER.info("[tries to sharding all at once.]");
+		try {
+			requestResult = executorService.shardAllAtOnce();
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Throwable t) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+			LOGGER.error("shardingAllAtOnce exception:", t);
+		}
+		return requestResult;
+	}
 
 }

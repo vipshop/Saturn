@@ -9,7 +9,8 @@ import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 
 /**
- * Report alarm, maybe you could re-implement this class, and change {@linkplain ReportAlarmProxyServiceImpl#getTarget()}
+ * Report alarm, maybe you could re-implement this class, and change
+ * {@linkplain ReportAlarmProxyServiceImpl#getTarget()}
  * 
  * @author hebelala
  */

@@ -86,21 +86,21 @@ public class RegistryCenterController extends AbstractController {
 		}
 		return model;
 	}
-	
+
 	@RequestMapping(value = "selectZk", method = RequestMethod.POST)
-    public String selectZk(final HttpSession session, String newZkClusterKey) {
-    	setCurrentZkClusterKey(newZkClusterKey, session);
-    	return "ok";
-    }
+	public String selectZk(final HttpSession session, String newZkClusterKey) {
+		setCurrentZkClusterKey(newZkClusterKey, session);
+		return "ok";
+	}
 
 	private String replaceQuotation(String str) {
-		if(str == null) {
+		if (str == null) {
 			return "";
 		} else {
 			return str.replaceAll("\'", "&#39;").replaceAll("\"", "&#34;");
 		}
 	}
-	
+
 	private List<TreeNode> connectAndLoadJobs(HttpServletRequest request, String nns, final HttpSession session) {
 		setSession(registryCenterService.connect(nns), session);
 		// set threadlocal session.
@@ -109,11 +109,12 @@ public class RegistryCenterController extends AbstractController {
 			return null;
 		}
 		ThreadLocalCuratorClient.setCuratorClient(client.getCuratorClient());
-		Collection<JobBriefInfo> jobs = jobDimensionService.getAllJobsBriefInfo(null,null);
+		Collection<JobBriefInfo> jobs = jobDimensionService.getAllJobsBriefInfo(null, null);
 		List<TreeNode> nodes = new ArrayList<>();
 		for (Iterator<JobBriefInfo> iterator = jobs.iterator(); iterator.hasNext();) {
 			JobBriefInfo jobBriefInfo = (JobBriefInfo) iterator.next();
-			TreeNode node = new TreeNode(String.format(TITLE_FORMAT, jobBriefInfo.getJobName(), nns, replaceQuotation(jobBriefInfo.getDescription()), jobBriefInfo.getJobName()));
+			TreeNode node = new TreeNode(String.format(TITLE_FORMAT, jobBriefInfo.getJobName(), nns,
+					replaceQuotation(jobBriefInfo.getDescription()), jobBriefInfo.getJobName()));
 			node.setFolder(false);
 			switch (jobBriefInfo.getJobType()) {
 			case MSG_JOB:
@@ -144,7 +145,7 @@ public class RegistryCenterController extends AbstractController {
 
 	@RequestMapping(value = "jobs", method = RequestMethod.GET)
 	public Collection<JobBriefInfo> getAllJobsBriefInfo() {
-		return jobDimensionService.getAllJobsBriefInfo(null,null);
+		return jobDimensionService.getAllJobsBriefInfo(null, null);
 	}
 
 }

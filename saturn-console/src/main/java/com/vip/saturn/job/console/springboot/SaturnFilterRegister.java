@@ -9,11 +9,9 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import com.vip.saturn.job.console.filter.RecordLastVisit;
 import com.vip.saturn.job.console.filter.SaturnXssFilter;
 
-
 @Component
 public class SaturnFilterRegister {
-	
-	
+
 	@Bean
 	public FilterRegistrationBean registerEncodingFilter() {
 		CharacterEncodingFilter encodingFilter = new CharacterEncodingFilter();
@@ -22,17 +20,17 @@ public class SaturnFilterRegister {
 		FilterRegistrationBean registration = new FilterRegistrationBean(encodingFilter);
 		registration.addUrlPatterns("/*");
 		registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
-	    return registration;
+		return registration;
 	}
 
-//	@Bean
-//	public FilterRegistrationBean registerSaturnXssFilter() {
-//		SaturnXssFilter xssFilter = new SaturnXssFilter();
-//		FilterRegistrationBean registration = new FilterRegistrationBean(xssFilter);
-//		registration.addUrlPatterns("/*");
-//		registration.setOrder(2);
-//	    return registration;
-//	}
+	// @Bean
+	// public FilterRegistrationBean registerSaturnXssFilter() {
+	// SaturnXssFilter xssFilter = new SaturnXssFilter();
+	// FilterRegistrationBean registration = new FilterRegistrationBean(xssFilter);
+	// registration.addUrlPatterns("/*");
+	// registration.setOrder(2);
+	// return registration;
+	// }
 
 	@Bean
 	public FilterRegistrationBean registerLastVisitFilter() {
@@ -40,8 +38,7 @@ public class SaturnFilterRegister {
 		FilterRegistrationBean registration = new FilterRegistrationBean(lastVisit);
 		registration.addUrlPatterns("/*");
 		registration.setOrder(3);
-	    return registration;
+		return registration;
 	}
-
 
 }

@@ -29,57 +29,59 @@ import java.util.Map;
 @RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController {
 
-    public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
+	public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
-    private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
+	private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
-    @Resource
-    private RestApiService restApiService;
+	@Resource
+	private RestApiService restApiService;
 
-    @RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
-        try {
-            String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
-            String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
-            Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
+	@RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
+			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
+		try {
+			String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
+			String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
+			Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
 
-            AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
+			AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-            logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName, executorName, shardItem);
+			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName,
+					executorName, shardItem);
 
-            restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
+			restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
 
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } catch (SaturnJobConsoleException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
-        }
-    }
+			return new ResponseEntity<>(HttpStatus.CREATED);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+		}
+	}
 
-    private AlarmInfo constructAlarmInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {
-        AlarmInfo alarmInfo = new AlarmInfo();
-        String level = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "level", true);
-        alarmInfo.setLevel(level);
+	private AlarmInfo constructAlarmInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {
+		AlarmInfo alarmInfo = new AlarmInfo();
+		String level = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "level", true);
+		alarmInfo.setLevel(level);
 
-        alarmInfo.setType(ALARM_TYPE);
+		alarmInfo.setType(ALARM_TYPE);
 
-        String name = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "name", true);
-        alarmInfo.setName(name);
+		String name = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "name", true);
+		alarmInfo.setName(name);
 
-        String title = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "title", true);
-        alarmInfo.setTitle(title);
+		String title = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "title", true);
+		alarmInfo.setTitle(title);
 
-        String message = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "message", false);
-        if (StringUtils.isNotBlank(message)) {
-            alarmInfo.setMessage(message);
-        }
+		String message = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "message", false);
+		if (StringUtils.isNotBlank(message)) {
+			alarmInfo.setMessage(message);
+		}
 
-        Map<String, String> customFields = (Map<String, String>) reqParams.get("additionalInfo");
-        if (customFields != null) {
-            alarmInfo.getCustomFields().putAll(customFields);
-        }
+		Map<String, String> customFields = (Map<String, String>) reqParams.get("additionalInfo");
+		if (customFields != null) {
+			alarmInfo.getCustomFields().putAll(customFields);
+		}
 
-        return alarmInfo;
-    }
+		return alarmInfo;
+	}
 }
