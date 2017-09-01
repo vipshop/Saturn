@@ -41,10 +41,10 @@ public class SaturnJobRunMojo extends AbstractMojo {
 
 	@Parameter(property = "namespace")
 	private String namespace;
-	
+
 	@Parameter(property = "executorName")
 	private String executorName;
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -58,21 +58,22 @@ public class SaturnJobRunMojo extends AbstractMojo {
 		final MavenProject project = (MavenProject) getPluginContext().get("project");
 
 		// 拷贝应用运行时依赖至target/saturn-run目录
-		File saturnAppLibDir = new File(project.getBuild().getDirectory() + System.getProperty("file.separator") + "saturn-run");
-		if(!saturnAppLibDir.exists()) {
+		File saturnAppLibDir = new File(
+				project.getBuild().getDirectory() + System.getProperty("file.separator") + "saturn-run");
+		if (!saturnAppLibDir.exists()) {
 			saturnAppLibDir.mkdirs();
 		}
 		try {
 			List<String> runtimeArtifacts = project.getRuntimeClasspathElements();
 			for (String path : runtimeArtifacts) {
 				File tmp = new File(path);
-				copy(tmp, saturnAppLibDir );
+				copy(tmp, saturnAppLibDir);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new MojoExecutionException("getRuntimeClasspathElements error", e);
 		}
-		
+
 		String saturnVersion = getSaturnVersion(project);
 		MavenProjectUtils mavenProjectUtils = new MavenProjectUtils(project, log);
 		IvyGetArtifact ivyGetArtifact = getIvyGetArtifact(mavenProjectUtils);
@@ -90,19 +91,21 @@ public class SaturnJobRunMojo extends AbstractMojo {
 
 		final URLClassLoader executorClassLoader;
 		try {
-			executorClassLoader = new URLClassLoader(new URL[]{new File(saturnExecutorDir, "saturn-executor.jar").toURL()}, ClassLoader.getSystemClassLoader());
+			executorClassLoader = new URLClassLoader(
+					new URL[] { new File(saturnExecutorDir, "saturn-executor.jar").toURL() },
+					ClassLoader.getSystemClassLoader());
 		} catch (MalformedURLException e) {
 			throw new MojoExecutionException("get saturn-executor classLoad failed", e);
 		}
 
 		final List<String> argList = new ArrayList<>();
-		if(namespace != null) {
+		if (namespace != null) {
 			argList.add("-namespace");
 			argList.add(namespace);
 		} else {
 			throw new MojoExecutionException("the parameter of namespace is required");
 		}
-		if(executorName != null) {
+		if (executorName != null) {
 			argList.add("-executorName");
 			argList.add(executorName);
 		}
@@ -122,21 +125,21 @@ public class SaturnJobRunMojo extends AbstractMojo {
 					System.setProperty("saturn.stdout", "true");
 					Class<?> mainClass = executorClassLoader.loadClass("com.vip.saturn.job.executor.Main");
 					Method mainMethod = mainClass.getMethod("main", String[].class);
-					mainMethod.invoke(mainClass, new Object[]{argList.toArray(new String[argList.size()])});
+					mainMethod.invoke(mainClass, new Object[] { argList.toArray(new String[argList.size()]) });
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
 			}
 		});
 		containerThread.start();
-		
+
 		try {
 			Thread.currentThread().join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			throw new MojoExecutionException("current thread join error", e);
 		}
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -188,13 +191,13 @@ public class SaturnJobRunMojo extends AbstractMojo {
 
 	private static List<URL> getUrls(File file) throws MalformedURLException {
 		List<URL> urls = new ArrayList<>();
-		if(file.exists()) {
-			if(file.isDirectory()) {
+		if (file.exists()) {
+			if (file.isDirectory()) {
 				File[] files = file.listFiles();
-				for(File tmp : files) {
+				for (File tmp : files) {
 					urls.addAll(getUrls(tmp));
 				}
-			} else if(file.isFile()) {
+			} else if (file.isFile()) {
 				urls.add(file.toURI().toURL());
 			}
 		}
@@ -202,14 +205,14 @@ public class SaturnJobRunMojo extends AbstractMojo {
 	}
 
 	private void copy(File source, File destinationDir) throws IOException {
-		if(source.isFile()) {
+		if (source.isFile()) {
 			FileUtils.copyFileToDirectory(source, destinationDir);
-		} else if(source.isDirectory()) {
+		} else if (source.isDirectory()) {
 			File newDestinationDir = new File(destinationDir, source.getName());
-			if(!newDestinationDir.exists()) {
+			if (!newDestinationDir.exists()) {
 				newDestinationDir.mkdirs();
 			}
-			for(File tmp : source.listFiles()) {
+			for (File tmp : source.listFiles()) {
 				copy(tmp, newDestinationDir);
 			}
 		}

@@ -67,8 +67,8 @@ public class MavenProjectUtils {
 
 			Object basedirParent = null;
 			try {
-				Field userLocalArtifactRepository = localRepository_object.getClass().getDeclaredField(
-						"userLocalArtifactRepository");// for maven 3.1.1
+				Field userLocalArtifactRepository = localRepository_object.getClass()
+						.getDeclaredField("userLocalArtifactRepository");// for maven 3.1.1
 				userLocalArtifactRepository.setAccessible(true);
 				basedirParent = userLocalArtifactRepository.get(localRepository_object);
 			} catch (Exception e) {
@@ -83,5 +83,5 @@ public class MavenProjectUtils {
 		}
 		return localRepositoryDir == null ? defaultM2Repository : localRepositoryDir;// default local maven dir
 	}
-	
+
 }

@@ -19,7 +19,7 @@ import java.util.zip.ZipOutputStream;
  *
  */
 public class CommonUtils {
-	
+
 	private static final String fileSeparator = System.getProperty("file.separator");
 
 	public static boolean initSaturnHome() {
@@ -29,7 +29,7 @@ public class CommonUtils {
 		saturnCaches.mkdirs();
 		return saturnCaches.exists();
 	}
-	
+
 	public static File getSaturnHomeCaches() {
 		return new File(System.getProperty("user.home") + fileSeparator + ".saturn" + fileSeparator + "caches");
 	}
@@ -65,23 +65,23 @@ public class CommonUtils {
 			zipFile.close();
 		}
 	}
-	
+
 	public static void zip(List<File> runtimeLibFiles, File saturnContainerDir, File zipFile) throws IOException {
 		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
-/*		for(File file : saturnContainerDir.listFiles()) {
-			zip(file, "saturn", zos);
-		}*/
-		
-		
-		for(File file : runtimeLibFiles) {
-			zip(file, "app"+fileSeparator+"lib", zos);
+		/*
+		 * for(File file : saturnContainerDir.listFiles()) { zip(file, "saturn", zos); }
+		 */
+
+		for (File file : runtimeLibFiles) {
+			zip(file, "app" + fileSeparator + "lib", zos);
 		}
 		zos.close();
 	}
-	
+
 	private static void zip(File file, String parent, ZipOutputStream zos) throws IOException {
-		if(file == null || !file.exists()) return;
-		if(file.isFile()) {
+		if (file == null || !file.exists())
+			return;
+		if (file.isFile()) {
 			String entryName = parent == null ? file.getName() : parent + fileSeparator + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName));
 			FileInputStream fis = new FileInputStream(file);
@@ -91,12 +91,12 @@ public class CommonUtils {
 				zos.write(bs, 0, len);
 			}
 			fis.close();
-		} else if(file.isDirectory()) {
+		} else if (file.isDirectory()) {
 			String entryName = parent == null ? file.getName() : parent + fileSeparator + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName + "/"));
 			File[] listFiles = file.listFiles();
-			if(listFiles != null) {
-				for(File tmp : file.listFiles()) {
+			if (listFiles != null) {
+				for (File tmp : file.listFiles()) {
 					zip(tmp, entryName, zos);
 				}
 			}

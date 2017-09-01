@@ -46,7 +46,8 @@ public class IvyGetArtifact {
 		this.ivy = ivy;
 	}
 
-	private File getIvyfile(String org, String name, String rev, String[] confs, Set<Map<String, Object>> artifacts) throws IOException {
+	private File getIvyfile(String org, String name, String rev, String[] confs, Set<Map<String, Object>> artifacts)
+			throws IOException {
 		File ivyfile;
 		ivyfile = File.createTempFile("ivy", ".xml");
 		ivyfile.deleteOnExit();
@@ -54,26 +55,27 @@ public class IvyGetArtifact {
 				.newDefaultInstance(ModuleRevisionId.newInstance(org, name + "-caller", "working"));
 		DefaultDependencyDescriptor dd = new DefaultDependencyDescriptor(md,
 				ModuleRevisionId.newInstance(org, name, rev), false, false, true);
-		
-		if(artifacts != null && !artifacts.isEmpty()) {
-			for(Map<String, Object> artifact : artifacts) {
+
+		if (artifacts != null && !artifacts.isEmpty()) {
+			for (Map<String, Object> artifact : artifacts) {
 				String artifactName = (String) artifact.get("name");
 				String artifactType = (String) artifact.get("type");
 				String artifactExt = (String) artifact.get("ext");
 				URL artifactUrl = (URL) artifact.get("url");
 				Map<?, ?> extraAttributes = (Map<?, ?>) artifact.get("extraAttributes");
-				DefaultDependencyArtifactDescriptor dad = new DefaultDependencyArtifactDescriptor(dd, artifactName, artifactType, artifactExt, artifactUrl, extraAttributes);
+				DefaultDependencyArtifactDescriptor dad = new DefaultDependencyArtifactDescriptor(dd, artifactName,
+						artifactType, artifactExt, artifactUrl, extraAttributes);
 				dd.addDependencyArtifact("default", dad);
 			}
 		}
-		
+
 		for (int i = 0; i < confs.length; i++) {
 			dd.addDependencyConfiguration("default", confs[i]);
 		}
 		md.addDependency(dd);
-		
+
 		md.addExtraAttributeNamespace("m", "http://ant.apache.org/ivy/maven");
-		
+
 		XmlModuleDescriptorWriter.write(md, ivyfile);
 		return ivyfile;
 	}
@@ -106,7 +108,8 @@ public class IvyGetArtifact {
 		return fs;
 	}
 
-	public List<URL> get(String org, String name, String rev, String[] confs, Set<Map<String, Object>> artifacts) throws IOException, ParseException {
+	public List<URL> get(String org, String name, String rev, String[] confs, Set<Map<String, Object>> artifacts)
+			throws IOException, ParseException {
 		Set<URL> artifactsGeted = new HashSet<URL>();
 		try {
 			ivy.getSettings().addAllVariables(System.getProperties());
@@ -135,5 +138,5 @@ public class IvyGetArtifact {
 		result.addAll(artifactsGeted);
 		return result;
 	}
-	
+
 }
