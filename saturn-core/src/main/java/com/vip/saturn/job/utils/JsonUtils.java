@@ -44,8 +44,8 @@ public class JsonUtils {
 	}
 
 	/**
-	 *  从JSON转换为对象
-	 * @param <T> 转换的Java类型 
+	 * 从JSON转换为对象
+	 * @param <T> 转换的Java类型
 	 * @param jsonStr JSON字符串
 	 * @param type 指定类型
 	 * @return 转换后的对象
@@ -59,7 +59,7 @@ public class JsonUtils {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 从JSON转换为对象
 	 * @param jsonStr JSON字符串
@@ -85,5 +85,5 @@ public class JsonUtils {
 		}
 		return result;
 	}
-	
+
 }

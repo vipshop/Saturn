@@ -22,7 +22,7 @@ public class ResourceUtils {
 				props.load(is);
 			}
 		} finally {
-			if(is != null) {
+			if (is != null) {
 				is.close();
 			}
 		}

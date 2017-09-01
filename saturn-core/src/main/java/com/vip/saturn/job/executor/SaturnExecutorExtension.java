@@ -6,13 +6,14 @@ package com.vip.saturn.job.executor;
  *
  */
 public abstract class SaturnExecutorExtension {
-	
+
 	protected String executorName;
 	protected String namespace;
 	protected ClassLoader jobClassLoader;
 	protected ClassLoader executorClassLoader;
 
-	public SaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	public SaturnExecutorExtension(String executorName, String namespace, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.jobClassLoader = jobClassLoader;
@@ -20,17 +21,17 @@ public abstract class SaturnExecutorExtension {
 	}
 
 	public abstract void initBefore();
-	
+
 	public abstract void initLogDirEnv();
-	
+
 	public abstract void initLog();
-	
+
 	public abstract void initAfter();
-	
+
 	public abstract void registerJobType();
-	
+
 	public abstract void validateNamespaceExisting(String connectString) throws Exception;
-	
+
 	public abstract void init();
 
 }

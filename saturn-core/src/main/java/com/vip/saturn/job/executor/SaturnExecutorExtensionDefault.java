@@ -18,21 +18,23 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 	private static Logger LOGGER;
 	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
 
-	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
+	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader,
+			ClassLoader jobClassLoader) {
 		super(executorName, namespace, executorClassLoader, jobClassLoader);
 	}
 
 	@Override
 	public void initBefore() {
-		
+
 	}
-	
+
 	@Override
 	public void initLogDirEnv() {
-		String SATURN_LOG_DIR = System.getProperty(NAME_SATURN_LOG_DIR, getEnv(NAME_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
+		String SATURN_LOG_DIR = System.getProperty(NAME_SATURN_LOG_DIR,
+				getEnv(NAME_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
 		System.setProperty("saturn.log.dir", SATURN_LOG_DIR); // for logback.xml
 	}
-	
+
 	private static String getEnv(String key, String defaultValue) {
 		String v = System.getenv(key);
 		if (v == null || v.isEmpty()) {
@@ -40,14 +42,15 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 		}
 		return v;
 	}
-	
+
 	private static String getDefaultLogDir(String executorName) {
-		return "/apps/logs/saturn/" + System.getProperty("namespace") + "/" + executorName + "-" + LocalHostService.cachedIpAddress;
+		return "/apps/logs/saturn/" + System.getProperty("namespace") + "/" + executorName + "-"
+				+ LocalHostService.cachedIpAddress;
 	}
 
 	@Override
 	public void initLog() {
-		if(LOGGER == null) {
+		if (LOGGER == null) {
 			LOGGER = LoggerFactory.getLogger(SaturnExecutorExtensionDefault.class);
 		}
 	}
@@ -65,7 +68,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void validateNamespaceExisting(String connectString) throws Exception {
-		
+
 	}
 
 	@Override
@@ -74,7 +77,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 		initLogDirEnv();
 		initLog();
 		initAfter();
-		registerJobType();		
+		registerJobType();
 	}
 
 }

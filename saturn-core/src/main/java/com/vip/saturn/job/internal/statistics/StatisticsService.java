@@ -44,7 +44,7 @@ public class StatisticsService extends AbstractSaturnService {
 	private ScheduledFuture<?> processCountJobFuture;
 
 	private boolean isdown = false;
-			
+
 	public StatisticsService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
@@ -83,8 +83,8 @@ public class StatisticsService extends AbstractSaturnService {
 				log.info("[{}] msg=Reschedule ProcessCountJob of the {} job, the processCountIntervalSeconds is {}",
 						jobName, jobConfiguration.getJobName(), processCountIntervalSeconds);
 			}
-			processCountJobFuture = processCountExecutor.scheduleAtFixedRate(new ProcessCountJob(jobScheduler), new Random().nextInt(10),
-					processCountIntervalSeconds, TimeUnit.SECONDS);
+			processCountJobFuture = processCountExecutor.scheduleAtFixedRate(new ProcessCountJob(jobScheduler),
+					new Random().nextInt(10), processCountIntervalSeconds, TimeUnit.SECONDS);
 
 		} else { // don't count, reset to zero.
 			if (processCountJobFuture != null) {
@@ -109,12 +109,12 @@ public class StatisticsService extends AbstractSaturnService {
 
 	@Override
 	public void shutdown() {
-		if(isdown){
+		if (isdown) {
 			return;
 		}
 		isdown = true;
 		stopProcessCountJob();
 		ProcessCountStatistics.resetSuccessFailureCount(executorName, jobName);
 	}
-	
+
 }

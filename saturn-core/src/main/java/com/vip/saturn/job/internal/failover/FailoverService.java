@@ -41,10 +41,11 @@ public class FailoverService extends AbstractSaturnService {
 	public FailoverService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
-	
+
 	@Override
-	public void start(){
+	public void start() {
 	}
+
 	/**
 	 * 设置失效的分片项标记.
 	 * 
@@ -53,10 +54,12 @@ public class FailoverService extends AbstractSaturnService {
 	public void createCrashedFailoverFlag(final int item) {
 		if (!isFailoverAssigned(item)) {
 			try {
-				getJobNodeStorage().getClient().create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(JobNodePath.getNodeFullPath(jobName, FailoverNode.getItemsNode(item)));
+				getJobNodeStorage().getClient().create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
+						.forPath(JobNodePath.getNodeFullPath(jobName, FailoverNode.getItemsNode(item)));
 				log.info("{} - {} create failover flag of item {}", executorName, jobName, item);
 			} catch (KeeperException.NodeExistsException e) {
-				log.debug("{} - {} create failover flag of item {} failed, because it is already existing", executorName, jobName, item);
+				log.debug("{} - {} create failover flag of item {} failed, because it is already existing",
+						executorName, jobName, item);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -74,7 +77,8 @@ public class FailoverService extends AbstractSaturnService {
 		if (!needFailover()) {
 			return;
 		}
-		getJobNodeStorage().executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1, TimeUnit.MINUTES, new FailoverTimeoutLeaderExecutionCallback());
+		getJobNodeStorage().executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1,
+				TimeUnit.MINUTES, new FailoverTimeoutLeaderExecutionCallback());
 	}
 
 	private boolean needFailover() {
@@ -146,17 +150,20 @@ public class FailoverService extends AbstractSaturnService {
 			if (!needFailover()) {
 				return;
 			}
-			if(jobScheduler == null){
+			if (jobScheduler == null) {
 				return;
 			}
-			if(!jobScheduler.getConfigService().getPreferList().contains(executorName) && !jobScheduler.getConfigService().isUseDispreferList()){
+			if (!jobScheduler.getConfigService().getPreferList().contains(executorName)
+					&& !jobScheduler.getConfigService().isUseDispreferList()) {
 				return;
 			}
 			List<String> items = getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT);
-			if(items != null && !items.isEmpty()) {
-				int crashedItem = Integer.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
+			if (items != null && !items.isEmpty()) {
+				int crashedItem = Integer
+						.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
 				log.info("[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName, crashedItem);
-				getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
+				getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem),
+						executorName);
 				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
 				jobScheduler.triggerJob();
 			}

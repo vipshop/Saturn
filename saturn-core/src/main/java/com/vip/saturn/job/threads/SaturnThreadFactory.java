@@ -14,11 +14,11 @@ public class SaturnThreadFactory implements ThreadFactory {
 	private AtomicInteger threadNumber = new AtomicInteger(1);
 	private boolean isMultiple = true;
 	private String threadName;
-	
 
 	public SaturnThreadFactory(String threadName) {
 		this.threadName = "Saturn-" + threadName + "-" + poolNumber.getAndIncrement() + "-thread-";
 	}
+
 	public SaturnThreadFactory(String threadName, boolean isMultiple) {
 		this.isMultiple = isMultiple;
 		this.threadName = threadName;
@@ -26,7 +26,7 @@ public class SaturnThreadFactory implements ThreadFactory {
 
 	@Override
 	public Thread newThread(Runnable r) {
-		String name = isMultiple?threadName + threadNumber.getAndIncrement():threadName;
+		String name = isMultiple ? threadName + threadNumber.getAndIncrement() : threadName;
 		Thread t = new Thread(r, name);
 		if (t.isDaemon()) {
 			t.setDaemon(false);

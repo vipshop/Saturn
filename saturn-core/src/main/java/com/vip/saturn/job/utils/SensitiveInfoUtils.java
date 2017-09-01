@@ -1,17 +1,14 @@
 /**
  * Copyright 2016 vip.com.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  * </p>
  */
 
@@ -34,31 +31,31 @@ import com.google.common.collect.Lists;
  * @author caohao
  */
 public final class SensitiveInfoUtils {
-    
-    public static List<String> filterSenstiveIps(final List<String> result) {
-        final Map<String, String> fakeIpMap = new HashMap<>();
-        final String fakeIpSample = "ip";
-        final AtomicInteger step = new AtomicInteger();
-        Function<String, String> func = new Function<String, String>() {
-            
-            @Override
-            public String apply(final String line) {
-                final String regex = "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
-                final Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(line);
-                String result = line;
-                while (matcher.find()) {
-                    String realIp = matcher.group();
-                    String fakeIp = fakeIpMap.get(realIp);
-                    if (Strings.isNullOrEmpty(fakeIp)) {
-                        fakeIp = fakeIpSample + step.incrementAndGet();
-                        fakeIpMap.put(realIp, fakeIp);
-                    }
-                    result = result.replace(realIp, fakeIp);
-                }
-                return result;
-            }
-        };
-        return Lists.transform(result, func);
-    }
+
+	public static List<String> filterSenstiveIps(final List<String> result) {
+		final Map<String, String> fakeIpMap = new HashMap<>();
+		final String fakeIpSample = "ip";
+		final AtomicInteger step = new AtomicInteger();
+		Function<String, String> func = new Function<String, String>() {
+
+			@Override
+			public String apply(final String line) {
+				final String regex = "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
+				final Pattern pattern = Pattern.compile(regex);
+				Matcher matcher = pattern.matcher(line);
+				String result = line;
+				while (matcher.find()) {
+					String realIp = matcher.group();
+					String fakeIp = fakeIpMap.get(realIp);
+					if (Strings.isNullOrEmpty(fakeIp)) {
+						fakeIp = fakeIpSample + step.incrementAndGet();
+						fakeIpMap.put(realIp, fakeIp);
+					}
+					result = result.replace(realIp, fakeIp);
+				}
+				return result;
+			}
+		};
+		return Lists.transform(result, func);
+	}
 }

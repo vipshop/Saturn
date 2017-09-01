@@ -77,11 +77,11 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected JobScheduler jobScheduler;
 
 	protected SaturnExecutorService saturnExecutorService;
-	
+
 	protected ReportService reportService;
 
 	protected String jobVersion;
-	
+
 	/**
 	 * vms job这个状态无效。
 	 */
@@ -96,11 +96,11 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	@Override
 	public void shutdown() {
-		if(scheduler != null) {
+		if (scheduler != null) {
 			scheduler.shutdown();
 		}
 	}
-	
+
 	public ExecutorService getExecutorService() {
 		return jobScheduler.getExecutorService();
 	}
@@ -144,7 +144,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			if (configService.isInPausePeriod()) {
 				log.info("the job {} current running time is in pausePeriod, do nothing about business.", jobName);
-				//executionService.updateNextFireTime(shardingContext.getShardingItems());
+				// executionService.updateNextFireTime(shardingContext.getShardingItems());
 				return;
 			}
 			executeJobInternal(shardingContext);
@@ -163,7 +163,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext)
 			throws JobExecutionException {
-		
+
 		executionService.registerJobBegin(shardingContext);
 
 		try {
@@ -179,7 +179,8 @@ public abstract class AbstractElasticJob implements Stopable {
 					if (!updateServerStatus) {
 						JobConfiguration jobConfiguration = getJobScheduler().getCurrentConf();
 						if (jobConfiguration.isEnabledReport() == null) {
-							if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+							if ("JAVA_JOB".equals(jobConfiguration.getJobType())
+									|| "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 								serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
 							}
 						} else if (jobConfiguration.isEnabledReport()) {
@@ -203,28 +204,32 @@ public abstract class AbstractElasticJob implements Stopable {
 	 * @return 是否继续执行完complete节点，清空failover信息
 	 */
 	private boolean checkIfZkLostAfterExecution(final Integer item) {
-		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient();
+		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter()
+				.getRawClient();
 		try {
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
-            Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
-            long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
-			//有itemStat的情况
+			Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
+			long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
+			// 有itemStat的情况
 			if (itemStat != null) {
-                long ephemeralOwner = itemStat.getEphemeralOwner();
-                if (ephemeralOwner != sessionId) {
-					log.info("[{}] msg=item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}", jobName, item, ephemeralOwner, sessionId);
+				long ephemeralOwner = itemStat.getEphemeralOwner();
+				if (ephemeralOwner != sessionId) {
+					log.info(
+							"[{}] msg=item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}",
+							jobName, item, ephemeralOwner, sessionId);
 					return false;
 				} else {
 					return true;
 				}
 			}
-			//如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
+			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
 			JobConfiguration currentConf = jobScheduler.getCurrentConf();
 			Boolean enabledReport = currentConf.isEnabledReport();
 
 			if (enabledReport != null) {
 				if (enabledReport.equals(Boolean.TRUE)) {
-					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item,
+							sessionId);
 					return false;
 				} else {
 					return true;
@@ -292,9 +297,11 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	public abstract void onNeedRaiseAlarm(int item, String alarmMessage);
 
-	public void notifyJobEnabled() {}
+	public void notifyJobEnabled() {
+	}
 
-	public void notifyJobDisabled() {}
+	public void notifyJobDisabled() {
+	}
 
 	/**
 	 * 设置shardingService

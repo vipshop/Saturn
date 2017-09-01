@@ -29,7 +29,8 @@ public class SaturnApi {
 	private SaturnApi() {
 	}
 
-	public void updateJobCron(String jobName, String cron, Map<String, String> customContext) throws SaturnJobException {
+	public void updateJobCron(String jobName, String cron, Map<String, String> customContext)
+			throws SaturnJobException {
 		try {
 			UpdateJobCronUtils.updateJobCron(namespace, jobName, cron, customContext);
 		} catch (SaturnJobException se) {

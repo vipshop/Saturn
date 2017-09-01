@@ -38,27 +38,31 @@ public class ControlListenerManager extends AbstractListenerManager {
 
 	public ControlListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
-        reportService = jobScheduler.getReportService();
+		reportService = jobScheduler.getReportService();
 	}
 
 	@Override
 	public void start() {
-    	zkCacheManager.addTreeCacheListener(new ReportPathListener(), JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
+		zkCacheManager.addTreeCacheListener(new ReportPathListener(),
+				JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
 	}
 
 	@Override
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
-    	zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ControlNode.REPORT_NODE), 0);
 	}
 
 	class ReportPathListener extends AbstractJobListener {
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown) return;
-			if (ControlNode.isReportPath(jobName, path) && (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
-				log.info("[{}] msg={} received report event from console, start to flush data to zk.", jobName, jobName);
+			if (isShutdown)
+				return;
+			if (ControlNode.isReportPath(jobName, path)
+					&& (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
+				log.info("[{}] msg={} received report event from console, start to flush data to zk.", jobName,
+						jobName);
 				reportService.reportData2Zk();
 			}
 		}

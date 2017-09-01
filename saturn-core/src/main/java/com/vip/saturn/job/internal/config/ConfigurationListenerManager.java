@@ -44,17 +44,19 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 	public ConfigurationListenerManager(JobScheduler jobScheduler) {
 		super(jobScheduler);
 		jobConfiguration = jobScheduler.getCurrentConf();
-        jobName = jobConfiguration.getJobName();
-        executionContextService = jobScheduler.getExecutionContextService();
-        executionService = jobScheduler.getExecutionService();
-        failoverService = jobScheduler.getFailoverService();
+		jobName = jobConfiguration.getJobName();
+		executionContextService = jobScheduler.getExecutionContextService();
+		executionService = jobScheduler.getExecutionService();
+		failoverService = jobScheduler.getFailoverService();
 		configurationService = jobScheduler.getConfigService();
 	}
 
 	@Override
 	public void start() {
-		zkCacheManager.addTreeCacheListener(new CronPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
-        zkCacheManager.addTreeCacheListener(new EnabledPathListener(), JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
+		zkCacheManager.addTreeCacheListener(new CronPathListener(),
+				JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
+		zkCacheManager.addTreeCacheListener(new EnabledPathListener(),
+				JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
 	@Override
@@ -62,7 +64,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		super.shutdown();
 		isShutdown = true;
 		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
-        zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
 	class EnabledPathListener extends AbstractJobListener {
@@ -73,7 +75,8 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		 */
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
+			if (isShutdown)
+				return;
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
@@ -111,7 +114,8 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if(isShutdown) return;
+			if (isShutdown)
+				return;
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				log.info("[{}] msg={} 's cron update", jobName, jobName);
 

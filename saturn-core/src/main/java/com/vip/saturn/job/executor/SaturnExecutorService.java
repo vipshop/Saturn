@@ -39,7 +39,7 @@ public class SaturnExecutorService {
 	private static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
 
 	private String executorName;
-	
+
 	private List<String> jobNames = new ArrayList<String>();
 
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
@@ -92,7 +92,7 @@ public class SaturnExecutorService {
 		} catch (IOException e) {
 			log.error(e.getMessage(), e);
 		}
-		
+
 		// 持久化clean
 		coordinatorRegistryCenter.persist(executorCleanNode,
 				String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));
@@ -148,8 +148,7 @@ public class SaturnExecutorService {
 				Thread.sleep(100L);
 			} while (++count <= WAIT_FOR_IP_NODE_DISAPPEAR_COUNT);
 
-			throw new Exception(
-					"The executor (" + executorName + ") is running, cannot running the instance twice.");
+			throw new Exception("The executor (" + executorName + ") is running, cannot running the instance twice.");
 		} else {
 			coordinatorRegistryCenter.persist(executorNode, "");
 		}
@@ -157,9 +156,9 @@ public class SaturnExecutorService {
 
 	private TreeCache buildAndStart$JobsTreeCache(CuratorFramework client) throws Exception {
 		TreeCache tc = TreeCache.newBuilder(client, "/" + JobNodePath.$JOBS_NODE_NAME)
-				.setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true))
-				.setMaxDepth(1)
-				.build();
+				.setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(
+						new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true))
+				.setMaxDepth(1).build();
 		tc.start();
 		return tc;
 	}
@@ -179,20 +178,22 @@ public class SaturnExecutorService {
 								String jobName = StringUtils.substringAfterLast(path, "/");
 								String jobClassPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_CLASS);
 								// wait 5 seconds at most until jobClass created.
-								for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i ++) {
+								for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i++) {
 									if (client.checkExists().forPath(jobClassPath) == null) {
 										Thread.sleep(200);
 									} else {
 										log.info("new job: {} 's jobClass created event received", jobName);
 										if (!jobNames.contains(jobName)) {
-											if(callback.call(jobName)) {
+											if (callback.call(jobName)) {
 												jobNames.add(jobName);
 												log.info("the job {} initialize successfully", jobName);
 											} else {
 												log.warn("the job {} initialize fail", jobName);
 											}
 										} else {
-											log.warn("the job {} is unnecessary to initialize, because it's already existing", jobName);
+											log.warn(
+													"the job {} is unnecessary to initialize, because it's already existing",
+													jobName);
 										}
 										break;
 									}
@@ -237,7 +238,7 @@ public class SaturnExecutorService {
 		removeIpNode();
 		close$JobsTreeCache();
 	}
-	
+
 	public CoordinatorRegistryCenter getCoordinatorRegistryCenter() {
 		return coordinatorRegistryCenter;
 	}
