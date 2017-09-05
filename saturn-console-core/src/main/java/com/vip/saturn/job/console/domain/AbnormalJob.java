@@ -170,11 +170,4 @@ public class AbnormalJob {
 				&& this.getCause().equals(other.getCause()) && this.getNextFireTime() == other.getNextFireTime();
 	}
 
-	@Override
-	public String toString() {
-		return "AbnormalJob{" + "jobName='" + jobName + '\'' + ", domainName='" + domainName + '\'' + ", nns='" + nns
-				+ '\'' + ", degree='" + degree + '\'' + ", jobDegree='" + jobDegree + '\'' + ", timeZone='" + timeZone
-				+ '\'' + ", nextFireTime=" + nextFireTime + ", nextFireTimeWithTimeZoneFormat='"
-				+ nextFireTimeWithTimeZoneFormat + '\'' + ", cause='" + cause + '\'' + '}';
-	}
 }

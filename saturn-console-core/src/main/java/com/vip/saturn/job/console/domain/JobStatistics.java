@@ -19,24 +19,20 @@ public class JobStatistics implements Serializable {
 	private int failureCountOfTheDay;
 	private int totalLoadLevel;
 	private int jobDegree;
-	private final String jobName;
-	private final String domainName;
-	private final String nns;
+	private String jobName;
+	private String domainName;
+	private String nns;
 	/** e.g. exe01:1,3;exe02:0,2 */
 	private String executorsAndShards;
 	private float failureRateOfAllTime;
+
+	public JobStatistics() {
+	}
 
 	public JobStatistics(String jobName, String domainName, String nns) {
 		this.jobName = jobName;
 		this.domainName = domainName;
 		this.nns = nns;
-	}
-
-	public float getFailureRateOfAllTime() {
-		if (processCountOfAllTime == 0)
-			return 0;
-		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
-		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public int getProcessCountOfAllTime() {
@@ -87,6 +83,30 @@ public class JobStatistics implements Serializable {
 		this.jobDegree = jobDegree;
 	}
 
+	public String getJobName() {
+		return jobName;
+	}
+
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
+	public String getDomainName() {
+		return domainName;
+	}
+
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
+	}
+
+	public String getNns() {
+		return nns;
+	}
+
+	public void setNns(String nns) {
+		this.nns = nns;
+	}
+
 	public String getExecutorsAndShards() {
 		return executorsAndShards;
 	}
@@ -95,28 +115,14 @@ public class JobStatistics implements Serializable {
 		this.executorsAndShards = executorsAndShards;
 	}
 
-	public String getJobName() {
-		return jobName;
-	}
-
-	public String getDomainName() {
-		return domainName;
-	}
-
-	public String getNns() {
-		return nns;
+	public float getFailureRateOfAllTime() {
+		if (processCountOfAllTime == 0)
+			return 0;
+		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
+		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public void setFailureRateOfAllTime(float failureRateOfAllTime) {
 		this.failureRateOfAllTime = failureRateOfAllTime;
-	}
-
-	@Override
-	public String toString() {
-		return "JobStatistics [processCountOfAllTime=" + processCountOfAllTime + ", errorCountOfAllTime="
-				+ errorCountOfAllTime + ", processCountOfTheDay=" + processCountOfTheDay + ", failureCountOfTheDay="
-				+ failureCountOfTheDay + ", totalLoadLevel=" + totalLoadLevel + ", jobDegree=" + jobDegree
-				+ ", jobName=" + jobName + ", domainName=" + domainName + ", nns=" + nns + ", executorsAndShards="
-				+ executorsAndShards + ", failureRateOfAllTime=" + failureRateOfAllTime + "]";
 	}
 }

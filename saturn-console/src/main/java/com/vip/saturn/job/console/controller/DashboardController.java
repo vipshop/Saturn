@@ -14,6 +14,7 @@
 
 package com.vip.saturn.job.console.controller;
 
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,101 +56,166 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "count", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Integer> count(HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		String zkAddr = getCurrentZkAddr(session);
-		Map<String, Integer> countMap = new HashMap<String, Integer>();
-		if (zkAddr != null) {
-			countMap.put("executorInDockerCount", dashboardService.executorInDockerCount(zkAddr));
-			countMap.put("executorNotInDockerCount", dashboardService.executorNotInDockerCount(zkAddr));
-			countMap.put("jobCount", dashboardService.jobCount(zkAddr));
+	public Map<String, Integer> count(HttpServletRequest request, Boolean allZkCluster) {
+		Map<String, Integer> countMap = new HashMap<>();
+		int executorInDockerCount = 0;
+		int executorNotInDockerCount = 0;
+		int jobCount = 0;
+		int domainCount = 0;
+		if (allZkCluster != null && allZkCluster) {
+			Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+			for (ZkCluster zkCluster : zkClusterList) {
+				String zkAddr = zkCluster.getZkAddr();
+				if (zkAddr != null) {
+					executorInDockerCount += dashboardService.executorInDockerCount(zkAddr);
+					executorNotInDockerCount += dashboardService.executorNotInDockerCount(zkAddr);
+					jobCount += dashboardService.jobCount(zkAddr);
+				}
+				String zkClusterKey = zkCluster.getZkClusterKey();
+				if (zkClusterKey != null) {
+					domainCount += registryCenterService.domainCount(zkClusterKey);
+				}
+			}
+		} else {
+			HttpSession session = request.getSession();
+			String zkAddr = getCurrentZkAddr(session);
+			if (zkAddr != null) {
+				executorInDockerCount = dashboardService.executorInDockerCount(zkAddr);
+				executorNotInDockerCount = dashboardService.executorNotInDockerCount(zkAddr);
+				jobCount = dashboardService.jobCount(zkAddr);
+			}
+			String zkClusterKey = getCurrentZkClusterKey(session);
+			if (zkClusterKey != null) {
+				domainCount = registryCenterService.domainCount(zkClusterKey);
+			}
 		}
-		String zkClusterKey = getCurrentZkClusterKey(session);
-		if (zkClusterKey != null) {
-			countMap.put("domainCount", registryCenterService.domainCount(zkClusterKey));
-		}
+		countMap.put("executorInDockerCount", executorInDockerCount);
+		countMap.put("executorNotInDockerCount", executorNotInDockerCount);
+		countMap.put("jobCount", jobCount);
+		countMap.put("domainCount", domainCount);
 		return countMap;
 	}
 
 	@RequestMapping(value = "top10FailJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10FailureJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10FailJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10FailureJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10FailureJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10FailExe", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailExe(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10FailureExecutor(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10FailExe(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10FailureExecutorByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10FailureExecutor(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10ActiveJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10ActiveJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10AactiveJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10ActiveJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10AactiveJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10AactiveJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10LoadJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10LoadJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10LoadJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10LoadJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10LoadJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10LoadJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10FailDomain", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailDomain(HttpServletRequest request) {
-		// return
-		// "[{\"domainName\":\"g.vip.com\",\"errorCountOfAllTime\":0,\"errorCountOfTheDay\":0,\"failureRateOfAllTime\":0.23,\"processCountOfAllTime\":0,\"processCountOfTheDay\":0,\"shardingCount\":39,\"zkList\":\"localhost:2181\"},{\"domainName\":\"g.1.com\",\"errorCountOfAllTime\":0,\"errorCountOfTheDay\":0,\"failureRateOfAllTime\":0.34,\"processCountOfAllTime\":0,\"processCountOfTheDay\":0,\"shardingCount\":35,\"zkList\":\"localhost:2181\"},{\"domainName\":\"yardman.api.vip.com\",\"errorCountOfAllTime\":0,\"errorCountOfTheDay\":0,\"failureRateOfAllTime\":0.1,\"processCountOfAllTime\":0,\"processCountOfTheDay\":0,\"shardingCount\":23,\"zkList\":\"localhost:2181\"},{\"domainName\":\"b2c-tools.vip.vip.com\",\"errorCountOfAllTime\":0,\"errorCountOfTheDay\":0,\"failureRateOfAllTime\":0.33,\"processCountOfAllTime\":0,\"processCountOfTheDay\":0,\"shardingCont\":23,\"zkList\":\"localhost:2181\"},{\"domainName\":\"chembo.demo\",\"errorCountOfAllTime\":0,\"errorCountOfTheDay\":0,\"failureRateOfAllTime\":0.12,\"processCountOfAllTime\":0,\"processCountOfTheDay\":0,\"shardingCount\":27,\"zkList\":\"localhost:2181\"}]";
-		SaturnStatistics ss = dashboardService.top10FailureDomain(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10FailDomain(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10FailureDomainByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10FailureDomain(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10UnstableDomain", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10UnstableDomain(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10UnstableDomain(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10UnstableDomain(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10UnstableDomainByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10UnstableDomain(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "top10LoadExecutor", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10LoadExecutor(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.top10LoadExecutor(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String top10LoadExecutor(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.top10LoadExecutorByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.top10LoadExecutor(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "unnormalJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String unnormalJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.allUnnormalJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
-		// return
-		// "[{\"domainName\":\"g.1.com\",\"jobName\":\"j1\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j2\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j3\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j4\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"},{\"domainName\":\"g.1.com\",\"jobName\":\"j5\",\"nextFireTime\":1477037590349,\"nns\":\"/平台架构/任务调度系统/g.1.com\"}]";
+	public String unnormalJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.allUnnormalJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.allUnnormalJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "unableFailoverJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String unableFailoverJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.allUnableFailoverJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String unableFailoverJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.allUnableFailoverJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.allUnableFailoverJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "allTimeout4AlarmJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String allTimeout4AlarmJob(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String allTimeout4AlarmJob(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.allTimeout4AlarmJobByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "domainProcessCount", method = RequestMethod.POST)
 	@ResponseBody
-	public String domainProcessCount(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.allProcessAndErrorCountOfTheDay(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String domainProcessCount(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService
+					.allProcessAndErrorCountOfTheDay(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "cleanShardingCount", method = RequestMethod.POST)
@@ -201,33 +268,53 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "loadDomainRank", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Integer> loadDomainRank(HttpSession session) {
-		return dashboardService.loadDomainRankDistribution(getCurrentZkClusterKey(session));
+	public Map<String, Integer> loadDomainRank(HttpSession session, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.loadDomainRankDistributionByAllZkCluster();
+		} else {
+			return dashboardService.loadDomainRankDistribution(getCurrentZkClusterKey(session));
+		}
 	}
 
 	@RequestMapping(value = "loadJobRank", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<Integer, Integer> loadJobRank(HttpSession session) {
-		return dashboardService.loadJobRankDistribution(getCurrentZkAddr(session));
+	public Map<Integer, Integer> loadJobRank(HttpSession session, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.loadJobRankDistributionByAllZkCluster();
+		} else {
+			return dashboardService.loadJobRankDistribution(getCurrentZkAddr(session));
+		}
 	}
 
 	@RequestMapping(value = "abnormalContainer", method = RequestMethod.POST)
 	@ResponseBody
-	public String abnormalContainer(HttpServletRequest request) {
-		SaturnStatistics ss = dashboardService.abnormalContainer(getCurrentZkAddr(request.getSession()));
-		return ss == null ? null : ss.getResult();
+	public String abnormalContainer(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.abnormalContainerByAllZkCluster();
+		} else {
+			SaturnStatistics ss = dashboardService.abnormalContainer(getCurrentZkAddr(request.getSession()));
+			return ss == null ? null : ss.getResult();
+		}
 	}
 
 	@RequestMapping(value = "versionDomainNumber", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Long> versionDomainNumber(HttpServletRequest request) {
-		return dashboardService.versionDomainNumber(getCurrentZkAddr(request.getSession()));
+	public Map<String, Long> versionDomainNumber(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.versionDomainNumberByAllZkCluster();
+		} else {
+			return dashboardService.versionDomainNumber(getCurrentZkAddr(request.getSession()));
+		}
 	}
 
 	@RequestMapping(value = "versionExecutorNumber", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Long> versionExecutorNumber(HttpServletRequest request) {
-		return dashboardService.versionExecutorNumber(getCurrentZkAddr(request.getSession()));
+	public Map<String, Long> versionExecutorNumber(HttpServletRequest request, Boolean allZkCluster) {
+		if (allZkCluster != null && allZkCluster) {
+			return dashboardService.versionExecutorNumberByAllZkCluster();
+		} else {
+			return dashboardService.versionExecutorNumber(getCurrentZkAddr(request.getSession()));
+		}
 	}
 
 }

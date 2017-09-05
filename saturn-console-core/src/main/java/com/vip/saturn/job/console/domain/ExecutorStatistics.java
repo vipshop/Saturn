@@ -13,9 +13,9 @@ public class ExecutorStatistics implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String executorName;
+	private String executorName;
 
-	private final String domain;
+	private String domain;
 
 	private int loadLevel;
 
@@ -34,17 +34,28 @@ public class ExecutorStatistics implements Serializable {
 
 	private float failureRateOfTheDay;
 
+	public ExecutorStatistics() {
+	}
+
 	public ExecutorStatistics(String executorName, String domain) {
 		this.executorName = executorName;
 		this.domain = domain;
 	}
 
-	public float getFailureRateOfTheDay() {
-		if (processCountOfTheDay == 0) {
-			return 0;
-		}
-		float rate = (float) failureCountOfTheDay / processCountOfTheDay;
-		return (float) (Math.floor(rate * 10000) / 10000.0);
+	public String getExecutorName() {
+		return executorName;
+	}
+
+	public void setExecutorName(String executorName) {
+		this.executorName = executorName;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 	public int getLoadLevel() {
@@ -103,24 +114,15 @@ public class ExecutorStatistics implements Serializable {
 		this.jobAndShardings = jobAndShardings;
 	}
 
-	public String getExecutorName() {
-		return executorName;
-	}
-
-	public String getDomain() {
-		return domain;
+	public float getFailureRateOfTheDay() {
+		if (processCountOfTheDay == 0) {
+			return 0;
+		}
+		float rate = (float) failureCountOfTheDay / processCountOfTheDay;
+		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public void setFailureRateOfTheDay(float failureRateOfTheDay) {
 		this.failureRateOfTheDay = failureRateOfTheDay;
 	}
-
-	@Override
-	public String toString() {
-		return "ExecutorStatistics [executorName=" + executorName + ", domain=" + domain + ", loadLevel=" + loadLevel
-				+ ", nns=" + nns + ", ip=" + ip + ", runInDocker=" + runInDocker + ", processCountOfTheDay="
-				+ processCountOfTheDay + ", failureCountOfTheDay=" + failureCountOfTheDay + ", jobAndShardings="
-				+ jobAndShardings + ", failureRateOfTheDay=" + failureRateOfTheDay + "]";
-	}
-
 }

@@ -7,21 +7,24 @@ public class AbnormalContainer {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String taskId;
+	private String taskId;
 
-	private final String domainName;
+	private String domainName;
 
 	/** name and namespace */
-	private final String nns;
+	private String nns;
 
 	/** degree of the domain */
-	private final String degree;
+	private String degree;
 
 	private Integer configInstances;
 
 	private Integer runningInstances;
 
 	private String cause;
+
+	public AbnormalContainer() {
+	}
 
 	public AbnormalContainer(String taskId, String domainName, String nns, String degree) {
 		this.taskId = taskId;
@@ -32,6 +35,38 @@ public class AbnormalContainer {
 
 	public enum Cause {
 		CONTAINER_INSTANCE_MISMATCH
+	}
+
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	public String getDomainName() {
+		return domainName;
+	}
+
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
+	}
+
+	public String getNns() {
+		return nns;
+	}
+
+	public void setNns(String nns) {
+		this.nns = nns;
+	}
+
+	public String getDegree() {
+		return degree;
+	}
+
+	public void setDegree(String degree) {
+		this.degree = degree;
 	}
 
 	public Integer getConfigInstances() {
@@ -56,29 +91,6 @@ public class AbnormalContainer {
 
 	public void setCause(String cause) {
 		this.cause = cause;
-	}
-
-	public String getTaskId() {
-		return taskId;
-	}
-
-	public String getDomainName() {
-		return domainName;
-	}
-
-	public String getNns() {
-		return nns;
-	}
-
-	public String getDegree() {
-		return degree;
-	}
-
-	@Override
-	public String toString() {
-		return "AbnormalContainer [taskId=" + taskId + ", domainName=" + domainName + ", nns=" + nns + ", degree="
-				+ degree + ", configInstances=" + configInstances + ", runningInstances=" + runningInstances
-				+ ", cause=" + cause + "]";
 	}
 
 }

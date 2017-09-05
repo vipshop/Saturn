@@ -24,6 +24,9 @@ public class Timeout4AlarmJob {
 
 	private List<Integer> timeoutItems = new ArrayList<>();
 
+	public Timeout4AlarmJob() {
+	}
+
 	public Timeout4AlarmJob(String jobName, String domainName, String nns, String degree) {
 		this.jobName = jobName;
 		this.domainName = domainName;
@@ -87,10 +90,4 @@ public class Timeout4AlarmJob {
 		this.timeoutItems = timeoutItems;
 	}
 
-	@Override
-	public String toString() {
-		return "Timeout4AlarmJob{" + "jobName='" + jobName + '\'' + ", domainName='" + domainName + '\'' + ", nns='"
-				+ nns + '\'' + ", degree='" + degree + '\'' + ", jobDegree='" + jobDegree + '\''
-				+ ", timeout4AlarmSeconds=" + timeout4AlarmSeconds + ", timeoutItems=" + timeoutItems + '}';
-	}
 }

@@ -19,29 +19,24 @@ public class DomainStatistics {
 
 	private int errorCountOfTheDay;
 
-	private final String domainName;
+	private String domainName;
 
 	private int shardingCount;
 
-	private final String zkList;
+	private String zkList;
 
 	/** name & namespace */
-	private final String nns;
+	private String nns;
 
 	private float failureRateOfAllTime;
+
+	public DomainStatistics() {
+	}
 
 	public DomainStatistics(String domainName, String zkList, String nns) {
 		this.domainName = domainName;
 		this.zkList = zkList;
 		this.nns = nns;
-	}
-
-	public float getFailureRateOfAllTime() {
-		if (processCountOfAllTime == 0) {
-			return 0;
-		}
-		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
-		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
 	public int getProcessCountOfAllTime() {
@@ -76,6 +71,14 @@ public class DomainStatistics {
 		this.errorCountOfTheDay = errorCountOfTheDay;
 	}
 
+	public String getDomainName() {
+		return domainName;
+	}
+
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
+	}
+
 	public int getShardingCount() {
 		return shardingCount;
 	}
@@ -84,28 +87,31 @@ public class DomainStatistics {
 		this.shardingCount = shardingCount;
 	}
 
-	public String getDomainName() {
-		return domainName;
-	}
-
 	public String getZkList() {
 		return zkList;
+	}
+
+	public void setZkList(String zkList) {
+		this.zkList = zkList;
 	}
 
 	public String getNns() {
 		return nns;
 	}
 
+	public void setNns(String nns) {
+		this.nns = nns;
+	}
+
+	public float getFailureRateOfAllTime() {
+		if (processCountOfAllTime == 0) {
+			return 0;
+		}
+		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
+		return (float) (Math.floor(rate * 10000) / 10000.0);
+	}
+
 	public void setFailureRateOfAllTime(float failureRateOfAllTime) {
 		this.failureRateOfAllTime = failureRateOfAllTime;
 	}
-
-	@Override
-	public String toString() {
-		return "DomainStatistics [processCountOfAllTime=" + processCountOfAllTime + ", errorCountOfAllTime="
-				+ errorCountOfAllTime + ", processCountOfTheDay=" + processCountOfTheDay + ", errorCountOfTheDay="
-				+ errorCountOfTheDay + ", domainName=" + domainName + ", shardingCount=" + shardingCount + ", zkList="
-				+ zkList + ", nns=" + nns + ", failureRateOfAllTime=" + failureRateOfAllTime + "]";
-	}
-
 }

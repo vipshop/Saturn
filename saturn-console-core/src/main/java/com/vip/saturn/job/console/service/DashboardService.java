@@ -26,35 +26,49 @@ public interface DashboardService {
 	 */
 	SaturnStatistics top10FailureDomain(String key);
 
+	String top10FailureDomainByAllZkCluster();
+
 	/**
 	 * 根据失败率top10的作业列表
 	 */
 	SaturnStatistics top10FailureJob(String key);
+
+	String top10FailureJobByAllZkCluster();
 
 	/**
 	 * 最活跃作业的作业列表(即当天执行次数最多的作业)
 	 */
 	SaturnStatistics top10AactiveJob(String key);
 
+	String top10AactiveJobByAllZkCluster();
+
 	/**
 	 * 负荷最重的top10的Executor列表
 	 */
 	SaturnStatistics top10LoadExecutor(String key);
+
+	String top10LoadExecutorByAllZkCluster();
 
 	/**
 	 * 负荷最重的top10的作业列表以及其成功率
 	 */
 	SaturnStatistics top10LoadJob(String key);
 
+	String top10LoadJobByAllZkCluster();
+
 	/**
 	 * 稳定性最差的top10的域列表
 	 */
 	SaturnStatistics top10UnstableDomain(String key);
 
+	String top10UnstableDomainByAllZkCluster();
+
 	/**
 	 * 全域当天处理总数，失败总数
 	 */
 	SaturnStatistics allProcessAndErrorCountOfTheDay(String key);
+
+	String allProcessAndErrorCountOfTheDayByAllZkCluster();
 
 	/**
 	 * 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)<br>
@@ -62,14 +76,22 @@ public interface DashboardService {
 	 */
 	SaturnStatistics allUnnormalJob(String key);
 
+	String allUnnormalJobByAllZkCluster();
+
 	SaturnStatistics allTimeout4AlarmJob(String key);
+
+	String allTimeout4AlarmJobByAllZkCluster();
 
 	/**
 	 * 无法高可用作业列表 当只有一个可用的物理机Executor运行该作业分片时，如果该Executor宕机将造成无法飘移分片到其他Executor
 	 */
 	SaturnStatistics allUnableFailoverJob(String key);
 
+	String allUnableFailoverJobByAllZkCluster();
+
 	SaturnStatistics top10FailureExecutor(String key);
+
+	String top10FailureExecutorByAllZkCluster();
 
 	/**
 	 * 清除该域下的/$SaturnExecutors/sharding/count
@@ -87,13 +109,25 @@ public interface DashboardService {
 
 	Map<String, Integer> loadDomainRankDistribution(String key);
 
+	Map<String, Integer> loadDomainRankDistributionByAllZkCluster();
+
 	Map<Integer, Integer> loadJobRankDistribution(String key);
+
+	Map<Integer, Integer> loadJobRankDistributionByAllZkCluster();
 
 	SaturnStatistics abnormalContainer(String key);
 
+	String abnormalContainerByAllZkCluster();
+
 	Map<String, Long> versionDomainNumber(String key);
+
+	Map<String, Long> versionDomainNumberByAllZkCluster();
 
 	Map<String, Long> versionExecutorNumber(String key);
 
+	Map<String, Long> versionExecutorNumberByAllZkCluster();
+
 	void setUnnormalJobMonitorStatusToRead(String key, String uuid);
+
+	void setUnnormalJobMonitorStatusToReadByAllZkCluster(String uuid);
 }

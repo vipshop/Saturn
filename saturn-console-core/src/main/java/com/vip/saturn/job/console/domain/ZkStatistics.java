@@ -13,8 +13,11 @@ public class ZkStatistics implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final int count;
-	private final int error;
+	private int count;
+	private int error;
+
+	public ZkStatistics() {
+	}
 
 	public ZkStatistics(int count, int error) {
 		this.count = count;
@@ -25,12 +28,15 @@ public class ZkStatistics implements Serializable {
 		return count;
 	}
 
+	public void setCount(int count) {
+		this.count = count;
+	}
+
 	public int getError() {
 		return error;
 	}
 
-	@Override
-	public String toString() {
-		return "ZkStatistics [count=" + count + ", error=" + error + "]";
+	public void setError(int error) {
+		this.error = error;
 	}
 }
