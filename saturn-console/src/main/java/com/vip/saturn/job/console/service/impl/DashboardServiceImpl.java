@@ -279,6 +279,15 @@ public class DashboardServiceImpl implements DashboardService {
 
 						// 遍历所有$Jobs子节点，非系统作业
 						List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+						SaturnStatistics saturnStatistics = saturnStatisticsService.findStatisticsByNameAndZkList(
+								StatisticsTableKeyConstant.UNNORMAL_JOB, zkCluster.getZkAddr());
+						List<AbnormalJob> oldAbnormalJobs = new ArrayList<>();
+						if (saturnStatistics != null) {
+							String result = saturnStatistics.getResult();
+							if (StringUtils.isNotBlank(result)) {
+								oldAbnormalJobs = JSON.parseArray(result, AbnormalJob.class);
+							}
+						}
 						for (String job : jobs) {
 							try {
 								Boolean localMode = Boolean.valueOf(
@@ -302,7 +311,7 @@ public class DashboardServiceImpl implements DashboardService {
 								if (!localMode) {
 									AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(),
 											config.getNameAndNamespace(), config.getDegree());
-									checkJavaOrShellJobHasProblem(curatorClient, unnormalJob, jobDegree,
+									checkJavaOrShellJobHasProblem(oldAbnormalJobs, curatorClient, unnormalJob, jobDegree,
 											unnormalJobList);
 								}
 
@@ -787,16 +796,29 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private void saveOrUpdateAbnormalJob(List<AbnormalJob> unnormalJobList, String zkAddr) {
 		unnormalJobList = DashboardServiceHelper.sortUnnormaoJobByTimeDesc(unnormalJobList);
-		String unnormalJobJsonString = JSON.toJSONString(unnormalJobList);
 		SaturnStatistics unnormalJobFromDB = saturnStatisticsService
 				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr);
 		if (unnormalJobFromDB == null) {
 			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr,
-					unnormalJobJsonString);
+					JSON.toJSONString(unnormalJobList));
 			saturnStatisticsService.create(ss);
 		} else {
-			unnormalJobFromDB.setResult(unnormalJobJsonString);
+			List<AbnormalJob> oldUnnormalJobList = JSON.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
+			dealWithReadStatus(unnormalJobList, oldUnnormalJobList);
+			unnormalJobFromDB.setResult(JSON.toJSONString(unnormalJobList));
 			saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
+		}
+	}
+
+	private void dealWithReadStatus(List<AbnormalJob> unnormalJobList, List<AbnormalJob> oldUnnormalJobList) {
+		if (oldUnnormalJobList == null || oldUnnormalJobList.isEmpty()) {
+			return;
+		}
+		for (AbnormalJob example : unnormalJobList) {
+			AbnormalJob equalOld = findEqualAbnormalJob(example, oldUnnormalJobList);
+			if (equalOld != null) {
+				example.setRead(equalOld.isRead());
+			}
 		}
 	}
 
@@ -904,18 +926,43 @@ public class DashboardServiceImpl implements DashboardService {
 		abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
 	}
 
+	private AbnormalJob findEqualAbnormalJob(AbnormalJob example, List<AbnormalJob> oldUnnormalJobList) {
+		if (oldUnnormalJobList == null || oldUnnormalJobList.isEmpty()) {
+			return null;
+		}
+		for (AbnormalJob oldUnnormalJob : oldUnnormalJobList) {
+			if (oldUnnormalJob.equals(example)) {
+				return oldUnnormalJob;
+			}
+		}
+		return null;
+	}
+
+	private void registerAbnormalJobIfNecessary(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob, String timeZone, Long nextFireTime) {
+		AbnormalJob oldAbnormalJob = findEqualAbnormalJob(abnormalJob, oldAbnormalJobs);
+		if (oldAbnormalJob != null) {
+			abnormalJob.setRead(oldAbnormalJob.isRead());
+			if (oldAbnormalJob.getUuid() != null) {
+				abnormalJob.setUuid(oldAbnormalJob.getUuid());
+			} else {
+				abnormalJob.setUuid(UUID.randomUUID().toString());
+			}
+		} else {
+			abnormalJob.setUuid(UUID.randomUUID().toString());
+		}
+		if (!abnormalJob.isRead()) {
+			try {
+				reportAlarmProxyService.getTarget().dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
+			} catch (Throwable t) {
+				log.error(t.getMessage(), t);
+			}
+		}
+	}
+
 	/**
 	 * 检查和处理问题作业
-	 * @param curatorClient
-	 * @param abnormalJob
-	 * @param enabledPath
-	 * @param shardingItemStr
-	 * @param zkNodeCVersion
-	 * @param jobDegree
-	 * @param unnormalJobList
-	 * @throws Exception
 	 */
-	private void checkAndHandleJobProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath,
+	private void checkAndHandleJobProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath,
 			String shardingItemStr, int zkNodeCVersion, String jobDegree, List<AbnormalJob> unnormalJobList)
 			throws Exception {
 		if (unnormalJobList.contains(abnormalJob)) {
@@ -928,10 +975,10 @@ public class DashboardServiceImpl implements DashboardService {
 				abnormalJob.setCause(AbnormalJob.Cause.NOT_RUN.name());
 			}
 			String timeZone = getTimeZone(abnormalJob.getJobName(), curatorClient);
-			// 上报Hermes
-			registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
 			// 补充异常信息
 			fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), timeZone, nextFireTime);
+			// 如果有必要，上报hermes
+			registerAbnormalJobIfNecessary(oldAbnormalJobs, abnormalJob, timeZone, nextFireTime);
 
 			// 增加到非正常作业列表
 			abnormalJob.setJobDegree(jobDegree);
@@ -1067,7 +1114,7 @@ public class DashboardServiceImpl implements DashboardService {
 		return true;
 	}
 
-	private void checkJavaOrShellJobHasProblem(CuratorFramework curatorClient, AbnormalJob abnormalJob,
+	private void checkJavaOrShellJobHasProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient, AbnormalJob abnormalJob,
 			String jobDegree, List<AbnormalJob> unnormalJobList) {
 		try {
 			// 计算异常作业,根据$Jobs/jobName/execution/item/nextFireTime，如果小于当前时间且作业不在running，则为异常
@@ -1098,7 +1145,7 @@ public class DashboardServiceImpl implements DashboardService {
 								if (each >= shardingTotalCount) {
 									continue;
 								}
-								checkAndHandleJobProblem(curatorClient, abnormalJob, enabledPath, itemStr,
+								checkAndHandleJobProblem(oldAbnormalJobs, curatorClient, abnormalJob, enabledPath, itemStr,
 										getCVersion(curatorClient, JobNodePath
 												.getExecutionItemNodePath(abnormalJob.getJobName(), itemStr)),
 										jobDegree, unnormalJobList);
@@ -1113,12 +1160,11 @@ public class DashboardServiceImpl implements DashboardService {
 							if (nextFireTime != null
 									&& nextFireTime + ALLOW_DELAY_MILLIONSECONDS < new Date().getTime()) {
 								String timeZone = getTimeZone(abnormalJob.getJobName(), curatorClient);
-								// 上报Hermes
-								registerAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone,
-										nextFireTime);
 								// 补充异常信息
 								fillAbnormalJob(curatorClient, abnormalJob, abnormalJob.getCause(), timeZone,
 										nextFireTime);
+								// 如果有必要，上报hermes
+								registerAbnormalJobIfNecessary(oldAbnormalJobs, abnormalJob, timeZone, nextFireTime);
 
 								// 增加到非正常作业列表
 								abnormalJob.setJobDegree(jobDegree);
@@ -1263,14 +1309,6 @@ public class DashboardServiceImpl implements DashboardService {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return null;
-		}
-	}
-
-	private void registerAbnormalJob(String job, String domain, String timeZone, Long nextFireTimeValue) {
-		try {
-			reportAlarmProxyService.getTarget().dashboardAbnormalJob(domain, job, timeZone, nextFireTimeValue);
-		} catch (Throwable t) {
-			log.error(t.getMessage(), t);
 		}
 	}
 
@@ -2021,12 +2059,61 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public void setUnnormalJobMonitorStatusToRead(String currentZkAddr, String uuid) {
-
+		if (StringUtils.isBlank(uuid)) {
+			return;
+		}
+		SaturnStatistics saturnStatistics = saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, currentZkAddr);
+		if (saturnStatistics != null) {
+			String result = saturnStatistics.getResult();
+			List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
+			if(jobs != null) {
+				boolean find = false;
+				for (AbnormalJob job : jobs) {
+					if (uuid.equals(job.getUuid())) {
+						job.setRead(true);
+						find = true;
+						break;
+					}
+				}
+				if(find) {
+					saturnStatistics.setResult(JSON.toJSONString(jobs));
+					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+				}
+			}
+		}
 	}
 
 	@Override
 	public void setUnnormalJobMonitorStatusToReadByAllZkCluster(String uuid) {
-
+		if (StringUtils.isBlank(uuid)) {
+			return;
+		}
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		for (ZkCluster zkCluster : zkClusterList) {
+			String zkAddr = zkCluster.getZkAddr();
+			SaturnStatistics saturnStatistics = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr);
+			if (saturnStatistics != null) {
+				boolean find = false;
+				String result = saturnStatistics.getResult();
+				List<AbnormalJob> abnormalJobList = JSON.parseArray(result, AbnormalJob.class);
+				if (abnormalJobList != null) {
+					for (AbnormalJob abnormalJob : abnormalJobList) {
+						if (uuid.equals(abnormalJob.getUuid())) {
+							abnormalJob.setRead(true);
+							find = true;
+							break;
+						}
+					}
+				}
+				if (find) {
+					saturnStatistics.setResult(JSON.toJSONString(abnormalJobList));
+					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+					return;
+				}
+			}
+		}
 	}
 
 }

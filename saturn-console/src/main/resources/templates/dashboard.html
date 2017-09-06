@@ -347,126 +347,115 @@ layout:decorator="frame-layout">
 		            	</div>
 
 		            	<div role="tabpanel" class="tab-pane" id="warn">
-		            		<div class="row">
-					    		<ul>
-					    			<li class="col-lg-6">
-					    				<div class="panel panel-default">
-											<div class="panel-heading">
-												<a data-toggle="collapse" href="#unnormal-job-body">
-													<h3 class="pull-left panel-title">异常作业(java/shell作业)</h3>
-													<i class="pull-right fa fa-minus"></i>
-												</a>
-												<div class="clearfix"></div>
-											</div>
-											<div id="unnormal-job-body" class="panel-collapse collapse in">
-												<div class="panel-body">
-						                			<div class="table-responsive">
-					                                    <table id="unnormal-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
-					                                        <thead>
-					                                            <tr>
-					                                                <th>作业名</th>
-					                                                <th>所属域</th>
-					                                                <th>域等级</th>
-					                                                <th>作业等级</th>
-					                                                <th>本该调度时间</th>
-					                                                <th>异常原因</th>
-					                                            </tr>
-					                                        </thead>
-					                                        <tbody></tbody>
-					                                    </table>
-						                			</div>
-						                		</div>
-											</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#unnormal-job-body">
+										<h3 class="pull-left panel-title">异常作业(java/shell作业)</h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="unnormal-job-body" class="panel-collapse collapse in">
+									<div class="panel-body">
+										<div class="table-responsive">
+											<table id="unnormal-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
+												<thead>
+													<tr>
+														<th>作业名</th>
+														<th>所属域</th>
+														<th>域等级</th>
+														<th>作业等级</th>
+														<th>本该调度时间</th>
+														<th>异常原因</th>
+														<th name="unnormal-job-read">操作</th>
+													</tr>
+												</thead>
+												<tbody></tbody>
+											</table>
 										</div>
-									</li>
-									<li class="col-lg-6">
-										<div class="panel panel-default">
-											<div class="panel-heading">
-												<a data-toggle="collapse" href="#timeout4Alarm-job-body">
-													<h3 class="pull-left panel-title">运行超时（告警）的作业分片</h3>
-													<i class="pull-right fa fa-minus"></i>
-												</a>
-												<div class="clearfix"></div>
-											</div>
-											<div id="timeout4Alarm-job-body" class="panel-collapse collapse in">
-												<div class="panel-body">
-													<div class="table-responsive">
-														<table id="timeout4Alarm-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
-															<thead>
-															<tr>
-																<th>作业名</th>
-																<th>所属域</th>
-																<th>域等级</th>
-																<th>作业等级</th>
-																<th>超时秒数</th>
-																<th>超时的分片</th>
-															</tr>
-															</thead>
-															<tbody></tbody>
-														</table>
-													</div>
-												</div>
-											</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#timeout4Alarm-job-body">
+										<h3 class="pull-left panel-title">运行超时（告警）的作业分片</h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="timeout4Alarm-job-body" class="panel-collapse collapse in">
+									<div class="panel-body">
+										<div class="table-responsive">
+											<table id="timeout4Alarm-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
+												<thead>
+												<tr>
+													<th>作业名</th>
+													<th>所属域</th>
+													<th>域等级</th>
+													<th>作业等级</th>
+													<th>超时秒数</th>
+													<th>超时的分片</th>
+												</tr>
+												</thead>
+												<tbody></tbody>
+											</table>
 										</div>
-									</li>
-									<li class="col-lg-6">
-					    				<div class="panel panel-default">
-											<div class="panel-heading">
-												<a data-toggle="collapse" href="#unable-failover-job-body">
-													<h3 class="pull-left panel-title">无法高可用的作业</h3>
-													<i class="pull-right fa fa-minus"></i>
-												</a>
-												<div class="clearfix"></div>
-											</div>
-											<div id="unable-failover-job-body" class="panel-collapse collapse in">
-												<div class="panel-body">
-						                			<div class="table-responsive">
-					                                    <table id="unable-failover-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
-					                                        <thead>
-					                                            <tr>
-					                                                <th>作业名</th>
-					                                                <th>所属域</th>
-					                                                <th>域等级</th>
-					                                                <th>作业等级</th>
-					                                            </tr>
-					                                        </thead>
-					                                        <tbody></tbody>
-					                                    </table>
-						                			</div>
-						                		</div>
-											</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#unable-failover-job-body">
+										<h3 class="pull-left panel-title">无法高可用的作业</h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="unable-failover-job-body" class="panel-collapse collapse in">
+									<div class="panel-body">
+										<div class="table-responsive">
+											<table id="unable-failover-job-table" class="table table-bordered table-hover table-striped" style="width:100% !important;">
+												<thead>
+													<tr>
+														<th>作业名</th>
+														<th>所属域</th>
+														<th>域等级</th>
+														<th>作业等级</th>
+													</tr>
+												</thead>
+												<tbody></tbody>
+											</table>
 										</div>
-									</li>
-                                    <li class="col-lg-6">
-                                        <div class="panel panel-default">
-                                            <div class="panel-heading">
-                                                <a data-toggle="collapse" href="#abnormal-container-body">
-                                                    <h3 class="pull-left panel-title">异常的容器资源</h3>
-                                                    <i class="pull-right fa fa-minus"></i>
-                                                </a>
-                                                <div class="clearfix"></div>
-                                            </div>
-                                            <div id="abnormal-container-body" class="panel-collapse collapse in">
-                                                <div class="panel-body">
-                                                    <div class="table-responsive">
-                                                        <table id="abnormal-container-table" class="table table-bordered table-hover table-striped">
-                                                            <thead>
-                                                            <tr>
-                                                                <th>资源名</th>
-                                                                <th>所属域</th>
-																<th>域等级</th>
-                                                                <th>异常原因</th>
-                                                            </tr>
-                                                            </thead>
-                                                            <tbody></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-					    		</ul>
-				    		</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#abnormal-container-body">
+										<h3 class="pull-left panel-title">异常的容器资源</h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="abnormal-container-body" class="panel-collapse collapse in">
+									<div class="panel-body">
+										<div class="table-responsive">
+											<table id="abnormal-container-table" class="table table-bordered table-hover table-striped">
+												<thead>
+												<tr>
+													<th>资源名</th>
+													<th>所属域</th>
+													<th>域等级</th>
+													<th>异常原因</th>
+												</tr>
+												</thead>
+												<tbody></tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
 		            	</div>
 					</div>
 			    </div>
@@ -474,6 +463,7 @@ layout:decorator="frame-layout">
 			<input type="hidden" id="authorizeSaturnConsoleDashBoardAllPrivilege" th:value="${authorizeSaturnConsoleDashBoardAllPrivilege}" />
 			<div th:replace="fragments :: success-dialog"></div>
 			<div th:replace="fragments :: confirm-dialog(id='dashboard-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='setUnnormalJobToRead-confirm-dialog', text='')"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 		</div>
 
@@ -486,6 +476,7 @@ layout:decorator="frame-layout">
 					<td>{{jobDegree}}</td>
 					<td>{{nextFireTime}}</td>
 					<td>{{cause}}</td>
+					<td name="unnormal-job-read"><button uuid="{{uuid}}" jobName="{{jobName}}" domainName="{{domainName}}" data-target="#setUnnormalJobToRead-confirm-dialog" id="button-{{jobName}}" title="确认不再告警后，后续将不再为同一条异常作业发送告警信息！" class='btn btn-info' onclick="setUnnormalJobMonitorStatusToRead(this);">不再告警</button></td>
 				</tr>
 			</script>
 			<script type="text/x-mustache" id="timeout4Alarm-job-template">

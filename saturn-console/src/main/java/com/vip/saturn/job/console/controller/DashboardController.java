@@ -317,4 +317,15 @@ public class DashboardController extends AbstractController {
 		}
 	}
 
+	@RequestMapping(value = "setUnnormalJobMonitorStatusToRead", method = RequestMethod.POST)
+	@ResponseBody
+	public String setUnnormalJobMonitorStatusToRead(HttpServletRequest request, Boolean allZkCluster, String uuid) {
+		if (allZkCluster != null && allZkCluster) {
+			dashboardService.setUnnormalJobMonitorStatusToReadByAllZkCluster(uuid);
+		} else {
+			dashboardService.setUnnormalJobMonitorStatusToRead(getCurrentZkAddr(request.getSession()), uuid);
+		}
+		return "ok";
+	}
+
 }

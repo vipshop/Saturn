@@ -1,8 +1,11 @@
 var cleanButtonClass = ($("#authorizeSaturnConsoleDashBoardAllPrivilege").val() == "true")?"show":"hide",
 		causeMap = {"NOT_RUN": "过时未跑", "NO_SHARDS": "没有分片", "EXECUTORS_NOT_READY": "没有executor能运行该作业"};
+var abnormalJobDataTable, timeout4AlarmJobDataTable, unableFailoverJobDataTable, abnormalContainerDataTable;
 $(function() {
 	window.parent.setActiveTab("#dashboardTab");
 	window.parent.releaseRegName();
+
+    $loading = $("#loading");
 
 	renderZks(function() {
         $("#zks").change(function(){
@@ -825,14 +828,29 @@ function renderAbnormalJob() {
 		    data = JSON.parse(data0);
 		}
 		$("#abnormalJobCount").html(data.length);
+		if(abnormalJobDataTable) {
+		    abnormalJobDataTable.destroy();
+		}
 		var $tbody = $("#unnormal-job-table tbody"), trContent = "", unnormalJobTmp = $("#unnormal-job-template").html();
-		$("#unnormal-job-table tbody").empty();
+		$tbody.empty();
         for (var i in data) {
-        	trContent += Mustache.render(unnormalJobTmp,{cause:causeMap[data[i].cause],degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", nextFireTime:data[i].timeZone + " " + data[i].nextFireTimeWithTimeZoneFormat});
+        	trContent += Mustache.render(unnormalJobTmp,{uuid:data[i].uuid,cause:causeMap[data[i].cause],degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", nextFireTime:data[i].timeZone + " " + data[i].nextFireTimeWithTimeZoneFormat});
         }
         $tbody.append(trContent);
-        $("#unnormal-job-table").DataTable({"destroy": true,"oLanguage": language});
+        for (var i in data) {
+            if(data[i].read && data[i].read == true) {
+                $('#button-'+data[i].jobName).attr("disabled","disabled");
+            }
+        }
+        abnormalJobDataTable = $("#unnormal-job-table").DataTable({"destroy": true,"oLanguage": language});
 	}).always(function() { $loading.hide(); });
+}
+
+function setUnnormalJobMonitorStatusToRead(obj) {
+    var domainName = $(obj).attr("domainName");
+    var jobName = $(obj).attr("jobName");
+	$("#setUnnormalJobToRead-confirm-dialog .confirm-reason").text("确定此异常作业（域名" + domainName + "，作业名" + jobName + "）不再发送告警信息吗？");
+	$("#setUnnormalJobToRead-confirm-dialog").modal("show", obj);
 }
 
 function renderTimeout4AlarmJob() {
@@ -841,13 +859,16 @@ function renderTimeout4AlarmJob() {
         if(data0) {
             data = JSON.parse(data0);
         }
+        if(timeout4AlarmJobDataTable) {
+            timeout4AlarmJobDataTable.destroy();
+        }
 		var $tbody = $("#timeout4Alarm-job-table tbody"), trContent = "", timeout4AlarmJobTmp = $("#timeout4Alarm-job-template").html();
-		$("#timeout4Alarm-job-table tbody").empty();
+		$tbody.empty();
         for (var i in data) {
         	trContent += Mustache.render(timeout4AlarmJobTmp,{degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
         }
         $tbody.append(trContent);
-        $("#timeout4Alarm-job-table").DataTable({"destroy": true, "oLanguage": language});
+        timeout4AlarmJobDataTable = $("#timeout4Alarm-job-table").DataTable({"destroy": true, "oLanguage": language});
 	}).always(function() { $loading.hide(); });
 }
 
@@ -858,13 +879,16 @@ function renderUnableFailoverJob() {
         if(data0) {
             data = JSON.parse(data0);
         }
+        if(unableFailoverJobDataTable) {
+            unableFailoverJobDataTable.destroy();
+        }
 		var $tbody = $("#unable-failover-job-table tbody"), trContent = "", unableFailoverJobTmp = $("#unable-failover-job-template").html();
-		$("#unable-failover-job-table tbody").empty();
+		$tbody.empty();
         for (var i in data) {
         	trContent += Mustache.render(unableFailoverJobTmp,{degree:degreeMap[data[i].degree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", jobDegree:degreeMap[data[i].jobDegree]});
         }
         $tbody.append(trContent);
-        $("#unable-failover-job-table").DataTable({"destroy": true,"oLanguage": language});
+        unableFailoverJobDataTable = $("#unable-failover-job-table").DataTable({"destroy": true,"oLanguage": language});
 	}).always(function() { $loading.hide(); });
 }
 
@@ -874,15 +898,18 @@ function renderAbnormalContainer() {
         if(data0) {
             data = JSON.parse(data0);
         }
+        if(abnormalContainerDataTable) {
+            abnormalContainerDataTable.destroy();
+        }
 		var $tbody = $("#abnormal-container-table tbody"), trContent = "", abnormalContainerTmp = $("#abnormal-container-template").html();
-		$("#abnormal-container-table tbody").empty();
+		$tbody.empty();
         for (var i in data) {
             if(data[i].cause == "CONTAINER_INSTANCE_MISMATCH") {
         	    trContent += Mustache.render(abnormalContainerTmp,{taskId:data[i].taskId, nns:data[i].nns + "&", domainName:data[i].domainName, degree:degreeMap[data[i].degree], cause:"运行实例数不匹配，期望" + data[i].configInstances + "个，实际" + data[i].runningInstances + "个"});
         	}
         }
         $tbody.append(trContent);
-        $("#abnormal-container-table").DataTable({"destroy": true,"oLanguage": language});
+        abnormalContainerDataTable = $("#abnormal-container-table").DataTable({"destroy": true,"oLanguage": language});
 	}).always(function() { $loading.hide(); });
 }
 
@@ -1113,5 +1140,19 @@ $("#dashboard-confirm-dialog").on("shown.bs.modal", function (event) {
 			}
 		}).always(function() { $btn.bootstrapBtn('reset'); });
 		return false;
+	});
+});
+
+$("#setUnnormalJobToRead-confirm-dialog").on("shown.bs.modal", function (event) {
+	$("#setUnnormalJobToRead-confirm-dialog-confirm-btn").unbind('click').click(function() {
+		var button = $(event.relatedTarget);
+		var formData = getFormData();
+		formData.uuid = button.attr('uuid');
+		$.post("dashboard/setUnnormalJobMonitorStatusToRead", formData, function (data0) {
+			$("#setUnnormalJobToRead-confirm-dialog").modal("hide");
+			if(data0 =='ok') {
+				$(event.relatedTarget).attr("disabled","disabled")
+			}
+		});
 	});
 });
