@@ -191,6 +191,7 @@ function refreshNamespaceZkClusterMappingList() {
             "aoColumnDefs": [{"bSortable":false,"aTargets":[0]}], // set the 0 column unSort
             "aaSorting": [[1, "asc"]], // set sort from the second column
             "displayLength":100,
+            "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "所有"]],
             "initComplete": function () {
                 $("#namespace_zkcluster_manager_table_filter label").before(namespace_zkcluster_manager_operation);
 
