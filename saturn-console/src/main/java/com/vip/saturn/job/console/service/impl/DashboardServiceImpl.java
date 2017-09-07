@@ -311,8 +311,8 @@ public class DashboardServiceImpl implements DashboardService {
 								if (!localMode) {
 									AbnormalJob unnormalJob = new AbnormalJob(job, config.getNamespace(),
 											config.getNameAndNamespace(), config.getDegree());
-									checkJavaOrShellJobHasProblem(oldAbnormalJobs, curatorClient, unnormalJob, jobDegree,
-											unnormalJobList);
+									checkJavaOrShellJobHasProblem(oldAbnormalJobs, curatorClient, unnormalJob,
+											jobDegree, unnormalJobList);
 								}
 
 								// 查找超时告警作业
@@ -938,7 +938,8 @@ public class DashboardServiceImpl implements DashboardService {
 		return null;
 	}
 
-	private void registerAbnormalJobIfNecessary(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob, String timeZone, Long nextFireTime) {
+	private void registerAbnormalJobIfNecessary(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob,
+			String timeZone, Long nextFireTime) {
 		AbnormalJob oldAbnormalJob = findEqualAbnormalJob(abnormalJob, oldAbnormalJobs);
 		if (oldAbnormalJob != null) {
 			abnormalJob.setRead(oldAbnormalJob.isRead());
@@ -952,7 +953,8 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		if (!abnormalJob.isRead()) {
 			try {
-				reportAlarmService.dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
+				reportAlarmService.dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone,
+						nextFireTime);
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
 			}
@@ -962,9 +964,9 @@ public class DashboardServiceImpl implements DashboardService {
 	/**
 	 * 检查和处理问题作业
 	 */
-	private void checkAndHandleJobProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath,
-			String shardingItemStr, int zkNodeCVersion, String jobDegree, List<AbnormalJob> unnormalJobList)
-			throws Exception {
+	private void checkAndHandleJobProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient,
+			AbnormalJob abnormalJob, String enabledPath, String shardingItemStr, int zkNodeCVersion, String jobDegree,
+			List<AbnormalJob> unnormalJobList) throws Exception {
 		if (unnormalJobList.contains(abnormalJob)) {
 			return;
 		}
@@ -1114,8 +1116,8 @@ public class DashboardServiceImpl implements DashboardService {
 		return true;
 	}
 
-	private void checkJavaOrShellJobHasProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient, AbnormalJob abnormalJob,
-			String jobDegree, List<AbnormalJob> unnormalJobList) {
+	private void checkJavaOrShellJobHasProblem(List<AbnormalJob> oldAbnormalJobs, CuratorFramework curatorClient,
+			AbnormalJob abnormalJob, String jobDegree, List<AbnormalJob> unnormalJobList) {
 		try {
 			// 计算异常作业,根据$Jobs/jobName/execution/item/nextFireTime，如果小于当前时间且作业不在running，则为异常
 			// 只有java/shell作业有cron
@@ -1145,7 +1147,8 @@ public class DashboardServiceImpl implements DashboardService {
 								if (each >= shardingTotalCount) {
 									continue;
 								}
-								checkAndHandleJobProblem(oldAbnormalJobs, curatorClient, abnormalJob, enabledPath, itemStr,
+								checkAndHandleJobProblem(oldAbnormalJobs, curatorClient, abnormalJob, enabledPath,
+										itemStr,
 										getCVersion(curatorClient, JobNodePath
 												.getExecutionItemNodePath(abnormalJob.getJobName(), itemStr)),
 										jobDegree, unnormalJobList);
@@ -1226,8 +1229,8 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 				if (!timeout4AlarmJob.getTimeoutItems().isEmpty()) {
 					try {
-						reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(),
-								jobName, timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
+						reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(), jobName,
+								timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
 					} catch (Throwable t) {
 						log.error(t.getMessage(), t);
 					}
@@ -1368,9 +1371,9 @@ public class DashboardServiceImpl implements DashboardService {
 					abnormalContainer.setConfigInstances(myInstance);
 					abnormalContainer.setRunningInstances(count);
 					try {
-						reportAlarmService.dashboardContainerInstancesMismatch(
-								abnormalContainer.getDomainName(), abnormalContainer.getTaskId(),
-								abnormalContainer.getConfigInstances(), abnormalContainer.getRunningInstances());
+						reportAlarmService.dashboardContainerInstancesMismatch(abnormalContainer.getDomainName(),
+								abnormalContainer.getTaskId(), abnormalContainer.getConfigInstances(),
+								abnormalContainer.getRunningInstances());
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}
@@ -2067,7 +2070,7 @@ public class DashboardServiceImpl implements DashboardService {
 		if (saturnStatistics != null) {
 			String result = saturnStatistics.getResult();
 			List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-			if(jobs != null) {
+			if (jobs != null) {
 				boolean find = false;
 				for (AbnormalJob job : jobs) {
 					if (uuid.equals(job.getUuid())) {
@@ -2076,7 +2079,7 @@ public class DashboardServiceImpl implements DashboardService {
 						break;
 					}
 				}
-				if(find) {
+				if (find) {
 					saturnStatistics.setResult(JSON.toJSONString(jobs));
 					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
 				}

@@ -565,8 +565,7 @@ public class RestApiServiceImpl implements RestApiService {
 										String.format("The executor {%s} does not exists.", executorName));
 							}
 
-							reportAlarmService.raise(namespace, jobName, executorName, shardItem,
-									alarmInfo);
+							reportAlarmService.raise(namespace, jobName, executorName, shardItem, alarmInfo);
 						} catch (ReportAlarmException e) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 									e.getMessage());
