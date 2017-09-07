@@ -7,6 +7,7 @@ import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
+import com.vip.saturn.job.utils.SaturnVersionUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -81,16 +82,10 @@ public class SaturnExecutorService {
 
 		// 持久化最近启动时间
 		coordinatorRegistryCenter.persist(lastBeginTimeNode, String.valueOf(System.currentTimeMillis()));
+		String executorVersion = SaturnVersionUtils.getVersion();
 		// 持久化版本
-		try {
-			Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
-			String executorVersion = props.getProperty("build.version");
-			if (StringUtils.isNotBlank(executorVersion)) {
-				log.info("persist znode '/version': {}", executorVersion);
-				coordinatorRegistryCenter.persist(versionNode, executorVersion);
-			}
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+		if(executorVersion != null) {
+			coordinatorRegistryCenter.persist(versionNode, executorVersion);	
 		}
 
 		// 持久化clean
