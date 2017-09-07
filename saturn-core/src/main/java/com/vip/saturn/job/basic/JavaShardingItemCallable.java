@@ -148,12 +148,14 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 	 * 执行前回调
 	 */
 	public void beforeExecution() {
+		this.startTime = System.currentTimeMillis();
 	}
 
 	/**
 	 * 执行后回调
 	 */
 	public void afterExecution() {
+		this.endTime = System.currentTimeMillis();
 	}
 
 	/**

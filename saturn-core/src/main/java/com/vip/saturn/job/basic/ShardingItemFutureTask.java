@@ -90,6 +90,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			return ret;
 		} finally {
 			done();
+			log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", callable.getJobName(), callable.getItem(), callable.getExecutionTime());
 		}
 	}
 

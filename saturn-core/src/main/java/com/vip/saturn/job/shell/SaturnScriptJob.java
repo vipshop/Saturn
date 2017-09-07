@@ -86,9 +86,11 @@ public class SaturnScriptJob extends CrondJob {
 	}
 
 	public void beforeExecution(ShardingItemCallable callable) {
+		callable.setStartTime(System.currentTimeMillis());
 	}
 
 	public void afterExecution(ShardingItemCallable callable) {
+		callable.setEndTime(System.currentTimeMillis());
 	}
 
 	public ShardingItemCallable createShardingItemCallable(String jobName, Integer item, String execParameter,
@@ -122,6 +124,9 @@ public class SaturnScriptJob extends CrondJob {
 
 		callable.setSaturnJobReturn(saturnJobReturn);
 		afterExecution(callable);
+
+		log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", jobName, item, callable.getExecutionTime());
+
 		return saturnJobReturn;
 	}
 
