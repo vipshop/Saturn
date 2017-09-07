@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -54,7 +55,6 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.LocalHostService;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 
@@ -69,7 +69,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private CuratorRepository curatorRepository;
 
 	@Resource
-	private ReportAlarmProxyService reportAlarmProxyService;
+	private ReportAlarmService reportAlarmService;
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
@@ -234,7 +234,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					boolean isDifferentiateContainer = systemConfigService
 							.getBooleanValue(SystemConfigProperties.IS_CONTAINER_DIFFERENTIATE, true);
 					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
-							generateShardingLeadershipHostValue(), reportAlarmProxyService, isDifferentiateContainer);
+							generateShardingLeadershipHostValue(), reportAlarmService, isDifferentiateContainer);
 					namespaceShardingManager.start();
 					if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
 						try {

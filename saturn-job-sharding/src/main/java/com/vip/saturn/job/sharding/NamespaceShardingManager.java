@@ -1,6 +1,6 @@
 package com.vip.saturn.job.sharding;
 
-import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.sharding.listener.*;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.AddJobListenersService;
@@ -36,12 +36,12 @@ public class NamespaceShardingManager {
 	private String zkClusterKey;
 
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue,
-			ReportAlarmProxyService reportAlarmProxyService, boolean isDifferentiateContainer) {
+									ReportAlarmService reportAlarmService, boolean isDifferentiateContainer) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
 		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue,
-				reportAlarmProxyService, isDifferentiateContainer);
+				reportAlarmService, isDifferentiateContainer);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService,
 				shardingTreeCacheService);

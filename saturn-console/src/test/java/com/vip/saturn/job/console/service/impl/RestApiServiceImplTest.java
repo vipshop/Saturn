@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -32,7 +33,6 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 
 /**
  * Created by kfchu on 31/05/2017.
@@ -55,7 +55,7 @@ public class RestApiServiceImplTest extends AbstractSaturnConsoleTest {
 	private JobOperationService jobOperationService;
 
 	@Mock
-	private ReportAlarmProxyService reportAlarmProxyService;
+	private ReportAlarmService reportAlarmService;
 
 	@Mock
 	private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;

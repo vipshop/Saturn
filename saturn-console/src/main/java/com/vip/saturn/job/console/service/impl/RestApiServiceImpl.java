@@ -18,7 +18,7 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
-import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -63,7 +63,7 @@ public class RestApiServiceImpl implements RestApiService {
 	private JobOperationService jobOperationService;
 
 	@Resource
-	private ReportAlarmProxyService reportAlarmProxyService;
+	private ReportAlarmService reportAlarmService;
 
 	@Resource
 	private ExecutorService executorService;
@@ -565,7 +565,7 @@ public class RestApiServiceImpl implements RestApiService {
 										String.format("The executor {%s} does not exists.", executorName));
 							}
 
-							reportAlarmProxyService.getTarget().raise(namespace, jobName, executorName, shardItem,
+							reportAlarmService.raise(namespace, jobName, executorName, shardItem,
 									alarmInfo);
 						} catch (ReportAlarmException e) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),

@@ -19,8 +19,8 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
 import com.vip.saturn.job.console.utils.*;
-import com.vip.saturn.job.integrate.service.ReportAlarmProxyService;
 
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -92,7 +92,7 @@ public class DashboardServiceImpl implements DashboardService {
 	private CuratorRepository curatorRepository;
 
 	@Autowired
-	private ReportAlarmProxyService reportAlarmProxyService;
+	private ReportAlarmService reportAlarmService;
 
 	@Autowired
 	private ContainerService containerService;
@@ -952,7 +952,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		if (!abnormalJob.isRead()) {
 			try {
-				reportAlarmProxyService.getTarget().dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
+				reportAlarmService.dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone, nextFireTime);
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
 			}
@@ -1226,7 +1226,7 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 				if (!timeout4AlarmJob.getTimeoutItems().isEmpty()) {
 					try {
-						reportAlarmProxyService.getTarget().dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(),
+						reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(),
 								jobName, timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
 					} catch (Throwable t) {
 						log.error(t.getMessage(), t);
@@ -1368,7 +1368,7 @@ public class DashboardServiceImpl implements DashboardService {
 					abnormalContainer.setConfigInstances(myInstance);
 					abnormalContainer.setRunningInstances(count);
 					try {
-						reportAlarmProxyService.getTarget().dashboardContainerInstancesMismatch(
+						reportAlarmService.dashboardContainerInstancesMismatch(
 								abnormalContainer.getDomainName(), abnormalContainer.getTaskId(),
 								abnormalContainer.getConfigInstances(), abnormalContainer.getRunningInstances());
 					} catch (Exception e) {
