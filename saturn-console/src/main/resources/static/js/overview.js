@@ -9,7 +9,7 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
                	'<button class="btn btn-danger" id="batch-remove-job" title="点击进行批量删除作业">删除作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="add-job" title="点击进行添加作业">添加作业</button>&nbsp;&nbsp;' +
                	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>' +
-               	'<button class="btn btn-success batch-migrate-job" id="batch-migrate-job" title="点击进行批量迁移作业">迁移作业</button>&nbsp;&nbsp;'+
+               	'<button class="btn btn-success batch-migrate-job" id="batch-migrate-job" title="点击进行批量迁移作业到容器资源">迁移容器</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="batch-add-job" title="点击进行导入作业">导入作业</button>&nbsp;&nbsp;' +
                	'<a class="btn btn-info" id="export-job" href="executor/exportJob?nns='+regName+'" title="点击进行导出全域作业" target="_self">导出全域作业</a>&nbsp;&nbsp;' +
                	'<label>分组 <select id="groupSelect" title="选择作业分组" class="form-control"><option value="">全部分组</option></select></label>';
