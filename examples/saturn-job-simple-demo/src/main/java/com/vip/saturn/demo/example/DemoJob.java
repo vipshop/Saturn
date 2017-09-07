@@ -21,11 +21,13 @@ public class DemoJob extends AbstractSaturnJavaJob {
 	@Override
 	public void onEnabled(String jobName) {
 		//
+		System.out.println(jobName + ", i am enabled");
 	}
 
 	@Override
 	public void onDisabled(String jobName) {
 		//
+		System.out.println(jobName + ", i am disabled");
 	}
 
 	@Override
