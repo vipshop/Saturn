@@ -76,7 +76,7 @@ public class DashboardController extends AbstractController {
 			}
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				executorInDockerCount = dashboardService.executorInDockerCount(zkCluster.getZkAddr());
 				executorNotInDockerCount = dashboardService.executorNotInDockerCount(zkCluster.getZkAddr());
 				jobCount = dashboardService.jobCount(zkCluster.getZkAddr());
@@ -97,7 +97,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10FailureJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10FailureJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -112,7 +112,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10FailureExecutorByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10FailureExecutor(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -127,7 +127,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10AactiveJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10AactiveJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -142,7 +142,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10LoadJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10LoadJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -157,7 +157,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10FailureDomainByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10FailureDomain(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -172,7 +172,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10UnstableDomainByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10UnstableDomain(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -187,7 +187,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.top10LoadExecutorByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.top10LoadExecutor(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -202,7 +202,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.allUnnormalJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.allUnnormalJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -217,7 +217,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.allUnableFailoverJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.allUnableFailoverJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -232,7 +232,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.allTimeout4AlarmJobByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -247,9 +247,8 @@ public class DashboardController extends AbstractController {
 			return dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
-				SaturnStatistics ss = dashboardService
-						.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
+			if (zkCluster != null) {
+				SaturnStatistics ss = dashboardService.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
 			return null;
@@ -321,7 +320,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.loadJobRankDistributionByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				return dashboardService.loadJobRankDistribution(zkCluster.getZkAddr());
 			}
 			return new HashMap<>();
@@ -335,7 +334,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.abnormalContainerByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				SaturnStatistics ss = dashboardService.abnormalContainer(zkCluster.getZkAddr());
 				return ss == null ? null : ss.getResult();
 			}
@@ -350,7 +349,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.versionDomainNumberByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				return dashboardService.versionDomainNumber(zkCluster.getZkAddr());
 			}
 			return new HashMap<>();
@@ -364,7 +363,7 @@ public class DashboardController extends AbstractController {
 			return dashboardService.versionExecutorNumberByAllZkCluster();
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				return dashboardService.versionExecutorNumber(zkCluster.getZkAddr());
 			}
 			return new HashMap<>();
@@ -378,7 +377,7 @@ public class DashboardController extends AbstractController {
 			dashboardService.setUnnormalJobMonitorStatusToReadByAllZkCluster(uuid);
 		} else {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if(zkCluster != null) {
+			if (zkCluster != null) {
 				dashboardService.setUnnormalJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
 			}
 		}
