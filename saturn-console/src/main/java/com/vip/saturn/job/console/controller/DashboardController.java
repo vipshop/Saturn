@@ -27,8 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,7 +46,7 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "refresh", method = RequestMethod.GET)
 	@ResponseBody
-	public String refresh(HttpServletRequest request) {
+	public String refresh() {
 		Date start = new Date();
 		dashboardService.refreshStatistics2DB(true);
 		return "done refresh. takes:" + (new Date().getTime() - start.getTime());
@@ -56,7 +54,7 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "count", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Integer> count(HttpServletRequest request, Boolean allZkCluster) {
+	public Map<String, Integer> count(Boolean allZkCluster, String zkClusterKey) {
 		Map<String, Integer> countMap = new HashMap<>();
 		int executorInDockerCount = 0;
 		int executorNotInDockerCount = 0;
@@ -71,22 +69,18 @@ public class DashboardController extends AbstractController {
 					executorNotInDockerCount += dashboardService.executorNotInDockerCount(zkAddr);
 					jobCount += dashboardService.jobCount(zkAddr);
 				}
-				String zkClusterKey = zkCluster.getZkClusterKey();
-				if (zkClusterKey != null) {
-					domainCount += registryCenterService.domainCount(zkClusterKey);
+				String zck = zkCluster.getZkClusterKey();
+				if (zck != null) {
+					domainCount += registryCenterService.domainCount(zck);
 				}
 			}
 		} else {
-			HttpSession session = request.getSession();
-			String zkAddr = getCurrentZkAddr(session);
-			if (zkAddr != null) {
-				executorInDockerCount = dashboardService.executorInDockerCount(zkAddr);
-				executorNotInDockerCount = dashboardService.executorNotInDockerCount(zkAddr);
-				jobCount = dashboardService.jobCount(zkAddr);
-			}
-			String zkClusterKey = getCurrentZkClusterKey(session);
-			if (zkClusterKey != null) {
-				domainCount = registryCenterService.domainCount(zkClusterKey);
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				executorInDockerCount = dashboardService.executorInDockerCount(zkCluster.getZkAddr());
+				executorNotInDockerCount = dashboardService.executorNotInDockerCount(zkCluster.getZkAddr());
+				jobCount = dashboardService.jobCount(zkCluster.getZkAddr());
+				domainCount = registryCenterService.domainCount(zkCluster.getZkClusterKey());
 			}
 		}
 		countMap.put("executorInDockerCount", executorInDockerCount);
@@ -98,129 +92,173 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "top10FailJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10FailJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10FailureJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10FailureJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10FailureJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10FailExe", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailExe(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10FailExe(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10FailureExecutorByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10FailureExecutor(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10FailureExecutor(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10ActiveJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10ActiveJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10ActiveJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10AactiveJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10AactiveJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10AactiveJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10LoadJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10LoadJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10LoadJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10LoadJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10LoadJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10LoadJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10FailDomain", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10FailDomain(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10FailDomain(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10FailureDomainByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10FailureDomain(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10FailureDomain(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10UnstableDomain", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10UnstableDomain(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10UnstableDomain(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10UnstableDomainByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10UnstableDomain(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10UnstableDomain(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "top10LoadExecutor", method = RequestMethod.POST)
 	@ResponseBody
-	public String top10LoadExecutor(HttpServletRequest request, Boolean allZkCluster) {
+	public String top10LoadExecutor(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.top10LoadExecutorByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.top10LoadExecutor(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.top10LoadExecutor(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "unnormalJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String unnormalJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String unnormalJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.allUnnormalJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.allUnnormalJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.allUnnormalJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "unableFailoverJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String unableFailoverJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String unableFailoverJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.allUnableFailoverJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.allUnableFailoverJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.allUnableFailoverJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "allTimeout4AlarmJob", method = RequestMethod.POST)
 	@ResponseBody
-	public String allTimeout4AlarmJob(HttpServletRequest request, Boolean allZkCluster) {
+	public String allTimeout4AlarmJob(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.allTimeout4AlarmJobByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.allTimeout4AlarmJob(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "domainProcessCount", method = RequestMethod.POST)
 	@ResponseBody
-	public String domainProcessCount(HttpServletRequest request, Boolean allZkCluster) {
+	public String domainProcessCount(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService
-					.allProcessAndErrorCountOfTheDay(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService
+						.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "cleanShardingCount", method = RequestMethod.POST)
 	@ResponseBody
-	public String cleanShardingCount(HttpServletRequest request, String nns) {
+	public String cleanShardingCount(String nns) {
 		try {
 			dashboardService.cleanShardingCount(nns);
 			return "ok";
@@ -232,7 +270,7 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "cleanOneJobAnalyse", method = RequestMethod.POST)
 	@ResponseBody
-	public String cleanOneJobAnalyse(HttpServletRequest request, String nns, String job) {
+	public String cleanOneJobAnalyse(String nns, String job) {
 		try {
 			dashboardService.cleanOneJobAnalyse(job, nns);
 			return "ok";
@@ -244,7 +282,7 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "cleanOneJobExecutorCount", method = RequestMethod.POST)
 	@ResponseBody
-	public String cleanOneJobExecutorCount(HttpServletRequest request, String nns, String job) {
+	public String cleanOneJobExecutorCount(String nns, String job) {
 		try {
 			dashboardService.cleanOneJobExecutorCount(job, nns);
 			return "ok";
@@ -256,7 +294,7 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "cleanAllJobAnalyse", method = RequestMethod.POST)
 	@ResponseBody
-	public String cleanAllJobAnalyse(HttpServletRequest request, String nns) {
+	public String cleanAllJobAnalyse(String nns) {
 		try {
 			dashboardService.cleanAllJobAnalyse(nns);
 			return "ok";
@@ -268,62 +306,81 @@ public class DashboardController extends AbstractController {
 
 	@RequestMapping(value = "loadDomainRank", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Integer> loadDomainRank(HttpSession session, Boolean allZkCluster) {
+	public Map<String, Integer> loadDomainRank(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.loadDomainRankDistributionByAllZkCluster();
 		} else {
-			return dashboardService.loadDomainRankDistribution(getCurrentZkClusterKey(session));
+			return dashboardService.loadDomainRankDistribution(zkClusterKey);
 		}
 	}
 
 	@RequestMapping(value = "loadJobRank", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<Integer, Integer> loadJobRank(HttpSession session, Boolean allZkCluster) {
+	public Map<Integer, Integer> loadJobRank(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.loadJobRankDistributionByAllZkCluster();
 		} else {
-			return dashboardService.loadJobRankDistribution(getCurrentZkAddr(session));
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				return dashboardService.loadJobRankDistribution(zkCluster.getZkAddr());
+			}
+			return new HashMap<>();
 		}
 	}
 
 	@RequestMapping(value = "abnormalContainer", method = RequestMethod.POST)
 	@ResponseBody
-	public String abnormalContainer(HttpServletRequest request, Boolean allZkCluster) {
+	public String abnormalContainer(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.abnormalContainerByAllZkCluster();
 		} else {
-			SaturnStatistics ss = dashboardService.abnormalContainer(getCurrentZkAddr(request.getSession()));
-			return ss == null ? null : ss.getResult();
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				SaturnStatistics ss = dashboardService.abnormalContainer(zkCluster.getZkAddr());
+				return ss == null ? null : ss.getResult();
+			}
+			return null;
 		}
 	}
 
 	@RequestMapping(value = "versionDomainNumber", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Long> versionDomainNumber(HttpServletRequest request, Boolean allZkCluster) {
+	public Map<String, Long> versionDomainNumber(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.versionDomainNumberByAllZkCluster();
 		} else {
-			return dashboardService.versionDomainNumber(getCurrentZkAddr(request.getSession()));
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				return dashboardService.versionDomainNumber(zkCluster.getZkAddr());
+			}
+			return new HashMap<>();
 		}
 	}
 
 	@RequestMapping(value = "versionExecutorNumber", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Long> versionExecutorNumber(HttpServletRequest request, Boolean allZkCluster) {
+	public Map<String, Long> versionExecutorNumber(Boolean allZkCluster, String zkClusterKey) {
 		if (allZkCluster != null && allZkCluster) {
 			return dashboardService.versionExecutorNumberByAllZkCluster();
 		} else {
-			return dashboardService.versionExecutorNumber(getCurrentZkAddr(request.getSession()));
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				return dashboardService.versionExecutorNumber(zkCluster.getZkAddr());
+			}
+			return new HashMap<>();
 		}
 	}
 
 	@RequestMapping(value = "setUnnormalJobMonitorStatusToRead", method = RequestMethod.POST)
 	@ResponseBody
-	public String setUnnormalJobMonitorStatusToRead(HttpServletRequest request, Boolean allZkCluster, String uuid) {
+	public String setUnnormalJobMonitorStatusToRead(Boolean allZkCluster, String zkClusterKey, String uuid) {
 		if (allZkCluster != null && allZkCluster) {
 			dashboardService.setUnnormalJobMonitorStatusToReadByAllZkCluster(uuid);
 		} else {
-			dashboardService.setUnnormalJobMonitorStatusToRead(getCurrentZkAddr(request.getSession()), uuid);
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if(zkCluster != null) {
+				dashboardService.setUnnormalJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
+			}
 		}
 		return "ok";
 	}

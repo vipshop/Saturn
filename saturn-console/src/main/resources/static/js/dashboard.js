@@ -9,11 +9,6 @@ $(function() {
 
 	renderZks(function() {
         $("#zks").change(function(){
-            var indexSelected = $(this).get(0).selectedIndex;
-            if(indexSelected != 0) { // not select allZkCluster
-                var newSelected = $("#zks").val();
-                $.post("registry_center/selectZk", {newZkClusterKey : newSelected}, function() {});
-            }
             renderAll();
         });
         renderAll();
@@ -146,6 +141,9 @@ function getFormData() {
     var formData = {};
     if($("#zks").get(0).selectedIndex == 0) {
         formData = {allZkCluster: true};
+    } else {
+        var zkClusterKey = $("#zks").val();
+        formData = {allZkCluster: false, zkClusterKey: zkClusterKey};
     }
     return formData;
 }

@@ -87,12 +87,6 @@ public class RegistryCenterController extends AbstractController {
 		return model;
 	}
 
-	@RequestMapping(value = "selectZk", method = RequestMethod.POST)
-	public String selectZk(final HttpSession session, String newZkClusterKey) {
-		setCurrentZkClusterKey(newZkClusterKey, session);
-		return "ok";
-	}
-
 	private String replaceQuotation(String str) {
 		if (str == null) {
 			return "";

@@ -1,14 +1,8 @@
 var junkViewDataTable,$loading = $("#loading");
 
 $(function() {
+
     renderZks();
-    
-	$("#zks").change(function(){
-		var newSelected = $("#zks").val();
-		$.post("registry_center/selectZk", {newZkClusterKey : newSelected}, function (data) {
-			renderJunkData(newSelected);
-        }).always(function() {});
-	});
     
     $("#confirm-dialog").on("shown.bs.modal", function (event) {
     	var button = $(event.relatedTarget);
@@ -73,9 +67,10 @@ $(function() {
     });
 });
 
-function renderJunkData(newZkClusterKey) {
+function renderJunkData() {
 	$loading.show();
-    $.get("getJunkdata", {newZkClusterKey:newZkClusterKey}, function(data) {
+
+    $.get("getJunkdata", {newZkClusterKey:$("#zks").val()}, function(data) {
     	if (junkViewDataTable) {
     		junkViewDataTable.destroy();
     	}
@@ -122,7 +117,12 @@ function renderZks() {
 			}
 		}
 		$("#zks").append(options);
-		renderJunkData($("#zks").val());
+
+		$("#zks").change(function(){
+            renderJunkData();
+        });
+
+        renderJunkData();
 	});
 }
 
