@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.NamespaceVersionMappingRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="is_forced" property="isForced" jdbcType="INTEGER" />
+		<result column="is_deleted" property="isDeleted" jdbcType="INTEGER" />
+	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
+	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id,version_number,namespace,is_forced,is_deleted, create_time, created_by, last_update_time, last_updated_by
+    </sql>
+    
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
+        insert into namespace_version_mapping(version_number,namespace,is_forced,create_time, created_by) values
+        (
+         #{versionNumber, jdbcType=VARCHAR},
+         #{namespace, jdbcType=VARCHAR}, 
+         #{isForced, jdbcType=INTEGER}, 
+         #{createTime, jdbcType=TIMESTAMP}, 
+         #{createdBy, jdbcType=VARCHAR}
+        )
+    </insert>
+</mapper>
