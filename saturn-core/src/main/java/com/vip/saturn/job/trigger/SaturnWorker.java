@@ -23,10 +23,10 @@ public class SaturnWorker implements Runnable {
 	static Logger log = LoggerFactory.getLogger(SaturnWorker.class);
 
 	private AbstractElasticJob job;
-	private OperableTrigger triggerObj;
+	private volatile OperableTrigger triggerObj;
 	private final Object sigLock = new Object();
-	private boolean paused = false;
-	private boolean triggered = false;
+	private volatile boolean paused = false;
+	private volatile boolean triggered = false;
 	private AtomicBoolean halted = new AtomicBoolean(false);
 
 	public SaturnWorker(AbstractElasticJob job, Trigger trigger) throws SchedulerException {
@@ -132,16 +132,23 @@ public class SaturnWorker implements Runnable {
 					}
 				}
 				boolean goAhead;
-				// 触发执行只有两个条件：1.时间到了；2。点立即执行；
+				// 触发执行只有两个条件：1.时间到了 2.点立即执行
 				synchronized (sigLock) {
 					goAhead = !halted.get() && !paused;
 					// 重置立即执行标志；
 					if (triggered) {
 						triggered = false;
-					} else { // 非立即执行。即，执行时间到了，或者没有下次执行时间。
-						goAhead = goAhead && !noFireTime;
-						if (goAhead && triggerObj != null) { // 执行时间到了，更新执行时间；没有下次执行时间，不更新时间，并且不执行作业
-							triggerObj.triggered(null);
+					} else if(goAhead){ // 非立即执行。即，执行时间到了，或者没有下次执行时间
+						goAhead = goAhead && !noFireTime; // 有下次执行时间，即执行时间到了，才执行作业
+						if (goAhead) { // 执行时间到了，更新执行时间
+							if(triggerObj != null) {
+								triggerObj.triggered(null);
+							}
+						} else { // 没有下次执行时间，则尝试睡一秒，防止不停的循环导致CPU使用率过高（如果cron不再改为周期性执行）
+                            try {
+                                sigLock.wait(1000L);
+                            } catch (InterruptedException ignore) {
+                            }
 						}
 					}
 				}
