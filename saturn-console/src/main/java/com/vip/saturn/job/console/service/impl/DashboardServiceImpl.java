@@ -953,7 +953,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		if (!abnormalJob.isRead()) {
 			try {
-				reportAlarmService.dashboardAbnormalJob(abnormalJob.getJobName(), abnormalJob.getDomainName(), timeZone,
+				reportAlarmService.dashboardAbnormalJob(abnormalJob.getDomainName(), abnormalJob.getJobName(), timeZone,
 						nextFireTime);
 			} catch (Throwable t) {
 				log.error(t.getMessage(), t);
