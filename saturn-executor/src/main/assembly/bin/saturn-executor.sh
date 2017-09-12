@@ -125,7 +125,16 @@ CHECK_JMX()
 
 GET_PID()
 {
-	echo `ps -ef | grep java | grep "\-jar" | grep "saturn-executor.jar" | grep -v grep | awk '{print $2}' `
+    if [ -f $PID_FILE ] ; then
+        cat $PID_FILE
+    else
+        echo `ps -ef | grep java | grep "\-jar" | grep "saturn-executor.jar" | grep -v grep | awk '{print $2}' `
+    fi
+}
+
+GET_LOGDIR()
+{
+    echo `ps -ef | grep java | grep "\-jar" | grep "saturn-executor.jar" | grep $1 | sed -r 's/.*HeapDumpPath=(.*)/\1/' | awk '{print $1}'`
 }
 
 CHECK_PARAMETERS()
@@ -221,15 +230,19 @@ START()
 
 STOP()
 {	
-	if [ -f $PID_FILE ] ; then
-		PID=`cat $PID_FILE`
-	else
-		PID=$(GET_PID)
-	fi
-
-	stoptime=0  
+    PID=$(GET_PID)
+	stoptime=0
     if [ "$PID" != "" ]; then
 		if [ -d /proc/$PID ];then
+		    LOGDIR=$(GET_LOGDIR ${PID})
+            # do the thread dump
+            echo "Thread dump before stop executor."
+            LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
+            jstack -l $PID > $LOGDIR/dump_$LOG_FILE_POSTFIX.log
+            # backup gc log
+            echo "Backup gc log before stop executor."
+            cp $LOGDIR/gc.log $LOGDIR/gc_$LOG_FILE_POSTFIX.log
+
 			RUN_PARAMS=`cat ${STATUS_FILE}`
 			echo "Saturn executor is stopping,pid is ${PID}, params are : ${RUN_PARAMS}."	
 			while [ -d /proc/$PID ]; do
