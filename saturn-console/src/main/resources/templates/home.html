@@ -20,7 +20,7 @@
 	                <a class="navbar-brand" href="#">Saturn Console</a>
 	            </div>
                 <div class="navbar-header">
-                    <span class="navbar-brand">当前命名空间：<span id="activated-reg-center" th:text="${activated_config}?${activated_config.nameAndNamespace}:未连接"></span></span>
+                    <span class="navbar-brand">当前域：<span id="activated-reg-center" th:text="${activated_config}?${activated_config.nameAndNamespace}:未连接"></span></span>
                 </div>
                 <div class="navbar-header">
                     <span class="navbar-brand">所属集群：<span id="activated-zk" th:text="${activated_config}?${activated_config.zkAlias}:未连接"></span></span>

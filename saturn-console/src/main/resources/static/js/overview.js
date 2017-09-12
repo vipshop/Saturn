@@ -89,7 +89,7 @@ $(function() {
 		return true;
 	};
 	regName = $("#regNameFromServer").val();
-	window.parent.setRegName(regName, $("#zkAlias").val(),$("#namespace").val());
+	window.parent.setRegName($("#namespace").val(), $("#zkAlias").val());
     window.parent.reloadTreeAndExpandJob(regName);
     $("#jobviews-status-showall-btn").click(function(){
     	filterJobs("","");

@@ -18,7 +18,7 @@ $(function() {
       }).focus();
 
 });
-var tree, sideBarOverlay = $("#sidebar-overlay"), rp = $("#activated-reg-center").parent(), $regNameParent = $(rp);
+var tree, sideBarOverlay = $("#sidebar-overlay");
 
 function reloadTreeData() {
 	tree.reload();
@@ -123,22 +123,18 @@ function focusAndActiveJob(jobName) {
 	}
 }
 
-function setRegName(regName,zkAlias, ns) {
+function setRegName(regName,zkAlias) {
 	if (regName) {
 		$("#activated-reg-center").html(regName);
 	}
 	if(zkAlias) {
 		$("#activated-zk").html(zkAlias);
 	}
-	if (ns) {
-		$regNameParent.attr("title", "域名："+ns);
-	}
 }
 
 function releaseRegName() {
     $("#activated-reg-center").html("未连接");
     $("#activated-zk").html("未连接");
-    $regNameParent.removeAttr("title");
 }
 
 function setActiveTab(tabName) {
