@@ -27,6 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
+import com.vip.saturn.job.console.mybatis.service.NamespaceVersionMappingService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +57,9 @@ public class RegistryCenterController extends AbstractController {
 
 	@Resource
 	private JobDimensionService jobDimensionService;
+
+	@Resource
+	private NamespaceVersionMappingService namespaceVersionMappingService;
 
 	@RequestMapping(value = "getNamespaceInfo", method = RequestMethod.GET)
 	public RequestResult getNamespaceInfo(final HttpSession session) {
@@ -142,4 +148,47 @@ public class RegistryCenterController extends AbstractController {
 		return jobDimensionService.getAllJobsBriefInfo(null, null);
 	}
 
+	@RequestMapping(value = "updateNamespaceVersionMapping", method = {RequestMethod.POST, RequestMethod.GET})
+	public RequestResult updateNamespaceVersionMapping(HttpServletRequest request, String namespace, String versionNumber, Integer isForced) {
+		RequestResult requestResult = new RequestResult();
+		if(StringUtils.isBlank(namespace)) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage("the namespace is required");
+			return requestResult;
+		}
+		if(StringUtils.isBlank(versionNumber)) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage("the versionNumber is required");
+			return requestResult;
+		}
+		if(isForced == null) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage("the isForced is required");
+			return requestResult;
+		}
+		try {
+			namespaceVersionMappingService.insertOrUpdate(namespace, versionNumber, isForced, "");
+			requestResult.setSuccess(true);
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "getNamespaceVersionMappingList", method = RequestMethod.GET)
+	public RequestResult getNamespaceVersionMappingList(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<NamespaceVersionMapping> namespaceVersionMappingList = namespaceVersionMappingService.selectAllWithNotDeleted();
+			requestResult.setObj(namespaceVersionMappingList);
+			requestResult.setSuccess(true);
+		} catch (Throwable t) {
+			LOGGER.error(t.getMessage(), t);
+			requestResult.setSuccess(false);
+			requestResult.setMessage(t.toString());
+		}
+		return requestResult;
+	}
 }

@@ -4,6 +4,8 @@ import org.springframework.stereotype.Repository;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
 
+import java.util.List;
+
 /**
  * 
  * @author hebelala
@@ -12,6 +14,12 @@ import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
 @Repository
 public interface NamespaceVersionMappingRepository {
 
-	Integer insert(NamespaceVersionMapping namespaceVersionMapping);
+	int insert(NamespaceVersionMapping namespaceVersionMapping);
+
+	int update(NamespaceVersionMapping namespaceVersionMapping);
+
+	NamespaceVersionMapping selectByNamespace(String namespace);
+
+	List<NamespaceVersionMapping> selectAllWithNotDeleted();
 
 }
