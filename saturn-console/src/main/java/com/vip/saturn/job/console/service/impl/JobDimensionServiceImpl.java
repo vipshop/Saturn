@@ -16,6 +16,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
@@ -996,6 +997,61 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
+	public String getAllExecutorsOfNamespace() {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+
+		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
+			return null;
+		}
+		StringBuilder allExecutorsBuilder = new StringBuilder();
+		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
+		if (executors != null && executors.size() > 0) {
+			for (String executor : executors) {
+				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
+					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
+				}
+				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
+				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
+					allExecutorsBuilder.append(executor + "(" + ip + ")").append(",");
+					continue;
+				}
+			}
+		}
+
+		String containerTaskIdsStr = generateContainerTaskIdStr(curatorFrameworkOp);
+		allExecutorsBuilder.append(containerTaskIdsStr);
+
+		return allExecutorsBuilder.toString();
+	}
+
+	private String generateContainerTaskIdStr(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		StringBuilder containerTaskIdsBuilder = new StringBuilder();
+		List<String> containerTaskIds;
+
+		containerTaskIds = getContainerTaskIds(curatorFrameworkOp);
+
+		if (!CollectionUtils.isEmpty(containerTaskIds)) {
+			for (String containerTaskId : containerTaskIds) {
+				containerTaskIdsBuilder.append(containerTaskId + "(容器资源)").append(",");
+			}
+		}
+
+		return containerTaskIdsBuilder.toString();
+	}
+
+	private List<String> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> containerTaskIds = Lists.newArrayList();
+
+		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
+		if (curatorFrameworkOp.checkExists(containerNodePath)) {
+			containerTaskIds = curatorFrameworkOp.getChildren(containerNodePath);
+		}
+
+		return containerTaskIds;
+	}
+
+	@Override
 	public JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException {
 		JobMigrateInfo jobMigrateInfo = new JobMigrateInfo();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
@@ -1564,6 +1620,40 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				throw new SaturnJobConsoleException(jobName + ":" + e.getMessage());
 			}
 		}
+	}
+
+	@Override
+	public void batchSetPreferExecutors(String jobNames, String executorListStr) throws SaturnJobConsoleException {
+		for (String jobName : jobNames.split(",")) {
+			try {
+				this.setPreferExecutors(jobName, executorListStr);
+			} catch (SaturnJobConsoleException e) {
+				throw new SaturnJobConsoleException(jobName + ":" + e.getMessage());
+			}
+		}
+	}
+
+	@Transactional
+	@Override
+	public void setPreferExecutors(String jobName, String executorListStr) throws SaturnJobConsoleException {
+		try {
+			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
+			savePreferList2DBAndZK(jobName, executorListStr, curatorRepository.inSessionClient(), jobConfigPreferListNodePath);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private void savePreferList2DBAndZK(String jobName, String executorListStr, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobConfigPreferListNodePath) throws SaturnJobConsoleException {
+		savePreferListToDb(jobName, curatorFrameworkOp, executorListStr);
+		curatorFrameworkOp.update(jobConfigPreferListNodePath, executorListStr);
+		// delete and create the forceShard node
+		String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
+		curatorFrameworkOp.delete(jobConfigForceShardNodePath);
+		curatorFrameworkOp.create(jobConfigForceShardNodePath);
 	}
 
 	private List<String> getPreferTasksByJobName(String jobName) {

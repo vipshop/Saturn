@@ -1,5 +1,8 @@
 package com.vip.saturn.job.console.mybatis.service;
 
+import java.util.List;
+
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
 
 /**
@@ -10,6 +13,14 @@ import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
 public interface ReleaseVersionInfoService {
 
 	ReleaseVersionInfo selectByNamespace(String namespace);
-	
-	int insert(ReleaseVersionInfo releaseVersionInfo);
+
+	ReleaseVersionInfo selectByVersionNumber(String versionNumber);
+
+	List<ReleaseVersionInfo> getVersions();
+
+	int insert(ReleaseVersionInfo releaseVersionInfo) throws SaturnJobConsoleException;
+
+	boolean isInUsing(String versionNumber);
+
+	int deleteByVersionNumber(String versionNumber) throws SaturnJobConsoleException;
 }

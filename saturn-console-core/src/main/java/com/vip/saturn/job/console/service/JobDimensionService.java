@@ -80,6 +80,11 @@ public interface JobDimensionService {
 
 	String getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
+	/**
+	 * 返回namespace下所有online的executor/taskId（容器）.
+	 */
+	String getAllExecutorsOfNamespace();
+
 	JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException;
 
 	JobMigrateInfo getJobMigrateInfo(String jobName) throws SaturnJobConsoleException;
@@ -87,6 +92,10 @@ public interface JobDimensionService {
 	void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
 
 	void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException;
+
+	void setPreferExecutors(String jobName, String executorListStr) throws SaturnJobConsoleException;
+
+	void batchSetPreferExecutors(String jobNames, String executorListStr) throws SaturnJobConsoleException;
 
 	Collection<JobBriefInfo> getAllJobsBriefInfo4Tree();
 
