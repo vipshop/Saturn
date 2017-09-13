@@ -46,4 +46,9 @@ public class NamespaceVersionMappingServiceImpl implements NamespaceVersionMappi
     public List<NamespaceVersionMapping> selectAllWithNotDeleted() {
         return namespaceVersionMappingRepository.selectAllWithNotDeleted();
     }
+
+	@Override
+	public NamespaceVersionMapping selectByNamespace(String namespace) {
+		return namespaceVersionMappingRepository.selectByNamespace(namespace);
+	}
 }
