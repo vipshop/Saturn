@@ -186,3 +186,19 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   UNIQUE KEY `uniq_namespace` (`namespace`),
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `namespace_version_mapping` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
+  `version_number` varchar(255) NOT NULL DEFAULT '' COMMENT '版本号',
+  `is_forced` tinyint(1) DEFAULT '0' COMMENT '当前版本已经不低于该版本时，是否强制使用该配置版本：0，不强制；1，强制',
+  `create_time` timestamp NOT NULL DEFAULT NULL COMMENT '创建时间',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `last_update_time` timestamp NOT NULL DEFAULT NULL COMMENT '最近更新时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_namespace_version_number` (`namespace`,`version_number`),
+  KEY `idx_version_number` (`version_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
