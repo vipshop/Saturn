@@ -11,7 +11,6 @@ import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
@@ -20,9 +19,6 @@ import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
@@ -42,8 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -57,7 +51,9 @@ public class SaturnExecutor {
 
 	private static SaturnExecutorExtension saturnExecutorExtension;
 
-	protected ZookeeperRegistryCenter regCenter;
+	private ZookeeperRegistryCenter regCenter;
+
+	private FixedConnectionStateListener connectionLostListener;
 
 	private String executorName;
 
@@ -71,8 +67,6 @@ public class SaturnExecutor {
 
 	private ZookeeperConfiguration zkConfig;
 
-	private ExecutorService executor;
-
 	private SaturnExecutorService saturnExecutorService;
 
 	private ResetCountService resetCountService;
@@ -81,16 +75,48 @@ public class SaturnExecutor {
 
 	private boolean isShutdown;
 
-	private AtomicBoolean restarting = new AtomicBoolean(false);
+	private volatile boolean needRestart = false;
+
+	private Thread restartThread;
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.executorClassLoader = executorClassLoader;
 		this.jobClassLoader = jobClassLoader;
+		initRestartThread();
+	}
 
-		executor = Executors
-				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-zk-reconnect-thread", false));
+	private void initRestartThread() {
+		final String restartThreadName = executorName + "-restart-thread";
+		this.restartThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					while (true) {
+						if (isShutdown) {
+							return;
+						}
+						if (needRestart) {
+							try {
+								needRestart = false;
+								execute();
+							} catch (InterruptedException e) {
+								throw e;
+							} catch (Throwable t) {
+								needRestart = true;
+								LOGGER.error("The executor " + executorName + " restart failed, will retry again.", t);
+							}
+						}
+						Thread.sleep(1000L);
+					}
+				} catch (InterruptedException e) {
+					LOGGER.info("{} is interrupted", restartThreadName);
+				}
+			}
+		}, restartThreadName);
+		this.restartThread.setDaemon(false);
+		this.restartThread.start();
 	}
 	
 	/**
@@ -215,82 +241,6 @@ public class SaturnExecutor {
 		return scheduler.init();
 	}
 
-	class ConnectionLostListener implements ConnectionStateListener {
-
-		private AtomicBoolean connected = new AtomicBoolean(false);
-		
-		private long getSessionId(CuratorFramework client) {
-			long sessionId;
-			try {
-				sessionId = client.getZookeeperClient().getZooKeeper().getSessionId();
-			} catch (Exception e) {// NOSONAR
-				return -1;
-			}
-			return sessionId;
-		}
-
-		@Override
-		public void stateChanged(final CuratorFramework client, final ConnectionState newState) {
-			// 使用single thread executor严格保证ZK事件执行的顺序性，避免并发性问题
-			if (ConnectionState.SUSPENDED == newState) {
-				connected.set(false);
-				if(restarting.compareAndSet(false, true)) {
-					LOGGER.warn("The executor {} found zk is SUSPENDED", executorName);
-					final long sessionId = getSessionId(client);
-					executor.submit(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								do {
-									try {
-										Thread.sleep(1000L);
-									} catch (InterruptedException e) {
-									}
-									if (isShutdown) {
-										return;
-									}
-									long newSessionId = getSessionId(client);
-									if (sessionId != newSessionId) {
-										LOGGER.warn("The executor {} is going to restart for zk lost, client: {}", executorName, client);
-										restart();
-										return;
-									}
-								} while (!isShutdown && !connected.get());
-							} finally {
-								restarting.set(false);
-							}
-						}
-					});
-				}
-			} else if (ConnectionState.RECONNECTED == newState) {
-				LOGGER.warn("The executor {} found zk is RECONNECTED", executorName);
-				connected.set(true);
-			}
-		}
-	}
-	
-	private void restart() {
-		while (true) {
-			try {
-				execute();
-				break;
-			} catch (InterruptedException e) {
-				LOGGER.warn("The executor {} restart is interrupted, and exit the restart process.", executorName);
-				break;
-			} catch (Throwable t) {
-				LOGGER.error("The executor " + executorName + " restart failed, will retry again.", t);
-			}
-
-			try {
-				Thread.sleep(1000L);
-			} catch (InterruptedException e) {
-				LOGGER.warn("The executor {} restart is interrupted, and exit the restart process.", executorName);
-				break;
-			}
-		}
-	}
-
-
 	public void execute() throws Exception {
 		shutdownLock.lockInterruptibly();
 
@@ -328,7 +278,12 @@ public class SaturnExecutor {
 					// 初始化注册中心
 					LOGGER.info("start to init reg center.");
 					regCenter.init();
-					ConnectionLostListener connectionLostListener = new ConnectionLostListener();
+					connectionLostListener = new FixedConnectionStateListener(executorName) {
+						@Override
+						public void whenLost() {
+							needRestart = true;
+						}
+					};
 					regCenter.addConnectionStateListener(connectionLostListener);
 		
 					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
@@ -409,7 +364,7 @@ public class SaturnExecutor {
 								shutdownLock.lockInterruptibly();
 								try {
 									shutdownGracefully0();
-									executor.shutdownNow();
+									restartThread.interrupt();
 									isShutdown = true;
 								} finally {
 									shutdownLock.unlock();
@@ -476,6 +431,9 @@ public class SaturnExecutor {
 			shutdownUnfinishJob();
 			if(saturnExecutorService != null) {
 				saturnExecutorService.shutdown();
+			}
+			if (connectionLostListener != null) {
+				connectionLostListener.close();
 			}
 			if (regCenter != null) {
 				regCenter.close();
@@ -578,6 +536,7 @@ public class SaturnExecutor {
 		shutdownLock.lockInterruptibly();
 		try {
 			shutdown0();
+			restartThread.interrupt();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
@@ -589,6 +548,7 @@ public class SaturnExecutor {
 		shutdownLock.lockInterruptibly();
 		try {
 			shutdownGracefully0();
+			restartThread.interrupt();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
