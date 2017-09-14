@@ -42,7 +42,7 @@ public class NamespaceShardingServiceTest {
 		String ip1 = "127.0.0.1";
 		CuratorFramework curatorFramework1 = nestedZkUtils.createClient(namespace);
 		NamespaceShardingManager namespaceShardingManager1 = new NamespaceShardingManager(curatorFramework1, namespace,
-				ip1, null, true);
+				ip1, null);
 		namespaceShardingManager1.start();
 
 		Thread.sleep(1000);
@@ -55,7 +55,7 @@ public class NamespaceShardingServiceTest {
 		String ip2 = "127.0.0.2";
 		CuratorFramework curatorFramework2 = nestedZkUtils.createClient(namespace);
 		NamespaceShardingManager namespaceShardingManager2 = new NamespaceShardingManager(curatorFramework2, namespace,
-				ip2, null, true);
+				ip2, null);
 		namespaceShardingManager2.start();
 
 		Thread.sleep(1000);
@@ -68,7 +68,7 @@ public class NamespaceShardingServiceTest {
 		String ip3 = "127.0.0.3";
 		CuratorFramework curatorFramework3 = nestedZkUtils.createClient(namespace);
 		NamespaceShardingManager namespaceShardingManager3 = new NamespaceShardingManager(curatorFramework3, namespace,
-				ip3, null, true);
+				ip3, null);
 		namespaceShardingManager3.start();
 
 		Thread.sleep(1000);
