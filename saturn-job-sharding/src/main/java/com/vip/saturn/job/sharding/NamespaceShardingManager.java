@@ -36,12 +36,12 @@ public class NamespaceShardingManager {
 	private String zkClusterKey;
 
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue,
-									ReportAlarmService reportAlarmService, boolean isDifferentiateContainer) {
+									ReportAlarmService reportAlarmService) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
 		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue,
-				reportAlarmService, isDifferentiateContainer);
+				reportAlarmService);
 		this.executorCleanService = new ExecutorCleanService(curatorFramework);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService,
 				shardingTreeCacheService);

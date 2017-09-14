@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.zookeeper.CreateMode;
@@ -33,11 +34,11 @@ public class NamespaceShardingService {
 
 	private static final int LOAD_LEVEL_DEFAULT = 1;
 
+	private static final String NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL = "IS_CONTAINER_ALIGN_WITH_PHYSICAL";
+
 	private String namespace;
 
 	private String hostValue;
-
-	private boolean isDifferentiateContainer;
 
 	private CuratorFramework curatorFramework;
 
@@ -54,11 +55,10 @@ public class NamespaceShardingService {
 	private ReentrantLock lock;
 
 	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue,
-									ReportAlarmService reportAlarmService, boolean isDifferentiateContainer) {
+									ReportAlarmService reportAlarmService) {
 		this.curatorFramework = curatorFramework;
 		this.hostValue = hostValue;
 		this.reportAlarmService = reportAlarmService;
-		this.isDifferentiateContainer = isDifferentiateContainer;
 		this.shardingCount = new AtomicInteger(0);
 		this.needAllSharding = new AtomicBoolean(false);
 		this.executorService = newSingleThreadExecutor();
@@ -421,11 +421,13 @@ public class NamespaceShardingService {
 			});
 		}
 
-		/**
-		 * if isDifferentiateContainer = false, return all executors; otherwise, return all non-container executors.
-		 */
 		private List<Executor> getExecutors(List<Executor> lastOnlineExecutorList) throws Exception {
-			if (!isDifferentiateContainer) {
+			String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
+					System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
+			boolean isContainerAlignWithPhysical = StringUtils.isNotBlank(isContainerAlignWithPhysicalStr) ?
+					Boolean.parseBoolean(isContainerAlignWithPhysicalStr) : true;
+			// if isContainerAlignWithPhysical = false, return all executors; otherwise, return all non-container executors.
+			if (isContainerAlignWithPhysical) {
 				return lastOnlineExecutorList;
 			}
 

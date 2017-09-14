@@ -231,10 +231,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (client != null) {
 				NamespaceShardingManager namespaceShardingManager = null;
 				try {
-					boolean isDifferentiateContainer = systemConfigService
-							.getBooleanValue(SystemConfigProperties.IS_CONTAINER_DIFFERENTIATE, true);
 					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
-							generateShardingLeadershipHostValue(), reportAlarmService, isDifferentiateContainer);
+							generateShardingLeadershipHostValue(), reportAlarmService);
 					namespaceShardingManager.start();
 					if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
 						try {
