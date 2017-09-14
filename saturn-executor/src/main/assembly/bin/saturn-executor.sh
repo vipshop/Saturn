@@ -236,12 +236,12 @@ STOP()
 		if [ -d /proc/$PID ];then
 		    LOGDIR=$(GET_LOGDIR ${PID})
             # do the thread dump
-            echo "Thread dump before stop executor."
             LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
             jstack -l $PID > $LOGDIR/dump_$LOG_FILE_POSTFIX.log
+            echo "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
             # backup gc log
-            echo "Backup gc log before stop executor."
             cp $LOGDIR/gc.log $LOGDIR/gc_$LOG_FILE_POSTFIX.log
+            echo "\nBackup gc log done: gc_${LOG_FILE_POSTFIX}.log"
 
 			RUN_PARAMS=`cat ${STATUS_FILE}`
 			echo "Saturn executor is stopping,pid is ${PID}, params are : ${RUN_PARAMS}."	
