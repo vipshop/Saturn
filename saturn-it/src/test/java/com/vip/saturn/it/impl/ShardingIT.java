@@ -3,6 +3,7 @@ package com.vip.saturn.it.impl;
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
@@ -27,6 +28,8 @@ public class ShardingIT extends AbstractSaturnIT {
 	@BeforeClass
 	public static void setUp() throws Exception {
 		startSaturnConsoleList(1);
+
+		System.setProperty("VIP_SATURN_CONTAINER_ALIGN_WITH_PHYSICAL", "false");
 	}
 
 	@AfterClass

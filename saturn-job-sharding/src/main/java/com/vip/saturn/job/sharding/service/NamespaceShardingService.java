@@ -34,7 +34,7 @@ public class NamespaceShardingService {
 
 	private static final int LOAD_LEVEL_DEFAULT = 1;
 
-	private static final String NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL = "IS_CONTAINER_ALIGN_WITH_PHYSICAL";
+	private static final String NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL = "VIP_SATURN_CONTAINER_ALIGN_WITH_PHYSICAL";
 
 	private String namespace;
 
