@@ -43,9 +43,9 @@ public abstract class FixedConnectionStateListener implements ConnectionStateLis
 		if (closed) {
 			return;
 		}
+		final String clientStr = client.toString();
 		if (ConnectionState.SUSPENDED == newState) {
 			connected = false;
-			String clientStr = client.toString();
 			LOGGER.warn("The executor {} found zk is SUSPENDED, client is {}", executorName, clientStr);
 			final long sessionId = getSessionId(client);
 			if (!closed) {
@@ -63,7 +63,7 @@ public abstract class FixedConnectionStateListener implements ConnectionStateLis
 							long newSessionId = getSessionId(client);
 							if (sessionId != newSessionId) {
 								LOGGER.warn("The executor {} is going to restart for zk lost, client is {}",
-										executorName, client);
+										executorName, clientStr);
 								whenLost();
 								break;
 							}
@@ -72,7 +72,7 @@ public abstract class FixedConnectionStateListener implements ConnectionStateLis
 				});
 			}
 		} else if (ConnectionState.RECONNECTED == newState) {
-			LOGGER.warn("The executor {} found zk is RECONNECTED, client is {}", executorName, client);
+			LOGGER.warn("The executor {} found zk is RECONNECTED, client is {}", executorName, clientStr);
 			connected = true;
 		}
 	}
