@@ -7,12 +7,16 @@ import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
 import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
+import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.AlarmUtils;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.ResourceUtils;
+import com.vip.saturn.job.utils.SaturnUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
@@ -32,12 +36,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -77,12 +84,16 @@ public class SaturnExecutor {
 
 	private Thread restartThread;
 
+	private ExecutorService raiseAlarmExecutorService;
+
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.executorClassLoader = executorClassLoader;
 		this.jobClassLoader = jobClassLoader;
+		this.raiseAlarmExecutorService = Executors
+				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
 		initRestartThread();
 	}
 
@@ -298,6 +309,7 @@ public class SaturnExecutor {
 						@Override
 						public void onLost() {
 							needRestart = true;
+							raiseAlarm();
 						}
 					};
 					regCenter.addConnectionStateListener(connectionLostListener);
@@ -381,6 +393,7 @@ public class SaturnExecutor {
 								try {
 									shutdownGracefully0();
 									restartThread.interrupt();
+									raiseAlarmExecutorService.shutdownNow();
 									isShutdown = true;
 								} finally {
 									shutdownLock.unlock();
@@ -404,6 +417,36 @@ public class SaturnExecutor {
 		} finally {
 			shutdownLock.unlock();
 		}
+	}
+
+	private void raiseAlarm() {
+		LOGGER.info("raise alarm to console for restarting event.");
+		raiseAlarmExecutorService.submit(new Runnable() {
+			@Override
+			public void run() {
+				raiseAlarm2Console(namespace, executorName);
+			}
+		});
+	}
+
+	protected void raiseAlarm2Console(String namespace, String executorName) {
+		Map<String, Object> alarmInfo = constructAlarmInfo(namespace, executorName);
+		try {
+			AlarmUtils.raiseAlarm(alarmInfo, namespace);
+		} catch (Throwable t) {
+			LOGGER.warn("cannot raise alarm", t);
+		}
+	}
+
+	protected Map<String,Object> constructAlarmInfo(String namespace, String executorName) {
+		Map<String, Object> alarmInfo = new HashMap<>();
+		alarmInfo.put("executorName", executorName);
+		alarmInfo.put("name", "Saturn Event");
+		alarmInfo.put("title", "Executor_Restart");
+		alarmInfo.put("level", "WARNING");
+		alarmInfo.put("message", "Executor_Restart: namespace:["  + namespace + "] executor:[" + executorName + "] restart on " + SaturnUtils.convertTime2FormattedString(System.currentTimeMillis()));
+
+		return alarmInfo;
 	}
 
 	private void shutdownAllCountThread() {
@@ -555,6 +598,7 @@ public class SaturnExecutor {
 		try {
 			shutdown0();
 			restartThread.interrupt();
+			raiseAlarmExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
@@ -567,6 +611,7 @@ public class SaturnExecutor {
 		try {
 			shutdownGracefully0();
 			restartThread.interrupt();
+			raiseAlarmExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {

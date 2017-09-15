@@ -112,11 +112,6 @@ public class AlarmUtils {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "alarmInfo cannot be null.");
 		}
 
-		String jobName = (String) alarmInfo.get("jobName");
-		if (StringUtils.isBlank(jobName)) {
-			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "jobName cannot be blank.");
-		}
-
 		String level = (String) alarmInfo.get("level");
 		if (StringUtils.isBlank(level)) {
 			throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, "level cannot be blank.");
