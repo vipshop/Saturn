@@ -53,7 +53,7 @@ public class SaturnExecutor {
 
 	private ZookeeperRegistryCenter regCenter;
 
-	private FixedConnectionStateListener connectionLostListener;
+	private EnhancedConnectionStateListener connectionLostListener;
 
 	private String executorName;
 
@@ -278,9 +278,9 @@ public class SaturnExecutor {
 					// 初始化注册中心
 					LOGGER.info("start to init reg center.");
 					regCenter.init();
-					connectionLostListener = new FixedConnectionStateListener(executorName) {
+					connectionLostListener = new EnhancedConnectionStateListener(executorName) {
 						@Override
-						public void whenLost() {
+						public void onLost() {
 							needRestart = true;
 						}
 					};

@@ -13,16 +13,16 @@ import java.util.concurrent.Executors;
 /**
  * @author hebelala
  */
-public abstract class FixedConnectionStateListener implements ConnectionStateListener {
+public abstract class EnhancedConnectionStateListener implements ConnectionStateListener {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(FixedConnectionStateListener.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(EnhancedConnectionStateListener.class);
 
 	private String executorName;
 	private volatile boolean connected = false;
 	private volatile boolean closed = false;
 	private ExecutorService checkLostThread;
 
-	public FixedConnectionStateListener(String executorName) {
+	public EnhancedConnectionStateListener(String executorName) {
 		this.executorName = executorName;
 		this.checkLostThread = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-check-lost-thread", false));
@@ -64,7 +64,7 @@ public abstract class FixedConnectionStateListener implements ConnectionStateLis
 							if (sessionId != newSessionId) {
 								LOGGER.warn("The executor {} is going to restart for zk lost, client is {}",
 										executorName, clientStr);
-								whenLost();
+								onLost();
 								break;
 							}
 						} while (!closed && !connected);
@@ -77,7 +77,7 @@ public abstract class FixedConnectionStateListener implements ConnectionStateLis
 		}
 	}
 
-	public abstract void whenLost();
+	public abstract void onLost();
 
 	public void close() {
 		this.closed = true;
