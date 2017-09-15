@@ -20,12 +20,13 @@ public class NamespaceVersionMappingServiceImpl implements NamespaceVersionMappi
     private NamespaceVersionMappingRepository namespaceVersionMappingRepository;
 
     @Override
-    public int insertOrUpdate(String namespace, String versionNumber, int isForced, String who) {
+    public int insertOrUpdate(String namespace, String versionNumber, boolean isForced, String who) {
         NamespaceVersionMapping namespaceVersionMapping = namespaceVersionMappingRepository.selectByNamespace(namespace);
         if(namespaceVersionMapping != null) {
             namespaceVersionMapping.setVersionNumber(versionNumber);
             namespaceVersionMapping.setIsForced(isForced);
             namespaceVersionMapping.setLastUpdatedBy(who);
+            namespaceVersionMapping.setIsDeleted(false);
             return namespaceVersionMappingRepository.update(namespaceVersionMapping);
         } else {
             namespaceVersionMapping = new NamespaceVersionMapping();
@@ -37,6 +38,7 @@ public class NamespaceVersionMappingServiceImpl implements NamespaceVersionMappi
             namespaceVersionMapping.setCreateTime(now);
             namespaceVersionMapping.setLastUpdatedBy(who);
             namespaceVersionMapping.setLastUpdateTime(now);
+            namespaceVersionMapping.setIsDeleted(false);
             return namespaceVersionMappingRepository.insert(namespaceVersionMapping);
         }
     }

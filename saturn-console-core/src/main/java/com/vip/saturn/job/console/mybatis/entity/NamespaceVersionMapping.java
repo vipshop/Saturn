@@ -12,8 +12,8 @@ public class NamespaceVersionMapping {
 	private long id;
 	private String namespace;
 	private String versionNumber;
-	private Integer isForced;
-	private Integer isDeleted;
+	private Boolean isForced;
+	private Boolean isDeleted;
 	private Date createTime;
 	private String createdBy;
 	private Date lastUpdateTime;
@@ -43,19 +43,19 @@ public class NamespaceVersionMapping {
 		this.versionNumber = versionNumber;
 	}
 
-	public Integer getIsForced() {
+	public Boolean getIsForced() {
 		return isForced;
 	}
 
-	public void setIsForced(Integer isForced) {
+	public void setIsForced(Boolean isForced) {
 		this.isForced = isForced;
 	}
 
-	public Integer getIsDeleted() {
+	public Boolean getIsDeleted() {
 		return isDeleted;
 	}
 
-	public void setIsDeleted(Integer isDeleted) {
+	public void setIsDeleted(Boolean isDeleted) {
 		this.isDeleted = isDeleted;
 	}
 

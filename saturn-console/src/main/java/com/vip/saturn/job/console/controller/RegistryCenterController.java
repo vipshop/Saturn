@@ -149,7 +149,7 @@ public class RegistryCenterController extends AbstractController {
 	}
 
 	@RequestMapping(value = "updateNamespaceVersionMapping", method = {RequestMethod.POST, RequestMethod.GET})
-	public RequestResult updateNamespaceVersionMapping(HttpServletRequest request, String namespace, String versionNumber, Integer isForced) {
+	public RequestResult updateNamespaceVersionMapping(HttpServletRequest request, String namespace, String versionNumber, Boolean isForced) {
 		RequestResult requestResult = new RequestResult();
 		if(StringUtils.isBlank(namespace)) {
 			requestResult.setSuccess(false);

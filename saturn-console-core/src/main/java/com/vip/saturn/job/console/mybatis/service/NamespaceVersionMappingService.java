@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface NamespaceVersionMappingService {
 
-	int insertOrUpdate(String namespace, String versionNumber, int isForced, String who);
+	int insertOrUpdate(String namespace, String versionNumber, boolean isForced, String who);
 
 	List<NamespaceVersionMapping> selectAllWithNotDeleted();
 
