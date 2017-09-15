@@ -46,6 +46,7 @@
         select
         <include refid="Base_Column_List"/>
         from namespace_version_mapping
+        where is_deleted = false
     </select>
 
 </mapper>
