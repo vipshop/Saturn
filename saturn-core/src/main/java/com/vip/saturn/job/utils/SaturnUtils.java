@@ -10,7 +10,6 @@ public class SaturnUtils {
     public static String convertTime2FormattedString (long time){
         Date date = new Date(time);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-        sdf.setTimeZone(TimeZone.getDefault());
         return sdf.format(date);
     }
 }

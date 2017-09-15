@@ -3,8 +3,6 @@ package com.vip.saturn.job.executor;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.vip.saturn.job.alarm.AlarmInfo;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
@@ -378,9 +376,7 @@ public class SaturnExecutor {
 								try {
 									shutdownGracefully0();
 									restartThread.interrupt();
-									if(raiseAlarmExecutorService != null){
-										raiseAlarmExecutorService.shutdown();
-									}
+									raiseAlarmExecutorService.shutdownNow();
 									isShutdown = true;
 								} finally {
 									shutdownLock.unlock();
@@ -425,7 +421,7 @@ public class SaturnExecutor {
 	}
 
 	protected Map<String,Object> constructAlarmInfo(String namespace, String executorName) {
-		Map<String, Object> alarmInfo = Maps.newHashMap();
+		Map<String, Object> alarmInfo = new HashMap<>();
 		alarmInfo.put("executorName", executorName);
 		alarmInfo.put("name", "Saturn Event");
 		alarmInfo.put("title", "Executor_Restart");
@@ -583,9 +579,7 @@ public class SaturnExecutor {
 		try {
 			shutdown0();
 			restartThread.interrupt();
-			if(raiseAlarmExecutorService != null){
-				raiseAlarmExecutorService.shutdown();
-			}
+			raiseAlarmExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
@@ -598,9 +592,7 @@ public class SaturnExecutor {
 		try {
 			shutdownGracefully0();
 			restartThread.interrupt();
-			if(raiseAlarmExecutorService != null){
-				raiseAlarmExecutorService.shutdown();
-			}
+			raiseAlarmExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
