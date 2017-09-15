@@ -95,6 +95,7 @@ public class SaturnExecutor {
 		this.raiseAlarmExecutorService = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
 		initRestartThread();
+		registerShutdownHandler();
 	}
 
 	private void initRestartThread() {
@@ -127,6 +128,35 @@ public class SaturnExecutor {
 		}, restartThreadName);
 		this.restartThread.setDaemon(false);
 		this.restartThread.start();
+	}
+
+	/**
+	 * 注册退出时资源清理回调
+	 */
+	private void registerShutdownHandler() {
+		shutdownHandler = new Runnable() {
+			@Override
+			public void run() {
+				if (isShutdown) {
+					return;
+				}
+				try {
+					shutdownLock.lockInterruptibly();
+					try {
+						shutdownGracefully0();
+						restartThread.interrupt();
+						raiseAlarmExecutorService.shutdownNow();
+						isShutdown = true;
+					} finally {
+						shutdownLock.unlock();
+					}
+				} catch (Exception e) {
+					LOGGER.error(e.getMessage(), e);
+				}
+			}
+
+		};
+		ShutdownHandler.addShutdownCallback(executorName, shutdownHandler);
 	}
 
 	/**
@@ -378,34 +408,6 @@ public class SaturnExecutor {
 				// 启动零点清0成功数错误数线程
 				resetCountService = new ResetCountService(executorName);
 				resetCountService.startRestCountTimer();
-
-				// 注册退出时资源清理回调
-				if (shutdownHandler == null) {
-					shutdownHandler = new Runnable() {
-
-						@Override
-						public void run() {
-							if (isShutdown) {
-								return;
-							}
-							try {
-								shutdownLock.lockInterruptibly();
-								try {
-									shutdownGracefully0();
-									restartThread.interrupt();
-									raiseAlarmExecutorService.shutdownNow();
-									isShutdown = true;
-								} finally {
-									shutdownLock.unlock();
-								}
-							} catch (Exception e) {
-								LOGGER.error(e.getMessage(), e);
-							}
-						}
-
-					};
-					ShutdownHandler.addShutdownCallback(executorName, shutdownHandler);
-				}
 
 				LOGGER.info("The executor {} start successfully which used {} ms", executorName,
 						System.currentTimeMillis() - startTime);
