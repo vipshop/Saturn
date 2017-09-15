@@ -79,7 +79,7 @@ public class SaturnExecutor {
 
 	private ReentrantLock shutdownLock = new ReentrantLock();
 
-	private boolean isShutdown;
+	private volatile boolean isShutdown;
 
 	private volatile boolean needRestart = false;
 
@@ -515,6 +515,9 @@ public class SaturnExecutor {
 				shutdownUnfinishJob();
 				JobRegistry.clearExecutor(executorName);
 			} finally {
+				if (connectionLostListener != null) {
+					connectionLostListener.close();
+				}
 				if (regCenter != null) {
 					regCenter.close();
 				}
