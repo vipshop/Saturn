@@ -378,6 +378,9 @@ public class SaturnExecutor {
 								try {
 									shutdownGracefully0();
 									restartThread.interrupt();
+									if(raiseAlarmExecutorService != null){
+										raiseAlarmExecutorService.shutdown();
+									}
 									isShutdown = true;
 								} finally {
 									shutdownLock.unlock();
@@ -403,6 +406,7 @@ public class SaturnExecutor {
 	}
 
 	private void raiseAlarm() {
+		LOGGER.info("raise alarm to console for restarting event.");
 		raiseAlarmExecutorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -426,7 +430,7 @@ public class SaturnExecutor {
 		alarmInfo.put("name", "Saturn Event");
 		alarmInfo.put("title", "Executor_Restart");
 		alarmInfo.put("level", "WARNING");
-		alarmInfo.put("message", "namespace:"  + namespace + " executor:" + executorName + " restart as zk lost connection on " + SaturnUtils.convertTime2FormattedString(System.currentTimeMillis()));
+		alarmInfo.put("message", "Executor_Restart: namespace:["  + namespace + "] executor:[" + executorName + "] restart on " + SaturnUtils.convertTime2FormattedString(System.currentTimeMillis()));
 
 		return alarmInfo;
 	}
@@ -579,6 +583,9 @@ public class SaturnExecutor {
 		try {
 			shutdown0();
 			restartThread.interrupt();
+			if(raiseAlarmExecutorService != null){
+				raiseAlarmExecutorService.shutdown();
+			}
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
@@ -591,6 +598,9 @@ public class SaturnExecutor {
 		try {
 			shutdownGracefully0();
 			restartThread.interrupt();
+			if(raiseAlarmExecutorService != null){
+				raiseAlarmExecutorService.shutdown();
+			}
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {
