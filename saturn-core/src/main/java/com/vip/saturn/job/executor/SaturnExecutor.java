@@ -599,9 +599,12 @@ public class SaturnExecutor {
 	}
 
 	public void shutdown() throws Exception {
+		if (isShutdown) {
+			return;
+		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if(isShutdown) {
+			if (isShutdown) {
 				return;
 			}
 			shutdown0();
@@ -615,9 +618,12 @@ public class SaturnExecutor {
 	}
 
 	public void shutdownGracefully() throws Exception {
+		if (isShutdown) {
+			return;
+		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if(isShutdown) {
+			if (isShutdown) {
 				return;
 			}
 			shutdownGracefully0();
