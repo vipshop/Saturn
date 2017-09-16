@@ -143,6 +143,9 @@ public class SaturnExecutor {
 				try {
 					shutdownLock.lockInterruptibly();
 					try {
+						if (isShutdown) {
+							return;
+						}
 						shutdownGracefully0();
 						restartThread.interrupt();
 						raiseAlarmExecutorService.shutdownNow();
@@ -580,8 +583,14 @@ public class SaturnExecutor {
 	}
 	
 	public void shutdown() throws Exception {
+		if (isShutdown) {
+			return;
+		}
 		shutdownLock.lockInterruptibly();
 		try {
+			if (isShutdown) {
+				return;
+			}
 			shutdown0();
 			restartThread.interrupt();
 			raiseAlarmExecutorService.shutdownNow();
@@ -593,8 +602,14 @@ public class SaturnExecutor {
 	}
 	
 	public void shutdownGracefully() throws Exception {
+		if (isShutdown) {
+			return;
+		}
 		shutdownLock.lockInterruptibly();
 		try {
+			if (isShutdown) {
+				return;
+			}
 			shutdownGracefully0();
 			restartThread.interrupt();
 			raiseAlarmExecutorService.shutdownNow();

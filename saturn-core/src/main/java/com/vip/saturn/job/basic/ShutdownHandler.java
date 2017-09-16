@@ -54,7 +54,7 @@ public class ShutdownHandler implements SignalHandler {
 	
 	@Override
 	public void handle(Signal sn) {
-		log.info("msg=Saturn is shutdown...");
+		log.info("msg=Received the kill command");
 		
 		Iterator<Entry<String, List<Runnable>>> iterator = listeners.entrySet().iterator();
 		while(iterator.hasNext()) {
@@ -82,7 +82,8 @@ public class ShutdownHandler implements SignalHandler {
 			}
 		}
 		globalListeners.clear();
-		
+
+		log.info("msg=Saturn executor is closed");
 		if(exit) {
 			LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 			loggerContext.stop();
@@ -90,7 +91,7 @@ public class ShutdownHandler implements SignalHandler {
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
-				log.error("msg=" + e.getMessage(),e);
+				e.printStackTrace();
 			}
 			
 			System.exit(-1);
