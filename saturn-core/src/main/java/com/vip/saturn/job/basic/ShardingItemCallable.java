@@ -29,6 +29,10 @@ public class ShardingItemCallable {
 
 	protected boolean businessReturned = false;
 
+	protected long startTime;
+
+	protected long endTime;
+
 	public ShardingItemCallable(String jobName, Integer item, String itemValue, int timeoutSeconds,
 			SaturnExecutionContext shardingContext, AbstractSaturnJob saturnJob) {
 		super();
@@ -38,6 +42,10 @@ public class ShardingItemCallable {
 		this.timeoutSeconds = timeoutSeconds;
 		this.shardingContext = shardingContext;
 		this.saturnJob = saturnJob;
+	}
+
+	public long getExecutionTime(){
+		return endTime - startTime;
 	}
 
 	/**
@@ -135,5 +143,20 @@ public class ShardingItemCallable {
 	public AbstractSaturnJob getSaturnJob() {
 		return saturnJob;
 	}
-	
+
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
 }
