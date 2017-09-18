@@ -28,7 +28,9 @@ import javax.servlet.http.HttpSession;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
+import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceVersionMappingService;
+import com.vip.saturn.job.console.mybatis.service.ReleaseVersionInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,9 @@ public class RegistryCenterController extends AbstractController {
 
 	@Resource
 	private JobDimensionService jobDimensionService;
+
+	@Resource
+	private ReleaseVersionInfoService releaseVersionInfoService;
 
 	@Resource
 	private NamespaceVersionMappingService namespaceVersionMappingService;
@@ -167,6 +172,10 @@ public class RegistryCenterController extends AbstractController {
 			return requestResult;
 		}
 		try {
+			ReleaseVersionInfo releaseVersionInfo = releaseVersionInfoService.selectByVersionNumber(versionNumber);
+			if (releaseVersionInfo == null) {
+				throw new Exception("the versionNumber " + versionNumber + " does not exist");
+			}
 			namespaceVersionMappingService.insertOrUpdate(namespace, versionNumber, isForced, "");
 			requestResult.setSuccess(true);
 		} catch (Throwable t) {
