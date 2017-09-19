@@ -211,7 +211,7 @@ CREATE TABLE `namespace_version_mapping` (
   `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
   `last_update_time` timestamp NOT NULL DEFAULT NULL COMMENT '最近更新时间',
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace_version_number` (`namespace`,`version_number`),
   KEY `idx_version_number` (`version_number`)
