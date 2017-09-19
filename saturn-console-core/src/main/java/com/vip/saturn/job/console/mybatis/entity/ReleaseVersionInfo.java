@@ -21,7 +21,7 @@ public class ReleaseVersionInfo {
 
 	private String checkCode;
 
-	private Integer isDeleted;
+	private Boolean isDeleted;
 
 	private Date createTime;
 
@@ -71,11 +71,11 @@ public class ReleaseVersionInfo {
 		this.checkCode = checkCode;
 	}
 
-	public Integer getIsDeleted() {
+	public Boolean getIsDeleted() {
 		return isDeleted;
 	}
 
-	public void setIsDeleted(Integer isDeleted) {
+	public void setIsDeleted(Boolean isDeleted) {
 		this.isDeleted = isDeleted;
 	}
 

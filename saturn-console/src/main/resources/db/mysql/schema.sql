@@ -199,7 +199,7 @@ CREATE TABLE `release_version_info` (
   `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
   `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
-  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_release_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Saturn发布版本信息表';

@@ -7,7 +7,7 @@
         <result column="version_desc" property="versionDesc" jdbcType="VARCHAR"/>
         <result column="package_url" property="packageUrl" jdbcType="VARCHAR"/>
         <result column="check_code" property="checkCode" jdbcType="VARCHAR"/>
-        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER" />
+        <result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN" />
 	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
         <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
 	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
