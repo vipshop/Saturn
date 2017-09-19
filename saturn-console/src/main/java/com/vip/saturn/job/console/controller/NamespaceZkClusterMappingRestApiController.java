@@ -50,12 +50,12 @@ public class NamespaceZkClusterMappingRestApiController {
 			String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 
 			if (zkClusterKey == null) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+				throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
 						"The NamespaceZkClusterMapping is not configured in db for " + namespace);
 			}
 			ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 			if (zkClusterInfo == null) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+				throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
 						"The clusterKey(" + zkClusterKey + ") is not configured in db for " + namespace);
 			}
 			return new ResponseEntity<Object>(zkClusterInfo.getConnectString(), headers, HttpStatus.OK);
