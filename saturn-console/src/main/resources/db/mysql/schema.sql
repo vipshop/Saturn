@@ -189,6 +189,22 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
 
+CREATE TABLE `release_version_info` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `version_number` varchar(255) NOT NULL DEFAULT '' COMMENT '版本号',
+  `package_url` varchar(512) NOT NULL DEFAULT '' COMMENT '发布包所在的服务地址',
+  `check_code` varchar(255) NOT NULL DEFAULT '' COMMENT '发布包完整性的校验码',
+  `version_desc` varchar(2048) DEFAULT '' COMMENT '发布包描述',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_release_version_number` (`version_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Saturn发布版本信息表';
+ 
+
 CREATE TABLE `namespace_version_mapping` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
