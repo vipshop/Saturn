@@ -5,8 +5,8 @@
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
         <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
-        <result column="is_forced" property="isForced" jdbcType="INTEGER" />
-		<result column="is_deleted" property="isDeleted" jdbcType="INTEGER" />
+        <result column="is_forced" property="isForced" jdbcType="BOOLEAN" />
+		<result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN" />
 	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
         <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
 	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
@@ -21,7 +21,7 @@
         (
          #{namespace, jdbcType=VARCHAR},
          #{versionNumber, jdbcType=VARCHAR},
-         #{isForced, jdbcType=INTEGER},
+         #{isForced, jdbcType=BOOLEAN},
          #{createTime, jdbcType=TIMESTAMP}, 
          #{createdBy, jdbcType=VARCHAR},
          #{lastUpdateTime, jdbcType=TIMESTAMP},
@@ -31,7 +31,7 @@
 
     <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
         update namespace_version_mapping
-        set version_number=#{versionNumber, jdbcType=VARCHAR}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, is_forced = #{isForced, jdbcType=INTEGER}
+        set version_number=#{versionNumber, jdbcType=VARCHAR}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, is_forced = #{isForced, jdbcType=BOOLEAN}
         where namespace = #{namespace, jdbcType=BIGINT}
     </update>
 
