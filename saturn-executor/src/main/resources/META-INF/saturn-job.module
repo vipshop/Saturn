@@ -1,4 +1,0 @@
-module.name=saturn-executor
-module.type=saturn-job-executor
-#don't change this whole key:value. it will be replaced by the full version when release script is run.
-module.version=saturn-dev
