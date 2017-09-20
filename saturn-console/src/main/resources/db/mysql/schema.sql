@@ -201,7 +201,7 @@ CREATE TABLE `release_version_info` (
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
   `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_release_version_number` (`version_number`)
+  UNIQUE KEY `uniq_rvi_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Saturn发布版本信息表';
  
 
@@ -216,6 +216,6 @@ CREATE TABLE `namespace_version_mapping` (
   `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近更新人',
   `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_namespace_version_number` (`namespace`,`version_number`),
-  KEY `idx_version_number` (`version_number`)
+  UNIQUE KEY `uniq_nvm_namespace` (`namespace`),
+  KEY `idx_nvm_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名版本配置表';
