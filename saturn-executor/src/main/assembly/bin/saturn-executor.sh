@@ -241,7 +241,7 @@ STOP()
             echo "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
             # backup gc log
             cp $LOGDIR/gc.log $LOGDIR/gc_$LOG_FILE_POSTFIX.log
-            echo "\nBackup gc log done: gc_${LOG_FILE_POSTFIX}.log"
+            echo "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
 
 			RUN_PARAMS=`cat ${STATUS_FILE}`
 			echo "Saturn executor is stopping,pid is ${PID}, params are : ${RUN_PARAMS}."	
