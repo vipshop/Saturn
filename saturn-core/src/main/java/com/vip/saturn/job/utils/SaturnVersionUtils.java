@@ -17,11 +17,11 @@ import com.google.common.base.Strings;
  */
 public class SaturnVersionUtils {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SaturnVersionUtils.class);
+
 	private SaturnVersionUtils() {
 
 	}
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(SaturnVersionUtils.class);
 
 	public static String getVersion() {
 		try {
