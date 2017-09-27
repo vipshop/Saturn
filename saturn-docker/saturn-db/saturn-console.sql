@@ -1,6 +1,10 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
+CREATE DATABASE saturn_console;
+
+USE saturn_console;
+
 -- ----------------------------
 -- Table structure for `job_config`
 -- ----------------------------
