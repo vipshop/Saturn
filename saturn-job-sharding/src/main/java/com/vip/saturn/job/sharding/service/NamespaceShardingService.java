@@ -36,12 +36,11 @@ public class NamespaceShardingService {
 
 	private static final String NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL = "VIP_SATURN_CONTAINER_ALIGN_WITH_PHYSICAL";
 
+	private static boolean isContainerAlignWithPhysical;
+
 	private String namespace;
 
 	private String hostValue;
-
-	private String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
-			System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
 
 	private CuratorFramework curatorFramework;
 
@@ -56,6 +55,14 @@ public class NamespaceShardingService {
 	private ReportAlarmService reportAlarmService;
 
 	private ReentrantLock lock;
+
+	static {
+		String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
+				System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
+
+		isContainerAlignWithPhysical = StringUtils.isNotBlank(isContainerAlignWithPhysicalStr) ?
+				Boolean.parseBoolean(isContainerAlignWithPhysicalStr) : true;
+	}
 
 	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue,
 									ReportAlarmService reportAlarmService) {
