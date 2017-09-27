@@ -432,8 +432,6 @@ public class NamespaceShardingService {
 		}
 
 		private List<Executor> getExecutors(List<Executor> lastOnlineExecutorList) throws Exception {
-			boolean isContainerAlignWithPhysical = StringUtils.isNotBlank(isContainerAlignWithPhysicalStr) ?
-					Boolean.parseBoolean(isContainerAlignWithPhysicalStr) : true;
 			// if isContainerAlignWithPhysical = false, return all executors; otherwise, return all non-container executors.
 			if (isContainerAlignWithPhysical) {
 				return lastOnlineExecutorList;
