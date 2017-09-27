@@ -40,6 +40,9 @@ public class NamespaceShardingService {
 
 	private String hostValue;
 
+	private String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
+			System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
+
 	private CuratorFramework curatorFramework;
 
 	private AtomicInteger shardingCount;
@@ -422,8 +425,6 @@ public class NamespaceShardingService {
 		}
 
 		private List<Executor> getExecutors(List<Executor> lastOnlineExecutorList) throws Exception {
-			String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
-					System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
 			boolean isContainerAlignWithPhysical = StringUtils.isNotBlank(isContainerAlignWithPhysicalStr) ?
 					Boolean.parseBoolean(isContainerAlignWithPhysicalStr) : true;
 			// if isContainerAlignWithPhysical = false, return all executors; otherwise, return all non-container executors.
