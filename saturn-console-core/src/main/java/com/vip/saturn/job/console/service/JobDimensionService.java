@@ -14,7 +14,15 @@
 
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.HealthCheckJobServer;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
@@ -36,7 +44,27 @@ public interface JobDimensionService {
 
 	String getJobType(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
+	/**
+	 * Get job config from zk and also sync with the one in db.
+	 */
 	JobSettings getJobSettings(String jobName, RegistryCenterConfiguration configInSession);
+
+	/**
+	 * Get job config from zk and also sync with the one in db.
+	 *
+	 * @param jobName
+	 * @param curatorFrameworkOp zkClient that initialized by caller.
+	 * @param configInSession
+	 * @return
+	 */
+	JobSettings getJobSettings(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RegistryCenterConfiguration configInSession);
+
+	/**
+	 * Get job config from zk.
+	 *
+	 * @param curatorFrameworkOp zkClient that initialized by caller.
+	 */
+	JobSettings getJobSettingsFromZK(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
 	JobConfig getHistoryJobConfigByHistoryId(Long historyId) throws SaturnJobConsoleException;
 
@@ -106,6 +134,9 @@ public interface JobDimensionService {
 	Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
+	/**
+	 * Get all job names of current namespace.
+	 */
 	List<String> getAllJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
 	List<String> getAllUnSystemJobs(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)

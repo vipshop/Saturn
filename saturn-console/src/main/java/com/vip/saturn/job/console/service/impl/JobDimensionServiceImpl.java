@@ -17,9 +17,19 @@ package com.vip.saturn.job.console.service.impl;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
+import com.vip.saturn.job.console.domain.HealthCheckJobServer;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
@@ -28,12 +38,15 @@ import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp.CuratorTransactionOp;
 import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.utils.*;
+import com.vip.saturn.job.console.utils.BooleanWrapper;
+import com.vip.saturn.job.console.utils.ContainerNodePath;
+import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,11 +57,18 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
-
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
 
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
@@ -463,6 +483,20 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	@Override
 	public JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration configInSession) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		return getJobSettings(jobName, curatorFrameworkOp, configInSession);
+	}
+
+	@Override
+	public JobSettings getJobSettings(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RegistryCenterConfiguration configInSession) {
+		return getJobSettings(jobName, curatorFrameworkOp, configInSession, false);
+	}
+
+	@Override
+	public JobSettings getJobSettingsFromZK(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		return getJobSettings(jobName, curatorFrameworkOp, null, true);
+	}
+
+	private JobSettings getJobSettings(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RegistryCenterConfiguration configInSession, boolean isJobConfigOnly) {
 		JobSettings result = new JobSettings();
 		result.setJobName(jobName);
 		result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
@@ -509,7 +543,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		result.setEnabled(
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
 		result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
-		result.setPreferListCandidate(getAllExecutors(jobName));
+		if (!isJobConfigOnly) {
+			result.setPreferListCandidate(getAllExecutors(jobName));
+		}
 		String useDispreferList = curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
 		if (Strings.isNullOrEmpty(useDispreferList)) {
@@ -521,8 +557,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
 		result.setLocalMode(
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
-		// result.setFailover(Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName,
-		// "failover"))));
 		result.setDependencies(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies")));
 		result.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups")));
 		try {
@@ -563,19 +597,21 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 		result.setShowNormalLog(
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
-		try {
-			CurrentJobConfig jobconfig = currentJobConfigService
-					.findConfigByNamespaceAndJobName(configInSession.getNamespace(), result.getJobName());
-			// config not exists, save it to current config.
-			if (jobconfig == null) {
-				CurrentJobConfig current = mapper.map(result, CurrentJobConfig.class);
-				current.setCreateTime(new Date());
-				current.setLastUpdateTime(new Date());
-				current.setNamespace(configInSession.getNamespace());
-				currentJobConfigService.create(current);
+		if (!isJobConfigOnly) {
+			try {
+				CurrentJobConfig jobconfig = currentJobConfigService
+						.findConfigByNamespaceAndJobName(configInSession.getNamespace(), result.getJobName());
+				// config not exists, save it to current config.
+				if (jobconfig == null) {
+					CurrentJobConfig current = mapper.map(result, CurrentJobConfig.class);
+					current.setCreateTime(new Date());
+					current.setLastUpdateTime(new Date());
+					current.setNamespace(configInSession.getNamespace());
+					currentJobConfigService.create(current);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
 		return result;
 	}
