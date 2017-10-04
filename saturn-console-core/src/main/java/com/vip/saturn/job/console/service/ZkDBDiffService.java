@@ -12,7 +12,7 @@ public interface ZkDBDiffService {
      * @param clusterKey zk cluster key.
      * @return The different info organized by job.
      */
-    List<JobDiffInfo> diffByCluster(String clusterKey);
+    List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException;
 
     /**
      * Diff the config data in zk and db of namespace.

@@ -14,14 +14,22 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.ZkDBDiffService;
+import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 public class ZkDBDiffServiceImpl implements ZkDBDiffService {
@@ -45,17 +53,57 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     @Resource
     private CuratorRepository curatorRepository;
 
+    private ExecutorService diffExecutorService;
+
+    @PostConstruct
+    public void init() {
+        if (diffExecutorService != null) {
+            diffExecutorService.shutdownNow();
+        }
+        diffExecutorService = Executors
+                .newFixedThreadPool(3, new ConsoleThreadFactory("diff-zk-db-thread", false));
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (diffExecutorService != null) {
+            diffExecutorService.shutdownNow();
+        }
+    }
+
     @Override
-    public List<JobDiffInfo> diffByCluster(String clusterKey) {
+    public List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(clusterKey);
 
-        List<JobDiffInfo> resultList = Lists.newArrayList();
-        for (String namespace : namespaces) {
-            resultList.addAll(diffByNamespace(namespace));
+        List<Callable<List<JobDiffInfo>>> callableList = Lists.newArrayList();
+        for (final String namespace : namespaces) {
+            Callable<List<JobDiffInfo>> callable = new Callable<List<JobDiffInfo>>() {
+                @Override
+                public List<JobDiffInfo> call() throws Exception {
+                    return diffByNamespace(namespace);
+                }
+            };
+            callableList.add(callable);
         }
 
-        log.info("Finish diff cluster:{} which cost {}ms", clusterKey, System.currentTimeMillis() - startTime);
+        List<JobDiffInfo> resultList = Lists.newArrayList();
+        try {
+            List<Future<List<JobDiffInfo>>> results = diffExecutorService.invokeAll(callableList);
+
+            for (Future future : results) {
+                List<JobDiffInfo> jobDiffInfos = (List<JobDiffInfo>) future.get();
+                resultList.addAll(jobDiffInfos);
+            }
+        } catch (InterruptedException e) {
+            log.warn("the thread is interrupted", e);
+            throw e;
+        } catch (Exception e) {
+            log.error("exception happens during execute diff operation", e);
+        }
+
+
+        log.info("Finish diff zkcluster:{}, which cost {}ms", clusterKey, System.currentTimeMillis() - startTime);
 
         return resultList;
     }
@@ -217,7 +265,23 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             return;
         }
 
-        if (valueInDb == null || !valueInDb.equals(valueInZk)) {
+        if (valueInDb == null) {
+            // 空串与null视为相等
+            if (valueInZk instanceof String && StringUtils.isEmpty((String) valueInZk)) {
+                return;
+            }
+
+            log.debug("key:{} has difference between zk and db", key);
+            configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
+            return;
+        }
+
+        // 空串与null视为相等
+        if (valueInDb instanceof String && StringUtils.isEmpty((String) valueInDb) && StringUtils.isEmpty((String) valueInZk)) {
+            return;
+        }
+
+        if (!valueInDb.equals(valueInZk)) {
             log.debug("key:{} has difference between zk and db", key);
             configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
         }

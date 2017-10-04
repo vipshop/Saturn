@@ -42,7 +42,7 @@ function seeDiffInfoDialog(obj) {
     	var namespace = $(obj).attr('namespace');
     	$.get("zk_db_diff/diffByJob", {jobName:jobName, namespace:namespace}, function(data) {
     		if(data.success) {
-    		    var result = data.obj.configDiffInfoList;
+    		    var result = data.obj.configDiffInfos;
                 var content = "";
                 if (result && result instanceof Array){
                     for(var i in result) {

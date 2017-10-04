@@ -499,7 +499,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	private JobSettings getJobSettings(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, RegistryCenterConfiguration configInSession, boolean isJobConfigOnly) {
 		JobSettings result = new JobSettings();
 		result.setJobName(jobName);
-		result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+		result.setJobType(jobType);
+		if (JobType.JAVA_JOB.name().equals(jobType) || JobType.MSG_JOB.name().equals(jobType)) {
+			result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		}
 		result.setShardingTotalCount(Integer
 				.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
 		String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
@@ -509,7 +513,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			result.setTimeZone(timeZone);
 		}
 		result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-		result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
+		if (!JobType.MSG_JOB.name().equals(jobType)) {
+			result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
+		}
 		result.setPausePeriodDate(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
 		result.setPausePeriodTime(
@@ -553,8 +559,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		} else {
 			result.setUseDispreferList(Boolean.valueOf(useDispreferList));
 		}
-		result.setUseSerial(
-				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
 		result.setLocalMode(
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
 		result.setDependencies(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies")));
@@ -570,13 +574,15 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 		result.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
 		result.setJobMode(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode")));
-		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
-		result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
+		if (JobType.MSG_JOB.name().equals(jobType)) {
+			result.setUseSerial(
+					Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+			result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
+			result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
+		}
 		if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName, "showNormalLog")) == false) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, "showNormalLog"));
 		}
-		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-		result.setJobType(jobType);
 		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
 		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
 		if (Strings.isNullOrEmpty(enabledReport)) {
