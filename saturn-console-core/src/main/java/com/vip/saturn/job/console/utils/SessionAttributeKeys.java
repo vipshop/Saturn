@@ -12,5 +12,10 @@ public class SessionAttributeKeys {
 	public static final String LAST_VISIT_URL = "last_visit_url";
 	public static final String LOGIN_USER_NAME = "login_user_name";
 	public static final String LOGIN_USER_OA_NAME = "login_user_oa_name";
+	public static final String MOVE_NAMESPACE_BATCH_STATUS_PREFIX = "move_namespace_batch_status_prefix";
+
+	public static String getMoveNamespaceBatchStatusKey(long id) {
+		return MOVE_NAMESPACE_BATCH_STATUS_PREFIX + "_" + id;
+	}
 
 }

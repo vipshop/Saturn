@@ -28,7 +28,6 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -59,7 +58,6 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	private RegistryCenterService registryCenterService;
 
 	private ExecutorService moveNamespaceBatchThreadPool;
-	private Map<Long, MoveNamespaceBatchStatus> moveNamespaceBatchStatusMap = new ConcurrentHashMap<>();
 
 	@PostConstruct
 	public void init() {
@@ -227,8 +225,8 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	}
 
 	@Override
-	public void moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
-			final boolean updateDBOnly, final long id) throws SaturnJobConsoleException {
+	public MoveNamespaceBatchStatus moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
+			final boolean updateDBOnly) throws SaturnJobConsoleException {
 		final List<String> namespaceList = new ArrayList<>();
 		String[] split = namespaces.split(",");
 		if (split != null) {
@@ -240,11 +238,10 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			}
 		}
 		int size = namespaceList.size();
-		moveNamespaceBatchStatusMap.put(id, new MoveNamespaceBatchStatus(size));
+		final MoveNamespaceBatchStatus moveNamespaceBatchStatus = new MoveNamespaceBatchStatus(size);
 		moveNamespaceBatchThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {
-				MoveNamespaceBatchStatus moveNamespaceBatchStatus = moveNamespaceBatchStatusMap.get(id);
 				try {
 					for (String namespace : namespaceList) {
 						try {
@@ -268,28 +265,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 				}
 			}
 		});
-	}
-
-	@Override
-	public MoveNamespaceBatchStatus getMoveNamespaceBatchStatus(long id) throws SaturnJobConsoleException {
-		MoveNamespaceBatchStatus moveNamespaceBatchStatus = moveNamespaceBatchStatusMap.get(id);
-		if (moveNamespaceBatchStatus == null) {
-			throw new SaturnJobConsoleException("query no MoveNamespaceBatchStatus");
-		}
-		if (moveNamespaceBatchStatus.isFinished()) {
-			moveNamespaceBatchStatusMap.remove(id);
-		} else {
-			try {
-				Thread.sleep(400L);
-			} catch (InterruptedException e) {// NOSONAR
-			}
-		}
 		return moveNamespaceBatchStatus;
-	}
-
-	@Override
-	public void clearMoveNamespaceBatchStatus(long id) throws SaturnJobConsoleException {
-		moveNamespaceBatchStatusMap.remove(id);
 	}
 
 }
