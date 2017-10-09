@@ -84,6 +84,7 @@ public class SaturnAutoBasic {
 		System.setProperty("namespace", NAMESPACE);
 		System.setProperty("saturn.stdout", "true");
 		System.setProperty("saturn.debug", "true");
+		System.setProperty("VIP_SATURN_CONTAINER_ALIGN_WITH_PHYSICAL", "false");
 		// 必须在设置saturn.out后，才加载日志框架
 		log = LoggerFactory.getLogger(AbstractSaturnIT.class);
 	}
