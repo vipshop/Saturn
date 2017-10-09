@@ -26,6 +26,7 @@ import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 public final class CuratorSessionClientInterceptor extends HandlerInterceptorAdapter {
@@ -45,12 +46,12 @@ public final class CuratorSessionClientInterceptor extends HandlerInterceptorAda
 				response.sendRedirect(request.getContextPath() + "/registry_center_page");
 				return false;
 			}
-			request.getSession().setAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY, conf);
-			request.getSession().setAttribute(AbstractController.CURRENT_ZK_CLUSTER_KEY, conf.getZkClusterKey());
+			request.getSession().setAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY, conf);
+			request.getSession().setAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY, conf.getZkClusterKey());
 			return true;
 		}
 		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) request.getSession()
-				.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
+				.getAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY);
 		if (reg == null) {
 			response.sendRedirect(request.getContextPath() + "/registry_center_page");
 			return false;

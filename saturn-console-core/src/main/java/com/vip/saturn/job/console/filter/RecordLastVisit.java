@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
+
 /**
  * Record the last url visited.
  * 
@@ -22,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class RecordLastVisit implements Filter {
 	private static final String GET_METHOD = "get";
-	public static final String LAST_VISIT_URL = "last_vist_url";
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -46,7 +47,7 @@ public class RecordLastVisit implements Filter {
 					currentURL += "?" + queryString;
 				}
 
-				request.getSession().setAttribute(LAST_VISIT_URL, currentURL);
+				request.getSession().setAttribute(SessionAttributeKeys.LAST_VISIT_URL, currentURL);
 			}
 		}
 		if (chain != null) {

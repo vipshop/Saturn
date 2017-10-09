@@ -20,6 +20,7 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 
 /**
@@ -28,9 +29,7 @@ import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
  */
 public class AbstractController {
 
-	public static final String ACTIVATED_CONFIG_SESSION_KEY = "activated_config";
 	public static final String REQUEST_NAMESPACE_PARAM = "nns";
-	public static final String CURRENT_ZK_CLUSTER_KEY = "current_zk_cluster_key";
 
 	@Resource
 	protected RegistryCenterService registryCenterService;
@@ -63,16 +62,16 @@ public class AbstractController {
 		if (conf == null) {
 			return;
 		}
-		session.setAttribute(ACTIVATED_CONFIG_SESSION_KEY, conf);
+		session.setAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY, conf);
 		setCurrentZkClusterKey(conf.getZkClusterKey(), session);
 	}
 
 	public void setCurrentZkClusterKey(String zkClusterKey, final HttpSession session) {
-		session.setAttribute(CURRENT_ZK_CLUSTER_KEY, zkClusterKey);
+		session.setAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY, zkClusterKey);
 	}
 
 	public String getCurrentZkClusterKey(final HttpSession session) {
-		String zkClusterKey = (String) session.getAttribute(CURRENT_ZK_CLUSTER_KEY);
+		String zkClusterKey = (String) session.getAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY);
 		if (zkClusterKey == null) {
 			// if zkKey doesn't exist in map, use the first online one in map.
 			Collection<ZkCluster> zks = registryCenterService.getZkClusterList();
@@ -88,7 +87,7 @@ public class AbstractController {
 	}
 
 	public String getCurrentZkAddr(final HttpSession session) {
-		String zkClusterKey = (String) session.getAttribute(CURRENT_ZK_CLUSTER_KEY);
+		String zkClusterKey = (String) session.getAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY);
 		if (zkClusterKey != null) {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
 			if (zkCluster != null) {
@@ -108,12 +107,12 @@ public class AbstractController {
 	}
 
 	public RegistryCenterConfiguration getActivatedConfigInSession(final HttpSession session) {
-		return (RegistryCenterConfiguration) session.getAttribute(ACTIVATED_CONFIG_SESSION_KEY);
+		return (RegistryCenterConfiguration) session.getAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY);
 	}
 
 	public RegistryCenterClient getClientInSession(final HttpSession session) {
 		RegistryCenterConfiguration reg = (RegistryCenterConfiguration) session
-				.getAttribute(ACTIVATED_CONFIG_SESSION_KEY);
+				.getAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY);
 		if (reg == null) {
 			return null;
 		}
@@ -129,7 +128,7 @@ public class AbstractController {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
 				.getRequest();
 		RegistryCenterConfiguration configuration = (RegistryCenterConfiguration) request.getSession()
-				.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
+				.getAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY);
 		if (configuration != null) {
 			return configuration.getNamespace();
 		}

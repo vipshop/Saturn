@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,12 +37,11 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 
 @Controller
 @RequestMapping("/")
 public class HomeController extends AbstractController {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
 
 	@Resource
 	private JobDimensionService jobDimensionService;
@@ -136,7 +133,7 @@ public class HomeController extends AbstractController {
 			return "overview";
 		}
 		RegistryCenterConfiguration config = (RegistryCenterConfiguration) request.getSession()
-				.getAttribute(AbstractController.ACTIVATED_CONFIG_SESSION_KEY);
+				.getAttribute(SessionAttributeKeys.ACTIVATED_CONFIG_SESSION_KEY);
 		if (config == null) {
 			return "redirect:registry_center_page";
 		} else {
