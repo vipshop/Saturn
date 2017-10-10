@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -61,7 +62,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             diffExecutorService.shutdownNow();
         }
         diffExecutorService = Executors
-                .newFixedThreadPool(3, new ConsoleThreadFactory("diff-zk-db-thread", false));
+                .newFixedThreadPool(4, new ConsoleThreadFactory("diff-zk-db-thread", false));
     }
 
     @PreDestroy
@@ -73,6 +74,8 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
     @Override
     public List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException {
+        List<JobDiffInfo> resultList = Lists.newArrayList();
+
         long startTime = System.currentTimeMillis();
         List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(clusterKey);
 
@@ -87,7 +90,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             callableList.add(callable);
         }
 
-        List<JobDiffInfo> resultList = Lists.newArrayList();
         try {
             List<Future<List<JobDiffInfo>>> results = diffExecutorService.invokeAll(callableList);
 
@@ -124,7 +126,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 String jobName = dbJobConfig.getJobName();
                 log.info("start to diff job:{}", jobName);
                 if (!checkJobIsExsitInZk(jobName, zkClient)) {
-                    jobDiffInfos.add(new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, null));
+                    jobDiffInfos.add(new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
                     continue;
                 }
 
@@ -160,11 +162,11 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             JobSettings zkJobConfig = jobDimensionService.getJobSettingsFromZK(jobName, zkClient);
 
             if (dbJobConfig == null && zkJobConfig != null) {
-                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY, null);
+                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
             }
 
             if (dbJobConfig != null && zkJobConfig == null) {
-                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, null);
+                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
             }
 
             return diff(dbJobConfig, zkJobConfig, true);
@@ -192,14 +194,23 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
         List<JobDiffInfo.ConfigDiffInfo> configDiffInfos = Lists.newArrayList();
 
-        // jobClass
-        diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
+        String jobTypeInDB = dbJobConfig.getJobType();
+        // jobType
+        diff("jobType", jobTypeInDB, zkJobConfig.getJobType(), configDiffInfos);
+
+        if (JobBriefInfo.JobType.JAVA_JOB.name().equals(jobTypeInDB) || JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // jobClass
+            diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
+        }
         // shardingTotalCount
         diff("shardingTotalCount", dbJobConfig.getShardingTotalCount(), zkJobConfig.getShardingTotalCount(), configDiffInfos);
         // timeZone
         diff("timeZone", dbJobConfig.getTimeZone(), zkJobConfig.getTimeZone(), configDiffInfos);
-        // cron
-        diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
+
+        if (!JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // cron
+            diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
+        }
         // pausePeriodDate
         diff("pausePeriodDate", dbJobConfig.getPausePeriodDate(), zkJobConfig.getPausePeriodDate(), configDiffInfos);
         // pausePeriodTime
@@ -224,8 +235,13 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("preferList", dbJobConfig.getPreferList(), zkJobConfig.getPreferList(), configDiffInfos);
         // useDispreferList
         diff("useDispreferList", dbJobConfig.getUseDispreferList(), zkJobConfig.getUseDispreferList(), configDiffInfos);
-        // useSerial
-        diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
+
+        if (JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // useSerial
+            diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
+            // queueName
+            diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
+        }
         // localMode
         diff("localMode", dbJobConfig.getLocalMode(), zkJobConfig.getLocalMode(), configDiffInfos);
         // dependencies
@@ -236,14 +252,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("description", dbJobConfig.getDescription(), zkJobConfig.getDescription(), configDiffInfos);
         // jobMode
         diff("jobMode", dbJobConfig.getJobMode(), zkJobConfig.getJobMode(), configDiffInfos);
-        // queueName
-        diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
         // channelName
         diff("channelName", dbJobConfig.getChannelName(), zkJobConfig.getChannelName(), configDiffInfos);
         // showNormalLog
         diff("showNormalLog", dbJobConfig.getShowNormalLog(), zkJobConfig.getShowNormalLog(), configDiffInfos);
-        // jobType
-        diff("jobType", dbJobConfig.getJobType(), zkJobConfig.getJobType(), configDiffInfos);
         // enabledReport
         diff("enabledReport", dbJobConfig.getEnabledReport(), zkJobConfig.getEnabledReport(), configDiffInfos);
         // showNormalLog
@@ -254,7 +266,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, configDiffInfos);
             }
 
-            return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, null);
+            return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
         }
 
         return null;
@@ -309,7 +321,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         if (jobNamesInZk.size() > jobNamesInDb.size()) {
             for (String name : jobNamesInZk) {
                 if (!jobNamesInDb.contains(name)) {
-                    jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, null));
+                    jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
                 }
             }
         }
