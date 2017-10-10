@@ -117,7 +117,7 @@ public class ZkClusterMappingUtils {
 	 * 
 	 * @param systemConfigService
 	 * @param zkClusterKey
-	 * @return
+	 * @return IDC标识
 	 * @throws SaturnJobConsoleException
 	 */
 	public static String getIdcByConsoleId(SystemConfigService systemConfigService, String consoleId)
@@ -156,7 +156,7 @@ public class ZkClusterMappingUtils {
 	 * 
 	 * @param systemConfigService
 	 * @param zkClusterKey
-	 * @return
+	 * @return 是否在同一个IDC
 	 */
 	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey) {
 		try {
@@ -182,7 +182,7 @@ public class ZkClusterMappingUtils {
 	 * 
 	 * @param systemConfigService
 	 * @param idc
-	 * @return
+	 * @return console的域名
 	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByIdc(SystemConfigService systemConfigService, String idc)
@@ -221,7 +221,7 @@ public class ZkClusterMappingUtils {
 	 * 
 	 * @param systemConfigService
 	 * @param zkClusterKey
-	 * @return
+	 * @return console的域名
 	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
@@ -242,7 +242,7 @@ public class ZkClusterMappingUtils {
 	 * 
 	 * @param systemConfigService
 	 * @param mappingName
-	 * @return
+	 * @return 映射关系值
 	 * @throws SaturnJobConsoleException
 	 */
 	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName)
