@@ -69,18 +69,29 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getIdcByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
+		String result = null;
 		String idcZkClusterMappingStr = getIdcZkClusterMappingStr(systemConfigService);
 		if (zkClusterIdcMapsCache != null) {
 			Map<String, String> zkClusterIdcMap = zkClusterIdcMapsCache.get(idcZkClusterMappingStr);
 			if (zkClusterIdcMap != null) {
-				return zkClusterIdcMap.get(zkClusterKey);
+				result = zkClusterIdcMap.get(zkClusterKey);
+				if (result == null) {
+					throw new SaturnJobConsoleException("idc not found");
+				} else {
+					return result;
+				}
 			}
 		}
 		Map<String, String> zkClusterConsoleDomainMap = getZkClusterIdcMap(idcZkClusterMappingStr);
 		Map<String, Map<String, String>> tempZkClusterIdcMapsCache = new HashMap<String, Map<String, String>>();
 		tempZkClusterIdcMapsCache.put(idcZkClusterMappingStr, zkClusterConsoleDomainMap);
 		zkClusterIdcMapsCache = tempZkClusterIdcMapsCache;
-		return zkClusterConsoleDomainMap.get(zkClusterKey);
+		result = zkClusterConsoleDomainMap.get(zkClusterKey);
+		if (result == null) {
+			throw new SaturnJobConsoleException("idc not found");
+		} else {
+			return result;
+		}
 	}
 
 	/**
@@ -93,34 +104,48 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getIdcByConsoleId(SystemConfigService systemConfigService, String consoleId)
 			throws SaturnJobConsoleException {
+		String result = null;
 		String idcConsoleIdMappingStr = getIdcConsoleIdMappingStr(systemConfigService);
 		if (idcConsoleIdMapsCache != null) {
 			Map<String, String> idcConsoleIdMap = idcConsoleIdMapsCache.get(idcConsoleIdMappingStr);
 			if (idcConsoleIdMap != null) {
-				return idcConsoleIdMap.get(consoleId);
+				result = idcConsoleIdMap.get(consoleId);
+				if (result == null) {
+					throw new SaturnJobConsoleException("idc not found");
+				} else {
+					return result;
+				}
 			}
 		}
 		Map<String, String> idcConsoleIdMap = getIdcConsoleIdMap(idcConsoleIdMappingStr);
 		Map<String, Map<String, String>> tempIdcConsoleIdMapsCache = new HashMap<String, Map<String, String>>();
 		tempIdcConsoleIdMapsCache.put(idcConsoleIdMappingStr, idcConsoleIdMap);
 		idcConsoleIdMapsCache = tempIdcConsoleIdMapsCache;
-		return idcConsoleIdMap.get(consoleId);
+		result = idcConsoleIdMap.get(consoleId);
+		if (result == null) {
+			throw new SaturnJobConsoleException("idc not found");
+		} else {
+			return result;
+		}
 	}
 
-	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey)
-			throws SaturnJobConsoleException {
-		if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-			LOGGER.warn("没有配置VIP_SATURN_CONSOLE_CLUSTER环境变量或者系统属性");
+	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey) {
+		try {
+			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
+				LOGGER.warn("没有配置VIP_SATURN_CONSOLE_CLUSTER环境变量或者系统属性");
+				return false;
+			}
+			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
+			if (zkCluseterIdc == null) {
+				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的IDC信息");
+				return false;
+			}
+			String consoleIdc = getIdcByConsoleId(systemConfigService, VIP_SATURN_CONSOLE_CLUSTER_ID);
+			return zkCluseterIdc.equals(consoleIdc);
+		} catch (SaturnJobConsoleException e) {
+			LOGGER.error("error occur when judge current console is in the same idc with the zk cluster", e);
 			return false;
 		}
-		String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
-		if (zkCluseterIdc == null) {
-			LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的IDC信息");
-			return false;
-		}
-		String consoleIdc = getIdcByConsoleId(systemConfigService, VIP_SATURN_CONSOLE_CLUSTER_ID);
-		return zkCluseterIdc.equals(consoleIdc);
-
 	}
 
 	/**
@@ -133,18 +158,29 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getConsoleDomainByIdc(SystemConfigService systemConfigService, String idc)
 			throws SaturnJobConsoleException {
+		String result = null;
 		String idcConsoleDomainMappingStr = getIdcConsoleDomainMappingStr(systemConfigService);
 		if (idcConsoleDomainMapsCache != null) {
 			Map<String, String> idcConsoleDomainMap = idcConsoleDomainMapsCache.get(idcConsoleDomainMappingStr);
 			if (idcConsoleDomainMap != null) {
-				return idcConsoleDomainMap.get(idc);
+				result = idcConsoleDomainMap.get(idc);
+				if (result == null) {
+					throw new SaturnJobConsoleException("console domain not found");
+				} else {
+					return result;
+				}
 			}
 		}
 		Map<String, String> idcConsoleDomainMap = getIdcConsoleDomainMap(idcConsoleDomainMappingStr);
 		Map<String, Map<String, String>> tempIdcConsoleDomainMapsCache = new HashMap<String, Map<String, String>>();
 		tempIdcConsoleDomainMapsCache.put(idcConsoleDomainMappingStr, idcConsoleDomainMap);
 		idcConsoleDomainMapsCache = tempIdcConsoleDomainMapsCache;
-		return idcConsoleDomainMap.get(idc);
+		result = idcConsoleDomainMap.get(idc);
+		if (result == null) {
+			throw new SaturnJobConsoleException("console domain not found");
+		} else {
+			return result;
+		}
 	}
 
 	/**
@@ -158,10 +194,15 @@ public class ZkClusterMappingUtils {
 	public static String getConsoleDomainByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
 		String idc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
-		if (idc == null) {
-			return null;
+		String result = null;
+		if (idc != null) {
+			result = getConsoleDomainByIdc(systemConfigService, idc);
 		}
-		return getConsoleDomainByIdc(systemConfigService, idc);
+		if (result == null) {
+			throw new SaturnJobConsoleException("console domain not found");
+		} else {
+			return result;
+		}
 	}
 
 	private static String getIdcZkClusterMappingStr(SystemConfigService systemConfigService)
@@ -239,8 +280,11 @@ public class ZkClusterMappingUtils {
 						+ ") format is not correct, should be like CONSOLE-GD9:gd9");
 			}
 			String idc = consoleIdAndIdcArray[0];
-			String consoleId = consoleIdAndIdcArray[1];
-			result.put(consoleId, idc);
+			String consoleIds = consoleIdAndIdcArray[1];
+			String[] consoleIdArray = consoleIds.trim().split(",");
+			for (String consoleId : consoleIdArray) {
+				result.put(consoleId, idc);
+			}
 		}
 		return result;
 	}
