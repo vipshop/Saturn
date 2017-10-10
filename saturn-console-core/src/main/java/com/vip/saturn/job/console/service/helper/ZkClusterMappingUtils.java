@@ -237,15 +237,15 @@ public class ZkClusterMappingUtils {
 
 	private static Map<String, String> getZkClusterIdcMap(String allMappingStr) throws SaturnJobConsoleException {
 		Map<String, String> result = new HashMap<String, String>();
-		String[] consoleDomainMappingArray = allMappingStr.split(";");
-		for (String consoleDomainMappingStr : consoleDomainMappingArray) {
-			String[] consoleDomainAndClusterKeyArray = consoleDomainMappingStr.split(":");
-			if (consoleDomainAndClusterKeyArray.length != 2) {
-				throw new SaturnJobConsoleException("the IDC_ZK_CLUSTER_MAPPING(" + consoleDomainAndClusterKeyArray
+		String[] idcMappingArray = allMappingStr.split(";");
+		for (String idcMappingStr : idcMappingArray) {
+			int index = idcMappingStr.indexOf(":");
+			if (index < 0) {
+				throw new SaturnJobConsoleException("the IDC_ZK_CLUSTER_MAPPING(" + idcMappingStr
 						+ ") format is not correct, should be like gd6:/zk1");
 			}
-			String domain = consoleDomainAndClusterKeyArray[0];
-			String zkClusterKeys = consoleDomainAndClusterKeyArray[1];
+			String domain = idcMappingStr.substring(0, index);
+			String zkClusterKeys = idcMappingStr.substring(index + 1);
 			String[] zkClusterKeyArray = zkClusterKeys.trim().split(",");
 			for (String zkClusterKey : zkClusterKeyArray) {
 				result.put(zkClusterKey, domain);
@@ -258,13 +258,13 @@ public class ZkClusterMappingUtils {
 		Map<String, String> result = new HashMap<String, String>();
 		String[] consoleDomainMappingArray = allMappingStr.split(";");
 		for (String consoleDomainMappingStr : consoleDomainMappingArray) {
-			String[] consoleDomainAndClusterKeyArray = consoleDomainMappingStr.split(":");
-			if (consoleDomainAndClusterKeyArray.length != 2) {
-				throw new SaturnJobConsoleException("the IDC_CONSOLE_DOMAIN_MAPPING(" + consoleDomainAndClusterKeyArray
-						+ ") format is not correct, should be like gd6:saturn.vip.vip.com");
+			int index = consoleDomainMappingStr.indexOf(":");
+			if (index < 0) {
+				throw new SaturnJobConsoleException("the IDC_CONSOLE_DOMAIN_MAPPING(" + consoleDomainMappingStr
+						+ ") format is not correct, should be like CONSOLE-GD9:gd9");
 			}
-			String idc = consoleDomainAndClusterKeyArray[0];
-			String domain = consoleDomainAndClusterKeyArray[1];
+			String idc = consoleDomainMappingStr.substring(0, index);
+			String domain = consoleDomainMappingStr.substring(index + 1);
 			result.put(idc, domain);
 		}
 		return result;
@@ -274,13 +274,13 @@ public class ZkClusterMappingUtils {
 		Map<String, String> result = new HashMap<String, String>();
 		String[] consoleIdMappingArray = allMappingStr.split(";");
 		for (String consoleIdMappingStr : consoleIdMappingArray) {
-			String[] consoleIdAndIdcArray = consoleIdMappingStr.split(":");
-			if (consoleIdAndIdcArray.length != 2) {
-				throw new SaturnJobConsoleException("the IDC_CONSOLE_ID_MAPPING(" + consoleIdAndIdcArray
+			int index = consoleIdMappingStr.indexOf(":");
+			if (index < 0) {
+				throw new SaturnJobConsoleException("the IDC_CONSOLE_ID_MAPPING(" + consoleIdMappingStr
 						+ ") format is not correct, should be like CONSOLE-GD9:gd9");
 			}
-			String idc = consoleIdAndIdcArray[0];
-			String consoleIds = consoleIdAndIdcArray[1];
+			String idc = consoleIdMappingStr.substring(0, index);
+			String consoleIds = consoleIdMappingStr.substring(index + 1);
 			String[] consoleIdArray = consoleIds.trim().split(",");
 			for (String consoleId : consoleIdArray) {
 				result.put(consoleId, idc);
