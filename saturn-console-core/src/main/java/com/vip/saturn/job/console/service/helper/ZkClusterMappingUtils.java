@@ -61,11 +61,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据zk集群key获取IDC标识
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getIdcByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
@@ -96,11 +91,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据consoleId获取IDC标识
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getIdcByConsoleId(SystemConfigService systemConfigService, String consoleId)
 			throws SaturnJobConsoleException {
@@ -150,11 +140,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据IDC标识，获取console的域名
-	 * 
-	 * @param systemConfigService
-	 * @param idc
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByIdc(SystemConfigService systemConfigService, String idc)
 			throws SaturnJobConsoleException {
@@ -185,11 +170,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据zk集群key，获取该zk集群所属机房的console域名
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
