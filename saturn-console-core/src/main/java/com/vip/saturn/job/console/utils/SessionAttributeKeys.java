@@ -13,6 +13,7 @@ public class SessionAttributeKeys {
 	public static final String LOGIN_USER_NAME = "login_user_name";
 	public static final String LOGIN_USER_OA_NAME = "login_user_oa_name";
 	public static final String MOVE_NAMESPACE_BATCH_STATUS_PREFIX = "move_namespace_batch_status_prefix";
+	public static final String EXPORT_JOB_CONFIG_PAGE_STATUS = "export_job_config_page_status";
 
 	public static String getMoveNamespaceBatchStatusKey(long id) {
 		return MOVE_NAMESPACE_BATCH_STATUS_PREFIX + "_" + id;

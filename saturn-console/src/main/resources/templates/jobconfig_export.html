@@ -4,7 +4,7 @@ xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
 layout:decorator="frame-layout">
 	<head>
 		<title>Saturn Job配置导出</title>
-		<link href="lib/datatables/dataTables.bootstrap.min.css" rel="stylesheet" />
+		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 	</head>
 	<body>
 		<div th:remove="tag" layout:fragment="content">
@@ -20,7 +20,7 @@ layout:decorator="frame-layout">
 					<div class="panel-title">
 						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> Saturn Job配置复制 <span id="exportMsg">(状态：复制初始化)</span></span>
 						<div class="pull-right">
-							<button id="exportAllConfig" class="btn btn-info" hidden="hidden" data-loading-text="复制中..." title="将ZK的作业配置信息全量复制到数据库中">全量复制配置</button>
+							<button id="exportAllConfig" class="btn btn-info" title="将ZK的作业配置信息全量复制到数据库中">全量复制配置</button>
 						</div>
 						<div class="clearfix"></div>
 					</div>
@@ -43,13 +43,11 @@ layout:decorator="frame-layout">
 			<div th:replace="fragments :: success-dialog"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='exportConfig-confirm-dialog', text='')"></div>
-			<input type="hidden" id="authorizeSaturnConsoleDashBoardAllPrivilege" th:value="${authorizeSaturnConsoleDashBoardAllPrivilege}" />
-			<input type="hidden" id="isExporting" th:value="${isExporting}" />
+			<input type="hidden" id="exporting" th:value="${exporting}" />
 		</div>
 		<div th:remove="tag" layout:fragment="footer-scripts">
-			<script src="lib/datatables/jquery.dataTables.min.js"></script>
-			<script src="lib/datatables/dataTables.bootstrap.min.js"></script>
-			<script src="lib/typeahead/bootstrap3-typeahead.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
 			<script src="js/jobconfig_export.js?v=saturn-console-ui-version"></script>
 		</div>
 	</body>
