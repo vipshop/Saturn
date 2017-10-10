@@ -18,20 +18,34 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.SystemConfigService;
 
 /**
+ * 管理以下的映射关系
+ * 
+ * <ul>
+ * <li>zk集群key和IDC标识映射关系</li>
+ * <li>IDC标识和console域名的映射关系</li>
+ * <li>console集群Id和IDC标识的映射关系</li>
+ * </ul>
+ * 
  * @author timmy.hu
  */
 public class ZkClusterMappingUtils {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
 
+	/**
+	 * Console控制台集群ID的环境变量名称
+	 */
 	public static String NAME_VIP_SATURN_CONSOLE_CLUSTER = "VIP_SATURN_CONSOLE_CLUSTER";
 
+	/**
+	 * Console控制台集群ID
+	 */
 	public static String VIP_SATURN_CONSOLE_CLUSTER_ID = StringUtils
 			.trim(System.getProperty(NAME_VIP_SATURN_CONSOLE_CLUSTER, System.getenv(NAME_VIP_SATURN_CONSOLE_CLUSTER)));
 
 	/**
 	 * <pre>
-	 *       key:IDC标识和zk集群key映射关系的配置串
+	 *       key:zk集群key和IDC标识映射关系的配置串
 	 *       value:map
 	 *       		key:zk集群key
 	 *       		value: IDC标识
@@ -51,13 +65,13 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * <pre>
-	 * 		 key:IDC标识和console集群Id的映射关系的配置串
+	 * 		 key:console集群Id和IDC标识的映射关系的配置串
 	 * 	     value:map
-	 *       		key:idc标识
-	 *       		value: console集群Id
+	 *       		key:console集群Id
+	 *       		value:idc标识
 	 * </pre>
 	 */
-	private static Map<String, Map<String, String>> idcConsoleIdMapsCache;
+	private static Map<String, Map<String, String>> consoleIdIdcMapsCache;
 
 	/**
 	 * 根据zk集群key获取IDC标识
@@ -69,29 +83,33 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getIdcByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
-		String result = null;
-		String idcZkClusterMappingStr = getIdcZkClusterMappingStr(systemConfigService);
+		String idcZkClusterMappingStr = getRelaMappingStr(systemConfigService, IDC_ZK_CLUSTER_MAPPING);
+		Map<String, String> zkClusterIdcMap = null;
 		if (zkClusterIdcMapsCache != null) {
-			Map<String, String> zkClusterIdcMap = zkClusterIdcMapsCache.get(idcZkClusterMappingStr);
-			if (zkClusterIdcMap != null) {
-				result = zkClusterIdcMap.get(zkClusterKey);
-				if (result == null) {
-					throw new SaturnJobConsoleException("idc not found");
-				} else {
-					return result;
-				}
-			}
+			zkClusterIdcMap = zkClusterIdcMapsCache.get(idcZkClusterMappingStr);
 		}
-		Map<String, String> zkClusterConsoleDomainMap = getZkClusterIdcMap(idcZkClusterMappingStr);
-		Map<String, Map<String, String>> tempZkClusterIdcMapsCache = new HashMap<String, Map<String, String>>();
-		tempZkClusterIdcMapsCache.put(idcZkClusterMappingStr, zkClusterConsoleDomainMap);
-		zkClusterIdcMapsCache = tempZkClusterIdcMapsCache;
-		result = zkClusterConsoleDomainMap.get(zkClusterKey);
+		if (zkClusterIdcMap == null) {
+			zkClusterIdcMap = getRelaMap(idcZkClusterMappingStr);
+			reInitZkClusterIdcMapsCache(idcZkClusterMappingStr, zkClusterIdcMap);
+		}
+		String result = zkClusterIdcMap.get(zkClusterKey);
 		if (result == null) {
-			throw new SaturnJobConsoleException("idc not found");
-		} else {
-			return result;
+			throw new SaturnJobConsoleException("idc not found by zkClusterKey:" + zkClusterKey);
 		}
+		return result;
+	}
+
+	/**
+	 * 重新设置zk集群和idc的映射关系缓存
+	 * 
+	 * @param idcZkClusterMappingStr
+	 * @param zkClusterIdcMap
+	 */
+	private static void reInitZkClusterIdcMapsCache(String idcZkClusterMappingStr,
+			Map<String, String> zkClusterIdcMap) {
+		Map<String, Map<String, String>> tempZkClusterIdcMapsCache = new HashMap<String, Map<String, String>>();
+		tempZkClusterIdcMapsCache.put(idcZkClusterMappingStr, zkClusterIdcMap);
+		zkClusterIdcMapsCache = tempZkClusterIdcMapsCache;
 	}
 
 	/**
@@ -104,31 +122,42 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getIdcByConsoleId(SystemConfigService systemConfigService, String consoleId)
 			throws SaturnJobConsoleException {
-		String result = null;
-		String idcConsoleIdMappingStr = getIdcConsoleIdMappingStr(systemConfigService);
-		if (idcConsoleIdMapsCache != null) {
-			Map<String, String> idcConsoleIdMap = idcConsoleIdMapsCache.get(idcConsoleIdMappingStr);
-			if (idcConsoleIdMap != null) {
-				result = idcConsoleIdMap.get(consoleId);
-				if (result == null) {
-					throw new SaturnJobConsoleException("idc not found");
-				} else {
-					return result;
-				}
-			}
+		String idcConsoleIdMappingStr = getRelaMappingStr(systemConfigService, IDC_CONSOLE_ID_MAPPING);
+		Map<String, String> idcConsoleIdMap = null;
+		if (consoleIdIdcMapsCache != null) {
+			idcConsoleIdMap = consoleIdIdcMapsCache.get(idcConsoleIdMappingStr);
 		}
-		Map<String, String> idcConsoleIdMap = getIdcConsoleIdMap(idcConsoleIdMappingStr);
-		Map<String, Map<String, String>> tempIdcConsoleIdMapsCache = new HashMap<String, Map<String, String>>();
-		tempIdcConsoleIdMapsCache.put(idcConsoleIdMappingStr, idcConsoleIdMap);
-		idcConsoleIdMapsCache = tempIdcConsoleIdMapsCache;
-		result = idcConsoleIdMap.get(consoleId);
+		if (idcConsoleIdMap == null) {
+			idcConsoleIdMap = getRelaMap(idcConsoleIdMappingStr);
+			reInitConsoleIdIdcMapsCache(idcConsoleIdMappingStr, idcConsoleIdMap);
+		}
+		String result = idcConsoleIdMap.get(consoleId);
 		if (result == null) {
-			throw new SaturnJobConsoleException("idc not found");
-		} else {
-			return result;
+			throw new SaturnJobConsoleException("idc not found by consoleId:" + consoleId);
 		}
+		return result;
 	}
 
+	/**
+	 * 重新初始化console集群ID和IDC之间的映射关系缓存
+	 * 
+	 * @param idcConsoleIdMappingStr
+	 * @param idcConsoleIdMap
+	 */
+	private static void reInitConsoleIdIdcMapsCache(String idcConsoleIdMappingStr,
+			Map<String, String> idcConsoleIdMap) {
+		Map<String, Map<String, String>> tempConsoleIdIdcMapsCache = new HashMap<String, Map<String, String>>();
+		tempConsoleIdIdcMapsCache.put(idcConsoleIdMappingStr, idcConsoleIdMap);
+		consoleIdIdcMapsCache = tempConsoleIdIdcMapsCache;
+	}
+
+	/**
+	 * 根据zk集群key，判断该zk集群所属的idc，是否和当前console在同一个idc
+	 * 
+	 * @param systemConfigService
+	 * @param zkClusterKey
+	 * @return
+	 */
 	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey) {
 		try {
 			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
@@ -137,7 +166,7 @@ public class ZkClusterMappingUtils {
 			}
 			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (zkCluseterIdc == null) {
-				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的IDC信息");
+				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的Idc信息");
 				return false;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, VIP_SATURN_CONSOLE_CLUSTER_ID);
@@ -158,29 +187,33 @@ public class ZkClusterMappingUtils {
 	 */
 	public static String getConsoleDomainByIdc(SystemConfigService systemConfigService, String idc)
 			throws SaturnJobConsoleException {
-		String result = null;
-		String idcConsoleDomainMappingStr = getIdcConsoleDomainMappingStr(systemConfigService);
+		String idcConsoleDomainMappingStr = getRelaMappingStr(systemConfigService, IDC_CONSOLE_DOMAIN_MAPPING);
+		Map<String, String> idcConsoleDomainMap = null;
 		if (idcConsoleDomainMapsCache != null) {
-			Map<String, String> idcConsoleDomainMap = idcConsoleDomainMapsCache.get(idcConsoleDomainMappingStr);
-			if (idcConsoleDomainMap != null) {
-				result = idcConsoleDomainMap.get(idc);
-				if (result == null) {
-					throw new SaturnJobConsoleException("console domain not found");
-				} else {
-					return result;
-				}
-			}
+			idcConsoleDomainMap = idcConsoleDomainMapsCache.get(idcConsoleDomainMappingStr);
 		}
-		Map<String, String> idcConsoleDomainMap = getIdcConsoleDomainMap(idcConsoleDomainMappingStr);
+		if (idcConsoleDomainMap == null) {
+			idcConsoleDomainMap = getIdcConsoleDomainMap(idcConsoleDomainMappingStr);
+			reInitIdcConsoleDomainMapsCache(idcConsoleDomainMappingStr, idcConsoleDomainMap);
+		}
+		String result = idcConsoleDomainMap.get(idc);
+		if (result == null) {
+			throw new SaturnJobConsoleException("console domain not found by idc:" + idc);
+		}
+		return result;
+	}
+
+	/**
+	 * 重新设置Idc和console域名映射关系的缓存
+	 * 
+	 * @param idcConsoleDomainMappingStr
+	 * @param idcConsoleDomainMap
+	 */
+	private static void reInitIdcConsoleDomainMapsCache(String idcConsoleDomainMappingStr,
+			Map<String, String> idcConsoleDomainMap) {
 		Map<String, Map<String, String>> tempIdcConsoleDomainMapsCache = new HashMap<String, Map<String, String>>();
 		tempIdcConsoleDomainMapsCache.put(idcConsoleDomainMappingStr, idcConsoleDomainMap);
 		idcConsoleDomainMapsCache = tempIdcConsoleDomainMapsCache;
-		result = idcConsoleDomainMap.get(idc);
-		if (result == null) {
-			throw new SaturnJobConsoleException("console domain not found");
-		} else {
-			return result;
-		}
 	}
 
 	/**
@@ -199,91 +232,88 @@ public class ZkClusterMappingUtils {
 			result = getConsoleDomainByIdc(systemConfigService, idc);
 		}
 		if (result == null) {
-			throw new SaturnJobConsoleException("console domain not found");
-		} else {
-			return result;
-		}
-	}
-
-	private static String getIdcZkClusterMappingStr(SystemConfigService systemConfigService)
-			throws SaturnJobConsoleException {
-		String idcZkClusterMappingStr = systemConfigService.getValueDirectly(IDC_ZK_CLUSTER_MAPPING);
-		LOGGER.info("the IDC_ZK_CLUSTER_MAPPING str is:" + idcZkClusterMappingStr);
-		if (StringUtils.isBlank(idcZkClusterMappingStr)) {
-			throw new SaturnJobConsoleException("the IDC_ZK_CLUSTER_MAPPING is not configured in sys_config");
-		}
-		return StringUtils.deleteWhitespace(idcZkClusterMappingStr);
-	}
-
-	private static String getIdcConsoleDomainMappingStr(SystemConfigService systemConfigService)
-			throws SaturnJobConsoleException {
-		String idcConsoleDomainMappingStr = systemConfigService.getValueDirectly(IDC_CONSOLE_DOMAIN_MAPPING);
-		LOGGER.info("the IDC_CONSOLE_DOMAIN_MAPPING str is:" + idcConsoleDomainMappingStr);
-		if (StringUtils.isBlank(idcConsoleDomainMappingStr)) {
-			throw new SaturnJobConsoleException("the IDC_CONSOLE_DOMAIN_MAPPING is not configured in sys_config");
-		}
-		return StringUtils.deleteWhitespace(idcConsoleDomainMappingStr);
-	}
-
-	private static String getIdcConsoleIdMappingStr(SystemConfigService systemConfigService)
-			throws SaturnJobConsoleException {
-		String idcConsoleIdMappingStr = systemConfigService.getValueDirectly(IDC_CONSOLE_ID_MAPPING);
-		LOGGER.info("the IDC_CONSOLE_ID_MAPPING str is:" + idcConsoleIdMappingStr);
-		if (StringUtils.isBlank(idcConsoleIdMappingStr)) {
-			throw new SaturnJobConsoleException("the IDC_CONSOLE_ID_MAPPING is not configured in sys_config");
-		}
-		return StringUtils.deleteWhitespace(idcConsoleIdMappingStr);
-	}
-
-	private static Map<String, String> getZkClusterIdcMap(String allMappingStr) throws SaturnJobConsoleException {
-		Map<String, String> result = new HashMap<String, String>();
-		String[] idcMappingArray = allMappingStr.split(";");
-		for (String idcMappingStr : idcMappingArray) {
-			int index = idcMappingStr.indexOf(":");
-			if (index < 0) {
-				throw new SaturnJobConsoleException("the IDC_ZK_CLUSTER_MAPPING(" + idcMappingStr
-						+ ") format is not correct, should be like gd6:/zk1");
-			}
-			String domain = idcMappingStr.substring(0, index);
-			String zkClusterKeys = idcMappingStr.substring(index + 1);
-			String[] zkClusterKeyArray = zkClusterKeys.trim().split(",");
-			for (String zkClusterKey : zkClusterKeyArray) {
-				result.put(zkClusterKey, domain);
-			}
+			throw new SaturnJobConsoleException("console domain not found by zkClusterKey:" + zkClusterKey);
 		}
 		return result;
 	}
 
-	private static Map<String, String> getIdcConsoleDomainMap(String allMappingStr) throws SaturnJobConsoleException {
+	/**
+	 * 根据映射关系名称，获取该映射关系值
+	 * 
+	 * @param systemConfigService
+	 * @param mappingName
+	 * @return
+	 * @throws SaturnJobConsoleException
+	 */
+	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName)
+			throws SaturnJobConsoleException {
+		String idcConsoleIdMappingStr = systemConfigService.getValueDirectly(mappingName);
+		LOGGER.info("the " + mappingName + " str is:" + idcConsoleIdMappingStr);
+		if (StringUtils.isBlank(idcConsoleIdMappingStr)) {
+			throw new SaturnJobConsoleException("the " + mappingName + " is not configured in sys_config");
+		}
+		return StringUtils.deleteWhitespace(idcConsoleIdMappingStr);
+	}
+
+	/**
+	 * 根据映射关系的字符串，解析出其中的map对应关系
+	 * 
+	 * @param relaMappings 例如输入格式如下: idc1:domain1;idc2:domain2;
+	 * @return
+	 * 
+	 * <pre>
+	 *       解析出来的map对应关系 针对以上的输入，返回map如下：
+	 *      idc1:domain1 
+	 *      idc2:domain2
+	 * </pre>
+	 * 
+	 * @throws SaturnJobConsoleException
+	 */
+	private static Map<String, String> getIdcConsoleDomainMap(String relaMappings) throws SaturnJobConsoleException {
 		Map<String, String> result = new HashMap<String, String>();
-		String[] consoleDomainMappingArray = allMappingStr.split(";");
+		String[] consoleDomainMappingArray = relaMappings.split(";");
 		for (String consoleDomainMappingStr : consoleDomainMappingArray) {
-			int index = consoleDomainMappingStr.indexOf(":");
-			if (index < 0) {
-				throw new SaturnJobConsoleException("the IDC_CONSOLE_DOMAIN_MAPPING(" + consoleDomainMappingStr
-						+ ") format is not correct, should be like CONSOLE-GD9:gd9");
+			int colonIndex = consoleDomainMappingStr.indexOf(":");
+			if (colonIndex < 0) {
+				throw new SaturnJobConsoleException(
+						"the format(" + consoleDomainMappingStr + ") is not correct, should like key:value1,value2");
 			}
-			String idc = consoleDomainMappingStr.substring(0, index);
-			String domain = consoleDomainMappingStr.substring(index + 1);
+			String idc = consoleDomainMappingStr.substring(0, colonIndex);
+			String domain = consoleDomainMappingStr.substring(colonIndex + 1);
 			result.put(idc, domain);
 		}
 		return result;
 	}
 
-	private static Map<String, String> getIdcConsoleIdMap(String allMappingStr) throws SaturnJobConsoleException {
+	/**
+	 * 根据映射关系的字符串，解析出其中的map对应关系
+	 * 
+	 * @param relaMappings 例如输入格式如下: idc1:/zk1,/zk2;idc2:/zk3;
+	 * @return
+	 * 
+	 * <pre>
+	 *       解析出来的map对应关系 针对以上的输入，返回map如下：
+	 *      /zk1:idc1 
+	 *      /zk2:idc1
+	 *      /zk3:idc2
+	 * </pre>
+	 * 
+	 * @throws SaturnJobConsoleException
+	 */
+	private static Map<String, String> getRelaMap(String relaMappings) throws SaturnJobConsoleException {
 		Map<String, String> result = new HashMap<String, String>();
-		String[] consoleIdMappingArray = allMappingStr.split(";");
-		for (String consoleIdMappingStr : consoleIdMappingArray) {
-			int index = consoleIdMappingStr.indexOf(":");
-			if (index < 0) {
-				throw new SaturnJobConsoleException("the IDC_CONSOLE_ID_MAPPING(" + consoleIdMappingStr
-						+ ") format is not correct, should be like CONSOLE-GD9:gd9");
+		String[] relaMappingArray = relaMappings.split(";");
+		for (String relaMapping : relaMappingArray) {
+			int colonIndex = relaMapping.indexOf(":");
+			if (colonIndex <= 0) {
+				throw new SaturnJobConsoleException(
+						"the format(" + relaMapping + ") is not correct, should like key:value1,value2");
 			}
-			String idc = consoleIdMappingStr.substring(0, index);
-			String consoleIds = consoleIdMappingStr.substring(index + 1);
-			String[] consoleIdArray = consoleIds.trim().split(",");
-			for (String consoleId : consoleIdArray) {
-				result.put(consoleId, idc);
+			String value = relaMapping.substring(0, colonIndex);
+			String keys = relaMapping.substring(colonIndex + 1);
+			String[] keyArray = keys.split(",");
+			for (String key : keyArray) {
+				result.put(key, value);
 			}
 		}
 		return result;
