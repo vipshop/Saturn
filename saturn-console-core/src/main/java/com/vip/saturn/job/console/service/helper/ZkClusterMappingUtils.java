@@ -311,7 +311,7 @@ public class ZkClusterMappingUtils {
 			}
 			String value = relaMapping.substring(0, colonIndex);
 			String keys = relaMapping.substring(colonIndex + 1);
-			String[] keyArray = keys.split(",");
+			String[] keyArray = keys.trim().split(",");
 			for (String key : keyArray) {
 				result.put(key, value);
 			}
