@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.console.service.impl;
 
 import java.util.ArrayList;
@@ -8,14 +5,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
+import com.vip.saturn.job.console.domain.ExportJobConfigPageStatus;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.JobSettings;
@@ -49,21 +47,7 @@ import ma.glasnost.orika.MapperFactory;
 @Service
 public class JobConfigInitializationServiceImpl implements JobConfigInitializationService {
 
-	private static final Logger log = LoggerFactory.getLogger(JobConfigInitializationServiceImpl.class);
-
-	private static List<RegistryCenterConfiguration> regCenterConfList = null;
-
-	private static Map<String, RegistryCenterConfiguration> regCenterConfMap = new HashMap<String, RegistryCenterConfiguration>();
-
-	private static AtomicBoolean exportingFlag = new AtomicBoolean(false);
-
-	private static boolean hadExported = false;
-
-	private static boolean success = true;
-
-	private static int successNamespaceNum = 0;
-
-	private static int successJobNum = 0;
+	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
 	private final static int MAX_DELETE_NUM = 2000;
 
@@ -77,13 +61,22 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	private CurrentJobConfigService currentJobConfigService;
 
 	private MapperFacade mapper;
+	private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-	private synchronized void initReg() {
-		if (regCenterConfList != null) {
-			return;
+	@Autowired
+	public void setMapperFactory(MapperFactory mapperFactory) {
+		this.mapper = mapperFactory.getMapperFacade();
+	}
+
+	@PreDestroy
+	public void destroy() {
+		if (executorService != null) {
+			executorService.shutdownNow();
 		}
-		successNamespaceNum = 0;
-		successJobNum = 0;
+	}
+
+	@Override
+	public List<RegistryCenterConfiguration> getRegistryCenterConfigurations() throws SaturnJobConsoleException {
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		List<RegistryCenterConfiguration> rccs = new ArrayList<>();
 		if (zkClusterList != null) {
@@ -93,59 +86,57 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 				}
 			}
 		}
-		JobConfigInitializationServiceImpl.regCenterConfList = rccs;
 		for (RegistryCenterConfiguration rcc : rccs) {
 			rcc.setMsg("ready to export");
-			regCenterConfMap.put(rcc.getNamespace(), rcc);
 		}
-	}
-
-	private RegistryCenterConfiguration findByNamespace(String namespace) {
-		return regCenterConfMap.get(namespace);
-	}
-
-	@Autowired
-	public void setMapperFactory(MapperFactory mapperFactory) {
-		this.mapper = mapperFactory.getMapperFacade();
-	}
-
-	public boolean success() {
-		return success;
-	}
-
-	public List<RegistryCenterConfiguration> getRegistryCenterConfigurations() {
-		if (regCenterConfList == null) {
-			initReg();
-		}
-		return JobConfigInitializationServiceImpl.regCenterConfList;
+		return rccs;
 	}
 
 	@Override
-	public synchronized void exportAllToDb(String userName) throws SaturnJobConsoleException {
-		log.info("start to export all to db");
-		hadExported = true;
-		regCenterConfList = null;
-		try {
-			initReg();
-			if (exportingFlag.compareAndSet(false, true)) {
-				log.info("start to delete all from table job_config");
-				deleteAll();
-				log.info(" delete all from table job_config successfully");
-				Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
-				if (zkClusters != null) {
-					for (ZkCluster tmp : zkClusters) {
-						exportToDbByZkCluster(userName, tmp);
+	public ExportJobConfigPageStatus exportAllToDb(final String userName) throws SaturnJobConsoleException {
+		final ExportJobConfigPageStatus exportJobConfigPageStatus = new ExportJobConfigPageStatus();
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				log.info("start to export all to db");
+				try {
+					initReg(exportJobConfigPageStatus);
+					log.info("start to delete all from table job_config");
+					deleteAll();
+					log.info("delete all from table job_config successfully");
+					Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
+					if (zkClusters != null) {
+						for (ZkCluster tmp : zkClusters) {
+							exportToDbByZkCluster(userName, tmp, exportJobConfigPageStatus);
+						}
 					}
+					exportJobConfigPageStatus.setSuccess(true);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					exportJobConfigPageStatus.setSuccess(false);
+				} finally {
+					exportJobConfigPageStatus.setExported(true);
 				}
 			}
-			success = true;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			success = false;
-		} finally {
-			exportingFlag.set(false);
-		}
+		});
+		return exportJobConfigPageStatus;
+	}
 
+	private void initReg(ExportJobConfigPageStatus exportJobConfigPageStatus) {
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		List<RegistryCenterConfiguration> rccs = new ArrayList<>();
+		if (zkClusterList != null) {
+			for (ZkCluster zkCluster : zkClusterList) {
+				if (zkCluster != null && !zkCluster.isOffline()) {
+					rccs.addAll(zkCluster.getRegCenterConfList());
+				}
+			}
+		}
+		exportJobConfigPageStatus.setRegCenterConfList(rccs);
+		for (RegistryCenterConfiguration rcc : rccs) {
+			rcc.setMsg("ready to export");
+			exportJobConfigPageStatus.getRegCenterConfMap().put(rcc.getNamespace(), rcc);
+		}
 	}
 
 	private void deleteAll() {
@@ -163,16 +154,16 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 				log.error(e.getMessage(), e);
 			}
 		}
-
 	}
 
-	private void exportToDbByZkCluster(String userName, ZkCluster tmp) throws SaturnJobConsoleException {
+	private void exportToDbByZkCluster(String userName, ZkCluster tmp,
+			ExportJobConfigPageStatus exportJobConfigPageStatus) throws SaturnJobConsoleException {
 		log.info(" start to export db by single zkCluster, zkCluster Addr is :{}", tmp.getZkAddr());
 		ZkCluster zkCluster = tmp;
 		ArrayList<RegistryCenterConfiguration> oldRccs = zkCluster.getRegCenterConfList();
 		ArrayList<RegistryCenterConfiguration> rccs = new ArrayList<RegistryCenterConfiguration>(oldRccs);
 		for (RegistryCenterConfiguration rcc : rccs) {
-			setRegistryCenterConfigurationMsg(rcc.getNamespace(), "Exporting");
+			setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(), "Exporting");
 			List<String> jobNames = getAllUnSystemJobs(rcc.getNamespace(), zkCluster.getCuratorFramework());
 			for (String jobName : jobNames) {
 				try {
@@ -186,19 +177,22 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 					currentJobConfigService.create(current);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
-					setRegistryCenterConfigurationMsg(rcc.getNamespace(), "Export failed,error:" + e.getMessage());
+					setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(),
+							"Export failed,error:" + e.getMessage());
 					throw new SaturnJobConsoleException(e.getMessage());
 				}
 			}
-			successJobNum += jobNames.size();
-			successNamespaceNum++;
-			setRegistryCenterConfigurationMsg(rcc.getNamespace(), "export success,job number:" + jobNames.size());
+			exportJobConfigPageStatus.setSuccessJobNum(exportJobConfigPageStatus.getSuccessJobNum() + jobNames.size());
+			exportJobConfigPageStatus.setSuccessNamespaceNum(exportJobConfigPageStatus.getSuccessNamespaceNum() + 1);
+			setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(),
+					"export success,job number:" + jobNames.size());
 		}
 		log.info("export db by single zkCluster successfully, zkCluster Addr is :{}", tmp.getZkAddr());
 	}
 
-	private void setRegistryCenterConfigurationMsg(String namespace, String msg) {
-		RegistryCenterConfiguration rcc = findByNamespace(namespace);
+	private void setRegistryCenterConfigurationMsg(ExportJobConfigPageStatus exportJobConfigPageStatus,
+			String namespace, String msg) {
+		RegistryCenterConfiguration rcc = exportJobConfigPageStatus.getRegCenterConfMap().get(namespace);
 		if (rcc != null) {
 			rcc.setMsg(msg);
 		}
@@ -369,11 +363,6 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		return allJobs;
 	}
 
-	@Override
-	public boolean isExporting() {
-		return exportingFlag.get();
-	}
-
 	private int parseInt(String str) {
 		if (StringUtils.isEmpty(str)) {
 			return 0;
@@ -386,14 +375,4 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		}
 	}
 
-	@Override
-	public Map<String, String> getStatus() {
-		Map<String, String> result = new HashMap<String, String>();
-		result.put("hadExported", String.valueOf(hadExported));
-		result.put("success", String.valueOf(success));
-		result.put("exporting", String.valueOf(exportingFlag.get()));
-		result.put("successJobNum", String.valueOf(successJobNum));
-		result.put("successNamespaceNum", String.valueOf(successNamespaceNum));
-		return result;
-	}
 }

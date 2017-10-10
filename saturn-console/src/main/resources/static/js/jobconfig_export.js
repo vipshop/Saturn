@@ -1,5 +1,4 @@
 $(function() {
-	
 	initWithPrivilege();
     renderRegCenters();
     renderExportStatus();
@@ -10,28 +9,31 @@ $(function() {
 
 function renderExportStatus() {
     $.get("jobconfig/getExportStatus", {}, function(data) {
-        var statusText = "";
-        if(data.exportStatus.hadExported == 'false') {
-        	statusText="(status:ready to export)";
-        } else if(data.exportStatus.success == 'true' && data.exportStatus.exporting == 'false') {
-        	statusText="(status:export success,namespace:"+data.exportStatus.successNamespaceNum+", job:"+data.exportStatus.successJobNum+")";
-        }  else if(data.exportStatus.exporting == 'true') {
-        	statusText="(status:exporting,completed:namespace["+data.exportStatus.successNamespaceNum+"], job["+data.exportStatus.successJobNum+"])";
-        } else if(data.exportStatus.success == 'false') {
-        	statusText="(status:export fail,please retry!)";
-        }
-        $("#exportMsg").text(statusText);
+    	if(data.success == true) {
+    		var status = data.obj;
+	        var statusText = "";
+	        if(status) {
+	        	if(status.exported == true) {
+	        		if(status.success == true) {
+	        			statusText="(status:export success,namespace:"+status.successNamespaceNum+", job:"+status.successJobNum+")";
+	        		} else {
+	        			statusText="(status:export fail,please retry!)";
+	        		}
+	        	} else {
+	        		statusText="(status:exporting,completed:namespace["+status.successNamespaceNum+"], job["+status.successJobNum+"])";
+	        	}
+	        } else {
+	        	statusText="(status:ready to export)";
+	        }
+	        $("#exportMsg").text(statusText);
+    	} else {
+    		showFailureDialogWithMsg("failure-dialog", data.message);
+    	}
     });
 }
 
 function initWithPrivilege() {
-	if($("#authorizeSaturnConsoleDashBoardAllPrivilege").val() == "true") {
-		$("#exportAllConfig").removeAttr("hidden");
-	} else {
-		$("#exportAllConfig").attr("hidden");
-	}
-	
-	if($("#isExporting").val() == "true") {
+	if($("#exporting").val() == "true") {
 		$("#exportAllConfig").attr("disabled",true);
 		$("#exportAllConfig").text("复制中...");
 	} else {
@@ -43,14 +45,19 @@ function initWithPrivilege() {
 function renderRegCenters() {
     $.get("jobconfig/getExportRegList", {}, function(data) {
         $("#regCenters tbody").empty();
-        if(data.configs && data.configs instanceof Array) {
-            for (var i = 0;i < data.configs.length;i++) {
-                var baseTd = "<td>" + data.configs[i].namespace + "</td><td>"
-                    + data.configs[i].name + "</td><td>"
-                    + data.configs[i].zkAlias + "</td><td>" + data.configs[i].zkClusterKey + "</td>"
-                    +"<td>"+data.configs[i].msg+"</td>";
-                $("#regCenters tbody").append("<tr>" + baseTd + "</tr>");
-            }
+        if(data.success == true) {
+        	if(data.obj && data.obj instanceof Array) {
+        		var list = data.obj;
+	            for (var i = 0;i < list.length;i++) {
+	                var baseTd = "<td>" + list[i].namespace + "</td><td>"
+	                    + list[i].name + "</td><td>"
+	                    + list[i].zkAlias + "</td><td>" + list[i].zkClusterKey + "</td>"
+	                    +"<td>"+list[i].msg+"</td>";
+	                $("#regCenters tbody").append("<tr>" + baseTd + "</tr>");
+	            }
+        	}
+        } else {
+        	showFailureDialogWithMsg("failure-dialog", data.message);
         }
         $("#regCenters").DataTable({"oLanguage": language, "displayLength":100});
     });
@@ -86,21 +93,5 @@ function bindExport() {
     });
 }
 
-
-function bindRefreshCmdbButton() {
-	$("#exportAllConfig").click(function() {
-		$("#exportAllConfig").attr("disabled",true);
-		var $btn = $(this);
-		$btn.button("loading");
-		$.post("jobconfig/exportAllConfigToDb", function(data) {
-			if(data.success == true) {
-				showSuccessDialog();
-			} else {
-				showFailureDialogWithMsg("failure-dialog", data.message);
-			}
-		}).always(function() {  });
-		return false;;
-    });
-}
 
 
