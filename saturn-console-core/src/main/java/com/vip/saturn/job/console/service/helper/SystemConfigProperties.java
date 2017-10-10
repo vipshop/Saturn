@@ -14,6 +14,8 @@ public class SystemConfigProperties {
 	public static final String IS_CONTAINER_DIFFERENTIATE = "IS_CONTAINER_DIFFERENTIATE";
 
 	public static final String IDC_CONSOLE_DOMAIN_MAPPING = "IDC_CONSOLE_DOMAIN_MAPPING";
-	
+
 	public static final String IDC_ZK_CLUSTER_MAPPING = "IDC_ZK_CLUSTER_MAPPING";
+
+	public static final String IDC_CONSOLE_ID_MAPPING = "IDC_CONSOLE_ID_MAPPING";
 }
