@@ -3,6 +3,7 @@
  */
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 
 import java.util.Map;
@@ -14,6 +15,8 @@ import java.util.Map;
 public interface DashboardService {
 
 	void refreshStatistics2DB(boolean force);
+
+	void refreshStatistics2DB(String zkClusterKey) throws SaturnJobConsoleException;
 
 	int executorInDockerCount(String key);
 

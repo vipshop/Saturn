@@ -8,6 +8,7 @@ import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
 import com.vip.saturn.job.console.exception.JobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -178,6 +179,27 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		log.info("end refresh statistics, takes " + (new Date().getTime() - start.getTime()));
+	}
+	
+	@Override
+	public synchronized void refreshStatistics2DB(String zkClusterKey) throws SaturnJobConsoleException {
+		log.info("start refresh statistics by zkClusterKey:" + zkClusterKey);
+		Date start = new Date();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		ZkCluster targetZkCluster = null;
+		if (zkClusterList != null) {
+			for (ZkCluster zkCluster : zkClusterList) {
+				if (zkCluster.getZkClusterKey().equals(zkClusterKey)) {
+					targetZkCluster = zkCluster;
+				}
+			}
+		}
+		if (targetZkCluster != null) {
+			refreshStatistics2DB(targetZkCluster);
+		} else {
+			throw new SaturnJobConsoleException("zk cluster not found by zkClusterKey:" + zkClusterKey);
+		}
+		log.info("end refresh statistics by zkClusterKey, takes " + (new Date().getTime() - start.getTime()));
 	}
 
 	private void refreshStatistics2DB(ZkCluster zkCluster) {
