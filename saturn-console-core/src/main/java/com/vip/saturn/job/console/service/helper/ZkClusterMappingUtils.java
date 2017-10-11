@@ -75,11 +75,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据zk集群key获取IDC标识
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getIdcByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
@@ -101,9 +96,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 重新设置zk集群和idc的映射关系缓存
-	 * 
-	 * @param idcZkClusterMappingStr
-	 * @param zkClusterIdcMap
 	 */
 	private static void reInitZkClusterIdcMapsCache(String idcZkClusterMappingStr,
 			Map<String, String> zkClusterIdcMap) {
@@ -114,11 +106,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据consoleId获取IDC标识
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return IDC标识
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getIdcByConsoleId(SystemConfigService systemConfigService, String consoleId)
 			throws SaturnJobConsoleException {
@@ -140,9 +127,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 重新初始化console集群ID和IDC之间的映射关系缓存
-	 * 
-	 * @param idcConsoleIdMappingStr
-	 * @param idcConsoleIdMap
 	 */
 	private static void reInitConsoleIdIdcMapsCache(String idcConsoleIdMappingStr,
 			Map<String, String> idcConsoleIdMap) {
@@ -153,10 +137,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据zk集群key，判断该zk集群所属的idc，是否和当前console在同一个idc
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return 是否在同一个IDC
 	 */
 	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey) {
 		try {
@@ -179,11 +159,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据IDC标识，获取console的域名
-	 * 
-	 * @param systemConfigService
-	 * @param idc
-	 * @return console的域名
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByIdc(SystemConfigService systemConfigService, String idc)
 			throws SaturnJobConsoleException {
@@ -205,9 +180,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 重新设置Idc和console域名映射关系的缓存
-	 * 
-	 * @param idcConsoleDomainMappingStr
-	 * @param idcConsoleDomainMap
 	 */
 	private static void reInitIdcConsoleDomainMapsCache(String idcConsoleDomainMappingStr,
 			Map<String, String> idcConsoleDomainMap) {
@@ -218,11 +190,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据zk集群key，获取该zk集群所属机房的console域名
-	 * 
-	 * @param systemConfigService
-	 * @param zkClusterKey
-	 * @return console的域名
-	 * @throws SaturnJobConsoleException
 	 */
 	public static String getConsoleDomainByZkClusterKey(SystemConfigService systemConfigService, String zkClusterKey)
 			throws SaturnJobConsoleException {
@@ -239,11 +206,6 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据映射关系名称，获取该映射关系值
-	 * 
-	 * @param systemConfigService
-	 * @param mappingName
-	 * @return 映射关系值
-	 * @throws SaturnJobConsoleException
 	 */
 	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName)
 			throws SaturnJobConsoleException {
@@ -266,8 +228,6 @@ public class ZkClusterMappingUtils {
 	 *      idc1:domain1 
 	 *      idc2:domain2
 	 * </pre>
-	 * 
-	 * @throws SaturnJobConsoleException
 	 */
 	private static Map<String, String> getIdcConsoleDomainMap(String relaMappings) throws SaturnJobConsoleException {
 		Map<String, String> result = new HashMap<String, String>();
@@ -297,8 +257,6 @@ public class ZkClusterMappingUtils {
 	 *      /zk2:idc1
 	 *      /zk3:idc2
 	 * </pre>
-	 * 
-	 * @throws SaturnJobConsoleException
 	 */
 	private static Map<String, String> getRelaMap(String relaMappings) throws SaturnJobConsoleException {
 		Map<String, String> result = new HashMap<String, String>();
