@@ -22,6 +22,8 @@ public interface CurrentJobConfigRepository {
 	int updateByPrimaryKeySelective(CurrentJobConfig currentjobconfig);
 
 	int updateByPrimaryKey(CurrentJobConfig currentjobconfig);
+	
+	void updatePerferList(CurrentJobConfig currentjobconfig);
 
 	int selectCount(CurrentJobConfig currentjobconfig);
 

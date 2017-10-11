@@ -1,15 +1,21 @@
 package com.vip.saturn.job.sharding;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import com.vip.saturn.job.sharding.listener.*;
+import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
+import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
+import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
+import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
+import com.vip.saturn.job.sharding.listener.SaturnExecutorsShardingTriggerShardingListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.AddJobListenersService;
 import com.vip.saturn.job.sharding.service.ExecutorCleanService;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -36,13 +42,13 @@ public class NamespaceShardingManager {
 	private String zkClusterKey;
 
 	public NamespaceShardingManager(CuratorFramework curatorFramework, String namespace, String hostValue,
-									ReportAlarmService reportAlarmService) {
+			ReportAlarmService reportAlarmService, UpdateJobConfigService updateJobConfigService) {
 		this.curatorFramework = curatorFramework;
 		this.namespace = namespace;
 		this.shardingTreeCacheService = new ShardingTreeCacheService(namespace, curatorFramework);
 		this.namespaceShardingService = new NamespaceShardingService(curatorFramework, hostValue,
 				reportAlarmService);
-		this.executorCleanService = new ExecutorCleanService(curatorFramework);
+		this.executorCleanService = new ExecutorCleanService(curatorFramework,updateJobConfigService);
 		this.addJobListenersService = new AddJobListenersService(namespace, curatorFramework, namespaceShardingService,
 				shardingTreeCacheService);
 	}

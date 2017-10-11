@@ -23,6 +23,8 @@ public interface CurrentJobConfigService {
 
 	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel) throws Exception;
 
+	void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs);
+
 	List<CurrentJobConfig> findConfigsByNamespace(String namespace);
 
 	CurrentJobConfig findConfigByNamespaceAndJobName(String namespace, String jobName);
