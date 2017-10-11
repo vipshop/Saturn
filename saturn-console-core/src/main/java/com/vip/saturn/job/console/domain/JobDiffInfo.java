@@ -16,11 +16,11 @@ public class JobDiffInfo {
 
     private List<ConfigDiffInfo> configDiffInfos;
 
-    public JobDiffInfo(String namespace, String jobName, DiffType diffType, List<ConfigDiffInfo> configDiffInfoList) {
+    public JobDiffInfo(String namespace, String jobName, DiffType diffType, List<ConfigDiffInfo> configDiffInfos) {
         this.namespace = namespace;
         this.jobName = jobName;
         this.diffType = diffType;
-        this.configDiffInfos = configDiffInfoList;
+        this.configDiffInfos = configDiffInfos;
     }
 
     public String getNamespace() {
