@@ -60,6 +60,7 @@
             </div>
         </div>
     </div>
+    <div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 </div>
 <div th:remove="tag" layout:fragment="footer-scripts">
     <script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
