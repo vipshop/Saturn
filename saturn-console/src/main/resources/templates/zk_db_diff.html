@@ -4,7 +4,7 @@
       layout:decorator="frame-layout">
 <head>
     <title>ZK与DB中的作业配置比较</title>
-    <link href="lib/datatables/dataTables.bootstrap.min.css" rel="stylesheet"/>
+    <link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
 <div th:remove="tag" layout:fragment="content">
@@ -60,11 +60,12 @@
             </div>
         </div>
     </div>
+    <div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 </div>
 <div th:remove="tag" layout:fragment="footer-scripts">
     <script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
     <script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
-    <script src="js/zk_db_diff.js"></script>
+    <script src="js/zk_db_diff.js?v=saturn-console-ui-version"></script>
 </div>
 </body>
 </html>

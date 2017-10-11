@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -55,13 +56,15 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
     private ExecutorService diffExecutorService;
 
+    private static final int DIFF_THREAD_NUM = 10;
+
     @PostConstruct
     public void init() {
         if (diffExecutorService != null) {
             diffExecutorService.shutdownNow();
         }
         diffExecutorService = Executors
-                .newFixedThreadPool(3, new ConsoleThreadFactory("diff-zk-db-thread", false));
+                .newFixedThreadPool(DIFF_THREAD_NUM, new ConsoleThreadFactory("diff-zk-db-thread", false));
     }
 
     @PreDestroy
@@ -72,7 +75,9 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     }
 
     @Override
-    public List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException {
+    public List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException, SaturnJobConsoleException {
+        List<JobDiffInfo> resultList = Lists.newArrayList();
+
         long startTime = System.currentTimeMillis();
         List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(clusterKey);
 
@@ -87,19 +92,21 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             callableList.add(callable);
         }
 
-        List<JobDiffInfo> resultList = Lists.newArrayList();
         try {
-            List<Future<List<JobDiffInfo>>> results = diffExecutorService.invokeAll(callableList);
+            List<Future<List<JobDiffInfo>>> futures = diffExecutorService.invokeAll(callableList);
 
-            for (Future future : results) {
+            for (Future future : futures) {
                 List<JobDiffInfo> jobDiffInfos = (List<JobDiffInfo>) future.get();
-                resultList.addAll(jobDiffInfos);
+                if (jobDiffInfos != null && !jobDiffInfos.isEmpty()) {
+                    resultList.addAll(jobDiffInfos);
+                }
             }
         } catch (InterruptedException e) {
             log.warn("the thread is interrupted", e);
-            throw e;
+            new SaturnJobConsoleException("the diff thread is interrupted", e);
         } catch (Exception e) {
             log.error("exception happens during execute diff operation", e);
+            new SaturnJobConsoleException(e);
         }
 
 
@@ -109,22 +116,26 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     }
 
     @Override
-    public List<JobDiffInfo> diffByNamespace(String namespace) {
+    public List<JobDiffInfo> diffByNamespace(String namespace) throws SaturnJobConsoleException {
         long startTime = System.currentTimeMillis();
 
         List<JobDiffInfo> jobDiffInfos = Lists.newArrayList();
         CuratorRepository.CuratorFrameworkOp zkClient;
         try {
             List<CurrentJobConfig> dbJobConfigList = configService.findConfigsByNamespace(namespace);
+            if (dbJobConfigList == null || dbJobConfigList.isEmpty()) {
+                return jobDiffInfos;
+            }
+
             zkClient = initCuratorClient(namespace);
 
             Set<String> jobNamesInDb = getAllJobNames(dbJobConfigList);
 
             for (CurrentJobConfig dbJobConfig : dbJobConfigList) {
                 String jobName = dbJobConfig.getJobName();
-                log.info("start to diff job:{}", jobName);
+                log.info("start to diff job:{}@{}", jobName, namespace);
                 if (!checkJobIsExsitInZk(jobName, zkClient)) {
-                    jobDiffInfos.add(new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, null));
+                    jobDiffInfos.add(new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
                     continue;
                 }
 
@@ -140,17 +151,21 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 jobDiffInfos.addAll(jobsInZkOnly);
             }
 
+        } catch (SaturnJobConsoleException e) {
+            log.error(e.getMessage(), e);
+            throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}]", namespace, e);
+            new SaturnJobConsoleException(e);
+        } finally {
+            log.info("Finish diff namespace:{} which cost {}ms", namespace, System.currentTimeMillis() - startTime);
         }
-
-        log.info("Finish diff namespace:{} which cost {}ms", namespace, System.currentTimeMillis() - startTime);
 
         return jobDiffInfos;
     }
 
     @Override
-    public JobDiffInfo diffByJob(String namespace, String jobName) {
+    public JobDiffInfo diffByJob(String namespace, String jobName) throws SaturnJobConsoleException {
         CuratorRepository.CuratorFrameworkOp zkClient;
         try {
             zkClient = initCuratorClient(namespace);
@@ -160,16 +175,20 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             JobSettings zkJobConfig = jobDimensionService.getJobSettingsFromZK(jobName, zkClient);
 
             if (dbJobConfig == null && zkJobConfig != null) {
-                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY, null);
+                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
             }
 
             if (dbJobConfig != null && zkJobConfig == null) {
-                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, null);
+                return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
             }
 
             return diff(dbJobConfig, zkJobConfig, true);
+        } catch (SaturnJobConsoleException e) {
+            log.error(e.getMessage(), e);
+            throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}] and job [{}]", namespace, jobName, e);
+            new SaturnJobConsoleException(e);
         }
 
         return null;
@@ -192,14 +211,23 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
         List<JobDiffInfo.ConfigDiffInfo> configDiffInfos = Lists.newArrayList();
 
-        // jobClass
-        diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
+        String jobTypeInDB = dbJobConfig.getJobType();
+        // jobType
+        diff("jobType", jobTypeInDB, zkJobConfig.getJobType(), configDiffInfos);
+
+        if (JobBriefInfo.JobType.JAVA_JOB.name().equals(jobTypeInDB) || JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // jobClass
+            diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
+        }
         // shardingTotalCount
         diff("shardingTotalCount", dbJobConfig.getShardingTotalCount(), zkJobConfig.getShardingTotalCount(), configDiffInfos);
         // timeZone
         diff("timeZone", dbJobConfig.getTimeZone(), zkJobConfig.getTimeZone(), configDiffInfos);
-        // cron
-        diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
+
+        if (!JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // cron
+            diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
+        }
         // pausePeriodDate
         diff("pausePeriodDate", dbJobConfig.getPausePeriodDate(), zkJobConfig.getPausePeriodDate(), configDiffInfos);
         // pausePeriodTime
@@ -224,8 +252,13 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("preferList", dbJobConfig.getPreferList(), zkJobConfig.getPreferList(), configDiffInfos);
         // useDispreferList
         diff("useDispreferList", dbJobConfig.getUseDispreferList(), zkJobConfig.getUseDispreferList(), configDiffInfos);
-        // useSerial
-        diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
+
+        if (JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
+            // useSerial
+            diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
+            // queueName
+            diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
+        }
         // localMode
         diff("localMode", dbJobConfig.getLocalMode(), zkJobConfig.getLocalMode(), configDiffInfos);
         // dependencies
@@ -236,14 +269,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("description", dbJobConfig.getDescription(), zkJobConfig.getDescription(), configDiffInfos);
         // jobMode
         diff("jobMode", dbJobConfig.getJobMode(), zkJobConfig.getJobMode(), configDiffInfos);
-        // queueName
-        diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
         // channelName
         diff("channelName", dbJobConfig.getChannelName(), zkJobConfig.getChannelName(), configDiffInfos);
         // showNormalLog
         diff("showNormalLog", dbJobConfig.getShowNormalLog(), zkJobConfig.getShowNormalLog(), configDiffInfos);
-        // jobType
-        diff("jobType", dbJobConfig.getJobType(), zkJobConfig.getJobType(), configDiffInfos);
         // enabledReport
         diff("enabledReport", dbJobConfig.getEnabledReport(), zkJobConfig.getEnabledReport(), configDiffInfos);
         // showNormalLog
@@ -254,7 +283,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, configDiffInfos);
             }
 
-            return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, null);
+            return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
         }
 
         return null;
@@ -309,7 +338,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         if (jobNamesInZk.size() > jobNamesInDb.size()) {
             for (String name : jobNamesInZk) {
                 if (!jobNamesInDb.contains(name)) {
-                    jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, null));
+                    jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
                 }
             }
         }
