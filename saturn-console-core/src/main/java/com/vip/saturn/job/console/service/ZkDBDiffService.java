@@ -4,6 +4,7 @@ import com.vip.saturn.job.console.domain.JobDiffInfo;
 
 import java.util.List;
 
+// TODO interface method throws SaturnJobException, and zk_db_diff.js zk_db_diff/diffByJob data.obj.configDiffInfos deal well with null
 public interface ZkDBDiffService {
 
     /**

@@ -115,6 +115,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         List<JobDiffInfo> jobDiffInfos = Lists.newArrayList();
         CuratorRepository.CuratorFrameworkOp zkClient;
         try {
+        	// TODO dbJobConfigList could be null
             List<CurrentJobConfig> dbJobConfigList = configService.findConfigsByNamespace(namespace);
             zkClient = initCuratorClient(namespace);
 
