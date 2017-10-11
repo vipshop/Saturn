@@ -9,7 +9,8 @@ var regName = $("#regNameFromServer").val(), jobsViewDataTable, serversViewDataT
                	'<button class="btn btn-danger" id="batch-remove-job" title="点击进行批量删除作业">删除作业</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="add-job" title="点击进行添加作业">添加作业</button>&nbsp;&nbsp;' +
                	'<button class="btn btn-primary" id="copy-job" title="点击进行复制作业">复制作业</button>&nbsp;&nbsp;</div>' +
-               	'<button class="btn btn-success batch-migrate-job" id="batch-migrate-job" title="点击进行批量迁移作业到容器资源">迁移容器</button>&nbsp;&nbsp;'+
+//               	'<button class="btn btn-success batch-migrate-job" id="batch-migrate-job" title="点击进行批量迁移作业到容器资源">迁移容器</button>&nbsp;&nbsp;'+
+                '<button class="btn btn-success batch-set-prefer-executors" id="batch-set-prefer-executors" title="点击进行批量选择优先Executors">优先Executors</button>&nbsp;&nbsp;'+
                	'<button class="btn btn-info" id="batch-add-job" title="点击进行导入作业">导入作业</button>&nbsp;&nbsp;' +
                	'<a class="btn btn-info" id="export-job" href="executor/exportJob?nns='+regName+'" title="点击进行导出全域作业" target="_self">导出全域作业</a>&nbsp;&nbsp;' +
                	'<label>分组 <select id="groupSelect" title="选择作业分组" class="form-control"><option value="">全部分组</option></select></label>';
@@ -557,7 +558,92 @@ $(function() {
         });
         var jobObj = new Object();
         $("#batch-migrate-job-dialog").modal("show", jobObj);
-	});    
+	});
+
+	$(document).on("click", ".batch-set-prefer-executors", function(event) {
+        var jobNames = "";
+        $(".batchInput").each(function(){
+            if($(this).is(":checked")){
+                jobNames += $(this).attr("jobName") + ",";
+            }
+        });
+        if(isNullOrEmpty(jobNames)) {
+            $("#failure-dialog .fail-reason").text("请勾选至少一个作业！");
+            showFailureDialog("failure-dialog");
+            return;
+        }
+
+        jobNames = jobNames.substring(0, jobNames.length-1);
+
+        var migrateJobTasksSelectDiv = $("#batch-set-prefer-executors-select");
+        migrateJobTasksSelectDiv.empty();
+        $.get("job/batchSetPreferExecutorsEnabled", {nns:regName}, function(data) {
+            if(data.success == true) {
+                $("#batch-set-prefer-executors-jobName").html(jobNames);
+                var preferListCandidate = data.obj;
+                   if(typeof preferListCandidate == "string"){
+                        $("#batch-preferList").empty();
+                           var preferListCandidateArr = preferListCandidate.split(",");
+                           for (var i = 0; i < preferListCandidateArr.length; i++) {
+                               var preferExecutorCandidate = preferListCandidateArr[i];
+                               if(!preferExecutorCandidate){
+                                   continue;
+                               }
+                               var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
+                               var preferExecutorValue = preferExecutorCandidateArr[0];
+                               var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
+                               if(isContainer){
+                                   preferExecutorValue = "@"+preferExecutorValue;
+                               }
+                               var selected = false;
+                               var option = "<option value='" + preferExecutorValue + "'";
+                               if(selected) {
+                                   option = option + " selected";
+                               }
+                               option = option + ">" + preferExecutorCandidate + "</option>";
+                               $("#batch-preferList").append(option);
+                           }
+                        $("#batch-preferList").selectpicker('refresh');
+                        onPreferListChanged();
+                }
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        });
+        var jobObj = new Object();
+        $("#batch-set-prefer-executors-dialog").modal("show", jobObj);
+    });
+
+    function onPreferListChanged() {
+        var containerSelected = false;
+        var options = $("#batch-preferList").find("option");
+        if(options) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.selected && option.value && option.value[0] == "@") {
+                    containerSelected = true;
+                    break;
+                }
+            }
+        }
+        if(containerSelected) {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(!(option.selected) && option.value && option.value[0] == "@") {
+                    $(option).attr("disabled", "disabled");
+                }
+            }
+        } else {
+            for(var i=0; i<options.length; i++) {
+                var option = options[i];
+                if(option.value && option.value[0] == "@") {
+                    $(option).removeAttr("disabled");
+                }
+            }
+        }
+        $("#batch-preferList").selectpicker('refresh');
+    }
     
     $(document).on("click", ".change-jobStatus-batch-job", function(event) {
     	var targetButtonId = event.target.id;
@@ -709,6 +795,23 @@ $(function() {
         }).always(function() { $btn.button('reset'); });
         return false;
     });    
+
+    $("#batch-set-prefer-executors-confirm-btn").on('click', function(event) {
+        var $btn = $(this).button('loading');
+        var jobName = $("#batch-set-prefer-executors-jobName").html();
+        if($("#batch-preferList").val() != null) {
+            var newPreferExecutors = $("#batch-preferList").val().toString();
+        }
+        $.post("job/batchSetPreferExecutors", {jobNames : jobName, newPreferExecutors : newPreferExecutors}, function(data) {
+            if(data.success == true) {
+                showSuccessDialogWithCallback(function() {location.reload(true);});
+            } else {
+                $("#failure-dialog .fail-reason").text(data.message);
+                showFailureDialog("failure-dialog");
+            }
+        }).always(function() { $btn.button('reset'); });
+        return false;
+    });
 
     $("#add-container-dialog-confirm-btn").on('click', function(event) {
         var $btn = $(this).button('loading'),
