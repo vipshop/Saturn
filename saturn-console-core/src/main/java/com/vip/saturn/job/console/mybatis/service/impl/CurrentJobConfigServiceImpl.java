@@ -6,6 +6,10 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,8 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Autowired
 	private CurrentJobConfigRepository currentJobConfigRepo;
+	@Autowired
+	private SqlSessionFactory sqlSessionFactory;
 
 	private MapperFacade mapper;
 
@@ -77,6 +83,21 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	@Override
 	public int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKeySelective(currentJobConfig);
+	}
+
+	@Override
+	public void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) {
+		SqlSession batchSqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+		try {
+			for (CurrentJobConfig currentJobConfig : jobConfigs) {
+				batchSqlSession.getMapper(CurrentJobConfigRepository.class).updatePerferList(currentJobConfig);
+			}
+			batchSqlSession.commit();
+		} catch (Exception e) {
+			batchSqlSession.rollback();
+		} finally {
+			IOUtils.closeQuietly(batchSqlSession);
+		}
 	}
 
 	@Override

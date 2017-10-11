@@ -14,32 +14,6 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -71,9 +45,32 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
@@ -1175,46 +1172,80 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	public void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException {
 		try {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-			String jobNodePath = SaturnExecutorsNode.getJobNodePath(jobName);
-			if (!curatorFrameworkOp.checkExists(jobNodePath)) {
-				throw new SaturnJobConsoleException("The job " + jobName + " does not exists");
-			}
-			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
-			if (!curatorFrameworkOp.checkExists(jobConfigPreferListNodePath)) {
-				throw new SaturnJobConsoleException("The job has not set a docker task");
-			}
-			String jobConfigPreferList = curatorFrameworkOp.getData(jobConfigPreferListNodePath);
-			if (jobConfigPreferList == null) {
-				throw new SaturnJobConsoleException("The job has not set a docker task");
-			}
-			if (!jobConfigPreferList.contains("@")) {
-				throw new SaturnJobConsoleException("The job has not set a docker task");
-			}
-			List<String> tasks = getTasks(jobConfigPreferList);
-			if (tasks.isEmpty()) {
-				throw new SaturnJobConsoleException("The job has not set a docker task");
-			}
-			if (tasks.contains(taskNew)) {
-				throw new SaturnJobConsoleException("the new task is already set");
-			}
-			String dcosTaskNodePath = SaturnExecutorsNode.getDcosTaskNodePath(taskNew);
-			if (!curatorFrameworkOp.checkExists(dcosTaskNodePath)) {
-				throw new SaturnJobConsoleException("The new task does not exists");
-			}
+
+			String jobConfigPreferList = getOldJobConfigPreferList(jobName, curatorFrameworkOp);
+
+			validateMigrateJobNewTaskInfo(jobConfigPreferList, taskNew, curatorFrameworkOp);
+
 			// replace the old task by new task
+			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
+
 			String newJobConfigPreferList = replaceTaskInPreferList(jobConfigPreferList, taskNew);
-			savePreferListToDb(jobName, curatorFrameworkOp, newJobConfigPreferList);
-			curatorFrameworkOp.update(jobConfigPreferListNodePath, newJobConfigPreferList);
-			// delete and create the forceShard node
-			String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
-			curatorFrameworkOp.delete(jobConfigForceShardNodePath);
-			curatorFrameworkOp.create(jobConfigForceShardNodePath);
+			savePreferList2DBAndZK(jobName, newJobConfigPreferList, curatorFrameworkOp, jobConfigPreferListNodePath);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		}
+	}
+
+	private String getOldJobConfigPreferList(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException {
+		String jobNodePath = SaturnExecutorsNode.getJobNodePath(jobName);
+		if (!curatorFrameworkOp.checkExists(jobNodePath)) {
+			throw new SaturnJobConsoleException("The job " + jobName + " does not exists");
+		}
+		String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
+		String jobConfigPreferList = curatorFrameworkOp.getData(jobConfigPreferListNodePath);
+		if (jobConfigPreferList == null) {
+			jobConfigPreferList = "";
+		}
+
+		return jobConfigPreferList;
+	}
+
+	private void validateMigrateJobNewTaskInfo(String jobConfigPreferList, String taskNew,
+											   CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(jobConfigPreferList)) {
+			throw new SaturnJobConsoleException("The job has not set a docker task");
+		}
+
+		List<String> tasks = getTasks(jobConfigPreferList);
+
+		if (!jobConfigPreferList.contains("@")) {
+			throw new SaturnJobConsoleException("The job has not set a docker task");
+		}
+		if (tasks.isEmpty()) {
+			throw new SaturnJobConsoleException("The job has not set a docker task");
+		}
+
+		if (!tasks.isEmpty() && tasks.contains(taskNew)) {
+			throw new SaturnJobConsoleException("the new task is already set");
+		}
+
+		if (containsVDOSTaskId(curatorFrameworkOp)) {
+			String dcosTaskNodePath = SaturnExecutorsNode.getDcosTaskNodePath(taskNew);
+			if (!curatorFrameworkOp.checkExists(dcosTaskNodePath)) {
+				throw new SaturnJobConsoleException("The new task does not exists");
+			}
+		}
+	}
+
+	private boolean containsVDOSTaskId(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> containerTaskIds = getVDOSContainerTaskIds(curatorFrameworkOp);
+		return !CollectionUtils.isEmpty(containerTaskIds);
+	}
+
+	private List<String> getVDOSContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> containerTaskIds = Lists.newArrayList();
+
+		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
+		if (curatorFrameworkOp.checkExists(containerNodePath)) {
+			containerTaskIds = curatorFrameworkOp.getChildren(containerNodePath);
+		}
+
+		return containerTaskIds;
 	}
 
 	private void savePreferListToDb(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,

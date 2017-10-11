@@ -15,7 +15,15 @@
 package com.vip.saturn.job.console.controller;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
@@ -30,11 +38,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 @RestController
 @RequestMapping("job")
@@ -144,6 +156,45 @@ public class JobController extends AbstractController {
 			JobMigrateInfo jobMigrateInfo = jobDimensionService.getAllJobMigrateInfo();
 			requestResult.setSuccess(true);
 			requestResult.setObj(jobMigrateInfo);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "batchSetPreferExecutorsEnabled", method = RequestMethod.GET)
+	public RequestResult batchSetPreferExecutorsEnabled(HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			String candidateList = jobDimensionService.getAllExecutorsOfNamespace();
+			requestResult.setSuccess(true);
+			requestResult.setObj(candidateList);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		}
+		return requestResult;
+	}
+
+	@RequestMapping(value = "batchSetPreferExecutors", method = RequestMethod.POST)
+	public RequestResult batchSetPreferExecutors(final String jobNames, final String newPreferExecutors, HttpServletRequest request) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if (jobNames == null) {
+				throw new SaturnJobConsoleException("The jobNames cannot be null");
+			}
+			if (newPreferExecutors == null) {
+				throw new SaturnJobConsoleException("The new prefer executors cannot be null");
+			}
+			if (jobNames.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The jobNames cannot be empty string");
+			}
+			if (newPreferExecutors.trim().length() == 0) {
+				throw new SaturnJobConsoleException("The new prefer executors cannot be empty string");
+			}
+			jobDimensionService.batchSetPreferExecutors(jobNames.trim(), newPreferExecutors.trim());
+			requestResult.setSuccess(true);
 		} catch (Exception e) {
 			requestResult.setSuccess(false);
 			requestResult.setMessage(e.getMessage());

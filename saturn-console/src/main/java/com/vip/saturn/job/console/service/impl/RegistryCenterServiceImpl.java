@@ -25,6 +25,8 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -70,6 +72,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Resource
 	private ReportAlarmService reportAlarmService;
+
+	@Resource
+	private UpdateJobConfigService updateJobConfigService;
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
@@ -232,7 +237,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				NamespaceShardingManager namespaceShardingManager = null;
 				try {
 					namespaceShardingManager = new NamespaceShardingManager(client, namespace,
-							generateShardingLeadershipHostValue(), reportAlarmService);
+							generateShardingLeadershipHostValue(), reportAlarmService, updateJobConfigService);
 					namespaceShardingManager.start();
 					if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
 						try {

@@ -10,6 +10,8 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vip.saturn.job.integrate.entity.JobConfigInfo;
+import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 
 /**
@@ -23,8 +25,11 @@ public class ExecutorCleanService {
 
 	private CuratorFramework curatorFramework;
 
-	public ExecutorCleanService(CuratorFramework curatorFramework) {
+	private UpdateJobConfigService updateJobConfigService;
+
+	public ExecutorCleanService(CuratorFramework curatorFramework, UpdateJobConfigService updateJobConfigService) {
 		this.curatorFramework = curatorFramework;
+		this.updateJobConfigService = updateJobConfigService;
 	}
 
 	/**
@@ -45,13 +50,21 @@ public class ExecutorCleanService {
 							LOGGER.info("Clean the executor {}", executorName);
 							// delete $SaturnExecutors/executors/xxx
 							deleteExecutor(executorName);
-
-							for (String jobName : getJobList()) {
+							List<String> jobs = getJobList();
+							List<JobConfigInfo> jobConfigInfos = new ArrayList<JobConfigInfo>();
+							for (String jobName : jobs) {
 								// delete $Jobs/job/servers/xxx
 								deleteJobServerExecutor(jobName, executorName);
 								// delete $Jobs/job/config/preferList content about xxx
-								updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName, executorName);
+								String perferList = updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName,
+										executorName);
+								if (perferList != null) {
+									JobConfigInfo jobConfigInfo = new JobConfigInfo(curatorFramework.getNamespace(),
+											jobName, perferList);
+									jobConfigInfos.add(jobConfigInfo);
+								}
 							}
+							updatePerferListQuietly(jobConfigInfos);
 						} else {
 							LOGGER.info("The executor {} is online now, no necessary to clean", executorName);
 						}
@@ -62,6 +75,16 @@ public class ExecutorCleanService {
 			// ignore
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor " + executorName + " error", e);
+		}
+	}
+
+	private void updatePerferListQuietly(List<JobConfigInfo> jobConfigInfos) {
+		try {
+			if (updateJobConfigService != null) {
+				updateJobConfigService.batchUpdatePerferList(jobConfigInfos);
+			}
+		} catch (Exception e) {
+			LOGGER.warn("batchUpdatePerferList  error", e);
 		}
 	}
 
@@ -146,7 +169,7 @@ public class ExecutorCleanService {
 	/**
 	 * delete $Jobs/job/config/preferList content about xxx
 	 */
-	private void updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) {
+	private String updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) {
 		try {
 			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
 			if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {
@@ -157,6 +180,7 @@ public class ExecutorCleanService {
 					// build the new prefer list string
 					StringBuilder sb = new StringBuilder();
 					String[] split = new String(jobConfigPreferListNodeBytes, "UTF-8").split(",");
+					boolean found = false;
 					for (String tmp : split) {
 						String tmpTrim = tmp.trim();
 						if (!tmpTrim.equals(executorName)) {
@@ -164,10 +188,13 @@ public class ExecutorCleanService {
 								sb.append(',');
 							}
 							sb.append(tmpTrim);
+						} else {
+							found = true;
 						}
 					}
 					curatorFramework.setData().withVersion(stat.getVersion()).forPath(jobConfigPreferListNodePath,
 							sb.toString().getBytes("UTF-8"));
+					return found ? sb.toString() : null;
 				}
 			}
 		} catch (NoNodeException e) { // NOSONAR
@@ -178,6 +205,7 @@ public class ExecutorCleanService {
 			LOGGER.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", "
 					+ executorName + ") error", e);
 		}
+		return null;
 	}
 
 }
