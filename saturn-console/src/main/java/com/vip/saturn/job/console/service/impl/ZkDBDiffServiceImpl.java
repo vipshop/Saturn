@@ -103,7 +103,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             }
         } catch (InterruptedException e) {
             log.warn("the thread is interrupted", e);
-            throw e;
+            new SaturnJobConsoleException("the diff thread is interrupted", e);
         } catch (Exception e) {
             log.error("exception happens during execute diff operation", e);
             new SaturnJobConsoleException(e);
