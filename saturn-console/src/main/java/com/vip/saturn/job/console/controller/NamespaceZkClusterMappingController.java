@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,8 +97,8 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 	}
 
 	@RequestMapping(value = "moveNamespaceBatch", method = RequestMethod.POST)
-	public RequestResult moveNamespaceBatch(HttpServletRequest request, String namespaces, String zkClusterKeyNew,
-			boolean updateDBOnly, long id) {
+	public RequestResult moveNamespaceBatch(final HttpServletRequest request, String namespaces, String zkClusterKeyNew,
+			boolean updateDBOnly, final long id) {
 		RequestResult requestResult = new RequestResult();
 		try {
 			if (namespaces == null || namespaces.trim().isEmpty()) {
@@ -106,8 +107,17 @@ public class NamespaceZkClusterMappingController extends AbstractController {
 			if (zkClusterKeyNew == null || zkClusterKeyNew.trim().isEmpty()) {
 				throw new SaturnJobConsoleException("The zkClusterKeyNew cannot be null");
 			}
-			MoveNamespaceBatchStatus moveNamespaceBatchStatus = namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, zkClusterKeyNew, "", updateDBOnly);
-			request.getSession().setAttribute(SessionAttributeKeys.getMoveNamespaceBatchStatusKey(id), moveNamespaceBatchStatus);
+			namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, zkClusterKeyNew, "", updateDBOnly,
+					new NamespaceZkClusterMappingService.UpdateStatusCallback() {
+						@Override
+						public void update(MoveNamespaceBatchStatus moveNamespaceBatchStatus) {
+							HttpSession session = request.getSession();
+							if (session != null) {
+								session.setAttribute(SessionAttributeKeys.getMoveNamespaceBatchStatusKey(id),
+										moveNamespaceBatchStatus);
+							}
+						}
+					});
 			requestResult.setSuccess(true);
 		} catch (SaturnJobConsoleException e) {
 			requestResult.setSuccess(false);

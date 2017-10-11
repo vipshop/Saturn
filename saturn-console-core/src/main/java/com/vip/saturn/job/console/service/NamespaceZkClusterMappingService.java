@@ -1,15 +1,19 @@
 package com.vip.saturn.job.console.service;
 
+import java.util.List;
+
 import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-
-import java.util.List;
 
 /**
  * @author hebelala
  */
 public interface NamespaceZkClusterMappingService {
+
+	interface UpdateStatusCallback {
+		void update(MoveNamespaceBatchStatus moveNamespaceBatchStatus);
+	}
 
 	List<NamespaceZkClusterMappingVo> getNamespaceZkClusterMappingList() throws SaturnJobConsoleException;
 
@@ -20,7 +24,7 @@ public interface NamespaceZkClusterMappingService {
 	void moveNamespaceTo(String namespace, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly)
 			throws SaturnJobConsoleException;
 
-	MoveNamespaceBatchStatus moveNamespaceBatchTo(String namespaces, String zkClusterKeyNew, String lastUpdatedBy,
-			boolean updateDBOnly) throws SaturnJobConsoleException;
+	void moveNamespaceBatchTo(String namespaces, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly,
+			UpdateStatusCallback callback) throws SaturnJobConsoleException;
 
 }

@@ -225,8 +225,8 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	}
 
 	@Override
-	public MoveNamespaceBatchStatus moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
-			final boolean updateDBOnly) throws SaturnJobConsoleException {
+	public void moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
+			final boolean updateDBOnly, final UpdateStatusCallback callback) throws SaturnJobConsoleException {
 		final List<String> namespaceList = new ArrayList<>();
 		String[] split = namespaces.split(",");
 		if (split != null) {
@@ -246,6 +246,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					for (String namespace : namespaceList) {
 						try {
 							moveNamespaceBatchStatus.setMoving(namespace);
+							callback.update(moveNamespaceBatchStatus);
 							moveNamespaceTo(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
 							moveNamespaceBatchStatus.incrementSuccessCount();
 						} catch (SaturnJobConsoleException e) {
@@ -258,14 +259,16 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							}
 						} finally {
 							moveNamespaceBatchStatus.decrementUnDoCount();
+							callback.update(moveNamespaceBatchStatus);
 						}
 					}
 				} finally {
 					moveNamespaceBatchStatus.setFinished(true);
+					callback.update(moveNamespaceBatchStatus);
 				}
 			}
 		});
-		return moveNamespaceBatchStatus;
+		callback.update(moveNamespaceBatchStatus);
 	}
 
 }
