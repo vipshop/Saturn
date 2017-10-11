@@ -36,7 +36,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,9 +65,6 @@ public class ZKDBDiffController extends AbstractController {
 
     @Resource
     private SystemConfigService systemConfigService;
-
-    @Value("${simple.auth.token}")
-    private String simpleToken;
 
     private Gson gson = new Gson();
 
@@ -157,7 +153,6 @@ public class ZKDBDiffController extends AbstractController {
 
             request.setConfig(requestConfig);
             request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-            request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + simpleToken);
             // send request
             CloseableHttpResponse httpResponse = httpClient.execute(request);
             // handle response
