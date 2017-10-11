@@ -44,9 +44,11 @@ function seeDiffInfoDialog(obj) {
     		if(data.success) {
     		    var result = data.obj.configDiffInfos;
                 var content = "";
-                if (result && result instanceof Array){
+                if (result == null){
+                    content = "<p>没有任何不同</p>";
+                } else if (result && result instanceof Array){
                     for(var i in result) {
-                        content = content + "<p>属性:[" + result[i].key + "]找到不同  zk=" + result[i].zkValue + "   db=" + result[i].dbValue +"</p>"
+                        content = content + "<p>属性:[" + result[i].key + "]找到不同  zk=" + result[i].zkValue + "   db=" + result[i].dbValue +"</p>";
                     }
                 }
     		    $("#diff-info-textare").html(content);
