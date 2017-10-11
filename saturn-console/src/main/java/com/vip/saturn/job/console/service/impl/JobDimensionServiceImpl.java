@@ -14,6 +14,32 @@
 
 package com.vip.saturn.job.console.service.impl;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -45,32 +71,9 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
 
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
@@ -304,41 +307,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					jobBriefInfo.setUseSerial(currentJobConfig.getUseSerial());
 					jobBriefInfo.setUseDispreferList(currentJobConfig.getUseDispreferList());
 					jobBriefInfo.setProcessCountIntervalSeconds(currentJobConfig.getProcessCountIntervalSeconds());
-					jobBriefInfo.setJobRate(geJobRunningInfo(jobName));
 					jobBriefInfo.setGroups(currentJobConfig.getGroups());
 					String preferList = currentJobConfig.getPreferList();
-					StringBuilder allPreferExecutorsBuilder = new StringBuilder();
 					if (!Strings.isNullOrEmpty(preferList)) {
-						List<String> executors = null;
-						String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
-						if (curatorFrameworkOp.checkExists(executorsNodePath)) {
-							executors = curatorFrameworkOp.getChildren(executorsNodePath);
-						}
-						List<String> containerTaskIds = null;
 						String containerTaskIdsNodePath = ContainerNodePath.getDcosTasksNodePath();
-						if (curatorFrameworkOp.checkExists(containerTaskIdsNodePath)) {
-							containerTaskIds = curatorFrameworkOp.getChildren(containerTaskIdsNodePath);
-						}
-						boolean hasExecutors = !CollectionUtils.isEmpty(executors);
-						String[] preferExecutorList = preferList.split(",");
-						for (String preferExecutor : preferExecutorList) {
-							boolean isContainerPrefer = preferExecutor.startsWith("@");
-							if (hasExecutors && !executors.contains(preferExecutor) && !isContainerPrefer) {// NOSONAR
-								allPreferExecutorsBuilder.append(preferExecutor + "(已删除)").append(",");
-							} else if (isContainerPrefer) {
-								String preferTaskId = preferExecutor.substring(1);// 容器资源去掉@符号
-								if (!CollectionUtils.isEmpty(containerTaskIds)
-										&& containerTaskIds.contains(preferTaskId)) {// 过滤掉preferList中有，但实际上已被销毁的容器
-									allPreferExecutorsBuilder.append(preferTaskId + "(容器资源)").append(",");
-								}
-							} else {
-								allPreferExecutorsBuilder.append(preferExecutor).append(",");
-							}
-						}
-						if (!Strings.isNullOrEmpty(allPreferExecutorsBuilder.toString())) {
-							jobBriefInfo.setPreferList(
-									allPreferExecutorsBuilder.substring(0, allPreferExecutorsBuilder.length() - 1));
-						}
+						List<String> containerTaskIds = curatorFrameworkOp.getChildren(containerTaskIdsNodePath);
 						jobBriefInfo.setMigrateEnabled(isMigrateEnabled(preferList, containerTaskIds));
 					} else {
 						jobBriefInfo.setMigrateEnabled(false);
@@ -351,26 +324,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					}
 					jobBriefInfo.setCron(currentJobConfig.getCron());
 
-					if (!JobStatus.STOPPED.equals(jobBriefInfo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
-						String executorsPath = JobNodePath.getServerNodePath(jobName);
-						if (curatorFrameworkOp.checkExists(executorsPath)) {
-							List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
-							if (executors != null && !executors.isEmpty()) {
-								StringBuilder shardingListSb = new StringBuilder();
-								for (String executor : executors) {
-									String sharding = curatorFrameworkOp
-											.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
-									if (!Strings.isNullOrEmpty(sharding)) {
-										shardingListSb.append(executor).append(",");
-									}
-								}
-								if (shardingListSb != null && shardingListSb.length() > 0) {
-									jobBriefInfo
-											.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
-								}
-							}
-						}
-					}
+					updateJobBriefInfoStatus(curatorFrameworkOp, jobName, jobBriefInfo);
+
 					result.add(jobBriefInfo);
 				}
 			} catch (Exception e) {
@@ -380,6 +335,28 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 		Collections.sort(result);
 		return result;
+	}
+
+	private void updateJobBriefInfoStatus(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName,
+			JobBriefInfo jobBriefInfo) {
+		if (JobStatus.STOPPED.equals(jobBriefInfo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
+			return;
+		}
+		String executorsPath = JobNodePath.getServerNodePath(jobName);
+		List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
+		if (CollectionUtils.isEmpty(executors)) {
+			return;
+		}
+		StringBuilder shardingListSb = new StringBuilder();
+		for (String executor : executors) {
+			String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
+			if (!Strings.isNullOrEmpty(sharding)) {
+				shardingListSb.append(executor).append(",");
+			}
+		}
+		if (shardingListSb != null && shardingListSb.length() > 0) {
+			jobBriefInfo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
+		}
 	}
 
 	private Map<String, CurrentJobConfig> getJobConfigsFromDB(String namespace) {
@@ -1206,7 +1183,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	private void validateMigrateJobNewTaskInfo(String jobConfigPreferList, String taskNew,
-											   CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 		if (StringUtils.isBlank(jobConfigPreferList)) {
 			throw new SaturnJobConsoleException("The job has not set a docker task");
 		}

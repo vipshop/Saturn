@@ -1480,11 +1480,9 @@ $(function() {
                 	+ "<td>" + "<a href='job_detail?jobName=" + jobName + "&nns=" 
                 	+ regName +"'><span class=\"fancytree-custom-icon "+ iconClass +"\"> " 
                 	+ jobName + "</span></a>" + "</td>" 
-                	+ "<td>" + list[i].jobRate + "</td>"
                 	+ "<td>" + status + "</td>" 
                 	+ "<td>" + loadLevel + "</td>" 
                 	+ "<td>" + shardingTotalCount + "</td>" 
-                	+ "<td id='showPreferList_"+i+"' style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + preferList + "</td>"
                 	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
                 	+ "<td>" + degreeMap[list[i].jobDegree] + "</td>"
@@ -1538,7 +1536,7 @@ $(function() {
                 "createdRow": function( row, data, dataIndex ) {
                     var jobName = list[dataIndex].jobName;
                 },
-            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 8, 12]}], // set the columns unSort
+            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 6, 10]}], // set the columns unSort
                 "aaSorting": [[4, "desc" ],[3, "asc" ],[1, "asc" ]], // set init sorting
                 "columnDefs": [{ "type": "zn-datetime", targets: 10 }],
                 "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "所有"]]
