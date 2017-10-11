@@ -282,13 +282,6 @@ public class JobController extends AbstractController {
 		return jobDimensionService.getAllExecutors(null);
 	}
 
-	@RequestMapping(value = "getJobNextFireTime", method = RequestMethod.GET)
-	public String getJobNextFireTime(String jobName) {
-		Long calculateJobNextTime = jobDimensionService.calculateJobNextTime(jobName);
-		String formatTimeByJobTimeZone = jobDimensionService.formatTimeByJobTimeZone(jobName, calculateJobNextTime);
-		return formatTimeByJobTimeZone;
-	}
-
 	/**
 	 * 获取所有作业的分组列表
 	 */

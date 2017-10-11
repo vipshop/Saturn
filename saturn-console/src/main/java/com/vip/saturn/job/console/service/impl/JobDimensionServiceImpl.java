@@ -184,6 +184,26 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return allJobs;
 	}
 
+	private List<String> getAllUnSystemJobs(Map<String, CurrentJobConfig> jobConfigMap)
+			throws SaturnJobConsoleException {
+		List<String> allJobs = new ArrayList<String>();
+		for (CurrentJobConfig jobConfig : jobConfigMap.values()) {
+			allJobs.add(jobConfig.getJobName());
+		}
+		Collections.sort(allJobs);
+		Iterator<String> iterator = allJobs.iterator();
+		while (iterator.hasNext()) {
+			String job = iterator.next();
+			CurrentJobConfig jobConfig = jobConfigMap.get(job);
+			if (StringUtils.isNotBlank(jobConfig.getJobMode())) {
+				if (jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
+					iterator.remove();
+				}
+			}
+		}
+		return allJobs;
+	}
+
 	@Override
 	public List<JobConfig> getDependentJobsStatus(String jobName) throws SaturnJobConsoleException {
 		List<JobConfig> jobConfigs = new ArrayList<>();
@@ -249,14 +269,14 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	@Override
 	public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		Map<String, CurrentJobConfig> jobConfigs = getJobConfigsFromDB(namespace);
 		List<String> jobNames = new ArrayList<>();
 		try {
-			jobNames = getAllUnSystemJobs(curatorFrameworkOp);
+			jobNames = getAllUnSystemJobs(jobConfigs);
 		} catch (SaturnJobConsoleException e) {
 			log.error(e.getMessage(), e);
 		}
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
-		Map<String, CurrentJobConfig> jobConfigs = getJobConfigsFromDB(namespace);
 		for (String jobName : jobNames) {
 			try {
 				if (jobConfigs.containsKey(jobName)) {

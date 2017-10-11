@@ -1384,7 +1384,6 @@ $(function() {
                 	+ "<td id='showPreferList_"+i+"' style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + preferList + "</td>"
                 	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
-                	+ "<td class='nft'> - </td>" 
                 	+ "<td>" + degreeMap[list[i].jobDegree] + "</td>"
                 	+ "<td>" + list[i].groups + "</td>"
                 	+ "<td id='showDescription_"+i+"'></td>";
@@ -1435,15 +1434,8 @@ $(function() {
                 },
                 "createdRow": function( row, data, dataIndex ) {
                     var jobName = list[dataIndex].jobName;
-                    $.get("job/getJobNextFireTime", {nns:regName, jobName:jobName}, function(data) {
-                    	var nextFireTime = "-";
-                        if (data) {
-                            nextFireTime = data;
-                        }
-                    	$(row).find(".nft").html(nextFireTime);
-                    });
                 },
-            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 8, 13]}], // set the columns unSort
+            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 8, 12]}], // set the columns unSort
                 "aaSorting": [[4, "desc" ],[3, "asc" ],[1, "asc" ]], // set init sorting
                 "columnDefs": [{ "type": "zn-datetime", targets: 10 }],
                 "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "所有"]]
