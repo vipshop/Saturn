@@ -32,10 +32,12 @@ public class ZkClusterMappingUtils {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
 
+	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
+
 	/**
 	 * Console控制台集群ID的环境变量名称
 	 */
-	public static String NAME_VIP_SATURN_CONSOLE_CLUSTER = "VIP_SATURN_CONSOLE_CLUSTER";
+	private static String NAME_VIP_SATURN_CONSOLE_CLUSTER = "VIP_SATURN_CONSOLE_CLUSTER";
 
 	/**
 	 * Console控制台集群ID
@@ -140,16 +142,19 @@ public class ZkClusterMappingUtils {
 	 */
 	public static boolean isCurrentConsoleInTheSameIdc(SystemConfigService systemConfigService, String zkClusterKey) {
 		try {
+			String consoleClusterId;
 			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-				LOGGER.warn("没有配置VIP_SATURN_CONSOLE_CLUSTER环境变量或者系统属性");
-				return false;
+				LOGGER.warn("没有配置VIP_SATURN_CONSOLE_CLUSTER环境变量或者系统属性。使用默认id： default");
+				consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
+			} else {
+				consoleClusterId = VIP_SATURN_CONSOLE_CLUSTER_ID;
 			}
 			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (zkCluseterIdc == null) {
 				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的Idc信息");
 				return false;
 			}
-			String consoleIdc = getIdcByConsoleId(systemConfigService, VIP_SATURN_CONSOLE_CLUSTER_ID);
+			String consoleIdc = getIdcByConsoleId(systemConfigService, consoleClusterId);
 			return zkCluseterIdc.equals(consoleIdc);
 		} catch (SaturnJobConsoleException e) {
 			LOGGER.error("error occur when judge current console is in the same idc with the zk cluster", e);
