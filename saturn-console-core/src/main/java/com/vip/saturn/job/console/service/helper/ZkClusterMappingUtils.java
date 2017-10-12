@@ -155,7 +155,7 @@ public class ZkClusterMappingUtils {
 				return true;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, consoleClusterId);
-			return zkCluseterIdc.equals(consoleIdc);
+			return zkCluseterIdc.equalsIgnoreCase(consoleIdc);
 		} catch (SaturnJobConsoleException e) {
 			LOGGER.error("error occur when judge current console is in the same idc with the zk cluster", e);
 			return true;
