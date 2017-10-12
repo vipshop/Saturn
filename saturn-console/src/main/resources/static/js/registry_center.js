@@ -68,17 +68,15 @@ $(function() {
                     $("#move-namespace-batch-status-dialog-zkCluster").html(zkClusterKeyNew);
                     var split = namespaces.split(",");
                     if(split && split instanceof Array) {
-                        var id = parseInt(Math.random() * 10000000);
-                        $.post("registry_center/moveNamespaceBatch", {namespaces: namespaces, zkClusterKeyNew: zkClusterKeyNew, updateDBOnly: updateDBOnly, id: id}, function(data) {
+                        $.post("registry_center/moveNamespaceBatch", {namespaces: namespaces, zkClusterKeyNew: zkClusterKeyNew, updateDBOnly: updateDBOnly}, function(data) {
                             if(data.success) {
                                 var size = split.length;
                                 $("#move-namespace-batch-status-dialog-data").html("成功：" + 0 + "<br/>失败：" + 0 + "<br/>忽略：" + 0 + "<br/>未做：" + size + "<br/>总共：" + size);
-                                $("#move-namespace-batch-status-dialog-message").html("");
                                 $("#move-namespace-batch-status-dialog-tips").css("display", "inline");
                                 $("#move-namespace-batch-status-dialog-x").css("display", "none");
                                 $("#move-namespace-batch-status-dialog").modal({backdrop:"static", keyboard: false});
                                 $("#move-namespace-batch-status-dialog").modal("show");
-                                getMoveNamespaceBatchStatus(id);
+                                getMoveNamespaceBatchStatus();
                             } else {
                                 showFailureDialogWithMsg("failure-dialog", data.message);
                             }
@@ -115,10 +113,7 @@ $(function() {
 
     $("#move-namespace-batch-status-dialog-x").on("click", function() {
         $("#move-namespace-batch-status-dialog").modal("hide");
-        var id = parseInt($("#move-namespace-batch-status-dialog-x").attr("id2"));
-        if(!isNaN(id)) {
-            $.post("registry_center/clearMoveNamespaceBatchStatus", {id: id}, function(data) {});
-        }
+        $.post("registry_center/clearMoveNamespaceBatchStatus", {}, function(data) {});
         refreshNamespaceZkClusterMappingList();
     });
 
@@ -324,29 +319,14 @@ function refreshZkClusterInfo() {
     }).always(function() { $loading.hide(); });
 }
 
-function getMoveNamespaceBatchStatus(id) {
-    $.get("registry_center/getMoveNamespaceBatchStatus", {id: id}, function(data) {
+function getMoveNamespaceBatchStatus() {
+    $.get("registry_center/getMoveNamespaceBatchStatus", {}, function(data) {
         if(data.success) {
             var status = data.obj;
             $("#move-namespace-batch-status-dialog-data").html("成功：" + status.successCount + "<br/>失败：" + status.failCount + "<br/>忽略：" + status.ignoreCount + "<br/>未做：" + status.unDoCount + "<br/>总共：" + status.totalCount);
-            var message = "失败的域：";
-            var failList = status.failList;
-            if(failList.length > 0) {
-                message = message + failList;
-            } else {
-                message = message + "无";
-            }
-            message = message + "<br/>忽略的域：";
-            var ignoreList = status.ignoreList;
-            if(ignoreList.length > 0) {
-                message = message + ignoreList;
-            } else {
-                message = message + "无";
-            }
-            $("#move-namespace-batch-status-dialog-message").html(message);
             if(!status.finished) {
                 $("#move-namespace-batch-status-dialog-moving").html(status.moving);
-                getMoveNamespaceBatchStatus(id);
+                getMoveNamespaceBatchStatus();
             } else {
                 $("#move-namespace-batch-status-dialog-moving").html("无");
                 $("#move-namespace-batch-status-dialog-tips").css("display", "none");
@@ -354,7 +334,6 @@ function getMoveNamespaceBatchStatus(id) {
             }
         } else {
             showFailureDialogWithMsg("failure-dialog", data.message);
-            $("#move-namespace-batch-status-dialog-x").attr("id2", id);
             $("#move-namespace-batch-status-dialog-tips").css("display", "none");
             $("#move-namespace-batch-status-dialog-x").css("display", "inline");
         }

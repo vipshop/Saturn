@@ -1,14 +1,17 @@
 package com.vip.saturn.job.console.service.impl;
 
+import com.google.gson.Gson;
 import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
+import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
+import com.vip.saturn.job.console.mybatis.service.ShareStatusService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobOperationService;
@@ -16,6 +19,8 @@ import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.ShareStatusFunctions;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
@@ -56,6 +61,11 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 
 	@Resource
 	private RegistryCenterService registryCenterService;
+
+	@Resource
+	private ShareStatusService shareStatusService;
+
+	private Gson gson = new Gson();
 
 	private ExecutorService moveNamespaceBatchThreadPool;
 
@@ -226,7 +236,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 
 	@Override
 	public void moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
-			final boolean updateDBOnly, final UpdateStatusCallback callback) throws SaturnJobConsoleException {
+			final boolean updateDBOnly) throws SaturnJobConsoleException {
 		final List<String> namespaceList = new ArrayList<>();
 		String[] split = namespaces.split(",");
 		if (split != null) {
@@ -239,6 +249,9 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 		}
 		int size = namespaceList.size();
 		final MoveNamespaceBatchStatus moveNamespaceBatchStatus = new MoveNamespaceBatchStatus(size);
+		shareStatusService.delete(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS);
+		shareStatusService.create(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS,
+				gson.toJson(moveNamespaceBatchStatus));
 		moveNamespaceBatchThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -246,29 +259,44 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					for (String namespace : namespaceList) {
 						try {
 							moveNamespaceBatchStatus.setMoving(namespace);
-							callback.update(moveNamespaceBatchStatus);
+							shareStatusService.update(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS,
+									gson.toJson(moveNamespaceBatchStatus));
 							moveNamespaceTo(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
 							moveNamespaceBatchStatus.incrementSuccessCount();
 						} catch (SaturnJobConsoleException e) {
 							if (("The namespace(" + namespace + ") is in " + zkClusterKeyNew).equals(e.getMessage())) {
 								moveNamespaceBatchStatus.incrementIgnoreCount();
-								moveNamespaceBatchStatus.getIgnoreList().add(namespace);
 							} else {
 								moveNamespaceBatchStatus.incrementFailCount();
-								moveNamespaceBatchStatus.getFailList().add(namespace);
 							}
 						} finally {
+							moveNamespaceBatchStatus.setMoving("");
 							moveNamespaceBatchStatus.decrementUnDoCount();
-							callback.update(moveNamespaceBatchStatus);
+							shareStatusService.update(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS,
+									gson.toJson(moveNamespaceBatchStatus));
 						}
 					}
 				} finally {
 					moveNamespaceBatchStatus.setFinished(true);
-					callback.update(moveNamespaceBatchStatus);
+					shareStatusService.update(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS,
+							gson.toJson(moveNamespaceBatchStatus));
 				}
 			}
 		});
-		callback.update(moveNamespaceBatchStatus);
+	}
+
+	@Override
+	public MoveNamespaceBatchStatus getMoveNamespaceBatchStatus() {
+		ShareStatus shareStatus = shareStatusService.get(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS);
+		if (shareStatus != null) {
+			return gson.fromJson(shareStatus.getData(), MoveNamespaceBatchStatus.class);
+		}
+		return null;
+	}
+
+	@Override
+	public void clearMoveNamespaceBatchStatus() {
+		shareStatusService.delete(ShareStatusFunctions.MOVE_NAMESPACE_BATCH_STATUS);
 	}
 
 }

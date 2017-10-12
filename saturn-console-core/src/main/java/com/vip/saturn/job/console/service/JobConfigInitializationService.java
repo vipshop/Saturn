@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.console.service;
 
 import java.util.List;
@@ -15,7 +12,9 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
  */
 public interface JobConfigInitializationService {
 
-	ExportJobConfigPageStatus exportAllToDb(String userName) throws SaturnJobConsoleException;
+	void exportAllToDb(String userName) throws SaturnJobConsoleException;
+
+	ExportJobConfigPageStatus getStatus() throws SaturnJobConsoleException;
 
 	List<RegistryCenterConfiguration> getRegistryCenterConfigurations() throws SaturnJobConsoleException;
 

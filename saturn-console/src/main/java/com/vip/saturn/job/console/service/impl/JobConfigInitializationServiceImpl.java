@@ -23,20 +23,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.ExportJobConfigPageStatus;
+import com.google.gson.Gson;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.ExportJobConfigPageStatus;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
+import com.vip.saturn.job.console.mybatis.service.ShareStatusService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobConfigInitializationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.console.utils.ShareStatusFunctions;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
@@ -60,6 +64,10 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	@Resource
 	private CurrentJobConfigService currentJobConfigService;
 
+	@Resource
+	private ShareStatusService shareStatusService;
+
+	private Gson gson = new Gson();
 	private MapperFacade mapper;
 	private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -86,21 +94,20 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 				}
 			}
 		}
-		for (RegistryCenterConfiguration rcc : rccs) {
-			rcc.setMsg("ready to export");
-		}
 		return rccs;
 	}
 
 	@Override
-	public ExportJobConfigPageStatus exportAllToDb(final String userName) throws SaturnJobConsoleException {
+	public void exportAllToDb(final String userName) throws SaturnJobConsoleException {
 		final ExportJobConfigPageStatus exportJobConfigPageStatus = new ExportJobConfigPageStatus();
+		shareStatusService.delete(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		shareStatusService.create(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+				gson.toJson(exportJobConfigPageStatus));
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
 				log.info("start to export all to db");
 				try {
-					initReg(exportJobConfigPageStatus);
 					log.info("start to delete all from table job_config");
 					deleteAll();
 					log.info("delete all from table job_config successfully");
@@ -116,27 +123,11 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 					exportJobConfigPageStatus.setSuccess(false);
 				} finally {
 					exportJobConfigPageStatus.setExported(true);
+					shareStatusService.update(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+							gson.toJson(exportJobConfigPageStatus));
 				}
 			}
 		});
-		return exportJobConfigPageStatus;
-	}
-
-	private void initReg(ExportJobConfigPageStatus exportJobConfigPageStatus) {
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
-		List<RegistryCenterConfiguration> rccs = new ArrayList<>();
-		if (zkClusterList != null) {
-			for (ZkCluster zkCluster : zkClusterList) {
-				if (zkCluster != null && !zkCluster.isOffline()) {
-					rccs.addAll(zkCluster.getRegCenterConfList());
-				}
-			}
-		}
-		exportJobConfigPageStatus.setRegCenterConfList(rccs);
-		for (RegistryCenterConfiguration rcc : rccs) {
-			rcc.setMsg("ready to export");
-			exportJobConfigPageStatus.getRegCenterConfMap().put(rcc.getNamespace(), rcc);
-		}
 	}
 
 	private void deleteAll() {
@@ -163,7 +154,6 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 		ArrayList<RegistryCenterConfiguration> oldRccs = zkCluster.getRegCenterConfList();
 		ArrayList<RegistryCenterConfiguration> rccs = new ArrayList<RegistryCenterConfiguration>(oldRccs);
 		for (RegistryCenterConfiguration rcc : rccs) {
-			setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(), "Exporting");
 			List<String> jobNames = getAllUnSystemJobs(rcc.getNamespace(), zkCluster.getCuratorFramework());
 			for (String jobName : jobNames) {
 				try {
@@ -177,25 +167,15 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 					currentJobConfigService.create(current);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
-					setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(),
-							"Export failed,error:" + e.getMessage());
 					throw new SaturnJobConsoleException(e.getMessage());
 				}
 			}
 			exportJobConfigPageStatus.setSuccessJobNum(exportJobConfigPageStatus.getSuccessJobNum() + jobNames.size());
 			exportJobConfigPageStatus.setSuccessNamespaceNum(exportJobConfigPageStatus.getSuccessNamespaceNum() + 1);
-			setRegistryCenterConfigurationMsg(exportJobConfigPageStatus, rcc.getNamespace(),
-					"export success,job number:" + jobNames.size());
+			shareStatusService.update(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+					gson.toJson(exportJobConfigPageStatus));
 		}
 		log.info("export db by single zkCluster successfully, zkCluster Addr is :{}", tmp.getZkAddr());
-	}
-
-	private void setRegistryCenterConfigurationMsg(ExportJobConfigPageStatus exportJobConfigPageStatus,
-			String namespace, String msg) {
-		RegistryCenterConfiguration rcc = exportJobConfigPageStatus.getRegCenterConfMap().get(namespace);
-		if (rcc != null) {
-			rcc.setMsg(msg);
-		}
 	}
 
 	private JobSettings getJobSettings(final String jobName, RegistryCenterConfiguration rcc,
@@ -373,6 +353,15 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 			log.error(e.getMessage(), e);
 			return 0;
 		}
+	}
+
+	@Override
+	public ExportJobConfigPageStatus getStatus() throws SaturnJobConsoleException {
+		ShareStatus shareStatus = shareStatusService.get(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		if (shareStatus != null) {
+			return gson.fromJson(shareStatus.getData(), ExportJobConfigPageStatus.class);
+		}
+		return null;
 	}
 
 }

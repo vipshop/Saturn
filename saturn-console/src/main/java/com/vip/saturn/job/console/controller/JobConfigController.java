@@ -17,7 +17,6 @@ import com.vip.saturn.job.console.domain.ExportJobConfigPageStatus;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.service.JobConfigInitializationService;
-import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 
 @Controller
 @RequestMapping("/")
@@ -30,8 +29,12 @@ public class JobConfigController extends AbstractController {
 
 	@RequestMapping(value = "export_job_config_page", method = RequestMethod.GET)
 	public String exportPage(final ModelMap model, HttpServletRequest request) {
-		ExportJobConfigPageStatus exportJobConfigPageStatus = (ExportJobConfigPageStatus) request.getSession()
-				.getAttribute(SessionAttributeKeys.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		ExportJobConfigPageStatus exportJobConfigPageStatus = null;
+		try {
+			exportJobConfigPageStatus = jobConfigInitializationService.getStatus();
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+		}
 		if (exportJobConfigPageStatus != null && exportJobConfigPageStatus.isExported() == false) {
 			model.put("exporting", true);
 		} else {
@@ -45,14 +48,8 @@ public class JobConfigController extends AbstractController {
 	public RequestResult load(HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			List<RegistryCenterConfiguration> regCenterConfList = null;
-			ExportJobConfigPageStatus exportJobConfigPageStatus = (ExportJobConfigPageStatus) request.getSession()
-					.getAttribute(SessionAttributeKeys.EXPORT_JOB_CONFIG_PAGE_STATUS);
-			if (exportJobConfigPageStatus == null || exportJobConfigPageStatus.isExported()) {
-				regCenterConfList = jobConfigInitializationService.getRegistryCenterConfigurations();
-			} else {
-				regCenterConfList = exportJobConfigPageStatus.getRegCenterConfList();
-			}
+			List<RegistryCenterConfiguration> regCenterConfList = jobConfigInitializationService
+					.getRegistryCenterConfigurations();
 			requestResult.setSuccess(true);
 			requestResult.setObj(regCenterConfList);
 		} catch (Throwable t) {
@@ -69,8 +66,7 @@ public class JobConfigController extends AbstractController {
 		RequestResult requestResult = new RequestResult();
 		LOGGER.info("getExportStatus");
 		try {
-			ExportJobConfigPageStatus exportJobConfigPageStatus = (ExportJobConfigPageStatus) request.getSession()
-					.getAttribute(SessionAttributeKeys.EXPORT_JOB_CONFIG_PAGE_STATUS);
+			ExportJobConfigPageStatus exportJobConfigPageStatus = jobConfigInitializationService.getStatus();
 			requestResult.setSuccess(true);
 			requestResult.setObj(exportJobConfigPageStatus);
 		} catch (Throwable t) {
@@ -87,16 +83,13 @@ public class JobConfigController extends AbstractController {
 		LOGGER.info("exportAllConfigToDb");
 		RequestResult requestResult = new RequestResult();
 		try {
-			ExportJobConfigPageStatus exportJobConfigPageStatus = (ExportJobConfigPageStatus) request.getSession()
-					.getAttribute(SessionAttributeKeys.EXPORT_JOB_CONFIG_PAGE_STATUS);
+			ExportJobConfigPageStatus exportJobConfigPageStatus = jobConfigInitializationService.getStatus();
 			if (exportJobConfigPageStatus != null && exportJobConfigPageStatus.isExported() == false) {
 				requestResult.setSuccess(false);
 				requestResult.setMessage("正在导出配置中，如有必要，请稍后再试！");
 				return requestResult;
 			}
-			exportJobConfigPageStatus = jobConfigInitializationService.exportAllToDb(null);
-			request.getSession().setAttribute(SessionAttributeKeys.EXPORT_JOB_CONFIG_PAGE_STATUS,
-					exportJobConfigPageStatus);
+			jobConfigInitializationService.exportAllToDb(null);
 			requestResult.setSuccess(true);
 		} catch (Throwable t) {
 			LOGGER.error(t.getMessage(), t);

@@ -51,8 +51,7 @@ function renderRegCenters() {
 	            for (var i = 0;i < list.length;i++) {
 	                var baseTd = "<td>" + list[i].namespace + "</td><td>"
 	                    + list[i].name + "</td><td>"
-	                    + list[i].zkAlias + "</td><td>" + list[i].zkClusterKey + "</td>"
-	                    +"<td>"+list[i].msg+"</td>";
+	                    + list[i].zkAlias + "</td><td>" + list[i].zkClusterKey + "</td>";
 	                $("#regCenters tbody").append("<tr>" + baseTd + "</tr>");
 	            }
         	}

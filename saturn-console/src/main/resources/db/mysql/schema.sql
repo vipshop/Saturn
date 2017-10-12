@@ -219,3 +219,11 @@ CREATE TABLE `namespace_version_mapping` (
   UNIQUE KEY `uniq_nvm_namespace` (`namespace`),
   KEY `idx_nvm_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名版本配置表';
+
+
+CREATE TABLE `temporary_share_status` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `function` varchar(255) NOT NULL DEFAULT '' COMMENT '功能模块',
+  `data` varchar(2000) NOT NULL DEFAULT '' COMMENT '数据',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='共享状态表';

@@ -1,8 +1,5 @@
 package com.vip.saturn.job.console.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author hebelala
  */
@@ -15,8 +12,10 @@ public class MoveNamespaceBatchStatus {
 	private int unDoCount;
 	private int totalCount;
 	private String moving = "";
-	private List<String> failList = new ArrayList<>();
-	private List<String> ignoreList = new ArrayList<>();
+	
+	public MoveNamespaceBatchStatus() {
+		
+	}
 
 	public MoveNamespaceBatchStatus(int size) {
 		this.unDoCount = size;
@@ -77,22 +76,6 @@ public class MoveNamespaceBatchStatus {
 
 	public void setMoving(String moving) {
 		this.moving = moving;
-	}
-
-	public List<String> getFailList() {
-		return failList;
-	}
-
-	public void setFailList(List<String> failList) {
-		this.failList = failList;
-	}
-
-	public List<String> getIgnoreList() {
-		return ignoreList;
-	}
-
-	public void setIgnoreList(List<String> ignoreList) {
-		this.ignoreList = ignoreList;
 	}
 
 	public void incrementSuccessCount() {

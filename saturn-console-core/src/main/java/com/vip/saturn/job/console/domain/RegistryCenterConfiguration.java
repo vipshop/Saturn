@@ -16,8 +16,6 @@ package com.vip.saturn.job.console.domain;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * @author chembo.huang
  *
@@ -52,8 +50,6 @@ public class RegistryCenterConfiguration implements Serializable {
 	private String degree;
 
 	private String version;
-
-	private String msg;
 
 	public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
 		this.name = name;
@@ -169,14 +165,6 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.version = version;
 	}
 
-	public String getMsg() {
-		return msg;
-	}
-
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
-
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
@@ -213,7 +201,6 @@ public class RegistryCenterConfiguration implements Serializable {
 	}
 
 	public int hashCode() {
-		int PRIME = 59;
 		int result = 1;
 		Object $name = getName();
 		result = result * 59 + ($name == null ? 43 : $name.hashCode());

@@ -24,7 +24,10 @@ public interface NamespaceZkClusterMappingService {
 	void moveNamespaceTo(String namespace, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly)
 			throws SaturnJobConsoleException;
 
-	void moveNamespaceBatchTo(String namespaces, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly,
-			UpdateStatusCallback callback) throws SaturnJobConsoleException;
+	void moveNamespaceBatchTo(String namespaces, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly) throws SaturnJobConsoleException;
+	
+	MoveNamespaceBatchStatus getMoveNamespaceBatchStatus();
+	
+	void clearMoveNamespaceBatchStatus();
 
 }
