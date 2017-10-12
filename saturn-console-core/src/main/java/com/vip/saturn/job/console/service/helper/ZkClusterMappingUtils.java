@@ -152,13 +152,13 @@ public class ZkClusterMappingUtils {
 			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (zkCluseterIdc == null) {
 				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的Idc信息");
-				return false;
+				return true;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, consoleClusterId);
 			return zkCluseterIdc.equals(consoleIdc);
 		} catch (SaturnJobConsoleException e) {
 			LOGGER.error("error occur when judge current console is in the same idc with the zk cluster", e);
-			return false;
+			return true;
 		}
 	}
 

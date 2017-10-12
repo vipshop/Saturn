@@ -334,12 +334,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace, CuratorRepository.CuratorFrameworkOp zkClient, Set<String> jobNamesInDb) throws SaturnJobConsoleException {
         List<JobDiffInfo> jobsOnlyInZK = Lists.newArrayList();
         List<String> jobNamesInZk = jobDimensionService.getAllJobs(zkClient);
-        // 找出只有ZK有DB没有的Job
-        if (jobNamesInZk.size() > jobNamesInDb.size()) {
-            for (String name : jobNamesInZk) {
-                if (!jobNamesInDb.contains(name)) {
-                    jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
-                }
+
+        for (String name : jobNamesInZk) {
+            if (jobNamesInDb == null || jobNamesInDb.isEmpty() || !jobNamesInDb.contains(name)) {
+                jobsOnlyInZK.add(new JobDiffInfo(namespace, name, JobDiffInfo.DiffType.ZK_ONLY, Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList()));
             }
         }
 
