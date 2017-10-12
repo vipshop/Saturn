@@ -1483,7 +1483,7 @@ $(function() {
                 	+ "<td>" + status + "</td>" 
                 	+ "<td>" + loadLevel + "</td>" 
                 	+ "<td>" + shardingTotalCount + "</td>" 
-                	+ "<td style='width: 600px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
+                	+ "<td style='width: 300px; word-wrap:break-word;word-break:break-all;'>" + list[i].shardingList + "</td>"
                 	+ "<td>" + cron + "</td>" 
                 	+ "<td>" + degreeMap[list[i].jobDegree] + "</td>"
                 	+ "<td>" + list[i].groups + "</td>"
