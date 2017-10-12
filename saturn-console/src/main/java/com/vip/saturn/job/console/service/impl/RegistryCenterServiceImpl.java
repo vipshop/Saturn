@@ -53,6 +53,7 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.DashboardLeaderTreeCache;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
+import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.LocalHostService;
@@ -195,6 +196,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			return false;
 		}
 		return restrictComputeZkClusterKeys.contains(clusterKey);
+	}
+
+	/**
+	 * 判断是否同机房
+	 */
+	private boolean isCurrentConsoleInTheSameIdc(String clusterKey) {
+		return ZkClusterMappingUtils.isCurrentConsoleInTheSameIdc(systemConfigService, clusterKey);
 	}
 
 	private String generateShardingLeadershipHostValue() {
@@ -453,7 +461,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			return false;
 		}
 
-		return isZKClusterCanBeComputed(zkClusterKey);
+		return isZKClusterCanBeComputed(zkClusterKey) && isCurrentConsoleInTheSameIdc(zkClusterKey);
 	}
 
 	/**
@@ -464,7 +472,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			return;
 		}
 		for (String zkClusterKey : dashboardLeaderTreeCacheMap.keySet()) {
-			if (!isZKClusterCanBeComputed(zkClusterKey)) {
+			if (!isZKClusterCanBeComputed(zkClusterKey) || !isCurrentConsoleInTheSameIdc(zkClusterKey)) {
 				log.info("close the deprecated dashboard leader tree Cache, {}", zkClusterKey);
 				DashboardLeaderTreeCache oldDashboardLeaderTreeCache = dashboardLeaderTreeCacheMap.remove(zkClusterKey);
 				if (oldDashboardLeaderTreeCache != null) {
