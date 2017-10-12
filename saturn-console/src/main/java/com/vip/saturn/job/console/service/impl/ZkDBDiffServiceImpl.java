@@ -75,7 +75,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     }
 
     @Override
-    public List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException, SaturnJobConsoleException {
+    public List<JobDiffInfo> diffByCluster(String clusterKey) throws SaturnJobConsoleException {
         List<JobDiffInfo> resultList = Lists.newArrayList();
 
         long startTime = System.currentTimeMillis();

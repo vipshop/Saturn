@@ -13,7 +13,7 @@ public interface ZkDBDiffService {
      * @param clusterKey zk cluster key.
      * @return The different info organized by job.
      */
-    List<JobDiffInfo> diffByCluster(String clusterKey) throws InterruptedException, SaturnJobConsoleException;
+    List<JobDiffInfo> diffByCluster(String clusterKey) throws SaturnJobConsoleException;
 
     /**
      * Diff the config data in zk and db of namespace.
