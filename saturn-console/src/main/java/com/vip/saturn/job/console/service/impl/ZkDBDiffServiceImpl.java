@@ -224,7 +224,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         // timeZone
         diff("timeZone", dbJobConfig.getTimeZone(), zkJobConfig.getTimeZone(), configDiffInfos);
 
-        if (!JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB) && !JobBriefInfo.JobType.VSHELL.name().equals(jobTypeInDB)) {
+        if (!JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
             // cron
             diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
         }
