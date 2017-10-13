@@ -144,14 +144,14 @@ public class ZkClusterMappingUtils {
 		try {
 			String consoleClusterId;
 			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-				LOGGER.warn("没有配置VIP_SATURN_CONSOLE_CLUSTER环境变量或者系统属性。使用默认id： default");
+				LOGGER.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}", DEFAULT_CONSOLE_CLUSTER_ID);
 				consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
 			} else {
 				consoleClusterId = VIP_SATURN_CONSOLE_CLUSTER_ID;
 			}
 			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (zkCluseterIdc == null) {
-				LOGGER.warn("根据zkClusterKey:" + zkClusterKey + "，没有找到其所属的Idc信息");
+				LOGGER.warn("The mapping idc is not found for the zkClusterKey that is {}", zkClusterKey);
 				return true;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, consoleClusterId);
@@ -215,7 +215,7 @@ public class ZkClusterMappingUtils {
 	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName)
 			throws SaturnJobConsoleException {
 		String idcConsoleIdMappingStr = systemConfigService.getValueDirectly(mappingName);
-		LOGGER.info("the " + mappingName + " str is:" + idcConsoleIdMappingStr);
+		LOGGER.info("the {} str is {}", mappingName, idcConsoleIdMappingStr);
 		if (StringUtils.isBlank(idcConsoleIdMappingStr)) {
 			throw new SaturnJobConsoleException("the " + mappingName + " is not configured in sys_config");
 		}

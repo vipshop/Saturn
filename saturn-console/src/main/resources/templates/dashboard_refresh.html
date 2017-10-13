@@ -44,7 +44,6 @@ layout:decorator="frame-layout">
 			<div th:replace="fragments :: success-dialog"></div>
 			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='dashboard-refresh-confirm-dialog', text='')"></div>
-			<input type="hidden" id="authorizeSaturnConsoleDashBoardAllPrivilege" th:value="${authorizeSaturnConsoleDashBoardAllPrivilege}" />
 		</div>
 		<div th:remove="tag" layout:fragment="footer-scripts">
 			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>

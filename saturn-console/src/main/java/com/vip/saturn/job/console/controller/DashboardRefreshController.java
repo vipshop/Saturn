@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
@@ -14,12 +13,10 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,8 +38,6 @@ import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
 public class DashboardRefreshController extends AbstractController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardRefreshController.class);
-
-	private static final String HEADER_VALUE_PREFIX = "Bearer ";
 
 	private static final int CONNECT_TIMEOUT_MS = 10000;
 
