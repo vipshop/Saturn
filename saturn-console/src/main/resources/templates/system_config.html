@@ -80,7 +80,10 @@
             <ul>
                 <li><font color="red">CONTAINER_SENSITIVE_PARAMS</font><pre>容器资源环境变量配置敏感字，多个使用英文逗号隔开。</pre></li>
                 <li><font color="red">MAX_JOB_NUM</font><pre>每个域最大作业数。</pre></li>
-                <li><font color="red">CONSOLE_ZK_CLUSTER_MAPPING</font><pre>Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3;default:/zk。</pre></li>
+                <li><font color="red">CONSOLE_ZK_CLUSTER_MAPPING</font><pre>Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3;default:/zk;</pre></li>
+                <li><font color="red">IDC_ZK_CLUSTER_MAPPING</font><pre>IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。配置格式：gd:/zk1,/zk2;bj:/test,/zk;</pre></li>
+                <li><font color="red">IDC_CONSOLE_ID_MAPPING</font><pre>IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。配置格式：gd:CONSOLE-GD;bj:CONSOLE-BJ;</pre></li>
+                <li><font color="red">IDC_CONSOLE_DOMAIN_MAPPING</font><pre>IDC机房与Console访问域名的映射关系，用于识别不同机房的Console的访问域名。配置格式：gd:http://gd-namespace;bj:http://bj-namespace;</pre></li>
             </ul>
         </div>
     </div>
