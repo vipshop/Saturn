@@ -4,7 +4,7 @@ xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
 layout:decorator="frame-layout">
 	<head>
 		<title>Dashboard刷新</title>
-		<link href="lib/datatables/dataTables.bootstrap.min.css" rel="stylesheet" />
+		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
 	</head>
 	<body>
 		<div th:remove="tag" layout:fragment="content">
@@ -47,9 +47,8 @@ layout:decorator="frame-layout">
 			<input type="hidden" id="authorizeSaturnConsoleDashBoardAllPrivilege" th:value="${authorizeSaturnConsoleDashBoardAllPrivilege}" />
 		</div>
 		<div th:remove="tag" layout:fragment="footer-scripts">
-			<script src="lib/datatables/jquery.dataTables.min.js"></script>
-			<script src="lib/datatables/dataTables.bootstrap.min.js"></script>
-			<script src="lib/typeahead/bootstrap3-typeahead.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
 			<script src="js/dashboard_refresh.js?v=saturn-console-ui-version"></script>
 		</div>
 	</body>

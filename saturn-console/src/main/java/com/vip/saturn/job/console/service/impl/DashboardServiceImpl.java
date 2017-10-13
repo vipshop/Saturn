@@ -185,17 +185,9 @@ public class DashboardServiceImpl implements DashboardService {
 	public synchronized void refreshStatistics2DB(String zkClusterKey) throws SaturnJobConsoleException {
 		log.info("start refresh statistics by zkClusterKey:" + zkClusterKey);
 		Date start = new Date();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
-		ZkCluster targetZkCluster = null;
-		if (zkClusterList != null) {
-			for (ZkCluster zkCluster : zkClusterList) {
-				if (zkCluster.getZkClusterKey().equals(zkClusterKey)) {
-					targetZkCluster = zkCluster;
-				}
-			}
-		}
-		if (targetZkCluster != null) {
-			refreshStatistics2DB(targetZkCluster);
+		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+		if (zkCluster != null) {
+			refreshStatistics2DB(zkCluster);
 		} else {
 			throw new SaturnJobConsoleException("zk cluster not found by zkClusterKey:" + zkClusterKey);
 		}
