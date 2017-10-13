@@ -40,7 +40,7 @@ import com.vip.saturn.job.console.service.JobConfigInitializationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import com.vip.saturn.job.console.utils.ShareStatusFunctions;
+import com.vip.saturn.job.console.utils.ShareStatusModuleNames;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
@@ -100,8 +100,8 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	@Override
 	public void exportAllToDb(final String userName) throws SaturnJobConsoleException {
 		final ExportJobConfigPageStatus exportJobConfigPageStatus = new ExportJobConfigPageStatus();
-		shareStatusService.delete(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS);
-		shareStatusService.create(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+		shareStatusService.delete(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		shareStatusService.create(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 				gson.toJson(exportJobConfigPageStatus));
 		executorService.execute(new Runnable() {
 			@Override
@@ -123,7 +123,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 					exportJobConfigPageStatus.setSuccess(false);
 				} finally {
 					exportJobConfigPageStatus.setExported(true);
-					shareStatusService.update(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+					shareStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 							gson.toJson(exportJobConfigPageStatus));
 				}
 			}
@@ -172,7 +172,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 			}
 			exportJobConfigPageStatus.setSuccessJobNum(exportJobConfigPageStatus.getSuccessJobNum() + jobNames.size());
 			exportJobConfigPageStatus.setSuccessNamespaceNum(exportJobConfigPageStatus.getSuccessNamespaceNum() + 1);
-			shareStatusService.update(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS,
+			shareStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 					gson.toJson(exportJobConfigPageStatus));
 		}
 		log.info("export db by single zkCluster successfully, zkCluster Addr is :{}", tmp.getZkAddr());
@@ -357,7 +357,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 
 	@Override
 	public ExportJobConfigPageStatus getStatus() throws SaturnJobConsoleException {
-		ShareStatus shareStatus = shareStatusService.get(ShareStatusFunctions.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		ShareStatus shareStatus = shareStatusService.get(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
 		if (shareStatus != null) {
 			return gson.fromJson(shareStatus.getData(), ExportJobConfigPageStatus.class);
 		}

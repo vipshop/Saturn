@@ -21,35 +21,35 @@ public class ShareStatusServiceImpl implements ShareStatusService {
 
 	@Transactional
 	@Override
-	public int delete(String function) {
+	public int delete(String moduleName) {
 		ShareStatus shareStatus = new ShareStatus();
-		shareStatus.setFunction(function);
+		shareStatus.setModuleName(moduleName);
 		return shareStatusRepository.delete(shareStatus);
 	}
 
 	@Transactional
 	@Override
-	public int create(String function, String data) {
+	public int create(String moduleName, String data) {
 		ShareStatus shareStatus = new ShareStatus();
-		shareStatus.setFunction(function);
+		shareStatus.setModuleName(moduleName);
 		shareStatus.setData(data);
 		return shareStatusRepository.create(shareStatus);
 	}
 
 	@Transactional
 	@Override
-	public int update(String function, String data) {
+	public int update(String moduleName, String data) {
 		ShareStatus shareStatus = new ShareStatus();
-		shareStatus.setFunction(function);
+		shareStatus.setModuleName(moduleName);
 		shareStatus.setData(data);
 		return shareStatusRepository.update(shareStatus);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public ShareStatus get(String function) {
+	public ShareStatus get(String moduleName) {
 		ShareStatus shareStatus = new ShareStatus();
-		shareStatus.setFunction(function);
+		shareStatus.setModuleName(moduleName);
 		return shareStatusRepository.get(shareStatus);
 	}
 

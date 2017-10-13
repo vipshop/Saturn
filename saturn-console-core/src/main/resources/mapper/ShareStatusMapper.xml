@@ -3,30 +3,30 @@
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.ShareStatusRepository">
     <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.ShareStatus">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="function" property="function" jdbcType="VARCHAR"/>
+        <result column="module_name" property="moduleName" jdbcType="VARCHAR"/>
         <result column="data" property="data" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, function, data
+        id, module_name, data
     </sql>
     <insert id="create" parameterType="com.vip.saturn.job.console.mybatis.entity.ShareStatus">
         insert into 
-        temporary_share_status(function, data) 
-        values(#{function, jdbcType=VARCHAR}, #{data, jdbcType=VARCHAR})
+        temporary_share_status(module_name, data) 
+        values(#{moduleName, jdbcType=VARCHAR}, #{data, jdbcType=VARCHAR})
     </insert>
     <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.ShareStatus">
         update temporary_share_status
         set data = #{data, jdbcType=VARCHAR}
-        where function = #{function, jdbcType=VARCHAR}
+        where module_name = #{moduleName, jdbcType=VARCHAR}
     </update>
     <delete id="delete" parameterType="com.vip.saturn.job.console.mybatis.entity.ShareStatus">
         delete from temporary_share_status
-        where function = #{function, jdbcType=VARCHAR}
+        where module_name = #{moduleName, jdbcType=VARCHAR}
     </delete>
     <select id="get" resultMap="BaseResultMap" parameterType="com.vip.saturn.job.console.mybatis.entity.ShareStatus">
         select
         <include refid="Base_Column_List"/>
         from temporary_share_status
-        where function = #{function, jdbcType=VARCHAR}
+        where module_name = #{moduleName, jdbcType=VARCHAR}
     </select>
 </mapper>

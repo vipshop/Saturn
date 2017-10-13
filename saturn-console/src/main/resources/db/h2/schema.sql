@@ -219,7 +219,8 @@ CREATE TABLE `namespace_version_mapping` (
 
 CREATE TABLE `temporary_share_status` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `function` varchar(255) NOT NULL DEFAULT '' COMMENT '功能模块',
+  `module_name` varchar(255) NOT NULL DEFAULT '' COMMENT '功能模块',
   `data` varchar(2000) NOT NULL DEFAULT '' COMMENT '数据',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_tss_module_name` (`module_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

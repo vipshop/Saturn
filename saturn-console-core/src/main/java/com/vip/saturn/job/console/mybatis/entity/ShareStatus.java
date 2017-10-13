@@ -8,7 +8,7 @@ package com.vip.saturn.job.console.mybatis.entity;
 public class ShareStatus {
 
 	private long id;
-	private String function;
+	private String moduleName;
 	private String data;
 
 	public long getId() {
@@ -19,12 +19,12 @@ public class ShareStatus {
 		this.id = id;
 	}
 
-	public String getFunction() {
-		return function;
+	public String getModuleName() {
+		return moduleName;
 	}
 
-	public void setFunction(String function) {
-		this.function = function;
+	public void setModuleName(String moduleName) {
+		this.moduleName = moduleName;
 	}
 
 	public String getData() {

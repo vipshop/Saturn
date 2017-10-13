@@ -9,12 +9,12 @@ import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
  */
 public interface ShareStatusService {
 
-	int delete(String function);
+	int delete(String moduleName);
 
-	int create(String function, String data);
+	int create(String moduleName, String data);
 
-	int update(String function, String data);
+	int update(String moduleName, String data);
 
-	ShareStatus get(String function);
+	ShareStatus get(String moduleName);
 
 }
