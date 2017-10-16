@@ -1538,7 +1538,6 @@ $(function() {
                 },
             	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 6, 10]}], // set the columns unSort
                 "aaSorting": [[3, "desc" ],[1, "asc" ],[1, "asc" ]], // set init sorting
-                "columnDefs": [{ "type": "zn-datetime", targets: 10 }],
                 "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "所有"]]
 			});
             $("#jobs-overview-tbl_filter label").before(jobOperation);
