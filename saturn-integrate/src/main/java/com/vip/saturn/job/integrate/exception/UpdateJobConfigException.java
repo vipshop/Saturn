@@ -1,14 +1,10 @@
 package com.vip.saturn.job.integrate.exception;
 
 /**
- * 
  * @author timmy.hu
  */
 public class UpdateJobConfigException extends Exception {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 6261442630110127839L;
 
 	public UpdateJobConfigException() {
