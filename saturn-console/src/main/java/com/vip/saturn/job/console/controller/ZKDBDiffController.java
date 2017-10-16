@@ -19,7 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.service.SystemConfigService;
@@ -117,7 +116,7 @@ public class ZKDBDiffController extends AbstractController {
     private List<JobDiffInfo> relayDiffIfPossible(String zkCluster) throws SaturnJobConsoleException, InterruptedException {
         try {
             return relayDiff(zkCluster);
-        } catch (JobConsoleException e) {
+        } catch (SaturnJobConsoleException e) {
             LOGGER.warn("fail to relay diff: {}", e.getMessage(), e);
             return zkDBDiffService.diffByCluster(zkCluster);
         }
