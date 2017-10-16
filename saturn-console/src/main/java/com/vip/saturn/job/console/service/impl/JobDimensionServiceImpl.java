@@ -269,6 +269,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	@Override
 	public Collection<JobBriefInfo> getAllJobsBriefInfo(String sessionBsKey, String namespace) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
 		Map<String, CurrentJobConfig> jobConfigs = getJobConfigsFromDB(namespace);
 		List<String> jobNames = new ArrayList<>();
 		try {
