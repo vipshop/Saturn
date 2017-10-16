@@ -84,7 +84,7 @@ public class ExecutorCleanService {
 				updateJobConfigService.batchUpdatePerferList(jobConfigInfos);
 			}
 		} catch (Exception e) {
-			LOGGER.warn("batchUpdatePerferList  error", e);
+			LOGGER.warn("batchUpdatePerferList  error", e); // just log a warn.
 		}
 	}
 

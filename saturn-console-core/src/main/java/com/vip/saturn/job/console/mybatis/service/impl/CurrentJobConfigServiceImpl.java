@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
@@ -86,7 +87,7 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) {
+	public void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException {
 		SqlSession batchSqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
 		try {
 			for (CurrentJobConfig currentJobConfig : jobConfigs) {
@@ -95,6 +96,7 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 			batchSqlSession.commit();
 		} catch (Exception e) {
 			batchSqlSession.rollback();
+			throw new SaturnJobConsoleException("error when batchUpdatePerferList", e);
 		} finally {
 			IOUtils.closeQuietly(batchSqlSession);
 		}
