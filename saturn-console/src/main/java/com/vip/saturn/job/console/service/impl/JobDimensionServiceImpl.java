@@ -14,32 +14,6 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -71,9 +45,32 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
@@ -82,8 +79,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	@Resource
 	private CuratorRepository curatorRepository;
-
-	protected static Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
 
 	@Resource
 	private HistoryJobConfigService historyJobConfigService;
@@ -1095,15 +1090,35 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return containerTaskIdsBuilder.toString();
 	}
 
+	/**
+	 * 先获取DCOS节点下的taskID节点；如果没有此节点，则尝试从executor节点下获取;
+	 * <p>
+	 * 不存在既有DCOS容器，又有K8S容器的模式。
+	 */
 	private List<String> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		List<String> containerTaskIds = Lists.newArrayList();
-
-		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
-		if (curatorFrameworkOp.checkExists(containerNodePath)) {
-			containerTaskIds = curatorFrameworkOp.getChildren(containerNodePath);
+		List<String> containerTaskIds = getDCOSContainerTaskIds(curatorFrameworkOp);
+		if (CollectionUtils.isEmpty(containerTaskIds)) {
+			containerTaskIds = getK8SContainerTaskIds(curatorFrameworkOp);
 		}
-
 		return containerTaskIds;
+	}
+
+	private List<String> getK8SContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> taskIds = new ArrayList<>();
+		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
+		if (executors != null && executors.size() > 0) {
+			for (String executor : executors) {
+				String executorTaskNodePath = SaturnExecutorsNode.getExecutorTaskNodePath(executor);
+				if (curatorFrameworkOp.checkExists(executorTaskNodePath)) {
+					String taskId = curatorFrameworkOp.getData(executorTaskNodePath);
+					if (taskId != null && !taskIds.contains(taskId)) {
+						taskIds.add(taskId);
+					}
+				}
+			}
+		}
+		return taskIds;
 	}
 
 	@Override
@@ -1202,7 +1217,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			throw new SaturnJobConsoleException("the new task is already set");
 		}
 
-		if (containsVDOSTaskId(curatorFrameworkOp)) {
+		if (containsDCOSTaskId(curatorFrameworkOp)) {
 			String dcosTaskNodePath = SaturnExecutorsNode.getDcosTaskNodePath(taskNew);
 			if (!curatorFrameworkOp.checkExists(dcosTaskNodePath)) {
 				throw new SaturnJobConsoleException("The new task does not exists");
@@ -1210,12 +1225,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 	}
 
-	private boolean containsVDOSTaskId(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		List<String> containerTaskIds = getVDOSContainerTaskIds(curatorFrameworkOp);
+	private boolean containsDCOSTaskId(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> containerTaskIds = getDCOSContainerTaskIds(curatorFrameworkOp);
 		return !CollectionUtils.isEmpty(containerTaskIds);
 	}
 
-	private List<String> getVDOSContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private List<String> getDCOSContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		List<String> containerTaskIds = Lists.newArrayList();
 
 		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
