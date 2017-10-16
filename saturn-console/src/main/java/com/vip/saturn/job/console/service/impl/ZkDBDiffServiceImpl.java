@@ -95,7 +95,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         try {
             List<Future<List<JobDiffInfo>>> futures = diffExecutorService.invokeAll(callableList);
 
-            for (Future future : futures) {
+            for (Future<List<JobDiffInfo>> future : futures) {
                 List<JobDiffInfo> jobDiffInfos = (List<JobDiffInfo>) future.get();
                 if (jobDiffInfos != null && !jobDiffInfos.isEmpty()) {
                     resultList.addAll(jobDiffInfos);
@@ -103,10 +103,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             }
         } catch (InterruptedException e) {
             log.warn("the thread is interrupted", e);
-            new SaturnJobConsoleException("the diff thread is interrupted", e);
+            throw new SaturnJobConsoleException("the diff thread is interrupted", e);
         } catch (Exception e) {
             log.error("exception happens during execute diff operation", e);
-            new SaturnJobConsoleException(e);
+            throw new SaturnJobConsoleException(e);
         }
 
 
@@ -156,7 +156,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}]", namespace, e);
-            new SaturnJobConsoleException(e);
+            throw new SaturnJobConsoleException(e);
         } finally {
             log.info("Finish diff namespace:{} which cost {}ms", namespace, System.currentTimeMillis() - startTime);
         }
@@ -188,10 +188,8 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}] and job [{}]", namespace, jobName, e);
-            new SaturnJobConsoleException(e);
+            throw new SaturnJobConsoleException(e);
         }
-
-        return null;
     }
 
     private boolean checkJobIsExsitInZk(String jobName, CuratorRepository.CuratorFrameworkOp zkClient) {
