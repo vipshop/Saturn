@@ -2,7 +2,7 @@ package com.vip.saturn.job.console.mybatis.repository;
 
 import org.springframework.stereotype.Repository;
 
-import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
+import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
 
 /**
  * 
@@ -12,12 +12,12 @@ import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
 @Repository
 public interface ShareStatusRepository {
 
-	int create(ShareStatus shareStatus);
+	int create(TemporarySharedStatus temporarySharedStatus);
 
-	int update(ShareStatus shareStatus);
+	int update(TemporarySharedStatus temporarySharedStatus);
 
-	int delete(ShareStatus shareStatus);
+	int delete(TemporarySharedStatus temporarySharedStatus);
 
-	ShareStatus get(ShareStatus shareStatus);
+	TemporarySharedStatus get(TemporarySharedStatus temporarySharedStatus);
 
 }

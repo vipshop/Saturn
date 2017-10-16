@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.ShareStatusRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="status_key" property="statusKey" jdbcType="VARCHAR"/>
+        <result column="status_value" property="statusValue" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, status_key, status_value
+    </sql>
+    <insert id="create" parameterType="com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus">
+        insert into 
+        temporary_shared_status(status_key, status_value) 
+        values(#{statusKey, jdbcType=VARCHAR}, #{statusValue, jdbcType=VARCHAR})
+    </insert>
+    <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus">
+        update temporary_shared_status
+        set status_value = #{statusValue, jdbcType=VARCHAR}
+        where status_key = #{statusKey, jdbcType=VARCHAR}
+    </update>
+    <delete id="delete" parameterType="com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus">
+        delete from temporary_shared_status
+        where status_key = #{statusKey, jdbcType=VARCHAR}
+    </delete>
+    <select id="get" resultMap="BaseResultMap" parameterType="com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus">
+        select
+        <include refid="Base_Column_List"/>
+        from temporary_shared_status
+        where status_key = #{statusKey, jdbcType=VARCHAR}
+    </select>
+</mapper>

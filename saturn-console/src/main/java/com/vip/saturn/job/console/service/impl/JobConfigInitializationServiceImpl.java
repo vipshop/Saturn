@@ -32,9 +32,9 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
-import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
+import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
-import com.vip.saturn.job.console.mybatis.service.ShareStatusService;
+import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobConfigInitializationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -65,7 +65,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	private CurrentJobConfigService currentJobConfigService;
 
 	@Resource
-	private ShareStatusService shareStatusService;
+	private TemporarySharedStatusService temporarySharedStatusService;
 
 	private Gson gson = new Gson();
 	private MapperFacade mapper;
@@ -100,8 +100,8 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	@Override
 	public void exportAllToDb(final String userName) throws SaturnJobConsoleException {
 		final ExportJobConfigPageStatus exportJobConfigPageStatus = new ExportJobConfigPageStatus();
-		shareStatusService.delete(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
-		shareStatusService.create(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
+		temporarySharedStatusService.delete(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		temporarySharedStatusService.create(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 				gson.toJson(exportJobConfigPageStatus));
 		executorService.execute(new Runnable() {
 			@Override
@@ -123,7 +123,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 					exportJobConfigPageStatus.setSuccess(false);
 				} finally {
 					exportJobConfigPageStatus.setExported(true);
-					shareStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
+					temporarySharedStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 							gson.toJson(exportJobConfigPageStatus));
 				}
 			}
@@ -172,7 +172,7 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 			}
 			exportJobConfigPageStatus.setSuccessJobNum(exportJobConfigPageStatus.getSuccessJobNum() + jobNames.size());
 			exportJobConfigPageStatus.setSuccessNamespaceNum(exportJobConfigPageStatus.getSuccessNamespaceNum() + 1);
-			shareStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
+			temporarySharedStatusService.update(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS,
 					gson.toJson(exportJobConfigPageStatus));
 		}
 		log.info("export db by single zkCluster successfully, zkCluster Addr is :{}", tmp.getZkAddr());
@@ -357,9 +357,10 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 
 	@Override
 	public ExportJobConfigPageStatus getStatus() throws SaturnJobConsoleException {
-		ShareStatus shareStatus = shareStatusService.get(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
-		if (shareStatus != null) {
-			return gson.fromJson(shareStatus.getData(), ExportJobConfigPageStatus.class);
+		TemporarySharedStatus temporarySharedStatus = temporarySharedStatusService
+				.get(ShareStatusModuleNames.EXPORT_JOB_CONFIG_PAGE_STATUS);
+		if (temporarySharedStatus != null) {
+			return gson.fromJson(temporarySharedStatus.getStatusValue(), ExportJobConfigPageStatus.class);
 		}
 		return null;
 	}

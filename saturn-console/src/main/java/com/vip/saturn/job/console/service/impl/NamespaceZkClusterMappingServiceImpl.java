@@ -7,11 +7,11 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
-import com.vip.saturn.job.console.mybatis.entity.ShareStatus;
+import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
-import com.vip.saturn.job.console.mybatis.service.ShareStatusService;
+import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobOperationService;
@@ -63,7 +63,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	private RegistryCenterService registryCenterService;
 
 	@Resource
-	private ShareStatusService shareStatusService;
+	private TemporarySharedStatusService temporarySharedStatusService;
 
 	private Gson gson = new Gson();
 
@@ -249,8 +249,8 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 		}
 		int size = namespaceList.size();
 		final MoveNamespaceBatchStatus moveNamespaceBatchStatus = new MoveNamespaceBatchStatus(size);
-		shareStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
-		shareStatusService.create(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
+		temporarySharedStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
+		temporarySharedStatusService.create(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
 				gson.toJson(moveNamespaceBatchStatus));
 		moveNamespaceBatchThreadPool.execute(new Runnable() {
 			@Override
@@ -259,7 +259,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					for (String namespace : namespaceList) {
 						try {
 							moveNamespaceBatchStatus.setMoving(namespace);
-							shareStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
+							temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
 									gson.toJson(moveNamespaceBatchStatus));
 							moveNamespaceTo(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
 							moveNamespaceBatchStatus.incrementSuccessCount();
@@ -272,13 +272,13 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 						} finally {
 							moveNamespaceBatchStatus.setMoving("");
 							moveNamespaceBatchStatus.decrementUnDoCount();
-							shareStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
+							temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
 									gson.toJson(moveNamespaceBatchStatus));
 						}
 					}
 				} finally {
 					moveNamespaceBatchStatus.setFinished(true);
-					shareStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
+					temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
 							gson.toJson(moveNamespaceBatchStatus));
 				}
 			}
@@ -287,16 +287,17 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 
 	@Override
 	public MoveNamespaceBatchStatus getMoveNamespaceBatchStatus() {
-		ShareStatus shareStatus = shareStatusService.get(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
-		if (shareStatus != null) {
-			return gson.fromJson(shareStatus.getData(), MoveNamespaceBatchStatus.class);
+		TemporarySharedStatus temporarySharedStatus = temporarySharedStatusService
+				.get(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
+		if (temporarySharedStatus != null) {
+			return gson.fromJson(temporarySharedStatus.getStatusValue(), MoveNamespaceBatchStatus.class);
 		}
 		return null;
 	}
 
 	@Override
 	public void clearMoveNamespaceBatchStatus() {
-		shareStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
+		temporarySharedStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
 	}
 
 }

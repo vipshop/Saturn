@@ -221,10 +221,10 @@ CREATE TABLE `namespace_version_mapping` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名版本配置表';
 
 
-CREATE TABLE `temporary_share_status` (
+CREATE TABLE `temporary_shared_status` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `module_name` varchar(255) NOT NULL DEFAULT '' COMMENT '功能模块',
-  `data` varchar(2000) NOT NULL DEFAULT '' COMMENT '数据',
+  `status_key` varchar(255) NOT NULL DEFAULT '' COMMENT '状态键',
+  `status_value` varchar(4000) NOT NULL DEFAULT '' COMMENT '状态值',
   PRIMARY KEY (`id`),
-  KEY `idx_tss_module_name` (`module_name`)
+  UNIQUE KEY `uniq_tss_status_key` (`status_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='共享状态表';
