@@ -145,6 +145,7 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
 	}
 
+	@Transactional
 	@Override
 	public int deleteAll(int limitNum) {
 		return currentJobConfigRepo.deleteAll(limitNum);
