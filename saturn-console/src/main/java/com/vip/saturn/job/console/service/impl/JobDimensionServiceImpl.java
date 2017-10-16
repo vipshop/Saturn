@@ -121,15 +121,15 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	@Override
 	public Collection<JobBriefInfo> getAllJobsBriefInfo4Tree() {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		Map<String, CurrentJobConfig> jobConfigs = getJobConfigsFromDB(
+				curatorFrameworkOp.getCuratorFramework().getNamespace());
 		List<String> jobNames = new ArrayList<>();
 		try {
-			jobNames = getAllUnSystemJobs(curatorFrameworkOp);
+			jobNames = getAllUnSystemJobs(jobConfigs);
 		} catch (SaturnJobConsoleException e) {
 			log.error(e.getMessage(), e);
 		}
 		List<JobBriefInfo> result = new ArrayList<>(jobNames.size());
-		Map<String, CurrentJobConfig> jobConfigs = getJobConfigsFromDB(
-				curatorFrameworkOp.getCuratorFramework().getNamespace());
 		for (String jobName : jobNames) {
 			try {
 				JobBriefInfo jobBriefInfo = genJobBriefInfo4tree(jobName, jobConfigs);
