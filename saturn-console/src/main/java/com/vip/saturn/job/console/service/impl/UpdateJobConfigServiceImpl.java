@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.integrate.entity.JobConfigInfo;
+import com.vip.saturn.job.integrate.exception.UpdateJobConfigException;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 
 /**
@@ -31,7 +33,7 @@ public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 	 * @see com.vip.saturn.job.integrate.service.UpdateJobConfigService#batchUpdatePerferList(java.util.List)
 	 */
 	@Override
-	public void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos) {
+	public void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException {
 		if (CollectionUtils.isEmpty(jobConfigInfos)) {
 			return;
 		}
@@ -44,7 +46,11 @@ public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 			currentJobConfig.setPreferList(jobConfigInfo.getPerferList());
 			currentJobConfigs.add(currentJobConfig);
 		}
-		currentJobConfigService.batchUpdatePerferList(currentJobConfigs);
+		try {
+			currentJobConfigService.batchUpdatePerferList(currentJobConfigs);
+		} catch (SaturnJobConsoleException e) {
+			throw new UpdateJobConfigException(e);
+		}
 	}
 
 }

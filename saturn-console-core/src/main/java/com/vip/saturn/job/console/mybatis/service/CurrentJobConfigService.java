@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 
 public interface CurrentJobConfigService {
@@ -23,7 +24,7 @@ public interface CurrentJobConfigService {
 
 	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel) throws Exception;
 
-	void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs);
+	void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException;
 
 	List<CurrentJobConfig> findConfigsByNamespace(String namespace);
 

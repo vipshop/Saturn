@@ -6,6 +6,7 @@ package com.vip.saturn.job.integrate.service;
 import java.util.List;
 
 import com.vip.saturn.job.integrate.entity.JobConfigInfo;
+import com.vip.saturn.job.integrate.exception.UpdateJobConfigException;
 
 /**
  * 更新Job配置
@@ -19,6 +20,6 @@ public interface UpdateJobConfigService {
 	 * 
 	 * @param jobConfigInfos 作业配置信息
 	 */
-	void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos);
+	void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException;
 
 }
