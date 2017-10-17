@@ -157,11 +157,9 @@ public class ZKDBDiffController extends AbstractController {
             // handle response
             return handleResponse(httpResponse);
         } catch (SaturnJobConsoleException se) {
-            LOGGER.error("SaturnJobException throws: {}", se.getMessage(), se);
             throw se;
         } catch (Exception e) {
-            LOGGER.error("Other exception throws: {}", e);
-            throw new SaturnJobConsoleException(e);
+            throw new SaturnJobConsoleException("Exception throws during relay diff", e);
         } finally {
             if (httpClient != null) {
                 try {
@@ -193,7 +191,7 @@ public class ZKDBDiffController extends AbstractController {
             List<JobDiffInfo> result = gson.fromJson(responseBody, new TypeToken<List<JobDiffInfo>>() {
             }.getType());
 
-            LOGGER.info("Get diff info. size={}", result.size());
+            LOGGER.info("Get diff info from relay site successfully, size={}", result.size());
             return result;
         }
 
