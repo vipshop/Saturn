@@ -45,17 +45,19 @@ import java.util.Map;
 @Service
 public class RestApiServiceImpl implements RestApiService {
 
-	private final static Logger log = LoggerFactory.getLogger(RestApiServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(RestApiServiceImpl.class);
 
-	private final static long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
+	private static final long STATUS_UPDATE_FORBIDDEN_INTERVAL_IN_MILL_SECONDS = 3 * 1000L;
 
-	private final static long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
+	private static final long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
-	private final static String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
+	private static final String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
 
-	private final static String ALL_EXECUTORS_ARE_OFFLINE = "all executors are offline";
+	private static final String ALL_EXECUTORS_ARE_OFFLINE = "all executors are offline";
 
-	private final static String NO_EXECUTOR_FOUND = "no executor found for this job";
+	private static final String NO_EXECUTOR_FOUND = "no executor found for this job";
+
+	private static final String EXECUTOR_RESTART_TIME_PREFIX = "restart on ";
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -559,7 +561,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 	@Override
 	public void raiseAlarm(final String namespace, final String jobName, final String executorName,
-			final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+						   final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
 				new ReuseCallBackWithoutReturn() {
 					@Override
@@ -582,20 +584,31 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public void raiseAlarm(final String namespace, final String executorName, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+	public void raiseExecutorRestartAlarm(final String namespace, final String executorName, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, registryCenterService, curatorRepository,
 				new ReuseCallBackWithoutReturn() {
 					@Override
 					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 							throws SaturnJobConsoleException {
 						try {
-							reportAlarmService.raise(namespace, null, executorName, null, alarmInfo);
+							String restartTime = obtainRestartTime(alarmInfo);
+							reportAlarmService.executorRestart(namespace, executorName, restartTime);
 						} catch (ReportAlarmException e) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 									e.getMessage());
 						}
 					}
 				});
+	}
+
+	private String obtainRestartTime(AlarmInfo alarmInfo) {
+		String msg = alarmInfo.getMessage();
+		int idx = msg.indexOf(EXECUTOR_RESTART_TIME_PREFIX);
+		if (idx > 0 && idx + EXECUTOR_RESTART_TIME_PREFIX.length() < msg.length()) {
+			return msg.substring(idx + EXECUTOR_RESTART_TIME_PREFIX.length());
+		}
+
+		return "";
 	}
 
 	private void checkUpdateStatusToEnableAllowed(long ctime, long mtime) throws SaturnJobConsoleHttpException {

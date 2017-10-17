@@ -52,6 +52,16 @@ public interface ReportAlarmService {
 	void dashboardTimeout4AlarmJob(String namespace, String jobName, List<Integer> timeoutItems,
 			int timeout4AlarmSeconds) throws ReportAlarmException;
 
+
+	/**
+	 * Alarm for executor restart.
+	 *
+	 * @param namespace
+	 * @param executorName
+	 * @param restartTime
+	 */
+	void executorRestart(String namespace, String executorName, String restartTime) throws ReportAlarmException;
+
 	/**
 	 * Raise customized alarm by Saturn job.
 	 *

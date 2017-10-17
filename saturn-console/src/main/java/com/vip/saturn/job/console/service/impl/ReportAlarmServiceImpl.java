@@ -52,6 +52,11 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 	}
 
 	@Override
+	public void executorRestart(String namespace, String executorName, String restartTime) throws ReportAlarmException {
+		log.error("executor restart, namespace is {}, executor is {}, restart on {}", namespace, executorName, restartTime);
+	}
+
+	@Override
 	public void raise(String namespace, String jobName, String executorName, Integer shardItem, AlarmInfo alarmInfo)
 			throws ReportAlarmException {
 		log.error("raise, namespace is {}, jobName is {}, executorName is {}, shardItem is {}, alarmInfo is {}",

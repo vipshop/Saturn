@@ -133,11 +133,11 @@ public interface RestApiService {
 			throws SaturnJobConsoleException;
 
 	/**
-	 * Raise alarm for specified executor exception.
+	 * Raise alarm for executor restart event.
 	 *
 	 * @param namespace
 	 * @param executorName
 	 * @param alarmInfo
 	 */
-	void raiseAlarm(String namespace, String executorName, AlarmInfo alarmInfo) throws SaturnJobConsoleException;
+	void raiseExecutorRestartAlarm(String namespace, String executorName, AlarmInfo alarmInfo) throws SaturnJobConsoleException;
 }

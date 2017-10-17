@@ -56,7 +56,7 @@ public class AlarmRestApiController {
 			// (since 2.1.4) 如果alarm title是Executor_Restart，而且系统配置ALARM_RAISED_ON_EXECUTOR_RESTART=false, 只记录日志不发送告警
 			boolean isExecutorRestartAlarmEvent = isExecutorRestartAlarmEvent(alarmInfo);
 			if (isExecutorRestartAlarmEvent) {
-				restApiService.raiseAlarm(namespace, executorName, alarmInfo);
+				restApiService.raiseExecutorRestartAlarm(namespace, executorName, alarmInfo);
 			} else {
 				if (StringUtils.isBlank(jobName)) {
 					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Missing parameter: jobName");
