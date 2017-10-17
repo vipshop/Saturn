@@ -1019,17 +1019,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 																						// executor is offline
 			}
 		}
-		StringBuilder containerTaskIdsBuilder = new StringBuilder();
-		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
-		if (curatorFrameworkOp.checkExists(containerNodePath)) {
-			List<String> containerTaskIds = curatorFrameworkOp.getChildren(containerNodePath);
-			if (!CollectionUtils.isEmpty(containerTaskIds)) {
-				for (String containerTaskId : containerTaskIds) {
-					containerTaskIdsBuilder.append(containerTaskId + "(容器资源)").append(",");
-				}
-			}
-		}
-		allExecutorsBuilder.append(containerTaskIdsBuilder.toString());
+
+		String containerTaskIdsStr = generateContainerTaskIdStr(curatorFrameworkOp);
+		allExecutorsBuilder.append(containerTaskIdsStr);
+
 		allExecutorsBuilder.append(offlineExecutorsBuilder.toString());
 		String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
 		if (curatorFrameworkOp.checkExists(preferListNodePath)) {

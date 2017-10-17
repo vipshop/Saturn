@@ -119,6 +119,10 @@ public interface JobDimensionService {
 
 	void migrateJobNewTask(String jobName, String taskNew) throws SaturnJobConsoleException;
 
+	@Deprecated
+	/**
+	 * 2.1.4 之后，被批量设置executor取代。
+	 */
 	void batchMigrateJobNewTask(String jobNames, String taskNew) throws SaturnJobConsoleException;
 
 	void setPreferExecutors(String jobName, String executorListStr) throws SaturnJobConsoleException;
