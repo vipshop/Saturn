@@ -2,7 +2,14 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RestApiJobConfig;
+import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.RestApiJobStatistics;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -566,6 +573,23 @@ public class RestApiServiceImpl implements RestApiService {
 							}
 
 							reportAlarmService.raise(namespace, jobName, executorName, shardItem, alarmInfo);
+						} catch (ReportAlarmException e) {
+							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+									e.getMessage());
+						}
+					}
+				});
+	}
+
+	@Override
+	public void raiseAlarm(final String namespace, final String executorName, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(namespace, registryCenterService, curatorRepository,
+				new ReuseCallBackWithoutReturn() {
+					@Override
+					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+							throws SaturnJobConsoleException {
+						try {
+							reportAlarmService.raise(namespace, null, executorName, null, alarmInfo);
 						} catch (ReportAlarmException e) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 									e.getMessage());

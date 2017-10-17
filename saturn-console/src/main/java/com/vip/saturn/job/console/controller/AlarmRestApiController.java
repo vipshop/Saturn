@@ -29,9 +29,13 @@ import java.util.Map;
 @RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController {
 
-	public final static String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
+	private static final String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
-	private final static Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
+	private static final String ALARM_TITLE_EXECUTOR_RESTART = "Executor_Restart";
+
+	private static final String ALARM_NAME_EXECUTOR_RESTART = "Saturn Event";
+
+	private static final Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
 	@Resource
 	private RestApiService restApiService;
@@ -49,7 +53,16 @@ public class AlarmRestApiController {
 			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName,
 					executorName, shardItem);
 
-			restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
+			// (since 2.1.4) 如果alarm title是Executor_Restart，而且系统配置ALARM_RAISED_ON_EXECUTOR_RESTART=false, 只记录日志不发送告警
+			boolean isExecutorRestartAlarmEvent = isExecutorRestartAlarmEvent(alarmInfo);
+			if (isExecutorRestartAlarmEvent) {
+				restApiService.raiseAlarm(namespace, executorName, alarmInfo);
+			} else {
+				if (StringUtils.isBlank(jobName)) {
+					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Missing parameter: jobName");
+				}
+				restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
+			}
 
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} catch (SaturnJobConsoleException e) {
@@ -57,6 +70,10 @@ public class AlarmRestApiController {
 		} catch (Exception e) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
+	}
+
+	private boolean isExecutorRestartAlarmEvent(AlarmInfo alarmInfo) {
+		return ALARM_TITLE_EXECUTOR_RESTART.equals(alarmInfo.getTitle()) && ALARM_NAME_EXECUTOR_RESTART.equals(alarmInfo.getName());
 	}
 
 	private AlarmInfo constructAlarmInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {
