@@ -604,7 +604,7 @@ public class RestApiServiceImpl implements RestApiService {
 	private String obtainRestartTime(AlarmInfo alarmInfo) {
 		String msg = alarmInfo.getMessage();
 		int idx = msg.indexOf(EXECUTOR_RESTART_TIME_PREFIX);
-		if (idx > 0 && idx + EXECUTOR_RESTART_TIME_PREFIX.length() < msg.length()) {
+		if (idx > 0) {
 			return msg.substring(idx + EXECUTOR_RESTART_TIME_PREFIX.length());
 		}
 
