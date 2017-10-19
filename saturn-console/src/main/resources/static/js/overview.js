@@ -298,9 +298,9 @@ $(function() {
     	var term = $(this).val();
         regex =  term ;
         if (regex == "") {
-    		jobsViewDataTable.columns(11).search(regex, true, false).draw();
+    		jobsViewDataTable.columns(8).search(regex, true, false).draw();
         } else {
-    		jobsViewDataTable.columns(11).search("^" + regex + "$", true, false).draw();
+    		jobsViewDataTable.columns(8).search("^" + regex + "$", true, false).draw();
         }
     });
     
