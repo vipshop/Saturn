@@ -820,7 +820,7 @@ $(function() {
                 "url": "job/loadHistoryConfig",
                 "type": "POST",
                 "deferRender": true,
-                "data": {jobName:jobName},
+                "data": {jobName:jobName,ns:$("#namespace").val(), nns:regName},
                 "dataSrc": "data"
             },
             "rowCallback": function( row, data, displayIndex, displayIndexFull ) {
@@ -922,7 +922,7 @@ $(function() {
 	function bindCheckAndForecastCronButton() {
 		 $(document).on("click", "#check-and-forecast-cron", function(event) {
 			var timeZone = $("#timeZone").val();
-			$.post("job/checkAndForecastCron", {timeZone: timeZone, cron : $("#cron").val()}, function (data) {
+			$.post("job/checkAndForecastCron", {timeZone: timeZone, cron : $("#cron").val(),nns:regName}, function (data) {
 				var msg = "检验结果：";
 				if(data.success == true) {
                     msg += "成功";

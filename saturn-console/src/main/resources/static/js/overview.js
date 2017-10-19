@@ -770,7 +770,7 @@ $(function() {
         var $btn = $(this).button('loading');
         var jobName = $("#migrate-jobName").html();
         var newTask = $("#migrate-job-tasks-select").find("option:selected").val();
-        $.post("job/migrateJobNewTask", {jobName : jobName, newTask : newTask}, function(data) {
+        $.post("job/migrateJobNewTask", {jobName : jobName, newTask : newTask,nns:regName}, function(data) {
             if(data.success == true) {
                 showSuccessDialogWithCallback(function() {location.reload(true);});
             } else {
@@ -785,7 +785,7 @@ $(function() {
         var $btn = $(this).button('loading');
         var jobName = $("#batch-migrate-jobName").html();
         var newTask = $("#batch-migrate-job-tasks-select").find("option:selected").val();
-        $.post("job/batchMigrateJobNewTask", {jobNames : jobName, newTask : newTask}, function(data) {
+        $.post("job/batchMigrateJobNewTask", {jobNames : jobName, newTask : newTask,nns:regName}, function(data) {
             if(data.success == true) {
                 showSuccessDialogWithCallback(function() {location.reload(true);});
             } else {
@@ -802,7 +802,7 @@ $(function() {
         if($("#batch-preferList").val() != null) {
             var newPreferExecutors = $("#batch-preferList").val().toString();
         }
-        $.post("job/batchSetPreferExecutors", {jobNames : jobName, newPreferExecutors : newPreferExecutors}, function(data) {
+        $.post("job/batchSetPreferExecutors", {jobNames : jobName, newPreferExecutors : newPreferExecutors,nns:regName}, function(data) {
             if(data.success == true) {
                 showSuccessDialogWithCallback(function() {location.reload(true);});
             } else {
@@ -1333,7 +1333,7 @@ $(function() {
     	selectedJobName = $jobNamesSelect.val();
     	var st = $("#start-time").val();
     	var et = $("#end-time").val();
-    	$logstashTable.ajax.url("logstash?jn="+selectedJobName+"&st="+st+"&et="+et).load();
+    	$logstashTable.ajax.url("logstash?jn="+selectedJobName+"&st="+st+"&et="+et+"&nns="+regName+"&ns="+ns).load();
     }); 
     if ($("#jobs").is(':visible')) {
     	$loading.show();
@@ -1542,7 +1542,7 @@ $(function() {
 			});
             $("#jobs-overview-tbl_filter label").before(jobOperation);
             
-            $.get("job/getAllJobGroups", {}, function (data) {
+            $.get("job/getAllJobGroups", {nns:regName}, function (data) {
         		if(!data){
         			return;
         		}
@@ -2287,7 +2287,7 @@ $(function() {
     }
 
     function checkAndForecastCron(timeZone, cron) {
-        $.post("job/checkAndForecastCron", {timeZone: timeZone, cron : cron}, function (data) {
+        $.post("job/checkAndForecastCron", {timeZone: timeZone, cron : cron,nns:regName}, function (data) {
             var msg = "检验结果：";
             if(data.success == true) {
                 msg += "成功";
