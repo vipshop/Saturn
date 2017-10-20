@@ -746,8 +746,7 @@ $(function() {
                 }
 	            var status = data[i].status;
 	            var jobMsg = null == data[i].jobMsg? "-" : data[i].jobMsg;
-	            var runningIp = data[i].runningIp;
-	            var falioverExecutor = null == data[i].failoverExecutor ? "-" : data[i].failoverExecutor;
+	            var executorName = data[i].executorName;
 	            var lastBeginTime = null == data[i].lastBeginTime ? "-" : data[i].lastBeginTime;
 	            var executionTime;
 	            if(!data[i].lastCompleteTime || status === "RUNNING"){
@@ -770,12 +769,15 @@ $(function() {
 	            	trClass = "info";
 	            	status = "<span title='您已关闭了本作业上报运行状态，不会上报实时状态'>-</span>";
 	            }
+	            if(data[i].failover == true) {
+	            	status = status + " & FAILOVER";
+	            }
 	            if( data[i].timeConsumed >= 60) {
 	            	trClass = "danger";
 	            	var baseTd = "<td><span class='glyphicon glyphicon-exclamation-sign red-color' >" + data[i].item + "</span></td>" 
 	            		+ "<td>" + status + "</td>" 
 	            		+ "<td>" + jobMsg + "</td>" 
-	            		+ "<td>" + runningIp + "</td>" 
+	            		+ "<td>" + executorName + "</td>"
 	            		+ "<td>" + executionTime + "</td>" 
 	            		+ "<td class='hide-when-is-msg-job'>" + nextFireTime + "</td>" 
 	            		+ "<td><button class='logBtn btn btn-info' + jobItem='" + data[i].item + "' title='查看作业分片日志'>查看" + "</button></td>";
@@ -784,7 +786,7 @@ $(function() {
 	            	var baseTd = "<td>" + data[i].item + "</td>" 
 	            		+ "<td>" + status + "</td>" 
 	            		+ "<td>" + jobMsg + "</td>" 
-	            		+ "<td>" + runningIp + "</td>"
+	            		+ "<td>" + executorName + "</td>"
 	            		+ "<td>" + executionTime + "</td>" 
 	            		+ "<td class='hide-when-is-msg-job'>"+ nextFireTime + "</td>" 
 	                	+ "<td><button class='logBtn btn btn-info' + jobItem='" + data[i].item + "' title='查看作业分片日志'>查看" + "</button></td>";

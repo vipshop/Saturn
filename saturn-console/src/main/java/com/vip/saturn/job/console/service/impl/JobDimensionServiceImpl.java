@@ -853,8 +853,9 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
 		List<ExecutionInfo> result = new ArrayList<>(items.size());
 		for (String each : items) {
-			if (getRunningIP(each, jobName) != null) { // || hasFailoverExecutor(each, jobName)
-				result.add(getExecutionInfo(jobName, each));
+			ExecutionInfo executionInfo = getExecutionInfo(jobName, each, curatorFrameworkOp);
+			if(executionInfo != null) {
+				result.add(executionInfo);
 			}
 		}
 		Collections.sort(result);
@@ -871,8 +872,11 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	private ExecutionInfo getExecutionInfo(final String jobName, final String item) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+	private ExecutionInfo getExecutionInfo(final String jobName, final String item, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String itemExecutorName = getItemExecutorName(jobName, item, curatorFrameworkOp);
+		if(itemExecutorName == null) {
+			return null;
+		}
 		ExecutionInfo result = new ExecutionInfo();
 		result.setJobName(jobName);
 		result.setItem(Integer.parseInt(item));
@@ -897,12 +901,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "jobMsg"));
 		result.setJobMsg(jobMsg);
 
-		String runningIp = getRunningIP(item, jobName);
-		result.setRunningIp(runningIp == null ? "未找到" : runningIp);
+		result.setExecutorName(itemExecutorName);
 
 		if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failover"))) {
-			result.setFailoverExecutor(
-					curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "failover")));
+			result.setFailover(true);
 		}
 		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
 		if (timeZoneStr == null || timeZoneStr.trim().length() == 0) {
@@ -938,20 +940,16 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	/**
-	 * 查找运行item的服务器IP
-	 *
-	 * @param item 作业分片
-	 * @param jobName 作业名称
-	 * @return 运行item的服务器IP
-	 */
-	private String getRunningIP(String item, String jobName) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		String runningIp = null;
+	private String getItemExecutorName(final String jobName, final String item, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
 		if (!curatorFrameworkOp.checkExists(serverNodePath)) {
-			return runningIp;
+			return null;
 		}
+		String failoverNodePath = JobNodePath.getExecutionNodePath(jobName, item, "failover");
+		if(curatorFrameworkOp.checkExists(failoverNodePath)) {
+			return curatorFrameworkOp.getData(failoverNodePath);
+		}
+		String executorName = null;
 		List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
 		for (String server : servers) {
 			String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, server, "sharding"));
@@ -966,12 +964,12 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				}
 			}
 			if (!Strings.isNullOrEmpty(toFind)) {
-				runningIp = server;
+				executorName = server;
 				break;
 			}
 		}
 
-		return runningIp;
+		return executorName;
 	}
 
 	@Override

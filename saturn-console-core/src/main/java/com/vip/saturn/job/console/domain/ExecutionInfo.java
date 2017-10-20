@@ -30,7 +30,7 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 
 	private String jobMsg;
 
-	private String failoverExecutor;
+	private boolean failover;
 
 	private String lastBeginTime;
 
@@ -43,7 +43,7 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 	private long timeConsumed;
 
 	/** 运行作业服务器 */
-	private String runningIp;
+	private String executorName;
 
 	/** 作业分片运行日志 */
 	private String logMsg;
@@ -88,12 +88,12 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 		this.jobMsg = jobMsg;
 	}
 
-	public String getFailoverExecutor() {
-		return failoverExecutor;
+	public boolean getFailover() {
+		return failover;
 	}
 
-	public void setFailoverExecutor(String failoverExecutor) {
-		this.failoverExecutor = failoverExecutor;
+	public void setFailover(boolean failover) {
+		this.failover = failover;
 	}
 
 	public String getLastBeginTime() {
@@ -128,12 +128,12 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 		this.timeConsumed = timeConsumed;
 	}
 
-	public String getRunningIp() {
-		return runningIp;
+	public String getExecutorName() {
+		return executorName;
 	}
 
-	public void setRunningIp(String runningIp) {
-		this.runningIp = runningIp;
+	public void setExecutorName(String executorName) {
+		this.executorName = executorName;
 	}
 
 	public String getLogMsg() {
