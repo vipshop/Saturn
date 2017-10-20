@@ -319,8 +319,8 @@ public class ConfigurationService extends AbstractSaturnService {
 								int dLeft = Integer.parseInt(MdLeft[1]);
 								int MRight = Integer.parseInt(MdRight[0]);
 								int dRight = Integer.parseInt(MdRight[1]);
-								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
-										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
+								dateIn = (M > MLeft || M == MLeft && d >= dLeft) // NOSONAR
+										&& (M < MRight || M == MRight && d <= dRight); // NOSONAR
 								if (dateIn) {
 									break;
 								}
@@ -358,8 +358,8 @@ public class ConfigurationService extends AbstractSaturnService {
 								int mLeft = Integer.parseInt(hmLeft[1]);
 								int hRight = Integer.parseInt(hmRight[0]);
 								int mRight = Integer.parseInt(hmRight[1]);
-								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
-										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
+								timeIn = (h > hLeft || h == hLeft && m >= mLeft) // NOSONAR
+										&& (h < hRight || h == hRight && m <= mRight); // NOSONAR
 								if (timeIn) {
 									break;
 								}
@@ -453,20 +453,6 @@ public class ConfigurationService extends AbstractSaturnService {
 			customContext = new HashMap<>();
 		}
 		return customContext;
-	}
-
-	/**
-	 * 将map转为str字符串
-	 *
-	 * @param customContextMap 自定义上下文map
-	 * @return 自定义上下文str
-	 */
-	private String toCustomContext(Map<String, String> customContextMap) {
-		String result = JsonUtils.toJSON(customContextMap);
-		if (result == null) {
-			result = "";
-		}
-		return result.trim();
 	}
 
 	public String getRawJobType() {

@@ -67,7 +67,6 @@ public class RegistryCenterConfiguration implements Serializable {
 			this.nameAndNamespace = name + SLASH + namespace;
 		} else {
 			this.nameAndNamespace = SLASH + namespace;
-			;
 		}
 	}
 

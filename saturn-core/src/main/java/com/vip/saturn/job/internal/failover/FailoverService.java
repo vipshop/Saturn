@@ -57,7 +57,7 @@ public class FailoverService extends AbstractSaturnService {
 				getJobNodeStorage().getClient().create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
 						.forPath(JobNodePath.getNodeFullPath(jobName, FailoverNode.getItemsNode(item)));
 				log.info("{} - {} create failover flag of item {}", executorName, jobName, item);
-			} catch (KeeperException.NodeExistsException e) {
+			} catch (KeeperException.NodeExistsException e) { // NOSONAR
 				log.debug("{} - {} create failover flag of item {} failed, because it is already existing",
 						executorName, jobName, item);
 			} catch (Exception e) {

@@ -139,7 +139,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		public void process(WatchedEvent event) throws Exception {
 			switch (event.getType()) {
 			case NodeCreated:
-			case NodeDataChanged:
+			case NodeDataChanged: // NOSONAR
 				log.info("event type:{}, path:{}", event.getType(), event.getPath());
 				doBusiness();
 			default:

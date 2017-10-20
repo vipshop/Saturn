@@ -60,8 +60,8 @@ public class NamespaceShardingService {
 		String isContainerAlignWithPhysicalStr = System.getProperty(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL,
 				System.getenv(NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL));
 
-		isContainerAlignWithPhysical = StringUtils.isNotBlank(isContainerAlignWithPhysicalStr) ?
-				Boolean.parseBoolean(isContainerAlignWithPhysicalStr) : true;
+		isContainerAlignWithPhysical = StringUtils.isBlank(isContainerAlignWithPhysicalStr)
+				|| Boolean.parseBoolean(isContainerAlignWithPhysicalStr);
 	}
 
 	public NamespaceShardingService(CuratorFramework curatorFramework, String hostValue,
@@ -156,7 +156,7 @@ public class NamespaceShardingService {
 						try {
 							reportAlarmService.allShardingError(namespace, hostValue);
 						} catch (Throwable t2) {
-							if (t2 instanceof InterruptedException) {
+							if (t2 instanceof InterruptedException) { // NOSONAR
 								log.info("{}-{} {}-allShardingError is interrupted", namespace, hostValue,
 										this.getClass().getSimpleName());
 								Thread.currentThread().interrupt();

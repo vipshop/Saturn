@@ -44,7 +44,7 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		boolean updatePauseConditionThird = (prePauseTime != null && !prePauseTime.equals(pauseTime));
 		boolean updatePauseConditionFourth = (prePauseTime == null && pauseTime != null);
 		if (shouldReschedule || updatePauseConditionFirst || updatePauseConditionSecond || updatePauseConditionThird
-				|| updatePauseConditionFourth) {
+				|| updatePauseConditionFourth) { // NOSONAR
 			executionService.updateNextFireTime(executionContextService.getShardingItems());
 		}
 		if (updatePauseConditionFirst || updatePauseConditionSecond) {

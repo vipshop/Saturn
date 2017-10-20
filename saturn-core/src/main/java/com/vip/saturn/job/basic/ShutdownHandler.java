@@ -91,7 +91,7 @@ public class ShutdownHandler implements SignalHandler {
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				e.printStackTrace(); // NOSONAR
 			}
 
 			System.exit(-1);

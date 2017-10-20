@@ -142,7 +142,7 @@ public class SaturnExecutor {
 				try {
 					shutdownLock.lockInterruptibly();
 					try {
-						if(isShutdown) {
+						if(isShutdown) { // NOSONAR
 							return;
 						}
 						shutdownGracefully0();
@@ -204,7 +204,7 @@ public class SaturnExecutor {
 				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader,
 						jobClassLoader);
 			}
-		} catch (Exception e) { // log is not allowed to use, before saturnExecutorExtension.init().
+		} catch (Exception e) { // NOSONAR log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
 		}
 
@@ -239,7 +239,7 @@ public class SaturnExecutor {
 				StatusLine statusLine = httpResponse.getStatusLine();
 				String responseBody = EntityUtils.toString(httpResponse.getEntity());
 				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
-				if (statusLine != null && statusCode == HttpStatus.SC_OK) {
+				if (statusLine != null && statusCode.intValue() == HttpStatus.SC_OK) {
 					String connectionString = JSON.parseObject(responseBody, String.class);
 					if (StringUtils.isBlank(connectionString)) {
 						LOGGER.warn("ZK connection string is blank！");
@@ -603,7 +603,7 @@ public class SaturnExecutor {
 		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if (isShutdown) {
+			if (isShutdown) { // NOSONAR
 				return;
 			}
 			shutdown0();
@@ -622,7 +622,7 @@ public class SaturnExecutor {
 		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if (isShutdown) {
+			if (isShutdown) { // NOSONAR
 				return;
 			}
 			shutdownGracefully0();

@@ -150,7 +150,7 @@ public class ExecutorCleanService {
 						try {
 							curatorFramework.delete().deletingChildrenIfNeeded()
 									.forPath(jobServersExecutorNodePath + "/" + tmp);
-						} catch (NoNodeException e) {
+						} catch (NoNodeException e) { // NOSONAR
 							// ignore
 						} catch (Exception e) {
 							LOGGER.error("Clean the executor " + executorName + " error", e);
