@@ -31,7 +31,6 @@ import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,8 +160,7 @@ public abstract class AbstractElasticJob implements Stopable {
 		}
 	}
 
-	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext)
-			throws JobExecutionException {
+	private void executeJobInternal(final JobExecutionMultipleShardingContext shardingContext) {
 
 		executionService.registerJobBegin(shardingContext);
 
