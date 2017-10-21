@@ -14,14 +14,12 @@
 
 package com.vip.saturn.job.exception;
 
-import org.quartz.JobExecutionException;
-
 /**
  * 调用了shutdown， 但作业还在调度时抛该异常。
  * 
  * @author chembo.huang
  */
-public final class JobShuttingDownException extends JobExecutionException {// NOSONAR
+public final class JobShuttingDownException extends Exception {
 
 	private static final long serialVersionUID = -6287464997081326084L;
 

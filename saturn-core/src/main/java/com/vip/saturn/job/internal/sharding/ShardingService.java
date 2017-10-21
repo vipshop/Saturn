@@ -14,21 +14,6 @@
 
 package com.vip.saturn.job.internal.sharding;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.CuratorWatcher;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.apache.zookeeper.KeeperException.BadVersionException;
-import org.apache.zookeeper.data.Stat;
-import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
@@ -40,6 +25,19 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.BlockUtils;
 import com.vip.saturn.job.utils.ItemUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.zookeeper.KeeperException.BadVersionException;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * 作业分片服务.
@@ -127,7 +125,7 @@ public class ShardingService extends AbstractSaturnService {
 	/**
 	 * 如果需要分片且当前节点为主节点, 则作业分片.
 	 */
-	public synchronized void shardingIfNecessary() throws JobExecutionException {
+	public synchronized void shardingIfNecessary() throws JobShuttingDownException {
 		if (isShutdown) {
 			return;
 		}
