@@ -35,7 +35,7 @@ public class AbnormalJob {
 
 	private boolean read = false;
 
-	private transient long nextFireTimeAfterEnabledMtime;
+	private transient long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 
 	public AbnormalJob() {
 
@@ -132,12 +132,13 @@ public class AbnormalJob {
 		return degree;
 	}
 
-	public long getNextFireTimeAfterEnabledMtime() {
-		return nextFireTimeAfterEnabledMtime;
+	public long getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() {
+		return nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 	}
 
-	public void setNextFireTimeAfterEnabledMtime(long nextFireTimeAfterEnabledMtime) {
-		this.nextFireTimeAfterEnabledMtime = nextFireTimeAfterEnabledMtime;
+	public void setNextFireTimeAfterEnabledMtimeOrLastCompleteTime(
+			long nextFireTimeAfterEnabledMtimeOrLastCompleteTime) {
+		this.nextFireTimeAfterEnabledMtimeOrLastCompleteTime = nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 	}
 
 	public boolean isRead() {
@@ -153,7 +154,8 @@ public class AbnormalJob {
 		int result = jobName.hashCode();
 		result = 31 * result + domainName.hashCode();
 		result = 31 * result + cause.hashCode();
-		result = 31 * result + (int) (nextFireTimeAfterEnabledMtime ^ (nextFireTimeAfterEnabledMtime >>> 32));
+		result = 31 * result + (int) (nextFireTimeAfterEnabledMtimeOrLastCompleteTime
+				^ (nextFireTimeAfterEnabledMtimeOrLastCompleteTime >>> 32));
 		return result;
 	}
 

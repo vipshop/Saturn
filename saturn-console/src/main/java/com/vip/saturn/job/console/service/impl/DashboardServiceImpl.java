@@ -1091,14 +1091,14 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 			// 既没有running又没completed，同时nextFireTime + ALLOW_DELAY_MILLIONSECONDS < 当期时间，视为异常
 			else {
-				if (abnormalJob.getNextFireTimeAfterEnabledMtime() == 0) {
-					abnormalJob.setNextFireTimeAfterEnabledMtime(
+				if (abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() == 0) {
+					abnormalJob.setNextFireTimeAfterEnabledMtimeOrLastCompleteTime(
 							jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
 									getMtime(curatorClient, enabledPath), abnormalJob.getJobName(),
 									new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient)));
 				}
 
-				Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtime();
+				Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime();
 				// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 				if (nextFireTime != null && nextFireTime + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
 					return nextFireTime;

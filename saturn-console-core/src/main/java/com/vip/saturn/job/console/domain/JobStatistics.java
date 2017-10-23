@@ -24,7 +24,6 @@ public class JobStatistics implements Serializable {
 	private String nns;
 	/** e.g. exe01:1,3;exe02:0,2 */
 	private String executorsAndShards;
-	private float failureRateOfAllTime;
 
 	public JobStatistics() {
 	}
@@ -55,16 +54,16 @@ public class JobStatistics implements Serializable {
 		return processCountOfTheDay;
 	}
 
-	public void setProcessCountOfTheDay(int processCountOfTheDay) {
-		this.processCountOfTheDay = processCountOfTheDay;
+	public synchronized void incrProcessCountOfTheDay(int processCount) {
+		this.processCountOfTheDay+=processCount;
 	}
 
 	public int getFailureCountOfTheDay() {
 		return failureCountOfTheDay;
 	}
 
-	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
-		this.failureCountOfTheDay = failureCountOfTheDay;
+	public synchronized void incrFailureCountOfTheDay(int failureCount) {
+		this.failureCountOfTheDay += failureCount;
 	}
 
 	public int getTotalLoadLevel() {
@@ -122,7 +121,14 @@ public class JobStatistics implements Serializable {
 		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
-	public void setFailureRateOfAllTime(float failureRateOfAllTime) {
-		this.failureRateOfAllTime = failureRateOfAllTime;
+	public void setProcessCountOfTheDay(int processCountOfTheDay) {
+		this.processCountOfTheDay = processCountOfTheDay;
 	}
+
+	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
+		this.failureCountOfTheDay = failureCountOfTheDay;
+	}
+	
+	
+
 }

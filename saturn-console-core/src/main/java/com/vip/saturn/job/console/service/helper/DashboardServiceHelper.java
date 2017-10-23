@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.util.CollectionUtils;
+
 import com.vip.saturn.job.console.domain.AbnormalJob;
 import com.vip.saturn.job.console.domain.DomainStatistics;
 import com.vip.saturn.job.console.domain.ExecutorStatistics;
@@ -100,6 +102,18 @@ public class DashboardServiceHelper {
 			}
 		});
 		return executorList;
+	}
+
+	public static AbnormalJob findEqualAbnormalJob(AbnormalJob example, List<AbnormalJob> oldUnnormalJobList) {
+		if (CollectionUtils.isEmpty(oldUnnormalJobList)) {
+			return null;
+		}
+		for (AbnormalJob oldUnnormalJob : oldUnnormalJobList) {
+			if (oldUnnormalJob.equals(example)) {
+				return oldUnnormalJob;
+			}
+		}
+		return null;
 	}
 
 }
