@@ -1303,8 +1303,11 @@ $(function() {
 					showPromptDialogWithMsgAndCallback("batch-add-job-prompt-dialog",result.responseText, function() {
 						window.parent.location.reload(true);
 					});
-				}
-			}).always(function() { $btn.button('reset'); });
+				},
+                complete:function(result) {
+                	$btn.button('reset');
+                }
+			});
 		return false;
 	});
 
