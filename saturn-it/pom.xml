@@ -107,8 +107,7 @@
 			        	<exclude>**/AbstractSaturnIT.java</exclude>
 			        </excludes>
 			        <runOrder>alphabetical</runOrder>
-                    <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit</argLine>
-                    <forkMode>always</forkMode>
+                    <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit ${argLine}</argLine>
 			    </configuration>
 			</plugin>
 			<plugin>
@@ -134,7 +133,7 @@
 						<configuration>
 							<!-- The destination file for the code coverage report has to be set to the same value in the parent pom and in each
 								module pom. Then JaCoCo will add up information in the same report, so that, it will give the cross-module code coverage. -->
-							 <destFile>${project.basedir}/target/jacoco-it.exec</destFile>
+							 <!--<destFile>${project.basedir}/target/jacoco-it.exec</destFile>-->
 						</configuration>
 						<executions>
 							<execution>
@@ -166,8 +165,7 @@
 					        	<exclude>**/AbstractSaturnIT.java</exclude>
 					        </excludes>
 					        <runOrder>alphabetical</runOrder>
-                            <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit</argLine>
-                            <forkMode>always</forkMode>
+                            <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit ${argLine}</argLine>
 						</configuration>
 					</plugin>
 				</plugins>

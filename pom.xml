@@ -100,8 +100,9 @@
 
 		<javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
 
+		<sonar.jacoco.utReportPath>${project.basedir}/target/jacoco-ut.exec</sonar.jacoco.utReportPath>
+		<sonar.jacoco.itReportPath>${project.basedir}/saturn-it/target/jacoco-it.exec</sonar.jacoco.itReportPath>
 		<sonar.language>java</sonar.language>
-		<sonar.jacoco.itReportPath>${project.basedir}/../target/jacoco-it.exec</sonar.jacoco.itReportPath>
 
 		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
@@ -650,6 +651,12 @@
 								<id>agent-for-ut</id>
 								<goals>
 									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>agent-for-it</id>
+								<goals>
+									<goal>prepare-agent-integration</goal>
 								</goals>
 							</execution>
 						</executions>
