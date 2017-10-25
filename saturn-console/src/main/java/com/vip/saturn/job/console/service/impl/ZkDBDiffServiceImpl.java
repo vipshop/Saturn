@@ -127,7 +127,12 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 return jobDiffInfos;
             }
 
-            zkClient = initCuratorClient(namespace);
+            try {
+                zkClient = initCuratorClient(namespace);
+            } catch (SaturnJobConsoleException e) {
+                log.warn("skip diff by namespace:{} for reason:{}", namespace, e.getMessage(), e);
+                return jobDiffInfos;
+            }
 
             Set<String> jobNamesInDb = getAllJobNames(dbJobConfigList);
 
@@ -168,7 +173,13 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     public JobDiffInfo diffByJob(String namespace, String jobName) throws SaturnJobConsoleException {
         CuratorRepository.CuratorFrameworkOp zkClient;
         try {
-            zkClient = initCuratorClient(namespace);
+            try {
+                zkClient = initCuratorClient(namespace);
+            } catch (SaturnJobConsoleException e) {
+                log.warn("skip diff by namespace:{} and job:{} for reason:{}", namespace, jobName, e.getMessage(), e);
+                return null;
+            }
+
             log.info("start to diff job:{}", jobName);
 
             CurrentJobConfig dbJobConfig = configService.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -183,9 +194,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             }
 
             return diff(dbJobConfig, zkJobConfig, true);
-        } catch (SaturnJobConsoleException e) {
-            log.error(e.getMessage(), e);
-            throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}] and job [{}]", namespace, jobName, e);
             throw new SaturnJobConsoleException(e);
@@ -202,7 +210,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
      * @param dbJobConfig db里面的配置。
      * @param zkJobConfig zk里面的配置
      * @param needDetail  是否需要细节；true，则需要，false，为不需要；
-     * @return
+     * @return 如果没有不同，返回null.
      */
     private JobDiffInfo diff(CurrentJobConfig dbJobConfig, JobSettings zkJobConfig, boolean needDetail) {
         String jobName = dbJobConfig.getJobName();
@@ -277,6 +285,9 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("showNormalLog", dbJobConfig.getShowNormalLog(), zkJobConfig.getShowNormalLog(), configDiffInfos);
 
         if (!configDiffInfos.isEmpty()) {
+            Set<String> diffProperties = getDifferentProperties(configDiffInfos);
+            log.info("find different properties of job [{}], {}", jobName, diffProperties);
+
             if (needDetail) {
                 return new JobDiffInfo(dbJobConfig.getNamespace(), jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, configDiffInfos);
             }
@@ -285,6 +296,16 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         }
 
         return null;
+    }
+
+    private Set<String> getDifferentProperties(List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
+        Set<String> diffProperties = Sets.newHashSet();
+
+        for (JobDiffInfo.ConfigDiffInfo diffInfo : configDiffInfos) {
+            diffProperties.add(diffInfo.getKey());
+        }
+
+        return diffProperties;
     }
 
     private void diff(String key, Object valueInDb, Object valueInZk, List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
@@ -298,19 +319,27 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
                 return;
             }
 
-            log.debug("key:{} has difference between zk and db", key);
             configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
             return;
         }
 
-        // 空串与null视为相等
-        if (valueInDb instanceof String && StringUtils.isEmpty((String) valueInDb) && StringUtils.isEmpty((String) valueInZk)) {
+        if (valueInDb instanceof String) {
+            diffByString(key, (String) valueInDb, (String) valueInZk, configDiffInfos);
+        } else if (!valueInDb.equals(valueInZk)) {
+            configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
+        }
+    }
+
+    private void diffByString(String key, String valueInDb, String valueInZk, List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
+        String valueInDbStr = StringUtils.trim(valueInDb);
+        String valueInZkStr = StringUtils.trim(valueInZk);
+
+        if (StringUtils.isEmpty(valueInDbStr) && StringUtils.isEmpty(valueInZkStr)) {
             return;
         }
 
-        if (!valueInDb.equals(valueInZk)) {
-            log.debug("key:{} has difference between zk and db", key);
-            configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
+        if (!valueInDbStr.equals(valueInZkStr)) {
+            configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDbStr, valueInZkStr));
         }
     }
 
