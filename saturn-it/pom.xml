@@ -51,12 +51,10 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>log4j-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
@@ -91,26 +89,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.18.1</version>
-			</plugin>
-			<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-surefire-plugin</artifactId>
-			    <version>2.18.1</version>
-			    <configuration>
-			        <includes>
-			            <include>**/*IT.java</include>
-			        </includes>
-			        <excludes>
-			        	<exclude>**/AbstractSaturnIT.java</exclude>
-			        </excludes>
-			        <runOrder>alphabetical</runOrder>
-                    <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit ${argLine}</argLine>
-			    </configuration>
-			</plugin>
-			<plugin>
 				<groupId>com.vip.saturn</groupId>
 				<artifactId>saturn-plugin</artifactId>
 				<version>${project.parent.version}</version>
@@ -118,58 +96,4 @@
 		</plugins>
 	</build>
 
-	<profiles>
-		<profile>
-			<id>jacoco</id>
-			<activation>
-	            <activeByDefault>true</activeByDefault>
-	        </activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.jacoco</groupId>
-						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.7.2.201409121644</version>
-						<configuration>
-							<!-- The destination file for the code coverage report has to be set to the same value in the parent pom and in each
-								module pom. Then JaCoCo will add up information in the same report, so that, it will give the cross-module code coverage. -->
-							 <!--<destFile>${project.basedir}/target/jacoco-it.exec</destFile>-->
-						</configuration>
-						<executions>
-							<execution>
-								<id>default-prepare-agent-integration</id>
-								<goals>
-									<goal>prepare-agent-integration</goal>
-								</goals>
-							</execution>
-
-							<execution>
-								<id>jacoco-site</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>report-integration</goal>
-								</goals>
-							</execution>
-
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						 <version>2.19.1</version>
-						<configuration>
-							<includes>
-								<include>**/*IT*</include>
-							</includes>
-					        <excludes>
-					        	<exclude>**/AbstractSaturnIT.java</exclude>
-					        </excludes>
-					        <runOrder>alphabetical</runOrder>
-                            <argLine>-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit ${argLine}</argLine>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>
