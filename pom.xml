@@ -432,6 +432,11 @@
 					<version>${maven-jar-plugin.version}</version>
 				</plugin>
 				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco-maven-plugin.version}</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>${maven-surefire-plugin.version}</version>
@@ -601,7 +606,6 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>${jacoco-maven-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>agent-for-ut</id>
@@ -615,20 +619,6 @@
 								<phase>package</phase>
 								<goals>
 									<goal>report</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>agent-for-it</id>
-								<phase>pre-integration-test</phase>
-								<goals>
-									<goal>prepare-agent-integration</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>report-for-it</id>
-								<phase>post-integration-test</phase>
-								<goals>
-									<goal>report-integration</goal>
 								</goals>
 							</execution>
 						</executions>
