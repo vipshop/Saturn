@@ -612,9 +612,23 @@
 							</execution>
 							<execution>
 								<id>report-for-ut</id>
-								<phase>verify</phase>
+								<phase>package</phase>
 								<goals>
 									<goal>report</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>agent-for-it</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>prepare-agent-integration</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report-for-it</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>report-integration</goal>
 								</goals>
 							</execution>
 						</executions>
@@ -625,12 +639,32 @@
 						<configuration>
 							<includes>
 								<include>**/*Test.java</include>
+								<include>**/*IT.java</include>
 							</includes>
+							<excludes>
+								<exclude>**/AbstractSaturnIT.java</exclude>
+							</excludes>
 						</configuration>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>integration-test</id>
+								<phase>integration-test</phase>
+								<goals>
+									<goal>integration-test</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>verify</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>verify</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
