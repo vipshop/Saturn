@@ -125,13 +125,11 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
-							<includes>
-								<include>**/*IT.java</include>
-							</includes>
 							<excludes>
-								<exclude>**/AbstractSaturnIT.java</exclude>
+								<exclude>**/*IT.java</exclude>
 							</excludes>
-							<forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
 						</configuration>
 					</plugin>
 					<plugin>
@@ -153,6 +151,11 @@
 								</goals>
 							</execution>
 						</executions>
+						<configuration>
+							<includes>
+								<include>**/*IT.java</include>
+							</includes>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
