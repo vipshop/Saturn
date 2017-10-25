@@ -629,11 +629,7 @@
 						<configuration>
 							<includes>
 								<include>**/*Test.java</include>
-								<include>**/*IT.java</include>
 							</includes>
-							<excludes>
-								<exclude>**/AbstractSaturnIT.java</exclude>
-							</excludes>
 						</configuration>
 					</plugin>
 					<plugin>
