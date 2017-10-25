@@ -611,24 +611,10 @@
 								</goals>
 							</execution>
 							<execution>
-								<id>agent-for-it</id>
-								<phase>test-compile</phase>
-								<goals>
-									<goal>prepare-agent-integration</goal>
-								</goals>
-							</execution>
-							<execution>
 								<id>report-for-ut</id>
 								<phase>verify</phase>
 								<goals>
 									<goal>report</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>report-for-it</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>report-integration</goal>
 								</goals>
 							</execution>
 						</executions>
@@ -638,7 +624,6 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
 							<includes>
-								<include>**/*IT.java</include>
 								<include>**/*Test.java</include>
 							</includes>
 						</configuration>
