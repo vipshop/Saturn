@@ -104,6 +104,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		Thread.sleep(1 * 1000);
 
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
+		Thread.sleep(1000);
 		runAtOnce(jobName1);
 		runAtOnce(jobName2);
 		runAtOnce(jobName3);
