@@ -131,6 +131,7 @@
 							<excludes>
 								<exclude>**/AbstractSaturnIT.java</exclude>
 							</excludes>
+							<forkMode>always</forkMode>
 						</configuration>
 					</plugin>
 					<plugin>

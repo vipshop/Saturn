@@ -630,6 +630,7 @@
 							<includes>
 								<include>**/*Test.java</include>
 							</includes>
+							<forkMode>always</forkMode>
 						</configuration>
 					</plugin>
 					<plugin>
