@@ -103,10 +103,7 @@
 		<javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
 
 		<sonar.language>java</sonar.language>
-
-		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
-		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
-		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.7.2.201409121644</jacoco-maven-plugin.version>
 
 		<ivy.version>2.3.0</ivy.version>
 
@@ -542,11 +539,6 @@
 					<artifactId>maven-war-plugin</artifactId>
 					<version>${maven-war-plugin.version}</version>
 				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>cobertura-maven-plugin</artifactId>
-					<version>${cobertura-maven-plugin.version}</version>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 		
@@ -609,28 +601,32 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.7.2.201409121644</version>
+						<version>${jacoco-maven-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>agent-for-ut</id>
+								<phase>test-compile</phase>
 								<goals>
 									<goal>prepare-agent</goal>
 								</goals>
 							</execution>
 							<execution>
 								<id>agent-for-it</id>
+								<phase>test-compile</phase>
 								<goals>
 									<goal>prepare-agent-integration</goal>
 								</goals>
 							</execution>
 							<execution>
 								<id>report-for-ut</id>
+								<phase>verify</phase>
 								<goals>
 									<goal>report</goal>
 								</goals>
 							</execution>
 							<execution>
 								<id>report-for-it</id>
+								<phase>verify</phase>
 								<goals>
 									<goal>report-integration</goal>
 								</goals>
