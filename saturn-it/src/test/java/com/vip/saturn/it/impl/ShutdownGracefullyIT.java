@@ -92,6 +92,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
+		forceRemoveJob(jobName);
 	}
 
 	@Test
@@ -145,6 +146,8 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
+
+		forceRemoveJob(jobName);
 
 	}
 }
