@@ -83,7 +83,7 @@
 		<maven-resources-plugin.version>2.7</maven-resources-plugin.version>
 		<maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 		<maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
+		<maven-failsafe-plugin.version>2.19.1</maven-failsafe-plugin.version>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven-site-plugin.version>3.4</maven-site-plugin.version>
 		<lifecycle-mapping.version>1.0.0</lifecycle-mapping.version>
@@ -632,9 +632,6 @@
 							<includes>
 								<include>**/*Test.java</include>
 							</includes>
-							<forkCount>1</forkCount>
-							<reuseForks>false</reuseForks>
-							<runOrder>alphabetical</runOrder>
 						</configuration>
 					</plugin>
 				</plugins>
