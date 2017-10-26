@@ -103,7 +103,7 @@
 		<javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
 
 		<sonar.language>java</sonar.language>
-		<jacoco-maven-plugin.version>0.7.2.201409121644</jacoco-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
 
 		<ivy.version>2.3.0</ivy.version>
 
