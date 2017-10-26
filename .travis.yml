@@ -8,4 +8,4 @@ branches:
   only:
     - develop
 
-script: mvn clean test -Pjacoco -Dsaturn.it.log.level=WARN -DargLine="-Xmx2048m -Xms1024m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit"
+script: mvn clean install -Pjacoco -Dsaturn.it.log.level=WARN
