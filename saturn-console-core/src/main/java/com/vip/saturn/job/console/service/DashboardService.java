@@ -133,4 +133,8 @@ public interface DashboardService {
 	void setUnnormalJobMonitorStatusToRead(String key, String uuid);
 
 	void setUnnormalJobMonitorStatusToReadByAllZkCluster(String uuid);
+
+	void setTimeout4AlarmJobMonitorStatusToRead(String key, String uuid);
+
+	void setTimeout4AlarmJobMonitorStatusToReadByAllZkCluster(String uuid);
 }

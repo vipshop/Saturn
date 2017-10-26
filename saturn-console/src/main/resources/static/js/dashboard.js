@@ -863,11 +863,23 @@ function renderTimeout4AlarmJob() {
 		var $tbody = $("#timeout4Alarm-job-table tbody"), trContent = "", timeout4AlarmJobTmp = $("#timeout4Alarm-job-template").html();
 		$tbody.empty();
         for (var i in data) {
-        	trContent += Mustache.render(timeout4AlarmJobTmp,{degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
+        	trContent += Mustache.render(timeout4AlarmJobTmp,{uuid:data[i].uuid,degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
         }
         $tbody.append(trContent);
+        for (var i in data) {
+            if(data[i].read && data[i].read == true) {
+                $('#button-'+data[i].jobName+'-timeout4AlarmJob').attr("disabled","disabled");
+            }
+        }
         timeout4AlarmJobDataTable = $("#timeout4Alarm-job-table").DataTable({"destroy": true, "oLanguage": language});
 	}).always(function() { $loading.hide(); });
+}
+
+function setTimeout4AlarmJobMonitorStatusToRead(obj) {
+    var domainName = $(obj).attr("domainName");
+    var jobName = $(obj).attr("jobName");
+	$("#setTimeout4AlarmJobToRead-confirm-dialog .confirm-reason").text("确定此超时作业（域名" + domainName + "，作业名" + jobName + "）不再发送告警信息吗？");
+	$("#setTimeout4AlarmJobToRead-confirm-dialog").modal("show", obj);
 }
 
 function renderUnableFailoverJob() {
@@ -1148,6 +1160,20 @@ $("#setUnnormalJobToRead-confirm-dialog").on("shown.bs.modal", function (event) 
 		formData.uuid = button.attr('uuid');
 		$.post("dashboard/setUnnormalJobMonitorStatusToRead", formData, function (data0) {
 			$("#setUnnormalJobToRead-confirm-dialog").modal("hide");
+			if(data0 =='ok') {
+				$(event.relatedTarget).attr("disabled","disabled")
+			}
+		});
+	});
+});
+
+$("#setTimeout4AlarmJobToRead-confirm-dialog").on("shown.bs.modal", function (event) {
+	$("#setTimeout4AlarmJobToRead-confirm-dialog-confirm-btn").unbind('click').click(function() {
+		var button = $(event.relatedTarget);
+		var formData = getFormData();
+		formData.uuid = button.attr('uuid');
+		$.post("dashboard/setTimeout4AlarmJobMonitorStatusToRead", formData, function (data0) {
+			$("#setTimeout4AlarmJobToRead-confirm-dialog").modal("hide");
 			if(data0 =='ok') {
 				$(event.relatedTarget).attr("disabled","disabled")
 			}

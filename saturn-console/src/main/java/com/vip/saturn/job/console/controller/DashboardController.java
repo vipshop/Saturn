@@ -384,4 +384,18 @@ public class DashboardController extends AbstractController {
 		return "ok";
 	}
 
+	@RequestMapping(value = "setTimeout4AlarmJobMonitorStatusToRead", method = RequestMethod.POST)
+	@ResponseBody
+	public String setTimeout4AlarmJobMonitorStatusToRead(Boolean allZkCluster, String zkClusterKey, String uuid) {
+		if (allZkCluster != null && allZkCluster) {
+			dashboardService.setTimeout4AlarmJobMonitorStatusToReadByAllZkCluster(uuid);
+		} else {
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if (zkCluster != null) {
+				dashboardService.setTimeout4AlarmJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
+			}
+		}
+		return "ok";
+	}
+
 }

@@ -8,6 +8,10 @@ import java.util.List;
  */
 public class Timeout4AlarmJob {
 
+	private String uuid;
+
+	private boolean read;
+
 	private String jobName;
 
 	private String domainName;
@@ -32,6 +36,22 @@ public class Timeout4AlarmJob {
 		this.domainName = domainName;
 		this.nns = nns;
 		this.degree = degree;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public boolean isRead() {
+		return read;
+	}
+
+	public void setRead(boolean read) {
+		this.read = read;
 	}
 
 	public String getJobName() {
@@ -90,4 +110,21 @@ public class Timeout4AlarmJob {
 		this.timeoutItems = timeoutItems;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Timeout4AlarmJob that = (Timeout4AlarmJob) o;
+
+		if (!jobName.equals(that.jobName)) return false;
+		return domainName.equals(that.domainName);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = jobName.hashCode();
+		result = 31 * result + domainName.hashCode();
+		return result;
+	}
 }
