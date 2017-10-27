@@ -100,7 +100,6 @@ public class AddJobListenersService {
 	private void addJobServersPathListener(String jobName) throws InterruptedException {
 		try {
 			String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/servers";
-			int depth = 2;
 			try {
 				// create servers if not exists
 				if (curatorFramework.checkExists().forPath(path) == null) {
@@ -110,7 +109,7 @@ public class AddJobListenersService {
 				throw e;
 			} catch (Exception e) { // NOSONAR
 			}
-
+			int depth = 2;
 			shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
 					new JobServersTriggerShardingListener(jobName, namespaceShardingService));

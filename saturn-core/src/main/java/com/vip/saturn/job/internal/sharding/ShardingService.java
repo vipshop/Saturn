@@ -45,7 +45,9 @@ import java.util.Map.Entry;
  * 
  */
 public class ShardingService extends AbstractSaturnService {
-	static Logger log = LoggerFactory.getLogger(ShardingService.class);
+	public static final String SHARDING_UN_NECESSARY = "0";
+
+	private static final Logger log = LoggerFactory.getLogger(ShardingService.class);
 
 	private LeaderElectionService leaderElectionService;
 
@@ -54,8 +56,6 @@ public class ShardingService extends AbstractSaturnService {
 	private ExecutionService executionService;
 
 	private NamespaceShardingContentService namespaceShardingContentService;
-
-	public final static String SHARDING_UN_NECESSARY = "0";
 
 	private volatile boolean isShutdown;
 
@@ -165,6 +165,7 @@ public class ShardingService extends AbstractSaturnService {
 							.and();
 					curatorTransactionFinal.commit();
 				} catch (BadVersionException e) {
+					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "zookeeper bad version exception happens."), e);
 					needRetry = true;
 					retryCount--;
 				} catch (Exception e) {

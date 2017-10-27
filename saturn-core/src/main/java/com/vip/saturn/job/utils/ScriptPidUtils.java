@@ -1,5 +1,20 @@
 package com.vip.saturn.job.utils;
 
+import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.executor.SaturnExecutorsNode;
+import com.vip.saturn.job.internal.config.ConfigurationNode;
+import com.vip.saturn.job.internal.execution.ExecutionNode;
+import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,22 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.executor.SaturnExecutorsNode;
-import com.vip.saturn.job.internal.config.ConfigurationNode;
-import com.vip.saturn.job.internal.execution.ExecutionNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-
 /**
  * 用于处理Shell的相关pid功能
  * 
@@ -36,7 +35,7 @@ import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
  *
  */
 public class ScriptPidUtils {
-	static Logger log = LoggerFactory.getLogger(ScriptPidUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(ScriptPidUtils.class);
 
 	public static long UNKNOWN_PID = -1;
 
@@ -492,8 +491,7 @@ public class ScriptPidUtils {
 		for (String path : itemPaths) {
 			Integer item = Integer.parseInt(StringUtils.substringAfterLast(path, File.separator));
 			long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, "" + item);
-			System.out
-					.println("pid found for jobName:" + jobName + " executorName:" + executorName + ", kill -9 " + pid);// NOSONAR
+			System.out.println("pid found for jobName:" + jobName + " executorName:" + executorName + ", kill -9 " + pid);// NOSONAR
 			try {
 				killAllChildrenByPid(pid, true);
 			} catch (InterruptedException e) {
