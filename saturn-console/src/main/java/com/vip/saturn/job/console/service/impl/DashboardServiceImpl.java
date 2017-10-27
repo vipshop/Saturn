@@ -302,6 +302,15 @@ public class DashboardServiceImpl implements DashboardService {
 								oldAbnormalJobs = JSON.parseArray(result, AbnormalJob.class);
 							}
 						}
+						saturnStatistics = saturnStatisticsService.findStatisticsByNameAndZkList(
+								StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkCluster.getZkAddr());
+						List<Timeout4AlarmJob> oldTimeout4AlarmJobs = new ArrayList<>();
+						if (saturnStatistics != null) {
+							String result = saturnStatistics.getResult();
+							if (StringUtils.isNotBlank(result)) {
+								oldTimeout4AlarmJobs = JSON.parseArray(result, Timeout4AlarmJob.class);
+							}
+						}
 						for (String job : jobs) {
 							try {
 								Boolean localMode = Boolean.valueOf(
@@ -332,7 +341,7 @@ public class DashboardServiceImpl implements DashboardService {
 								// 查找超时告警作业
 								Timeout4AlarmJob timeout4AlarmJob = new Timeout4AlarmJob(job, config.getNamespace(),
 										config.getNameAndNamespace(), config.getDegree());
-								if (isTimeout4AlarmJob(timeout4AlarmJob, curatorFrameworkOp) != null) {
+								if (isTimeout4AlarmJob(oldTimeout4AlarmJobs, timeout4AlarmJob, curatorFrameworkOp) != null) {
 									timeout4AlarmJob.setJobDegree(jobDegree);
 									timeout4AlarmJobList.add(timeout4AlarmJob);
 								}
@@ -845,8 +854,22 @@ public class DashboardServiceImpl implements DashboardService {
 					timeout4AlarmJobJsonString);
 			saturnStatisticsService.create(ss);
 		} else {
-			timeout4AlarmJobFromDB.setResult(timeout4AlarmJobJsonString);
+			List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
+			dealWithReadStatus4Timeout4AlarmJob(timeout4AlarmJobList, oldTimeout4AlarmJobs);
+			timeout4AlarmJobFromDB.setResult(JSON.toJSONString(timeout4AlarmJobList));
 			saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
+		}
+	}
+
+	private void dealWithReadStatus4Timeout4AlarmJob(List<Timeout4AlarmJob> jobList, List<Timeout4AlarmJob> oldJobList) {
+		if (oldJobList == null || oldJobList.isEmpty()) {
+			return;
+		}
+		for (Timeout4AlarmJob job : jobList) {
+			Timeout4AlarmJob oldJob = DashboardServiceHelper.findEqualTimeout4AlarmJob(job, oldJobList);
+			if (oldJob != null) {
+				job.setRead(oldJob.isRead());
+			}
 		}
 	}
 
@@ -1212,7 +1235,7 @@ public class DashboardServiceImpl implements DashboardService {
 	/**
 	 * 如果配置了超时告警时间，而且running节点存在时间大于它，则告警
 	 */
-	private Timeout4AlarmJob isTimeout4AlarmJob(Timeout4AlarmJob timeout4AlarmJob,
+	private Timeout4AlarmJob isTimeout4AlarmJob(List<Timeout4AlarmJob> oldTimeout4AlarmJobs, Timeout4AlarmJob timeout4AlarmJob,
 			CuratorFrameworkOp curatorFrameworkOp) {
 		String jobName = timeout4AlarmJob.getJobName();
 		String timeout4AlarmSecondsStr = curatorFrameworkOp
@@ -1242,11 +1265,24 @@ public class DashboardServiceImpl implements DashboardService {
 					}
 				}
 				if (!timeout4AlarmJob.getTimeoutItems().isEmpty()) {
-					try {
-						reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(), jobName,
-								timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
-					} catch (Throwable t) {
-						log.error(t.getMessage(), t);
+					Timeout4AlarmJob oldJob = DashboardServiceHelper.findEqualTimeout4AlarmJob(timeout4AlarmJob, oldTimeout4AlarmJobs);
+					if (oldJob != null) {
+						timeout4AlarmJob.setRead(oldJob.isRead());
+						if (oldJob.getUuid() != null) {
+							timeout4AlarmJob.setUuid(oldJob.getUuid());
+						} else {
+							timeout4AlarmJob.setUuid(UUID.randomUUID().toString());
+						}
+					} else {
+						timeout4AlarmJob.setUuid(UUID.randomUUID().toString());
+					}
+					if (!timeout4AlarmJob.isRead()) {
+						try {
+							reportAlarmService.dashboardTimeout4AlarmJob(timeout4AlarmJob.getDomainName(), jobName,
+									timeout4AlarmJob.getTimeoutItems(), timeout4AlarmSeconds);
+						} catch (Throwable t) {
+							log.error(t.getMessage(), t);
+						}
 					}
 					return timeout4AlarmJob;
 				}
@@ -2126,6 +2162,65 @@ public class DashboardServiceImpl implements DashboardService {
 				}
 				if (find) {
 					saturnStatistics.setResult(JSON.toJSONString(abnormalJobList));
+					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+					return;
+				}
+			}
+		}
+	}
+
+	@Override
+	public void setTimeout4AlarmJobMonitorStatusToRead(String currentZkAddr, String uuid) {
+		if (StringUtils.isBlank(uuid)) {
+			return;
+		}
+		SaturnStatistics saturnStatistics = saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, currentZkAddr);
+		if (saturnStatistics != null) {
+			String result = saturnStatistics.getResult();
+			List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
+			if (jobs != null) {
+				boolean find = false;
+				for (Timeout4AlarmJob job : jobs) {
+					if (uuid.equals(job.getUuid())) {
+						job.setRead(true);
+						find = true;
+						break;
+					}
+				}
+				if (find) {
+					saturnStatistics.setResult(JSON.toJSONString(jobs));
+					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void setTimeout4AlarmJobMonitorStatusToReadByAllZkCluster(String uuid) {
+		if (StringUtils.isBlank(uuid)) {
+			return;
+		}
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		for (ZkCluster zkCluster : zkClusterList) {
+			String zkAddr = zkCluster.getZkAddr();
+			SaturnStatistics saturnStatistics = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr);
+			if (saturnStatistics != null) {
+				boolean find = false;
+				String result = saturnStatistics.getResult();
+				List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
+				if (jobs != null) {
+					for (Timeout4AlarmJob job : jobs) {
+						if (uuid.equals(job.getUuid())) {
+							job.setRead(true);
+							find = true;
+							break;
+						}
+					}
+				}
+				if (find) {
+					saturnStatistics.setResult(JSON.toJSONString(jobs));
 					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
 					return;
 				}

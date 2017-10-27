@@ -13,12 +13,65 @@ $(function() {
         });
         renderAll();
     });
-	
-/*	$("#sortable").sortable({
-		revert : true
-	});
-*/
-//	window.setInterval("reload();", 1000);
+
+	$("#dashboard-confirm-dialog").on("shown.bs.modal", function (event) {
+    	var button = $(event.relatedTarget),
+    		nns = button.data("nns"),
+    		job = button.data("job"),
+    		cleanType = button.data("clean"),
+    		url;
+    	if (cleanType === "shard") {
+    		url = "dashboard/cleanShardingCount";
+    	} else if (cleanType === "one-analyse") {
+    		url = "dashboard/cleanOneJobAnalyse";
+    	} else if (cleanType === "all-analyse") {
+    		url = "dashboard/cleanAllJobAnalyse";
+    	} else if (cleanType === "one-executor") {
+    		url = "dashboard/cleanOneJobExecutorCount";
+    	}
+    	$("#dashboard-confirm-dialog-confirm-btn").unbind('click').click(function() {
+    		var $btn = $(this).bootstrapBtn('loading');
+    		$.post(url, {nns : nns, job: job}, function (data) {
+    			$("#dashboard-confirm-dialog").modal("hide");
+    			if("ok" == data) {
+    				$("#success-dialog .success-msg").text("操作完成，请稍后刷新页面获取最新数据。");
+    				showSuccessDialogAndNotHide();
+    			} else {
+                	$("#failure-dialog .fail-reason").text(data);
+                	showFailureDialog("failure-dialog");
+    			}
+    		}).always(function() { $btn.bootstrapBtn('reset'); });
+    		return false;
+    	});
+    });
+
+    $("#setUnnormalJobToRead-confirm-dialog").on("shown.bs.modal", function (event) {
+    	$("#setUnnormalJobToRead-confirm-dialog-confirm-btn").unbind('click').click(function() {
+    		var button = $(event.relatedTarget);
+    		var formData = getFormData();
+    		formData.uuid = button.attr('uuid');
+    		$.post("dashboard/setUnnormalJobMonitorStatusToRead", formData, function (data0) {
+    			$("#setUnnormalJobToRead-confirm-dialog").modal("hide");
+    			if(data0 =='ok') {
+    				$(event.relatedTarget).attr("disabled","disabled");
+    			}
+    		});
+    	});
+    });
+
+    $("#setTimeout4AlarmJobToRead-confirm-dialog").on("shown.bs.modal", function (event) {
+    	$("#setTimeout4AlarmJobToRead-confirm-dialog-confirm-btn").unbind('click').click(function() {
+    		var button = $(event.relatedTarget);
+    		var formData = getFormData();
+    		formData.uuid = button.attr('uuid');
+    		$.post("dashboard/setTimeout4AlarmJobMonitorStatusToRead", formData, function (data0) {
+    			$("#setTimeout4AlarmJobToRead-confirm-dialog").modal("hide");
+    			if(data0 =='ok') {
+    				$(event.relatedTarget).attr("disabled","disabled");
+    			}
+    		});
+    	});
+    });
 });
 
 function renderZks(callback) {
@@ -863,11 +916,23 @@ function renderTimeout4AlarmJob() {
 		var $tbody = $("#timeout4Alarm-job-table tbody"), trContent = "", timeout4AlarmJobTmp = $("#timeout4Alarm-job-template").html();
 		$tbody.empty();
         for (var i in data) {
-        	trContent += Mustache.render(timeout4AlarmJobTmp,{degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
+        	trContent += Mustache.render(timeout4AlarmJobTmp,{uuid:data[i].uuid,degree:degreeMap[data[i].degree],jobDegree:degreeMap[data[i].jobDegree], jobName:data[i].jobName, domainName:data[i].domainName, nns:data[i].nns+"&", timeout4AlarmSeconds:data[i].timeout4AlarmSeconds, timeoutItems:data[i].timeoutItems});
         }
         $tbody.append(trContent);
+        for (var i in data) {
+            if(data[i].read && data[i].read == true) {
+                $('#button-'+data[i].jobName+'-timeout4AlarmJob').attr("disabled","disabled");
+            }
+        }
         timeout4AlarmJobDataTable = $("#timeout4Alarm-job-table").DataTable({"destroy": true, "oLanguage": language});
 	}).always(function() { $loading.hide(); });
+}
+
+function setTimeout4AlarmJobMonitorStatusToRead(obj) {
+    var domainName = $(obj).attr("domainName");
+    var jobName = $(obj).attr("jobName");
+	$("#setTimeout4AlarmJobToRead-confirm-dialog .confirm-reason").text("确定此超时作业（域名" + domainName + "，作业名" + jobName + "）不再发送告警信息吗？");
+	$("#setTimeout4AlarmJobToRead-confirm-dialog").modal("show", obj);
 }
 
 function renderUnableFailoverJob() {
@@ -1109,48 +1174,3 @@ function cleanAllJobAnalyse(btn) {
 	$("#dashboard-confirm-dialog .confirm-reason").text("确定清零: "+$(btn).data("nns")+"/$Jobs/所有作业/analyse/processCount & errorCount");
 	$("#dashboard-confirm-dialog").modal("show", btn);
 }
-
-$("#dashboard-confirm-dialog").on("shown.bs.modal", function (event) {
-	var button = $(event.relatedTarget), 
-		nns = button.data("nns"), 
-		job = button.data("job"), 
-		cleanType = button.data("clean"),
-		url;
-	if (cleanType === "shard") {
-		url = "dashboard/cleanShardingCount";
-	} else if (cleanType === "one-analyse") {
-		url = "dashboard/cleanOneJobAnalyse";
-	} else if (cleanType === "all-analyse") {
-		url = "dashboard/cleanAllJobAnalyse";
-	} else if (cleanType === "one-executor") {
-		url = "dashboard/cleanOneJobExecutorCount";
-	}
-	$("#dashboard-confirm-dialog-confirm-btn").unbind('click').click(function() {
-		var $btn = $(this).bootstrapBtn('loading');
-		$.post(url, {nns : nns, job: job}, function (data) {
-			$("#dashboard-confirm-dialog").modal("hide");
-			if("ok" == data) {
-				$("#success-dialog .success-msg").text("操作完成，请稍后刷新页面获取最新数据。");
-				showSuccessDialogAndNotHide();
-			} else {
-            	$("#failure-dialog .fail-reason").text(data);
-            	showFailureDialog("failure-dialog");
-			}
-		}).always(function() { $btn.bootstrapBtn('reset'); });
-		return false;
-	});
-});
-
-$("#setUnnormalJobToRead-confirm-dialog").on("shown.bs.modal", function (event) {
-	$("#setUnnormalJobToRead-confirm-dialog-confirm-btn").unbind('click').click(function() {
-		var button = $(event.relatedTarget);
-		var formData = getFormData();
-		formData.uuid = button.attr('uuid');
-		$.post("dashboard/setUnnormalJobMonitorStatusToRead", formData, function (data0) {
-			$("#setUnnormalJobToRead-confirm-dialog").modal("hide");
-			if(data0 =='ok') {
-				$(event.relatedTarget).attr("disabled","disabled")
-			}
-		});
-	});
-});
