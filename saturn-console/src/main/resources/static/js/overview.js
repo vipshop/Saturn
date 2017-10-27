@@ -298,9 +298,9 @@ $(function() {
     	var term = $(this).val();
         regex =  term ;
         if (regex == "") {
-    		jobsViewDataTable.columns(8).search(regex, true, false).draw();
+    		jobsViewDataTable.columns(9).search(regex, true, false).draw();
         } else {
-    		jobsViewDataTable.columns(8).search("^" + regex + "$", true, false).draw();
+    		jobsViewDataTable.columns(9).search("^" + regex + "$", true, false).draw();
         }
     });
     
@@ -1480,6 +1480,7 @@ $(function() {
                 	+ "<td>" + "<a href='job_detail?jobName=" + jobName + "&nns=" 
                 	+ regName +"'><span class=\"fancytree-custom-icon "+ iconClass +"\"> " 
                 	+ jobName + "</span></a>" + "</td>" 
+                	+ "<td>" + list[i].jobRate + "</td>"
                 	+ "<td>" + status + "</td>" 
                 	+ "<td>" + loadLevel + "</td>" 
                 	+ "<td>" + shardingTotalCount + "</td>" 
@@ -1536,8 +1537,8 @@ $(function() {
                 "createdRow": function( row, data, dataIndex ) {
                     var jobName = list[dataIndex].jobName;
                 },
-            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 6, 10]}], // set the columns unSort
-                "aaSorting": [[3, "desc" ],[1, "asc" ],[1, "asc" ]], // set init sorting
+            	"aoColumnDefs": [{"bSortable": false,"aTargets": [0, 7, 11]}], // set the columns unSort
+                "aaSorting": [[4, "desc" ],[3, "asc" ],[1, "asc" ]], // set init sorting
                 "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "所有"]]
 			});
             $("#jobs-overview-tbl_filter label").before(jobOperation);

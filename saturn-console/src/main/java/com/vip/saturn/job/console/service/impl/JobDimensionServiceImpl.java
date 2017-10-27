@@ -303,6 +303,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					jobBriefInfo.setUseSerial(currentJobConfig.getUseSerial());
 					jobBriefInfo.setUseDispreferList(currentJobConfig.getUseDispreferList());
 					jobBriefInfo.setProcessCountIntervalSeconds(currentJobConfig.getProcessCountIntervalSeconds());
+					jobBriefInfo.setJobRate(geJobRunningInfo(jobName));
 					jobBriefInfo.setGroups(currentJobConfig.getGroups());
 					String preferList = currentJobConfig.getPreferList();
 					if (!Strings.isNullOrEmpty(preferList)) {
