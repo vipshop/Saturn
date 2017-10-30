@@ -138,8 +138,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		refreshAllTimer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				log.info("refresh-RegCenter-timmer begin to refresh registry center");
-				refreshRegCenter();
+				try {
+					refreshRegCenter();
+				} catch (Throwable t) {
+					log.error("refresh regCenter error", t);
+				}
 			}
 		}, 1000 * 60 * 5, 1000 * 60 * 5);
 	}
@@ -773,6 +776,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		RequestResult result = new RequestResult();
 		if (refreshingRegCenter.compareAndSet(false, true)) {
 			try {
+				log.info("begin to refresh registry center");
 				refreshAll();
 				result.setSuccess(true);
 			} catch (Throwable t) {
@@ -780,6 +784,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				result.setSuccess(false);
 				result.setMessage(ExceptionUtils.getMessage(t));
 			} finally {
+				log.info("end refresh registry center");
 				refreshingRegCenter.set(false);
 			}
 		} else {

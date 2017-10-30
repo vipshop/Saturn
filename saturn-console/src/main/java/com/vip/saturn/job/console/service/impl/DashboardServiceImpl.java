@@ -139,10 +139,14 @@ public class DashboardServiceImpl implements DashboardService {
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				refreshStatistics2DB(false);
+				try {
+					refreshStatistics2DB(false);
+				} catch (Throwable t) {
+					log.error("refresh statistics error", t);
+				}
 			}
 		};
-		refreshStatisticsTimmer = new Timer("refresh-statistics-to-db-timmer", true);
+		refreshStatisticsTimmer = new Timer("refresh-statistics-to-db-timer", true);
 		refreshStatisticsTimmer.scheduleAtFixedRate(timerTask, 1000 * 15, 1000 * 60 * REFRESH_INTERVAL_IN_MINUTE);
 	}
 
@@ -150,19 +154,23 @@ public class DashboardServiceImpl implements DashboardService {
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				for (Entry<String, AbnormalShardingState> entrySet : abnormalShardingStateCache.entrySet()) {
-					AbnormalShardingState shardingState = entrySet.getValue();
-					if (shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()) {
-						abnormalShardingStateCache.remove(entrySet.getKey());
-						log.info(
-								"Clean abnormalShardingStateCache with key: {}, alertTime: {}, zkNodeCVersion: {}: "
-										+ entrySet.getKey(),
-								shardingState.getAlertTime(), shardingState.getZkNodeCVersion());
+				try {
+					for (Entry<String, AbnormalShardingState> entrySet : abnormalShardingStateCache.entrySet()) {
+						AbnormalShardingState shardingState = entrySet.getValue();
+						if (shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()) {
+							abnormalShardingStateCache.remove(entrySet.getKey());
+							log.info(
+									"Clean abnormalShardingStateCache with key: {}, alertTime: {}, zkNodeCVersion: {}: "
+											+ entrySet.getKey(),
+									shardingState.getAlertTime(), shardingState.getZkNodeCVersion());
+						}
 					}
+				} catch (Exception e) {
+					log.error("clean abnormalShardingCache error", e);
 				}
 			}
 		};
-		cleanAbnormalShardingCacheTimer = new Timer("clean-abnormalShardingCache-timmer", true);
+		cleanAbnormalShardingCacheTimer = new Timer("clean-abnormalShardingCache-timer", true);
 		cleanAbnormalShardingCacheTimer.scheduleAtFixedRate(timerTask, 0, ALLOW_DELAY_MILLIONSECONDS);
 	}
 
@@ -170,13 +178,17 @@ public class DashboardServiceImpl implements DashboardService {
 	public synchronized void refreshStatistics2DB(boolean force) {
 		log.info("start refresh statistics.");
 		Date start = new Date();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
-		if (zkClusterList != null) {
-			for (ZkCluster zkCluster : zkClusterList) {
-				if (force || registryCenterService.isDashboardLeader(zkCluster.getZkClusterKey())) {
-					refreshStatistics2DB(zkCluster);
+		try {
+			Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+			if (zkClusterList != null) {
+				for (ZkCluster zkCluster : zkClusterList) {
+					if (force || registryCenterService.isDashboardLeader(zkCluster.getZkClusterKey())) {
+						refreshStatistics2DB(zkCluster);
+					}
 				}
 			}
+		} catch (Throwable t) {
+			log.error("refresh statistics error", t);
 		}
 		log.info("end refresh statistics, takes " + (new Date().getTime() - start.getTime()));
 	}
@@ -804,32 +816,40 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	private void saveOrUpdateDomainProcessCount(ZkStatistics zks, String zkAddr) {
-		String domainListJsonString = JSON.toJSONString(zks);
-		SaturnStatistics domainProcessCountFromDB = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.DOMAIN_PROCESS_COUNT_OF_THE_DAY, zkAddr);
-		if (domainProcessCountFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.DOMAIN_PROCESS_COUNT_OF_THE_DAY,
-					zkAddr, domainListJsonString);
-			saturnStatisticsService.create(ss);
-		} else {
-			domainProcessCountFromDB.setResult(domainListJsonString);
-			saturnStatisticsService.updateByPrimaryKey(domainProcessCountFromDB);
+		try {
+			String domainListJsonString = JSON.toJSONString(zks);
+			SaturnStatistics domainProcessCountFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.DOMAIN_PROCESS_COUNT_OF_THE_DAY, zkAddr);
+			if (domainProcessCountFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.DOMAIN_PROCESS_COUNT_OF_THE_DAY,
+						zkAddr, domainListJsonString);
+				saturnStatisticsService.create(ss);
+			} else {
+				domainProcessCountFromDB.setResult(domainListJsonString);
+				saturnStatisticsService.updateByPrimaryKey(domainProcessCountFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
 	private void saveOrUpdateAbnormalJob(List<AbnormalJob> unnormalJobList, String zkAddr) {
-		unnormalJobList = DashboardServiceHelper.sortUnnormaoJobByTimeDesc(unnormalJobList);
-		SaturnStatistics unnormalJobFromDB = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr);
-		if (unnormalJobFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr,
-					JSON.toJSONString(unnormalJobList));
-			saturnStatisticsService.create(ss);
-		} else {
-			List<AbnormalJob> oldUnnormalJobList = JSON.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
-			dealWithReadStatus(unnormalJobList, oldUnnormalJobList);
-			unnormalJobFromDB.setResult(JSON.toJSONString(unnormalJobList));
-			saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
+		try {
+			unnormalJobList = DashboardServiceHelper.sortUnnormaoJobByTimeDesc(unnormalJobList);
+			SaturnStatistics unnormalJobFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr);
+			if (unnormalJobFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.UNNORMAL_JOB, zkAddr,
+						JSON.toJSONString(unnormalJobList));
+				saturnStatisticsService.create(ss);
+			} else {
+				List<AbnormalJob> oldUnnormalJobList = JSON.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
+				dealWithReadStatus(unnormalJobList, oldUnnormalJobList);
+				unnormalJobFromDB.setResult(JSON.toJSONString(unnormalJobList));
+				saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -846,18 +866,22 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	private void saveOrUpdateTimeout4AlarmJob(List<Timeout4AlarmJob> timeout4AlarmJobList, String zkAddr) {
-		String timeout4AlarmJobJsonString = JSON.toJSONString(timeout4AlarmJobList);
-		SaturnStatistics timeout4AlarmJobFromDB = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr);
-		if (timeout4AlarmJobFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr,
-					timeout4AlarmJobJsonString);
-			saturnStatisticsService.create(ss);
-		} else {
-			List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
-			dealWithReadStatus4Timeout4AlarmJob(timeout4AlarmJobList, oldTimeout4AlarmJobs);
-			timeout4AlarmJobFromDB.setResult(JSON.toJSONString(timeout4AlarmJobList));
-			saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
+		try {
+			String timeout4AlarmJobJsonString = JSON.toJSONString(timeout4AlarmJobList);
+			SaturnStatistics timeout4AlarmJobFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr);
+			if (timeout4AlarmJobFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkAddr,
+						timeout4AlarmJobJsonString);
+				saturnStatisticsService.create(ss);
+			} else {
+				List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
+				dealWithReadStatus4Timeout4AlarmJob(timeout4AlarmJobList, oldTimeout4AlarmJobs);
+				timeout4AlarmJobFromDB.setResult(JSON.toJSONString(timeout4AlarmJobList));
+				saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -874,30 +898,38 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	private void saveOrUpdateUnableFailoverJob(List<AbnormalJob> unableFailoverJobList, String zkAddr) {
-		String unableFailoverJobJsonString = JSON.toJSONString(unableFailoverJobList);
-		SaturnStatistics unableFailoverJobFromDB = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zkAddr);
-		if (unableFailoverJobFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zkAddr,
-					unableFailoverJobJsonString);
-			saturnStatisticsService.create(ss);
-		} else {
-			unableFailoverJobFromDB.setResult(unableFailoverJobJsonString);
-			saturnStatisticsService.updateByPrimaryKey(unableFailoverJobFromDB);
+		try {
+			String unableFailoverJobJsonString = JSON.toJSONString(unableFailoverJobList);
+			SaturnStatistics unableFailoverJobFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zkAddr);
+			if (unableFailoverJobFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, zkAddr,
+						unableFailoverJobJsonString);
+				saturnStatisticsService.create(ss);
+			} else {
+				unableFailoverJobFromDB.setResult(unableFailoverJobJsonString);
+				saturnStatisticsService.updateByPrimaryKey(unableFailoverJobFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
 	private void saveOrUpdateAbnormalContainer(List<AbnormalContainer> abnormalContainerList, String zkAddr) {
-		String abnormalContainerJsonString = JSON.toJSONString(abnormalContainerList);
-		SaturnStatistics abnormalContainerFromDB = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.ABNORMAL_CONTAINER, zkAddr);
-		if (abnormalContainerFromDB == null) {
-			SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.ABNORMAL_CONTAINER, zkAddr,
-					abnormalContainerJsonString);
-			saturnStatisticsService.create(ss);
-		} else {
-			abnormalContainerFromDB.setResult(abnormalContainerJsonString);
-			saturnStatisticsService.updateByPrimaryKey(abnormalContainerFromDB);
+		try {
+			String abnormalContainerJsonString = JSON.toJSONString(abnormalContainerList);
+			SaturnStatistics abnormalContainerFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.ABNORMAL_CONTAINER, zkAddr);
+			if (abnormalContainerFromDB == null) {
+				SaturnStatistics ss = new SaturnStatistics(StatisticsTableKeyConstant.ABNORMAL_CONTAINER, zkAddr,
+						abnormalContainerJsonString);
+				saturnStatisticsService.create(ss);
+			} else {
+				abnormalContainerFromDB.setResult(abnormalContainerJsonString);
+				saturnStatisticsService.updateByPrimaryKey(abnormalContainerFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -1927,7 +1959,11 @@ public class DashboardServiceImpl implements DashboardService {
 		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
-				refreshStatistics2DB(true);
+				try {
+					refreshStatistics2DB(true);
+				} catch (Throwable t) {
+					log.error("async refresh statistics error", t);
+				}
 			}
 		};
 		updateStatisticsThreadPool.submit(runnable);

@@ -40,14 +40,18 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				loadAll();
+				try {
+					loadAll();
+				} catch (Throwable t) {
+					log.error("get system config from db error", t);
+				}
 			}
 		}, SaturnConstants.GET_SYS_CONFIG_DATA_REFRESH_TIME, SaturnConstants.GET_SYS_CONFIG_DATA_REFRESH_TIME);
 	}
 
 	private void loadAll() {
 		try {
-			log.info("get system config from db");
+			log.info("begin to get system config from db");
 			List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByLastly();
 			synchronized (systemConfigCache) {
 				systemConfigCache.clear();
@@ -60,6 +64,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
+			log.info("end get system config from db");
 			hasGotSystemConfigData.compareAndSet(false, true);
 		}
 	}
