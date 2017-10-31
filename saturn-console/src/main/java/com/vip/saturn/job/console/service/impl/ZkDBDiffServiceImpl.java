@@ -212,20 +212,14 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         String jobTypeInDB = dbJobConfig.getJobType();
         // jobType
         diff("jobType", jobTypeInDB, zkJobConfig.getJobType(), configDiffInfos);
-
-        if (JobBriefInfo.JobType.JAVA_JOB.name().equals(jobTypeInDB) || JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
-            // jobClass
-            diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
-        }
+        // jobClass
+        diff("jobClass", dbJobConfig.getJobClass(), zkJobConfig.getJobClass(), configDiffInfos);
         // shardingTotalCount
         diff("shardingTotalCount", dbJobConfig.getShardingTotalCount(), zkJobConfig.getShardingTotalCount(), configDiffInfos);
         // timeZone
         diff("timeZone", dbJobConfig.getTimeZone(), zkJobConfig.getTimeZone(), configDiffInfos);
-
-        if (!JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
-            // cron
-            diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
-        }
+        // cron
+        diff("cron", dbJobConfig.getCron(), zkJobConfig.getCron(), configDiffInfos);
         // pausePeriodDate
         diff("pausePeriodDate", dbJobConfig.getPausePeriodDate(), zkJobConfig.getPausePeriodDate(), configDiffInfos);
         // pausePeriodTime
@@ -250,13 +244,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("preferList", dbJobConfig.getPreferList(), zkJobConfig.getPreferList(), configDiffInfos);
         // useDispreferList
         diff("useDispreferList", dbJobConfig.getUseDispreferList(), zkJobConfig.getUseDispreferList(), configDiffInfos);
-
-        if (JobBriefInfo.JobType.MSG_JOB.name().equals(jobTypeInDB)) {
-            // useSerial
-            diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
-            // queueName
-            diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
-        }
+        // useSerial
+        diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
+        // queueName
+        diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
         // localMode
         diff("localMode", dbJobConfig.getLocalMode(), zkJobConfig.getLocalMode(), configDiffInfos);
         // dependencies
