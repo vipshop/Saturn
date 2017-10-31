@@ -508,10 +508,15 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			RegistryCenterConfiguration configInSession, boolean isJobConfigOnly) {
 		JobSettings result = new JobSettings();
 		result.setJobName(jobName);
-		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-		result.setJobType(jobType);
-		if (JobType.JAVA_JOB.name().equals(jobType) || JobType.MSG_JOB.name().equals(jobType)) {
-			result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		result.setJobType(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType")));
+		result.setJobClass(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass")));
+		// 兼容旧版没有msg_job。
+		if (StringUtils.isBlank(result.getJobType())) {
+			if (result.getJobClass().indexOf("script") > 0) {
+				result.setJobType(JobType.SHELL_JOB.name());
+			} else {
+				result.setJobType(JobType.JAVA_JOB.name());
+			}
 		}
 		result.setShardingTotalCount(Integer
 				.parseInt(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
@@ -522,9 +527,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			result.setTimeZone(timeZone);
 		}
 		result.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-		if (!JobType.MSG_JOB.name().equals(jobType)) {
-			result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
-		}
+		result.setCron(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron")));
 		result.setPausePeriodDate(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate")));
 		result.setPausePeriodTime(
@@ -583,33 +586,19 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 		result.setDescription(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description")));
 		result.setJobMode(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode")));
-		if (JobType.MSG_JOB.name().equals(jobType)) {
-			result.setUseSerial(
-					Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
-			result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
-			result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
-		}
+		result.setUseSerial(
+				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName")));
+		result.setChannelName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName")));
 		if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName, "showNormalLog")) == false) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, "showNormalLog"));
 		}
 		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
 		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
 		if (Strings.isNullOrEmpty(enabledReport)) {
-			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
-				enabledReportValue = true;
-			} else {
-				enabledReportValue = false;
-			}
+			enabledReportValue = true;
 		}
 		result.setEnabledReport(enabledReportValue);
-		// 兼容旧版没有msg_job。
-		if (StringUtils.isBlank(result.getJobType())) {
-			if (result.getJobClass().indexOf("script") > 0) {
-				result.setJobType(JobType.SHELL_JOB.name());
-			} else {
-				result.setJobType(JobType.JAVA_JOB.name());
-			}
-		}
 		result.setShowNormalLog(
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
 		if (!isJobConfigOnly) {
