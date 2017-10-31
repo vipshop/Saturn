@@ -9,7 +9,7 @@
 
 	<groupId>com.vip.saturn</groupId>
 	<artifactId>saturn-job</artifactId>
-	<version>master-SNAPSHOT</version>
+	<version>2.x-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>${project.artifactId}</name>
 	<description>Saturn-Job - distributed scheduled job solution</description>

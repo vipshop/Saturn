@@ -23,16 +23,16 @@ fi
 
 #git checkout $BRANCHNAME
 
-echo "[step 1/6] Replace master-SNAPSHOT to ${FULLVERSION} in all the pom.xml"
+echo "[step 1/6] Replace 2.x-SNAPSHOT to ${FULLVERSION} in all the pom.xml"
 
 for i in `find . -name pom.xml`; do
-  sed -i "s|master-SNAPSHOT|${FULLVERSION}|g" $i
+  sed -i "s|2.x-SNAPSHOT|${FULLVERSION}|g" $i
 done
 
-echo "[step 2/6] Replace master-SNAPSHOT to ${FULLVERSION} in all the quickstart.sh"
+echo "[step 2/6] Replace 2.x-SNAPSHOT to ${FULLVERSION} in all the quickstart.sh"
 
 for i in `find . -name quickstart.sh`; do
-  sed -i "s|master-SNAPSHOT|${FULLVERSION}|g" $i
+  sed -i "s|2.x-SNAPSHOT|${FULLVERSION}|g" $i
 done
 
 echo "[step 3/6] Replace build.version=saturn-dev to ${FULLVERSION} in saturn-core.properties"
