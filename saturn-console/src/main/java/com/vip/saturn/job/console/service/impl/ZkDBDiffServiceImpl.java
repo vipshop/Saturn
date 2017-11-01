@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -252,10 +251,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("preferList", dbJobConfig.getPreferList(), zkJobConfig.getPreferList(), configDiffInfos);
         // useDispreferList
         diff("useDispreferList", dbJobConfig.getUseDispreferList(), zkJobConfig.getUseDispreferList(), configDiffInfos);
-        // useSerial
-        diff("useSerial", dbJobConfig.getUseSerial(), zkJobConfig.getUseSerial(), configDiffInfos);
-        // queueName
-        diff("queueName", dbJobConfig.getQueueName(), zkJobConfig.getQueueName(), configDiffInfos);
         // localMode
         diff("localMode", dbJobConfig.getLocalMode(), zkJobConfig.getLocalMode(), configDiffInfos);
         // dependencies
@@ -272,8 +267,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         diff("showNormalLog", dbJobConfig.getShowNormalLog(), zkJobConfig.getShowNormalLog(), configDiffInfos);
         // enabledReport
         diff("enabledReport", dbJobConfig.getEnabledReport(), zkJobConfig.getEnabledReport(), configDiffInfos);
-        // showNormalLog
-        diff("showNormalLog", dbJobConfig.getShowNormalLog(), zkJobConfig.getShowNormalLog(), configDiffInfos);
 
         if (!configDiffInfos.isEmpty()) {
             Set<String> diffProperties = getDifferentProperties(configDiffInfos);
