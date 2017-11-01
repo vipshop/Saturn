@@ -24,6 +24,10 @@ public class SaturnJobException extends Exception {
 
 	private String message;
 
+	public SaturnJobException(String message) {
+		this(SYSTEM_ERROR, message);
+	}
+
 	public SaturnJobException(int type, String message) {
 		super();
 		this.type = type;
