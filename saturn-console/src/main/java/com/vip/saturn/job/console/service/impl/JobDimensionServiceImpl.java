@@ -879,6 +879,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		} else if (completed) {
 			String completedData = curatorFrameworkOp.getData(completedNodePath);
 			result.setExecutorName(Strings.isNullOrEmpty(completedData) ? server : completedData);
+		} else {
+			result.setExecutorName(server);
 		}
 
 		boolean isEnabledReport = false;
