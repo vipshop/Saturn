@@ -123,13 +123,13 @@ public class ExecutionService extends AbstractSaturnService {
 		if (jobConfiguration.isEnabledReport() == null) {
 			if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
-				getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+				getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), executorName);
 				// 清除完成状态timeout等信息
 				cleanSaturnNode(item);
 			}
 		} else if (jobConfiguration.isEnabledReport()) {
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
-			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), executorName);
 			// 清除完成状态timeout等信息
 			cleanSaturnNode(item);
 		}
@@ -229,11 +229,11 @@ public class ExecutionService extends AbstractSaturnService {
 		// updateNextFireTimeAndPausePeriodEffected(item);
 		if (jobConfiguration.isEnabledReport() == null) {
 			if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
-				getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+				getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
 				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 			}
 		} else if (jobConfiguration.isEnabledReport()) {
-			getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+			getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 		}
 

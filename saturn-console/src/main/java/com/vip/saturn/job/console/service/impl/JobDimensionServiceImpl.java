@@ -839,43 +839,48 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			return Collections.emptyList();
 		}
 
-		List<String> items = curatorFrameworkOp.getChildren(executionRootpath);
-		List<ExecutionInfo> result = new ArrayList<>(items.size());
-		for (String each : items) {
-			ExecutionInfo executionInfo = getExecutionInfo(jobName, each, curatorFrameworkOp);
-			if(executionInfo != null) {
-				result.add(executionInfo);
-			}
+		List<ExecutionInfo> result = new ArrayList<>();
+		Map<String, String> effectiveItemServerMapping = getEffectiveItemServerMapping(jobName, curatorFrameworkOp);
+		Iterator<Map.Entry<String, String>> iterator = effectiveItemServerMapping.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<String, String> next = iterator.next();
+			String item = next.getKey();
+			String server = next.getValue();
+			result.add(getExecutionInfo(jobName, item, server, curatorFrameworkOp));
 		}
 		Collections.sort(result);
 		return result;
 	}
 
-	@Override
-	public ExecutionInfo getExecutionJobLog(String jobName, int item) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		ExecutionInfo result = new ExecutionInfo();
-		String logMsg = curatorFrameworkOp
-				.getData(JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "jobLog"));
-		result.setLogMsg(logMsg);
-		return result;
-	}
-
-	private ExecutionInfo getExecutionInfo(final String jobName, final String item, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		String itemExecutorName = getItemExecutorName(jobName, item, curatorFrameworkOp);
-		if(itemExecutorName == null) {
-			return null;
-		}
+	private ExecutionInfo getExecutionInfo(String jobName, String item, String server, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		ExecutionInfo result = new ExecutionInfo();
 		result.setJobName(jobName);
 		result.setItem(Integer.parseInt(item));
-		boolean running = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
-		boolean completed = curatorFrameworkOp
-				.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
-		boolean failed = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failed"));
-		boolean timeout = curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "timeout"));
 
+		String failoverNodePath = JobNodePath.getExecutionNodePath(jobName, item, "failover");
+		String runningNodePath = JobNodePath.getExecutionNodePath(jobName, item, "running");
+		String completedNodePath = JobNodePath.getExecutionNodePath(jobName, item, "completed");
+		String failedNodePath = JobNodePath.getExecutionNodePath(jobName, item, "failed");
+		String timeoutNodePath = JobNodePath.getExecutionNodePath(jobName, item, "timeout");
 		String enabledReportNodePath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
+
+		boolean failover = curatorFrameworkOp.checkExists(failoverNodePath);
+		boolean running = curatorFrameworkOp.checkExists(runningNodePath);
+		boolean completed = curatorFrameworkOp.checkExists(completedNodePath);
+		boolean failed = curatorFrameworkOp.checkExists(failedNodePath);
+		boolean timeout = curatorFrameworkOp.checkExists(timeoutNodePath);
+
+		if (failover) {
+			result.setExecutorName(curatorFrameworkOp.getData(failedNodePath));
+			result.setFailover(true);
+		} else if (running) {
+			String runningData = curatorFrameworkOp.getData(runningNodePath);
+			result.setExecutorName(Strings.isNullOrEmpty(runningData) ? server : runningData);
+		} else if (completed) {
+			String completedData = curatorFrameworkOp.getData(completedNodePath);
+			result.setExecutorName(Strings.isNullOrEmpty(completedData) ? server : completedData);
+		}
+
 		boolean isEnabledReport = false;
 		if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
 			isEnabledReport = Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
@@ -890,11 +895,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, item, "jobMsg"));
 		result.setJobMsg(jobMsg);
 
-		result.setExecutorName(itemExecutorName);
-
-		if (curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "failover"))) {
-			result.setFailover(true);
-		}
 		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
 		if (timeZoneStr == null || timeZoneStr.trim().length() == 0) {
 			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
@@ -929,36 +929,40 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	private String getItemExecutorName(final String jobName, final String item, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private Map<String, String> getEffectiveItemServerMapping(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		Map<String, String> mapping = new HashMap<>();
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
-		if (!curatorFrameworkOp.checkExists(serverNodePath)) {
-			return null;
-		}
-		String failoverNodePath = JobNodePath.getExecutionNodePath(jobName, item, "failover");
-		if(curatorFrameworkOp.checkExists(failoverNodePath)) {
-			return curatorFrameworkOp.getData(failoverNodePath);
-		}
-		String executorName = null;
-		List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
-		for (String server : servers) {
-			String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, server, "sharding"));
-			String toFind = "";
-			if (Strings.isNullOrEmpty(sharding)) {
-				continue;
-			}
-			for (String itemKey : Splitter.on(',').split(sharding)) {
-				if (item.equals(itemKey)) {
-					toFind = itemKey;
-					break;
+		if (curatorFrameworkOp.checkExists(serverNodePath)) {
+			List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
+			if (servers != null) {
+				for (String server : servers) {
+					String shardingData = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, server, "sharding"));
+					if (shardingData != null && !shardingData.trim().isEmpty()) {
+						String[] split = shardingData.split(",");
+						for (String tmp : split) {
+							if (tmp != null) {
+								tmp = tmp.trim();
+								if (!tmp.isEmpty()) {
+									mapping.put(tmp, server);
+								}
+							}
+						}
+					}
 				}
 			}
-			if (!Strings.isNullOrEmpty(toFind)) {
-				executorName = server;
-				break;
-			}
 		}
+		return mapping;
+	}
 
-		return executorName;
+
+	@Override
+	public ExecutionInfo getExecutionJobLog(String jobName, int item) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		ExecutionInfo result = new ExecutionInfo();
+		String logMsg = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, String.valueOf(item), "jobLog"));
+		result.setLogMsg(logMsg);
+		return result;
 	}
 
 	@Override
