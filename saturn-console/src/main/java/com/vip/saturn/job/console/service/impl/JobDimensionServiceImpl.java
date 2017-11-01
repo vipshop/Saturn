@@ -871,7 +871,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		boolean timeout = curatorFrameworkOp.checkExists(timeoutNodePath);
 
 		if (failover) {
-			result.setExecutorName(curatorFrameworkOp.getData(failedNodePath));
+			result.setExecutorName(curatorFrameworkOp.getData(failoverNodePath));
 			result.setFailover(true);
 		} else if (running) {
 			String runningData = curatorFrameworkOp.getData(runningNodePath);
