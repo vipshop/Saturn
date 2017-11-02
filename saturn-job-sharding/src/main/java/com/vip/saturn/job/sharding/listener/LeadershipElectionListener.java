@@ -6,7 +6,7 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 
 /**
- * Created by xiaopeng.he on 2016/7/12.
+ * @author hebelala
  */
 public class LeadershipElectionListener extends AbstractTreeCacheListener {
 

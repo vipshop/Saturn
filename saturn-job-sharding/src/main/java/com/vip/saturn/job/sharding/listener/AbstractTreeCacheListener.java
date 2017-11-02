@@ -6,7 +6,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 
 /**
- * Created by xiaopeng.he on 2016/7/12.
+ * @author hebelala 
  */
 public abstract class AbstractTreeCacheListener implements TreeCacheListener {
 

@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.console.service.impl;
 
 import java.util.ArrayList;
@@ -27,13 +24,8 @@ public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 	@Autowired
 	private CurrentJobConfigService currentJobConfigService;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.vip.saturn.job.integrate.service.UpdateJobConfigService#batchUpdatePerferList(java.util.List)
-	 */
 	@Override
-	public void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException {
+	public void batchUpdatePreferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException {
 		if (CollectionUtils.isEmpty(jobConfigInfos)) {
 			return;
 		}
@@ -47,7 +39,7 @@ public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 			currentJobConfigs.add(currentJobConfig);
 		}
 		try {
-			currentJobConfigService.batchUpdatePerferList(currentJobConfigs);
+			currentJobConfigService.batchUpdatePreferList(currentJobConfigs);
 		} catch (SaturnJobConsoleException e) {
 			throw new UpdateJobConfigException(e);
 		}

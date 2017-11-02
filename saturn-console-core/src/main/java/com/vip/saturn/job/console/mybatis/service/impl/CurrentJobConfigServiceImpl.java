@@ -87,16 +87,16 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException {
+	public void batchUpdatePreferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException {
 		SqlSession batchSqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
 		try {
 			for (CurrentJobConfig currentJobConfig : jobConfigs) {
-				batchSqlSession.getMapper(CurrentJobConfigRepository.class).updatePerferList(currentJobConfig);
+				batchSqlSession.getMapper(CurrentJobConfigRepository.class).updatePreferList(currentJobConfig);
 			}
 			batchSqlSession.commit();
 		} catch (Exception e) {
 			batchSqlSession.rollback();
-			throw new SaturnJobConsoleException("error when batchUpdatePerferList", e);
+			throw new SaturnJobConsoleException("error when batchUpdatePreferList", e);
 		} finally {
 			IOUtils.closeQuietly(batchSqlSession);
 		}

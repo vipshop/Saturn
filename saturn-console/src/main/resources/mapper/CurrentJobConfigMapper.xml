@@ -479,7 +479,7 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
   
-  <update id="updatePerferList" parameterType="java.util.List">
+  <update id="updatePreferList" parameterType="java.util.List">
      update job_config set prefer_list = #{preferList,jdbcType=VARCHAR}
      where namespace = #{namespace,jdbcType=VARCHAR} and job_name = #{jobName,jdbcType=VARCHAR}
   </update>

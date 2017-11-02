@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.vip.saturn.job.integrate.service;
 
 import java.util.List;
@@ -20,6 +17,6 @@ public interface UpdateJobConfigService {
 	 * 
 	 * @param jobConfigInfos 作业配置信息
 	 */
-	void batchUpdatePerferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException;
+	void batchUpdatePreferList(List<JobConfigInfo> jobConfigInfos) throws UpdateJobConfigException;
 
 }

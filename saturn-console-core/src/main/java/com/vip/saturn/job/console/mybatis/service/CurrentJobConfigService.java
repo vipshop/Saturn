@@ -24,7 +24,7 @@ public interface CurrentJobConfigService {
 
 	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel) throws Exception;
 
-	void batchUpdatePerferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException;
+	void batchUpdatePreferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException;
 
 	List<CurrentJobConfig> findConfigsByNamespace(String namespace);
 

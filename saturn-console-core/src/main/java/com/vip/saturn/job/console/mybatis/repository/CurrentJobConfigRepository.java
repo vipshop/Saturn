@@ -23,7 +23,7 @@ public interface CurrentJobConfigRepository {
 
 	int updateByPrimaryKey(CurrentJobConfig currentjobconfig);
 	
-	void updatePerferList(CurrentJobConfig currentjobconfig);
+	void updatePreferList(CurrentJobConfig currentjobconfig);
 
 	int selectCount(CurrentJobConfig currentjobconfig);
 

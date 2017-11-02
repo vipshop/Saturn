@@ -21,7 +21,7 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
  * @author hebelala
  */
 public class ExecutorCleanService {
-	private static Logger LOGGER = LoggerFactory.getLogger(ExecutorCleanService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorCleanService.class);
 
 	private CuratorFramework curatorFramework;
 
@@ -38,6 +38,7 @@ public class ExecutorCleanService {
 	 * delete $Jobs/job/config/preferList content about xxx
 	 */
 	public void clean(String executorName) {
+		List<JobConfigInfo> jobConfigInfos = new ArrayList<>();
 		try {
 			String cleanNodePath = SaturnExecutorsNode.getExecutorCleanNodePath(executorName);
 			if (curatorFramework.checkExists().forPath(cleanNodePath) != null) {
@@ -51,20 +52,18 @@ public class ExecutorCleanService {
 							// delete $SaturnExecutors/executors/xxx
 							deleteExecutor(executorName);
 							List<String> jobs = getJobList();
-							List<JobConfigInfo> jobConfigInfos = new ArrayList<JobConfigInfo>();
 							for (String jobName : jobs) {
 								// delete $Jobs/job/servers/xxx
 								deleteJobServerExecutor(jobName, executorName);
 								// delete $Jobs/job/config/preferList content about xxx
-								String perferList = updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName,
+								String preferList = updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName,
 										executorName);
-								if (perferList != null) {
+								if (preferList != null) {
 									JobConfigInfo jobConfigInfo = new JobConfigInfo(curatorFramework.getNamespace(),
-											jobName, perferList);
+											jobName, preferList);
 									jobConfigInfos.add(jobConfigInfo);
 								}
 							}
-							updatePerferListQuietly(jobConfigInfos);
 						} else {
 							LOGGER.info("The executor {} is online now, no necessary to clean", executorName);
 						}
@@ -75,20 +74,22 @@ public class ExecutorCleanService {
 			// ignore
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor " + executorName + " error", e);
+		} finally {
+			updatePreferListQuietly(jobConfigInfos);
 		}
 	}
 
-	private void updatePerferListQuietly(List<JobConfigInfo> jobConfigInfos) {
+	private void updatePreferListQuietly(List<JobConfigInfo> jobConfigInfos) {
 		try {
 			if (updateJobConfigService != null) {
-				updateJobConfigService.batchUpdatePerferList(jobConfigInfos);
+				updateJobConfigService.batchUpdatePreferList(jobConfigInfos);
 			}
 		} catch (Exception e) {
-			LOGGER.warn("batchUpdatePerferList  error", e); // just log a warn.
+			LOGGER.warn("batchUpdatePreferList  error", e); // just log a warn.
 		}
 	}
 
-	private List<String> getJobList() {
+	private List<String> getJobList() throws KeeperException.ConnectionLossException, InterruptedException {
 		List<String> jobList = new ArrayList<>();
 		try {
 			String jobsNodePath = SaturnExecutorsNode.$JOBSNODE_PATH;
@@ -100,6 +101,10 @@ public class ExecutorCleanService {
 			}
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
+		} catch (KeeperException.ConnectionLossException e) {
+			throw e;
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor, getJobList error", e);
 		}
@@ -109,7 +114,7 @@ public class ExecutorCleanService {
 	/**
 	 * delete $SaturnExecutors/executors/xxx
 	 */
-	private void deleteExecutor(String executorName) {
+	private void deleteExecutor(String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String executorNodePath = SaturnExecutorsNode.getExecutorNodePath(executorName);
 			if (curatorFramework.checkExists().forPath(executorNodePath) != null) {
@@ -130,6 +135,10 @@ public class ExecutorCleanService {
 			}
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
+		} catch (KeeperException.ConnectionLossException e) {
+			throw e;
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
 		}
@@ -138,7 +147,7 @@ public class ExecutorCleanService {
 	/**
 	 * delete $Jobs/job/servers/xxx
 	 */
-	private void deleteJobServerExecutor(String jobName, String executorName) {
+	private void deleteJobServerExecutor(String jobName, String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String jobServersExecutorNodePath = SaturnExecutorsNode.getJobServersExecutorNodePath(jobName,
 					executorName);
@@ -161,6 +170,10 @@ public class ExecutorCleanService {
 			}
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
+		} catch (KeeperException.ConnectionLossException e) {
+			throw e;
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
 		}
@@ -169,7 +182,7 @@ public class ExecutorCleanService {
 	/**
 	 * delete $Jobs/job/config/preferList content about xxx
 	 */
-	private String updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) {
+	private String updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
 			if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {
@@ -201,6 +214,10 @@ public class ExecutorCleanService {
 			// ignore
 		} catch (KeeperException.BadVersionException e) { // NOSONAR
 			// ignore
+		} catch (KeeperException.ConnectionLossException e) {
+			throw e;
+		} catch (InterruptedException e) {
+			throw e;
 		} catch (Exception e) {
 			LOGGER.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", "
 					+ executorName + ") error", e);

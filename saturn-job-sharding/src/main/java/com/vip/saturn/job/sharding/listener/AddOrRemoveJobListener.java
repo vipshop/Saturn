@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
-	static Logger log = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AddOrRemoveJobListener.class);
 
 	private AddJobListenersService addJobListenersService;
 
@@ -28,16 +28,15 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 			String job = StringUtils.substringAfterLast(path, "/");
 			if (!SaturnExecutorsNode.$JOBS.equals(job)) {
 				if (isAddJob(type)) {
-					log.info("job: {} created", job);
+					LOGGER.info("job: {} created", job);
 					addJobListenersService.addJobPathListener(job);
 				} else if (isRemoveJob(type)) {
-					log.info("job: {} removed", job);
+					LOGGER.info("job: {} removed", job);
 					addJobListenersService.removeJobPathTreeCache(job);
 				}
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw e;
+			LOGGER.error(e.getMessage(), e);
 		}
 	}
 

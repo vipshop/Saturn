@@ -25,7 +25,7 @@ import com.vip.saturn.job.sharding.service.NamespaceShardingService;
  */
 public class SaturnExecutorsShardingTriggerShardingListener extends AbstractTreeCacheListener {
 
-	static Logger log = LoggerFactory.getLogger(SaturnExecutorsShardingTriggerShardingListener.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SaturnExecutorsShardingTriggerShardingListener.class);
 
 	private NamespaceShardingService namespaceShardingService;
 
@@ -36,7 +36,7 @@ public class SaturnExecutorsShardingTriggerShardingListener extends AbstractTree
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
 		if (isShardAllAtOnce(type, path)) {
-			log.info("msg=shard-all-at-once triggered.");
+			LOGGER.info("shard-all-at-once triggered.");
 			namespaceShardingService.asyncShardingWhenExecutorAll();
 		}
 	}

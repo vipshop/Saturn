@@ -1,6 +1,7 @@
 package com.vip.saturn.job.sharding;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
  *
  */
 public class NamespaceShardingManager {
-	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingManager.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceShardingManager.class);
 
 	private NamespaceShardingService namespaceShardingService;
 
@@ -134,14 +135,13 @@ public class NamespaceShardingManager {
 				new LeadershipElectionListener(namespaceShardingService));
 	}
 
-	private void createNodePathIfNotExists(String path) throws InterruptedException {
-		try {
-			if (curatorFramework.checkExists().forPath(path) == null) {
+	private void createNodePathIfNotExists(String path) throws Exception {
+		if (curatorFramework.checkExists().forPath(path) == null) {
+			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
+			} catch (KeeperException.NodeExistsException e) {
+				LOGGER.info(e.getMessage());
 			}
-		} catch (InterruptedException e) {
-			throw e;
-		} catch (Exception e) { // NOSONAR
 		}
 	}
 
@@ -155,17 +155,17 @@ public class NamespaceShardingManager {
 				namespaceShardingConnectionListener.shutdownNowUntilTerminated();
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}
 		try {
 			shardingTreeCacheService.shutdown();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}
 		try {
 			namespaceShardingService.shutdown();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}
 	}
 
@@ -186,10 +186,10 @@ public class NamespaceShardingManager {
 				shardingTreeCacheService.shutdown();
 				namespaceShardingService.shutdown();
 			} catch (InterruptedException e) {
-				log.info("stop interrupted");
+				LOGGER.info("stop interrupted");
 				Thread.currentThread().interrupt();
 			} catch (Exception e) {
-				log.error("stop error", e);
+				LOGGER.error("stop error", e);
 			}
 		}
 
@@ -198,10 +198,10 @@ public class NamespaceShardingManager {
 			try {
 				start0();
 			} catch (InterruptedException e) {
-				log.info("restart interrupted");
+				LOGGER.info("restart interrupted");
 				Thread.currentThread().interrupt();
 			} catch (Exception e) {
-				log.error("restart error", e);
+				LOGGER.error("restart error", e);
 			}
 		}
 	}
