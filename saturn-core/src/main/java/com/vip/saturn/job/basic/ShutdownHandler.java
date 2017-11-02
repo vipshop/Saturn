@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,13 @@ import sun.misc.SignalHandler;
 public class ShutdownHandler implements SignalHandler {
 	private static Logger log = LoggerFactory.getLogger(ShutdownHandler.class);
 
-	private static ConcurrentHashMap<String, List<Runnable>> listeners = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, List<Runnable>> executorListeners = new ConcurrentHashMap<>();
 	private static List<Runnable> globalListeners = new ArrayList<>();
 
 	private static ShutdownHandler handler;
 	private static volatile boolean exit = true;
+
+	private static final AtomicBoolean isHandling = new AtomicBoolean(false);
 
 	static {
 		handler = new ShutdownHandler();
@@ -34,18 +37,27 @@ public class ShutdownHandler implements SignalHandler {
 	}
 
 	public static void addShutdownCallback(Runnable c) {
+		if (isHandling.get()) {
+			return;
+		}
 		globalListeners.add(c);
 	}
 
 	public static void addShutdownCallback(String executorName, Runnable c) {
-		if (!listeners.containsKey(executorName)) {
-			listeners.putIfAbsent(executorName, new ArrayList<Runnable>());
+		if (isHandling.get()) {
+			return;
 		}
-		listeners.get(executorName).add(c);
+		if (!executorListeners.containsKey(executorName)) {
+			executorListeners.putIfAbsent(executorName, new ArrayList<Runnable>());
+		}
+		executorListeners.get(executorName).add(c);
 	}
 
 	public static void removeShutdownCallback(String executorName) {
-		listeners.remove(executorName);
+		if (isHandling.get()) {
+			return;
+		}
+		executorListeners.remove(executorName);
 	}
 
 	public static void exitAfterHandler(boolean exit) {
@@ -54,9 +66,29 @@ public class ShutdownHandler implements SignalHandler {
 
 	@Override
 	public void handle(Signal sn) {
-		log.info("msg=Received the kill command");
+		if (isHandling.compareAndSet(false, true)) {
+			try {
+				doHandle(sn);
+			} finally {
+				isHandling.set(false);
+			}
+		} else {
+			log.info("shutdown is handling");
+		}
+	}
 
-		Iterator<Entry<String, List<Runnable>>> iterator = listeners.entrySet().iterator();
+	private void doHandle(Signal sn) {
+		log.info("msg=Received the kill command");
+		callExecutorListeners();
+		callGlobalListeners();
+		log.info("msg=Saturn executor is closed");
+		if (exit) {
+			exit();
+		}
+	}
+
+	private void callExecutorListeners() {
+		Iterator<Entry<String, List<Runnable>>> iterator = executorListeners.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, List<Runnable>> next = iterator.next();
 			List<Runnable> value = next.getValue();
@@ -70,8 +102,10 @@ public class ShutdownHandler implements SignalHandler {
 				}
 			}
 		}
-		listeners.clear();
+		executorListeners.clear();
+	}
 
+	private void callGlobalListeners() {
 		for (Runnable runnable : globalListeners) {
 			try {
 				if (runnable != null) {
@@ -82,20 +116,18 @@ public class ShutdownHandler implements SignalHandler {
 			}
 		}
 		globalListeners.clear();
-
-		log.info("msg=Saturn executor is closed");
-		if (exit) {
-			LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-			loggerContext.stop();
-
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace(); // NOSONAR
-			}
-
-			System.exit(-1);
-		}
 	}
 
+	private void exit() {
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		loggerContext.stop();
+
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace(); // NOSONAR
+		}
+
+		System.exit(-1);
+	}
 }
