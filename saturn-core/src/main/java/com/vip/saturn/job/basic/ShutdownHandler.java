@@ -28,7 +28,7 @@ public class ShutdownHandler implements SignalHandler {
 	private static ShutdownHandler handler;
 	private static volatile boolean exit = true;
 
-	private final AtomicBoolean handling = new AtomicBoolean(false);
+	private static final AtomicBoolean isHandling = new AtomicBoolean(false);
 
 	static {
 		handler = new ShutdownHandler();
@@ -37,10 +37,16 @@ public class ShutdownHandler implements SignalHandler {
 	}
 
 	public static void addShutdownCallback(Runnable c) {
+		if (isHandling.get()) {
+			return;
+		}
 		globalListeners.add(c);
 	}
 
 	public static void addShutdownCallback(String executorName, Runnable c) {
+		if (isHandling.get()) {
+			return;
+		}
 		if (!listeners.containsKey(executorName)) {
 			listeners.putIfAbsent(executorName, new ArrayList<Runnable>());
 		}
@@ -48,6 +54,9 @@ public class ShutdownHandler implements SignalHandler {
 	}
 
 	public static void removeShutdownCallback(String executorName) {
+		if (isHandling.get()) {
+			return;
+		}
 		listeners.remove(executorName);
 	}
 
@@ -57,12 +66,14 @@ public class ShutdownHandler implements SignalHandler {
 
 	@Override
 	public void handle(Signal sn) {
-		if (handling.compareAndSet(false, true)) {
+		if (isHandling.compareAndSet(false, true)) {
 			try {
 				doHandle(sn);
 			} finally {
-				handling.set(false);
+				isHandling.set(false);
 			}
+		} else {
+			log.info("shutdown is handling");
 		}
 	}
 
