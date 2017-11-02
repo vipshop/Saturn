@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ public class ShutdownHandler implements SignalHandler {
 
 	private static ShutdownHandler handler;
 	private static volatile boolean exit = true;
+
+	private final AtomicBoolean handling = new AtomicBoolean(false);
 
 	static {
 		handler = new ShutdownHandler();
@@ -54,6 +57,16 @@ public class ShutdownHandler implements SignalHandler {
 
 	@Override
 	public void handle(Signal sn) {
+		if (handling.compareAndSet(false, true)) {
+			try {
+				doHandle(sn);
+			} finally {
+				handling.set(false);
+			}
+		}
+	}
+
+	private void doHandle(Signal sn) {
 		log.info("msg=Received the kill command");
 
 		Iterator<Entry<String, List<Runnable>>> iterator = listeners.entrySet().iterator();
@@ -97,5 +110,4 @@ public class ShutdownHandler implements SignalHandler {
 			System.exit(-1);
 		}
 	}
-
 }
