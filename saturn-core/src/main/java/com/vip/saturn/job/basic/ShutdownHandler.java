@@ -22,7 +22,7 @@ import sun.misc.SignalHandler;
 public class ShutdownHandler implements SignalHandler {
 	private static Logger log = LoggerFactory.getLogger(ShutdownHandler.class);
 
-	private static ConcurrentHashMap<String, List<Runnable>> listeners = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, List<Runnable>> executorListeners = new ConcurrentHashMap<>();
 	private static List<Runnable> globalListeners = new ArrayList<>();
 
 	private static ShutdownHandler handler;
@@ -47,17 +47,17 @@ public class ShutdownHandler implements SignalHandler {
 		if (isHandling.get()) {
 			return;
 		}
-		if (!listeners.containsKey(executorName)) {
-			listeners.putIfAbsent(executorName, new ArrayList<Runnable>());
+		if (!executorListeners.containsKey(executorName)) {
+			executorListeners.putIfAbsent(executorName, new ArrayList<Runnable>());
 		}
-		listeners.get(executorName).add(c);
+		executorListeners.get(executorName).add(c);
 	}
 
 	public static void removeShutdownCallback(String executorName) {
 		if (isHandling.get()) {
 			return;
 		}
-		listeners.remove(executorName);
+		executorListeners.remove(executorName);
 	}
 
 	public static void exitAfterHandler(boolean exit) {
@@ -79,8 +79,16 @@ public class ShutdownHandler implements SignalHandler {
 
 	private void doHandle(Signal sn) {
 		log.info("msg=Received the kill command");
+		callExecutorListeners();
+		callGlobalListeners();
+		log.info("msg=Saturn executor is closed");
+		if (exit) {
+			exit();
+		}
+	}
 
-		Iterator<Entry<String, List<Runnable>>> iterator = listeners.entrySet().iterator();
+	private void callExecutorListeners() {
+		Iterator<Entry<String, List<Runnable>>> iterator = executorListeners.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, List<Runnable>> next = iterator.next();
 			List<Runnable> value = next.getValue();
@@ -94,8 +102,10 @@ public class ShutdownHandler implements SignalHandler {
 				}
 			}
 		}
-		listeners.clear();
+		executorListeners.clear();
+	}
 
+	private void callGlobalListeners() {
 		for (Runnable runnable : globalListeners) {
 			try {
 				if (runnable != null) {
@@ -106,19 +116,18 @@ public class ShutdownHandler implements SignalHandler {
 			}
 		}
 		globalListeners.clear();
+	}
 
-		log.info("msg=Saturn executor is closed");
-		if (exit) {
-			LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-			loggerContext.stop();
+	private void exit() {
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		loggerContext.stop();
 
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace(); // NOSONAR
-			}
-
-			System.exit(-1);
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace(); // NOSONAR
 		}
+
+		System.exit(-1);
 	}
 }
