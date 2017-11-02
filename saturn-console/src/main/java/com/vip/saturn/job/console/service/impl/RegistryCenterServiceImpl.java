@@ -15,17 +15,23 @@
 package com.vip.saturn.job.console.service.impl;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
-
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -58,6 +64,8 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.LocalHostService;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 
@@ -356,7 +364,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (allMappingsOfCluster != null && !zkCluster.isOffline()) {
 				for (NamespaceZkClusterMapping mapping : allMappingsOfCluster) {
 					String namespace = mapping.getNamespace();
-					String name = mapping.getName();
+					String name = StringUtils.deleteWhitespace(mapping.getName());
 					if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
 						log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
 						continue;
