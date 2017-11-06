@@ -166,9 +166,9 @@ public class NamespaceShardingService {
 						}
 					}
 					try {
-						shutdown();
+						shutdownInner(false);
 					} catch (InterruptedException e) {
-						log.info("{}-{} {}-shutdown is interrupted", namespace, hostValue,
+						log.info("{}-{} {}-shutdownInner is interrupted", namespace, hostValue,
 								this.getClass().getSimpleName());
 						Thread.currentThread().interrupt();
 					} catch (Throwable t3) {
@@ -253,7 +253,7 @@ public class NamespaceShardingService {
 					try {
 						_shardingCount = Integer.parseInt(new String(shardingCountData, "UTF-8")) + 1;
 					} catch (NumberFormatException e) {
-						log.error(e.getMessage(), e);
+						log.error("parse shardingCount error", e);
 					}
 				}
 				curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
@@ -370,25 +370,25 @@ public class NamespaceShardingService {
 					try {
 						shardingTotalCount = Integer.parseInt(new String(shardingTotalCountData, "UTF-8"));
 					} catch (NumberFormatException e) {
-						log.error(e.getMessage(), e);
+						log.error("parse shardingTotalCount error, will use the default value", e);
 					}
 				}
 			}
 			return shardingTotalCount;
 		}
 
-		protected int getLoadLevel(String jobName) {
+		protected int getLoadLevel(String jobName) throws Exception {
 			int loadLevel = LOAD_LEVEL_DEFAULT;
-			try {
-				String jobConfigLoadLevelNodePath = SaturnExecutorsNode.getJobConfigLoadLevelNodePath(jobName);
-				if (curatorFramework.checkExists().forPath(jobConfigLoadLevelNodePath) != null) {
-					byte[] loadLevelData = curatorFramework.getData().forPath(jobConfigLoadLevelNodePath);
+			String jobConfigLoadLevelNodePath = SaturnExecutorsNode.getJobConfigLoadLevelNodePath(jobName);
+			if (curatorFramework.checkExists().forPath(jobConfigLoadLevelNodePath) != null) {
+				byte[] loadLevelData = curatorFramework.getData().forPath(jobConfigLoadLevelNodePath);
+				try {
 					if (loadLevelData != null) {
 						loadLevel = Integer.parseInt(new String(loadLevelData, "UTF-8"));
 					}
+				} catch (NumberFormatException e) {
+					log.error("parse loadLevel error, will use the default value", e);
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
 			return loadLevel;
 		}
@@ -578,21 +578,16 @@ public class NamespaceShardingService {
 		 * 1、存在结点，并且该结点值为false，返回false；<br>
 		 * 2、其他情况，返回true
 		 */
-		protected boolean useDispreferList(String jobName) {
-			try {
-				String jobConfigUseDispreferListNodePath = SaturnExecutorsNode
-						.getJobConfigUseDispreferListNodePath(jobName);
-				if (curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath) != null) {
-					byte[] useDispreferListData = curatorFramework.getData().forPath(jobConfigUseDispreferListNodePath);
-					if (useDispreferListData != null && !Boolean.valueOf(new String(useDispreferListData, "UTF-8"))) {
-						return false;
-					}
+		protected boolean useDispreferList(String jobName) throws Exception {
+			String jobConfigUseDispreferListNodePath = SaturnExecutorsNode
+					.getJobConfigUseDispreferListNodePath(jobName);
+			if (curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath) != null) {
+				byte[] useDispreferListData = curatorFramework.getData().forPath(jobConfigUseDispreferListNodePath);
+				if (useDispreferListData != null && !Boolean.valueOf(new String(useDispreferListData, "UTF-8"))) {
+					return false;
 				}
-				return true;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-				return true;
 			}
+			return true;
 		}
 
 		private Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
@@ -1173,19 +1168,15 @@ public class NamespaceShardingService {
 					executorName);
 		}
 
-		private String getExecutorIp() {
+		private String getExecutorIp() throws Exception {
 			String ip = null;
-			try {
-				String executorIpNodePath = SaturnExecutorsNode.getExecutorIpNodePath(executorName);
-				if (curatorFramework.checkExists()
-						.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) != null) {
-					byte[] ipBytes = curatorFramework.getData().forPath(executorIpNodePath);
-					if (ipBytes != null) {
-						ip = new String(ipBytes, "UTF-8");
-					}
+			String executorIpNodePath = SaturnExecutorsNode.getExecutorIpNodePath(executorName);
+			if (curatorFramework.checkExists()
+					.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) != null) {
+				byte[] ipBytes = curatorFramework.getData().forPath(executorIpNodePath);
+				if (ipBytes != null) {
+					ip = new String(ipBytes, "UTF-8");
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
 			return ip;
 		}
@@ -1501,13 +1492,9 @@ public class NamespaceShardingService {
 			needAllSharding.set(true);
 			shardingCount.incrementAndGet();
 			executorService.submit(new ExecuteAllShardingTask());
-			try {
-				String shardAllAtOnce = SaturnExecutorsNode.getExecutorShardingNodePath("shardAllAtOnce");
-				if (curatorFramework.checkExists().forPath(shardAllAtOnce) != null) {
-					curatorFramework.delete().deletingChildrenIfNeeded().forPath(shardAllAtOnce);
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+			String shardAllAtOnce = SaturnExecutorsNode.getExecutorShardingNodePath("shardAllAtOnce");
+			if (curatorFramework.checkExists().forPath(shardAllAtOnce) != null) {
+				curatorFramework.delete().deletingChildrenIfNeeded().forPath(shardAllAtOnce);
 			}
 		}
 	}
@@ -1680,9 +1667,20 @@ public class NamespaceShardingService {
 		}
 	}
 
-	public void shutdown() throws InterruptedException {
+	/**
+	 * Firstly, shutdown thread pool. Secondly, release my leadership.
+	 * @param shutdownNow true, the thread pool will be shutdownNow; false, it will be shutdown
+	 */
+	private void shutdownInner(boolean shutdownNow) throws InterruptedException {
 		lock.lockInterruptibly();
 		try {
+			if (executorService != null) {
+				if(shutdownNow) {
+					executorService.shutdownNow();
+				} else {
+					executorService.shutdown();
+				}
+			}
 			try {
 				if (curatorFramework.getZookeeperClient().isConnected()) {
 					releaseMyLeadership();
@@ -1690,12 +1688,13 @@ public class NamespaceShardingService {
 			} catch (Exception e) {
 				log.error(namespace + "-" + hostValue + " delete leadership error", e);
 			}
-			if (executorService != null) {
-				executorService.shutdownNow();
-			}
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	public void shutdown() throws InterruptedException {
+		shutdownInner(true);
 	}
 
 	public NamespaceShardingContentService getNamespaceShardingContentService() {
