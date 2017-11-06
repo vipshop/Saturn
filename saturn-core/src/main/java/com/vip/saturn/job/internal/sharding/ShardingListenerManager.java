@@ -141,7 +141,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			case NodeCreated:
 			case NodeDataChanged:
 				log.info("event type:{}, path:{}", event.getType(), event.getPath());
-				doBusiness();
+				if (shardingService.isNeedSharding()) {
+					doBusiness();
+				}
 			default:
 				// use the thread pool to executor registerNecessaryWatcher by async,
 				// fix the problem:
