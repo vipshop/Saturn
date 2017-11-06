@@ -90,16 +90,20 @@ public class DashboardRefreshController extends AbstractController {
 		}
 	}
 
-	private void forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
+	private boolean forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
 		CloseableHttpClient httpClient = null;
 		String url = null;
 		try {
 			String domain = ZkClusterMappingUtils.getConsoleDomainByZkClusterKey(systemConfigService, zkClusterKey);
+			if (StringUtils.isBlank(domain)) {
+				return false;
+			}
 			url = domain + "/rest/v1/dashboard/refresh?zkClusterKey=" + zkClusterKey;
 			httpClient = HttpClientBuilder.create().build();
 			HttpPost httpPost = createHttpRequest(url);
 			CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
 			handleResponse(url, httpResponse);
+			return true;
 		} catch (SaturnJobConsoleException se) {
 			throw se;
 		} catch (Exception e) {
