@@ -589,11 +589,14 @@ $(function() {
                                if(!preferExecutorCandidate){
                                    continue;
                                }
-                               var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
-                               var preferExecutorValue = preferExecutorCandidateArr[0];
-                               var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
-                               if(isContainer){
-                                   preferExecutorValue = "@"+preferExecutorValue;
+                               var preferExecutorValue = "";
+                               if (preferExecutorCandidate != "无优先Executor") {
+                                   var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
+                                   preferExecutorValue = preferExecutorCandidateArr[0];
+                                   var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
+                                   if(isContainer){
+                                       preferExecutorValue = "@"+preferExecutorValue;
+                                   }
                                }
                                var selected = false;
                                var option = "<option value='" + preferExecutorValue + "'";
@@ -801,6 +804,12 @@ $(function() {
         var jobName = $("#batch-set-prefer-executors-jobName").html();
         if($("#batch-preferList").val() != null) {
             var newPreferExecutors = $("#batch-preferList").val().toString();
+        }
+        if(newPreferExecutors && newPreferExecutors.slice(-1) == ",") {
+            $("#failure-dialog .fail-reason").text("'无优先Executor'只能单选");
+            showFailureDialog("failure-dialog");
+            $btn.button('reset');
+            return false;
         }
         $.post("job/batchSetPreferExecutors", {jobNames : jobName, newPreferExecutors : newPreferExecutors,nns:regName}, function(data) {
             if(data.success == true) {

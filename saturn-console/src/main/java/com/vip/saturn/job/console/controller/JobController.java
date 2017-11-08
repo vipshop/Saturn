@@ -29,6 +29,7 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.ModelMap;
@@ -168,8 +169,13 @@ public class JobController extends AbstractController {
 		RequestResult requestResult = new RequestResult();
 		try {
 			String candidateList = jobDimensionService.getAllExecutorsOfNamespace();
+			// append无优先Executor选项
+			StringBuilder strb = new StringBuilder(candidateList);
+			if (StringUtils.isNotBlank(candidateList)) {
+				strb.append("无优先Executor");
+			}
 			requestResult.setSuccess(true);
-			requestResult.setObj(candidateList);
+			requestResult.setObj(strb.toString());
 		} catch (Exception e) {
 			requestResult.setSuccess(false);
 			requestResult.setMessage(e.getMessage());
@@ -189,9 +195,6 @@ public class JobController extends AbstractController {
 			}
 			if (jobNames.trim().length() == 0) {
 				throw new SaturnJobConsoleException("The jobNames cannot be empty string");
-			}
-			if (newPreferExecutors.trim().length() == 0) {
-				throw new SaturnJobConsoleException("The new prefer executors cannot be empty string");
 			}
 			jobDimensionService.batchSetPreferExecutors(jobNames.trim(), newPreferExecutors.trim());
 			requestResult.setSuccess(true);
