@@ -84,6 +84,7 @@
                 <li><font color="red">IDC_ZK_CLUSTER_MAPPING</font><pre>IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。<br/>参考配置格式：gd:/zk1,/zk2;bj:/test,/zk;</pre></li>
                 <li><font color="red">IDC_CONSOLE_ID_MAPPING</font><pre>IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。其中IDC机房和Console之间是一对多的关系，一个IDC下面包含多个Console，Console之间用逗号隔开。<br/>参考配置格式：gd:CONSOLE-GD;bj:CONSOLE-BJ;</pre></li>
                 <li><font color="red">IDC_CONSOLE_DOMAIN_MAPPING</font><pre>IDC机房与Console访问域名的映射关系，用于识别不同机房对应的Console的访问域名.其中IDC机房和域名之间是一对一的关系,一个IDC机房只能对应一个域名。<br/>参考配置格式：gd:http://gd-namespace;bj:http://bj-namespace;</pre></li>
+                <li><font color="red">INTERVAL_TIME_OF_ENABLED_REPORT</font><pre>开启上报运行状态时的间隔秒数。<br/>针对导入作业时，如果是cron作业，根据该配置，来计算作业是否开启上报运行状态。</pre></li>
             </ul>
         </div>
     </div>
