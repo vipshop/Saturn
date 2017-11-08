@@ -24,7 +24,7 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
  *
  */
 public class ShardingListenerManager extends AbstractListenerManager {
-	private static Logger log = LoggerFactory.getLogger(ShardingListenerManager.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ShardingListenerManager.class);
 
 	private volatile boolean isShutdown;
 
@@ -33,6 +33,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	private ShardingService shardingService;
 
 	private ExecutorService executorService;
+
+	private ConnectionStateListener connectionStateListener;
 
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
 		super(jobScheduler);
@@ -49,17 +51,18 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			executorService = Executors.newSingleThreadExecutor(
 					new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
 			shardingService.registerNecessaryWatcher(necessaryWatcher);
-			addConnectionStateListener(new ConnectionStateListener() {
+			connectionStateListener = new ConnectionStateListener() {
 				@Override
 				public void stateChanged(CuratorFramework client, ConnectionState newState) {
 					if ((newState == ConnectionState.CONNECTED) || (newState == ConnectionState.RECONNECTED)) {
 						// maybe node data have changed, so doBusiness whatever, it's okay for MSG job
-						log.info("state change to {}, trigger doBusiness and register necessary watcher.", newState);
+						LOGGER.info("state change to {}, trigger doBusiness and register necessary watcher.", newState);
 						doBusiness();
 						registerNecessaryWatcher();
 					}
 				}
-			});
+			};
+			addConnectionStateListener(connectionStateListener);
 		}
 	}
 
@@ -68,6 +71,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		super.shutdown();
 		if (executorService != null) {
 			executorService.shutdownNow();
+		}
+		if(connectionStateListener != null) {
+			removeConnectionStateListener(connectionStateListener);
 		}
 		isShutdown = true;
 	}
@@ -121,15 +127,15 @@ public class ShardingListenerManager extends AbstractListenerManager {
 						if (jobScheduler == null || jobScheduler.getJob() == null) {
 							return;
 						}
-						log.info("[{}] msg={} trigger on-resharding", jobName, jobName);
+						LOGGER.info("[{}] msg={} trigger on-resharding", jobName, jobName);
 						jobScheduler.getJob().onResharding();
 					} catch (Throwable t) {
-						log.error("Exception throws during resharding", t);
+						LOGGER.error("Exception throws during resharding", t);
 					}
 				}
 			});
 		} catch (Throwable t) {
-			log.error("Exception throws during execute thread", t);
+			LOGGER.error("Exception throws during execute thread", t);
 		}
 	}
 
@@ -140,7 +146,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			switch (event.getType()) {
 			case NodeCreated:
 			case NodeDataChanged: // NOSONAR
-				log.info("event type:{}, path:{}", event.getType(), event.getPath());
+				LOGGER.info("event type:{}, path:{}", event.getType(), event.getPath());
 				doBusiness();
 			default:
 				// use the thread pool to executor registerNecessaryWatcher by async,
