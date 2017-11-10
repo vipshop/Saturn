@@ -34,6 +34,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 
 	private ExecutorService executorService;
 
+	private ConnectionStateListener connectionStateListener;
+
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 		shardingService = jobScheduler.getShardingService();
@@ -49,7 +51,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			executorService = Executors.newSingleThreadExecutor(
 					new SaturnThreadFactory(executorName + "-" + jobName + "-registerNecessaryWatcher", false));
 			shardingService.registerNecessaryWatcher(necessaryWatcher);
-			addConnectionStateListener(new ConnectionStateListener() {
+			connectionStateListener = new ConnectionStateListener() {
 				@Override
 				public void stateChanged(CuratorFramework client, ConnectionState newState) {
 					if ((newState == ConnectionState.CONNECTED) || (newState == ConnectionState.RECONNECTED)) {
@@ -59,7 +61,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 						registerNecessaryWatcher();
 					}
 				}
-			});
+			};
+			addConnectionStateListener(connectionStateListener);
 		}
 	}
 
@@ -68,6 +71,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		super.shutdown();
 		if (executorService != null) {
 			executorService.shutdownNow();
+		}
+		if (connectionStateListener != null) {
+			removeConnectionStateListener(connectionStateListener);
 		}
 		isShutdown = true;
 	}
