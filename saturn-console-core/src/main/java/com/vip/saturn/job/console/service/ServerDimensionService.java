@@ -17,6 +17,7 @@ package com.vip.saturn.job.console.service;
 import java.util.Map;
 
 import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
 public interface ServerDimensionService {
 
@@ -29,5 +30,7 @@ public interface ServerDimensionService {
 	boolean isRunning(String jobName, String executor);
 
 	boolean isReady(String jobName, String executor);
+
+	void traffic(String executorName, boolean extract) throws SaturnJobConsoleException;
 
 }

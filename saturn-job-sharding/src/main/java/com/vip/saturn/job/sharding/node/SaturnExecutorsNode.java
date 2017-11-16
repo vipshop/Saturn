@@ -13,6 +13,7 @@ public class SaturnExecutorsNode {
 	private static final String SHARDING = "sharding";
 	private static final String CONTENT = "content";
 	public static final String $JOBS = "$Jobs";
+	private static final String NO_TRAFFIC = "noTraffic";
 	private static final String IP = "ip";
 	private static final String CLEAN = "clean";
 	private static final String TASK = "task";
@@ -29,6 +30,8 @@ public class SaturnExecutorsNode {
 			+ "enabled";
 	public static final String EXECUTOR_IPNODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*"
 			+ "/" + IP;
+	public static final String EXECUTOR_NO_TRAFFIC_NODE_PATH_REGEX = "/\\" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + "[^/]*"
+			+ "/" + NO_TRAFFIC;
 	public static final String CONFIG_VERSION_PATH = "/" + $SATURNEXECUTORS + "/config/version";
 
 	public static final String $JOBSNODE_PATH = "/" + $JOBS;
@@ -48,6 +51,14 @@ public class SaturnExecutorsNode {
 	 */
 	public static String getExecutorsNodePath() {
 		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS;
+	}
+
+	/**
+	 * 获取noTraffic结点名称
+	 * @return
+	 */
+	public static String getNoTrafficNodeName() {
+		return NO_TRAFFIC;
 	}
 
 	/**
@@ -77,6 +88,15 @@ public class SaturnExecutorsNode {
 	}
 
 	/**
+	 * 获取$SaturnExecutors/executors/xx/noTraffic结点完整路径
+	 * @param executor
+	 * @return
+	 */
+	public static String getExecutorNoTrafficNodePath(String executor) {
+		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + executor + "/" + NO_TRAFFIC;
+	}
+
+	/**
 	 * 获取$SaturnExecutors/executors/xx/clean结点完整路径
 	 * @param executor
 	 * @return
@@ -100,7 +120,18 @@ public class SaturnExecutorsNode {
 	 * @return
 	 */
 	public static String getExecutorNameByIpPath(String path) {
-		int lastIndexOf = path.lastIndexOf("/" + SaturnExecutorsNode.getIpNodeName());
+		return getExecutorNameByPath(path, getIpNodeName());
+	}
+
+	/**
+	 * 从路径中抽取出executorName
+	 */
+	public static String getExecutorNameByNoTrafficPath(String path) {
+		return getExecutorNameByPath(path, getNoTrafficNodeName());
+	}
+
+	private static String getExecutorNameByPath(String path, String nodeName) {
+		int lastIndexOf = path.lastIndexOf("/" + nodeName);
 		String substring = path.substring(0, lastIndexOf);
 		int lastIndexOf2 = substring.lastIndexOf('/');
 		return substring.substring(lastIndexOf2 + 1);

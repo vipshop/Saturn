@@ -5,6 +5,7 @@ import com.vip.saturn.it.utils.NestedZkUtils;
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -347,6 +348,28 @@ public class SaturnAutoBasic {
 			}
 			regCenter.persist(path, "1");
 		}
+	}
+
+	public static void runAtOnceAndWaitShardingCompleted(final JobConfiguration jobConfiguration) throws Exception {
+		runAtOnce(jobConfiguration.getJobName());
+		Thread.sleep(1000L);
+
+		waitForFinish(new FinishCheck() {
+
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration);
+			}
+
+		}, 10);
+	}
+
+	public static void extractTraffic(String executorName) {
+		regCenter.persist(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName), "");
+	}
+
+	public static void recoverTraffic(String executorName) {
+		regCenter.remove(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
 
 	protected static void configJob(String jobName, String configPath, Object value) {

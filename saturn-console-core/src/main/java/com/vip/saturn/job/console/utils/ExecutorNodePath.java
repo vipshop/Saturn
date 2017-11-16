@@ -42,6 +42,10 @@ public class ExecutorNodePath {
 		return getExecutorNodePath(executorName, "task");
 	}
 
+	public static String getExecutorNoTrafficNodePath(final String executorName) {
+		return getExecutorNodePath(executorName, "noTraffic");
+	}
+
 	public static String getExecutorIpNodePath(final String executorName) {
 		return getExecutorNodePath(executorName, "ip");
 	}

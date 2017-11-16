@@ -252,6 +252,25 @@ $(function() {
     		return false;
     	});
 	});
+
+	$("#traffic-executor-confirm-dialog").on("shown.bs.modal", function (event) {
+        var button = $(event.relatedTarget);
+        var executor = button.data('executor');
+        var operation = button.data('operation');
+        $("#traffic-executor-confirm-dialog-confirm-btn").unbind('click').click(function() {
+            var $btn = $(this).button('loading');
+            $.post("server/traffic", {executorName: executor, operation: operation, nns: regName}, function (data) {
+                $("#traffic-executor-confirm-dialog").modal("hide");
+                if(data.success) {
+                    showSuccessDialogWithCallback(function(){location.reload(true);});
+                } else {
+                    $("#executor-failure-dialog .fail-reason").text(data.message);
+                    showFailureDialog("executor-failure-dialog");
+                }
+            }).always(function() { $btn.button('reset'); });
+            return false;
+        });
+    });
     
     $("#remove-executor-confirm-dialog").on("shown.bs.modal", function (event) {
     	// 批量删除和单击删除公用一个confirm-dialog，如果取到relatedTarget为字符串，则为批量删除
@@ -1408,6 +1427,19 @@ $(function() {
 		$("#change-jobStatus-confirm-dialog").modal("show", obj);
 	}
 
+	function showTrafficConfirmDialog(obj) {
+        var executor = $(obj).data('executor');
+        var operation = $(obj).data('operation');
+        var confirmReason = null;
+        if(operation == "extract") {
+            confirmReason = "确认要 摘取 Executor(" + executor + ") 的流量吗?";
+        } else {
+            confirmReason = "确认要 恢复 Executor(" + executor + ") 的流量吗?";
+        }
+        $("#traffic-executor-confirm-dialog .confirm-reason").text(confirmReason);
+        $("#traffic-executor-confirm-dialog").modal("show", obj);
+    }
+
     function showRemoveExecutorConfirmDialog(obj) {
     	var confirmReason = "确认要删除Executor：（" + $(obj).data('executor') + "）吗?";
     	$("#remove-executor-confirm-dialog .confirm-reason").text(confirmReason);
@@ -1928,30 +1960,37 @@ $(function() {
             var loadLevels= [], exeNames = [], serverInfos = data["serverInfos"], lv = data["jobShardLoadLevels"];
             if(serverInfos){
             	for (var i = 0;i < serverInfos.length;i++) {
-            		var status = serverInfos[i].status,jobStatus = serverInfos[i].jobStatus,sharding = serverInfos[i].sharding, lastBeginTime = serverInfos[i].lastBeginTime,executorName = serverInfos[i].executorName,trClass = "",removeBtnClass = "",removeBtnTitle="";
-            		loadLevels.push(serverInfos[i].totalLoadLevel),hasSharding = serverInfos[i].hasSharding;
+            	    var serverInfo = serverInfos[i];
+            		var status = serverInfo.status,jobStatus = serverInfo.jobStatus,sharding = serverInfo.sharding, lastBeginTime = serverInfo.lastBeginTime,executorName = serverInfo.executorName,trClass = "",removeBtnClass = "",removeBtnTitle="";
+            		loadLevels.push(serverInfo.totalLoadLevel),hasSharding = serverInfo.hasSharding, noTraffic = serverInfo.noTraffic;
             		if ("ONLINE" === status) {
             			trClass = "success";
             			onlines ++;
             			removeBtnClass = "disabled";
             			removeBtnTitle="无法删除ONLINE的Executor";
-            			exeNames.push(serverInfos[i].executorName);
+            			exeNames.push(serverInfo.executorName);
             		} else {
             			trClass = "warning";
             			offlines ++;
             			lastBeginTime = "";
             			removeBtnTitle="点击进行删除该Executor";
             		}
+            		var trafficButton = "";
+            		if(noTraffic == false) { // 可以摘取流量
+                        trafficButton = "<button class='btn btn-warning' data-executor='" + executorName + "' data-operation='extract' onclick='showTrafficConfirmDialog(this);'" + ">流量摘取</button>";
+                    } else {
+                        trafficButton = "<button class='btn btn-info' data-executor='" + executorName + "' data-operation='recover' onclick='showTrafficConfirmDialog(this);'" + ">流量恢复</button>";
+                    }
             		var removeButton = "<button operation='removeExecutor' title='"+removeBtnTitle+"' class='btn btn-danger "+removeBtnClass+"' data-executor='" + executorName + "' onclick='showRemoveExecutorConfirmDialog(this);' "+removeBtnClass+">删除</button>";
             		var baseTd = "<td><input class='batchDelExecutorInput' executorName='"+executorName+"' removeBtnClass='"+removeBtnClass+"' type='checkbox' onclick='clickBatchDelExecutorInputCheckBox(this);'/></td>"
             		+ "<td>" + executorName + "</td>" 
-            		+ "<td>" + serverInfos[i].serverIp + "</td>" 
-            		+ "<td>" + serverInfos[i].totalLoadLevel + "</td>" 
+            		+ "<td>" + serverInfo.serverIp + "</td>"
+            		+ "<td>" + serverInfo.totalLoadLevel + "</td>"
             		+ "<td>" + sharding + "</td>" 
             		+ "<td>" + status + "</td>"
             		+ "<td>" + lastBeginTime + "</td>"
-            		+ "<td>" + serverInfos[i].version + "</td>"
-            		+ "<td>" + removeButton + "</td>";
+            		+ "<td>" + serverInfo.version + "</td>"
+            		+ "<td>" + trafficButton + removeButton + "</td>";
             		$("#servers-overview-tbl tbody").append("<tr class='" + trClass + "'>" + baseTd + "</tr>");
             	}
             }
