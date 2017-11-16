@@ -7,5 +7,6 @@ jdk:
 branches:
   only:
     - develop
+    - 2.x
 
 script: mvn clean install -Pjacoco -Dsaturn.it.log.level=WARN
