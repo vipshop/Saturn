@@ -23,7 +23,7 @@ public class ExecutorTrafficTriggerShardingListener extends AbstractTreeCacheLis
         try {
             if (isExecutorNoTraffic(type, path)) {
                 String executorName = SaturnExecutorsNode.getExecutorNameByNoTrafficPath(path);
-                namespaceShardingService.asyncShardingWhenExecutorExtractTraffic(executorName);
+                namespaceShardingService.asyncShardingWhenExtractExecutorTraffic(executorName);
             } else if (isExecutorTraffic(type, path)) {
                 String executorName = SaturnExecutorsNode.getExecutorNameByNoTrafficPath(path);
                 namespaceShardingService.asyncShardingWhenRecoverExecutorTraffic(executorName);

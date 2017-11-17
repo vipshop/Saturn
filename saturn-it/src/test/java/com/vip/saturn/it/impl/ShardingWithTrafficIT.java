@@ -47,8 +47,8 @@ public class ShardingWithTrafficIT extends AbstractSaturnIT {
      */
     @Test
     public void test_A_NormalFlow() throws Exception {
-        String jobName = "test_A_Extract";
-        String jobName2 = "test_A_Extract2";
+        String jobName = "test_A_NormalFlow";
+        String jobName2 = "test_A_NormalFlow2";
 
         final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
         jobConfiguration.setCron("* * * * * ? 2099");

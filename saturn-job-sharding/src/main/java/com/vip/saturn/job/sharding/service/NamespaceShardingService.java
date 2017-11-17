@@ -1074,7 +1074,7 @@ public class NamespaceShardingService {
 			}
 
 			if (theExecutor == null) {
-				LOGGER.info("The executor {} is offline or already noTraffic, unnecessary to extract traffic", executorName);
+				LOGGER.warn("The executor {} maybe offline, unnecessary to extract traffic", executorName);
 				return false;
 			}
 
@@ -1123,7 +1123,7 @@ public class NamespaceShardingService {
 				}
 			}
 			if (theExecutor == null) {
-				LOGGER.info("The executor {} is offline, unnecessary to recover traffic", executorName);
+				LOGGER.warn("The executor {} maybe offline, unnecessary to recover traffic", executorName);
 				return false;
 			}
 
@@ -1696,7 +1696,7 @@ public class NamespaceShardingService {
 	/**
 	 * 摘取流量
 	 */
-	public void asyncShardingWhenExecutorExtractTraffic(String executorName) throws Exception {
+	public void asyncShardingWhenExtractExecutorTraffic(String executorName) throws Exception {
 		if (isLeadership()) {
 			shardingCount.incrementAndGet();
 			executorService.submit(new ExecuteExtractTrafficShardingTask(executorName));
