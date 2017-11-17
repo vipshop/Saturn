@@ -391,8 +391,7 @@ public class RestApiServiceImpl implements RestApiService {
 							long ctime = curatorFrameworkOp.getCtime(enabledNodePath);
 							long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
 							checkUpdateStatusToEnableAllowed(ctime, mtime);
-
-							curatorFrameworkOp.update(enabledNodePath, "true");
+							jobOperationService.setJobEnabledState(jobName, true);
 						}
 					}
 				});
@@ -410,8 +409,7 @@ public class RestApiServiceImpl implements RestApiService {
 						if (Boolean.valueOf(enabled)) {
 							long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
 							checkUpdateStatusToDisableAllowed(mtime);
-
-							curatorFrameworkOp.update(enabledNodePath, "false");
+							jobOperationService.setJobEnabledState(jobName, false);
 						} else {
 							throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(),
 									"The job is already disable");
