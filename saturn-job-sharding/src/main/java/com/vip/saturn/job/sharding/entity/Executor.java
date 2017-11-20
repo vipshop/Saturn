@@ -9,6 +9,7 @@ public class Executor {
 
 	private String executorName;
 	private String ip;
+	private boolean noTraffic;
 	private List<String> jobNameList; // the job list supported by the executor
 	private List<Shard> shardList;
 	private int totalLoadLevel;
@@ -27,6 +28,14 @@ public class Executor {
 
 	public void setIp(String ip) {
 		this.ip = ip;
+	}
+	
+	public boolean isNoTraffic() {
+		return noTraffic;
+	}
+
+	public void setNoTraffic(boolean noTraffic) {
+		this.noTraffic = noTraffic;
 	}
 
 	public List<String> getJobNameList() {

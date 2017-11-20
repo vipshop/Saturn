@@ -10,6 +10,7 @@ import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 import com.vip.saturn.job.sharding.listener.AddOrRemoveJobListener;
 import com.vip.saturn.job.sharding.listener.ExecutorOnlineOfflineTriggerShardingListener;
+import com.vip.saturn.job.sharding.listener.ExecutorTrafficTriggerShardingListener;
 import com.vip.saturn.job.sharding.listener.LeadershipElectionListener;
 import com.vip.saturn.job.sharding.listener.SaturnExecutorsShardingTriggerShardingListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -109,6 +110,8 @@ public class NamespaceShardingManager {
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
 				new ExecutorOnlineOfflineTriggerShardingListener(namespaceShardingService, executorCleanService));
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
+				new ExecutorTrafficTriggerShardingListener(namespaceShardingService));
 	}
 
 	/**

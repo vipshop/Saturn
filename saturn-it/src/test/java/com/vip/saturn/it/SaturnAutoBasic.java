@@ -1,10 +1,38 @@
 package com.vip.saturn.it;
 
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.it.utils.NestedZkUtils;
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -21,33 +49,6 @@ import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Basic for Saturn test automation
@@ -347,6 +348,28 @@ public class SaturnAutoBasic {
 			}
 			regCenter.persist(path, "1");
 		}
+	}
+	
+	public static void runAtOnceAndWaitShardingCompleted(final JobConfiguration jobConfiguration) throws Exception {
+		runAtOnce(jobConfiguration.getJobName());
+		Thread.sleep(1000L);
+
+		waitForFinish(new FinishCheck() {
+
+			@Override
+			public boolean docheck() {
+				return !isNeedSharding(jobConfiguration);
+			}
+
+		}, 10);
+	}
+
+	public static void extractTraffic(String executorName) {
+		regCenter.persist(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName), "");
+	}
+
+	public static void recoverTraffic(String executorName) {
+		regCenter.remove(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
 
 	protected static void configJob(String jobName, String configPath, Object value) {

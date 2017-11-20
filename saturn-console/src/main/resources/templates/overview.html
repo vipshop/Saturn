@@ -745,6 +745,7 @@ layout:decorator="frame-layout">
 			<div th:replace="fragments :: confirm-dialog(id='remove-job-confirm-dialog', text='确认删除作业吗？')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='remove-job-batch-confirm-dialog', text='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='remove-executor-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='traffic-executor-confirm-dialog', text='')"></div>
 			<div th:replace="fragments :: confirm-dialog(id='shard-all-at-once-confirm-dialog', text='确认要进行一键重排吗？（即把当前域下所有分片按照作业负荷以及优先Executor等作业配置重新进行排序。注：重排可能导致分片分布剧烈动荡，请谨慎操作！另外在操作本功能时，请尽量避免同时操作Executor上下线或启用禁用作业，以免影响到重排的均衡效果！）')"></div>
 			<div th:replace="fragments :: prompt-dialog(id='batch-add-job-prompt-dialog', text='')"></div>
 			<div th:replace="fragments :: failure-dialog(id='executor-failure-dialog', reason='')"></div>

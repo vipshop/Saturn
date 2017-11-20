@@ -19,13 +19,15 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ServerDimensionService;
 
 @RestController
@@ -37,12 +39,34 @@ public class ServerController extends AbstractController {
 	@Resource
 	private ServerDimensionService serverDimensionService;
 
-	@Resource
-	private JobOperationService jobOperationService;
-
 	@RequestMapping(value = "servers", method = RequestMethod.GET)
 	public Map<String, Object> getAllServersBriefInfo(final HttpServletRequest request) {
 		return serverDimensionService.getAllServersBriefInfo();
+	}
+
+	@RequestMapping(value = "traffic", method = RequestMethod.POST)
+	public RequestResult traffic(final HttpServletRequest request, String executorName, String operation) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			if (StringUtils.isNotBlank(executorName)) {
+				throw new SaturnJobConsoleException("The parameter executorName cannot be blank");
+			}
+			if ("extract".equals(operation)) {
+				serverDimensionService.trafficExtraction(executorName);
+			} else if ("recover".equals(operation)) {
+				serverDimensionService.traficRecovery(executorName);
+			} else {
+				throw new SaturnJobConsoleException("The operation " + operation + " is not supported");
+			}
+			requestResult.setSuccess(true);
+		} catch (SaturnJobConsoleException e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.getMessage());
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.toString());
+		}
+		return requestResult;
 	}
 
 }

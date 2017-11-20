@@ -68,6 +68,7 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 					ServerBriefInfo sbf = new ServerBriefInfo(executor);
 					String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
 					sbf.setServerIp(ip);
+					sbf.setNoTraffic(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "noTraffic")));
 					String lastBeginTime = curatorFrameworkOp
 							.getData(ExecutorNodePath.getExecutorNodePath(sbf.getExecutorName(), "lastBeginTime"));
 					sbf.setLastBeginTime(
@@ -190,6 +191,27 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void trafficExtraction(String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		validateExecutorNameExisted(executorName, curatorFrameworkOp);
+		curatorFrameworkOp.create(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
+	}
+
+	@Override
+	public void traficRecovery(String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+		validateExecutorNameExisted(executorName, curatorFrameworkOp);
+		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
+	}
+
+	private void validateExecutorNameExisted(String executorName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executorName))) {
+			throw new SaturnJobConsoleException("The executorName(" + executorName + ") is not existing");
+		}
 	}
 
 }
