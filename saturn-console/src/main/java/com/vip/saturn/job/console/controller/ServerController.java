@@ -48,7 +48,7 @@ public class ServerController extends AbstractController {
 	public RequestResult traffic(final HttpServletRequest request, String executorName, String operation) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			if (StringUtils.isNotBlank(executorName)) {
+			if (StringUtils.isBlank(executorName)) {
 				throw new SaturnJobConsoleException("The parameter executorName cannot be blank");
 			}
 			if ("extract".equals(operation)) {
