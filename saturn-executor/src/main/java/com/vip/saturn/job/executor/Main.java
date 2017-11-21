@@ -1,6 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import java.io.Closeable;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,7 +12,6 @@ import java.util.List;
  * @author xiaopeng.he
  *
  */
-
 public class Main {
 
 	private String namespace;
@@ -151,30 +149,13 @@ public class Main {
 	}
 
 	public void shutdown() throws Exception {
+		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
-			ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(executorClassLoader);
-			try {
-				Class<?> startExecutorClass = getSaturnExecutorClass();
-				startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldCL);
-			}
+			Class<?> startExecutorClass = getSaturnExecutorClass();
+			startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
 		} finally {
-			closeClassLoader(jobClassLoader);
-			closeClassLoader(executorClassLoader);
-		}
-	}
-
-	private void closeClassLoader(ClassLoader classLoader) {
-		try {
-			if (classLoader instanceof Closeable) {
-				((Closeable) classLoader).close();
-			}
-		} catch (Throwable t) {
-			if (t instanceof InterruptedException) {
-				Thread.currentThread().interrupt();
-			}
+			Thread.currentThread().setContextClassLoader(oldCL);
 		}
 	}
 
