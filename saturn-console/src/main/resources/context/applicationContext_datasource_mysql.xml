@@ -13,16 +13,15 @@
         <property name="url" value="${SATURN_CONSOLE_DB_URL:jdbc:mysql://a.b.c.d}" />
         <property name="username" value="${SATURN_CONSOLE_DB_USERNAME:}" />
         <property name="password" value="${SATURN_CONSOLE_DB_PASSWORD:}" />
-        <!-- 初始化连接大小 -->
-        <property name="initialSize" value="0" />
-        <!-- 连接池最大使用连接数量 -->
-        <property name="maxActive" value="20" />
-        <!-- 连接池最大空闲 -->
-        <property name="maxIdle" value="20" />
-        <!-- 连接池最小空闲 -->
-        <property name="minIdle" value="0" />
-        <!-- 获取连接最大等待时间 -->
-        <property name="maxWait" value="60000" />
+        <property name="initialSize" value="3" />
+        <property name="maxActive" value="15" />
+        <property name="minIdle" value="3" />
+        <property name="maxWait" value="5000" />
+        <property name="timeBetweenEvictionRunsMillis" value="90000" />
+        <property name="minEvictableIdleTimeMillis" value="1800000" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+        <property name="testWhileIdle" value="true" />
     </bean>	
 	
 </beans>
