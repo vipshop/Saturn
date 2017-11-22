@@ -213,9 +213,51 @@ $(function() {
 		}
 	});
 
-    function onPreferListChanged() {
+    function expandPreferListSelect(preferListArr, preferListProvided, selectObj) {
+        selectObj.empty();
+        for (var i = 0; i < preferListProvided.length; i++) {
+            var temp = preferListProvided[i];
+            var selected = false;
+            var optionValue = temp.executorName;
+            var optionTitle = optionValue;
+            var tips = "";
+            if (temp.type == "DOCKER") {
+                optionValue = "@" + optionValue;
+                tips = "容器";
+            } else if (temp.type == "OFFLINE") {
+                tips = "已离线";
+            } else if (temp.type == "DELETED") {
+                tips = "已删除";
+            }
+            if (temp.noTraffic == true) {
+                if (tips == "") {
+                    tips = "无流量";
+                } else {
+                    tips = tips + "，" + "无流量";
+                }
+            }
+            if (tips != "") {
+                optionTitle = optionTitle + "(" + tips + ")";
+            }
+            $.each(preferListArr, function (index, preferValue) {
+                if (preferValue == optionValue) {
+                    selected = true;
+                }
+            });
+            var option = "<option value='" + optionValue + "'";
+            if (selected) {
+                option = option + " selected";
+            }
+            option = option + ">" + optionTitle + "</option>";
+            selectObj.append(option);
+        }
+        selectObj.selectpicker('refresh');
+        onPreferListSelectChanged(selectObj);
+    }
+
+    function onPreferListSelectChanged(selectObj) {
         var containerSelected = false;
-        var options = $("#preferList").find("option");
+        var options = selectObj.find("option");
         if(options) {
             for(var i=0; i<options.length; i++) {
                 var option = options[i];
@@ -240,11 +282,11 @@ $(function() {
                 }
             }
         }
-        $("#preferList").selectpicker('refresh');
+        selectObj.selectpicker('refresh');
     }
 
 	$('#preferList').on('changed.bs.select', function (e) {
-        onPreferListChanged();
+        onPreferListSelectChanged($('#preferList'));
     });
 
 	/** [作业设置] Tab*/
@@ -404,40 +446,10 @@ $(function() {
 	        }
 	        $("#timeZone").selectpicker('refresh');
 	        $("#cron").val(jobConfig.cron);
-        	var preferListCandidate = jobConfig.preferListCandidate;
         	var preferList = jobConfig.preferList;
-        	var hasPreferList = (typeof preferList == "string");
-        	if(typeof preferListCandidate == "string"){
-        	    $("#preferList").empty();
-        	    var preferListArr = preferList.split(",");
-                var preferListCandidateArr = preferListCandidate.split(",");
-                for (var i = 0; i < preferListCandidateArr.length; i++) {
-                    var preferExecutorCandidate = preferListCandidateArr[i];
-                    if(!preferExecutorCandidate){
-                        continue;
-                    }
-                    var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
-                    var preferExecutorValue = preferExecutorCandidateArr[0];
-                    var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
-                    if(isContainer){
-                        preferExecutorValue = "@"+preferExecutorValue;
-                    }
-                    var selected = false;
-                    $.each(preferListArr, function(index, preferValue) {
-                        if(preferValue == preferExecutorValue){
-                            selected = true;
-                        }
-                    });
-                    var option = "<option value='" + preferExecutorValue + "'";
-                    if(selected) {
-                        option = option + " selected";
-                    }
-                    option = option + ">" + preferExecutorCandidate + "</option>";
-                    $("#preferList").append(option);
-                }
-                $("#preferList").selectpicker('refresh');
-                onPreferListChanged();
-        	}
+            var preferListArr = preferList.split(",");
+            var preferListProvided = jobConfig.preferListProvided;
+            expandPreferListSelect(preferListArr, preferListProvided, $("#preferList"));
 
         	$("#dependencies").empty();
             var dependencies = new Array();

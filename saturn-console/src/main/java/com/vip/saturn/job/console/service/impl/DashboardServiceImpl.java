@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
@@ -1333,7 +1334,7 @@ public class DashboardServiceImpl implements DashboardService {
 			String preferList = getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "preferList"));
 			Boolean onlyUsePreferList = !Boolean
 					.valueOf(getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "useDispreferList")));
-			String preferListCandidateStr = jobDimensionService.getAllExecutors(jobName, curatorFrameworkOp);
+			List<ExecutorProvided> preferListProvided = jobDimensionService.getAllExecutors(jobName, curatorFrameworkOp);
 			List<String> preferListArr = new ArrayList<>();
 			if (preferList != null && preferList.trim().length() > 0) {
 				String[] split = preferList.split(",");
@@ -1346,49 +1347,36 @@ public class DashboardServiceImpl implements DashboardService {
 					}
 				}
 			}
-			if (preferListCandidateStr != null && preferListCandidateStr.trim().length() > 0) {
-				String[] preferListCandidateArr = preferListCandidateStr.split(",");
-				if (onlyUsePreferList) {
-					boolean containerSelected = false;
-					int count = 0;
-					for (String preferListCandidate : preferListCandidateArr) {
-						String tmp = preferListCandidate.split("\\(")[0];
-						if (preferListCandidate.indexOf("容器资源") != -1) {
-							tmp = "@" + tmp;
-						}
-						if (preferListArr.contains(tmp)) {
-							if (preferListCandidate.indexOf("容器资源") != -1) {
-								containerSelected = true;
-								break;
-							} else {
-								if (preferListCandidate.indexOf("已离线") == -1
-										&& preferListCandidate.indexOf("已删除") == -1) {
-									count++;
-								}
-							}
-						}
-					}
-					if (!containerSelected && count == 1) {
-						return unableFailoverJob;
-					}
-				} else {
-					boolean containerSelected = false;
-					int count = 0;
-					for (String preferListCandidate : preferListCandidateArr) {
-						if (preferListCandidate.indexOf("容器资源") != -1
-								&& preferListArr.contains("@" + preferListCandidate.split("\\(")[0])) {
+			boolean containerSelected = false;
+			int count = 0;
+			if (onlyUsePreferList) {
+				for (ExecutorProvided executorProvided : preferListProvided) {
+					if (preferListArr.contains(executorProvided.getExecutorName())) {
+						if (ExecutorProvidedType.DOCKER.equals(executorProvided.getType())) {
 							containerSelected = true;
 							break;
-						}
-						if (preferListCandidate.indexOf("已离线") == -1 && preferListCandidate.indexOf("已删除") == -1
-								&& preferListCandidate.indexOf("容器资源") == -1) {
+						} else if (ExecutorProvidedType.ONLINE.equals(executorProvided.getType())) {
 							count++;
 						}
 					}
-					if (!containerSelected && count == 1) {
-						return unableFailoverJob;
+				}
+			} else {
+				for (ExecutorProvided executorProvided : preferListProvided) {
+					if (preferListArr.contains(executorProvided.getExecutorName())
+							&& ExecutorProvidedType.DOCKER.equals(executorProvided.getType())) {
+						containerSelected = true;
+						break;
+					}
+					if (ExecutorProvidedType.ONLINE.equals(executorProvided.getType())) {
+						count++;
+						if (count > 1) {
+							break;
+						}
 					}
 				}
+			}
+			if (!containerSelected && count == 1) {
+				return unableFailoverJob;
 			}
 			return null;
 		} catch (Exception e) {

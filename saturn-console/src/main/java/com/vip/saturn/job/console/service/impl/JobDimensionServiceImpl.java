@@ -14,22 +14,11 @@
 
 package com.vip.saturn.job.console.service.impl;
 
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
-import com.vip.saturn.job.console.domain.HealthCheckJobServer;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobMigrateInfo;
-import com.vip.saturn.job.console.domain.JobMode;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobSettings;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
@@ -305,6 +294,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 					jobBriefInfo.setProcessCountIntervalSeconds(currentJobConfig.getProcessCountIntervalSeconds());
 					jobBriefInfo.setGroups(currentJobConfig.getGroups());
 					String preferList = currentJobConfig.getPreferList();
+					jobBriefInfo.setPreferList(preferList);
 					if (!Strings.isNullOrEmpty(preferList)) {
 						String containerTaskIdsNodePath = ContainerNodePath.getDcosTasksNodePath();
 						List<String> containerTaskIds = curatorFrameworkOp.getChildren(containerTaskIdsNodePath);
@@ -561,7 +551,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
 		result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
 		if (!isJobConfigOnly) {
-			result.setPreferListCandidate(getAllExecutors(jobName));
+			result.setPreferListProvided(getAllExecutors(jobName));
 		}
 		String useDispreferList = curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
@@ -984,63 +974,69 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	 * @return 所有executors服务器列表:executorName(ip)
 	 */
 	@Override
-	public String getAllExecutors(String jobName) {
+	public List<ExecutorProvided> getAllExecutors(String jobName) {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 		return getAllExecutors(jobName, curatorFrameworkOp);
 	}
 
 	@Override
-	public String getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	public List<ExecutorProvided> getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
 		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
 			return null;
 		}
-		StringBuilder allExecutorsBuilder = new StringBuilder();
-		StringBuilder offlineExecutorsBuilder = new StringBuilder();
 		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
 		if (executors != null && executors.size() > 0) {
 			for (String executor : executors) {
 				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
 					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
 				}
+				ExecutorProvided executorProvided = new ExecutorProvided();
+				executorProvided.setExecutorName(executor);
+				executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
-				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
-					allExecutorsBuilder.append(executor + "(" + ip + ")").append(",");
-					continue;
+				if (StringUtils.isNotBlank(ip)) {
+					executorProvided.setType(ExecutorProvidedType.ONLINE);
+				} else {
+					executorProvided.setType(ExecutorProvidedType.OFFLINE);
 				}
-				offlineExecutorsBuilder.append(executor + "(该executor已离线)").append(",");// if ip is not exists,means the
-																						// executor is offline
+				executorProvidedList.add(executorProvided);
 			}
 		}
 
-		String containerTaskIdsStr = generateContainerTaskIdStr(curatorFrameworkOp);
-		allExecutorsBuilder.append(containerTaskIdsStr);
+		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
 
-		allExecutorsBuilder.append(offlineExecutorsBuilder.toString());
-		String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
-		if (curatorFrameworkOp.checkExists(preferListNodePath)) {
-			String preferList = curatorFrameworkOp.getData(preferListNodePath);
-			if (!Strings.isNullOrEmpty(preferList)) {
-				String[] preferExecutorList = preferList.split(",");
-				for (String preferExecutor : preferExecutorList) {
-					if (executors != null && !executors.contains(preferExecutor) && !preferExecutor.startsWith("@")) {
-						allExecutorsBuilder.append(preferExecutor + "(该executor已删除)").append(",");
+		if(jobName != null) {
+			String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
+			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
+				String preferList = curatorFrameworkOp.getData(preferListNodePath);
+				if (!Strings.isNullOrEmpty(preferList)) {
+					String[] preferExecutorList = preferList.split(",");
+					for (String preferExecutor : preferExecutorList) {
+						if (executors != null && !executors.contains(preferExecutor) && !preferExecutor.startsWith("@")) {
+							ExecutorProvided executorProvided = new ExecutorProvided();
+							executorProvided.setExecutorName(preferExecutor);
+							executorProvided.setType(ExecutorProvidedType.DELETED);
+							executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
+							executorProvidedList.add(executorProvided);
+						}
 					}
 				}
 			}
 		}
-		return allExecutorsBuilder.toString();
+		return executorProvidedList;
 	}
 
 	@Override
-	public String getAllExecutorsOfNamespace() {
+	public List<ExecutorProvided> getAllExecutorsOfNamespace() {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
 
 		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
 		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
 			return null;
 		}
-		StringBuilder allExecutorsBuilder = new StringBuilder();
 		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
 		if (executors != null && executors.size() > 0) {
 			for (String executor : executors) {
@@ -1049,31 +1045,19 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				}
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
 				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
-					allExecutorsBuilder.append(executor + "(" + ip + ")").append(",");
+					ExecutorProvided executorProvided = new ExecutorProvided();
+					executorProvided.setExecutorName(executor);
+					executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
+					executorProvided.setType(ExecutorProvidedType.ONLINE);
+					executorProvidedList.add(executorProvided);
 					continue;
 				}
 			}
 		}
 
-		String containerTaskIdsStr = generateContainerTaskIdStr(curatorFrameworkOp);
-		allExecutorsBuilder.append(containerTaskIdsStr);
+		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
 
-		return allExecutorsBuilder.toString();
-	}
-
-	private String generateContainerTaskIdStr(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		StringBuilder containerTaskIdsBuilder = new StringBuilder();
-		List<String> containerTaskIds;
-
-		containerTaskIds = getContainerTaskIds(curatorFrameworkOp);
-
-		if (!CollectionUtils.isEmpty(containerTaskIds)) {
-			for (String containerTaskId : containerTaskIds) {
-				containerTaskIdsBuilder.append(containerTaskId + "(容器资源)").append(",");
-			}
-		}
-
-		return containerTaskIdsBuilder.toString();
+		return executorProvidedList;
 	}
 
 	/**
@@ -1081,12 +1065,24 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	 * <p>
 	 * 不存在既有DCOS容器，又有K8S容器的模式。
 	 */
-	private List<String> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private List<ExecutorProvided> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
+
 		List<String> containerTaskIds = getDCOSContainerTaskIds(curatorFrameworkOp);
 		if (CollectionUtils.isEmpty(containerTaskIds)) {
 			containerTaskIds = getK8SContainerTaskIds(curatorFrameworkOp);
 		}
-		return containerTaskIds;
+
+		if (!CollectionUtils.isEmpty(containerTaskIds)) {
+			for(String task : containerTaskIds) {
+				ExecutorProvided executorProvided = new ExecutorProvided();
+				executorProvided.setExecutorName(task);
+				executorProvided.setType(ExecutorProvidedType.DOCKER);
+				executorProvidedList.add(executorProvided);
+			}
+		}
+
+		return executorProvidedList;
 	}
 
 	private List<String> getK8SContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {

@@ -23,6 +23,7 @@ import com.vip.saturn.job.console.domain.JobServer;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.JobStatus;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 
@@ -104,14 +105,14 @@ public interface JobDimensionService {
 
 	int isNewSaturn(String version, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
-	String getAllExecutors(String jobName);
+	List<ExecutorProvided> getAllExecutors(String jobName);
 
-	String getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
+	List<ExecutorProvided> getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp);
 
 	/**
 	 * 返回namespace下所有online的executor/taskId（容器）.
 	 */
-	String getAllExecutorsOfNamespace();
+	List<ExecutorProvided> getAllExecutorsOfNamespace();
 
 	JobMigrateInfo getAllJobMigrateInfo() throws SaturnJobConsoleException;
 

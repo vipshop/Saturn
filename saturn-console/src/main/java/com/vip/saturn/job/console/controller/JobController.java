@@ -24,12 +24,12 @@ import com.vip.saturn.job.console.domain.JobServer;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.JobStatus;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.ModelMap;
@@ -168,14 +168,9 @@ public class JobController extends AbstractController {
 	public RequestResult batchSetPreferExecutorsEnabled(HttpServletRequest request) {
 		RequestResult requestResult = new RequestResult();
 		try {
-			String candidateList = jobDimensionService.getAllExecutorsOfNamespace();
-			// append无优先Executor选项
-			StringBuilder strb = new StringBuilder(candidateList);
-			if (StringUtils.isNotBlank(candidateList)) {
-				strb.append("无优先Executor");
-			}
+			List<ExecutorProvided> allExecutorsOfNamespace = jobDimensionService.getAllExecutorsOfNamespace();
 			requestResult.setSuccess(true);
-			requestResult.setObj(strb.toString());
+			requestResult.setObj(allExecutorsOfNamespace);
 		} catch (Exception e) {
 			requestResult.setSuccess(false);
 			requestResult.setMessage(e.getMessage());
@@ -332,8 +327,17 @@ public class JobController extends AbstractController {
 	 * 获取所有的executor作为优先候选列表
 	 */
 	@RequestMapping(value = "getAllExecutors", method = RequestMethod.GET)
-	public String getAllExecutors() {
-		return jobDimensionService.getAllExecutors(null);
+	public RequestResult getAllExecutors(String jobName) {
+		RequestResult requestResult = new RequestResult();
+		try {
+			List<ExecutorProvided> allExecutors = jobDimensionService.getAllExecutors(jobName);
+			requestResult.setObj(allExecutors);
+			requestResult.setSuccess(true);
+		} catch (Exception e) {
+			requestResult.setSuccess(false);
+			requestResult.setMessage(e.toString());
+		}
+		return requestResult;
 	}
 
 	/**

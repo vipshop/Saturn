@@ -337,7 +337,7 @@ $(function() {
 		$("#showNormalLog").val('');
 		$("#timeZone").val('Asia/Shanghai');
 		$("#jobType").removeAttr("disabled");
-        reloadPreferListProvided("", function() {
+        reloadPreferListProvided(null, "", function() {
             $("#addJobTitle").html("添加作业");
             $("#add-job-dialog").modal("show").css({height:'100%', 'overflow-y':'scroll'});
             $("#jobName").focus();
@@ -488,7 +488,7 @@ $(function() {
 		$("#jobType").attr("disabled","disabled");
 		$("#addJobTitle").html("复制作业");
 		setJobTypeConfig(job.jobType);
-        reloadPreferListProvided(job.preferList, function() {
+        reloadPreferListProvided(job.jobName, job.preferList, function() {
             $("#addJobTitle").html("复制作业");
             $("#add-job-dialog").modal("show").css({height:'100%', 'overflow-y':'scroll'});
             $("#jobName").focus();
@@ -599,35 +599,28 @@ $(function() {
         $.get("job/batchSetPreferExecutorsEnabled", {nns:regName}, function(data) {
             if(data.success == true) {
                 $("#batch-set-prefer-executors-jobName").html(jobNames);
-                var preferListCandidate = data.obj;
-                   if(typeof preferListCandidate == "string"){
-                        $("#batch-preferList").empty();
-                           var preferListCandidateArr = preferListCandidate.split(",");
-                           for (var i = 0; i < preferListCandidateArr.length; i++) {
-                               var preferExecutorCandidate = preferListCandidateArr[i];
-                               if(!preferExecutorCandidate){
-                                   continue;
-                               }
-                               var preferExecutorValue = "";
-                               if (preferExecutorCandidate != "无优先Executor") {
-                                   var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
-                                   preferExecutorValue = preferExecutorCandidateArr[0];
-                                   var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
-                                   if(isContainer){
-                                       preferExecutorValue = "@"+preferExecutorValue;
-                                   }
-                               }
-                               var selected = false;
-                               var option = "<option value='" + preferExecutorValue + "'";
-                               if(selected) {
-                                   option = option + " selected";
-                               }
-                               option = option + ">" + preferExecutorCandidate + "</option>";
-                               $("#batch-preferList").append(option);
-                           }
-                        $("#batch-preferList").selectpicker('refresh');
-                        onPreferListChanged();
+                $("#batch-preferList").empty();
+                var preferListProvided = data.obj;
+                for (var i = 0; i < preferListProvided.length; i++) {
+                    var temp = preferListProvided[i];
+                    var executorName = temp.executorName;
+                    var optionTitle = executorName;
+                    if (temp.type == "ONLINE") {
+                        if (temp.noTraffic == true) {
+                            optionTitle = optionTitle + "(无流量)";
+                        }
+                        $("#batch-preferList").append("<option value='" + executorName + "'>" + optionTitle + "</option>");
+                    } else if (temp.type == "DOCKER") {
+                        var tips = "容器";
+                        if (temp.noTraffic == true) {
+                            tips = tips + "，" + "无流量";
+                        }
+                        optionTitle = optionTitle + "(" + tips + ")";
+                        $("#batch-preferList").append("<option value='@" + executorName + "'>" + optionTitle + "</option>");
+                    }
                 }
+                $("#batch-preferList").selectpicker('refresh');
+                onPreferListSelectChanged($("#batch-preferList"));
             } else {
                 $("#failure-dialog .fail-reason").text(data.message);
                 showFailureDialog("failure-dialog");
@@ -636,36 +629,6 @@ $(function() {
         var jobObj = new Object();
         $("#batch-set-prefer-executors-dialog").modal("show", jobObj);
     });
-
-    function onPreferListChanged() {
-        var containerSelected = false;
-        var options = $("#batch-preferList").find("option");
-        if(options) {
-            for(var i=0; i<options.length; i++) {
-                var option = options[i];
-                if(option.selected && option.value && option.value[0] == "@") {
-                    containerSelected = true;
-                    break;
-                }
-            }
-        }
-        if(containerSelected) {
-            for(var i=0; i<options.length; i++) {
-                var option = options[i];
-                if(!(option.selected) && option.value && option.value[0] == "@") {
-                    $(option).attr("disabled", "disabled");
-                }
-            }
-        } else {
-            for(var i=0; i<options.length; i++) {
-                var option = options[i];
-                if(option.value && option.value[0] == "@") {
-                    $(option).removeAttr("disabled");
-                }
-            }
-        }
-        $("#batch-preferList").selectpicker('refresh');
-    }
     
     $(document).on("click", ".change-jobStatus-batch-job", function(event) {
     	var targetButtonId = event.target.id;
@@ -987,7 +950,7 @@ $(function() {
                 if(data.success == true) {
                     $("#add-container-dialog-confirm-btn").modal("hide");
                     if($("#nested").val() == "true") {
-                        reloadPreferListProvided("", function() {
+                        reloadPreferListProvided(null, "", function() {
                             $("#add-container-dialog").modal("hide");
                         });
                         showSuccessDialog();
@@ -1562,7 +1525,6 @@ $(function() {
                     stoppings ++;
                 } 
                 $("#jobs-overview-tbl tbody").append("<tr id='tr-" + jobName + "' class='" + trClass + "'>" + baseTd + "</tr>");
-                $("#showPreferList_"+i).text(preferList);// 使用text来赋值，防止&gt;等被转义成>
                 $("#showDescription_"+i).text(list[i].description);// 使用text来赋值，防止&gt;等被转义成>
             }
             jobsViewDataTable = $("#jobs-overview-tbl").DataTable({
@@ -1855,52 +1817,69 @@ $(function() {
         }).always(function() { $loading.hide(); });
     }
 
-    function reloadPreferListProvided(preferList, callback) {
-        $.get("job/getAllExecutors", {nns:regName}, function (data) {
+    function reloadPreferListProvided(jobName, preferList, callback) {
+	    var postData = {};
+	    if(jobName == null) {
+	        postData = {nns: regName};
+        } else {
+	        postData = {nns: regName, jobName: jobName};
+        }
+        $.get("job/getAllExecutors", postData, function (data) {
             $("#preferListProvided").empty();
-            if(data) {
+            if(data.success == true) {
                 var preferListArr = preferList.split(",");
-                var preferListCandidateArr = data.split(",");
-                for (var i = 0; i < preferListCandidateArr.length; i++) {
-                    var preferExecutorCandidate = preferListCandidateArr[i];
-                    if(!preferExecutorCandidate){
-                        continue;
-                    }
-                    var preferExecutorCandidateArr =  preferExecutorCandidate.split("(");
-                    var preferExecutorValue = preferExecutorCandidateArr[0];
-                    var isContainer = (preferExecutorCandidate.indexOf("容器资源") != -1);
-                    if(isContainer){
-                        preferExecutorValue = "@"+preferExecutorValue;
-                    }
-                    var selected = false;
-                    $.each(preferListArr, function(index, preferValue) {
-                        if(isContainer) {
-                            if("@"+preferValue.split("(")[0] == preferExecutorValue) {
-                                selected = true;
-                            }
-                        } else {
-                            if(preferValue == preferExecutorValue){
-                                selected = true;
-                            }
-                        }
-                    });
-                    var option = "<option value='" + preferExecutorValue + "'";
-                    if(selected) {
-                        option = option + " selected";
-                    }
-                    option = option + ">" + preferExecutorCandidate + "</option>";
-                    $("#preferListProvided").append(option);
-                }
-                $("#preferListProvided").selectpicker('refresh');
-                onPreferListProvidedChanged();
+                var preferListProvided = data.obj;
+                expandPreferListSelect(preferListArr, preferListProvided, $("#preferListProvided"));
             }
             if(callback) callback();
         });
     }
 
-    function onPreferListProvidedChanged() {
+    function expandPreferListSelect(preferListArr, preferListProvided, selectObj) {
+        selectObj.empty();
+        for (var i = 0; i < preferListProvided.length; i++) {
+            var temp = preferListProvided[i];
+            var selected = false;
+            var optionValue = temp.executorName;
+            var optionTitle = optionValue;
+            var tips = "";
+            if (temp.type == "DOCKER") {
+                optionValue = "@" + optionValue;
+                tips = "容器";
+            } else if (temp.type == "OFFLINE") {
+                tips = "已离线";
+            } else if (temp.type == "DELETED") {
+                tips = "已删除";
+            }
+            if (temp.noTraffic == true) {
+                if (tips == "") {
+                    tips = "无流量";
+                } else {
+                    tips = tips + ", " + "无流量";
+                }
+            }
+            if (tips != "") {
+                optionTitle = optionTitle + "(" + tips + ")";
+            }
+            $.each(preferListArr, function (index, preferValue) {
+                if (preferValue == optionValue) {
+                    selected = true;
+                }
+            });
+            var option = "<option value='" + optionValue + "'";
+            if (selected) {
+                option = option + " selected";
+            }
+            option = option + ">" + optionTitle + "</option>";
+            selectObj.append(option);
+        }
+        selectObj.selectpicker('refresh');
+        onPreferListSelectChanged(selectObj);
+    }
+
+    function onPreferListSelectChanged(selectObj) {
         var containerSelected = false;
-        var options = $("#preferListProvided").find("option");
+        var options = selectObj.find("option");
         if(options) {
             for(var i=0; i<options.length; i++) {
                 var option = options[i];
@@ -1925,11 +1904,11 @@ $(function() {
                 }
             }
         }
-        $("#preferListProvided").selectpicker('refresh');
+        selectObj.selectpicker('refresh');
     }
 
     $('#preferListProvided').on('changed.bs.select', function (e) {
-        onPreferListProvidedChanged();
+        onPreferListSelectChanged($('#preferListProvided'));
     });
     
     function filterJobsRegex(regex) {
