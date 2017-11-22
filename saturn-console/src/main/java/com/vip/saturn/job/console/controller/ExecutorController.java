@@ -8,8 +8,6 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.service.SystemConfigService;
-import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import jxl.Cell;
@@ -43,16 +41,12 @@ public class ExecutorController extends AbstractController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorController.class);
 
-	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
-
 	@Resource
 	private ExecutorService executorService;
 	@Resource
 	private JobDimensionService jobDimensionService;
 	@Resource
 	private JobOperationService jobOperationService;
-	@Resource
-	private SystemConfigService systemConfigService;
 
 	@RequestMapping(value = "checkAndAddJobs", method = RequestMethod.POST)
 	public RequestResult checkAndAddJobs(JobConfig jobConfig, HttpServletRequest request) {
@@ -202,7 +196,6 @@ public class ExecutorController extends AbstractController {
 		jobConfig.setJobClass(jobClass);
 
 		String cron = getContents(rowCells, 3);
-		CronExpression cronExpression = null;
 		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name())
 				|| jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
 			if (cron == null || cron.trim().isEmpty()) {
@@ -211,7 +204,7 @@ public class ExecutorController extends AbstractController {
 			}
 			cron = cron.trim();
 			try {
-				cronExpression = new CronExpression(cron); // will validate the cron
+				CronExpression.validateExpression(cron);
 			} catch (ParseException e) {
 				throw new SaturnJobConsoleException(
 						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e.toString()));
@@ -381,40 +374,7 @@ public class ExecutorController extends AbstractController {
 		}
 		jobConfig.setTimeZone(timeZone);
 
-		// 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
-		cronExpression.setTimeZone(TimeZone.getTimeZone(timeZone));
-		jobConfig.setEnabledReport(getEnabledReport(jobType, cronExpression));
-
 		return jobConfig;
-	}
-
-	private boolean getEnabledReport(String jobType, CronExpression cronExpression) {
-		boolean enabledReport = true;
-		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
-			Integer intervalTimeConfigured = systemConfigService.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
-			if (intervalTimeConfigured == null) {
-				LOGGER.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
-				intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
-			}
-			Date lastNextTime = cronExpression.getNextValidTimeAfter(new Date());
-			if (lastNextTime != null) {
-				for (int i = 0; i < 5; i++) {
-					Date nextTime = cronExpression.getNextValidTimeAfter(lastNextTime);
-					if (nextTime == null) {
-						break;
-					}
-					long interval = nextTime.getTime() - lastNextTime.getTime();
-					if (interval < intervalTimeConfigured * 1000) {
-						enabledReport = false;
-						break;
-					}
-					lastNextTime = nextTime;
-				}
-			}
-		} else {
-			enabledReport = false;
-		}
-		return enabledReport;
 	}
 
 	private String getContents(Cell[] rowCell, int column) {

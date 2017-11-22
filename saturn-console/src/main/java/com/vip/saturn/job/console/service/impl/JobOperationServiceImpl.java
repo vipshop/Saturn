@@ -24,10 +24,8 @@ import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.service.ServerDimensionService;
+import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
@@ -51,30 +49,26 @@ import javax.transaction.Transactional;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
 
 	private static final Logger log = LoggerFactory.getLogger(JobOperationServiceImpl.class);
 
-	@Resource
-	private RegistryCenterService registryCenterService;
+	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 
 	@Resource
 	private CuratorRepository curatorRepository;
-
-	@Resource
-	private ServerDimensionService serverDimensionService;
 
 	@Resource
 	private JobDimensionService jobDimensionService;
 
 	@Resource
 	private CurrentJobConfigService currentJobConfigService;
+
+	@Resource
+	private SystemConfigService systemConfigService;
 
 	private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class,
 			String.class);
@@ -387,6 +381,45 @@ public class JobOperationServiceImpl implements JobOperationService {
 				jobConfig.setJobClass("");
 			}
 		}
+		jobConfig.setEnabledReport(getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone()));
+	}
+
+	/**
+	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
+	 */
+	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
+		boolean enabledReport = true;
+		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+			try {
+				Integer intervalTimeConfigured = systemConfigService.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
+				if (intervalTimeConfigured == null) {
+					log.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
+					intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
+				}
+				CronExpression cronExpression = new CronExpression(cron);
+				cronExpression.setTimeZone(TimeZone.getTimeZone(timeZone));
+				Date lastNextTime = cronExpression.getNextValidTimeAfter(new Date());
+				if (lastNextTime != null) {
+					for (int i = 0; i < 5; i++) {
+						Date nextTime = cronExpression.getNextValidTimeAfter(lastNextTime);
+						if (nextTime == null) {
+							break;
+						}
+						long interval = nextTime.getTime() - lastNextTime.getTime();
+						if (interval < intervalTimeConfigured * 1000) {
+							enabledReport = false;
+							break;
+						}
+						lastNextTime = nextTime;
+					}
+				}
+			} catch (ParseException e) {
+				log.warn(e.getMessage(), e);
+			}
+		} else {
+			enabledReport = false;
+		}
+		return enabledReport;
 	}
 
 	private void saveJobConfigToDb(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp)
