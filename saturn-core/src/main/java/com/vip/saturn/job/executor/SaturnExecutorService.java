@@ -6,24 +6,18 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.ResourceUtils;
 import com.vip.saturn.job.utils.SaturnVersionUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.*;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
-import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 
 /**
@@ -40,18 +34,14 @@ public class SaturnExecutorService {
 	private static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
 
 	private String executorName;
-
-	private List<String> jobNames = new ArrayList<String>();
-
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 
+	private List<String> jobNames = new ArrayList<String>();
 	private TreeCache $JobsTreeCache;
-
 	private String ipNode;
-
 	private ClassLoader jobClassLoader;
-
 	private ClassLoader executorClassLoader;
+	private RestartExecutorService restartExecutorService;
 
 	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
@@ -98,12 +88,15 @@ public class SaturnExecutorService {
 			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
 		}
 
-		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
-	}
+		// add watcher for restart
+		if (restartExecutorService != null) {
+			restartExecutorService.stop();
+		}
+		restartExecutorService = new RestartExecutorService(executorName, coordinatorRegistryCenter);
+		restartExecutorService.start();
 
-	public void reRegister() throws Exception {
-		registerJobNames();
-		registerExecutor0();
+		// 持久化ip
+		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
 	}
 
 	public void registerExecutor() throws Exception {
@@ -207,6 +200,16 @@ public class SaturnExecutorService {
 		}
 	}
 
+	private void stopRestartExecutorService() {
+		try {
+			if (restartExecutorService != null) {
+				restartExecutorService.stop();
+			}
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}
+
 	private void removeIpNode() {
 		try {
 			if (coordinatorRegistryCenter != null && ipNode != null && coordinatorRegistryCenter.isConnected()) {
@@ -230,6 +233,7 @@ public class SaturnExecutorService {
 
 	// Attention, catch Throwable and not throw it.
 	public void shutdown() {
+		stopRestartExecutorService();
 		removeIpNode();
 		close$JobsTreeCache();
 	}

@@ -69,6 +69,13 @@ public class SystemEnvProperties {
 	public static String NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT";
 	public static int VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1;
 
+	// For restart executor
+	public static boolean VIP_SATURN_ENABLE_RESTART_EXECUTOR = Boolean.getBoolean("VIP_SATURN_ENABLE_RESTART_EXECUTOR");
+	public static String NAME_VIP_SATURN_PRG = "VIP_SATURN_PRG";
+	public static String VIP_SATURN_PRG = System.getProperty(NAME_VIP_SATURN_PRG);
+	public static String NAME_VIP_SATURN_LOG_OUTFILE = "VIP_SATURN_LOG_OUTFILE";
+	public static String VIP_SATURN_LOG_OUTFILE = System.getProperty(NAME_VIP_SATURN_LOG_OUTFILE);
+
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
 				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
