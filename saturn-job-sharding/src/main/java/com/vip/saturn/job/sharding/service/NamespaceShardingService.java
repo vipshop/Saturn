@@ -1337,12 +1337,6 @@ public class NamespaceShardingService {
 					}
 				}
 			}
-			Collections.sort(itemList, new Comparator<Integer>() {
-				@Override
-				public int compare(Integer o1, Integer o2) {
-					return 01 - 02;
-				}
-			});
 			int item = 0;
 			if (!itemList.isEmpty()) {
 				boolean[] flags = new boolean[itemList.size() + 1];
