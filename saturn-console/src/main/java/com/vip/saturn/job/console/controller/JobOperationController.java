@@ -48,8 +48,6 @@ import com.vip.saturn.job.console.service.ServerDimensionService;
 @RequestMapping("job")
 public class JobOperationController extends AbstractController {
 
-	private static final Logger AUDITLOGGER = LoggerFactory.getLogger("AUDITLOG");
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(JobOperationController.class);
 
 	private static final int DEFAULT_RECORD_COUNT = 100;
@@ -266,7 +264,6 @@ public class JobOperationController extends AbstractController {
 					}
 				}
 			} catch (Exception e) {
-				AUDITLOGGER.error(e.getMessage(), e);
 				messageSbf.append("操作作业【" + jobName + "】出现内部错误，");
 				continue;
 			}
@@ -337,7 +334,6 @@ public class JobOperationController extends AbstractController {
 	public String batchRemoveStoppedJob(final String jobNames, HttpServletRequest request) throws InterruptedException {
 		String[] jobNamesArr = jobNames.split(",");
 		if (jobNamesArr == null || jobNamesArr.length == 0) {
-			AUDITLOGGER.warn("batchRemoveJobs is null");
 			return "批量删除作业为空";
 		}
 		StringBuilder errorLog = new StringBuilder();
