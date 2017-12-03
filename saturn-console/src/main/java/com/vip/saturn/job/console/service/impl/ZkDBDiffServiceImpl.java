@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -39,6 +38,10 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
     private static final String NAMESPACE_NOT_EXIST_TEMPLATE = "The namespace {%s} does not exists.";
 
+    private static final String ERR_MSG_SKIP_DIFF = "skip diff by namespace:{} for reason:{}";
+
+    private static final int DIFF_THREAD_NUM = 10;
+
     @Resource
     private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
 
@@ -55,8 +58,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
     private CuratorRepository curatorRepository;
 
     private ExecutorService diffExecutorService;
-
-    private static final int DIFF_THREAD_NUM = 10;
 
     @PostConstruct
     public void init() {
@@ -96,7 +97,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             List<Future<List<JobDiffInfo>>> futures = diffExecutorService.invokeAll(callableList);
 
             for (Future<List<JobDiffInfo>> future : futures) {
-                List<JobDiffInfo> jobDiffInfos = (List<JobDiffInfo>) future.get();
+                List<JobDiffInfo> jobDiffInfos = future.get();
                 if (jobDiffInfos != null && !jobDiffInfos.isEmpty()) {
                     resultList.addAll(jobDiffInfos);
                 }
@@ -128,6 +129,9 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             }
 
             zkClient = initCuratorClient(namespace);
+            if (zkClient == null) {
+                return jobDiffInfos;
+            }
 
             Set<String> jobNamesInDb = getAllJobNames(dbJobConfigList);
 
@@ -169,6 +173,9 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         CuratorRepository.CuratorFrameworkOp zkClient;
         try {
             zkClient = initCuratorClient(namespace);
+            if (zkClient == null) {
+                return null;
+            }
             log.info("start to diff job:{}", jobName);
 
             CurrentJobConfig dbJobConfig = configService.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -183,9 +190,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
             }
 
             return diff(dbJobConfig, zkJobConfig, true);
-        } catch (SaturnJobConsoleException e) {
-            log.error(e.getMessage(), e);
-            throw e;
         } catch (Exception e) {
             log.error("exception throws during diff by namespace [{}] and job [{}]", namespace, jobName, e);
             throw new SaturnJobConsoleException(e);
@@ -305,19 +309,22 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
         }
     }
 
-    private CuratorRepository.CuratorFrameworkOp initCuratorClient(String namespace) throws SaturnJobConsoleException {
+    private CuratorRepository.CuratorFrameworkOp initCuratorClient(String namespace) {
         RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
                 .findConfigByNamespace(namespace);
         if (registryCenterConfiguration == null) {
-            throw new SaturnJobConsoleException(String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
+            String errMsg = String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace);
+            log.warn(ERR_MSG_SKIP_DIFF, namespace, errMsg);
+            return null;
         }
 
         RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
         if (registryCenterClient != null && registryCenterClient.isConnected()) {
             return curatorRepository.newCuratorFrameworkOp(registryCenterClient.getCuratorClient());
-        } else {
-            throw new SaturnJobConsoleException("Connect zookeeper failed");
         }
+
+        log.warn(ERR_MSG_SKIP_DIFF, namespace, "fail to connect to zk.");
+        return null;
     }
 
     private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace, CuratorRepository.CuratorFrameworkOp zkClient, Set<String> jobNamesInDb) throws SaturnJobConsoleException {
