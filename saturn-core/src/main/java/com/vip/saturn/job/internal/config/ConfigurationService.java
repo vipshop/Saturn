@@ -413,6 +413,15 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	/**
+	 * 获取作业是否上报状态。
+	 *
+	 * @return true, 上报状态；false，不上报状态；
+	 */
+	public boolean isEnabledReport() {
+		return jobConfiguration.isEnabledReport();
+	}
+
+	/**
 	 * 获取超时时间
 	 * 
 	 * @return 超时时间
