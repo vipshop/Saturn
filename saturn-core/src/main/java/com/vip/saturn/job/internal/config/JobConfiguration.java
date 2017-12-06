@@ -478,6 +478,10 @@ public class JobConfiguration {
 		this.useDispreferList = useDispreferList;
 	}
 
+	public void setEnabledReport(Boolean enabledReport) {
+		this.enabledReport = enabledReport;
+	}
+
 	public Boolean isEnabledReport() {
 		return enabledReport;
 	}
