@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RestartExecutorIT extends AbstractSaturnIT {
+public class RestartAndDumpIT extends AbstractSaturnIT {
 
     private static String PRG = "src/test/resources/script/restart/prg.sh";
     private static String OUTFILE = "src/test/resources/script/restart/outfile";
@@ -35,8 +35,7 @@ public class RestartExecutorIT extends AbstractSaturnIT {
 
     @Test
     public void test() throws Exception {
-        boolean enable_restart_executor_old = SystemEnvProperties.VIP_SATURN_ENABLE_RESTART_EXECUTOR;
-        SystemEnvProperties.VIP_SATURN_ENABLE_RESTART_EXECUTOR = true;
+        SystemEnvProperties.VIP_SATURN_ENABLE_EXEC_SCRIPT = true;
         SystemEnvProperties.VIP_SATURN_PRG = new File(PRG).getAbsolutePath();
         SystemEnvProperties.VIP_SATURN_LOG_OUTFILE = new File(OUTFILE).getAbsolutePath();
         try {
@@ -49,8 +48,17 @@ public class RestartExecutorIT extends AbstractSaturnIT {
             Thread.sleep(1000L);
             String content = FileUtils.readFileToString(new File(OUTFILE));
             assertThat(content).isEqualTo("Hebe! Hebe! Hebe!");
+
+            String dumpNodePath = SaturnExecutorsNode.EXECUTORS_ROOT + "/" + executor.getExecutorName() + "/dump";
+            regCenter.persist(dumpNodePath, "");
+            Thread.sleep(1000L);
+            content = FileUtils.readFileToString(new File(OUTFILE));
+            assertThat(content).isEqualTo("Hebe! Hebe! Hebe!Dump! Dump! Dump!");
+            assertThat(regCenter.isExisted(dumpNodePath)).isFalse();
         } finally {
-            SystemEnvProperties.VIP_SATURN_ENABLE_RESTART_EXECUTOR = enable_restart_executor_old;
+            SystemEnvProperties.VIP_SATURN_ENABLE_EXEC_SCRIPT = false;
+            SystemEnvProperties.VIP_SATURN_PRG = null;
+            SystemEnvProperties.VIP_SATURN_LOG_OUTFILE = null;
         }
     }
 

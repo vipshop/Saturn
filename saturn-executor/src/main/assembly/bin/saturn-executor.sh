@@ -49,6 +49,8 @@ USAGE()
 	echo -e "        '-sld|--saturnLogDir': optional."
 	echo -e "        jvmArgs: optional."
 	echo -e "    -------------------------------"
+	echo -e "    dump, no parameters."
+	echo -e "    -------------------------------"
 	echo -e "    stop, no parameters."
 	echo -e "    -------------------------------"
 	echo -e "    restart, no parameters."
@@ -110,7 +112,7 @@ MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:
 GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
 CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
 JMX_OPTS="-Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dsun.rmi.transport.tcp.threadKeepAliveTime=75000 -Djava.rmi.server.hostname=${LOCALIP}"
-SETTING_CONF="-DVIP_SATURN_PRG=${PRG} -DVIP_SATURN_LOG_DIR=${LOGDIR} -DVIP_SATURN_LOG_OUTFILE=${OUTFILE} -DVIP_SATURN_ENABLE_RESTART_EXECUTOR=true -Dstart.check.outfile=${STATUS_FILE}"
+SETTING_CONF="-DVIP_SATURN_ENABLE_EXEC_SCRIPT=true -DVIP_SATURN_PRG=${PRG} -DVIP_SATURN_LOG_DIR=${LOGDIR} -DVIP_SATURN_LOG_OUTFILE=${OUTFILE} -Dstart.check.outfile=${STATUS_FILE}"
 
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
@@ -249,6 +251,35 @@ START()
 	fi
 }
 
+DUMP()
+{
+    LOG_FMT "Begin to dump executor."
+    local PID=$(GET_PID)
+    while true; do
+        case "$1" in
+            -pid) PID="$2"; shift 2;;
+            *) break;;
+        esac
+    done
+    if [ "$PID" != "" ]; then
+		if [ -d /proc/${PID} ];then
+		    LOGDIR=$(GET_LOGDIR ${PID})
+            # do the thread dump
+            LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
+            jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
+            LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
+            # backup gc log
+            cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
+            LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
+            LOG_FMT "Dump executor successfully."
+        else
+			LOG_FMT "Executor(pid:${PID}) is not running."
+		fi
+	else
+		LOG_FMT "Executor is not running."
+    fi
+}
+
 STOP()
 {
     LOG_FMT "Begin to stop executor."
@@ -256,15 +287,7 @@ STOP()
 	stoptime=0
     if [ "$PID" != "" ]; then
 		if [ -d /proc/$PID ];then
-		    LOGDIR=$(GET_LOGDIR ${PID})
-            # do the thread dump
-            LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
-            jstack -l $PID > $LOGDIR/dump_$LOG_FILE_POSTFIX.log
-            LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
-            # backup gc log
-            cp $LOGDIR/gc.log $LOGDIR/gc_$LOG_FILE_POSTFIX.log
-            LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
-
+		    DUMP -pid ${PID}
 			RUN_PARAMS=`cat ${STATUS_FILE}`
 			LOG_FMT "Saturn executor pid is ${PID}, params are : ${RUN_PARAMS}."
 			LOG_FMT "Stopping...\c"
@@ -319,6 +342,7 @@ STATUS()
 
 case "$CMD" in
   start) START;;
+  dump) DUMP;;
   stop) STOP;;
   restart) RESTART;;
   status) STATUS;;

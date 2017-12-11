@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	private static Logger LOGGER;
-	private static final String NAME_SATURN_LOG_DIR = "SATURN_LOG_DIR";
+	private static final String NAME_VIP_SATURN_LOG_DIR = "VIP_SATURN_LOG_DIR";
 
 	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
@@ -30,8 +30,8 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void initLogDirEnv() {
-		String SATURN_LOG_DIR = System.getProperty(NAME_SATURN_LOG_DIR,
-				getEnv(NAME_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
+		String SATURN_LOG_DIR = System.getProperty(NAME_VIP_SATURN_LOG_DIR,
+				getEnv(NAME_VIP_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
 		System.setProperty("saturn.log.dir", SATURN_LOG_DIR); // for logback.xml
 	}
 

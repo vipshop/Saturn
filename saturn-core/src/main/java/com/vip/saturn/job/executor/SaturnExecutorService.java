@@ -41,7 +41,7 @@ public class SaturnExecutorService {
 	private String ipNode;
 	private ClassLoader jobClassLoader;
 	private ClassLoader executorClassLoader;
-	private RestartExecutorService restartExecutorService;
+	private RestartAndDumpService restartExecutorService;
 
 	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
@@ -92,7 +92,7 @@ public class SaturnExecutorService {
 		if (restartExecutorService != null) {
 			restartExecutorService.stop();
 		}
-		restartExecutorService = new RestartExecutorService(executorName, coordinatorRegistryCenter);
+		restartExecutorService = new RestartAndDumpService(executorName, coordinatorRegistryCenter);
 		restartExecutorService.start();
 
 		// 持久化ip
@@ -213,7 +213,7 @@ public class SaturnExecutorService {
 	private void removeIpNode() {
 		try {
 			if (coordinatorRegistryCenter != null && ipNode != null && coordinatorRegistryCenter.isConnected()) {
-				log.info(" {} is going to delete its ip node {}", executorName, ipNode);
+				log.info("{} is going to delete its ip node {}", executorName, ipNode);
 				coordinatorRegistryCenter.remove(ipNode);
 			}
 		} catch (Throwable t) {
