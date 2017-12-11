@@ -21,7 +21,7 @@ The VIP's distributed job schedule platform. It supports java and shell jobs wit
 ### 1.2 User Guide
 - see [Quick Start Guide](https://github.com/vipshop/Saturn/wiki/Quick-Start)
 - see [Quick Start with Docker Container](https://github.com/vipshop/Saturn/wiki/Quick-Start---Docker)
-- see [User Guide CN](https://github.com/vipshop/Saturn/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%BC%95(%E5%AE%8C%E6%95%B4))
+- see [User Guide (中文)](https://github.com/vipshop/Saturn/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%BC%95(%E5%AE%8C%E6%95%B4))
 
 
 ## 2 System Design
@@ -30,20 +30,19 @@ The VIP's distributed job schedule platform. It supports java and shell jobs wit
 see [Entity Model](https://github.com/vipshop/Saturn/wiki/Saturn-Entity-Model)
 
 ### 2.2 Artichecture
-see [Architecture Description CN](https://github.com/vipshop/Saturn/wiki/Saturn%E6%9E%B6%E6%9E%84%E6%96%87%E6%A1%A3)
+see [Architecture Description (中文)](https://github.com/vipshop/Saturn/wiki/Saturn%E6%9E%B6%E6%9E%84%E6%96%87%E6%A1%A3)
 
 ## 3 Production Development Guide
-### 3.1  Development Guide for Java
-- see [Development Guide for Java CN](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8Bjava)
-- see [Development Guide for Shell CN](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8Bshell)
+- see [Development Guide for Java (中文)](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8BJava%E4%BD%9C%E4%B8%9A)
+- see [Development Guide for Shell (中文)](https://github.com/vipshop/Saturn/wiki/saturn%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95%E4%B9%8Bshell%E4%BD%9C%E4%B8%9A)
 
 ## 4 Operation
-### 4.1 Gray Upgrade
-- see [Gray Upgrade Process](https://github.com/vipshop/Saturn/wiki/Saturn-Job-Gray-Upgrade-Process)
+### 4.1 Production Deployment Guide
+- see [Console Deployment (中文)](https://github.com/vipshop/Saturn/wiki/Saturn%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BConsole)
+- see [Executor Deployment (中文)](https://github.com/vipshop/Saturn/wiki/Saturn部署文档之executor)
 
-### 4.2 Production Deployment Guide
-- see [Console Deployment](https://github.com/vipshop/Saturn/wiki/saturn部署文档之console)
-- see [Executor Deployment](https://github.com/vipshop/Saturn/wiki/Saturn部署文档之executor)
+### 4.2 Canary Deployments
+- see [Canary Deployments (中文)](https://github.com/vipshop/Saturn/wiki/Saturn-Job-Gray-Upgrade-Process)
 
 ## 5 The team
 
