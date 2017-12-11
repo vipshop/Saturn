@@ -130,6 +130,9 @@ public class ExecutionService extends AbstractSaturnService {
 		registerJobCompletedReportInfoByItem(jobExecutionShardingContext, item, nextFireTimePausePeriodEffected);
 	}
 
+	/**
+	 * 作业完成信息注册，此信息用于页面展现。注意，无论作业是否上报状态(对应/config/enabledReport/节点)，都会注册此信息。
+	 */
 	public void registerJobCompletedReportInfoByItem(
 			final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item,
 			Date nextFireTimePausePeriodEffected) {
@@ -144,19 +147,19 @@ public class ExecutionService extends AbstractSaturnService {
 				SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
 				if (jobRet != null) {
 					int errorGroup = jobRet.getErrorGroup();
-					info.setJobLog(saturnContext.getJobLog(item));
 					info.setJobMsg(jobRet.getReturnMsg());
-					if (errorGroup == SaturnSystemErrorGroup.SUCCESS) {
-						if (!configService.showNormalLog()) {
-							info.setJobLog(null);
-						}
+					//如果作业执行成功且不展示日志，则不展现log
+					if (errorGroup == SaturnSystemErrorGroup.SUCCESS && !configService.showNormalLog()) {
+						info.setJobLog(null);
+					} else {
+						info.setJobLog(saturnContext.getJobLog(item));
 					}
 				} else {
 					info.setJobMsg(NO_RETURN_VALUE);
 				}
 			}
 		}
-		if (null != nextFireTimePausePeriodEffected) {
+		if (nextFireTimePausePeriodEffected != null) {
 			info.setNextFireTime(nextFireTimePausePeriodEffected.getTime());
 		}
 
