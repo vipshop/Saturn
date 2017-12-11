@@ -29,6 +29,7 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
+import com.vip.saturn.job.utils.SaturnUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.quartz.JobExecutionException;
@@ -111,7 +112,7 @@ public abstract class AbstractElasticJob implements Stopable {
 	}
 
 	public final void execute() {
-		log.trace("Quartz run-job entrance, job execution context:{}.");
+		log.trace("Saturn start to execute job [{}].", jobName);
 		// 对每一个jobScheduler，作业对象只有一份，多次使用，所以每次开始执行前先要reset
 		reset();
 
@@ -122,7 +123,8 @@ public abstract class AbstractElasticJob implements Stopable {
 
 		JobExecutionMultipleShardingContext shardingContext = null;
 		try {
-			if (failoverService.getLocalHostFailoverItems().isEmpty()) {
+			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
+			if (isEnabledReport && failoverService.getLocalHostFailoverItems().isEmpty()) {
 				shardingService.shardingIfNecessary();
 			}
 
@@ -144,16 +146,16 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			if (configService.isInPausePeriod()) {
 				log.info("the job {} current running time is in pausePeriod, do nothing about business.", jobName);
-				// executionService.updateNextFireTime(shardingContext.getShardingItems());
 				return;
 			}
+
 			executeJobInternal(shardingContext);
 
 			if (isFailoverSupported() && configService.isFailover() && !stopped && !forceStopped && !aborted) {// NOSONAR
 				failoverService.failoverIfNecessary();
 			}
 
-			log.trace("Elastic job: execute normal completed, sharding context:{}.", shardingContext);
+			log.trace("Saturn finish to execute job [{}], sharding context:{}.", jobName, shardingContext);
 		} catch (Exception e) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 		} finally {
@@ -171,19 +173,14 @@ public abstract class AbstractElasticJob implements Stopable {
 		} finally {
 			boolean updateServerStatus = false;
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(getJobScheduler().getCurrentConf());
 			for (int item : shardingContext.getShardingItems()) {
-				if (!checkIfZkLostAfterExecution(item)) {
+				if (isEnabledReport && !checkIfZkLostAfterExecution(item)) {
 					continue;// NOSONAR
 				}
 				if (!aborted) {
 					if (!updateServerStatus) {
-						JobConfiguration jobConfiguration = getJobScheduler().getCurrentConf();
-						if (jobConfiguration.isEnabledReport() == null) {
-							if ("JAVA_JOB".equals(jobConfiguration.getJobType())
-									|| "SHELL_JOB".equals(jobConfiguration.getJobType())) {
-								serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
-							}
-						} else if (jobConfiguration.isEnabledReport()) {
+						if (isEnabledReport) {
 							serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
 						}
 						updateServerStatus = true;
@@ -223,27 +220,8 @@ public abstract class AbstractElasticJob implements Stopable {
 				}
 			}
 			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
-			JobConfiguration currentConf = jobScheduler.getCurrentConf();
-			Boolean enabledReport = currentConf.isEnabledReport();
-
-			if (enabledReport != null) {
-				if (enabledReport.equals(Boolean.TRUE)) {
-					log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item,
-							sessionId);
-					return false;
-				} else {
-					return true;
-				}
-			}
-
-			String jobType = currentConf.getJobType();
-			// 没有配enabledReport，java/shell作业默认为开启；
-			if ("JAVA_JOB".equals(jobType) || "SHELL_JOB".equals(jobType)) {
-				log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
-				return false;
-			} else {
-				return true;
-			}
+			log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+			return false;
 		} catch (Exception e) {
 			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 			return false;
