@@ -143,6 +143,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 
 		@Override
 		public void process(WatchedEvent event) throws Exception {
+			if (isShutdown) {
+				return;
+			}
 			switch (event.getType()) {
 			case NodeCreated:
 			case NodeDataChanged: // NOSONAR
