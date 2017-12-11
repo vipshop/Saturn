@@ -122,7 +122,7 @@ public abstract class AbstractElasticJob implements Stopable {
 		JobExecutionMultipleShardingContext shardingContext = null;
 		try {
 			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
-			if (isEnabledReport && failoverService.getLocalHostFailoverItems().isEmpty()) {
+			if (!isEnabledReport || failoverService.getLocalHostFailoverItems().isEmpty()) {
 				shardingService.shardingIfNecessary();
 			}
 
