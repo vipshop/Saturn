@@ -3,25 +3,20 @@
  */
 package com.vip.saturn.job.console.controller;
 
-import java.util.Collection;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
+import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
-import com.vip.saturn.job.console.service.RegistryCenterService;
-import com.vip.saturn.job.console.utils.SessionAttributeKeys;
-import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import java.util.Collection;
 
 /**
  * @author chembo.huang
@@ -31,12 +26,14 @@ public class AbstractController {
 
 	public static final String REQUEST_NAMESPACE_PARAM = "nns";
 
+	public static final String BAD_REQ_MSG_PREFIX = "Invalid request.";
+
+	public static final String INVALID_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Parameter: {%s} %s";
+
+	public static final String MISSING_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Missing parameter: {%s}";
+
 	@Resource
 	protected RegistryCenterService registryCenterService;
-	@Resource
-	private JobDimensionService jobDimensionService;
-	@Resource
-	private JobOperationService jobOperationService;
 
 	@Value("${console.version}")
 	protected String version;
@@ -117,11 +114,6 @@ public class AbstractController {
 			return null;
 		}
 		return registryCenterService.getCuratorByNameAndNamespace(reg.getNameAndNamespace());
-	}
-
-	public void setJobStatusAndIsEnabled(ModelMap model, String jobName) {
-		model.put("jobStatus", jobDimensionService.getJobStatus(jobName));
-		model.put("isEnabled", jobDimensionService.isJobEnabled(jobName));
 	}
 
 	public String getNamespace() {

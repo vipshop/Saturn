@@ -20,11 +20,7 @@ import com.vip.saturn.job.console.service.DashboardService;
  */
 @Controller
 @RequestMapping("/rest/v1")
-public class DashboardRefreshRestApiController {
-
-	public static final String BAD_REQ_MSG_PREFIX = "Invalid request.";
-
-	public static final String MISSING_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Missing parameter: {%s}";
+public class DashboardRefreshRestApiController extends AbstractController {
 
 	@Autowired
 	private DashboardService dashboardService;

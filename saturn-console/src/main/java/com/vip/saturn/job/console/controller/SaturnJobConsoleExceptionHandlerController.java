@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * Created by jeff.zhu on 26/05/2017.
  */
 @ControllerAdvice
-public class SaturnJobConsoleExceptionHandlerController {
+public class SaturnJobConsoleExceptionHandlerController extends AbstractController {
 
 	public final static String NOT_EXISTED_PREFIX = "does not exists";
 

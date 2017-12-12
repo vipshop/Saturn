@@ -33,13 +33,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/rest/v1")
-public class JobOperationRestApiController {
-
-	public static final String BAD_REQ_MSG_PREFIX = "Invalid request.";
-
-	public static final String INVALID_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Parameter: {%s} %s";
-
-	public static final String MISSING_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Missing parameter: {%s}";
+public class JobOperationRestApiController extends AbstractController {
 
 	private static final Logger logger = LoggerFactory.getLogger(JobOperationRestApiController.class);
 

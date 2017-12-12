@@ -110,7 +110,8 @@ public class HomeController extends AbstractController {
 	public String jobDetail(@RequestParam final String jobName, final ModelMap model, final String nns,
 			final HttpSession session, HttpServletRequest request) {
 		model.put("jobName", jobName);
-		setJobStatusAndIsEnabled(model, jobName);
+		model.put("jobStatus", jobDimensionService.getJobStatus(jobName));
+		model.put("isEnabled", jobDimensionService.isJobEnabled(jobName));
 		setSession(registryCenterService.connect(nns), session);
 		String jobRate = jobDimensionService.geJobRunningInfo(jobName);
 		String jobType = jobDimensionService.getJobType(jobName);

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * Created by jeff.zhu on 22/05/2017.
  */
 @ControllerAdvice
-public class ExceptionHandlerController {
+public class ExceptionHandlerController extends AbstractController {
 
 	@ExceptionHandler
 	@ResponseBody

@@ -25,11 +25,7 @@ import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
  */
 @Controller
 @RequestMapping("/rest/v1")
-public class NamespaceZkClusterMappingRestApiController {
-
-	public final static String BAD_REQ_MSG_PREFIX = "Invalid request.";
-
-	public final static String MISSING_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Missing parameter: {%s}";
+public class NamespaceZkClusterMappingRestApiController extends AbstractController {
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;

@@ -34,10 +34,6 @@ import java.util.List;
 @RequestMapping("/rest/v1")
 public class ZKDBDiffRestApiController extends AbstractController {
 
-    public static final String BAD_REQ_MSG_PREFIX = "Invalid request.";
-
-    public static final String MISSING_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Missing parameter: {%s}";
-
     @Resource
     private ZkDBDiffService zkDBDiffService;
 

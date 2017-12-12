@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/rest/v1/{namespace}/alarms")
-public class AlarmRestApiController {
+public class AlarmRestApiController extends AbstractController {
 
 	private static final String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
