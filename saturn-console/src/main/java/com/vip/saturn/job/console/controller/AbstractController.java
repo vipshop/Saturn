@@ -6,10 +6,14 @@ package com.vip.saturn.job.console.controller;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -17,6 +21,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author chembo.huang
@@ -125,6 +130,59 @@ public class AbstractController {
 			return configuration.getNamespace();
 		}
 		return null;
+	}
+
+	public static String getClientIp(HttpServletRequest request) {
+		String remoteAddr = "";
+
+		if (request != null) {
+			remoteAddr = request.getHeader("X-FORWARDED-FOR");
+			if (remoteAddr == null || "".equals(remoteAddr)) {
+				remoteAddr = request.getRemoteAddr();
+			}
+		}
+
+		return remoteAddr;
+	}
+
+	public static String checkAndGetParametersValueAsString(Map<String, Object> map, String key, boolean isMandatory)
+			throws SaturnJobConsoleException {
+		if (map.containsKey(key)) {
+			String value = (String) map.get(key);
+			return StringUtils.isBlank(value) ? null : value;
+		} else {
+			if (isMandatory) {
+				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+						String.format(MISSING_REQUEST_MSG, key));
+			}
+			return null;
+		}
+	}
+
+	public static Integer checkAndGetParametersValueAsInteger(Map<String, Object> map, String key, boolean isMandatory)
+			throws SaturnJobConsoleException {
+		if (map.containsKey(key)) {
+			return (Integer) map.get(key);
+		} else {
+			if (isMandatory) {
+				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+						String.format(MISSING_REQUEST_MSG, key));
+			}
+			return null;
+		}
+	}
+
+	public static Boolean checkAndGetParametersValueAsBoolean(Map<String, Object> map, String key, boolean isMandatory)
+			throws SaturnJobConsoleException {
+		if (map.containsKey(key)) {
+			return (Boolean) map.get(key);
+		} else {
+			if (isMandatory) {
+				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+						String.format(MISSING_REQUEST_MSG, key));
+			}
+			return null;
+		}
 	}
 
 }

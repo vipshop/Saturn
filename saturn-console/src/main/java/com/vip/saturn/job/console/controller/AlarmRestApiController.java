@@ -3,7 +3,6 @@ package com.vip.saturn.job.console.controller;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.utils.ControllerUtils;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -44,9 +43,9 @@ public class AlarmRestApiController extends AbstractController {
 	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		try {
-			String jobName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true);
-			String executorName = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "executorName", true);
-			Integer shardItem = ControllerUtils.checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
+			String jobName = checkAndGetParametersValueAsString(reqParams, "jobName", true);
+			String executorName = checkAndGetParametersValueAsString(reqParams, "executorName", true);
+			Integer shardItem = checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
 
 			AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
@@ -78,18 +77,18 @@ public class AlarmRestApiController extends AbstractController {
 
 	private AlarmInfo constructAlarmInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		AlarmInfo alarmInfo = new AlarmInfo();
-		String level = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "level", true);
+		String level = checkAndGetParametersValueAsString(reqParams, "level", true);
 		alarmInfo.setLevel(level);
 
 		alarmInfo.setType(ALARM_TYPE);
 
-		String name = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "name", true);
+		String name = checkAndGetParametersValueAsString(reqParams, "name", true);
 		alarmInfo.setName(name);
 
-		String title = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "title", true);
+		String title = checkAndGetParametersValueAsString(reqParams, "title", true);
 		alarmInfo.setTitle(title);
 
-		String message = ControllerUtils.checkAndGetParametersValueAsString(reqParams, "message", false);
+		String message = checkAndGetParametersValueAsString(reqParams, "message", false);
 		if (StringUtils.isNotBlank(message)) {
 			alarmInfo.setMessage(message);
 		}

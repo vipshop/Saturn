@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.utils.ControllerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,75 +258,75 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 		Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
 
-		jobConfig.setJobName(ControllerUtils.checkAndGetParametersValueAsString(reqParams, "jobName", true));
+		jobConfig.setJobName(checkAndGetParametersValueAsString(reqParams, "jobName", true));
 
-		jobConfig.setDescription(ControllerUtils.checkAndGetParametersValueAsString(reqParams, "description", false));
+		jobConfig.setDescription(checkAndGetParametersValueAsString(reqParams, "description", false));
 
 		jobConfig
-				.setChannelName(ControllerUtils.checkAndGetParametersValueAsString(configParams, "channelName", false));
+				.setChannelName(checkAndGetParametersValueAsString(configParams, "channelName", false));
 
-		jobConfig.setCron(ControllerUtils.checkAndGetParametersValueAsString(configParams, "cron", false));
+		jobConfig.setCron(checkAndGetParametersValueAsString(configParams, "cron", false));
 
-		jobConfig.setJobClass(ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobClass", false));
+		jobConfig.setJobClass(checkAndGetParametersValueAsString(configParams, "jobClass", false));
 
 		jobConfig.setJobParameter(
-				ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobParameter", false));
+				checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
-		String jobType = ControllerUtils.checkAndGetParametersValueAsString(configParams, "jobType", true);
+		String jobType = checkAndGetParametersValueAsString(configParams, "jobType", true);
 		if (JobBriefInfo.JobType.UNKOWN_JOB.equals(JobBriefInfo.JobType.getJobType(jobType))) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
 		}
 		jobConfig.setJobType(jobType);
 
-		jobConfig.setLoadLevel(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
+		jobConfig.setLoadLevel(checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
 
-		jobConfig.setLocalMode(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "localMode", false));
+		jobConfig.setLocalMode(checkAndGetParametersValueAsBoolean(configParams, "localMode", false));
 
 		jobConfig.setPausePeriodDate(
-				ControllerUtils.checkAndGetParametersValueAsString(configParams, "pausePeriodDate", false));
+				checkAndGetParametersValueAsString(configParams, "pausePeriodDate", false));
 
 		jobConfig.setPausePeriodTime(
-				ControllerUtils.checkAndGetParametersValueAsString(configParams, "pausePeriodTime", false));
+				checkAndGetParametersValueAsString(configParams, "pausePeriodTime", false));
 
-		jobConfig.setPreferList(ControllerUtils.checkAndGetParametersValueAsString(configParams, "preferList", false));
+		jobConfig.setPreferList(checkAndGetParametersValueAsString(configParams, "preferList", false));
 
-		jobConfig.setQueueName(ControllerUtils.checkAndGetParametersValueAsString(configParams, "queueName", false));
+		jobConfig.setQueueName(checkAndGetParametersValueAsString(configParams, "queueName", false));
 
 		jobConfig.setShardingItemParameters(
-				ControllerUtils.checkAndGetParametersValueAsString(configParams, "shardingItemParameters", true));
+				checkAndGetParametersValueAsString(configParams, "shardingItemParameters", true));
 
 		jobConfig.setShardingTotalCount(
-				ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "shardingTotalCount", true));
+				checkAndGetParametersValueAsInteger(configParams, "shardingTotalCount", true));
 
 		jobConfig.setTimeout4AlarmSeconds(
-				ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
+				checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
 
 		jobConfig.setTimeoutSeconds(
-				ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
+				checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
 
 		jobConfig.setUseDispreferList(
-				ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
+				checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
 
-		jobConfig.setUseSerial(ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
+		jobConfig.setUseSerial(checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
 
-		jobConfig.setJobDegree(ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
+		jobConfig.setJobDegree(checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
 
 		jobConfig.setDependencies(
-				ControllerUtils.checkAndGetParametersValueAsString(configParams, "dependencies", false));
+				checkAndGetParametersValueAsString(configParams, "dependencies", false));
 
-		jobConfig.setTimeZone(ControllerUtils.checkAndGetParametersValueAsString(configParams, "timeZone", false));
+		jobConfig.setTimeZone(checkAndGetParametersValueAsString(configParams, "timeZone", false));
 
 		jobConfig.setTimeoutSeconds(
-				ControllerUtils.checkAndGetParametersValueAsInteger(configParams, "timeoutSeconds", false));
+				checkAndGetParametersValueAsInteger(configParams, "timeoutSeconds", false));
 
-		jobConfig.setProcessCountIntervalSeconds(ControllerUtils.checkAndGetParametersValueAsInteger(configParams,
+		jobConfig.setProcessCountIntervalSeconds(checkAndGetParametersValueAsInteger(configParams,
 				"processCountIntervalSeconds", false));
 
-		jobConfig.setGroups(ControllerUtils.checkAndGetParametersValueAsString(configParams, "groups", false));
+		jobConfig.setGroups(checkAndGetParametersValueAsString(configParams, "groups", false));
 
 		jobConfig.setShowNormalLog(
-				ControllerUtils.checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
+				checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
 
 		return jobConfig;
 	}
