@@ -19,7 +19,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -183,6 +185,20 @@ public class AbstractController {
 			}
 			return null;
 		}
+	}
+
+	public static void checkMissingParameter(String name, String value) throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(value)) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					String.format(MISSING_REQUEST_MSG, name));
+		}
+	}
+
+	public void printErrorToJsAlert(String errorMsg, HttpServletResponse response) throws IOException {
+		response.setContentType("text/html; charset=utf-8");
+		StringBuilder msg = new StringBuilder().append("<script language='javascript'>").append("alert(\"")
+				.append(errorMsg.replaceAll("\"", "\\\"")).append("\");").append("history.back();").append("</script>");
+		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
 
 }

@@ -29,4 +29,9 @@ public class SaturnConstants {
 
 	public static final List<String> TIME_ZONE_IDS = Arrays.asList(TimeZone.getAvailableIDs());
 
+	public static final String FILE_SEPARATOR = System.getProperty("file.separator");
+
+	public static final String CACHES_FILE_PATH = System.getProperty("user.home") + FILE_SEPARATOR + ".saturn"
+			+ FILE_SEPARATOR + "saturn_console" + FILE_SEPARATOR + "caches";
+
 }

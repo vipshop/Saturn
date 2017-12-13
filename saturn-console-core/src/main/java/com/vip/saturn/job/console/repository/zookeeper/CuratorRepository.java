@@ -21,6 +21,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 
 import com.vip.saturn.job.console.utils.BooleanWrapper;
+import org.apache.zookeeper.data.Stat;
 
 public interface CuratorRepository {
 
@@ -45,6 +46,8 @@ public interface CuratorRepository {
 		void deleteRecursive(String znode);
 
 		void fillJobNodeIfNotExist(String node, Object value);
+
+		Stat getStat(String node);
 
 		long getMtime(String node);
 

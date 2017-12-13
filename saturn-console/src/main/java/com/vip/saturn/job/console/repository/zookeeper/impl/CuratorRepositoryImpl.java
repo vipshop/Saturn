@@ -232,6 +232,46 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 		}
 
+		@Override
+		public Stat getStat(String node) {
+			try {
+				return curatorFramework.checkExists().forPath(node);
+			} catch (final Exception ex) {
+				// CHECKSTYLE:ON
+				throw new JobConsoleException(ex);
+			}
+		}
+
+		@Override
+		public long getMtime(String node) {
+			try {
+				Stat stat = curatorFramework.checkExists().forPath(node);
+				if (stat != null) {
+					return stat.getMtime();
+				} else {
+					return 0l;
+				}
+			} catch (final Exception ex) {
+				// CHECKSTYLE:ON
+				throw new JobConsoleException(ex);
+			}
+		}
+
+		@Override
+		public long getCtime(String node) {
+			try {
+				Stat stat = curatorFramework.checkExists().forPath(node);
+				if (stat != null) {
+					return stat.getCtime();
+				} else {
+					return 0l;
+				}
+			} catch (final Exception ex) {
+				// CHECKSTYLE:ON
+				throw new JobConsoleException(ex);
+			}
+		}
+
 		/**
 		 * 默认会check根路径
 		 */
@@ -243,6 +283,11 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				// CHECKSTYLE:ON
 				throw new JobConsoleException(ex);
 			}
+		}
+
+		@Override
+		public CuratorFramework getCuratorFramework() {
+			return curatorFramework;
 		}
 
 		class CuratorTransactionOpImpl implements CuratorTransactionOp {
@@ -325,41 +370,6 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			public Collection<CuratorTransactionResult> commit() throws Exception {
 				return curatorTransactionFinal.commit();
 			}
-		}
-
-		@Override
-		public long getMtime(String node) {
-			try {
-				Stat stat = curatorFramework.checkExists().forPath(node);
-				if (stat != null) {
-					return stat.getMtime();
-				} else {
-					return 0l;
-				}
-			} catch (final Exception ex) {
-				// CHECKSTYLE:ON
-				throw new JobConsoleException(ex);
-			}
-		}
-
-		@Override
-		public long getCtime(String node) {
-			try {
-				Stat stat = curatorFramework.checkExists().forPath(node);
-				if (stat != null) {
-					return stat.getCtime();
-				} else {
-					return 0l;
-				}
-			} catch (final Exception ex) {
-				// CHECKSTYLE:ON
-				throw new JobConsoleException(ex);
-			}
-		}
-
-		@Override
-		public CuratorFramework getCuratorFramework() {
-			return curatorFramework;
 		}
 
 	}

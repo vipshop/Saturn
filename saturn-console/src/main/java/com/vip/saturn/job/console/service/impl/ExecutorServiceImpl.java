@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.service.impl;
 
-import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -224,10 +223,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public File getExportJobFile() throws SaturnJobConsoleException {
 		try {
-			String sep = System.getProperty("file.separator");
-			File tmp = new File(
-					System.getProperty("user.home") + sep + ".saturn" + sep + "saturn_console" + sep + "caches" + sep
-							+ "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
+			File tmp = new File(SaturnConstants.CACHES_FILE_PATH, "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
 			if (!tmp.exists()) {
 				FileUtils.forceMkdir(tmp.getParentFile());
 				tmp.createNewFile();

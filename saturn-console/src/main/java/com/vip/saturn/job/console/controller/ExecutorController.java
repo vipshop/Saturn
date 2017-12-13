@@ -407,20 +407,13 @@ public class ExecutorController extends AbstractController {
 			bis.close();
 			bos.close();
 		} catch (SaturnJobConsoleException e) {
-			printErrorToResponse("导出全域作业出错：" + e.toString(), response);
+			printErrorToJsAlert("导出全域作业出错：" + e.toString(), response);
 			return;
 		} finally {
 			if (exportJobFile != null) {
 				exportJobFile.delete();
 			}
 		}
-	}
-
-	private void printErrorToResponse(String errorMsg, HttpServletResponse response) throws IOException {
-		response.setContentType("text/html; charset=utf-8");
-		StringBuilder msg = new StringBuilder().append("<script language='javascript'>").append("alert(\"")
-				.append(errorMsg.replaceAll("\"", "\\\"")).append("\");").append("history.back();").append("</script>");
-		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
 
 	@RequestMapping(value = "shardAllAtOnce", method = RequestMethod.POST)
