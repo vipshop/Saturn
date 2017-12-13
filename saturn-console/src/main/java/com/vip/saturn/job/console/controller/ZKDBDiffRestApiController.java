@@ -17,7 +17,6 @@ package com.vip.saturn.job.console.controller;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.ZkDBDiffService;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,10 +40,7 @@ public class ZKDBDiffRestApiController extends AbstractController {
     @ResponseBody
     public ResponseEntity<Object> diff(String zkcluster, HttpServletRequest request) throws SaturnJobConsoleHttpException {
         try {
-            if (StringUtils.isBlank(zkcluster)) {
-                throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-                        String.format(MISSING_REQUEST_MSG, "namespace"));
-            }
+            checkMissingParameter("zkcluster", zkcluster);
 
             List<JobDiffInfo> resultList = zkDBDiffService.diffByCluster(zkcluster);
             return new ResponseEntity<Object>(resultList, HttpStatus.OK);

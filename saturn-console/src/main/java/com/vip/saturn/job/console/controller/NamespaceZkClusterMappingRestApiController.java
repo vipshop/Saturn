@@ -3,7 +3,6 @@ package com.vip.saturn.job.console.controller;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,10 +37,7 @@ public class NamespaceZkClusterMappingRestApiController extends AbstractControll
 			throws SaturnJobConsoleException {
 		HttpHeaders headers = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
+			checkMissingParameter("namespace", namespace);
 
 			String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 

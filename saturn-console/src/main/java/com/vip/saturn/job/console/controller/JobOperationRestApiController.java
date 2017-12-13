@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -60,14 +59,8 @@ public class JobOperationRestApiController extends AbstractController {
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
 
@@ -84,10 +77,8 @@ public class JobOperationRestApiController extends AbstractController {
 			throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
+			checkMissingParameter("namespace", namespace);
+
 			List<RestApiJobInfo> restApiJobInfos = restApiService.getRestApiJobInfos(namespace);
 			return new ResponseEntity<Object>(restApiJobInfos, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
@@ -103,14 +94,8 @@ public class JobOperationRestApiController extends AbstractController {
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			restApiService.enableJob(namespace, jobName);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
@@ -127,14 +112,8 @@ public class JobOperationRestApiController extends AbstractController {
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			restApiService.disableJob(namespace, jobName);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
@@ -152,19 +131,11 @@ public class JobOperationRestApiController extends AbstractController {
 			HttpServletRequest request) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
+
 			String cron = params.remove("cron");
-			if (StringUtils.isBlank(cron)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "cron"));
-			}
+			checkMissingParameter("cron", cron);
 
 			restApiService.updateJobCron(namespace, jobName, cron, params);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
@@ -179,14 +150,8 @@ public class JobOperationRestApiController extends AbstractController {
 	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			restApiService.runJobAtOnce(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -201,14 +166,8 @@ public class JobOperationRestApiController extends AbstractController {
 	public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			restApiService.stopJobAtOnce(namespace, jobName);
 
@@ -224,14 +183,8 @@ public class JobOperationRestApiController extends AbstractController {
 	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			if (StringUtils.isBlank(namespace)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "namespace"));
-			}
-			if (StringUtils.isBlank(jobName)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "jobName"));
-			}
+			checkMissingParameter("namespace", namespace);
+			checkMissingParameter("jobName", jobName);
 
 			restApiService.deleteJob(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -246,10 +199,8 @@ public class JobOperationRestApiController extends AbstractController {
 			throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 
-		if (StringUtils.isBlank(namespace)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					String.format(MISSING_REQUEST_MSG, "namespace"));
-		}
+		checkMissingParameter("namespace", namespace);
+
 		jobConfig.setNamespace(namespace);
 
 		if (!reqParams.containsKey("jobConfig")) {

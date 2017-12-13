@@ -187,7 +187,7 @@ public class AbstractController {
 		}
 	}
 
-	public static void checkMissingParameter(String name, String value) throws SaturnJobConsoleException {
+	public static void checkMissingParameter(String name, String value) throws SaturnJobConsoleHttpException {
 		if (StringUtils.isBlank(value)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(MISSING_REQUEST_MSG, name));

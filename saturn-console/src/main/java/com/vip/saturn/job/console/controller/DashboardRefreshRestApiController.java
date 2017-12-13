@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,10 +37,7 @@ public class DashboardRefreshRestApiController extends AbstractController {
 	public ResponseEntity<Object> dashboardRefresh(String zkClusterKey, HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		try {
-			if (StringUtils.isBlank(zkClusterKey)) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-						String.format(MISSING_REQUEST_MSG, "zkClusterKey"));
-			}
+			checkMissingParameter("zkClusterKey", zkClusterKey);
 			long beforeRefresh = System.currentTimeMillis();
 			dashboardService.refreshStatistics2DB(zkClusterKey);
 			long afterRefresh = System.currentTimeMillis();
