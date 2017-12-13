@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import com.vip.saturn.job.console.service.ZkTreeService;
 import org.assertj.core.util.Maps;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,9 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 
 	@MockBean
 	private RestApiService restApiService;
+
+	@MockBean
+	private ZkTreeService zkTreeService;
 
 	@Test
 	public void testCreateSuccessfully() throws Exception {
