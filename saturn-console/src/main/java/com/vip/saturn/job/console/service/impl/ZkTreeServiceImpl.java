@@ -10,6 +10,7 @@ import com.vip.saturn.job.console.service.helper.ReuseCallBack;
 import com.vip.saturn.job.console.service.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.io.FileUtils;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -22,6 +23,7 @@ import java.util.Random;
 /**
  * @author hebelala
  */
+@Service
 public class ZkTreeServiceImpl implements ZkTreeService {
 
     private Gson gson = new Gson();
