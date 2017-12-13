@@ -133,13 +133,14 @@ public class ExecutionIT extends AbstractSaturnIT {
 		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
 		jobConfiguration.setShardingTotalCount(shardCount);
 		jobConfiguration.setTimeoutSeconds(0);
+		jobConfiguration.setEnabledReport(true);
 		jobConfiguration.setShardingItemParameters("0=0");
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		runAtOnce(jobName);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 
 		assertThat(getJobNode(jobConfiguration, "execution/0/running")).isEqualTo("executorName0");
 

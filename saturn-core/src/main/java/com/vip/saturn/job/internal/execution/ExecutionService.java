@@ -116,7 +116,7 @@ public class ExecutionService extends AbstractSaturnService {
 		boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobConfiguration);
 		if (isEnabledReport) {
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
-			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), "");
+			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), executorName);
 			// 清除完成状态timeout等信息
 			cleanSaturnNode(item);
 		}
@@ -198,7 +198,7 @@ public class ExecutionService extends AbstractSaturnService {
 		}
 
 		// create completed node
-		getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getCompletedNode(item));
+		getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
 		// remove running node
 		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 
