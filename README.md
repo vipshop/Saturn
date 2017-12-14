@@ -2,7 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
 
-
+Saturn is a platform created by VIP.com(唯品会) to provIde a distributed, fault tolerant and high available job scheduling service.
 
 ## Why Saturn?
 
