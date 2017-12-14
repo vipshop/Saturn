@@ -26,7 +26,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		// stopExecutorList();
+		stopExecutorList();
 		stopSaturnConsoleList();
 	}
 
@@ -92,7 +92,11 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
+		// wait executor shutdown completely
+		Thread.sleep(2000);
 		forceRemoveJob(jobName);
+
+		stopExecutorList();
 	}
 
 	@Test
@@ -147,7 +151,11 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
+		// wait executor shutdown completely
+		Thread.sleep(2000);
 		forceRemoveJob(jobName);
+
+		stopExecutorList();
 
 	}
 }
