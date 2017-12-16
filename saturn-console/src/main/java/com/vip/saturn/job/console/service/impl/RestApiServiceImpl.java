@@ -6,12 +6,17 @@ import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobServer;
 import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.domain.RestApiJobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.domain.RestApiJobStatistics;
 import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
+import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
+import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
@@ -26,16 +31,19 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +67,10 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final String EXECUTOR_RESTART_TIME_PREFIX = "restart on ";
 
+	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
+
+	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new domain {%s} for reason {%s}";
+
 	@Resource
 	private RegistryCenterService registryCenterService;
 
@@ -76,6 +88,12 @@ public class RestApiServiceImpl implements RestApiService {
 
 	@Resource
 	private ExecutorService executorService;
+
+	@Resource
+	private NamespaceInfoService namespaceInfoService;
+
+	@Resource
+	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
 
 	@Override
 	public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -543,6 +561,63 @@ public class RestApiServiceImpl implements RestApiService {
 						log.info("job:{} deletion done", jobName);
 					}
 				});
+	}
+
+	@Transactional(rollbackFor = {Exception.class})
+	@Override
+	public void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException {
+		String namespace = namespaceDomainInfo.getNamespace();
+		String zkClusterKey = namespaceDomainInfo.getZkCluster();
+		ZkCluster currentCluster = registryCenterService.getZkCluster(zkClusterKey);
+
+		if (currentCluster == null) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "not found zkcluster" + zkClusterKey));
+		}
+
+		if (checkNamespaceExists(namespace)) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "namespace already exists"));
+		}
+
+		try {
+			// 创建 namespaceInfo
+			NamespaceInfo namespaceInfo = constructNamespaceInfo(namespaceDomainInfo);
+			namespaceInfoService.create(namespaceInfo);
+			// 创建 zkcluster 和 namespaceInfo 关系
+			namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, NAMESPACE_CREATOR_NAME);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
+		}
+	}
+
+	private boolean checkNamespaceExists(String namespace) {
+		if (namespaceInfoService.selectByNamespace(namespace) != null) {
+			return true;
+		}
+
+		// 判断其它集群是否有该域
+		String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
+		if (zkClusterKeyOther != null) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private NamespaceInfo constructNamespaceInfo(NamespaceDomainInfo namespaceDomainInfo) {
+		NamespaceInfo namespaceInfo = new NamespaceInfo();
+		namespaceInfo.setCreatedBy(NAMESPACE_CREATOR_NAME);
+		namespaceInfo.setCreateTime(new Date());
+		namespaceInfo.setIsDeleted(0);
+		namespaceInfo.setLastUpdatedBy(NAMESPACE_CREATOR_NAME);
+		namespaceInfo.setLastUpdateTime(new Date());
+		namespaceInfo.setNamespace(namespaceDomainInfo.getNamespace());
+		namespaceInfo.setContent(namespaceDomainInfo.getContent());
+
+		return namespaceInfo;
 	}
 
 	private void stopAtOnce(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)

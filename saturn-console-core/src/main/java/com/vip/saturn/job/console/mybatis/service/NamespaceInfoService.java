@@ -17,7 +17,11 @@ public interface NamespaceInfoService {
 
 	List<NamespaceInfo> selectAll(List<String> nsList);
 
-	void batchInsert(List<NamespaceInfo> namespaceInfos);
+	void create(NamespaceInfo namespaceInfo);
+
+	void batchCreate(List<NamespaceInfo> namespaceInfos);
+
+	int deleteByNamespace(String namespace);
 
 	void deleteAll();
 

@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
@@ -114,6 +115,15 @@ public interface RestApiService {
 	 * @throws SaturnJobConsoleException
 	 */
 	void deleteJob(String namespace, String jobName) throws SaturnJobConsoleException;
+
+
+	/**
+	 * Create Namespace.
+	 *
+	 * @param namespaceDomainInfo
+	 * @throws SaturnJobConsoleException
+	 */
+	void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
 
 	/**
 	 * Raise alarm for specified job/shard exception.

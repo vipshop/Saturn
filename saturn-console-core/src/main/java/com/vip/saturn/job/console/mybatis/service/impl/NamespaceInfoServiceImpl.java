@@ -6,8 +6,6 @@ package com.vip.saturn.job.console.mybatis.service.impl;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.transaction.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +15,8 @@ import org.springframework.util.CollectionUtils;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
+
+import javax.transaction.Transactional;
 
 /**
  * @author timmy.hu
@@ -49,17 +49,23 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 
 	@Transactional
 	@Override
+	public void create(NamespaceInfo namespaceInfo) {
+		namespaceInfoRepository.insert(namespaceInfo);
+	}
+
+	@Transactional
+	@Override
 	public void replaceAll(List<NamespaceInfo> namespaceInfos) {
 		deleteAll();
 		if (CollectionUtils.isEmpty(namespaceInfos)) {
 			return;
 		}
-		batchInsert(namespaceInfos);
+		batchCreate(namespaceInfos);
 	}
 
 	@Transactional
 	@Override
-	public void batchInsert(List<NamespaceInfo> namespaceInfos) {
+	public void batchCreate(List<NamespaceInfo> namespaceInfos) {
 		if (CollectionUtils.isEmpty(namespaceInfos)) {
 			return;
 		}
@@ -73,6 +79,12 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 			toInsertList = namespaceInfos.subList(divNum * BATCH_NUM, namespaceInfos.size());
 			namespaceInfoRepository.batchInsert(toInsertList);
 		}
+	}
+
+	@Transactional
+	@Override
+	public int deleteByNamespace(String namespace) {
+		return namespaceInfoRepository.deleteByNamespace(namespace);
 	}
 
 	@Transactional
