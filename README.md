@@ -37,4 +37,4 @@ WeChat Group: Please add group owner `dylan_xueke` to join us!
 
 ## Special thanks
 
-Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdotcom/elastic-job), we enhance it according to our requirement and understandings. Special thanks to Zhang Liang@dangdang who give us a lot of help and suggestions.]
+Saturn is originated from Dangdang's [elastic job](https://github.com/dangdangdotcom/elastic-job), we enhance it according to our requirement and understandings. Special thanks to Zhang Liang@dangdang who give us a lot of help and suggestions.
