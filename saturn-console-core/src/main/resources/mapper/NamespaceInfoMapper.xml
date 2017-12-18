@@ -51,5 +51,10 @@
         (#{item.createTime, jdbcType=TIMESTAMP}, #{item.createdBy, jdbcType=VARCHAR}, #{item.namespace, jdbcType=VARCHAR}, #{item.content, jdbcType=VARCHAR})
     	</foreach>
     </insert>
+    <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceInfo">
+        update namespace_info
+        set content=#{content, jdbcType=VARCHAR}
+        where namespace = #{namespace, jdbcType=VARCHAR}
+    </update>
 
 </mapper>

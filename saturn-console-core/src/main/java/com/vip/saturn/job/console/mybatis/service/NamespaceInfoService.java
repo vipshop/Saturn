@@ -19,6 +19,8 @@ public interface NamespaceInfoService {
 
 	void create(NamespaceInfo namespaceInfo);
 
+	void update(NamespaceInfo namespaceInfo);
+
 	void batchCreate(List<NamespaceInfo> namespaceInfos);
 
 	int deleteByNamespace(String namespace);

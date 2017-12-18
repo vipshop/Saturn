@@ -21,6 +21,8 @@ public interface NamespaceInfoRepository {
 
 	int insert(NamespaceInfo namespaceInfo);
 
+	int update(NamespaceInfo namespaceInfo);
+
 	int deleteByNamespace(String namespace);
 
 	Integer batchDelete(int limitNum);

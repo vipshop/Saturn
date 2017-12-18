@@ -150,10 +150,6 @@ public class AlarmRestApiControllerTest extends AbstractSaturnConsoleTest {
 				actualAlarmInfo.getCustomFields().get("key1"));
 	}
 
-	private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
-		return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
-	}
-
 	public class AlarmEntity {
 
 		private String jobName;

@@ -53,6 +53,11 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 		namespaceInfoRepository.insert(namespaceInfo);
 	}
 
+	@Override
+	public void update(NamespaceInfo namespaceInfo) {
+		namespaceInfoRepository.update(namespaceInfo);
+	}
+
 	@Transactional
 	@Override
 	public void replaceAll(List<NamespaceInfo> namespaceInfos) {
