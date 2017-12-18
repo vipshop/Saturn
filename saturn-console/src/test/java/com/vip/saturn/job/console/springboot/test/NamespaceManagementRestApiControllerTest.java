@@ -3,13 +3,10 @@ package com.vip.saturn.job.console.springboot.test;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
-import com.vip.saturn.job.console.controller.AlarmRestApiController;
-import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.controller.NamespaceManagementRestApiController;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.service.ZkTreeService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -24,16 +21,16 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(AlarmRestApiController.class)
+@WebMvcTest(NamespaceManagementRestApiController.class)
 public class NamespaceManagementRestApiControllerTest extends AbstractSaturnConsoleTest {
 
 	private final Gson gson = new Gson();
