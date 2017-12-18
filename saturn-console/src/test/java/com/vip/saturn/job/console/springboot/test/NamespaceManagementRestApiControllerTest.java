@@ -99,10 +99,10 @@ public class NamespaceManagementRestApiControllerTest extends AbstractSaturnCons
 	public void queryFailAsNamespaceNotFound() throws Exception {
 		String ns = "testns";
 
-		given(restApiService.getNamespace(ns)).willThrow(new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format("Domain {%s} not found.", ns)));
+		given(restApiService.getNamespace(ns)).willThrow(new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The namespace does not exists."));
 
 		MvcResult result = mvc.perform(get("/rest/v1/namespaces/" + ns)).andExpect(status().isNotFound()).andReturn();
 		String message = fetchErrorMessage(result);
-		assertEquals("error message not equal", "Domain {" + ns + "} not found.", message);
+		assertEquals("error message not equal", "The namespace does not exists.", message);
 	}
 }

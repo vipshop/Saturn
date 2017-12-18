@@ -70,9 +70,9 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
 
-	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new domain {%s} for reason {%s}";
+	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new namespace {%s} for reason {%s}";
 
-	private static final String ERR_MSG_NS_NOT_FOUND = "Domain {%s} not found.";
+	private static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -602,7 +602,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 		if (!checkNamespaceExists(namespace)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					String.format(ERR_MSG_NS_NOT_FOUND, namespace));
+					ERR_MSG_NS_NOT_FOUND);
 		}
 
 		try {
@@ -619,12 +619,12 @@ public class RestApiServiceImpl implements RestApiService {
 	@Override
 	public NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException {
 		if (namespaceInfoService.selectByNamespace(namespace) == null) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format(ERR_MSG_NS_NOT_FOUND, namespace));
+			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
 		}
 
 		String zkClusterKey = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
 		if (StringUtils.isBlank(zkClusterKey)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), String.format(ERR_MSG_NS_NOT_FOUND, namespace));
+			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
 		}
 
 		NamespaceDomainInfo namespaceDomainInfo = new NamespaceDomainInfo();
