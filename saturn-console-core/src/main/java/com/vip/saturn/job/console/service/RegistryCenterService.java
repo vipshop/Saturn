@@ -23,6 +23,7 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import org.apache.curator.framework.CuratorFramework;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface RegistryCenterService {
 
@@ -53,5 +54,7 @@ public interface RegistryCenterService {
 	int domainCount(String key);
 
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
+	
+	List<String> filterNamespaces(String keyword) throws SaturnJobConsoleException;
 
 }

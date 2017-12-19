@@ -110,6 +110,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private ConcurrentHashMap<String /** nns **/
 			, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
 
+	private List<String> allOnlineNamespaces = new ArrayList<>();
+	
 	private String consoleClusterId;
 
 	private List<String> restrictComputeZkClusterKeys = new ArrayList<String>();
@@ -286,6 +288,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private void refreshRegistryCenter() throws IOException {
 		LinkedHashMap<String, ZkCluster> newClusterMap = new LinkedHashMap<>();
+		List<String> allOnlineNamespacesTemp = new ArrayList<>();
 		// 获取新的zkClusters
 		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
 		if (allZkClusterInfo != null) {
@@ -400,12 +403,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
 						zkCluster.getRegCenterConfList().add(conf);
+						if(!allOnlineNamespacesTemp.contains(namespace)) {
+							allOnlineNamespacesTemp.add(namespace);
+						}
 					}
 				}
 			}
 		}
 		// 直接赋值新的
 		zkClusterMap = newClusterMap;
+		allOnlineNamespaces = allOnlineNamespacesTemp;
 	}
 
 	private Object getNnsLock(String nns) {
@@ -864,6 +871,25 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	public RequestResult refreshNamespaceFromCmdb(String userName) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public List<String> filterNamespaces(String keyword) throws SaturnJobConsoleException {
+		try {
+			List<String> namespaces = new ArrayList<>();
+			if (Strings.isNullOrEmpty(keyword)) {
+				namespaces.addAll(allOnlineNamespaces);
+			} else {
+				for (String namespace : allOnlineNamespaces) {
+					if (namespace.indexOf(keyword) >= 0) {
+						namespaces.add(namespace);
+					}
+				}
+			}
+			return namespaces;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
 	}
 
 }
