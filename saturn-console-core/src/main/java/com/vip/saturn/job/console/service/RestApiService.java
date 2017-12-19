@@ -126,6 +126,24 @@ public interface RestApiService {
 	void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
 
 	/**
+	 * Update Namespace.
+	 *
+	 * @param namespaceDomainInfo
+	 * @throws SaturnJobConsoleException
+	 */
+	void updateNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
+
+
+	/**
+	 * Get namespace by key.
+	 *
+	 * @param namespace
+	 * @return
+	 * @throws SaturnJobConsoleException
+	 */
+	NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException;
+
+	/**
 	 * Raise alarm for specified job/shard exception.
 	 *
 	 * @param namespace

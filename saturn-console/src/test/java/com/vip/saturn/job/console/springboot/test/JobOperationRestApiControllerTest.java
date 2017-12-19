@@ -221,10 +221,6 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 				.andExpect(status().isNoContent()).andReturn();
 	}
 
-	private String fetchErrorMessage(MvcResult result) throws UnsupportedEncodingException {
-		return JSONObject.parseObject(result.getResponse().getContentAsString()).getString("message");
-	}
-
 	private RestApiJobInfo constructJobInfo(String domain, String jobName) {
 		RestApiJobInfo jobInfo = new RestApiJobInfo();
 		jobInfo.setJobName(jobName);

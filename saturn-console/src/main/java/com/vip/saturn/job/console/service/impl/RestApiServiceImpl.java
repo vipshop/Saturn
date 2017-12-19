@@ -31,6 +31,7 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,9 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
 
-	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new domain {%s} for reason {%s}";
+	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new namespace {%s} for reason {%s}";
+
+	private static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -591,6 +594,44 @@ public class RestApiServiceImpl implements RestApiService {
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
 		}
+	}
+
+	@Override
+	public void updateNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException {
+		String namespace = namespaceDomainInfo.getNamespace();
+
+		if (!checkNamespaceExists(namespace)) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					ERR_MSG_NS_NOT_FOUND);
+		}
+
+		try {
+			// 创建 namespaceInfo
+			NamespaceInfo namespaceInfo = constructNamespaceInfo(namespaceDomainInfo);
+			namespaceInfoService.update(namespaceInfo);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
+		}
+	}
+
+	@Override
+	public NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException {
+		if (namespaceInfoService.selectByNamespace(namespace) == null) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
+		}
+
+		String zkClusterKey = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
+		if (StringUtils.isBlank(zkClusterKey)) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
+		}
+
+		NamespaceDomainInfo namespaceDomainInfo = new NamespaceDomainInfo();
+		namespaceDomainInfo.setNamespace(namespace);
+		namespaceDomainInfo.setZkCluster(zkClusterKey);
+
+		return namespaceDomainInfo;
 	}
 
 	private boolean checkNamespaceExists(String namespace) {
