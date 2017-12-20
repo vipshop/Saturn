@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +77,14 @@ public class SystemEnvProperties {
 	public static String NAME_VIP_SATURN_LOG_OUTFILE = "VIP_SATURN_LOG_OUTFILE";
 	public static String VIP_SATURN_LOG_OUTFILE = System.getProperty(NAME_VIP_SATURN_LOG_OUTFILE);
 
+	// nohup file size checking by default is 600 seconds
+	public static int VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = 600;
+	private static String NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = "VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL";
+
+	// nohup max file size by default is 500 MB
+	public static long VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = 500 * 1024 * 1024;
+	private static String NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = "VIP_SATURN_NOHUPOUT_SIZE_LIMIT";
+
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
 				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
@@ -128,6 +137,31 @@ public class SystemEnvProperties {
 				log.error("msg=" + t.getMessage(), t);
 			}
 		}
+
+		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC, System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
+		if (!Strings.isNullOrEmpty(checkNohupOutSizeInterval)) {
+			try {
+				int interval_in_sec = Integer.parseInt(checkNohupOutSizeInterval);
+				if (interval_in_sec > 0) {
+					VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = interval_in_sec;
+				}
+			} catch (Throwable t) {
+				log.error("msg=" + t.getMessage(), t);
+			}
+		}
+
+		String noHupOutSizeLimit = System.getProperty(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES, System.getenv(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES));
+		if (!Strings.isNullOrEmpty(noHupOutSizeLimit)) {
+			try {
+				long sizeLimit = Long.parseLong(noHupOutSizeLimit);
+				if (sizeLimit > 0) {
+					VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = sizeLimit;
+				}
+			} catch (Throwable t) {
+				log.error("msg=" + t.getMessage(), t);
+			}
+		}
+
 	}
 
 	protected static String trim(String property) {

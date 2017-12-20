@@ -75,6 +75,8 @@ public class SaturnExecutor {
 
 	private ResetCountService resetCountService;
 
+	private PeriodicTruncateNohupOutService periodicTruncateNohupOutService;
+
 	private ReentrantLock shutdownLock = new ReentrantLock();
 
 	private volatile boolean isShutdown;
@@ -393,6 +395,12 @@ public class SaturnExecutor {
 					}
 				}
 
+				LOGGER.info("start to register periodic truncate nohup out service.");
+				if (inited.get()) {
+					periodicTruncateNohupOutService = new PeriodicTruncateNohupOutService(executorName);
+					periodicTruncateNohupOutService.start();
+				}
+
 				LOGGER.info("start to process the remaining steps.");
 				// 添加新增作业时的回调方法
 				saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
@@ -506,6 +514,9 @@ public class SaturnExecutor {
 			if (resetCountService != null) {
 				resetCountService.shutdownRestCountTimer();
 			}
+			if (periodicTruncateNohupOutService != null) {
+				periodicTruncateNohupOutService.shutdown();
+			}
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
 			LOGGER.info("The executor {} is stopped", executorName);
 		} finally {
@@ -527,6 +538,9 @@ public class SaturnExecutor {
 			}
 			if (resetCountService != null) {
 				resetCountService.shutdownRestCountTimer();
+			}
+			if (periodicTruncateNohupOutService != null) {
+				periodicTruncateNohupOutService.shutdown();
 			}
 			// shutdown timeout-watchdog-threadpool
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
