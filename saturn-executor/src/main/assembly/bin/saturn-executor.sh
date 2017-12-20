@@ -18,6 +18,7 @@ PARENT_DIR=`cd "$BASE_DIR/.." >/dev/null; pwd`
 
 LOGDIR=""
 OUTFILE=""
+START_HISTORY_LOGFILE=""
 NAMESPACE=""
 EXECUTORNAME=`hostname`
 LOCALIP=`ip addr| grep 'inet '| grep -v '127.0.0.1'`
@@ -68,6 +69,12 @@ LOG_FMT()
     echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [saturn-executor] ${MSG}"
 }
 
+LOG_STARTLOG()
+{
+    local MSG=$*
+    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [saturn-executor] ${MSG}" >> $LOGDIR/saturn-start.log
+}
+
 CMD="$1"
 shift
 
@@ -105,7 +112,8 @@ if [[ "$LOGDIR" = "" ]]; then
   LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
 fi
 
-OUTFILE=$LOGDIR/saturn-executor.log
+OUTFILE=$LOGDIR/saturn-nohup.out
+START_HISTORY_LOGFILE=$LOGDIR/saturn-start.log
 
 JAVA_OPTS="-XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
 MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxTenuringThreshold=6 -XX:+ExplicitGCInvokesConcurrent"
@@ -202,6 +210,11 @@ START()
 		fi
 	fi
 
+    # delete nohup.out if possible
+	if [ -f $OUTFILE ] ; then
+        rm -rf $OUTFILE
+    fi
+
 	STARTUP_DELAY
 
 	echo "" > ${STATUS_FILE}
@@ -236,6 +249,7 @@ START()
 
 	if [ $CHECK_STATUS = "SUCCESS" ]; then
 		LOG_FMT "Saturn executor start successfully, running as process:$PID."
+		LOG_STARTLOG "Saturn executor is started, running as process:$PID, parameters are: $RUN_PARAMS"
 		echo ${RUN_PARAMS} > ${STATUS_FILE}
 	fi
 
@@ -284,6 +298,7 @@ STOP()
 {
     LOG_FMT "Begin to stop executor."
     PID=$(GET_PID)
+    LOGDIR=$(GET_LOGDIR ${PID})
 	stoptime=0
     if [ "$PID" != "" ]; then
 		if [ -d /proc/$PID ];then
@@ -305,6 +320,7 @@ STOP()
 			done
 			echo -e ""
 			LOG_FMT "Kill the process successfully."
+			LOG_STARTLOG "Saturn executor is stopped."
 		else
 			LOG_FMT "Saturn executor is not running."
 		fi

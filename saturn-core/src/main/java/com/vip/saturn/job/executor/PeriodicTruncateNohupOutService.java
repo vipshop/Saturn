@@ -16,13 +16,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Regular truncate saturn-executor.log while the size is over specified limit.
+ * Regular truncate saturn-nohup.out while the size is over specified limit.
  */
 public class PeriodicTruncateNohupOutService {
 
 	private static final Logger log = LoggerFactory.getLogger(PeriodicTruncateNohupOutService.class);
 
-	private static final long TRUNCATE_SIZE = Math.min(4096, SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES);
+	private static final long TRUNCATE_SIZE = 0;
 
 	private ScheduledExecutorService truncateLogService;
 
@@ -33,7 +33,7 @@ public class PeriodicTruncateNohupOutService {
 	public void start() {
 		log.info("start PeriodicTruncateNohupOutService");
 		if (StringUtils.isBlank(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)) {
-			log.warn("file path is not set, please check.");
+			log.warn("File path of saturn-nohup.out is not set, please check.");
 			return;
 		}
 
@@ -62,9 +62,9 @@ public class PeriodicTruncateNohupOutService {
 					fc.truncate(TRUNCATE_SIZE);
 				}
 			} catch (FileNotFoundException e) {
-				log.debug("File not found:", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, e);
+				log.debug("saturn-nohup.out is not found:", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, e);
 			} catch (Throwable e) {
-				log.debug("exception throws during handle saturn-executor-log.log", e);
+				log.debug("exception throws during handle saturn-nohup.out", e);
 			} finally {
 				try {
 					if (fc != null) {
