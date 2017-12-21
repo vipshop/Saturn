@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
-import com.vip.saturn.job.console.controller.AlarmRestApiController;
+import com.vip.saturn.job.console.controller.rest.AlarmRestApiController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;

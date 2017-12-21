@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.springboot.test;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
-import com.vip.saturn.job.console.controller.NamespaceManagementRestApiController;
+import com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;

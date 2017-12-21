@@ -1,5 +1,6 @@
-package com.vip.saturn.job.console.controller;
+package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;

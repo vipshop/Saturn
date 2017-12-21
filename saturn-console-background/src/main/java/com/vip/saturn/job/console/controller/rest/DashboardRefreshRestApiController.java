@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.controller;
+package com.vip.saturn.job.console.controller.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.DashboardService;

@@ -31,7 +31,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
-import com.vip.saturn.job.console.controller.JobOperationRestApiController;
+import com.vip.saturn.job.console.controller.rest.JobOperationRestApiController;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
