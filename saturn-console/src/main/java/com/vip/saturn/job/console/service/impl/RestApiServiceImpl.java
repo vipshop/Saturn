@@ -74,6 +74,8 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
 
+	private static final String ERR_MSG_NS_ALREADY_EXIST = "Invalid request. Namespace: {%s} already existed";
+
 	@Resource
 	private RegistryCenterService registryCenterService;
 
@@ -574,13 +576,13 @@ public class RestApiServiceImpl implements RestApiService {
 		ZkCluster currentCluster = registryCenterService.getZkCluster(zkClusterKey);
 
 		if (currentCluster == null) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "not found zkcluster" + zkClusterKey));
 		}
 
 		if (checkNamespaceExists(namespace)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "namespace already exists"));
+					String.format(ERR_MSG_NS_ALREADY_EXIST, namespace));
 		}
 
 		try {
