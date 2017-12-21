@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 import java.util.Map;
 
 /**
- * RESTful APIs for alarm handling.
+ * RESTful APIs of alarm handling.
  * <p>
  * Created by kfchu on 10/05/2017.
  */

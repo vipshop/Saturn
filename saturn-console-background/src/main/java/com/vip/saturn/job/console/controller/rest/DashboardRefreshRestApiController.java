@@ -16,6 +16,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.DashboardService;
 
 /**
+ * RESTful APIs of dashboard refresh.
+ *
  * @author timmy.hu
  */
 @Controller

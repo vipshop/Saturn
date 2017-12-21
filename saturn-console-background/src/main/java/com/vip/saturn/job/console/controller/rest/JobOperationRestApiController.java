@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * RESTful API of Job Operations.
+ * RESTful APIs of Job Operations.
  *
  * @author hebelala
  */

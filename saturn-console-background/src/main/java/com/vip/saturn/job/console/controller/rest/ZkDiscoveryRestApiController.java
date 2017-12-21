@@ -19,13 +19,14 @@ import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlS
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 
 /**
- * 
+ * Discover zk connection string by namespace.
+ *
  * @author hebelala
  *
  */
 @Controller
 @RequestMapping("/rest/v1")
-public class NamespaceZkClusterMappingRestApiController extends AbstractController {
+public class ZkDiscoveryRestApiController extends AbstractController {
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;

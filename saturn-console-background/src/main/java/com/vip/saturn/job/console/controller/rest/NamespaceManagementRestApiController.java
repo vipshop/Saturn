@@ -20,7 +20,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- * Namespace management service.
+ * RESTful APIs of namespace management.
+ *
+ * @author kfchu
  */
 @Controller
 @RequestMapping("/rest/v1")
