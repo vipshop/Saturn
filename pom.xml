@@ -17,6 +17,7 @@
 	<modules>
 		<module>saturn-console-background</module>
 		<module>saturn-console-core</module>
+		<module>saturn-console-old</module>
 		<module>saturn-core</module>
 		<module>saturn-job-api</module>
 		<module>saturn-job-sharding</module>
