@@ -6,7 +6,7 @@
 		<artifactId>saturn-job</artifactId>
 		<version>master-SNAPSHOT</version>
 	</parent>
-	<artifactId>saturn-console</artifactId>
+	<artifactId>saturn-console-old</artifactId>
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<dependencyManagement>
