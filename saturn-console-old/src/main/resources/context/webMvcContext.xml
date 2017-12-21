@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:context="http://www.springframework.org/schema/context" 
+    xmlns:mvc="http://www.springframework.org/schema/mvc" 
+    xmlns:p="http://www.springframework.org/schema/p" 
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/mvc 
+                        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                        ">
+    <context:property-placeholder
+		ignore-resource-not-found="true"
+		location="classpath:application.properties" />
+    <context:component-scan base-package="com.vip.saturn.job.console.**.controller" />
+    
+    <mvc:resources mapping="/static/js/**" location="/js/" />
+    <mvc:resources mapping="/static/css/**" location="/css/" />
+    <mvc:resources mapping="/static/lib/**" location="/lib/" />
+    <mvc:resources mapping="/static/image/**" location="/image/" />
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+            	<property name="objectMapper">
+    				<bean class="com.vip.saturn.job.console.response.converter.CustomNullValueMapper" />
+            	</property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/job/**"/>
+            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/server/**"/>
+            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/job_detail**"/>
+            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/executor/**"/>
+            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/container/**"/>
+            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
+</beans>

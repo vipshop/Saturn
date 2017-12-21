@@ -1,0 +1,775 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+layout:decorator="frame-layout">
+	<head>
+		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+		<link href="lib/jquery-ui-1.11.4.custom/jquery-ui.min.css" rel="stylesheet" />
+		<link href="lib/datetimepicker/bootstrap-datetimepicker.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div th:remove="tag" layout:fragment="content">
+			<div class="panel panel-default">
+			    <div class="panel-heading">
+			        <h2 class="panel-title"><i class="fa fa-dashboard"></i> 总览</h2>
+			    </div>
+			    <div class="panel-body">
+			    	<div class="callout callout-info lead">
+					    <p><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+					     运维负责人：<span th:text="${session.activated_config.sysAdmin}" th:remove="tag"></span>&nbsp;&nbsp;&nbsp;&nbsp;开发负责人：<span th:text="${session.activated_config.techAdmin}" th:remove="tag"></span>
+					    </p>
+					  </div>
+			    	
+			        <ul class="nav nav-tabs" role="tablist">
+			            <li id="jobs_tab" role="presentation" class="active"><a href="#jobs" aria-controls="jobs" role="tab" data-toggle="tab"><i class="fa fa-bar-chart-o fa-fw"></i> 作业总览</a></li>
+			            <li id="servers_tab" role="presentation"><a href="#servers" aria-controls="servers" role="tab" data-toggle="tab"><i class="fa fa-area-chart"></i> Executor总览</a></li>
+						<li id="containers_tab" role="presentation"><a href="#containers" aria-controls="containers" role="tab" data-toggle="tab"><i class="fa fa-cubes"></i> 容器资源（Marathon）</a></li>
+			        </ul>
+			        <br />
+			        <div class="tab-content">
+			            <div role="tabpanel" class="tab-pane active" id="jobs">
+			            	<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#jobs-chart-body">
+										<h3 class="pull-left panel-title">作业数量: <span class="red" id="jobs-count"></span></h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="jobs-chart-body" class="panel-collapse collapse in">
+									<div class="panel-body">
+			                			<div id="jobs-chart" style="height: 300px"  class="pull-left"></div>
+			                			<div id="jobs-rate-3dcolumn" style="height: 300px" class="pull-left"></div>
+                						<div class="clearfix"></div>
+			                		</div>
+								</div>
+							</div>
+			                <table id="jobs-overview-tbl" class="table table-hover table-bordered">
+			                    <thead>
+			                        <tr>
+			                        	<th><input id="totalCheckbox" type="checkbox"/></th>
+			                            <th>作业名</th>
+			                            <!-- <th>成功率</th>  -->
+			                            <th>运行状态</th>
+			                            <th>分片负荷</th>
+			                            <th>分片数</th>
+			                            <!--<th>优先Executor</th> -->
+			                            <th>已分片Executor</th>
+			                            <th>cron表达式</th>
+			                            <th>作业等级</th>
+			                            <th>所属分组</th>
+			                            <th>描述</th>
+			                            <th>操作</th>
+			                        </tr>
+			                    </thead>
+			                    <tbody>
+			                    </tbody>
+			                </table>
+			            </div>
+			        
+			            <div role="tabpanel" class="tab-pane" id="servers">
+			            	<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#executors-chart-body">
+										<h3 class="pull-left panel-title">Executor数量: <span class="red" id="executors-count"></span> (ONLINE: <span class="red" id="executors-online-count"></span>, OFFLINE: <span class="red" id="executors-offline-count"></span>)</h3>
+										<i class="pull-right fa fa-minus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="executors-chart-body" class="panel-collapse collapse in">
+									<div class="panel-body">	
+			                			<div id="executors-donuts" style="height: 300px" class="pull-left"></div>
+			                			<div id="executors-3dcolumn" style="height: 300px" class="pull-left"></div>
+			                			<div class="clearfix"></div>
+			                		</div>
+								</div>
+							</div>
+			                <table id="servers-overview-tbl" class="table table-hover table-bordered">
+			                    <thead>
+			                        <tr>
+			                            <th><input id="totalExecutorCheckbox" type="checkbox"/></th>
+			                            <th>Executor</th>
+			                            <th>IP</th>
+			                            <th>总负荷</th>
+			                            <th>已分配的作业分片</th>
+			                            <th>状态</th>
+			                            <th>启动时间</th>
+			                            <th>版本</th>
+			                            <th>操作</th>
+			                        </tr>
+			                    </thead>
+			                    <tbody>
+			                    </tbody>
+			                </table>
+			            </div>
+
+						<div role="tabpanel" class="tab-pane" id="containers">
+							<div id="containers-operation" style="margin-bottom:5px;">
+								<div class="form-inline">
+									<div id="add-container-div" class="pull-left">
+										<button class="btn btn-primary" id="add-container" title="点击创建容器资源">创建</button>
+									</div>
+									<div id="token-div" class="form-inline pull-right" hidden="hidden">
+										<div class="form-group">
+											<label for="containers-operation-token">token</label>
+											<input class="form-control" type="text" id="containers-operation-token" />
+										</div>
+										<div class="form-group">
+											<button class="btn btn-primary form-control" id="containers-operation-save-token">更新</button>
+										</div>
+									</div>
+									<div id="user-pwd-div" class="form-inline pull-right" hidden="hidden">
+										<div class="form-group">
+											<label for="containers-operation-userName">userName</label>
+											<input class="form-control" type="text" id="containers-operation-userName" />
+										</div>
+										<div class="form-group">
+											<label for="containers-operation-password">password</label>
+											<input class="form-control" type="text" id="containers-operation-password" />
+										</div>
+										<div class="form-group">
+											<button class="btn btn-primary form-control" id="containers-operation-save-user-pwd">更新</button>
+										</div>
+									</div>
+									<div class="clearfix"></div>
+								</div>
+							</div>
+							<table id="containers-tbl" class="table table-hover table-bordered" style="width:100% !important;">
+								<thead>
+								<tr>
+									<th>资源标识</th>
+									<th>Executor</th>
+									<th>IP</th>
+									<th>运行中的作业</th>
+									<th>绑定的作业</th>
+									<th>状态</th>
+									<th>配置</th>
+									<th>创建时间</th>
+									<th>伸缩计划</th>
+									<th>操作</th>
+								</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+						</div>
+			    	</div>
+			    </div>
+			</div>
+			<div id="migrate-job-dialog" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">迁移到新的容器资源</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">作业名</label>
+								<div class="col-sm-6">
+									<p id="migrate-jobName"></p>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">当前容器资源</label>
+								<div class="col-sm-6">
+									<p id="migrate-tasks-old"></p>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">容器资源</label>
+								<div class="col-sm-6">
+									<select id="migrate-job-tasks-select" class="form-control"></select>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="migrate-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="batch-migrate-job-dialog" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">批量迁移到新的容器资源</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">作业名</label>
+								<div class="col-sm-6">
+									<pre id="batch-migrate-jobName"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">迁移到容器资源</label>
+								<div class="col-sm-6">
+									<select id="batch-migrate-job-tasks-select" class="form-control"></select>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="batch-migrate-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="batch-set-prefer-executors-dialog" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+									aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">批量选择优先Executors</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">作业名</label>
+								<div class="col-sm-9">
+									<pre id="batch-set-prefer-executors-jobName"></pre>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="batch-preferList"
+									   class="col-sm-3 control-label text-right">优先Executors</label>
+								<div class="col-sm-9">
+									<select id="batch-preferList" class="selectpicker" multiple="multiple"
+											data-live-search="true" data-size="10" data-width="100%"
+											title="请选择优先Executors">
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="batch-set-prefer-executors-confirm-btn" data-loading-text='请求中...' type="button"
+									class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="add-container-dialog" class="modal fade" tabindex="-1" style="z-index:9998;">
+				<div class="modal-dialog modal-lg">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">创建容器资源</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group" id="add-container-dialog-token-div" hidden="hidden">
+								<label for="add-container-dialog-token" class="col-sm-2 control-label text-right">Token</label>
+								<div class="col-sm-8">
+									<input type="text" id="add-container-dialog-token" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+								<div class="col-sm-2">
+									<button class="btn btn-primary form-control" id="add-container-dialog-save-token">更新</button>
+								</div>
+							</div>
+							<div class="form-group" id="add-container-dialog-user-pwd-div" hidden="hidden">
+								<label for="add-container-dialog-userName" class="col-sm-2 control-label text-right">userName</label>
+								<div class="col-sm-3">
+									<input type="text" id="add-container-dialog-userName" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+								<label for="add-container-dialog-password" class="col-sm-2 control-label text-right">password</label>
+								<div class="col-sm-3">
+									<input type="text" id="add-container-dialog-password" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+								<div class="col-sm-2">
+									<button class="btn btn-primary form-control" id="add-container-dialog-save-user-pwd">更新</button>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="taskId" class="col-sm-2 control-label text-right">资源标识</label>
+								<div class="col-sm-10">
+									<input type="text" id="taskId" name="taskId" class="form-control" data-toggle="tooltip" data-placement="bottom" title="与容器绑定的TaskId，只能包含a-z、0-9、.、-这些符号" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="containerInstance" class="col-sm-2 control-label text-right">实例数</label>
+								<div class="col-sm-2">
+									<input type="number" min="1" id="containerInstance" name="containerInstance" value="1" class="form-control" data-toggle="tooltip" data-placement="bottom" title="容器的实例数，如果为0，则伸缩计划将不可用" />
+								</div>
+								<label for="cpus" class="col-sm-2 control-label text-right">CPU(核数)</label>
+								<div class="col-sm-2">
+									<input type="number" min="1" id="cpus" name="cpus" value="1" class="form-control" data-toggle="tooltip" data-placement="bottom" title="CPU的核数" />
+								</div>
+								<label for="memory" class="col-sm-2 control-label text-right">内存(MB)</label>
+								<div class="col-sm-2 memory-div">
+									<input type="number" min="1024" id="memory" name="memory" value="1024" class="form-control" data-toggle="tooltip" data-placement="bottom" title="内存的大小" />
+								</div>
+							</div>
+							<div class="form-group" id="constraints-div">
+								<label class="col-sm-2 control-label text-left">约束标识</label>
+								<div class="col-sm-10">
+									<div role="tabpanel" class="tab-pane">
+										<table id="constraints_table" class="table table-hover table-bordered" trAddCount="0">
+											<thead>
+											<tr>
+												<td>attribute</td>
+												<td>OPERATOR</td>
+												<td>value</td>
+												<td>操作<button class="fa fa-plus" onclick="addConstraintsTableTr(this, 0);"></button></td>
+											</tr>
+											</thead>
+											<tbody>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-2 control-label text-right">环境变量</label>
+								<div class="col-sm-10">
+									<div role="tabpanel" class="tab-pane">
+										<table id="env_table" class="table table-hover table-bordered" trAddCount="0">
+											<thead>
+											<tr>
+												<td width="40%">key</td>
+												<td width="40%">value</td>
+												<td>操作<button class="fa fa-plus" onclick="addEnvTableTr(this, 0);"></button></td>
+											</tr>
+											</thead>
+											<tbody>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="cmd" class="col-sm-2 control-label text-right">运行命令</label>
+								<div class="col-sm-10">
+									<textarea id="cmd" name="cmd" class="form-control" data-toggle="tooltip" data-placement="bottom" title="容器运行命令"></textarea>
+								</div>
+							</div>
+							<div class="form-group" id="image-div">
+								<label class="col-sm-2 control-label text-right">镜像</label>
+								<div class="control-form">
+									<div class="col-sm-5">
+										<select id="image-repositories" class="form-control"></select>
+									</div>
+									<div class="col-sm-5">
+										<select id="image-tags" class="form-control"></select>
+									</div>
+								</div>
+							</div>
+							<div class="form-group" id="parameters-div">
+								<label class="col-sm-2 control-label text-left">容器参数</label>
+								<div class="col-sm-10">
+									<div role="tabpanel" class="tab-pane">
+										<table id="parameters_table" class="table table-hover table-bordered" trAddCount="0">
+											<thead>
+											<tr>
+												<td width="40%">key</td>
+												<td width="40%">value</td>
+												<td>操作<button class="fa fa-plus" onclick="addParametersTableTr(this, 0);"></button></td>
+											</tr>
+											</thead>
+											<tbody>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="form-group" id="volumes-div">
+								<label class="col-sm-2 control-label text-left">目录映射</label>
+								<div class="col-sm-10">
+									<div role="tabpanel" class="tab-pane">
+										<table id="volumes_table" class="table table-hover table-bordered" trAddCount="1">
+											<thead>
+											<tr>
+												<td>容器路径</td>
+												<td>主机路径</td>
+												<td>权限</td>
+												<td>操作</td>
+											</tr>
+											</thead>
+											<tbody>
+											<tr>
+												<td>
+													<input type="text" class="form-control disabled" name="containerPath" value="/apps/logs/" disabled="disabled" />
+												</td>
+												<td>
+													<input type="text" class="form-control disabled" name="hostPath" value="/apps/logs/" disabled="disabled" />
+												</td>
+												<td>
+													<div class="radio disabled">
+														<label>
+															<input type="radio" name="mode" value="RW" checked="checked" disabled="disabled"/>RW
+														</label>
+														<br/>
+														<label>
+															<input type="radio" name="mode" value="RO" disabled="disabled"/>RO
+														</label>
+													</div>
+												</td>
+												<td>
+													<button class="fa fa-plus"></button>
+												</td>
+											</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<a data-toggle="collapse" href="#add-container-dialog-advanced-config-body">
+										<h3 class="pull-left panel-title">高级配置</h3>
+										<i class="pull-right fa fa-plus"></i>
+									</a>
+									<div class="clearfix"></div>
+								</div>
+								<div id="add-container-dialog-advanced-config-body" class="panel-collapse collapse">
+									<div class="panel-body">
+										<div class="form-group form-inline">
+											<label class="col-sm-4 control-label text-right">使用特权模式</label>
+											<div class="col-sm-6">
+												<div class="radio" id="privileged-div">
+													<input type="radio" name="privileged" value="true" />是&nbsp;&nbsp;
+													<input type="radio" name="privileged" value="false" checked="checked" />否
+												</div>
+											</div>
+										</div>
+										<div class="form-group form-inline">
+											<label class="col-sm-4 control-label text-right">强制拉取镜像</label>
+											<div class="col-sm-6">
+												<div class="radio" id="force_pull_image-div">
+													<input type="radio" name="force_pull_image" value="true" checked="checked" />是&nbsp;&nbsp;
+													<input type="radio" name="force_pull_image" value="false" />否
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="add-container-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+							<input id="nested" type="hidden"/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="alter-instance-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">变更<span id="showTask"></span>的实例数</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="currentInstance" class="col-sm-3 control-label text-right">当前实例数</label>
+								<span id="currentInstance"></span>
+							</div>
+							<div class="form-group">
+								<label for="alterInstance" class="col-sm-3 control-label text-right">实例数更改为</label>
+								<input type="number" min="0" id="alterInstance" name="alterInstance" value="1" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom" title="实例更改后的数目，如果为0，则伸缩计划将不可用" />
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="alter-instance-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="see-container-info-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">查看资源<span id="see-container-info-showTask"></span>的详细信息</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<pre id="see-container-info-textare"></pre>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="add-scale-job-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">为容器资源<span id="add-scale-job-dialog-showTask"></span>添加伸缩计划</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<div class="form-group">
+								<label for="add-scale-job-dialog-jobDesc" class="col-sm-3 control-label text-right">计划名称</label>
+								<div class="col-sm-6">
+									<input type="text" id="add-scale-job-dialog-jobDesc" name="add-scale-job-dialog-jobDesc" class="form-control" data-toggle="tooltip" data-placement="bottom" maxlength="20" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="add-scale-job-dialog-instances" class="col-sm-3 control-label text-right">实例数</label>
+								<div class="col-sm-3">
+									<input type="number" min="1" id="add-scale-job-dialog-instances" name="add-scale-job-dialog-instances" value="1" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="add-scale-job-dialog-timeZone" class="col-sm-3 control-label text-right">时区</label>
+								<div class="col-sm-6">
+									<select id="add-scale-job-dialog-timeZone" name="add-scale-job-dialog-timeZone" class="selectpicker form-control" data-live-search="true" data-size="10" data-width="100%" title="请选择时区">
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="add-scale-job-dialog-cron" class="col-sm-3 control-label text-right">Cron表达式</label>
+								<div class="col-sm-6">
+									<input type="text" id="add-scale-job-dialog-cron" name="add-scale-job-dialog-cron" class="form-control" data-toggle="tooltip" data-placement="bottom" value="0 30 9,19 * * ?"/>
+								</div>
+								<a id="add-scale-job-dialog-check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">预测</a>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<span data-style="expand-left" style="font-size:small; color:red">添加成功后，请点击该伸缩计划，手动启用</span>
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="add-scale-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">保存</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="see-scale-job-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">容器资源<span id="see-scale-job-dialog-showTask"></span>的伸缩计划</h4>
+						</div>
+						<div class="modal-body form-horizontal">
+							<input type="hidden" id="see-scale-job-dialog-iconId"/>
+							<input type="hidden" id="see-scale-job-dialog-jobName"/>
+							<div class="form-group">
+								<label for="see-scale-job-dialog-jobDesc" class="col-sm-3 control-label text-right">计划名称</label>
+								<div class="col-sm-6">
+									<input disabled="disabled" type="text" id="see-scale-job-dialog-jobDesc" name="see-scale-job-dialog-jobDesc" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="see-scale-job-dialog-instances" class="col-sm-3 control-label text-right">实例数</label>
+								<div class="col-sm-6">
+									<input disabled="disabled" type="number" id="see-scale-job-dialog-instances" name="see-scale-job-dialog-instances" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="see-scale-job-dialog-timeZone" class="col-sm-3 control-label text-right">时区</label>
+								<div class="col-sm-6">
+									<input disabled="disabled" type="text" id="see-scale-job-dialog-timeZone" name="see-scale-job-dialog-timeZone" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="see-scale-job-dialog-cron" class="col-sm-3 control-label text-right">Cron表达式</label>
+								<div class="col-sm-6">
+									<input disabled="disabled" type="text" id="see-scale-job-dialog-cron" name="see-scale-job-dialog-cron" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+								</div>
+								<a id="see-scale-job-dialog-check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">预测</a>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="see-scale-job-dialog-enable-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-success ladda-button" data-style="expand-right">
+								<span class="ladda-label" id="see-scale-job-dialog-enable-span"></span>
+							</button>
+							<button id="see-scale-job-dialog-delete-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">删除</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="icon-enable-scale-job-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">确认框</h4>
+						</div>
+						<div class="modal-body">
+							<p id="icon-enable-scale-job-dialog-text"></p>
+							<input type="hidden" id="icon-enable-scale-job-dialog-iconId" />
+							<input type="hidden" id="icon-enable-scale-job-dialog-taskId" />
+							<input type="hidden" id="icon-enable-scale-job-dialog-jobName" />
+							<input type="hidden" id="icon-enable-scale-job-dialog-jobDesc" />
+							<input type="hidden" id="icon-enable-scale-job-dialog-enable" />
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">
+								关闭
+							</button>
+							<button id="icon-enable-scale-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="batch-add-job-dialog" class="modal fade">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title">导入作业</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="downloadTemplateFile" class="col-sm-3 control-label" style="text-align:right;">下载模版文件</label>
+								<a id="downloadTemplateFile" href="download/jobs-template.xls?v=saturn-console-ui-version">点击下载</a>（请勿更改表头数据）
+							</div>
+							<div class="form-group">
+								<form id="fileupload" action="executor/batchAddJobs" method="POST" enctype="multipart/form-data">
+									<label for="inputFile" class="col-sm-3 control-label" style="text-align:right;">导入文件</label>
+									<input id="inputFile" type="file" name="files" multiple="multiple"  title="导入.xls文件" />
+									<input type="hidden" name="nns" th:value="${session.activated_config}?${session.activated_config.nameAndNamespace}:未连接" />
+								</form>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-1 control-label" style="text-align:right;"></label>
+								（温馨提示：Shell消息作业导入要求所有executor版本都是1.1.2及以上）
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button id="batch-add-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+								<span class="ladda-label">确认</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="add-job-dialog" class="modal fade">
+			    <div class="modal-dialog">
+			        <div class="modal-content">
+			            <div class="modal-header">
+			                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			                <h4 class="modal-title" id="addJobTitle">添加作业</h4>
+			            </div>
+			            <div class="modal-body">
+			            	<div class="form-group">
+				            	<label for="jobType" class="col-sm-3 control-label" style="text-align:right;">作业类型</label>
+								<select id="jobType" title="请选择要添加的作业类型" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom">
+									<option value="JAVA_JOB">Java定时作业</option>
+									<option value="SHELL_JOB">Shell定时作业</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label for="jobName" class="col-sm-3 control-label" style="text-align:right;">作业名</label>
+								<input type="text" id="jobName" name="jobName" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom" title="作业名称，如SaturnJavaJob" />
+							</div>
+							<div class="form-group hide-when-is-script-job">
+								<label for="jobClass" class="col-sm-3 control-label" style="text-align:right;">作业实现类</label>
+								<input type="text" id="jobClass" name="jobClass" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom" title="作业的完整类名，如com.vip.saturn.job.SaturnJavaJob" />
+							</div>
+							<div class="form-group form-inline hide-when-is-msg-job">
+								<label for="cron" class="col-sm-3 control-label" style="text-align:right;">cron表达式</label>
+								<input type="text" id="cron" name="cron" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom" value="0/5 * * * * ?" title="作业启动时间的cron表达式。&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每10秒运行：*/10 * * * * ? &nbsp;&nbsp; 每5分钟运行：0 */5 * * * ?" />
+								<a id="check-and-forecast-cron" class="hide-when-is-msg-job" href="javascript:void(0)">预测</a>
+							</div>
+							<div class="form-group">
+								<label for="shardingTotalCount" class="col-sm-3 control-label" style="text-align:right;">作业分片总数</label>
+								<input type="number" min="1" id="shardingTotalCount" name="shardingTotalCount" style="width:50%" class="form-control" data-toggle="tooltip" data-placement="bottom" title="设置该作业的分片总数" th:required="required" value="1"/>
+							</div>
+							<div class="form-group">
+			                    <label for="jobParameter" class="col-sm-3 control-label" style="text-align:right;">自定义参数</label>
+			                    <input type="text" id="jobParameter" name="jobParameter" class="form-control" data-toggle="tooltip" style="width:50%"
+			                    data-placement="bottom" title="配置格式: 多个配置使用逗号分隔(key1=value1, key2=value2)。在分片序列号/参数对照表中可作为alias形式引用，格式为{key1}" />
+			                </div>
+			                <div class="form-group">
+			                    <label for="shardingItemParameters" class="col-sm-3 control-label" style="text-align:right;">分片序列号/参数对照表</label>
+			                    <textarea  rows="5" id="shardingItemParameters" name="shardingItemParameters" class="form-control" data-toggle="tooltip" data-placement="bottom" style="width:50%" title='分片序列号和参数用等号分隔，多个键值对用逗号分隔，类似map。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c; !!会给转成"。特别的，对于本地模式的作业，只需要输入如：*=a，就可以了。'></textarea>
+			                </div>
+			                <div class="form-group">
+			                    <label for="description" class="col-sm-3 control-label" style="text-align:right;">作业描述信息</label>
+								<textarea id="description" name="description" class="form-control" style="width:50%"></textarea>
+			                </div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label text-right">优先Executor</label>
+								<select id="preferListProvided" class="selectpicker" multiple="multiple" data-live-search="true" data-size="10" title="请选择优先Executor" data-width="50%">
+								</select>
+								<button class="btn btn-info" data-width="50%" id="add-preferResource" title="点击创建容器资源">创建容器资源</button>
+							</div>
+							<input type="hidden" id="timeZone" value="Asia/Shanghai" />
+							<input type="hidden" id="loadLevel" />
+							<input type="hidden" id="useDispreferList" />
+							<input type="hidden" id="localMode" />
+							<input type="hidden" id="processCountIntervalSeconds" />
+                            <input type="hidden" id="timeout4AlarmSeconds" />
+							<input type="hidden" id="timeoutSeconds" />
+							<input type="hidden" id="pausePeriodDate" />
+							<input type="hidden" id="pausePeriodTime" />
+							<input type="hidden" id="showNormalLog" />
+							<input type="hidden" id="isCopyJob" />
+							<input type="hidden" id="originJobName" />
+						</div>
+			            <div class="modal-footer">
+			                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+			                <button id="add-job-dialog-confirm-btn" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+			            		<span class="ladda-label">确认</span>
+			            	</button>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+			<input type="hidden" id="regNameFromServer" th:value="${session.activated_config}?${session.activated_config.nameAndNamespace}:未连接" />
+			<input type="hidden" id="namespace" th:value="${session.activated_config}?${session.activated_config.namespace}:''" />
+			<input type="hidden" id="zkAlias" th:value="${session.activated_config}?${session.activated_config.zkAlias}:''" />
+			<input type="hidden" id="containerType" th:value="${containerType}" />
+			
+			<div th:replace="fragments :: success-dialog"></div>
+			<div th:replace="fragments :: confirm-dialog(id='remove-container-confirm-dialog', text='将先删除伸缩计划作业，然后再销毁容器，确认销毁吗？')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='change-jobStatus-confirm-dialog', test='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='change-jobStatus-batch-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='confirmDependencies-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='remove-job-confirm-dialog', text='确认删除作业吗？')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='remove-job-batch-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='remove-executor-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='traffic-executor-confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='shard-all-at-once-confirm-dialog', text='确认要进行一键重排吗？（即把当前域下所有分片按照作业负荷以及优先Executor等作业配置重新进行排序。注：重排可能导致分片分布剧烈动荡，请谨慎操作！另外在操作本功能时，请尽量避免同时操作Executor上下线或启用禁用作业，以免影响到重排的均衡效果！）')"></div>
+			<div th:replace="fragments :: prompt-dialog(id='batch-add-job-prompt-dialog', text='')"></div>
+			<div th:replace="fragments :: failure-dialog(id='executor-failure-dialog', reason='')"></div>
+			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
+			<div th:replace="fragments :: prompt-dialog(id='check-and-forecast-cron-prompt-dialog', text='')"></div>
+
+		</div>
+		<div th:remove="tag" layout:fragment="footer-scripts">
+			<script type="text/x-mustache" id="logstash-block-template">
+				<span><strong>app_domain:</strong>{{appDomain}} <br /></span>
+				<span><strong>domain:</strong>{{domain}} <br /></span>
+				<span><strong>path:</strong>{{path}} <br /></span>
+				<span><strong>@version:</strong>{{version}} <br /></span>
+				<span><strong>type:</strong>{{type}} <br /></span>
+			</script>
+			<script src="/webjars/jquery-form/3.51/jquery.form.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
+			<script src="lib/datetimepicker/moment-with-locales.js"></script>
+			<script src="lib/datetimepicker/bootstrap-datetimepicker.js"></script>
+			<script src="lib/mustache/mustache.min.js"></script>
+			<script src="/webjars/highcharts/4.2.3/highcharts.js"></script>
+			<script src="/webjars/highcharts/4.2.3/highcharts-3d.js"></script>
+			<script src="js/overview.js?v=saturn-console-ui-version"></script>
+		</div>
+	</body>
+</html>

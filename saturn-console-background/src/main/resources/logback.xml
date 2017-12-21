@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<property resource="application.properties" />
+	<if condition='property("saturn.console.log")==""'>
+	    <then>
+	        <property name="log.directory" value="/apps/logs/saturn_console" />
+	    </then>
+	    <else>
+	    	<property name="log.directory" value="${saturn.console.log}" />
+	    </else>
+	</if>
+    <property name="log.context.name" value="saturn.console" />
+    <property name="log.file.name" value="${log.context.name}" />
+    <property name="log.error.file.name" value="${log.context.name}-error" />
+    <property name="log.charset" value="UTF-8" />
+    <property name="log.maxHistory" value="30" />
+    <property name="log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n" />
+    <property name="log.async.queue.size" value="1024" />
+    
+    <contextName>${log.context.name}</contextName>
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+    </appender>
+    <appender name="NORMALLOG-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.directory}/${log.file.name}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${log.directory}/${log.file.name}_%i.log
+			</fileNamePattern>
+			<!-- keep 10G' worth of history -->
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<append>true</append>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1GB</maxFileSize>
+		</triggeringPolicy>
+		<encoder  charset="${log.charset}">
+			<!-- 格式化输出：%d表示日期，%t表示线程名，%p 级别, %logger logger name最多36字节 %msg：日志消息，%n是换行符 -->
+			<pattern>${log.pattern}</pattern>
+			<immediateFlush>true</immediateFlush>
+			<charset>UTF-8</charset>
+		</encoder>
+	</appender>
+	<appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.directory}/${log.error.file.name}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${log.directory}/${log.error.file.name}_%i.log
+			</fileNamePattern>
+			<!-- keep 10G' worth of history -->
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<append>true</append>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1GB</maxFileSize>
+		</triggeringPolicy>
+		<encoder  charset="${log.charset}">
+			<!-- 格式化输出：%d表示日期，%t表示线程名，%p 级别, %logger logger name最多36字节 %msg：日志消息，%n是换行符 -->
+			<pattern>${log.pattern}</pattern>
+			<immediateFlush>true</immediateFlush>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+	</appender>
+	
+    <root level="INFO">
+    	<if condition='property("saturn.stdout").equals("true")'>
+			<then>
+				<appender-ref ref="STDOUT" />
+			</then>
+		</if>
+		<appender-ref ref="NORMALLOG-APPENDER" />
+        <appender-ref ref="ERROR" />
+    </root>
+</configuration>

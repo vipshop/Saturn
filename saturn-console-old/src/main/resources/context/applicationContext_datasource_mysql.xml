@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/context 
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+                        ">
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close" lazy-init="true">
+        <property name="url" value="${SATURN_CONSOLE_DB_URL:jdbc:mysql://a.b.c.d}" />
+        <property name="username" value="${SATURN_CONSOLE_DB_USERNAME:}" />
+        <property name="password" value="${SATURN_CONSOLE_DB_PASSWORD:}" />
+        <property name="initialSize" value="3" />
+        <property name="maxActive" value="15" />
+        <property name="minIdle" value="3" />
+        <property name="maxWait" value="5000" />
+        <property name="timeBetweenEvictionRunsMillis" value="90000" />
+        <property name="minEvictableIdleTimeMillis" value="1800000" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+        <property name="testWhileIdle" value="true" />
+    </bean>	
+	
+</beans>

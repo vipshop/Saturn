@@ -1,0 +1,24 @@
+import Vue from 'vue';
+import Container from './common/container';
+import Header from './common/header';
+import topBar from './common/top_bar';
+import Breadcrumb from './common/breadcrumb';
+import Aside from './common/aside';
+import Timeline from './common/timeline';
+import TimelineItem from './common/timeline_item';
+import ChartContainer from './common/charts/chart_container';
+import Pie from './common/charts/pie';
+import Column from './common/charts/column';
+import Panel from './common/panel';
+
+Vue.component('Container', Container);
+Vue.component('Header', Header);
+Vue.component('Top-bar', topBar);
+Vue.component('Breadcrumb', Breadcrumb);
+Vue.component('Aside', Aside);
+Vue.component('Timeline', Timeline);
+Vue.component('Timeline-item', TimelineItem);
+Vue.component('Chart-container', ChartContainer);
+Vue.component('Pie', Pie);
+Vue.component('Column', Column);
+Vue.component('Panel', Panel);

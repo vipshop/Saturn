@@ -1,0 +1,94 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<body>
+
+		<div th:id="${id}" th:fragment="confirm-dialog" class="modal fade" style="z-index:10000">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title">确认框</h4>
+					</div>
+					<div class="modal-body">
+						<p class="confirm-reason" th:text="${text}"></p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">
+							关闭
+						</button>
+						<button th:id="${id}+'-confirm-btn'" data-loading-text='请求中...' type="button" class="btn btn-danger ladda-button" data-style="expand-right">
+							<span class="ladda-label">确认</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div th:id="${id}" th:fragment="failure-dialog" class="modal fade" style="z-index:10001">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title">信息框</h4>
+					</div>
+					<div class="modal-body">
+						<pre>操作未成功，原因：<strong class="fail-reason" th:text="${reason}"></strong></pre>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-danger" data-dismiss="modal">
+							关闭
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div th:id="${id}" th:fragment="prompt-dialog" class="modal fade" style="z-index:10003">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title">提示框</h4>
+					</div>
+					<div class="modal-body">
+						<p class="prompt-reason" th:text="${text}"></p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">
+							关闭
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div th:id="${id}?${id}:success-dialog" th:fragment="success-dialog" class="modal fade" style="z-index:10004">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title">信息框</h4>
+					</div>
+					<div class="modal-body">
+						<p>
+							操作已成功完成
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-success" data-dismiss="modal">
+							关闭
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

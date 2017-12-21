@@ -1,0 +1,120 @@
+/* 改变主题色变量 */
+$--color-primary: #487bb0;
+
+/* button */
+$--button-default-color: #1f2a3d;
+$--button-default-border: #ddd;
+$--button-default-fill: #ddd;
+/* Header */
+$--header-padding: 0px;
+
+/* Main */
+$--main-padding: 10px;
+
+/* 改变 icon 字体路径变量，必需 */
+$--font-path: '../node_modules/element-ui/lib/theme-chalk/fonts';
+
+@import "../node_modules/element-ui/packages/theme-chalk/src/index";
+
+/* menu */
+@include b(menu) {
+  background-color: #14212e;
+  @include m(horizontal) {
+    border-bottom: none;
+    & .el-menu-item {
+      color: #98A5B4;
+      border-bottom: none;
+      height: 50px;
+      line-height: 50px;
+      i {
+        color: #6d8999;
+      }
+      &:hover, &:focus{
+        background-color: #253343;
+        color: #e0e9f2;
+        i {
+          color: #9db9d2;
+        }
+      }
+    }
+    & .el-submenu {
+      &:focus {
+        > .el-submenu__title {
+          color: #e0e9f2;
+        }
+      }
+      > .el-menu {
+        background-color: #14212e;
+        top: 50px;
+      }
+
+      & .el-submenu__title {
+        border-bottom: none;
+        color: #98A5B4;
+        height: 50px;
+        line-height: 50px;
+      }
+
+      .el-submenu__title:hover {
+        background-color: #253343;
+        i {
+          color: #9db9d2;
+        }
+      }
+
+      & .el-menu-item {
+        background-color: #14212e;
+      }
+    }
+    & .el-menu-item:hover,
+    & .el-submenu__title:hover,
+    & .el-menu-item:focus {
+      color: #e0e9f2;
+    }
+    & > .el-menu-item.is-active,
+    & > .el-submenu.is-active .el-submenu__title {
+      border-bottom: none;
+      color: #e0e9f2;
+      background-color: #253343;
+      i {
+        color: #9db9d2;
+      }
+    }
+  }
+}
+@include b(submenu) {
+  & .el-menu-item {
+    min-width: 100px;
+  }
+}
+
+/* table */
+@include b(table) {
+  border: 1px solid #e5e5e5;
+  border-bottom: 0;
+  th {
+    padding: 8px 0;
+  }
+  td {
+    padding: 6px 0;
+  }
+  th.is-leaf {
+    background-color: #e9edf1;
+    font-weight: bold;
+    border-color: #e5e5e5;
+  }
+  .cell {
+    color: #555;
+  }
+}
+
+/* pagination */
+@include b(pagination) {
+  padding: 15px 0;
+  text-align: right;
+}
+
+/* button */
+@include b(button) {
+  border: none;
+}

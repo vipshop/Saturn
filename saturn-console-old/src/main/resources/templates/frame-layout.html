@@ -1,0 +1,30 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link href="/webjars/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" />
+		<link href="/webjars/bootstrap-select/1.12.0/css/bootstrap-select.min.css" rel="stylesheet" />
+		<link href="/webjars/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+		<link href="css/frame.css?v=saturn-console-ui-version" rel="stylesheet" type="text/css" />
+
+		<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class="container-fluid" style="margin-top:70px;">
+			<div layout:fragment="content"></div> 
+		</div>
+		<div id="loading" class="loading">
+			加载中...
+		</div>
+		<script src="/webjars/jquery/2.1.4/jquery.min.js"></script>
+		<script src="/webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="/webjars/bootstrap-select/1.12.0/js/bootstrap-select.min.js"></script>
+		<script src="/webjars/bootstrap-select/1.12.0/js/i18n/defaults-zh_CN.min.js"></script>
+		<script src="js/common.js?v=saturn-console-ui-version"></script>
+		<div th:remove="tag" layout:fragment="footer-scripts"></div>
+	</body>
+</html>

@@ -1,0 +1,88 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #f4f7f7;
+    font-family: Helvetica Neue,Helvetica,PingFang SC,Hiragino Sans GB,Microsoft YaHei,SimSun,sans-serif;
+}
+
+table {
+    font-size: 14px;
+}
+
+a {
+    cursor: pointer;
+    text-decoration: none;
+    color: #395e84;
+    .el-button {
+        color: #395e84;
+    }
+    &:hover {
+        color: #2594da;
+        .el-button {
+            color: #2594da;
+        }
+    }
+    &.active {
+        color: #7954a7;
+        .el-button {
+            color: #7954a7;
+        }
+    }
+}
+
+form {
+    margin-bottom: 0;
+}
+
+.pull-left {
+    float: left!important;
+}
+
+.pull-right {
+    float: right!important;
+}
+
+[class*="fa fa-"] {
+    margin-right: 5px;
+    margin-left: 0;
+}
+
+.text-danger {
+    color: #de3434;
+}
+
+.page-table {
+    margin-bottom: 12px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+.page-table-header {
+    padding: 10px 8px;
+    .page-table-header-title {
+        font-weight: bold;
+        font-size: 16px;
+        color: #777;
+        .el-button {
+            margin-left: 20px;
+        }
+    }
+    .el-button.el-button--default {
+        background-color: #f4f7f7;
+        &:hover {
+            box-shadow: 0 0 0 2px rgba(59,120,212,.15);
+        }
+    }
+    >* {
+        display: inline-block;
+    }
+}
+.page-separator {
+    margin: 0 12px;
+    vertical-align: middle;
+    border: none;
+    border-left: 1px solid #eee;
+    height: 30px;
+}
+.page-content {
+    margin: 10px 0;
+}

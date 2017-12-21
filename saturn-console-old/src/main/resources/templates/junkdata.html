@@ -1,0 +1,93 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+layout:decorator="frame-layout">
+	<head>
+		<link href="/webjars/datatables/1.10.11/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div th:remove="tag" layout:fragment="content">
+			<div id="wrapper">
+
+		        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		            <div class="navbar-header">
+		                <a class="navbar-brand" href="#">Saturn Console</a>
+		            </div>
+		            <!-- Top Menu Items -->
+		            <ul class="nav navbar-right top-nav" style="margin-top:10px;margin-right:20%;"> 
+		            	<li id="zk-select" title="当前zk集群"> <select class="form-control" id="zks"></select> </li> 
+		            </ul>
+		         </nav>
+	   		 </div>
+			<div class="panel panel-default">
+				<div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
+					<div class="panel-title">
+						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 管理废弃数据</span>
+						<div class="clearfix"></div>
+					</div>
+				</div>
+				<div class="panel-body">
+					<table id="junkdata-tbl" class="table table-hover table-bordered">
+						<thead>
+							<tr>
+								<th>命名空间</th>
+								<th>所属ZK集群</th>
+								<th>垃圾数据路径</th>
+								<th>清理描述</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="panel panel-default form-horizontal">
+				<div class="panel-heading" style="padding-bottom: 2px; padding-top: 2px;">
+					<div class="panel-title">
+						<span class="pull-left" style="margin-top: 6px;"><i class="fa fa-reorder"></i> 删除running结点</span>
+						<div class="clearfix"></div>
+					</div>
+				</div>
+				<div id="delete-running-body" class="panel-collapse collapse in">
+					<div class="panel-body">
+						<div class="form-group">
+							<label for="delete-running-namespace" class="col-sm-2 control-label">域名</label>
+							<div class="col-sm-2">
+								<input type="text" id="delete-running-namespace" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="delete-running-jobName" class="col-sm-2 control-label">作业名</label>
+							<div class="col-sm-2">
+								<input type="text" id="delete-running-jobName" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="delete-running-item" class="col-sm-2 control-label">分片</label>
+							<div class="col-sm-2">
+								<input type="number" id="delete-running-item" class="form-control" data-toggle="tooltip" data-placement="bottom" />
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="delete-running-btn" class="col-sm-2 control-label"></label>
+							<div class="col-sm-2">
+								<button id="delete-running-btn" class="btn btn-danger">删除</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div th:replace="fragments :: success-dialog"></div>
+			<div th:replace="fragments :: failure-dialog(id='failure-dialog', reason='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='confirm-dialog', text='')"></div>
+			<div th:replace="fragments :: confirm-dialog(id='delete-running-confirm-dialog', text='')"></div>
+		</div>
+		<div th:remove="tag" layout:fragment="footer-scripts">
+			<script src="/webjars/datatables/1.10.11/js/jquery.dataTables.min.js"></script>
+			<script src="/webjars/datatables/1.10.11/js/dataTables.bootstrap.min.js"></script>
+			<script src="js/junkdata.js?v=saturn-console-ui-version"></script>
+		</div>
+	</body>
+</html>
