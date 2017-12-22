@@ -868,28 +868,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
+	public List<String> getNamespaces() throws SaturnJobConsoleException {
+		return allOnlineNamespaces;
+	}
+
+	@Override
 	public RequestResult refreshNamespaceFromCmdb(String userName) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-	
-	@Override
-	public List<String> filterNamespaces(String keyword) throws SaturnJobConsoleException {
-		try {
-			List<String> namespaces = new ArrayList<>();
-			if (Strings.isNullOrEmpty(keyword)) {
-				namespaces.addAll(allOnlineNamespaces);
-			} else {
-				for (String namespace : allOnlineNamespaces) {
-					if (namespace.indexOf(keyword) >= 0) {
-						namespaces.add(namespace);
-					}
-				}
-			}
-			return namespaces;
-		} catch (Exception e) {
-			throw new SaturnJobConsoleException(e);
-		}
 	}
 
 }

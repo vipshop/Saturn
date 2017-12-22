@@ -55,6 +55,6 @@ public interface RegistryCenterService {
 
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
 	
-	List<String> filterNamespaces(String keyword) throws SaturnJobConsoleException;
+	List<String> getNamespaces() throws SaturnJobConsoleException;
 
 }
