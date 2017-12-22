@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.controller;
+package com.vip.saturn.job.console.controller.gui;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.vip.saturn.job.console.controller.AbstractController;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleUIException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,26 +17,23 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
 
+/**
+ * Home page controller.
+ */
 @Controller
-@RequestMapping("/home")
+@RequestMapping("/console/home")
 public class HomePageController extends AbstractController {
 
-	@RequestMapping(value = "/getNamespaces", method = RequestMethod.GET)
-	public ResponseEntity<Object> getNamespaces(final HttpServletRequest request, final String keyword) {
-		RequestResult requestResult = new RequestResult();
+	@RequestMapping(value = "/namespaces", method = RequestMethod.GET)
+	public ResponseEntity<RequestResult> getNamespaces(final HttpServletRequest request) throws SaturnJobConsoleUIException {
 		try {
 			Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
-			
 			Map<String, Object> obj = new HashMap<>();
 			obj.put("namespaces", zkClusterList);
-			requestResult.setObj(obj);
-			requestResult.setSuccess(true);
+			return new ResponseEntity<>(new RequestResult(true, obj), HttpStatus.OK);
 		} catch (Exception e) {
-			requestResult.setSuccess(false);
-			requestResult.setMessage(e.toString());
+			throw new SaturnJobConsoleUIException(e.getCause());
 		}
-		
-		return new ResponseEntity<Object>(requestResult, HttpStatus.OK);
 	}
 	
 }

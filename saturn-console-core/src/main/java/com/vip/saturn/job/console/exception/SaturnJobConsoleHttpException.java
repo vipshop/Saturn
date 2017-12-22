@@ -1,7 +1,7 @@
 package com.vip.saturn.job.console.exception;
 
 /**
- * Created by kfchu on 08/05/2017.
+ * REST API Exception.
  */
 public class SaturnJobConsoleHttpException extends SaturnJobConsoleException {
 
