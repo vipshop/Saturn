@@ -66,22 +66,6 @@ public class RegistryCenterController extends AbstractController {
 
 	@Resource
 	private NamespaceVersionMappingService namespaceVersionMappingService;
-	
-	@RequestMapping(value = "getNamespaces", method = RequestMethod.GET)
-	public RequestResult getNamespaces(final HttpServletRequest request, final String keyword) {
-		RequestResult requestResult = new RequestResult();
-		try {
-			requestResult.setObj(registryCenterService.filterNamespaces(keyword));
-			requestResult.setSuccess(true);
-		} catch (SaturnJobConsoleException e) {
-			requestResult.setSuccess(false);
-			requestResult.setMessage(e.getMessage());
-		} catch (Exception e) {
-			requestResult.setSuccess(false);
-			requestResult.setMessage(e.toString());
-		}
-		return requestResult;
-	}
 
 	@RequestMapping(value = "getNamespaceInfo", method = RequestMethod.GET)
 	public RequestResult getNamespaceInfo(final HttpSession session) {
