@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.Random;
@@ -52,35 +51,16 @@ public class PeriodicTruncateNohupOutService {
 
 		@Override
 		public void run() {
-			FileChannel fc = null;
-			RandomAccessFile file = null;
-			try {
-				file = new RandomAccessFile(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, "rw");
-				fc = file.getChannel();
+			try (RandomAccessFile file = new RandomAccessFile(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, "rw");
+				 FileChannel fc = file.getChannel();) {
 				if (fc.size() > SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES) {
 					log.info("truncate {} as size over {} bytes", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES);
 					fc.truncate(TRUNCATE_SIZE);
 				}
 			} catch (FileNotFoundException e) {
 				log.debug("saturn-nohup.out is not found:", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, e);
-			} catch (Throwable e) {
+			} catch (Exception e) {
 				log.debug("exception throws during handle saturn-nohup.out", e);
-			} finally {
-				try {
-					if (fc != null) {
-						fc.close();
-					}
-				} catch (IOException e) {
-					log.warn("exception throws during close file channel", e);
-				}
-
-				try {
-					if (file != null) {
-						file.close();
-					}
-				} catch (IOException e) {
-					log.warn("exception throws during close file", e);
-				}
 			}
 		}
 	}
