@@ -14,13 +14,6 @@
 
 package com.vip.saturn.job.console.interceptor;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -28,6 +21,12 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public final class CuratorSessionClientInterceptor extends HandlerInterceptorAdapter {
 
