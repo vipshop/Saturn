@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.NamespaceInfoRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.NamespaceInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER" />
+	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
+	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, is_deleted, create_time, created_by, last_update_time, last_updated_by, namespace, content
+    </sql>
+    <select id="selectByNamespace" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_info
+        where namespace = #{namespace, jdbcType=VARCHAR} limit 0,1
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_info where is_deleted = 0
+    </select>
+    <select id="selectAllByNamespaces" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_info where is_deleted = 0 and namespace in
+        <foreach collection="list" item="namespace_item" open="(" close=")" separator=",">
+       	 #{namespace_item}
+        </foreach>
+    </select>
+    <delete id="deleteByNamespace" parameterType="java.lang.String">
+        delete from namespace_info
+        where namespace = #{namespace, jdbcType=VARCHAR}
+    </delete>
+    <delete id="batchDelete" parameterType="java.lang.Integer">
+        delete from namespace_info limit #{limitNum,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceInfo">
+        insert into namespace_info( create_time, created_by, namespace, content) values
+        (#{createTime, jdbcType=TIMESTAMP}, #{createdBy, jdbcType=VARCHAR},#{namespace, jdbcType=VARCHAR},
+        #{content, jdbcType=VARCHAR})
+    </insert>
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into namespace_info( create_time, created_by, namespace, content) values
+        <foreach collection="list" item="item" separator=",">
+        (#{item.createTime, jdbcType=TIMESTAMP}, #{item.createdBy, jdbcType=VARCHAR}, #{item.namespace, jdbcType=VARCHAR}, #{item.content, jdbcType=VARCHAR})
+    	</foreach>
+    </insert>
+    <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceInfo">
+        update namespace_info
+        set content=#{content, jdbcType=VARCHAR}
+        where namespace = #{namespace, jdbcType=VARCHAR}
+    </update>
+
+</mapper>

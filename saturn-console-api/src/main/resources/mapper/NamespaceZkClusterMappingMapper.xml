@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER" />
+	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
+	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="zk_cluster_key" property="zkClusterKey" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, is_deleted, create_time, created_by, last_update_time, last_updated_by, namespace, name, zk_cluster_key
+    </sql>
+    <select id="selectByNamespace" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_zkcluster_mapping
+        where namespace = #{namespace, jdbcType=VARCHAR} limit 0,1
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_zkcluster_mapping
+    </select>
+    <select id="selectByZkClusterKey" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_zkcluster_mapping
+        where zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
+    </select>
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
+        insert into namespace_zkcluster_mapping( create_time, created_by,last_update_time,last_updated_by, namespace, name, zk_cluster_key) values(#{createTime, jdbcType=TIMESTAMP}, #{createdBy, jdbcType=VARCHAR},#{lastUpdateTime, jdbcType=TIMESTAMP},#{lastUpdatedBy, jdbcType=VARCHAR}, #{namespace, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{zkClusterKey, jdbcType=VARCHAR})
+    </insert>
+    <update id="updateById" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
+        update namespace_zkcluster_mapping
+        set is_deleted = #{isDeleted, jdbcType=INTEGER}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, namespace = #{namespace, jdbcType=VARCHAR}, name = #{name, jdbcType=VARCHAR}, zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
+        where id = #{id, jdbcType=BIGINT}
+    </update>
+    <update id="updateAllById" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping">
+        update namespace_zkcluster_mapping
+        set is_deleted = #{isDeleted, jdbcType=INTEGER}, create_time = #{createTime, jdbcType=VARCHAR}, created_by = #{createdBy, jdbcType=VARCHAR}, last_update_time = #{lastUpdateTime, jdbcType=VARCHAR}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, namespace = #{namespace, jdbcType=VARCHAR}, name = #{name, jdbcType=VARCHAR}, zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
+        where id = #{id, jdbcType=BIGINT}
+    </update>
+</mapper>

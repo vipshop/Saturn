@@ -15,16 +15,17 @@
 	<description>Saturn-Job - distributed scheduled job solution</description>
 
 	<modules>
-		<module>saturn-console-backend</module>
-		<module>saturn-console-core</module>
-		<module>saturn-console-old</module>
-		<module>saturn-core</module>
 		<module>saturn-job-api</module>
+		<module>saturn-integrate</module>
 		<module>saturn-job-sharding</module>
+		<module>saturn-core</module>
 		<module>saturn-executor</module>
 		<module>saturn-plugin</module>
 		<module>saturn-embed</module>
-		<module>saturn-integrate</module>
+		<module>saturn-console-core</module>
+		<module>saturn-console-old</module>
+		<module>saturn-console-api</module>
+		<module>saturn-console</module>
 		<module>saturn-it</module>
 	</modules>
 

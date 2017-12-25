@@ -15,8 +15,8 @@ module.exports = {
       }
     },
   },
-  buildIndex: path.resolve(__dirname, '../../../saturn-console-background/src/main/resources/index.html'),
-  buildRoot: path.resolve(__dirname, '../../../saturn-console-background/src/main/resources'),
+  buildIndex: path.resolve(__dirname, '../../../saturn-console/src/main/resources/index.html'),
+  buildRoot: path.resolve(__dirname, '../../../saturn-console/src/main/resources'),
   // 关闭eslint
   eslintEnable: true,
   // 关闭babel(需要源码为非转换代码，并且eslint是正确配置才可以)

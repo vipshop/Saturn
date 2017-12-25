@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.SystemConfigRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="property" property="property" jdbcType="VARCHAR"/>
+        <result column="value" property="value" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, property, value
+    </sql>
+    <select id="selectByPropertiesAndLastly" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_config
+        where id in
+        (select max(id) from sys_config where property in
+        <foreach collection="list" item="p_item" open="(" close=")" separator=",">
+        #{p_item}
+    </foreach>
+        group by property)
+    </select>
+    <select id="selectByLastly" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_config
+        where id in
+        (select max(id) from sys_config group by property)
+    </select>
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
+        insert into sys_config(property, value) values(#{property,jdbcType=VARCHAR}, #{value,jdbcType=VARCHAR})
+    </insert>
+    <update id="updateById" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
+        update sys_config
+        set property = #{property,jdbcType=VARCHAR}, value = #{value,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+</mapper>

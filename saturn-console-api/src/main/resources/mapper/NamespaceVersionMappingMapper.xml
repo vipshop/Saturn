@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.NamespaceVersionMappingRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
+        <result column="is_forced" property="isForced" jdbcType="BOOLEAN" />
+		<result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN" />
+	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
+	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id,namespace,version_number,is_forced,is_deleted, create_time, created_by, last_update_time, last_updated_by
+    </sql>
+    
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
+        insert into namespace_version_mapping(namespace,version_number,is_forced,create_time, created_by, last_update_time, last_updated_by) values
+        (
+         #{namespace, jdbcType=VARCHAR},
+         #{versionNumber, jdbcType=VARCHAR},
+         #{isForced, jdbcType=BOOLEAN},
+         #{createTime, jdbcType=TIMESTAMP}, 
+         #{createdBy, jdbcType=VARCHAR},
+         #{lastUpdateTime, jdbcType=TIMESTAMP},
+         #{lastUpdatedBy, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
+        update namespace_version_mapping
+        set version_number=#{versionNumber, jdbcType=VARCHAR}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, is_forced = #{isForced, jdbcType=BOOLEAN}
+        where namespace = #{namespace, jdbcType=BIGINT}
+    </update>
+
+    <select id="selectByNamespace" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_version_mapping
+        where namespace = #{namespace, jdbcType=VARCHAR} limit 0,1
+    </select>
+
+    <select id="selectAllWithNotDeleted" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_version_mapping
+        where is_deleted = false
+    </select>
+
+</mapper>

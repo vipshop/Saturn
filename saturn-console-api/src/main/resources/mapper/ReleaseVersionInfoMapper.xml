@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.ReleaseVersionInfoRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
+        <result column="version_desc" property="versionDesc" jdbcType="VARCHAR"/>
+        <result column="package_url" property="packageUrl" jdbcType="VARCHAR"/>
+        <result column="check_code" property="checkCode" jdbcType="VARCHAR"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN" />
+	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
+	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
+	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id,version_number,version_desc,package_url,check_code,is_deleted, create_time, created_by, last_update_time, last_updated_by
+    </sql>
+    <select id="selectByNamespace" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from release_version_info where version_number in 
+        (
+        	select version_number from namespace_version_mapping where namespace = #{namespace, jdbcType=VARCHAR} 
+        	and is_deleted = 0
+        )
+        and is_deleted = 0 limit 1
+    </select>
+
+    <select id="selectByVersionNumber" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from release_version_info where version_number = #{versionNumber, jdbcType=VARCHAR} 
+        and is_deleted = 0 limit 1
+    </select>
+    
+    <select id="selectInUsingNamespaceCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select count(1)
+        from namespace_version_mapping where version_number = #{versionNumber, jdbcType=VARCHAR} 
+        and is_deleted = 0 limit 1
+    </select>
+    
+    <delete id="deleteByVersionNumber" parameterType="java.lang.String">
+    	delete from release_version_info where version_number = #{versionNumber, jdbcType=VARCHAR} 
+    </delete>
+    
+
+    <select id="selectAll" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from release_version_info where is_deleted = 0 
+    </select>
+    
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo">
+        insert into release_version_info(version_number,version_desc,package_url,check_code,create_time, created_by,last_update_time, last_updated_by) values
+        (
+         #{versionNumber, jdbcType=VARCHAR},
+         #{versionDesc, jdbcType=VARCHAR}, 
+         #{packageUrl, jdbcType=VARCHAR}, 
+         #{checkCode, jdbcType=VARCHAR},  
+         #{createTime, jdbcType=TIMESTAMP}, 
+         #{createdBy, jdbcType=VARCHAR},
+         #{lastUpdateTime, jdbcType=TIMESTAMP}, 
+         #{lastUpdatedBy, jdbcType=VARCHAR}
+        )
+    </insert>
+</mapper>
