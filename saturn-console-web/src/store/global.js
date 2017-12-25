@@ -3,22 +3,31 @@ import * as types from './types';
 
 export default {
   state: {
-    domainUrl: '',
+    domainInfo: {
+      nameAndNamespace: '',
+      sysAdmin: '',
+      techAdmin: '',
+    },
   },
 
   getters: {
-    domainUrl: state => state.domainUrl,
+    domainInfo: state => state.domainInfo,
   },
 
   mutations: {
-    [types.SET_DOMAIN_URL](state, items) {
-      state.domainUrl = items;
+    [types.SET_DOMAIN_INFO](state, item) {
+      state.domainInfo = {
+        ...state.domainInfo,
+        nameAndNamespace: item.nameAndNamespace,
+        sysAdmin: item.sysAdmin,
+        techAdmin: item.techAdmin,
+      };
     },
   },
 
   actions: {
-    [types.SET_DOMAIN_URL]({ commit }, domainUrl) {
-      commit(types.SET_DOMAIN_URL, domainUrl);
+    [types.SET_DOMAIN_INFO]({ commit }, domainInfo) {
+      commit(types.SET_DOMAIN_INFO, domainInfo);
     },
   },
 };

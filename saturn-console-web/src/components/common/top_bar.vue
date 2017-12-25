@@ -6,8 +6,8 @@
             </span>
             <el-tooltip placement="right">
                 <div slot="content">
-                    运维负责人：<span v-for="item in person.operations" :key="item.name">{{item.name}}({{item.nick}}) </span><br/>
-                    开发负责人：<span v-for="item in person.develop" :key="item.name">{{item.name}}({{item.nick}}) </span>
+                    运维负责人：<span>{{domainInfo.techAdmin || '空'}}</span><br/>
+                    开发负责人：<span>{{domainInfo.sysAdmin || '空'}}</span>
                 </div>
                 <i class="el-icon-warning"></i>
             </el-tooltip>
@@ -17,7 +17,7 @@
 </template>
 <script>
 export default {
-  props: ['domain', 'person'],
+  props: ['domain', 'domainInfo'],
 };
 </script>
 <style lang="sass" scoped>

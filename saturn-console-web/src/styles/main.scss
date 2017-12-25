@@ -51,38 +51,14 @@ form {
     color: #de3434;
 }
 
-.page-table {
-    margin-bottom: 12px;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+.el-header {
+    padding: 0;
 }
-.page-table-header {
-    padding: 10px 8px;
-    .page-table-header-title {
-        font-weight: bold;
-        font-size: 16px;
-        color: #777;
-        .el-button {
-            margin-left: 20px;
-        }
-    }
-    .el-button.el-button--default {
-        background-color: #f4f7f7;
-        &:hover {
-            box-shadow: 0 0 0 2px rgba(59,120,212,.15);
-        }
-    }
-    >* {
-        display: inline-block;
-    }
+
+.el-main {
+    overflow: hidden;
 }
-.page-separator {
-    margin: 0 12px;
-    vertical-align: middle;
-    border: none;
-    border-left: 1px solid #eee;
-    height: 30px;
-}
+
 .page-content {
-    margin: 10px 0;
+    margin: 10px;
 }

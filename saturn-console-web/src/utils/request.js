@@ -1,8 +1,6 @@
 import axios from 'axios';
 import message from './message';
 
-axios.defaults.baseURL = 'api';
-
 export default {
   getData(url, data) {
     const loading = message.loading();

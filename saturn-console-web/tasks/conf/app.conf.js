@@ -7,12 +7,12 @@ module.exports = {
   assetsSubDirectory: '',
   assetsPublicPath: '/',
   proxyTable: {
-    '/api': {
-      target: "http://localhost:9088",
+    '/console': {
+      target: "http://127.0.0.1:9088",
       changeOrigin: true,
-      pathRewrite: {
-        '^/api' : '',     // rewrite path
-      }
+      // pathRewrite: {
+      //   '^/api' : '',     // rewrite path
+      // }
     },
   },
   buildIndex: path.resolve(__dirname, '../../../saturn-console/src/main/resources/static/index.html'),

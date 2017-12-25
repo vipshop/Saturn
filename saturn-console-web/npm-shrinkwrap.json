@@ -2,6 +2,11 @@
   "name": "webpack_es6_vue",
   "version": "1.0.0",
   "dependencies": {
+    "@cloudux/noah-theme": {
+      "version": "2.0.2",
+      "from": "@cloudux/noah-theme@2.0.2",
+      "resolved": "http://registry.npm.taobao.org/@cloudux/noah-theme/download/@cloudux/noah-theme-2.0.2.tgz"
+    },
     "abbrev": {
       "version": "1.1.1",
       "from": "abbrev@1",

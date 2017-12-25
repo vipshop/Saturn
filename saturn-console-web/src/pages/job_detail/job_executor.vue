@@ -1,6 +1,6 @@
 <template>
     <div class="page-content">
-        <el-table border :data="tableData" style="width: 100%">
+        <el-table stripe :data="tableData" style="width: 100%">
             <el-table-column prop="executor" label="Executor"></el-table-column>
             <el-table-column prop="ip" label="IP"></el-table-column>
             <el-table-column prop="shards" label="分片项"></el-table-column>

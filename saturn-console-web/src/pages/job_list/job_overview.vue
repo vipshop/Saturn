@@ -25,16 +25,16 @@
         <div class="page-container">
             <el-form :inline="true" class="demo-form-inline">
                 <el-form-item label="">
-                    <el-select v-model="selectedGroup" size="small">
+                    <el-select v-model="selectedGroup">
                         <el-option label="全部分组" value=""></el-option>
                         <el-option v-for="item in groups" :label="item" :value="item" :key="item"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="">
-                    <el-input placeholder="搜索" v-model="jobForSearch" size="small"></el-input>
+                    <el-input placeholder="搜索" v-model="jobForSearch"></el-input>
                 </el-form-item>
                 <el-form-item class="filter-search">
-                    <el-button type="primary" icon="el-icon-search" size="small">查询</el-button>
+                    <el-button type="primary" icon="el-icon-search">查询</el-button>
                 </el-form-item>
             </el-form>
             <div class="page-table">
@@ -42,7 +42,7 @@
                     <div class="page-table-header-title"><i class="fa fa-list"></i>作业列表
                         <el-button type="text" @click="handleRefresh()"><i class="fa fa-refresh"></i></el-button>
                     </div>
-                    <div class="page-separator"></div>
+                    <div class="page-table-header-separator"></div>
                     <div>
                         <el-button @click="batchEnabled()"><i class="fa fa-play-circle text-danger"></i>启用</el-button>
                         <el-button @click="batchStop()"><i class="fa fa-stop-circle text-danger"></i>停用</el-button>
@@ -55,7 +55,7 @@
                         <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-danger"></i>导出</el-button>
                     </div>
                 </div>
-                <el-table border ref="multipleTable" @selection-change="handleSelectionChange" :data="tableData" style="width: 100%">
+                <el-table stripe ref="multipleTable" @selection-change="handleSelectionChange" :data="tableData" style="width: 100%">
                     <el-table-column type="selection" width="55"></el-table-column>
                     <el-table-column label="作业名">
                         <template slot-scope="scope">

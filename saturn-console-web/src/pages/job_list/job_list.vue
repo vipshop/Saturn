@@ -1,8 +1,8 @@
 <template>
     <div>
-        <Top-bar :domain="domainName" :person="person"></Top-bar>
+        <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus">
-            <router-view></router-view>
+            <router-view style="margin: 20px;"></router-view>
         </Aside>
     </div>
 </template>
@@ -11,19 +11,25 @@
 export default {
   data() {
     return {
-      domainUrl: this.$store.getters.domainUrl,
       domainName: this.$route.params.domain,
+      domainInfo: {},
       sidebarMenus: [
         { index: 'job_overview', title: '作业总览', icon: 'fa fa-bar-chart-o fa-fw', name: 'job_overview', params: { domain: this.$route.params.domain } },
         { index: 'executor_overview', title: 'Executor总览', icon: 'fa fa-area-chart', name: 'executor_overview', params: { domain: this.$route.params.domain } },
       ],
-      person: {
-        develop: [{ name: '张三', nick: 'san.zhang' }, { name: '李四', nick: 'si.li' }, { name: '王五', nick: 'wu.wang' }],
-        operations: [{ name: '哈哈', nick: 'ha.ha' }, { name: '吴六', nick: 'liu.wu' }],
-      },
     };
   },
   methods: {
+    getDomainInfo() {
+      this.$http.getData(`/console/home/namespaces/${this.domainName}`).then((data) => {
+        if (data) {
+          this.domainInfo = data;
+        }
+      });
+    },
+  },
+  created() {
+    this.getDomainInfo();
   },
 };
 </script>
