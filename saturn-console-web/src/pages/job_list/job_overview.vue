@@ -66,7 +66,7 @@
                     </el-table-column>
                     <el-table-column label="状态">
                         <template slot-scope="scope"> 
-                            <el-tag :type="scope.row.status ? '' : 'danger'" close-transition>{{scope.row.status}}</el-tag>
+                            <el-tag :type="scope.row.status ? 'success' : 'danger'" close-transition>{{scope.row.status}}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="group" label="分组"></el-table-column>

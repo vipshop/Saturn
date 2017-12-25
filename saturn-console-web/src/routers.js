@@ -8,6 +8,7 @@ import ExecutorOverview from './pages/job_list/executor_overview';
 import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
 import JobExecutor from './pages/job_detail/job_executor';
+import RunningState from './pages/job_detail/running_state';
 import DashboardManage from './pages/dashboard_manage/dashboard_manage';
 import RegistryManage from './pages/registry_manage/registry_manage';
 
@@ -37,6 +38,7 @@ export default new Router({
         { path: '', redirect: 'job_setting' },
         { name: 'job_setting', path: RouterMapper.GetPath('jobSetting'), component: JobSetting },
         { name: 'job_executor', path: RouterMapper.GetPath('jobExecutor'), component: JobExecutor },
+        { name: 'running_state', path: RouterMapper.GetPath('runningState'), component: RunningState },
       ],
     }, {
       path: RouterMapper.GetPath('dashboardManage'),

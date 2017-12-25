@@ -89,6 +89,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 						}
 						failoverService.removeFailoverInfo();
 						jobScheduler.getJob().enableJob();
+						configurationService.invalidCustomContextCache();
 						if (sendEventFlag) {
 							configurationService.notifyJobEnabled();
 						}

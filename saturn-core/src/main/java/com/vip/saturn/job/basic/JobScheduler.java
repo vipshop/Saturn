@@ -39,7 +39,6 @@ import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.failover.FailoverService;
 import com.vip.saturn.job.internal.listener.ListenerManager;
-import com.vip.saturn.job.internal.offset.OffsetService;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.statistics.StatisticsService;
@@ -90,8 +89,6 @@ public class JobScheduler {
 
 	private final StatisticsService statisticsService;
 
-	private final OffsetService offsetService;
-
 	private final AnalyseService analyseService;
 
 	private final LimitMaxJobsService limitMaxJobsService;
@@ -128,7 +125,6 @@ public class JobScheduler {
 		executionService = new ExecutionService(this);
 		failoverService = new FailoverService(this);
 		statisticsService = new StatisticsService(this);
-		offsetService = new OffsetService(this);
 		analyseService = new AnalyseService(this);
 		limitMaxJobsService = new LimitMaxJobsService(this);
 		listenerManager = new ListenerManager(this);
@@ -175,7 +171,6 @@ public class JobScheduler {
 		executionService.start();
 		failoverService.start();
 		statisticsService.start();
-		offsetService.start();
 		limitMaxJobsService.start();
 		analyseService.start();
 
@@ -203,7 +198,6 @@ public class JobScheduler {
 		job.setExecutionContextService(executionContextService);
 		job.setExecutionService(executionService);
 		job.setFailoverService(failoverService);
-		job.setOffsetService(offsetService);
 		job.setServerService(serverService);
 		job.setExecutorName(executorName);
 		job.setReportService(reportService);
@@ -322,7 +316,6 @@ public class JobScheduler {
 			executionService.shutdown();
 			failoverService.shutdown();
 			statisticsService.shutdown();
-			offsetService.shutdown();
 			analyseService.shutdown();
 			limitMaxJobsService.shutdown();
 
@@ -452,10 +445,6 @@ public class JobScheduler {
 
 	public StatisticsService getStatisticsService() {
 		return statisticsService;
-	}
-
-	public OffsetService getOffsetService() {
-		return offsetService;
 	}
 
 	public AnalyseService getAnalyseService() {

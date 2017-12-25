@@ -24,7 +24,7 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.failover.FailoverService;
-import com.vip.saturn.job.internal.offset.OffsetService;
+import com.vip.saturn.job.utils.SaturnUtils;
 
 /**
  * 作业运行时上下文服务.
@@ -37,8 +37,6 @@ public class ExecutionContextService extends AbstractSaturnService {
 
 	private FailoverService failoverService;
 
-	private OffsetService offsetService;
-
 	public ExecutionContextService(JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
@@ -47,7 +45,6 @@ public class ExecutionContextService extends AbstractSaturnService {
 	public void start() {
 		configService = jobScheduler.getConfigService();
 		failoverService = jobScheduler.getFailoverService();
-		offsetService = jobScheduler.getOffsetService();
 	}
 
 	/**
@@ -56,12 +53,14 @@ public class ExecutionContextService extends AbstractSaturnService {
 	 * @return 当前作业服务器运行时分片上下文
 	 */
 	public JobExecutionMultipleShardingContext getJobExecutionShardingContext() {
-		// JobExecutionMultipleShardingContext result = new JobExecutionMultipleShardingContext();
 		SaturnExecutionContext result = new SaturnExecutionContext();
 		result.setJobName(configService.getJobName());
 		result.setShardingTotalCount(configService.getShardingTotalCount());
 		List<Integer> shardingItems = getShardingItems();
-		removeRunningItems(shardingItems);
+		boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
+		if(isEnabledReport) {
+			removeRunningItems(shardingItems);
+		}
 		result.setShardingItems(shardingItems);
 		result.setJobParameter(configService.getJobParameter());
 		result.setCustomContext(configService.getCustomContext());
@@ -87,8 +86,6 @@ public class ExecutionContextService extends AbstractSaturnService {
 				}
 			}
 		}
-		result.setOffsets(offsetService.getOffsets(result.getShardingItems()));
-
 		if (jobConfiguration.getTimeoutSeconds() > 0) {
 			result.setTimetoutSeconds(jobConfiguration.getTimeoutSeconds());
 		}
@@ -115,7 +112,8 @@ public class ExecutionContextService extends AbstractSaturnService {
 	 */
 	public List<Integer> getShardingItems() {
 		List<Integer> shardingItems = jobScheduler.getShardingService().getLocalHostShardingItems();
-		if (configService.isFailover()) {
+		boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
+		if (configService.isFailover() && isEnabledReport) {
 			List<Integer> failoverItems = failoverService.getLocalHostFailoverItems();
 			if (!failoverItems.isEmpty()) {
 				return failoverItems;
