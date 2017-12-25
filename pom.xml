@@ -15,7 +15,7 @@
 	<description>Saturn-Job - distributed scheduled job solution</description>
 
 	<modules>
-		<module>saturn-console-background</module>
+		<module>saturn-console-backend</module>
 		<module>saturn-console-core</module>
 		<module>saturn-console-old</module>
 		<module>saturn-core</module>
