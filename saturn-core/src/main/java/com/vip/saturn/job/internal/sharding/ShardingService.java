@@ -233,13 +233,8 @@ public class ShardingService extends AbstractSaturnService {
 	 * @return 运行在本作业服务器的分片序列号
 	 */
 	public List<Integer> getLocalHostShardingItems() {
-		try {
-			String value = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.getShardingNode(executorName));
-			return ItemUtils
-					.toItemList(value);
-		} catch (Throwable e) {
-			return Collections.<Integer> emptyList();
-		}
+		String value = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.getShardingNode(executorName));
+		return ItemUtils.toItemList(value);
 	}
 
 	@Override
