@@ -15,11 +15,7 @@
 		ignore-resource-not-found="true"
 		location="classpath:application.properties" />
     <context:component-scan base-package="com.vip.saturn.job.console.**.controller" />
-    
-    <mvc:resources mapping="/static/js/**" location="/js/" />
-    <mvc:resources mapping="/static/css/**" location="/css/" />
-    <mvc:resources mapping="/static/lib/**" location="/lib/" />
-    <mvc:resources mapping="/static/image/**" location="/image/" />
+
     <mvc:annotation-driven>
         <mvc:message-converters>
             <bean class="org.springframework.http.converter.StringHttpMessageConverter">
