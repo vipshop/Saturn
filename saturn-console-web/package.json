@@ -9,6 +9,7 @@
     "lint": "eslint --ext .js,.vue src"
   },
   "dependencies": {
+    "@cloudux/noah-theme": "^2.0.2",
     "axios": "^0.16.2",
     "brace": "^0.10.0",
     "element-ui": "^2.0.5",

@@ -24,7 +24,7 @@
                     <div class="page-table-header-title"><i class="fa fa-list"></i>Executor列表
                         <el-button type="text" @click="handleRefresh()"><i class="fa fa-refresh"></i></el-button>
                     </div>
-                    <div class="page-separator"></div>
+                    <div class="page-table-header-separator"></div>
                     <div>
                         <el-button @click="batchReArrange()"><i class="fa fa-repeat text-danger"></i>重排</el-button>
                         <el-button @click="batchPickTraffic()"><i class="fa fa-hand-lizard-o text-danger"></i>摘流量</el-button>
@@ -32,7 +32,7 @@
                         <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
                     </div>
                 </div>
-                <el-table border ref="multipleTable" @selection-change="handleSelectionChange" :data="tableData" style="width: 100%">
+                <el-table stripe ref="multipleTable" @selection-change="handleSelectionChange" :data="tableData" style="width: 100%">
                     <el-table-column type="selection" width="55"></el-table-column>
                     <el-table-column prop="name" label="Executor"></el-table-column>
                     <el-table-column label="状态">

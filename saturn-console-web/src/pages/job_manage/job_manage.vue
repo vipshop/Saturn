@@ -41,19 +41,17 @@ export default {
         state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0;
     },
     handleSelect(item) {
-      this.$store.commit('setDomainUrl', item.nameAndNamespace);
       this.toJobListPage(item.value);
     },
     toJobListPage(domain) {
       this.$router.push({ name: 'job_overview', params: { domain } });
     },
     loadAllDomains() {
-      this.$http.getData('/registry_center/getNamespaceInfo').then((data) => {
+      this.$http.getData('/console/home/namespaces').then((data) => {
         if (data) {
-          this.domains = data[0].regCenterConfList.map((obj) => {
+          this.domains = data.map((obj) => {
             const rObj = {};
-            rObj.value = obj.namespace;
-            rObj.nameAndNamespace = obj.nameAndNamespace;
+            rObj.value = obj;
             return rObj;
           });
         }

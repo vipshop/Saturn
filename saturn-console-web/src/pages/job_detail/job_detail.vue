@@ -1,9 +1,9 @@
 <template>
     <div>
-        <Top-bar :domain="domainName" :person="person"></Top-bar>
+        <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus">
-            <div class="page-header">
-                <div class="pull-left page-title">作业 :  {{jobName}}</div>
+            <div class="job-detail-header">
+                <div class="pull-left job-detail-title">作业 :  {{jobName}}</div>
                 <div class="pull-right">
                     <el-button size="small" @click=""><i class="fa fa-play-circle text-danger"></i>启用</el-button>
                     <el-button size="small" @click=""><i class="fa fa-play-circle-o text-danger"></i>立即执行</el-button>
@@ -26,22 +26,29 @@ export default {
         { index: 'job_setting', title: '作业设置', icon: 'fa fa-gear', name: 'job_setting', params: { domain: this.$route.params.domain, jobName: this.$route.params.domain } },
         { index: 'job_executor', title: '分片情况', icon: 'fa fa-server', name: 'job_executor', params: { domain: this.$route.params.domain, jobName: this.$route.params.domain } },
       ],
-      person: {
-        develop: [{ name: '张三', nick: 'san.zhang' }, { name: '李四', nick: 'si.li' }, { name: '王五', nick: 'wu.wang' }],
-        operations: [{ name: '哈哈', nick: 'ha.ha' }, { name: '吴六', nick: 'liu.wu' }],
-      },
+      domainInfo: {},
     };
   },
   methods: {
+    getDomainInfo() {
+      this.$http.getData(`/console/home/namespaces/${this.domainName}`).then((data) => {
+        if (data) {
+          this.domainInfo = data;
+        }
+      });
+    },
+  },
+  created() {
+    this.getDomainInfo();
   },
 };
 </script>
 <style lang="sass" scoped>
-.page-header {
-  padding-bottom: 10px;
+.job-detail-header {
+  padding: 10px;
   border-bottom: 1px solid #d0d0d0;
   height: 30px;
-  .page-title {
+  .job-detail-title {
     height: 30px;
     line-height: 30px;
     font-weight: bold;

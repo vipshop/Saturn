@@ -3,8 +3,8 @@
         <div class="header-title">
             <span>Saturn Console</span>
         </div>
-        <div class="header-content">
-            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" :router="true">
+        <div>
+            <el-menu :default-active="activeIndex" class="el-menu--dark el-menu--has-container" mode="horizontal" :router="true">
                 <template v-for='item in serviceList'>
                   <el-menu-item :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
                 </template>
@@ -57,7 +57,7 @@ export default {
     font-weight: 700;
     width: 150px;
     text-align: center;
-    padding: 0 20px;
+    padding-left: 20px;
 }
 
 .user-dropdown {
