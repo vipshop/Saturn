@@ -13,10 +13,10 @@
         <div class="page-container">
             <el-form :inline="true" class="demo-form-inline">
                 <el-form-item label="">
-                    <el-input placeholder="搜索" v-model="executorForSearch" size="small"></el-input>
+                    <el-input placeholder="搜索" v-model="executorForSearch"></el-input>
                 </el-form-item>
                 <el-form-item class="filter-search">
-                    <el-button type="primary" icon="el-icon-search" size="small">查询</el-button>
+                    <el-button type="primary" icon="el-icon-search">查询</el-button>
                 </el-form-item>
             </el-form>
             <div class="page-table">
