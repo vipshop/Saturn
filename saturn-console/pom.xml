@@ -27,6 +27,12 @@
 			<artifactId>saturn-console-api</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.vip.saturn</groupId>
+			<artifactId>saturn-console-web</artifactId>
+			<version>${project.parent.version}</version>
+			<type>pom</type>
+		</dependency>
 
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>

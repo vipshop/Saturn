@@ -29,3 +29,6 @@ saturn-job-console/logs/
 .DS_Store
 Thumbs.db
 /saturn-job-st/info
+
+# console static ignore
+saturn-console/src/main/resources/static
