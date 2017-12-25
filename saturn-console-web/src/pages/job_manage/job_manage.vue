@@ -2,7 +2,7 @@
     <div>
         <el-main>
             <div class="page-title">
-                <h3>作业管理</h3>
+                <h3>应用域</h3>
             </div>
             <div>
                 <el-row :gutter="20">
