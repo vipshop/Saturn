@@ -15,6 +15,7 @@
 package com.vip.saturn.job.internal.config;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
@@ -24,6 +25,7 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.JsonUtils;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
@@ -54,6 +56,8 @@ public class ConfigurationService extends AbstractSaturnService {
 	private TimeZone jobTimeZone;
 
 	private ExecutorService executorService;
+
+	private Map<String, String> customContextCache;
 
 	private static final Object lock = new Object();
 
@@ -443,8 +447,20 @@ public class ConfigurationService extends AbstractSaturnService {
 	 * @return 获取自定义上下文
 	 */
 	public Map<String, String> getCustomContext() {
-		String jobNodeData = getJobNodeStorage().getJobNodeData(ConfigurationNode.CUSTOM_CONTEXT);
-		return toCustomContext(jobNodeData);
+		if(customContextCache == null) {
+			String jobNodeData = getJobNodeStorage().getJobNodeData(ConfigurationNode.CUSTOM_CONTEXT);
+			Map<String, String> result = toCustomContext(jobNodeData);
+			customContextCache = Maps.newHashMap();
+			if(MapUtils.isNotEmpty(result)) {
+				customContextCache.putAll(result);
+			}
+		}
+
+		return customContextCache;
+	}
+
+	public void invalidCustomContextCache() {
+		customContextCache = null;
 	}
 
 	/**

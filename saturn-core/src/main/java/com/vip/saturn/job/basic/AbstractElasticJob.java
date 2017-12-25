@@ -21,7 +21,6 @@ import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.failover.FailoverService;
-import com.vip.saturn.job.internal.offset.OffsetService;
 import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.server.ServerStatus;
 import com.vip.saturn.job.internal.sharding.ShardingService;
@@ -60,8 +59,6 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected ExecutionService executionService;
 
 	protected FailoverService failoverService;
-
-	protected OffsetService offsetService;
 
 	protected ServerService serverService;
 
@@ -296,10 +293,6 @@ public abstract class AbstractElasticJob implements Stopable {
 
 	protected void setFailoverService(FailoverService failoverService) {
 		this.failoverService = failoverService;
-	}
-
-	protected void setOffsetService(OffsetService offsetService) {
-		this.offsetService = offsetService;
 	}
 
 	protected void setServerService(ServerService serverService) {
