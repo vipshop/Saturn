@@ -23,74 +23,14 @@
 	</dependencyManagement>
 	<dependencies>
 		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>webjars-locator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>bootstrap</artifactId>
-			<version>3.3.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>bootstrap-select</artifactId>
-			<version>1.12.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>font-awesome</artifactId>
-			<version>4.5.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery</artifactId>
-			<version>2.1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery-form</artifactId>
-			<version>3.51</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>highcharts</artifactId>
-			<version>4.2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>datatables</artifactId>
-			<version>1.10.11</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>Eonasdan-bootstrap-datetimepicker</artifactId>
-			<version>4.0.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<artifactId>saturn-console-api</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-framework</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.curator</groupId>
-			<artifactId>curator-recipes</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
@@ -118,53 +58,12 @@
 			<artifactId>spring-jdbc</artifactId>
 		</dependency>		
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>log4j-over-slf4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-core-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>javax</groupId>
 			<artifactId>javaee-web-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<!--<scope>test</scope> -->
 		</dependency>
 
 		<dependency>
@@ -182,11 +81,6 @@
 					<artifactId>servlet-api</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>jstl</groupId>
-			<artifactId>jstl</artifactId>
-			<version>${jstl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -213,24 +107,7 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons</artifactId>
 		</dependency>	
-		<dependency>
-			<groupId>net.sourceforge.jexcelapi</groupId>
-			<artifactId>jxl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-		</dependency>
 
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.1.7</version>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter</artifactId>
@@ -266,24 +143,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-		</dependency>
-        <!--<dependency>-->
-            <!--<groupId>commons-lang</groupId>-->
-            <!--<artifactId>commons-lang</artifactId>-->
-            <!--<version>2.6</version>-->
-        <!--</dependency>-->
     </dependencies>
 
 	<build>

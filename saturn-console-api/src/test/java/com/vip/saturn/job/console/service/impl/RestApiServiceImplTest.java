@@ -19,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobServer;
 import com.vip.saturn.job.console.domain.JobStatus;
@@ -38,7 +37,7 @@ import com.vip.saturn.job.console.utils.JobNodePath;
  * Created by kfchu on 31/05/2017.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RestApiServiceImplTest extends AbstractSaturnConsoleTest {
+public class RestApiServiceImplTest {
 
 	private final static String TEST_NAME_SPACE_NAME = "testDomain";
 

@@ -23,15 +23,6 @@ public class SaturnFilterRegister {
 		return registration;
 	}
 
-	// @Bean
-	// public FilterRegistrationBean registerSaturnXssFilter() {
-	// SaturnXssFilter xssFilter = new SaturnXssFilter();
-	// FilterRegistrationBean registration = new FilterRegistrationBean(xssFilter);
-	// registration.addUrlPatterns("/*");
-	// registration.setOrder(2);
-	// return registration;
-	// }
-
 	@Bean
 	public FilterRegistrationBean registerLastVisitFilter() {
 		RecordLastVisit lastVisit = new RecordLastVisit();
