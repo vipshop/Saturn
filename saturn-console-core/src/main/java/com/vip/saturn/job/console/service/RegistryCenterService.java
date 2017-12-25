@@ -54,7 +54,5 @@ public interface RegistryCenterService {
 	int domainCount(String key);
 
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
-	
-	List<String> getNamespaces() throws SaturnJobConsoleException;
 
 }

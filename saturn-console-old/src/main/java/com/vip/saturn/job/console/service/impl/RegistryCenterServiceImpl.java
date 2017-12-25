@@ -109,8 +109,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	// namespace is unique in all zkClusters
 	private ConcurrentHashMap<String /** nns **/
 			, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
-
-	private List<String> allOnlineNamespaces = new ArrayList<>();
 	
 	private String consoleClusterId;
 
@@ -288,7 +286,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private void refreshRegistryCenter() throws IOException {
 		LinkedHashMap<String, ZkCluster> newClusterMap = new LinkedHashMap<>();
-		List<String> allOnlineNamespacesTemp = new ArrayList<>();
 		// 获取新的zkClusters
 		List<ZkClusterInfo> allZkClusterInfo = zkClusterInfoService.getAllZkClusterInfo();
 		if (allZkClusterInfo != null) {
@@ -404,16 +401,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setZkAlias(zkCluster.getZkAlias());
 						zkCluster.getRegCenterConfList().add(conf);
 					}
-                    // 记录在线的域名
-                    if (!allOnlineNamespacesTemp.contains(namespace)) {
-                        allOnlineNamespacesTemp.add(namespace);
-                    }
                 }
 			}
 		}
 		// 直接赋值新的
 		zkClusterMap = newClusterMap;
-		allOnlineNamespaces = allOnlineNamespacesTemp;
 	}
 
 	private Object getNnsLock(String nns) {
@@ -866,11 +858,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			log.error(e.getMessage(), e);
 			return false;
 		}
-	}
-
-	@Override
-	public List<String> getNamespaces() throws SaturnJobConsoleException {
-		return allOnlineNamespaces;
 	}
 
 	@Override
