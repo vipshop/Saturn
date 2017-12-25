@@ -403,11 +403,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
 						zkCluster.getRegCenterConfList().add(conf);
-						if(!allOnlineNamespacesTemp.contains(namespace)) {
-							allOnlineNamespacesTemp.add(namespace);
-						}
 					}
-				}
+                    // 记录在线的域名
+                    if (!allOnlineNamespacesTemp.contains(namespace)) {
+                        allOnlineNamespacesTemp.add(namespace);
+                    }
+                }
 			}
 		}
 		// 直接赋值新的
