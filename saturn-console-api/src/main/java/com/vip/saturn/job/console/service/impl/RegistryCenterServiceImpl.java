@@ -403,9 +403,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
 						zkCluster.getRegCenterConfList().add(conf);
-						if(!allOnlineNamespacesTemp.contains(namespace)) {
-							allOnlineNamespacesTemp.add(namespace);
-						}
+					}
+					if(!allOnlineNamespacesTemp.contains(namespace)) {
+						allOnlineNamespacesTemp.add(namespace);
 					}
 				}
 			}
@@ -870,6 +870,53 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	@Override
 	public List<String> getNamespaces() throws SaturnJobConsoleException {
 		return allOnlineNamespaces;
+	}
+
+	@Override
+	public CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = null;
+		try {
+			RegistryCenterConfiguration registryCenterConfiguration = findConfigByNamespace(namespace);
+			if (registryCenterConfiguration != null) {
+				String nns = registryCenterConfiguration.getNameAndNamespace();
+				if (nns != null) {
+					String zkAddressList = registryCenterConfiguration.getZkAddressList();
+					String digest = registryCenterConfiguration.getDigest();
+					synchronized (getNnsLock(nns)) {
+						if (!registryCenterClientMap.containsKey(nns)) {
+							final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
+							registryCenterClient.setNameAndNamespace(nns);
+							registryCenterClient.setZkAddr(zkAddressList);
+							CuratorFramework curatorFramework = curatorRepository.connect(zkAddressList, namespace, digest);
+							if (curatorFramework != null) {
+								registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
+								registryCenterClient.setCuratorClient(curatorFramework);
+								registryCenterClientMap.put(nns, registryCenterClient);
+								curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+							}
+						} else {
+							RegistryCenterClient registryCenterClient = registryCenterClientMap.get(nns);
+							if (registryCenterClient != null) {
+								CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
+								if (curatorFramework != null) {
+									registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
+									curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			if (e instanceof SaturnJobConsoleException) {
+				throw e;
+			}
+			throw new SaturnJobConsoleException(e);
+		}
+		if (curatorFrameworkOp == null) {
+			throw new SaturnJobConsoleException("Connect zookeeper failed");
+		}
+		return curatorFrameworkOp;
 	}
 
 	@Override

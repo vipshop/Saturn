@@ -20,6 +20,7 @@ import java.io.Serializable;
  * @author chembo.huang
  *
  */
+@Deprecated
 public final class JobBriefInfo implements Serializable, Comparable<JobBriefInfo> {
 
 	private static final long serialVersionUID = 8405751873086755148L;

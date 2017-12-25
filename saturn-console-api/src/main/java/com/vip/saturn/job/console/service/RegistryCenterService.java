@@ -57,4 +57,6 @@ public interface RegistryCenterService {
 	
 	List<String> getNamespaces() throws SaturnJobConsoleException;
 
+	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
+
 }

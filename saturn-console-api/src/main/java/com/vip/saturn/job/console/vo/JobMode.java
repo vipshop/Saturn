@@ -1,9 +1,8 @@
-package com.vip.saturn.job.console.domain;
+package com.vip.saturn.job.console.vo;
 
 /**
  * @author hebelala
  */
-@Deprecated
 public class JobMode {
 
 	public static final String SYSTEM_PREFIX = "system";
