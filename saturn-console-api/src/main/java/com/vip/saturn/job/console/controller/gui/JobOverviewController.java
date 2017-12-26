@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{namespace:.+}/job_overview")
+@RequestMapping("/console/job_overview/{namespace:.+}/")
 public class JobOverviewController extends AbstractController {
 
     @Resource
