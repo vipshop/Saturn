@@ -18,4 +18,14 @@ export default {
     }
     return flag;
   },
+  strToArray(str) {
+    if (str !== '') {
+      if (str.indexOf(',') > 0) {
+        const arr = str.split(',');
+        return arr;
+      }
+      return [str];
+    }
+    return [];
+  },
 };

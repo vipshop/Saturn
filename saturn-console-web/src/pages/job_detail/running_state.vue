@@ -23,7 +23,7 @@
                 <el-table-column prop="executor" label="Executor"></el-table-column>
                 <el-table-column prop="executeTime" label="最近执行时间"></el-table-column>
                 <el-table-column prop="nextTime" label="下次开始时间"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="80px">
                     <template slot-scope="scope">
                         <el-tooltip content="分片返回信息" placement="top">
                             <el-button type="text" @click=""><i class="fa fa-reply-all"></i></el-button>
