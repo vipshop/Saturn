@@ -7,9 +7,9 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -34,9 +34,9 @@ public class HomeController extends AbstractGUIController {
         return new ResponseEntity<>(new RequestResult(true, namespaceList), HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/namespaces/{namespace:.+}", method = RequestMethod.GET)
-    public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request, @PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
-        checkMissingParameter("namespace", namespace);
+    @RequestMapping(value = "/namespace", method = RequestMethod.GET)
+    public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request,
+                                                      @RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
         RegistryCenterConfiguration registryCenterConfiguration = registryCenterService.findConfigByNamespace(namespace);
         if (registryCenterConfiguration == null) {
             throw new SaturnJobConsoleGUIException("The namespace is not existing");
