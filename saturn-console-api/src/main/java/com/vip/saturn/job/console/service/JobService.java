@@ -10,6 +10,8 @@ import java.util.List;
  */
 public interface JobService {
 
-    List<JobInfo> list(String namespace) throws SaturnJobConsoleException;
+    List<JobInfo> jobs(String namespace) throws SaturnJobConsoleException;
+
+    List<String> groups(String namespace) throws SaturnJobConsoleException;
 
 }

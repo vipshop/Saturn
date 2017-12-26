@@ -39,17 +39,15 @@ public class JobServiceImpl implements JobService {
     private CurrentJobConfigService currentJobConfigService;
 
     @Override
-    public List<JobInfo> list(String namespace) throws SaturnJobConsoleException {
+    public List<JobInfo> jobs(String namespace) throws SaturnJobConsoleException {
         List<JobInfo> list = new ArrayList<>();
         try {
             CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
             List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
-
             if (jobConfigList != null) {
                 for (CurrentJobConfig jobConfig : jobConfigList) {
                     try {
-                        // filter system job
-                        if (StringUtils.isNotBlank(jobConfig.getJobMode()) && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
+                        if (isSystemJob(jobConfig)) {
                             continue;
                         }
                         JobInfo jobInfo = new JobInfo();
@@ -121,6 +119,10 @@ public class JobServiceImpl implements JobService {
         }
 
         return list;
+    }
+
+    private boolean isSystemJob(CurrentJobConfig jobConfig) {
+        return StringUtils.isNotBlank(jobConfig.getJobMode()) && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX);
     }
 
     private JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
@@ -202,6 +204,24 @@ public class JobServiceImpl implements JobService {
         if (shardingListSb != null && shardingListSb.length() > 0) {
             jobInfo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
         }
+    }
+
+    @Override
+    public List<String> groups(String namespace) throws SaturnJobConsoleException {
+        List<String> groups = new ArrayList<>();
+        List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
+        if (jobConfigList != null) {
+            for (CurrentJobConfig jobConfig : jobConfigList) {
+                if (isSystemJob(jobConfig)) {
+                    continue;
+                }
+                String jobGroups = jobConfig.getGroups();
+                if (jobGroups != null && !groups.contains(jobGroups)) {
+                    groups.add(jobGroups);
+                }
+            }
+        }
+        return groups;
     }
 
 }
