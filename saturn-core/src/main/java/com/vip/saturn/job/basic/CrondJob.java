@@ -2,6 +2,7 @@ package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.trigger.CrondTrigger;
 import com.vip.saturn.job.trigger.SaturnTrigger;
+import com.vip.saturn.job.utils.SaturnUtils;
 
 public abstract class CrondJob extends AbstractSaturnJob {
 
@@ -10,9 +11,10 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		return new CrondTrigger();
 	}
 
+	// 如果上报运行状态，则支持failover；否则，不支持failover；
 	@Override
 	public boolean isFailoverSupported() {
-		return true;
+		return SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
 	}
 
 	@Override
