@@ -12,6 +12,7 @@
     <property name="log.context.name" value="saturn.console" />
     <property name="log.file.name" value="${log.context.name}" />
     <property name="log.error.file.name" value="${log.context.name}-error" />
+	<property name="log.audit.file.name" value="${log.context.name}-audit" />
     <property name="log.charset" value="UTF-8" />
     <property name="log.maxHistory" value="30" />
     <property name="log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n" />
@@ -24,6 +25,25 @@
             <pattern>${log.pattern}</pattern>
         </encoder>
     </appender>
+	<appender name="AUDITLOG-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.directory}/${log.audit.file.name}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${log.directory}/${log.audit.file.name}_%i.log
+			</fileNamePattern>
+			<!-- keep 10G' worth of history -->
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<append>true</append>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1GB</maxFileSize>
+		</triggeringPolicy>
+		<encoder charset="${log.charset}">
+			<!-- 格式化输出：%d表示日期，%t表示线程名，%p 级别, %logger logger name最多36字节 %msg：日志消息，%n是换行符 -->
+			<pattern>${log.pattern}</pattern>
+			<immediateFlush>true</immediateFlush>
+		</encoder>
+	</appender>
     <appender name="NORMALLOG-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${log.directory}/${log.file.name}.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -68,6 +88,10 @@
 			<onMismatch>DENY</onMismatch>
 		</filter>
 	</appender>
+
+	<logger name="AUDITLOG" additivity="${saturn.stdout:-false}" level="INFO">
+		<appender-ref ref="AUDITLOG-APPENDER" />
+	</logger>
 	
     <root level="INFO">
     	<if condition='property("saturn.stdout").equals("true")'>

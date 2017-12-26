@@ -14,6 +14,8 @@
 
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.JobDiffInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -37,6 +39,7 @@ public class ZkDbDiffRestApiController extends AbstractController {
     @Resource
     private ZkDBDiffService zkDBDiffService;
 
+    @Audit(type = AuditType.REST)
     @RequestMapping(value = "/diff", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     public ResponseEntity<Object> diff(String zkcluster, HttpServletRequest request) throws SaturnJobConsoleHttpException {

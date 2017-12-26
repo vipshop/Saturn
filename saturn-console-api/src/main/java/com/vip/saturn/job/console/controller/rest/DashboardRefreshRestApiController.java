@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -34,6 +36,7 @@ public class DashboardRefreshRestApiController extends AbstractController {
 	 * @return
 	 * @throws SaturnJobConsoleException
 	 */
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/dashboard/refresh", method = { RequestMethod.POST,
 			RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> dashboardRefresh(String zkClusterKey, HttpServletRequest request)

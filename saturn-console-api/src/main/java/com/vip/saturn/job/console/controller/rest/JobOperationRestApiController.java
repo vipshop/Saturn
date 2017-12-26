@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
@@ -7,6 +9,7 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.utils.AuditInfoContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -38,14 +41,13 @@ public class JobOperationRestApiController extends AbstractController {
 	@Resource
 	private RestApiService restApiService;
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		try {
 			JobConfig jobConfig = constructJobConfig(namespace, reqParams);
-
 			restApiService.createJob(namespace, jobConfig);
-
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -54,16 +56,13 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
-
 			return new ResponseEntity<Object>(restAPIJobInfo, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -77,8 +76,6 @@ public class JobOperationRestApiController extends AbstractController {
 			throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			checkMissingParameter("namespace", namespace);
-
 			List<RestApiJobInfo> restApiJobInfos = restApiService.getRestApiJobInfos(namespace);
 			return new ResponseEntity<Object>(restApiJobInfos, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
@@ -88,15 +85,13 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = { "/{namespace}/{jobName}/enable",
 			"/{namespace}/jobs/{jobName}/enable" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			restApiService.enableJob(namespace, jobName);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
@@ -106,15 +101,13 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = { "/{namespace}/{jobName}/disable",
 			"/{namespace}/jobs/{jobName}/disable" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			restApiService.disableJob(namespace, jobName);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
@@ -124,6 +117,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = { "/{namespace}/{jobName}/cron",
 			"/{namespace}/jobs/{jobName}/cron" }, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace,
@@ -131,12 +125,8 @@ public class JobOperationRestApiController extends AbstractController {
 			HttpServletRequest request) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			String cron = params.remove("cron");
 			checkMissingParameter("cron", cron);
-
 			restApiService.updateJobCron(namespace, jobName, cron, params);
 			return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
@@ -146,13 +136,11 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/run", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			restApiService.runJobAtOnce(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (SaturnJobConsoleException e) {
@@ -162,13 +150,11 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			restApiService.stopJobAtOnce(namespace, jobName);
 
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -179,13 +165,11 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			checkMissingParameter("namespace", namespace);
-			checkMissingParameter("jobName", jobName);
-
 			restApiService.deleteJob(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (SaturnJobConsoleException e) {
