@@ -84,7 +84,7 @@ public class AuditLogAspect {
 		// append additional context info if possible
 		Map<String, String> auditInfoMap = AuditInfoContext.currentAuditInfo();
 		if (auditInfoMap != null && auditInfoMap.size() > 0) {
-			stringBuilder.append(auditInfoMap);
+			stringBuilder.append(" AuditInfoContext:").append(auditInfoMap).append(".");
 		}
 
 		return stringBuilder.toString();
