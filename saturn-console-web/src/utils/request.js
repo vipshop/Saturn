@@ -2,76 +2,65 @@ import axios from 'axios';
 import message from './message';
 
 export default {
-  getData(url, data) {
-    const loading = message.loading();
-    return axios.get(url, { params: data })
-    .then((response) => {
-      loading.close();
-      let result;
-      if (response.data.success) {
-        result = response.data.obj;
-      } else {
-        message.errorMessage(response.data.message);
-      }
-      return result;
-    })
-    .catch(() => {
-      message.errorMessage('请求失败');
-      loading.close();
-    });
+  get(url, data) {
+    return this.request(url, data, 'GET');
   },
-  postData(url, data, config) {
-    const loading = message.loading();
-    return axios.post(url, data, config)
-    .then((response) => {
-      loading.close();
-      let result;
-      if (response.data.success) {
-        result = response.data.obj;
-      } else {
-        message.errorMessage(response.data.message);
-      }
-      return result;
-    })
-    .catch(() => {
-      message.errorMessage('请求失败');
-      loading.close();
-    });
+
+  post(url, data) {
+    return this.request(url, data, 'POST');
   },
-  deleteData(url, data) {
-    const loading = message.loading();
-    return axios.delete(url, { params: data })
-    .then((response) => {
-      loading.close();
-      let result;
-      if (response.data.success) {
-        result = response.data.obj;
-      } else {
-        message.errorMessage(response.data.message);
-      }
-      return result;
-    })
-    .catch(() => {
-      message.errorMessage('请求失败');
-      loading.close();
-    });
+
+  put(url, data) {
+    return this.request(url, data, 'PUT');
   },
-  putData(url, data) {
-    const loading = message.loading();
-    return axios.put(url, data)
-    .then((response) => {
-      loading.close();
-      let result;
-      if (response.data.success) {
-        result = response.data.obj;
-      } else {
-        message.errorMessage(response.data.message);
+
+  delete(url, data) {
+    return this.request(url, data, 'DELETE');
+  },
+
+  buildErrorHandler(msg, callback) {
+    message.errorMessage(msg);
+    if (callback) {
+      callback();
+    }
+  },
+
+  request(url, dataObj, methodType) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        url,
+        method: methodType,
+        cache: false,
+      };
+      /* eslint-disable no-case-declarations */
+      switch (methodType) {
+        case 'GET':
+          config.params = dataObj;
+          break;
+        case 'POST':
+          const formData = new URLSearchParams();
+          Object.entries(dataObj).forEach((ele) => {
+            formData.append(ele[0], ele[1]);
+          });
+          config.data = formData;
+          break;
+        default:
+          config.data = dataObj;
+          break;
       }
-      return result;
-    })
-    .catch(() => {
-      message.errorMessage('请求失败');
-      loading.close();
+      axios.request(config).then((response) => {
+        let result;
+        if (response.data.success) {
+          result = response.data.obj;
+        } else {
+          message.errorMessage(response.data.message);
+        }
+        resolve(result);
+      })
+      .catch((err) => {
+        console.log(err);
+        reject(err);
+      });
     });
   },
 };

@@ -47,14 +47,16 @@ export default {
       this.$router.push({ name: 'job_overview', params: { domain } });
     },
     loadAllDomains() {
-      this.$http.getData('/console/home/namespaces').then((data) => {
-        if (data) {
-          this.domains = data.map((obj) => {
-            const rObj = {};
-            rObj.value = obj;
-            return rObj;
-          });
-        }
+      this.$http.get('/console/home/namespaces').then((data) => {
+        this.domains = data.map((obj) => {
+          const rObj = {};
+          rObj.value = obj;
+          return rObj;
+        });
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取namespaces失败！'); })
+      .finally(() => {
+        this.loading = false;
       });
     },
   },

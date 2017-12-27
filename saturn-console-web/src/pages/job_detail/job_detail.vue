@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-loading="loading" element-loading-text="请稍等···">
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus">
             <div class="job-detail-header">
@@ -20,6 +20,7 @@
 export default {
   data() {
     return {
+      loading: false,
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       sidebarMenus: [
@@ -33,10 +34,13 @@ export default {
   },
   methods: {
     getDomainInfo() {
-      this.$http.getData('/console/home/namespace', { namespace: this.domainName }).then((data) => {
-        if (data) {
-          this.domainInfo = data;
-        }
+      this.loading = true;
+      this.$http.get('/console/home/namespace', { namespace: this.domainName }).then((data) => {
+        this.domainInfo = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取namespaces信息请求失败！'); })
+      .finally(() => {
+        this.loading = false;
       });
     },
   },
