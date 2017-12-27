@@ -32,68 +32,52 @@ public class JobOverviewController extends AbstractGUIController {
 	@Resource
 	private JobService jobService;
 
-	@Audit(type = AuditType.WEB)
 	@RequestMapping(value = "/jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> list(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
 		return new ResponseEntity<>(new RequestResult(true, jobService.jobs(namespace)), HttpStatus.OK);
 	}
 
-	@Audit(type = AuditType.WEB)
 	@RequestMapping(value = "/groups", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> groups(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
 		return new ResponseEntity<>(new RequestResult(true, jobService.groups(namespace)), HttpStatus.OK);
 	}
 
-	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/dependent-jobs", method = RequestMethod.GET)
-	public ResponseEntity<RequestResult> dependentJob(final HttpServletRequest request,
+	@RequestMapping(value = "/depending-jobs", method = RequestMethod.GET)
+	public ResponseEntity<RequestResult> dependingJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
-		List<DependencyJob> dependencyJobs = jobService.dependentJobs(namespace, jobName);
+		List<DependencyJob> dependencyJobs = jobService.dependingJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobs), HttpStatus.OK);
 	}
 
-	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/dependent-jobs-batch", method = RequestMethod.GET)
-	public ResponseEntity<RequestResult> dependentJobBatch(final HttpServletRequest request,
+	@RequestMapping(value = "/depending-jobs-batch", method = RequestMethod.GET)
+	public ResponseEntity<RequestResult> dependingJobBatch(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
-			List<DependencyJob> dependencyJobs = jobService.dependentJobs(namespace, jobName);
+			List<DependencyJob> dependencyJobs = jobService.dependingJobs(namespace, jobName);
 			dependencyJobsMap.put(jobName, dependencyJobs);
 		}
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobsMap), HttpStatus.OK);
 	}
 
-	@Audit(type = AuditType.WEB)
 	@RequestMapping(value = "/depended-jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> dependedJobs(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
 		List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependedJobs), HttpStatus.OK);
 	}
 
-	@Audit(type = AuditType.WEB)
 	@RequestMapping(value = "/depended-jobs-batch", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> dependedJobsBatch(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
 			List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
@@ -103,7 +87,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/enable-job", method = RequestMethod.GET)
+	@RequestMapping(value = "/enable-job", method = RequestMethod.POST)
 	public ResponseEntity<RequestResult> enableJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
@@ -114,7 +98,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/enable-job-batch", method = RequestMethod.GET)
+	@RequestMapping(value = "/enable-job-batch", method = RequestMethod.POST)
 	public ResponseEntity<RequestResult> enableJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
@@ -128,7 +112,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/disable-job", method = RequestMethod.GET)
+	@RequestMapping(value = "/disable-job", method = RequestMethod.POST)
 	public ResponseEntity<RequestResult> disableJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
@@ -139,7 +123,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/disable-job-batch", method = RequestMethod.GET)
+	@RequestMapping(value = "/disable-job-batch", method = RequestMethod.POST)
 	public ResponseEntity<RequestResult> disableJobBatch(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)

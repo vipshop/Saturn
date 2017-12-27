@@ -229,7 +229,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<DependencyJob> dependentJobs(String namespace, String jobName) throws SaturnJobConsoleException {
+	public List<DependencyJob> dependingJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
 		List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfigList != null) {
