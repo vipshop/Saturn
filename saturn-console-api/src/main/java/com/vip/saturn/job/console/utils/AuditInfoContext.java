@@ -6,6 +6,8 @@ import java.util.Map;
 
 /**
  * Context to hold the audit info.
+ *
+ * @author kfchu
  */
 public class AuditInfoContext {
 
@@ -25,6 +27,14 @@ public class AuditInfoContext {
 
 	public static void put(String key, String value) {
 		auditInfoHolder.get().put(key, value);
+	}
+
+	public static void putNamespace(String value) {
+		auditInfoHolder.get().put("namespace", value);
+	}
+
+	public static void putJobName(String value) {
+		auditInfoHolder.get().put("jobName", value);
 	}
 
 	public static String get(String key) {
