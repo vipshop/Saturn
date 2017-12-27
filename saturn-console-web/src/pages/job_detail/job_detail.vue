@@ -26,13 +26,14 @@ export default {
         { index: 'job_setting', title: '作业设置', icon: 'fa fa-gear', name: 'job_setting', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
         { index: 'job_executor', title: '分片情况', icon: 'fa fa-server', name: 'job_executor', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
         { index: 'running_state', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'running_state', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_statistics', title: '作业统计', icon: 'fa fa-bar-chart', name: 'job_statistics', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
       ],
       domainInfo: {},
     };
   },
   methods: {
     getDomainInfo() {
-      this.$http.getData(`/console/home/namespaces/${this.domainName}`).then((data) => {
+      this.$http.getData('/console/home/namespace', { namespace: this.domainName }).then((data) => {
         if (data) {
           this.domainInfo = data;
         }

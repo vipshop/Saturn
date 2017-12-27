@@ -7,6 +7,7 @@ const routermapperlist = [
     { name: 'jobSetting', path: '/job_detail/:domain/:jobName/job_overview/job_setting' },
     { name: 'jobExecutor', path: '/job_detail/:domain/:jobName/job_overview/job_executor' },
     { name: 'runningState', path: '/job_detail/:domain/:jobName/job_overview/running_state' },
+    { name: 'jobStatistics', path: '/job_detail/:domain/:jobName/job_overview/job_statistics' },
     { name: 'dashboardManage', path: '/dashboard_manage' },
     { name: 'registryManage', path: '/registry_manage' },
 ];

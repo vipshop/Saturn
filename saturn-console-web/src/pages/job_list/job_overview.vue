@@ -75,7 +75,7 @@
                             <el-table-column prop="shardingTotalCount" label="分片数"></el-table-column>
                             <el-table-column label="分片分布">
                                 <template slot-scope="scope">
-                                    <el-tooltip placement="right">
+                                    <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
                                         <el-tag>{{$array.strToArray(scope.row.shardingList).length}}</el-tag>
                                         <div slot="content" v-for="item in $array.strToArray(scope.row.shardingList)" :key="item">
                                             <div>{{item}}</div>
