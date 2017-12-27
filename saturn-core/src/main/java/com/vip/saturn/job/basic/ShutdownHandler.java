@@ -26,7 +26,7 @@ public class ShutdownHandler implements SignalHandler {
 	private static List<Runnable> globalListeners = new ArrayList<>();
 
 	private static ShutdownHandler handler;
-	private static volatile boolean exit = true;
+	private static volatile boolean isExit = true;
 
 	private static final AtomicBoolean isHandling = new AtomicBoolean(false);
 
@@ -60,8 +60,8 @@ public class ShutdownHandler implements SignalHandler {
 		executorListeners.remove(executorName);
 	}
 
-	public static void exitAfterHandler(boolean exit) {
-		ShutdownHandler.exit = exit;
+	public static void exitAfterHandler(boolean isExit) {
+		ShutdownHandler.isExit = isExit;
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class ShutdownHandler implements SignalHandler {
 		callExecutorListeners();
 		callGlobalListeners();
 		log.info("msg=Saturn executor is closed");
-		if (exit) {
+		if (isExit) {
 			exit();
 		}
 	}
