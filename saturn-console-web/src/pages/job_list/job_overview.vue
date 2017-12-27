@@ -39,7 +39,7 @@
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                         </el-form-item>
                     </el-form>
-                    <div class="page-table">
+                    <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>作业列表
                                 <el-button type="text" @click="handleRefresh()"><i class="fa fa-refresh"></i></el-button>
@@ -85,11 +85,11 @@
                             </el-table-column>
                             <el-table-column label="操作" width="100px">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="启用" placement="top" v-if="scope.row.status === 'READY' || scope.row.status === 'STOPPED'">
-                                        <el-button type="text" @click="handleEnabled(scope.row)"><i class="fa fa-play-circle"></i></el-button>
+                                    <el-tooltip content="启用" placement="top" v-if="scope.row.status === 'STOPPING' || scope.row.status === 'STOPPED'">
+                                        <el-button type="text" @click="handleActive(scope.row, true)"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="禁用" placement="top" v-if="scope.row.status === 'RUNNING'">
-                                        <el-button type="text" @click="handleEnabled(scope.row)"><i class="fa fa-stop-circle"></i></el-button>
+                                    <el-tooltip content="禁用" placement="top" v-if="scope.row.status === 'READY' || scope.row.status === 'RUNNING'">
+                                        <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="编辑" placement="top">
                                         <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
@@ -111,13 +111,14 @@
 export default {
   data() {
     return {
+      loading: false,
       domainName: this.$route.params.domain,
       filters: {
         jobName: '',
         groups: '',
       },
       orderBy: 'jobName',
-      groupList: ['group1', 'group2'],
+      groupList: [],
       jobList: [],
       statusTag: {
         READY: '',
@@ -173,22 +174,92 @@ export default {
     handleDelete(row) {
       console.log(row);
     },
-    handleEnabled(row) {
-      console.log(row);
+    handleActive(row, enabled) {
+      let dependUrl = '';
+      let operation = '';
+      let text = '';
+      let activeRequest = '';
+      if (enabled) {
+        dependUrl = '/console/job-overview/depending-jobs';
+        operation = '启用';
+        text = '禁用';
+        activeRequest = 'enable-job';
+      } else {
+        dependUrl = '/console/job-overview/depended-jobs';
+        operation = '禁用';
+        text = '启用';
+        activeRequest = 'disable-job';
+      }
+      const params = {
+        namespace: this.domainName,
+        job_name: row.jobName,
+      };
+      this.$http.get(dependUrl, params).then((data) => {
+        if (data) {
+          const arr = data;
+          if (arr.length > 0) {
+            const jobArr = [];
+            if (enabled) {
+              arr.forEach((ele) => {
+                if (!ele.enabled) {
+                  jobArr.push(ele.jobName);
+                }
+              });
+            } else {
+              arr.forEach((ele) => {
+                if (ele.enabled) {
+                  jobArr.push(ele.jobName);
+                }
+              });
+            }
+            if (jobArr.length > 0) {
+              const jobStr = jobArr.join(',');
+              this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
+                this.enabledRequest(params, activeRequest);
+              });
+            } else {
+              this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
+                this.enabledRequest(params, activeRequest);
+              });
+            }
+          } else {
+            this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
+              this.enabledRequest(params, activeRequest);
+            });
+          }
+        }
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+    },
+    enabledRequest(params, reqUrl) {
+      this.loading = true;
+      this.$http.post(`/console/job-overview/${reqUrl}`, params).then(() => {
+        this.getJobList();
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); })
+      .finally(() => {
+        this.loading = false;
+      });
     },
     getJobList() {
-      this.$http.getData('/console/job-overview/jobs', { namespace: this.domainName }).then((data) => {
-        if (data) {
-          this.jobList = data;
-          this.total = data.length;
-        }
+      this.loading = true;
+      this.$http.get('/console/job-overview/jobs', { namespace: this.domainName }).then((data) => {
+        this.jobList = data;
+        this.total = data.length;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业列表失败！'); })
+      .finally(() => {
+        this.loading = false;
       });
     },
     getGroupList() {
-      this.$http.getData('/console/job-overview/groups', { namespace: this.domainName }).then((data) => {
-        if (data) {
-          this.groupList = data;
-        }
+      this.loading = true;
+      this.$http.get('/console/job-overview/groups', { namespace: this.domainName }).then((data) => {
+        this.groupList = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); })
+      .finally(() => {
+        this.loading = false;
       });
     },
   },
