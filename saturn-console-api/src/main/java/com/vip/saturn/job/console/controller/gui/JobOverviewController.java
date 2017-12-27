@@ -7,11 +7,13 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.vo.DependencyJob;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -43,6 +45,9 @@ public class JobOverviewController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, jobService.groups(namespace)), HttpStatus.OK);
 	}
 
+	/**
+	 * Get the jobs. The job is depending on the jobs.
+	 */
 	@RequestMapping(value = "/depending-jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getDependingJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
@@ -64,6 +69,9 @@ public class JobOverviewController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobsMap), HttpStatus.OK);
 	}
 
+	/**
+	 * Get the jobs. The job is depended by the jobs.
+	 */
 	@RequestMapping(value = "/depended-jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getDependedJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
