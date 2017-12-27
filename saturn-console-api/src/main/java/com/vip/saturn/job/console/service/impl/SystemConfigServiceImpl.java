@@ -5,16 +5,20 @@ import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.mybatis.service.SystemConfig4SqlService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author xiaopeng.he
@@ -23,12 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SystemConfigServiceImpl implements SystemConfigService {
 
 	private static final Logger log = LoggerFactory.getLogger(SystemConfigServiceImpl.class);
-
+	private final ConcurrentHashMap<String, String> systemConfigCache = new ConcurrentHashMap<>();
 	@Autowired
 	private SystemConfig4SqlService systemConfig4SqlService;
-
-	private final ConcurrentHashMap<String, String> systemConfigCache = new ConcurrentHashMap<>();
-
 	private Timer timer;
 
 	private AtomicBoolean hasGotSystemConfigData = new AtomicBoolean(false);

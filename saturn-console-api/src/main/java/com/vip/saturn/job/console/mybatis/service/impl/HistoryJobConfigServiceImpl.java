@@ -1,15 +1,13 @@
-
 package com.vip.saturn.job.console.mybatis.service.impl;
 
+import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
+import com.vip.saturn.job.console.mybatis.repository.HistoryJobConfigRepository;
+import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
-import com.vip.saturn.job.console.mybatis.repository.HistoryJobConfigRepository;
-import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
 
 @Service
 public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {

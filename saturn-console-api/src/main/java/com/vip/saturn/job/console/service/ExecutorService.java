@@ -3,14 +3,11 @@ package com.vip.saturn.job.console.service;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-
 import java.io.File;
 import java.util.List;
 
 /**
- * 
  * @author xiaopeng.he
- *
  */
 public interface ExecutorService {
 

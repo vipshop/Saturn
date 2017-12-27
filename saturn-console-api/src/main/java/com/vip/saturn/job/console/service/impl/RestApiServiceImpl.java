@@ -31,6 +31,13 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +45,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author hebelala
@@ -350,11 +349,13 @@ public class RestApiServiceImpl implements RestApiService {
 					log.error(e.getMessage(), e);
 				}
 			}
-			if (!CollectionUtils.isEmpty(lastCompleteTimeList) && lastCompleteTimeList.size() == runningItemSize) { // 所有分配都完成才显示最近最晚的完成时间
+			if (!CollectionUtils.isEmpty(lastCompleteTimeList)
+					&& lastCompleteTimeList.size() == runningItemSize) { // 所有分配都完成才显示最近最晚的完成时间
 				Collections.sort(lastCompleteTimeList);
 				try {
 					restApiJobStatistics.setLastCompleteTime(
-							Long.parseLong(lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
+							Long.parseLong(
+									lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
 				} catch (NumberFormatException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -678,7 +679,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 	@Override
 	public void raiseAlarm(final String namespace, final String jobName, final String executorName,
-						   final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+			final Integer shardItem, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
 				new ReuseCallBackWithoutReturn() {
 					@Override
@@ -701,7 +702,8 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public void raiseExecutorRestartAlarm(final String namespace, final String executorName, final AlarmInfo alarmInfo) throws SaturnJobConsoleException {
+	public void raiseExecutorRestartAlarm(final String namespace, final String executorName, final AlarmInfo alarmInfo)
+			throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, registryCenterService, curatorRepository,
 				new ReuseCallBackWithoutReturn() {
 					@Override

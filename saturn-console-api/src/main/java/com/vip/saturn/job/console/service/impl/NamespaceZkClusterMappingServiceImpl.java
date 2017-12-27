@@ -20,21 +20,22 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ShareStatusModuleNames;
-
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author hebelala
@@ -165,7 +166,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 		return zkClusterList;
 	}
 
-	@Transactional(rollbackFor = { SaturnJobConsoleException.class })
+	@Transactional(rollbackFor = {SaturnJobConsoleException.class})
 	@Override
 	public void moveNamespaceTo(String namespace, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly)
 			throws SaturnJobConsoleException {
@@ -176,10 +177,11 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			} else {
 				String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 				if (zkClusterKey != null && zkClusterKey.equals(zkClusterKeyNew)) {
-					throw new SaturnJobConsoleException("The namespace(" + namespace + ") is in " + zkClusterKey); // see
-																													// moveNamespaceBatchTo
-																													// before
-																													// modify
+					throw new SaturnJobConsoleException(
+							"The namespace(" + namespace + ") is in " + zkClusterKey); // see
+					// moveNamespaceBatchTo
+					// before
+					// modify
 				}
 				ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKeyNew);
 				if (zkCluster == null) {

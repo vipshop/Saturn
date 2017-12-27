@@ -2,13 +2,10 @@ package com.vip.saturn.job.console.filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
- * 
  * @author linzhaoming
- *
  */
 public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
 

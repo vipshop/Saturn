@@ -1,11 +1,10 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
 /**
  * @author chembo.huang
- *
  */
 public class AbnormalJob {
 
@@ -17,10 +16,14 @@ public class AbnormalJob {
 
 	private String domainName;
 
-	/** name and namespace */
+	/**
+	 * name and namespace
+	 */
 	private String nns;
 
-	/** degree of the domain */
+	/**
+	 * degree of the domain
+	 */
 	private String degree;
 
 	private String jobDegree;
@@ -48,32 +51,12 @@ public class AbnormalJob {
 		this.degree = degree;
 	}
 
-	public enum Cause {
-		NO_SHARDS, NOT_RUN, EXECUTORS_NOT_READY
-	}
-
 	public String getUuid() {
 		return uuid;
 	}
 
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
-	}
-
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
-	}
-
-	public void setDomainName(String domainName) {
-		this.domainName = domainName;
-	}
-
-	public void setNns(String nns) {
-		this.nns = nns;
-	}
-
-	public void setDegree(String degree) {
-		this.degree = degree;
 	}
 
 	public String getJobDegree() {
@@ -120,16 +103,32 @@ public class AbnormalJob {
 		return jobName;
 	}
 
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
 	public String getDomainName() {
 		return domainName;
+	}
+
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
 	}
 
 	public String getNns() {
 		return nns;
 	}
 
+	public void setNns(String nns) {
+		this.nns = nns;
+	}
+
 	public String getDegree() {
 		return degree;
+	}
+
+	public void setDegree(String degree) {
+		this.degree = degree;
 	}
 
 	public long getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() {
@@ -161,15 +160,22 @@ public class AbnormalJob {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		AbnormalJob other = (AbnormalJob) obj;
 		return this.getJobName().equals(other.getJobName()) && this.getDomainName().equals(other.getDomainName())
 				&& this.getCause().equals(other.getCause()) && this.getNextFireTime() == other.getNextFireTime();
+	}
+
+	public enum Cause {
+		NO_SHARDS, NOT_RUN, EXECUTORS_NOT_READY
 	}
 
 }

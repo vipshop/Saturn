@@ -1,15 +1,12 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.service.impl;
@@ -24,17 +21,26 @@ import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.JsonUtils;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-
+import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
@@ -43,13 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
-
-import java.lang.reflect.Field;
-import java.text.ParseException;
-import java.util.*;
 
 @Service
 public class JobOperationServiceImpl implements JobOperationService {
@@ -316,7 +315,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 				if (jobConfig.getShardingItemParameters() == null
 						|| jobConfig.getShardingItemParameters().trim().isEmpty()
 						|| jobConfig.getShardingItemParameters().split(",").length < jobConfig
-								.getShardingTotalCount()) {
+						.getShardingTotalCount()) {
 					throw new SaturnJobConsoleException("分片参数不能小于分片总数");
 				}
 			}
@@ -360,7 +359,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 
 	/**
 	 * 对作业配置的一些属性进行矫正
-	 * 
+	 *
 	 * @param jobConfig
 	 * @param curatorFrameworkOp
 	 */
@@ -381,7 +380,8 @@ public class JobOperationServiceImpl implements JobOperationService {
 				jobConfig.setJobClass("");
 			}
 		}
-		jobConfig.setEnabledReport(getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone()));
+		jobConfig.setEnabledReport(
+				getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone()));
 	}
 
 	/**
@@ -389,9 +389,12 @@ public class JobOperationServiceImpl implements JobOperationService {
 	 */
 	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
 		boolean enabledReport = true;
-		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType
+				.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
 			try {
-				Integer intervalTimeConfigured = systemConfigService.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
+				Integer intervalTimeConfigured = systemConfigService
+						.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT,
+								DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
 				if (intervalTimeConfigured == null) {
 					log.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
 					intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;

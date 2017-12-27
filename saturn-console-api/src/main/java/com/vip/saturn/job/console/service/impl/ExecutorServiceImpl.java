@@ -17,6 +17,11 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import javax.annotation.Resource;
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableCell;
@@ -32,16 +37,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 /**
- * 
  * @author xiaopeng.he
- *
  */
 @Service
 public class ExecutorServiceImpl implements ExecutorService {
@@ -223,7 +220,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public File getExportJobFile() throws SaturnJobConsoleException {
 		try {
-			File tmp = new File(SaturnConstants.CACHES_FILE_PATH, "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
+			File tmp = new File(SaturnConstants.CACHES_FILE_PATH,
+					"tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
 			if (!tmp.exists()) {
 				FileUtils.forceMkdir(tmp.getParentFile());
 				tmp.createNewFile();

@@ -1,10 +1,7 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.response.converter;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,18 +15,37 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrappe
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase;
+import java.io.IOException;
+import java.lang.reflect.Type;
 
 /**
  * 返回json中null值显示为空
- * @author chembo.huang
  *
+ * @author chembo.huang
  */
 
 public class CustomNullValueMapper extends ObjectMapper {
 
 	private static final long serialVersionUID = 1L;
 
+	public CustomNullValueMapper() {
+		DefaultSerializerProvider sp = new DefaultSerializerProvider.Impl();
+		sp.setNullValueSerializer(new JsonSerializer<Object>() {
+
+			@Override
+			public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider)
+					throws IOException, JsonProcessingException {
+				jgen.writeString("");
+			}
+		});
+		setSerializerProvider(sp);
+		SimpleModule module = new SimpleModule();
+		module.addSerializer(String.class, new CustomStringSerializer());
+		registerModule(module);
+	}
+
 	class CustomStringSerializer extends NonTypedScalarSerializerBase<String> {
+
 		public CustomStringSerializer() {
 			super(String.class);
 		}
@@ -52,24 +68,9 @@ public class CustomNullValueMapper extends ObjectMapper {
 		@Override
 		public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint)
 				throws JsonMappingException {
-			if (visitor != null)
+			if (visitor != null) {
 				visitor.expectStringFormat(typeHint);
-		}
-	}
-
-	public CustomNullValueMapper() {
-		DefaultSerializerProvider sp = new DefaultSerializerProvider.Impl();
-		sp.setNullValueSerializer(new JsonSerializer<Object>() {
-
-			@Override
-			public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider)
-					throws IOException, JsonProcessingException {
-				jgen.writeString("");
 			}
-		});
-		setSerializerProvider(sp);
-		SimpleModule module = new SimpleModule();
-		module.addSerializer(String.class, new CustomStringSerializer());
-		registerModule(module);
+		}
 	}
 }

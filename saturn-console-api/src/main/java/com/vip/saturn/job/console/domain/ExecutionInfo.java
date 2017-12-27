@@ -1,15 +1,12 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.domain;
@@ -160,20 +157,26 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		ExecutionInfo other = (ExecutionInfo) obj;
-		if (item != other.item)
+		if (item != other.item) {
 			return false;
+		}
 		if (jobName == null) {
-			if (other.jobName != null)
+			if (other.jobName != null) {
 				return false;
-		} else if (!jobName.equals(other.jobName))
+			}
+		} else if (!jobName.equals(other.jobName)) {
 			return false;
+		}
 		return true;
 	}
 

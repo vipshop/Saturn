@@ -11,10 +11,14 @@ public class AbnormalContainer {
 
 	private String domainName;
 
-	/** name and namespace */
+	/**
+	 * name and namespace
+	 */
 	private String nns;
 
-	/** degree of the domain */
+	/**
+	 * degree of the domain
+	 */
 	private String degree;
 
 	private Integer configInstances;
@@ -31,10 +35,6 @@ public class AbnormalContainer {
 		this.domainName = domainName;
 		this.nns = nns;
 		this.degree = degree;
-	}
-
-	public enum Cause {
-		CONTAINER_INSTANCE_MISMATCH
 	}
 
 	public String getTaskId() {
@@ -91,6 +91,10 @@ public class AbnormalContainer {
 
 	public void setCause(String cause) {
 		this.cause = cause;
+	}
+
+	public enum Cause {
+		CONTAINER_INSTANCE_MISMATCH
 	}
 
 }

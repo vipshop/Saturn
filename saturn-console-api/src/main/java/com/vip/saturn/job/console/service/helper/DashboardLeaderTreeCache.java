@@ -4,6 +4,10 @@ import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.LocalHostService;
 import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.cache.NodeCacheListener;
@@ -12,11 +16,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author hebelala

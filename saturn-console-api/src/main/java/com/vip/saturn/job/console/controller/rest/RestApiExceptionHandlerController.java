@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Handler for RESTful API Exception.
- * <p>
- * Created by jeff.zhu on 26/05/2017.
+ * Handler for RESTful API Exception. <p> Created by jeff.zhu on 26/05/2017.
  */
 @ControllerAdvice
 public class RestApiExceptionHandlerController {

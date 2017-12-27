@@ -1,24 +1,33 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.ExecutorProvidedType;
+import com.vip.saturn.job.console.domain.HealthCheckJobServer;
+import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMigrateInfo;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
@@ -34,18 +43,6 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import ma.glasnost.orika.MapperFacade;
-import ma.glasnost.orika.MapperFactory;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -60,6 +57,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 public class JobDimensionServiceImpl implements JobDimensionService {
@@ -76,6 +84,114 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	private CurrentJobConfigService currentJobConfigService;
 
 	private MapperFacade mapper;
+
+	/**
+	 * 该时间是否在作业暂停时间段范围内。
+	 * <p>
+	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+	 *
+	 * @return 该时间是否在作业暂停时间段范围内。
+	 */
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
+			TimeZone timeZone) {
+		Calendar calendar = Calendar.getInstance(timeZone);
+		calendar.setTime(date);
+		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
+		int d = calendar.get(Calendar.DAY_OF_MONTH);
+		int h = calendar.get(Calendar.HOUR_OF_DAY);
+		int m = calendar.get(Calendar.MINUTE);
+
+		boolean dateIn = false;
+		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
+		if (!pausePeriodDateIsEmpty) {
+			String[] periodsDate = pausePeriodDate.split(",");
+			if (periodsDate != null) {
+				for (String period : periodsDate) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] MdLeft = left.split("/");
+						String[] MdRight = right.split("/");
+						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
+							try {
+								int MLeft = Integer.parseInt(MdLeft[0]);
+								int dLeft = Integer.parseInt(MdLeft[1]);
+								int MRight = Integer.parseInt(MdRight[0]);
+								int dRight = Integer.parseInt(MdRight[1]);
+								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
+										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
+								if (dateIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								dateIn = false;
+								break;
+							}
+						} else {
+							dateIn = false;
+							break;
+						}
+					} else {
+						dateIn = false;
+						break;
+					}
+				}
+			}
+		}
+		boolean timeIn = false;
+		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
+		if (!pausePeriodTimeIsEmpty) {
+			String[] periodsTime = pausePeriodTime.split(",");
+			if (periodsTime != null) {
+				for (String period : periodsTime) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] hmLeft = left.split(":");
+						String[] hmRight = right.split(":");
+						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
+							try {
+								int hLeft = Integer.parseInt(hmLeft[0]);
+								int mLeft = Integer.parseInt(hmLeft[1]);
+								int hRight = Integer.parseInt(hmRight[0]);
+								int mRight = Integer.parseInt(hmRight[1]);
+								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
+										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
+								if (timeIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								timeIn = false;
+								break;
+							}
+						} else {
+							timeIn = false;
+							break;
+						}
+					} else {
+						timeIn = false;
+						break;
+					}
+				}
+			}
+		}
+
+		if (pausePeriodDateIsEmpty) {
+			if (pausePeriodTimeIsEmpty) {
+				return false;
+			} else {
+				return timeIn;
+			}
+		} else {
+			if (pausePeriodTimeIsEmpty) {
+				return dateIn;
+			} else {
+				return dateIn && timeIn;
+			}
+		}
+	}
 
 	@Autowired
 	public void setMapperFactory(MapperFactory mapperFactory) {
@@ -137,7 +253,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
 			if (jobs != null && jobs.size() > 0) {
 				for (String job : jobs) {
-					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
+					if (curatorFrameworkOp
+							.checkExists(JobNodePath.getConfigNodePath(job))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
 						allJobs.add(job);
 					}
 				}
@@ -548,7 +665,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 			result.setJobDegree(Integer.parseInt(jobDegree));
 		}
 		result.setEnabled(
-				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
+				Boolean.valueOf(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
 		result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
 		if (!isJobConfigOnly) {
 			result.setPreferListProvided(getAllExecutors(jobName));
@@ -693,7 +811,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 							jobSettings.getLocalMode(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobSettings.getJobName(), "useSerial"),
 							jobSettings.getUseSerial(), bw);
-			if (jobSettings.getEnabledReport() != null && !jobSettings.getEnabledReport()) {// 当enabledReport关闭上报时，要清理execution节点
+			if (jobSettings.getEnabledReport() != null && !jobSettings
+					.getEnabledReport()) {// 当enabledReport关闭上报时，要清理execution节点
 				log.info("the switch of enabledReport set to false, now deleteJob the execution zk node");
 				String executionNodePath = JobNodePath.getExecutionNodePath(jobSettings.getJobName());
 				if (curatorFrameworkOp.checkExists(executionNodePath)) {
@@ -842,7 +961,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	private ExecutionInfo getExecutionInfo(String jobName, String item, String server, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private ExecutionInfo getExecutionInfo(String jobName, String item, String server,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		ExecutionInfo result = new ExecutionInfo();
 		result.setJobName(jobName);
 		result.setItem(Integer.parseInt(item));
@@ -921,14 +1041,16 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		return result;
 	}
 
-	private Map<String, String> getEffectiveItemServerMapping(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private Map<String, String> getEffectiveItemServerMapping(String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		Map<String, String> mapping = new HashMap<>();
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
 		if (curatorFrameworkOp.checkExists(serverNodePath)) {
 			List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
 			if (servers != null) {
 				for (String server : servers) {
-					String shardingData = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, server, "sharding"));
+					String shardingData = curatorFrameworkOp
+							.getData(JobNodePath.getServerNodePath(jobName, server, "sharding"));
 					if (shardingData != null && !shardingData.trim().isEmpty()) {
 						String[] split = shardingData.split(",");
 						for (String tmp : split) {
@@ -945,7 +1067,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 		return mapping;
 	}
-
 
 	@Override
 	public ExecutionInfo getExecutionJobLog(String jobName, int item) {
@@ -980,7 +1101,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	}
 
 	@Override
-	public List<ExecutorProvided> getAllExecutors(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	public List<ExecutorProvided> getAllExecutors(String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
 		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
@@ -994,7 +1116,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				}
 				ExecutorProvided executorProvided = new ExecutorProvided();
 				executorProvided.setExecutorName(executor);
-				executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
+				executorProvided.setNoTraffic(
+						curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
 				if (StringUtils.isNotBlank(ip)) {
 					executorProvided.setType(ExecutorProvidedType.ONLINE);
@@ -1007,18 +1130,20 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
 
-		if(jobName != null) {
+		if (jobName != null) {
 			String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
 			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
 				String preferList = curatorFrameworkOp.getData(preferListNodePath);
 				if (!Strings.isNullOrEmpty(preferList)) {
 					String[] preferExecutorList = preferList.split(",");
 					for (String preferExecutor : preferExecutorList) {
-						if (executors != null && !executors.contains(preferExecutor) && !preferExecutor.startsWith("@")) {
+						if (executors != null && !executors.contains(preferExecutor) && !preferExecutor
+								.startsWith("@")) {
 							ExecutorProvided executorProvided = new ExecutorProvided();
 							executorProvided.setExecutorName(preferExecutor);
 							executorProvided.setType(ExecutorProvidedType.DELETED);
-							executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
+							executorProvided.setNoTraffic(curatorFrameworkOp
+									.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
 							executorProvidedList.add(executorProvided);
 						}
 					}
@@ -1047,7 +1172,8 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
 					ExecutorProvided executorProvided = new ExecutorProvided();
 					executorProvided.setExecutorName(executor);
-					executorProvided.setNoTraffic(curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
+					executorProvided.setNoTraffic(
+							curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
 					executorProvided.setType(ExecutorProvidedType.ONLINE);
 					executorProvidedList.add(executorProvided);
 					continue;
@@ -1074,7 +1200,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		}
 
 		if (!CollectionUtils.isEmpty(containerTaskIds)) {
-			for(String task : containerTaskIds) {
+			for (String task : containerTaskIds) {
 				ExecutorProvided executorProvided = new ExecutorProvided();
 				executorProvided.setExecutorName(task);
 				executorProvided.setType(ExecutorProvidedType.DOCKER);
@@ -1284,7 +1410,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	/**
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * 检查否是新版本的executor(新的域)
 	 * 旧域：该域下必须至少有一个executor并且所有的executor都没有版本号version节点
@@ -1298,7 +1424,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	 *        	-2：该域下所有Executor的版本都小于指定的版本
 	 *         	-3：Executor的版本存在大于、等于或小于指定的版本
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
 	 */
 	@Override
@@ -1372,10 +1498,10 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 
 	/**
 	 * 比较两个executor的版本，以“.”分割成数组，从第一个数开始逐一比较
-	 * 
+	 *
 	 * <p>
 	 * Examples: <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 *     1.0.1 < 1.1.0
 	 *     1.0.1 < 1.0.10
@@ -1385,7 +1511,7 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 	 *     1.0.1.0 > 1.0.0.10
 	 * </blockquote>
 	 * </pre>
-	 * 
+	 *
 	 * @param version1 executor1的版本
 	 * @param version2 executor2的版本
 	 * @return 1:version1的版本大于version2的版本 0:version1的版本等于version2的版本 -1:version1的版本小于version2的版本
@@ -1504,114 +1630,6 @@ public class JobDimensionServiceImpl implements JobDimensionService {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return null;
-		}
-	}
-
-	/**
-	 * 该时间是否在作业暂停时间段范围内。
-	 * <p>
-	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
-	 *
-	 * @return 该时间是否在作业暂停时间段范围内。
-	 */
-	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
-			TimeZone timeZone) {
-		Calendar calendar = Calendar.getInstance(timeZone);
-		calendar.setTime(date);
-		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
-		int d = calendar.get(Calendar.DAY_OF_MONTH);
-		int h = calendar.get(Calendar.HOUR_OF_DAY);
-		int m = calendar.get(Calendar.MINUTE);
-
-		boolean dateIn = false;
-		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
-		if (!pausePeriodDateIsEmpty) {
-			String[] periodsDate = pausePeriodDate.split(",");
-			if (periodsDate != null) {
-				for (String period : periodsDate) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] MdLeft = left.split("/");
-						String[] MdRight = right.split("/");
-						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
-							try {
-								int MLeft = Integer.parseInt(MdLeft[0]);
-								int dLeft = Integer.parseInt(MdLeft[1]);
-								int MRight = Integer.parseInt(MdRight[0]);
-								int dRight = Integer.parseInt(MdRight[1]);
-								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
-										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
-								if (dateIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								dateIn = false;
-								break;
-							}
-						} else {
-							dateIn = false;
-							break;
-						}
-					} else {
-						dateIn = false;
-						break;
-					}
-				}
-			}
-		}
-		boolean timeIn = false;
-		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
-		if (!pausePeriodTimeIsEmpty) {
-			String[] periodsTime = pausePeriodTime.split(",");
-			if (periodsTime != null) {
-				for (String period : periodsTime) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] hmLeft = left.split(":");
-						String[] hmRight = right.split(":");
-						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
-							try {
-								int hLeft = Integer.parseInt(hmLeft[0]);
-								int mLeft = Integer.parseInt(hmLeft[1]);
-								int hRight = Integer.parseInt(hmRight[0]);
-								int mRight = Integer.parseInt(hmRight[1]);
-								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
-										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
-								if (timeIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								timeIn = false;
-								break;
-							}
-						} else {
-							timeIn = false;
-							break;
-						}
-					} else {
-						timeIn = false;
-						break;
-					}
-				}
-			}
-		}
-
-		if (pausePeriodDateIsEmpty) {
-			if (pausePeriodTimeIsEmpty) {
-				return false;
-			} else {
-				return timeIn;
-			}
-		} else {
-			if (pausePeriodTimeIsEmpty) {
-				return dateIn;
-			} else {
-				return dateIn && timeIn;
-			}
 		}
 	}
 

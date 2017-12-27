@@ -3,11 +3,22 @@ package com.vip.saturn.job.console.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.AbnormalContainer;
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.AbnormalShardingState;
+import com.vip.saturn.job.console.domain.DomainStatistics;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.ExecutorProvidedType;
+import com.vip.saturn.job.console.domain.ExecutorStatistics;
 import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.JobStatistics;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
+import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
-import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
@@ -20,9 +31,33 @@ import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
-import com.vip.saturn.job.console.utils.*;
-
+import com.vip.saturn.job.console.utils.ContainerNodePath;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.ResetCountType;
+import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -32,33 +67,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
 /**
  * @author chembo.huang
- *
  */
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
 	private static final Logger log = LoggerFactory.getLogger(DashboardServiceImpl.class);
-
-	private static int REFRESH_INTERVAL_IN_MINUTE = 7;
-
-	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
-
 	private static final long ALLOW_CONTAINER_DELAY_MILLIONSECONDS = 60L * 1000L * 3;
-
 	private static final long INTERVAL_DELTA_IN_SECOND = 10 * 1000L;
+	private static int REFRESH_INTERVAL_IN_MINUTE = 7;
+	private static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
 
 	static {
 		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE",
@@ -75,7 +94,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private Map<String/** domainName_jobName_shardingItemStr **/
 			, AbnormalShardingState/** abnormal sharding state */
-	> abnormalShardingStateCache = new ConcurrentHashMap<>();
+			> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
 	private Timer refreshStatisticsTimmer;
 	private Timer cleanAbnormalShardingCacheTimer;
@@ -158,7 +177,8 @@ public class DashboardServiceImpl implements DashboardService {
 				try {
 					for (Entry<String, AbnormalShardingState> entrySet : abnormalShardingStateCache.entrySet()) {
 						AbnormalShardingState shardingState = entrySet.getValue();
-						if (shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System.currentTimeMillis()) {
+						if (shardingState.getAlertTime() + ALLOW_DELAY_MILLIONSECONDS * 2 < System
+								.currentTimeMillis()) {
 							abnormalShardingStateCache.remove(entrySet.getKey());
 							log.info(
 									"Clean abnormalShardingCache with key: {}, alertTime: {}, zkNodeCVersion: {}: "
@@ -193,7 +213,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		log.info("end refresh statistics, takes " + (new Date().getTime() - start.getTime()));
 	}
-	
+
 	@Override
 	public synchronized void refreshStatistics2DB(String zkClusterKey) throws SaturnJobConsoleException {
 		log.info("start refresh statistics by zkClusterKey:" + zkClusterKey);
@@ -354,7 +374,8 @@ public class DashboardServiceImpl implements DashboardService {
 								// 查找超时告警作业
 								Timeout4AlarmJob timeout4AlarmJob = new Timeout4AlarmJob(job, config.getNamespace(),
 										config.getNameAndNamespace(), config.getDegree());
-								if (isTimeout4AlarmJob(oldTimeout4AlarmJobs, timeout4AlarmJob, curatorFrameworkOp) != null) {
+								if (isTimeout4AlarmJob(oldTimeout4AlarmJobs, timeout4AlarmJob, curatorFrameworkOp)
+										!= null) {
 									timeout4AlarmJob.setJobDegree(jobDegree);
 									timeout4AlarmJobList.add(timeout4AlarmJob);
 								}
@@ -399,10 +420,12 @@ public class DashboardServiceImpl implements DashboardService {
 														JobNodePath.getProcessSucessCount(job, server));
 												String processFailureCountOfThisExeStr = getData(curatorClient,
 														JobNodePath.getProcessFailureCount(job, server));
-												int processSuccessCountOfThisExe = processSuccessCountOfThisExeStr == null
-														? 0 : Integer.valueOf(processSuccessCountOfThisExeStr);
-												int processFailureCountOfThisExe = processFailureCountOfThisExeStr == null
-														? 0 : Integer.valueOf(processFailureCountOfThisExeStr);
+												int processSuccessCountOfThisExe =
+														processSuccessCountOfThisExeStr == null
+																? 0 : Integer.valueOf(processSuccessCountOfThisExeStr);
+												int processFailureCountOfThisExe =
+														processFailureCountOfThisExeStr == null
+																? 0 : Integer.valueOf(processFailureCountOfThisExeStr);
 												// 该作业当天运行统计
 												processCountOfThisJobThisDay += processSuccessCountOfThisExe
 														+ processFailureCountOfThisExe;
@@ -451,7 +474,7 @@ public class DashboardServiceImpl implements DashboardService {
 														// 更新job的executorsAndshards
 														String exesAndShards = (jobStatistics
 																.getExecutorsAndShards() == null ? ""
-																		: jobStatistics.getExecutorsAndShards())
+																: jobStatistics.getExecutorsAndShards())
 																+ server + ":" + sharding + "; ";
 														jobStatistics.setExecutorsAndShards(exesAndShards);
 														// 2.统计是物理机还是容器
@@ -844,7 +867,8 @@ public class DashboardServiceImpl implements DashboardService {
 						JSON.toJSONString(unnormalJobList));
 				saturnStatisticsService.create(ss);
 			} else {
-				List<AbnormalJob> oldUnnormalJobList = JSON.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
+				List<AbnormalJob> oldUnnormalJobList = JSON
+						.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
 				dealWithReadStatus(unnormalJobList, oldUnnormalJobList);
 				unnormalJobFromDB.setResult(JSON.toJSONString(unnormalJobList));
 				saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
@@ -876,7 +900,8 @@ public class DashboardServiceImpl implements DashboardService {
 						timeout4AlarmJobJsonString);
 				saturnStatisticsService.create(ss);
 			} else {
-				List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
+				List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON
+						.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
 				dealWithReadStatus4Timeout4AlarmJob(timeout4AlarmJobList, oldTimeout4AlarmJobs);
 				timeout4AlarmJobFromDB.setResult(JSON.toJSONString(timeout4AlarmJobList));
 				saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
@@ -886,7 +911,8 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 	}
 
-	private void dealWithReadStatus4Timeout4AlarmJob(List<Timeout4AlarmJob> jobList, List<Timeout4AlarmJob> oldJobList) {
+	private void dealWithReadStatus4Timeout4AlarmJob(List<Timeout4AlarmJob> jobList,
+			List<Timeout4AlarmJob> oldJobList) {
 		if (oldJobList == null || oldJobList.isEmpty()) {
 			return;
 		}
@@ -1091,11 +1117,8 @@ public class DashboardServiceImpl implements DashboardService {
 	 *
 	 * 逻辑： 1、有running节点，返回正常 2.1、有completed节点，但马上就取不到Mtime，节点有变动说明正常 2.2、根据Mtime计算下次触发时间，比较下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 	 * 3、既没有running又没completed视为异常
-	 * @param curatorClient
-	 * @param abnormalJob
-	 * @param shardingItemStr
+	 *
 	 * @return -1：状态正常，非-1：状态异常
-	 * @throws Exception
 	 */
 	private long checkShardingState(CuratorFramework curatorClient, AbnormalJob abnormalJob, String enabledPath,
 			String shardingItemStr) throws Exception {
@@ -1268,7 +1291,8 @@ public class DashboardServiceImpl implements DashboardService {
 	/**
 	 * 如果配置了超时告警时间，而且running节点存在时间大于它，则告警
 	 */
-	private Timeout4AlarmJob isTimeout4AlarmJob(List<Timeout4AlarmJob> oldTimeout4AlarmJobs, Timeout4AlarmJob timeout4AlarmJob,
+	private Timeout4AlarmJob isTimeout4AlarmJob(List<Timeout4AlarmJob> oldTimeout4AlarmJobs,
+			Timeout4AlarmJob timeout4AlarmJob,
 			CuratorFrameworkOp curatorFrameworkOp) {
 		String jobName = timeout4AlarmJob.getJobName();
 		String timeout4AlarmSecondsStr = curatorFrameworkOp
@@ -1298,7 +1322,8 @@ public class DashboardServiceImpl implements DashboardService {
 					}
 				}
 				if (!timeout4AlarmJob.getTimeoutItems().isEmpty()) {
-					Timeout4AlarmJob oldJob = DashboardServiceHelper.findEqualTimeout4AlarmJob(timeout4AlarmJob, oldTimeout4AlarmJobs);
+					Timeout4AlarmJob oldJob = DashboardServiceHelper
+							.findEqualTimeout4AlarmJob(timeout4AlarmJob, oldTimeout4AlarmJobs);
 					if (oldJob != null) {
 						timeout4AlarmJob.setRead(oldJob.isRead());
 						if (oldJob.getUuid() != null) {
@@ -1334,7 +1359,8 @@ public class DashboardServiceImpl implements DashboardService {
 			String preferList = getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "preferList"));
 			Boolean onlyUsePreferList = !Boolean
 					.valueOf(getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "useDispreferList")));
-			List<ExecutorProvided> preferListProvided = jobDimensionService.getAllExecutors(jobName, curatorFrameworkOp);
+			List<ExecutorProvided> preferListProvided = jobDimensionService
+					.getAllExecutors(jobName, curatorFrameworkOp);
 			List<String> preferListArr = new ArrayList<>();
 			if (preferList != null && preferList.trim().length() > 0) {
 				String[] split = preferList.split(",");
@@ -1499,7 +1525,7 @@ public class DashboardServiceImpl implements DashboardService {
 			if (checkExists(curatorClient, znode)) {
 				byte[] getZnodeData = curatorClient.getData().forPath(znode);
 				if (getZnodeData == null) {// executor的分片可能存在全部飘走的情况，sharding节点有可能获取到的是null，需要对null做判断，否则new
-											// String时会报空指针异常
+					// String时会报空指针异常
 					return null;
 				}
 				return new String(getZnodeData, Charset.forName("UTF-8"));

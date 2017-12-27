@@ -1,15 +1,10 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at <p>
+ * http://www.apache.org/licenses/LICENSE-2.0 <p> Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and limitations under the
+ * License. </p>
  */
 
 package com.vip.saturn.job.console.repository.zookeeper.impl;
@@ -19,6 +14,10 @@ import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.utils.BooleanWrapper;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
@@ -36,17 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 @Repository
 public class CuratorRepositoryImpl implements CuratorRepository {
 
-	protected static Logger log = LoggerFactory.getLogger(CuratorRepositoryImpl.class);
 	private static final int WAITING_SECONDS = 2;
-
+	protected static Logger log = LoggerFactory.getLogger(CuratorRepositoryImpl.class);
 	/**
 	 * 会话超时时间
 	 */
@@ -94,6 +87,16 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		return null;
 	}
 
+	@Override
+	public CuratorFrameworkOp inSessionClient() {
+		return new CuratorFrameworkOpImpl(ThreadLocalCuratorClient.getCuratorClient());
+	}
+
+	@Override
+	public CuratorFrameworkOp newCuratorFrameworkOp(CuratorFramework curatorFramework) {
+		return new CuratorFrameworkOpImpl(curatorFramework);
+	}
+
 	class CuratorFrameworkOpImpl implements CuratorFrameworkOp {
 
 		private CuratorFramework curatorFramework;
@@ -119,7 +122,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				if (checkExists(znode)) {
 					byte[] getZnodeData = curatorFramework.getData().forPath(znode);
 					if (getZnodeData == null) {// executor的分片可能存在全部飘走的情况，sharding节点有可能获取到的是null，需要对null做判断，否则new
-												// String时会报空指针异常
+						// String时会报空指针异常
 						return null;
 					}
 					return new String(getZnodeData, Charset.forName("UTF-8"));
@@ -371,16 +374,6 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 		}
 
-	}
-
-	@Override
-	public CuratorFrameworkOp inSessionClient() {
-		return new CuratorFrameworkOpImpl(ThreadLocalCuratorClient.getCuratorClient());
-	}
-
-	@Override
-	public CuratorFrameworkOp newCuratorFrameworkOp(CuratorFramework curatorFramework) {
-		return new CuratorFrameworkOpImpl(curatorFramework);
 	}
 
 }

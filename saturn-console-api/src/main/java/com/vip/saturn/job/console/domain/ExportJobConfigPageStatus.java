@@ -1,9 +1,7 @@
 package com.vip.saturn.job.console.domain;
 
 /**
- * 
  * @author hebelala
- *
  */
 public class ExportJobConfigPageStatus {
 

@@ -1,17 +1,14 @@
 package com.vip.saturn.job.console.mybatis.service.impl;
 
+import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
+import com.vip.saturn.job.console.mybatis.repository.ShareStatusRepository;
+import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
-import com.vip.saturn.job.console.mybatis.repository.ShareStatusRepository;
-import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
-
 /**
- * 
  * @author hebelala
- *
  */
 @Service
 public class TemporarySharedStatusServiceImpl implements TemporarySharedStatusService {

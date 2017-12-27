@@ -5,6 +5,6 @@ package com.vip.saturn.job.console.vo;
  */
 public enum JobStatus {
 
-    READY, STOPPED, RUNNING, STOPPING
+	READY, STOPPED, RUNNING, STOPPING
 
 }

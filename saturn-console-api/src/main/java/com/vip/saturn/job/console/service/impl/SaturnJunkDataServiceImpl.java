@@ -1,19 +1,20 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 package com.vip.saturn.job.console.service.impl;
 
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.SaturnJunkData;
+import com.vip.saturn.job.console.domain.SaturnJunkDataOpType;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -23,13 +24,12 @@ import com.vip.saturn.job.console.service.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author yangjuanying
@@ -71,8 +71,9 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 			List<String> jobNames = curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath());
 			if (jobNames != null) {
 				for (String jobName : jobNames) {
-					if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) { // $Jobs/jobName/config
-																									// exists
+					if (curatorFrameworkOp
+							.checkExists(JobNodePath.getConfigNodePath(jobName))) { // $Jobs/jobName/config
+						// exists
 						String toDeletePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
 						if (curatorFrameworkOp.checkExists(toDeletePath)) { // toDelete node is junk data
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
@@ -86,7 +87,7 @@ public class SaturnJunkDataServiceImpl implements SaturnJunkDataService {
 						String jobConfigForceShardNodePath = SaturnExecutorsNode
 								.getJobConfigForceShardNodePath(jobName);
 						if (curatorFrameworkOp.checkExists(jobConfigForceShardNodePath)) { // forceShard node is junk
-																							// data
+							// data
 							SaturnJunkData saturnJunkData = new SaturnJunkData();
 							saturnJunkData.setPath(jobConfigForceShardNodePath);
 							saturnJunkData.setNamespace(namespace);

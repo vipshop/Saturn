@@ -5,6 +5,7 @@ package com.vip.saturn.job.console.utils;
 
 /**
  * 项目名称：saturn-job-console 创建时间：2016年7月4日 下午2:21:55
+ *
  * @author yangjuanying 文件名称：ExecutorNodePath.java 类说明：
  */
 public class ExecutorNodePath {
@@ -45,7 +46,7 @@ public class ExecutorNodePath {
 	public static String getExecutorNoTrafficNodePath(final String executorName) {
 		return getExecutorNodePath(executorName, "noTraffic");
 	}
-	
+
 	public static String getExecutorIpNodePath(final String executorName) {
 		return getExecutorNodePath(executorName, "ip");
 	}

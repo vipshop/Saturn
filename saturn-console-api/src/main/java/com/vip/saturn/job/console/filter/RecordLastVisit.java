@@ -1,7 +1,7 @@
 package com.vip.saturn.job.console.filter;
 
+import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import java.io.IOException;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -10,19 +10,15 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
-
-import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 
 /**
  * Record the last url visited.
- * 
- * 
- * @author linzhaoming
  *
+ * @author linzhaoming
  */
 public class RecordLastVisit implements Filter {
+
 	private static final String GET_METHOD = "get";
 
 	@Override

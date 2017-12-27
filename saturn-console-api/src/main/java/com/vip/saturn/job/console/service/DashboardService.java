@@ -1,16 +1,14 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
-
 import java.util.Map;
 
 /**
  * @author chembo.huang
- *
  */
 public interface DashboardService {
 
@@ -74,8 +72,7 @@ public interface DashboardService {
 	String allProcessAndErrorCountOfTheDayByAllZkCluster();
 
 	/**
-	 * 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)<br>
-	 * 根据$Jobs/xx/config/cron计算出下次执行时间，如果大于当前时间且作业不在running，则为异常
+	 * 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)<br> 根据$Jobs/xx/config/cron计算出下次执行时间，如果大于当前时间且作业不在running，则为异常
 	 */
 	SaturnStatistics allUnnormalJob(String key);
 
@@ -98,7 +95,6 @@ public interface DashboardService {
 
 	/**
 	 * 清除该域下的/$SaturnExecutors/sharding/count
-	 * @param nns
 	 */
 	void cleanShardingCount(String nns) throws Exception;
 

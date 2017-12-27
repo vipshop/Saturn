@@ -1,17 +1,15 @@
 package com.vip.saturn.job.console.utils;
 
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.exception.JobConsoleException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.data.Stat;
-
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.exception.JobConsoleException;
 
 /**
  * @author timmy.hu
@@ -58,7 +56,7 @@ public class JobNodeUtils {
 			if (checkExists(curatorClient, znode)) {
 				byte[] getZnodeData = curatorClient.getData().forPath(znode);
 				if (getZnodeData == null) {// executor的分片可能存在全部飘走的情况，sharding节点有可能获取到的是null，需要对null做判断，否则new
-											// String时会报空指针异常
+					// String时会报空指针异常
 					return null;
 				}
 				return new String(getZnodeData, Charset.forName("UTF-8"));
@@ -129,8 +127,6 @@ public class JobNodeUtils {
 	/**
 	 * 首先检查是否符合Noah容器的命名规则，如果不符合，则检查是否有task node.
 	 *
-	 * @param curatorClient
-	 * @param executorName
 	 * @return true，是容器executor；false，不是容器executor；
 	 */
 	public static boolean isExecutorInDocker(CuratorFramework curatorClient, String executorName) {

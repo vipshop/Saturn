@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.mybatis.utils;
 
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author chembo.huang
- *
  */
 @Component
 public class MapperFactoryBean implements FactoryBean<MapperFactory> {

@@ -1,18 +1,16 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
-import org.apache.curator.framework.CuratorFramework;
-
 import java.io.Serializable;
 import java.util.ArrayList;
+import org.apache.curator.framework.CuratorFramework;
 
 /**
  * @author chembo.huang
- *
  */
 public class ZkCluster implements Serializable {
 
@@ -105,19 +103,24 @@ public class ZkCluster implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o)
+		if (this == o) {
 			return true;
-		if (!(o instanceof ZkCluster))
+		}
+		if (!(o instanceof ZkCluster)) {
 			return false;
+		}
 
 		ZkCluster zkCluster = (ZkCluster) o;
 
-		if (zkClusterKey != null ? !zkClusterKey.equals(zkCluster.zkClusterKey) : zkCluster.zkClusterKey != null)
+		if (zkClusterKey != null ? !zkClusterKey.equals(zkCluster.zkClusterKey) : zkCluster.zkClusterKey != null) {
 			return false;
-		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null)
+		}
+		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null) {
 			return false;
-		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null)
+		}
+		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) {
 			return false;
+		}
 		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
 
 	}

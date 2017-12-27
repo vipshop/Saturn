@@ -7,6 +7,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
+import java.util.Map;
+import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.annotation.Resource;
-import java.util.Map;
-
 /**
- * RESTful APIs of alarm handling.
- * <p>
- * Created by kfchu on 10/05/2017.
+ * RESTful APIs of alarm handling. <p> Created by kfchu on 10/05/2017.
  */
 @Controller
 @RequestMapping("/rest/v1/{namespace}/alarms")
@@ -62,7 +59,8 @@ public class AlarmRestApiController extends AbstractController {
 				restApiService.raiseExecutorRestartAlarm(namespace, executorName, alarmInfo);
 			} else {
 				if (StringUtils.isBlank(jobName)) {
-					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "Invalid request. Missing parameter: jobName");
+					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+							"Invalid request. Missing parameter: jobName");
 				}
 				restApiService.raiseAlarm(namespace, jobName, executorName, shardItem, alarmInfo);
 			}
@@ -76,7 +74,8 @@ public class AlarmRestApiController extends AbstractController {
 	}
 
 	private boolean isExecutorRestartAlarmEvent(AlarmInfo alarmInfo) {
-		return ALARM_TITLE_EXECUTOR_RESTART.equals(alarmInfo.getTitle()) && ALARM_NAME_EXECUTOR_RESTART.equals(alarmInfo.getName());
+		return ALARM_TITLE_EXECUTOR_RESTART.equals(alarmInfo.getTitle()) && ALARM_NAME_EXECUTOR_RESTART
+				.equals(alarmInfo.getName());
 	}
 
 	private AlarmInfo constructAlarmInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {

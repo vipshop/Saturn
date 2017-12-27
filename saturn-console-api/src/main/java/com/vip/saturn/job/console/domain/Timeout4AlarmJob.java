@@ -16,10 +16,14 @@ public class Timeout4AlarmJob {
 
 	private String domainName;
 
-	/** name and namespace */
+	/**
+	 * name and namespace
+	 */
 	private String nns;
 
-	/** degree of the domain */
+	/**
+	 * degree of the domain
+	 */
 	private String degree;
 
 	private String jobDegree;
@@ -112,12 +116,18 @@ public class Timeout4AlarmJob {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
 
 		Timeout4AlarmJob that = (Timeout4AlarmJob) o;
 
-		if (!jobName.equals(that.jobName)) return false;
+		if (!jobName.equals(that.jobName)) {
+			return false;
+		}
 		return domainName.equals(that.domainName);
 	}
 

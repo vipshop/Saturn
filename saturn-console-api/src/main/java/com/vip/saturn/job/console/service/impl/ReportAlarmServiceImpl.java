@@ -3,16 +3,14 @@ package com.vip.saturn.job.console.service.impl;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-
 /**
- * 
  * @author hebelala
  */
 @Service
@@ -53,7 +51,8 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 
 	@Override
 	public void executorRestart(String namespace, String executorName, String restartTime) throws ReportAlarmException {
-		log.error("executor restart, namespace is {}, executor is {}, restart on {}", namespace, executorName, restartTime);
+		log.error("executor restart, namespace is {}, executor is {}, restart on {}", namespace, executorName,
+				restartTime);
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import java.util.Collection;
 
 /**
  * 项目名称：saturn-job-console 创建时间：2016年7月26日 下午7:02:29
+ *
  * @author yangjuanying
  * @version 1.0
  * @since JDK 1.7.0_05 文件名称：JobInfoObject.java 类说明：

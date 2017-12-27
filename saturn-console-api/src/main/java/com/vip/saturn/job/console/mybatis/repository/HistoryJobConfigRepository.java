@@ -1,15 +1,14 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
+import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
 import java.util.List;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
-
 @Repository
 public interface HistoryJobConfigRepository {
+
 	int deleteByPrimaryKey(Long id);
 
 	int insert(HistoryJobConfig historyjobconfig);

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
@@ -7,7 +7,6 @@ import java.io.Serializable;
 
 /**
  * @author chembo.huang
- *
  */
 public class ExecutorStatistics implements Serializable {
 
@@ -29,7 +28,9 @@ public class ExecutorStatistics implements Serializable {
 
 	private int failureCountOfTheDay = 0;
 
-	/** e.g. job1:1,3;job2:0,4,6;job3:0 */
+	/**
+	 * e.g. job1:1,3;job2:0,4,6;job3:0
+	 */
 	private String jobAndShardings;
 
 	private float failureRateOfTheDay;

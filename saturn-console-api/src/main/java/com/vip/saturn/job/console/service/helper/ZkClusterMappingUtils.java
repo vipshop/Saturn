@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.service.helper;
 
@@ -7,25 +7,19 @@ import static com.vip.saturn.job.console.service.helper.SystemConfigProperties.I
 import static com.vip.saturn.job.console.service.helper.SystemConfigProperties.IDC_CONSOLE_ID_MAPPING;
 import static com.vip.saturn.job.console.service.helper.SystemConfigProperties.IDC_ZK_CLUSTER_MAPPING;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.service.SystemConfigService;
-
 /**
  * 管理以下的映射关系
- * 
- * <ul>
- * <li>zk集群key和IDC标识映射关系</li>
- * <li>IDC标识和console域名的映射关系</li>
- * <li>console集群Id和IDC标识的映射关系</li>
- * </ul>
- * 
+ *
+ * <ul> <li>zk集群key和IDC标识映射关系</li> <li>IDC标识和console域名的映射关系</li> <li>console集群Id和IDC标识的映射关系</li> </ul>
+ *
  * @author timmy.hu
  */
 public class ZkClusterMappingUtils {
@@ -144,7 +138,8 @@ public class ZkClusterMappingUtils {
 		try {
 			String consoleClusterId;
 			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-				LOGGER.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}", DEFAULT_CONSOLE_CLUSTER_ID);
+				LOGGER.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}",
+						DEFAULT_CONSOLE_CLUSTER_ID);
 				consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
 			} else {
 				consoleClusterId = VIP_SATURN_CONSOLE_CLUSTER_ID;
@@ -224,13 +219,11 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据映射关系的字符串，解析出其中的map对应关系
-	 * 
+	 *
 	 * @param relaMappings 例如输入格式如下: idc1:domain1;idc2:domain2;
-	 * @return
-	 * 
-	 * <pre>
+	 * @return <pre>
 	 *       解析出来的map对应关系 针对以上的输入，返回map如下：
-	 *      idc1:domain1 
+	 *      idc1:domain1
 	 *      idc2:domain2
 	 * </pre>
 	 */
@@ -252,13 +245,11 @@ public class ZkClusterMappingUtils {
 
 	/**
 	 * 根据映射关系的字符串，解析出其中的map对应关系
-	 * 
+	 *
 	 * @param relaMappings 例如输入格式如下: idc1:/zk1,/zk2;idc2:/zk3;
-	 * @return
-	 * 
-	 * <pre>
+	 * @return <pre>
 	 *       解析出来的map对应关系 针对以上的输入，返回map如下：
-	 *      /zk1:idc1 
+	 *      /zk1:idc1
 	 *      /zk2:idc1
 	 *      /zk3:idc2
 	 * </pre>

@@ -1,24 +1,20 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.mybatis.service.impl;
-
-import java.util.Date;
-import java.util.List;
-
-import javax.transaction.Transactional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
 import com.vip.saturn.job.console.mybatis.repository.ReleaseVersionInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.ReleaseVersionInfoService;
+import java.util.Date;
+import java.util.List;
+import javax.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @author timmy.hu
- *
  */
 @Service
 @Transactional
@@ -29,7 +25,7 @@ public class ReleaseVersionInfoServiceImpl implements ReleaseVersionInfoService 
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.vip.saturn.job.console.mybatis.service.ReleaseVersionInfoService# selectByNamespace(java.lang.String)
 	 */
 	@Override

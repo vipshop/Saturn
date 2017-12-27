@@ -1,14 +1,11 @@
 package com.vip.saturn.job.console.mybatis.service;
 
-import java.util.List;
-
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
+import java.util.List;
 
 /**
- * 
  * @author timmy.hu
- *
  */
 public interface ReleaseVersionInfoService {
 

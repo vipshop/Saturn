@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.exception;
 /**
  * GUI Exception.
  */
-public class SaturnJobConsoleGUIException extends SaturnJobConsoleException{
+public class SaturnJobConsoleGUIException extends SaturnJobConsoleException {
 
 	public SaturnJobConsoleGUIException() {
 	}
@@ -20,7 +20,8 @@ public class SaturnJobConsoleGUIException extends SaturnJobConsoleException{
 		super(cause);
 	}
 
-	public SaturnJobConsoleGUIException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public SaturnJobConsoleGUIException(String message, Throwable cause, boolean enableSuppression,
+			boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }

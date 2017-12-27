@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.mybatis.entity;
 
@@ -7,7 +7,6 @@ import java.util.Date;
 
 /**
  * @author timmy.hu
- *
  */
 public class ReleaseVersionInfo {
 

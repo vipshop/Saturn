@@ -1,13 +1,10 @@
 package com.vip.saturn.job.console.mybatis.service;
 
+import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import java.util.List;
 
-import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
-
 /**
- * 
  * @author timmy.hu
- *
  */
 public interface NamespaceInfoService {
 

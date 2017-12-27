@@ -12,9 +12,9 @@ public class MoveNamespaceBatchStatus {
 	private int unDoCount;
 	private int totalCount;
 	private String moving = "";
-	
+
 	public MoveNamespaceBatchStatus() {
-		
+
 	}
 
 	public MoveNamespaceBatchStatus(int size) {

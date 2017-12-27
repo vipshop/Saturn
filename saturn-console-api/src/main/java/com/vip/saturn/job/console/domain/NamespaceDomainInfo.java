@@ -4,48 +4,52 @@ import java.util.Objects;
 
 public class NamespaceDomainInfo {
 
-    private String namespace;
+	private String namespace;
 
-    private String content;
+	private String content;
 
-    private String zkCluster;
+	private String zkCluster;
 
-    public String getNamespace() {
-        return namespace;
-    }
+	public String getNamespace() {
+		return namespace;
+	}
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public String getContent() {
+		return content;
+	}
 
-    public void setContent(String content) {
-        this.content = content;
-    }
+	public void setContent(String content) {
+		this.content = content;
+	}
 
-    public String getZkCluster() {
-        return zkCluster;
-    }
+	public String getZkCluster() {
+		return zkCluster;
+	}
 
-    public void setZkCluster(String zkCluster) {
-        this.zkCluster = zkCluster;
-    }
+	public void setZkCluster(String zkCluster) {
+		this.zkCluster = zkCluster;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        NamespaceDomainInfo that = (NamespaceDomainInfo) o;
-        return Objects.equals(namespace, that.namespace) &&
-                Objects.equals(content, that.content) &&
-                Objects.equals(zkCluster, that.zkCluster);
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		NamespaceDomainInfo that = (NamespaceDomainInfo) o;
+		return Objects.equals(namespace, that.namespace) &&
+				Objects.equals(content, that.content) &&
+				Objects.equals(zkCluster, that.zkCluster);
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(namespace, content, zkCluster);
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hash(namespace, content, zkCluster);
+	}
 }

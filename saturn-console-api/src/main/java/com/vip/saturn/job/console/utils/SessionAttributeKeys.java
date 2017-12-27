@@ -1,9 +1,7 @@
 package com.vip.saturn.job.console.utils;
 
 /**
- * 
  * @author hebelala
- *
  */
 public class SessionAttributeKeys {
 

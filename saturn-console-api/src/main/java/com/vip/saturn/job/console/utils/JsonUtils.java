@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.utils;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ser.std.NullSerializer;
 import org.codehaus.jackson.type.JavaType;
@@ -7,18 +9,15 @@ import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
-import java.util.List;
-
 /**
  * Json Utils
  *
  * @author linzhaoming
  */
 public class JsonUtils {
-	static Logger log = LoggerFactory.getLogger(JsonUtils.class);
 
 	private static final ObjectMapper mapper = new ObjectMapper();
+	static Logger log = LoggerFactory.getLogger(JsonUtils.class);
 
 	static {
 		mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));

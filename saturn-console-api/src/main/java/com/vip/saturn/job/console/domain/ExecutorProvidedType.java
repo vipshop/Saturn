@@ -5,9 +5,9 @@ package com.vip.saturn.job.console.domain;
  */
 public enum ExecutorProvidedType {
 
-    DOCKER,
-    ONLINE,
-    OFFLINE,
-    DELETED
+	DOCKER,
+	ONLINE,
+	OFFLINE,
+	DELETED
 
 }

@@ -1,22 +1,19 @@
 package com.vip.saturn.job.console.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.integrate.entity.JobConfigInfo;
 import com.vip.saturn.job.integrate.exception.UpdateJobConfigException;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author timmy.hu
- *
  */
 @Service
 public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {

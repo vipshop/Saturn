@@ -1,10 +1,8 @@
 package com.vip.saturn.job.console.mybatis.service;
 
-import java.util.List;
-
-import org.springframework.data.domain.Pageable;
-
 import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
+import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface HistoryJobConfigService {
 

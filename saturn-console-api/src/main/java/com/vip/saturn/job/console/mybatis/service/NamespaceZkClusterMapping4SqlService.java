@@ -1,13 +1,10 @@
 package com.vip.saturn.job.console.mybatis.service;
 
+import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import java.util.List;
 
-import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
-
 /**
- * 
  * @author hebelala
- *
  */
 public interface NamespaceZkClusterMapping4SqlService {
 

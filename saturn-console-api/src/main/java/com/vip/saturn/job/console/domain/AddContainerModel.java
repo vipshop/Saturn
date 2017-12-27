@@ -1,7 +1,6 @@
 package com.vip.saturn.job.console.domain;
 
 import com.vip.saturn.job.console.domain.container.ContainerToken;
-
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +8,7 @@ import java.util.Map;
  * @author hebelala
  */
 public class AddContainerModel {
+
 	private ContainerToken containerToken;
 	private String taskId;
 	private String cmd;

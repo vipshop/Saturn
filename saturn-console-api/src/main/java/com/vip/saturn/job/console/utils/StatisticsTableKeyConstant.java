@@ -1,11 +1,10 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.utils;
 
 /**
  * @author chembo.huang
- *
  */
 public class StatisticsTableKeyConstant {
 

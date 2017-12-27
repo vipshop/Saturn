@@ -1,18 +1,20 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.service.helper;
 
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.DomainStatistics;
+import com.vip.saturn.job.console.domain.ExecutorStatistics;
+import com.vip.saturn.job.console.domain.JobStatistics;
+import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import com.vip.saturn.job.console.domain.*;
 import org.springframework.util.CollectionUtils;
 
 /**
  * @author chembo.huang
- *
  */
 public class DashboardServiceHelper {
 
@@ -112,7 +114,8 @@ public class DashboardServiceHelper {
 		return null;
 	}
 
-	public static Timeout4AlarmJob findEqualTimeout4AlarmJob(Timeout4AlarmJob example, List<Timeout4AlarmJob> oldTimeout4AlarmJobList) {
+	public static Timeout4AlarmJob findEqualTimeout4AlarmJob(Timeout4AlarmJob example,
+			List<Timeout4AlarmJob> oldTimeout4AlarmJobList) {
 		if (CollectionUtils.isEmpty(oldTimeout4AlarmJobList)) {
 			return null;
 		}

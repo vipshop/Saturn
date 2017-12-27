@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 public class AbstractGUIController extends AbstractController {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractGUIController.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractGUIController.class);
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<RequestResult> handleException(Throwable ex) {
-        log.debug("exception happens inside GUI controller operation:", ex.getMessage(), ex);
-        String message = ex.getMessage();
-        if (StringUtils.isBlank(message)) {
-            message = ex.toString();
-        }
-        return new ResponseEntity<>(new RequestResult(false, message), HttpStatus.OK);
-    }
+	@ExceptionHandler(Throwable.class)
+	public ResponseEntity<RequestResult> handleException(Throwable ex) {
+		log.debug("exception happens inside GUI controller operation:", ex.getMessage(), ex);
+		String message = ex.getMessage();
+		if (StringUtils.isBlank(message)) {
+			message = ex.toString();
+		}
+		return new ResponseEntity<>(new RequestResult(false, message), HttpStatus.OK);
+	}
 }

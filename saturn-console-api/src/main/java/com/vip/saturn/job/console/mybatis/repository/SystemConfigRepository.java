@@ -1,9 +1,8 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author hebelala

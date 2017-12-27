@@ -8,7 +8,7 @@ public class RestApiVersionInfo {
 	private String versionNumber;
 
 	private String checkCode;
-	
+
 	private boolean forced;
 
 	public String getVersionNumber() {
@@ -34,6 +34,6 @@ public class RestApiVersionInfo {
 	public void setForced(boolean forced) {
 		this.forced = forced;
 	}
-	
-	
+
+
 }

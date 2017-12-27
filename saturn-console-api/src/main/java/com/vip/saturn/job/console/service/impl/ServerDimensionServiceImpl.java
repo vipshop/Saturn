@@ -1,39 +1,39 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.service.impl;
-
-import java.text.DateFormat;
-import java.util.*;
-
-import javax.annotation.Resource;
-
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.JobStatus;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.ServerDimensionService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 public class ServerDimensionServiceImpl implements ServerDimensionService {
@@ -68,7 +68,8 @@ public class ServerDimensionServiceImpl implements ServerDimensionService {
 					ServerBriefInfo sbf = new ServerBriefInfo(executor);
 					String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
 					sbf.setServerIp(ip);
-					sbf.setNoTraffic(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "noTraffic")));
+					sbf.setNoTraffic(curatorFrameworkOp
+							.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "noTraffic")));
 					String lastBeginTime = curatorFrameworkOp
 							.getData(ExecutorNodePath.getExecutorNodePath(sbf.getExecutorName(), "lastBeginTime"));
 					sbf.setLastBeginTime(

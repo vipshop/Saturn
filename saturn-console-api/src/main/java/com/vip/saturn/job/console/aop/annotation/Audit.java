@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Audit {
+
 	// ALLOWED TYPE
 	AuditType type() default AuditType.WEB;
 }

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
@@ -7,7 +7,6 @@ import java.io.Serializable;
 
 /**
  * @author chembo.huang
- *
  */
 public class ZkStatistics implements Serializable {
 

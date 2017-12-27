@@ -1,45 +1,15 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.service.impl;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.SaturnEnvProperties;
@@ -68,6 +38,30 @@ import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
@@ -75,27 +69,19 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private static final Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
 
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
-
+	private final AtomicBoolean refreshingRegCenter = new AtomicBoolean(false);
 	@Resource
 	private CuratorRepository curatorRepository;
-
 	@Resource
 	private ReportAlarmService reportAlarmService;
-
 	@Resource
 	private UpdateJobConfigService updateJobConfigService;
-
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
-
 	@Resource
 	private SystemConfigService systemConfigService;
-
 	@Resource
 	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
-
-	private final AtomicBoolean refreshingRegCenter = new AtomicBoolean(false);
-
 	/** 为保证values有序 **/
 	private LinkedHashMap<String, ZkCluster> zkClusterMap = new LinkedHashMap<>();
 
@@ -111,7 +97,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			, NamespaceShardingManager> namespaceShardingListenerManagerMap = new ConcurrentHashMap<>();
 
 	private List<String> allOnlineNamespaces = new ArrayList<>();
-	
+
 	private String consoleClusterId;
 
 	private List<String> restrictComputeZkClusterKeys = new ArrayList<String>();
@@ -167,9 +153,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	/**
 	 * 解析Console集群和zk的映射关系
-	 * 
+	 *
 	 * 数据库中配置的例子如下： CONSOLE-1:/saturn,/forVdos;CONSOLE-2:/zk3;
-	 * 
+	 *
 	 * @throws SaturnJobConsoleException
 	 */
 	private void refreshRestrictComputeZkClusters() throws SaturnJobConsoleException {
@@ -404,7 +390,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setZkAlias(zkCluster.getZkAlias());
 						zkCluster.getRegCenterConfList().add(conf);
 					}
-					if(!allOnlineNamespacesTemp.contains(namespace)) {
+					if (!allOnlineNamespacesTemp.contains(namespace)) {
 						allOnlineNamespacesTemp.add(namespace);
 					}
 				}
@@ -873,7 +859,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
+	public CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace)
+			throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = null;
 		try {
 			RegistryCenterConfiguration registryCenterConfiguration = findConfigByNamespace(namespace);
@@ -887,7 +874,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 							final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
 							registryCenterClient.setNameAndNamespace(nns);
 							registryCenterClient.setZkAddr(zkAddressList);
-							CuratorFramework curatorFramework = curatorRepository.connect(zkAddressList, namespace, digest);
+							CuratorFramework curatorFramework = curatorRepository
+									.connect(zkAddressList, namespace, digest);
 							if (curatorFramework != null) {
 								registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
 								registryCenterClient.setCuratorClient(curatorFramework);
@@ -899,7 +887,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 							if (registryCenterClient != null) {
 								CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
 								if (curatorFramework != null) {
-									registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
+									registryCenterClient
+											.setConnected(curatorFramework.getZookeeperClient().isConnected());
 									curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
 								}
 							}

@@ -1,15 +1,12 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.console.domain;
@@ -22,10 +19,8 @@ import java.io.Serializable;
  */
 public class RegistryCenterConfiguration implements Serializable {
 
-	private static final long serialVersionUID = -5996257770767863699L;
-
 	public static final String SLASH = "/";
-
+	private static final long serialVersionUID = -5996257770767863699L;
 	private String name;
 
 	private String zkAddressList;
@@ -58,6 +53,9 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.zkAddressList = zkAddressList;
 	}
 
+	public RegistryCenterConfiguration() {
+	}
+
 	/**
 	 * before invoke this method, be sure that the name and namespace are set, and the namespace cannot be null
 	 */
@@ -86,55 +84,40 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.zkClusterKey = zkClusterKey;
 	}
 
-	public RegistryCenterConfiguration() {
-	}
-
 	public String getName() {
 		return this.name;
-	}
-
-	public String getZkAddressList() {
-		return this.zkAddressList;
-	}
-
-	public String getNamespace() {
-		return this.namespace;
-	}
-
-	public String getDigest() {
-		return this.digest;
-	}
-
-	public String getNameAndNamespace() {
-		return this.nameAndNamespace;
-	}
-
-	public String getSysAdmin() {
-		return this.sysAdmin;
-	}
-
-	public String getTechAdmin() {
-		return this.techAdmin;
-	}
-
-	public String getDegree() {
-		return this.degree;
 	}
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	public String getZkAddressList() {
+		return this.zkAddressList;
+	}
+
 	public void setZkAddressList(String zkAddressList) {
 		this.zkAddressList = zkAddressList;
+	}
+
+	public String getNamespace() {
+		return this.namespace;
 	}
 
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
 
+	public String getDigest() {
+		return this.digest;
+	}
+
 	public void setDigest(String digest) {
 		this.digest = digest;
+	}
+
+	public String getNameAndNamespace() {
+		return this.nameAndNamespace;
 	}
 
 	/**
@@ -144,12 +127,24 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.nameAndNamespace = nameAndNamespace;
 	}
 
+	public String getSysAdmin() {
+		return this.sysAdmin;
+	}
+
 	public void setSysAdmin(String sysAdmin) {
 		this.sysAdmin = sysAdmin;
 	}
 
+	public String getTechAdmin() {
+		return this.techAdmin;
+	}
+
 	public void setTechAdmin(String techAdmin) {
 		this.techAdmin = techAdmin;
+	}
+
+	public String getDegree() {
+		return this.degree;
 	}
 
 	public void setDegree(String degree) {
@@ -165,31 +160,39 @@ public class RegistryCenterConfiguration implements Serializable {
 	}
 
 	public boolean equals(Object o) {
-		if (o == this)
+		if (o == this) {
 			return true;
-		if (o == null)
+		}
+		if (o == null) {
 			return false;
-		if (this.getClass() != o.getClass())
+		}
+		if (this.getClass() != o.getClass()) {
 			return false;
+		}
 		RegistryCenterConfiguration other = (RegistryCenterConfiguration) o;
-		if (!other.canEqual(this))
+		if (!other.canEqual(this)) {
 			return false;
+		}
 		Object this$name = getName();
 		Object other$name = other.getName();
-		if (this$name == null ? other$name != null : !this$name.equals(other$name))
+		if (this$name == null ? other$name != null : !this$name.equals(other$name)) {
 			return false;
+		}
 		Object this$namespace = getNamespace();
 		Object other$namespace = other.getNamespace();
-		if (this$namespace == null ? other$namespace != null : !this$namespace.equals(other$namespace))
+		if (this$namespace == null ? other$namespace != null : !this$namespace.equals(other$namespace)) {
 			return false;
+		}
 		Object this$sysAdmin = getSysAdmin();
 		Object other$sysAdmin = other.getSysAdmin();
-		if (this$sysAdmin == null ? other$sysAdmin != null : !this$sysAdmin.equals(other$sysAdmin))
+		if (this$sysAdmin == null ? other$sysAdmin != null : !this$sysAdmin.equals(other$sysAdmin)) {
 			return false;
+		}
 		Object this$techAdmin = getTechAdmin();
 		Object other$techAdmin = other.getTechAdmin();
-		if (this$techAdmin == null ? other$techAdmin != null : !this$techAdmin.equals(other$techAdmin))
+		if (this$techAdmin == null ? other$techAdmin != null : !this$techAdmin.equals(other$techAdmin)) {
 			return false;
+		}
 		Object this$degree = getDegree();
 		Object other$degree = other.getDegree();
 		return this$degree == null ? other$degree == null : this$degree.equals(other$degree);

@@ -8,15 +8,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DashboardConstants {
 
-	private static final Logger log = LoggerFactory.getLogger(DashboardConstants.class);
-
-	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
-
-	public static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
-
-	public static long ALLOW_CONTAINER_DELAY_MILLIONSECONDS = 60L * 1000L * 3;
-
 	public static final long INTERVAL_DELTA_IN_SECOND = 10 * 1000L;
+	private static final Logger log = LoggerFactory.getLogger(DashboardConstants.class);
+	public static int REFRESH_INTERVAL_IN_MINUTE = 7;
+	public static long ALLOW_DELAY_MILLIONSECONDS = 60L * 1000L * REFRESH_INTERVAL_IN_MINUTE;
+	public static long ALLOW_CONTAINER_DELAY_MILLIONSECONDS = 60L * 1000L * 3;
 
 	static {
 		String refreshInterval = System.getProperty("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE",

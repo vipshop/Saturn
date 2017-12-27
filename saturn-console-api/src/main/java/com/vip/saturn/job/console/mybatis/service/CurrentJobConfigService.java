@@ -1,12 +1,10 @@
 package com.vip.saturn.job.console.mybatis.service;
 
-import java.util.List;
-
-import org.springframework.data.domain.Pageable;
-
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface CurrentJobConfigService {
 

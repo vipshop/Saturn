@@ -4,7 +4,7 @@ import java.util.Date;
 
 /**
  * 域信息定义
- * 
+ *
  * @author timmy.hu
  */
 public class NamespaceInfo {

@@ -1,15 +1,11 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
+import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import java.util.List;
-
 import org.springframework.stereotype.Repository;
 
-import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
-
 /**
- * 
  * @author hebelala
- *
  */
 @Repository
 public interface ZkClusterInfoRepository {

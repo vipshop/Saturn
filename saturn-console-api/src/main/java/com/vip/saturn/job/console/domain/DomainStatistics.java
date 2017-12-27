@@ -1,11 +1,10 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
 /**
  * @author chembo.huang
- *
  */
 public class DomainStatistics {
 
@@ -25,7 +24,9 @@ public class DomainStatistics {
 
 	private String zkList;
 
-	/** name & namespace */
+	/**
+	 * name & namespace
+	 */
 	private String nns;
 
 	private float failureRateOfAllTime;

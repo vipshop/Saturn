@@ -1,13 +1,10 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
+import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import java.util.List;
-
 import org.springframework.stereotype.Repository;
 
-import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
-
 /**
- * 
  * @author timmy.hu
  */
 @Repository

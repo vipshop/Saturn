@@ -9,7 +9,10 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-import com.vip.saturn.job.console.utils.AuditInfoContext;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -21,11 +24,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
 
 /**
  * RESTful APIs of Job Operations.
@@ -86,8 +84,8 @@ public class JobOperationRestApiController extends AbstractController {
 	}
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = { "/{namespace}/{jobName}/enable",
-			"/{namespace}/jobs/{jobName}/enable" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = {"/{namespace}/{jobName}/enable",
+			"/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -102,8 +100,8 @@ public class JobOperationRestApiController extends AbstractController {
 	}
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = { "/{namespace}/{jobName}/disable",
-			"/{namespace}/jobs/{jobName}/disable" }, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = {"/{namespace}/{jobName}/disable",
+			"/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -118,8 +116,8 @@ public class JobOperationRestApiController extends AbstractController {
 	}
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = { "/{namespace}/{jobName}/cron",
-			"/{namespace}/jobs/{jobName}/cron" }, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = {"/{namespace}/{jobName}/cron",
+			"/{namespace}/jobs/{jobName}/cron"}, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName, @RequestBody Map<String, String> params,
 			HttpServletRequest request) throws SaturnJobConsoleException {

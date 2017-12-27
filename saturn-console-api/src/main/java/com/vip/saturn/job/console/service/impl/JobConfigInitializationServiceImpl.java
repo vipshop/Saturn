@@ -1,31 +1,9 @@
 package com.vip.saturn.job.console.service.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.ExportJobConfigPageStatus;
+import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.JobSettings;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
@@ -41,9 +19,27 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.utils.ShareStatusModuleNames;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @author timmy.hu
@@ -54,13 +50,10 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
 	private final static int MAX_DELETE_NUM = 2000;
-
-	@Resource
-	private CuratorRepository curatorRepository;
-
 	@Resource
 	protected RegistryCenterService registryCenterService;
-
+	@Resource
+	private CuratorRepository curatorRepository;
 	@Resource
 	private CurrentJobConfigService currentJobConfigService;
 
@@ -333,7 +326,8 @@ public class JobConfigInitializationServiceImpl implements JobConfigInitializati
 			if (jobs != null && jobs.size() > 0) {
 				for (String job : jobs) {
 					if (curatorFrameworkOp.checkExists(
-							getConfigNodePathWithNamespace(namespace, JobNodePath.getConfigNodePath(job)))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
+							getConfigNodePathWithNamespace(namespace,
+									JobNodePath.getConfigNodePath(job)))) {// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
 						allJobs.add(job);
 					}
 				}

@@ -1,17 +1,15 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 /**
  * @author chembo.huang
- *
  */
 public class TreeNode {
 
@@ -50,68 +48,68 @@ public class TreeNode {
 		return this.title;
 	}
 
-	public String getDomain() {
-		return this.domain;
-	}
-
-	public String getFullPath() {
-		return this.fullPath;
-	}
-
-	public String getIcon() {
-		return this.icon;
-	}
-
-	public boolean isLazy() {
-		return this.lazy;
-	}
-
-	public String getExtraClasses() {
-		return this.extraClasses;
-	}
-
-	public boolean isFolder() {
-		return this.folder;
-	}
-
-	public int getBid() {
-		return this.bid;
-	}
-
-	public List<TreeNode> getChildren() {
-		return this.children;
-	}
-
 	public void setTitle(String title) {
 		this.title = title;
+	}
+
+	public String getDomain() {
+		return this.domain;
 	}
 
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
 
+	public String getFullPath() {
+		return this.fullPath;
+	}
+
 	public void setFullPath(String fullPath) {
 		this.fullPath = fullPath;
+	}
+
+	public String getIcon() {
+		return this.icon;
 	}
 
 	public void setIcon(String icon) {
 		this.icon = icon;
 	}
 
+	public boolean isLazy() {
+		return this.lazy;
+	}
+
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
+	}
+
+	public String getExtraClasses() {
+		return this.extraClasses;
 	}
 
 	public void setExtraClasses(String extraClasses) {
 		this.extraClasses = extraClasses;
 	}
 
+	public boolean isFolder() {
+		return this.folder;
+	}
+
 	public void setFolder(boolean folder) {
 		this.folder = folder;
 	}
 
+	public int getBid() {
+		return this.bid;
+	}
+
 	public void setBid(int bid) {
 		this.bid = bid;
+	}
+
+	public List<TreeNode> getChildren() {
+		return this.children;
 	}
 
 	public void setChildren(List<TreeNode> children) {

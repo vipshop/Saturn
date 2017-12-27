@@ -7,6 +7,9 @@ import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,10 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * RESTful APIs of namespace management.
@@ -35,7 +34,8 @@ public class NamespaceManagementRestApiController extends AbstractController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request) throws SaturnJobConsoleException {
+	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
+			throws SaturnJobConsoleException {
 		try {
 			NamespaceDomainInfo namespaceInfo = constructNamespaceDomainInfo(reqParams);
 			restApiService.createNamespace(namespaceInfo);
@@ -65,7 +65,8 @@ public class NamespaceManagementRestApiController extends AbstractController {
 		}
 	}
 
-	private NamespaceDomainInfo constructNamespaceDomainInfo(Map<String, Object> reqParams) throws SaturnJobConsoleException {
+	private NamespaceDomainInfo constructNamespaceDomainInfo(Map<String, Object> reqParams)
+			throws SaturnJobConsoleException {
 		NamespaceDomainInfo namespaceInfo = new NamespaceDomainInfo();
 
 		namespaceInfo.setNamespace(checkAndGetParametersValueAsString(reqParams, "namespace", true));

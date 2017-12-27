@@ -7,18 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import org.apache.curator.framework.CuratorFramework;
-import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobServer;
 import com.vip.saturn.job.console.domain.JobStatus;
@@ -32,6 +20,16 @@ import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import java.util.List;
+import org.apache.curator.framework.CuratorFramework;
+import org.assertj.core.util.Lists;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * Created by kfchu on 31/05/2017.

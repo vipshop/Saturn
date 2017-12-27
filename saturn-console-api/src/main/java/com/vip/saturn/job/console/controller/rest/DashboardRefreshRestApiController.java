@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.DashboardService;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * RESTful APIs of dashboard refresh.
@@ -30,15 +29,10 @@ public class DashboardRefreshRestApiController extends AbstractController {
 
 	/**
 	 * 根据ZK集群key，刷新该集群的dashboard信息
-	 * 
-	 * @param zkClusterKey
-	 * @param request
-	 * @return
-	 * @throws SaturnJobConsoleException
 	 */
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = "/dashboard/refresh", method = { RequestMethod.POST,
-			RequestMethod.GET }, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/dashboard/refresh", method = {RequestMethod.POST,
+			RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> dashboardRefresh(String zkClusterKey, HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		try {

@@ -1,12 +1,10 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
+import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import java.util.List;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-
-import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 
 @Repository
 public interface SaturnStatisticsRepository {

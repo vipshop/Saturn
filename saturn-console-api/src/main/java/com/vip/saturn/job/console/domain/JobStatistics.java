@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.console.domain;
 
@@ -7,7 +7,6 @@ import java.io.Serializable;
 
 /**
  * @author chembo.huang
- *
  */
 public class JobStatistics implements Serializable {
 
@@ -22,7 +21,9 @@ public class JobStatistics implements Serializable {
 	private String jobName;
 	private String domainName;
 	private String nns;
-	/** e.g. exe01:1,3;exe02:0,2 */
+	/**
+	 * e.g. exe01:1,3;exe02:0,2
+	 */
 	private String executorsAndShards;
 
 	public JobStatistics() {
@@ -54,12 +55,20 @@ public class JobStatistics implements Serializable {
 		return processCountOfTheDay;
 	}
 
+	public void setProcessCountOfTheDay(int processCountOfTheDay) {
+		this.processCountOfTheDay = processCountOfTheDay;
+	}
+
 	public synchronized void incrProcessCountOfTheDay(int processCount) {
-		this.processCountOfTheDay+=processCount;
+		this.processCountOfTheDay += processCount;
 	}
 
 	public int getFailureCountOfTheDay() {
 		return failureCountOfTheDay;
+	}
+
+	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
+		this.failureCountOfTheDay = failureCountOfTheDay;
 	}
 
 	public synchronized void incrFailureCountOfTheDay(int failureCount) {
@@ -115,20 +124,12 @@ public class JobStatistics implements Serializable {
 	}
 
 	public float getFailureRateOfAllTime() {
-		if (processCountOfAllTime == 0)
+		if (processCountOfAllTime == 0) {
 			return 0;
+		}
 		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
 		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 
-	public void setProcessCountOfTheDay(int processCountOfTheDay) {
-		this.processCountOfTheDay = processCountOfTheDay;
-	}
-
-	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
-		this.failureCountOfTheDay = failureCountOfTheDay;
-	}
-	
-	
 
 }
