@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.utils;
 
 import com.google.common.collect.Maps;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,7 +35,11 @@ public class AuditInfoContext {
 	}
 
 	public static void putJobName(String value) {
-		auditInfoHolder.get().put("jobName", value);
+		auditInfoHolder.get().put("job_name", value);
+	}
+
+	public static void putJobNames(List<String> value) {
+		auditInfoHolder.get().put("job_names", value.toString());
 	}
 
 	public static String get(String key) {

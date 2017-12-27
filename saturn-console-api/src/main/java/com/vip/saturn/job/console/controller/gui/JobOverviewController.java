@@ -36,7 +36,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@RequestMapping(value = "/jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> list(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
+		AuditInfoContext.putNamespace(namespace);
 		return new ResponseEntity<>(new RequestResult(true, jobService.jobs(namespace)), HttpStatus.OK);
 	}
 
@@ -44,7 +44,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@RequestMapping(value = "/groups", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> groups(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
+		AuditInfoContext.putNamespace(namespace);
 		return new ResponseEntity<>(new RequestResult(true, jobService.groups(namespace)), HttpStatus.OK);
 	}
 
@@ -53,8 +53,8 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> dependentJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_name", jobName);
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobName(jobName);
 		List<DependencyJob> dependencyJobs = jobService.dependentJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobs), HttpStatus.OK);
 	}
@@ -65,8 +65,8 @@ public class JobOverviewController extends AbstractGUIController {
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_names", jobNames.toString());
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
 			List<DependencyJob> dependencyJobs = jobService.dependentJobs(namespace, jobName);
@@ -80,8 +80,8 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> dependedJobs(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_name", jobName);
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobName(jobName);
 		List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependedJobs), HttpStatus.OK);
 	}
@@ -92,8 +92,8 @@ public class JobOverviewController extends AbstractGUIController {
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_names", jobNames.toString());
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
 			List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
@@ -107,8 +107,8 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> enableJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_name", jobName);
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobName(jobName);
 		jobService.enableJob(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}
@@ -119,8 +119,8 @@ public class JobOverviewController extends AbstractGUIController {
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_names", jobNames.toString());
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName);
 		}
@@ -132,8 +132,8 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> disableJob(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_name", required = true) String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_name", jobName);
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobName(jobName);
 		jobService.disableJob(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}
@@ -144,8 +144,8 @@ public class JobOverviewController extends AbstractGUIController {
 			@RequestParam(name = "namespace", required = true) String namespace,
 			@RequestParam(name = "job_names", required = true) List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
-		AuditInfoContext.put("job_names", jobNames.toString());
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
 		}

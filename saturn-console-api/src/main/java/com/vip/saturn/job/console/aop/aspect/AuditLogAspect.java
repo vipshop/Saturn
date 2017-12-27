@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
@@ -75,7 +76,7 @@ public class AuditLogAspect {
 		// append additional context info if possible
 		Map<String, String> auditInfoMap = AuditInfoContext.currentAuditInfo();
 		if (auditInfoMap != null && auditInfoMap.size() > 0) {
-			stringBuilder.append("context info:" + auditInfoMap).append(".");
+			stringBuilder.append("context info:").append(auditInfoMap).append(".");
 		}
 
 		return stringBuilder.toString();

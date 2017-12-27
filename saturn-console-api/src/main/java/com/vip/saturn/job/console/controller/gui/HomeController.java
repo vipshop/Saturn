@@ -43,7 +43,7 @@ public class HomeController extends AbstractGUIController {
 	@RequestMapping(value = "/namespace", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.put("namespace", namespace);
+		AuditInfoContext.putNamespace(namespace);
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
 		if (registryCenterConfiguration == null) {
