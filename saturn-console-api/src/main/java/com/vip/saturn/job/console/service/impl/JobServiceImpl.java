@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -10,10 +11,7 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import com.vip.saturn.job.console.vo.JobInfo;
-import com.vip.saturn.job.console.vo.JobMode;
-import com.vip.saturn.job.console.vo.JobStatus;
-import com.vip.saturn.job.console.vo.JobType;
+import com.vip.saturn.job.console.vo.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +20,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -222,6 +221,127 @@ public class JobServiceImpl implements JobService {
             }
         }
         return groups;
+    }
+
+    @Override
+    public List<DependencyJob> dependentJobs(String namespace, String jobName) throws SaturnJobConsoleException {
+        List<DependencyJob> dependencyJobs = new ArrayList<>();
+        List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
+        if (jobConfigList != null) {
+            CurrentJobConfig currentJobConfig = null;
+            for (CurrentJobConfig jobConfig : jobConfigList) {
+                if (isSystemJob(jobConfig)) {
+                    continue;
+                }
+                if (jobConfig.getJobName().equals(jobName)) {
+                    currentJobConfig = jobConfig;
+                    break;
+                }
+            }
+            if (currentJobConfig != null) {
+                String dependencies = currentJobConfig.getDependencies();
+                List<String> dependencyList = new ArrayList<>();
+                if (StringUtils.isNotBlank(dependencies)) {
+                    String[] split = dependencies.split(",");
+                    for (String tmp : split) {
+                        if (StringUtils.isNotBlank(tmp)) {
+                            dependencyList.add(tmp.trim());
+                        }
+                    }
+                }
+                if (!dependencyList.isEmpty()) {
+                    for (CurrentJobConfig jobConfig : jobConfigList) {
+                        if (isSystemJob(jobConfig)) {
+                            continue;
+                        }
+                        String tempJobName = jobConfig.getJobName();
+                        if (tempJobName.equals(jobName)) {
+                            continue;
+                        }
+                        if (dependencyList.contains(tempJobName)) {
+                            DependencyJob dependencyJob = new DependencyJob();
+                            dependencyJob.setJobName(tempJobName);
+                            dependencyJob.setEnabled(currentJobConfig.getEnabled());
+                            dependencyJobs.add(dependencyJob);
+                        }
+                    }
+                }
+            }
+        }
+        return dependencyJobs;
+    }
+
+    @Override
+    public List<DependencyJob> dependedJobs(String namespace, String jobName) throws SaturnJobConsoleException {
+        List<DependencyJob> dependencyJobs = new ArrayList<>();
+        List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
+        if (jobConfigList != null) {
+            for (CurrentJobConfig jobConfig : jobConfigList) {
+                if (isSystemJob(jobConfig)) {
+                    continue;
+                }
+                if (jobConfig.getJobName().equals(jobName)) {
+                    continue;
+                }
+                String dependencies = jobConfig.getDependencies();
+                if (StringUtils.isNotBlank(dependencies)) {
+                    String[] split = dependencies.split(",");
+                    for (String tmp : split) {
+                        if (jobName.equals(tmp.trim())) {
+                            DependencyJob dependencyJob = new DependencyJob();
+                            dependencyJob.setJobName(jobConfig.getJobName());
+                            dependencyJob.setEnabled(jobConfig.getEnabled());
+                            dependencyJobs.add(dependencyJob);
+                        }
+                    }
+                }
+            }
+        }
+        return dependencyJobs;
+    }
+
+    @Override
+    public void enableJob(String namespace, String jobName) throws SaturnJobConsoleException {
+        CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+        if (jobConfig == null) {
+            throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not existing");
+        }
+        if (jobConfig.getEnabled()) {
+            throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is already enabled");
+        }
+        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+        boolean allShardsFinished = isAllShardsFinished(jobName, curatorFrameworkOp);
+        if (!allShardsFinished) {
+            throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not stopped, cannot be enabled");
+        }
+        jobConfig.setEnabled(true);
+        jobConfig.setLastUpdateTime(new Date());
+        try {
+            currentJobConfigService.updateByPrimaryKey(jobConfig);
+        } catch (Exception e) {
+            throw new SaturnJobConsoleGUIException(e);
+        }
+        curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), true);
+    }
+
+    @Override
+    public void disableJob(String namespace, String jobName) throws SaturnJobConsoleException {
+        CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+        if (jobConfig == null) {
+            throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not existing");
+        }
+        if (!jobConfig.getEnabled()) {
+            throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is already disabled");
+        }
+        jobConfig.setEnabled(false);
+        jobConfig.setLastUpdateTime(new Date());
+        try {
+            currentJobConfigService.updateByPrimaryKey(jobConfig);
+        } catch (Exception e) {
+            throw new SaturnJobConsoleGUIException(e);
+        }
+        CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+        curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), false);
     }
 
 }
