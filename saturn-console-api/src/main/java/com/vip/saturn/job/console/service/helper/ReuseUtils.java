@@ -20,7 +20,7 @@ public class ReuseUtils {
 
 	private static final String NAMESPACE_NOT_EXIST_TEMPLATE = "The namespace {%s} does not exists.";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReuseUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(ReuseUtils.class);
 
 	public static <T> T reuse(String namespace, final String jobName, RegistryCenterService registryCenterService,
 			CuratorRepository curatorRepository, final ReuseCallBack<T> callBack) throws SaturnJobConsoleException {
@@ -56,7 +56,7 @@ public class ReuseUtils {
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Throwable t) {
-			LOGGER.error(t.getMessage(), t);
+			log.error(t.getMessage(), t);
 			throw new SaturnJobConsoleException(t);
 		} finally {
 			ThreadLocalCuratorClient.clear();
@@ -98,7 +98,7 @@ public class ReuseUtils {
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Throwable t) {
-			LOGGER.error(t.getMessage(), t);
+			log.error(t.getMessage(), t);
 			throw new SaturnJobConsoleException(t);
 		} finally {
 			ThreadLocalCuratorClient.clear();

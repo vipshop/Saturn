@@ -21,7 +21,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceInfoServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(NamespaceInfoServiceImpl.class);
 
 	private static final int BATCH_NUM = 2000;
 
@@ -100,7 +100,7 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 			try {
 				TimeUnit.MILLISECONDS.sleep(50);
 			} catch (InterruptedException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}

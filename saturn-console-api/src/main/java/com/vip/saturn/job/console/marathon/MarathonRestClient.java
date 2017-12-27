@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MarathonRestClient {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(MarathonRestClient.class);
+	private static Logger log = LoggerFactory.getLogger(MarathonRestClient.class);
 
 	private static String getEntityContent(HttpEntity entity) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(entity.getContent()));
@@ -110,13 +110,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not status returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -148,13 +148,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not status returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -181,13 +181,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not status returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -225,13 +225,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not status returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -265,13 +265,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not data returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -297,13 +297,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not data returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -327,13 +327,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not data returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -357,13 +357,13 @@ public class MarathonRestClient {
 				throw new SaturnJobConsoleException("Not data returned, url is " + urlStr);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		} finally {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DashboardLeaderTreeCache {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardLeaderTreeCache.class);
+	private static final Logger log = LoggerFactory.getLogger(DashboardLeaderTreeCache.class);
 
 	private final String hostValue = LocalHostService.cachedIpAddress + "-" + UUID.randomUUID().toString();
 
@@ -87,7 +87,7 @@ public class DashboardLeaderTreeCache {
 							SaturnSelfNodePath.SATURN_CONSOLE_DASHBOARD_LEADER_HOST, hostValue.getBytes("UTF-8"));
 				}
 			} else {
-				LOGGER.error("Try to elect dashboard leader timeout({}s), zkCluster zkAlias is {}", timeoutSeconds,
+				log.error("Try to elect dashboard leader timeout({}s), zkCluster zkAlias is {}", timeoutSeconds,
 						zkAlias);
 			}
 		} finally {
@@ -95,7 +95,7 @@ public class DashboardLeaderTreeCache {
 				try {
 					leaderLatch.close();
 				} catch (Exception e) {
-					LOGGER.error(e.getMessage(), e);
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -119,7 +119,7 @@ public class DashboardLeaderTreeCache {
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -130,7 +130,7 @@ public class DashboardLeaderTreeCache {
 				dashboardLeaderConnectionListener.shutdownNowUntilTerminated();
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -140,7 +140,7 @@ public class DashboardLeaderTreeCache {
 				nodeCache.close();
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 		if (executorService != null) {
 			executorService.shutdownNow();
@@ -170,7 +170,7 @@ public class DashboardLeaderTreeCache {
 				return data.equals(hostValue);
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 		return false;
 	}
@@ -192,7 +192,7 @@ public class DashboardLeaderTreeCache {
 				createNodeCache();
 				electLeaderIfNecessary();
 			} catch (Exception e) {
-				LOGGER.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 			}
 		}
 	}

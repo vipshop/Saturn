@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/rest/v1")
 public class JobOperationRestApiController extends AbstractController {
 
-	private static final Logger logger = LoggerFactory.getLogger(JobOperationRestApiController.class);
+	private static final Logger log = LoggerFactory.getLogger(JobOperationRestApiController.class);
 
 	@Resource
 	private RestApiService restApiService;

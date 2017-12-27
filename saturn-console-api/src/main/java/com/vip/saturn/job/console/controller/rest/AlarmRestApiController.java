@@ -34,7 +34,7 @@ public class AlarmRestApiController extends AbstractController {
 
 	private static final String ALARM_NAME_EXECUTOR_RESTART = "Saturn Event";
 
-	private static final Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
+	private static final Logger log = LoggerFactory.getLogger(AlarmRestApiController.class);
 
 	@Resource
 	private RestApiService restApiService;
@@ -50,7 +50,7 @@ public class AlarmRestApiController extends AbstractController {
 
 			AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName,
+			log.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName,
 					executorName, shardItem);
 
 			// (since 2.1.4) 如果alarm title是Executor_Restart，而且系统配置ALARM_RAISED_ON_EXECUTOR_RESTART=false, 只记录日志不发送告警

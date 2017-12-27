@@ -22,13 +22,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 public class AuditLogAspect {
 
-	private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger("AUDITLOG");
+	private static final Logger log = LoggerFactory.getLogger("AUDITLOG");
 
 	private static final String UNKNOWN = "Unkown";
 
 	private static final String EMPTY_STR = "";
 
-	private static final String GUI_AUDIT_LOG_TEMPLATE = "GUI API:[%s] is called by User:[%s] with IP:[%s], namespace:[%s], result is %s.";
+	private static final String GUI_AUDIT_LOG_TEMPLATE = "GUI API:[%s] is called by User:[%s] with IP:[%s], result is %s.";
 
 	private static final String REST_AUDIT_LOG_TEMPLATE = "REST API:[%s] is called by IP:[%s], result is %s.";
 
@@ -65,8 +65,7 @@ public class AuditLogAspect {
 		String result = isSuccess ? "success" : "failed";
 		String namespace = AuditInfoContext.getNamespace();
 
-		AUDIT_LOGGER
-				.info(buildLogContent(String.format(GUI_AUDIT_LOG_TEMPLATE, uri, userName, ipAddr, namespace, result)));
+		log.info(buildLogContent(String.format(GUI_AUDIT_LOG_TEMPLATE, uri, userName, ipAddr, namespace, result)));
 	}
 
 	protected void logRESTRequst(Boolean isSuccess, Signature signature) {
@@ -74,12 +73,15 @@ public class AuditLogAspect {
 		String ipAddr = getIpAddress();
 		String result = isSuccess ? "success" : "failed";
 
-		AUDIT_LOGGER.info(buildLogContent(String.format(REST_AUDIT_LOG_TEMPLATE, uri, ipAddr, result)));
+		log.info(buildLogContent(String.format(REST_AUDIT_LOG_TEMPLATE, uri, ipAddr, result)));
 	}
 
 	private String buildLogContent(String initValue) {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(initValue);
+		// append namespace if set in context
+
+		// append additional context info if possible
 		Map<String, String> auditInfoMap = AuditInfoContext.currentAuditInfo();
 		if (auditInfoMap != null && auditInfoMap.size() > 0) {
 			stringBuilder.append(auditInfoMap);

@@ -32,7 +32,7 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class JobServiceImpl implements JobService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(JobServiceImpl.class);
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -114,7 +114,7 @@ public class JobServiceImpl implements JobService {
 
 						list.add(jobInfo);
 					} catch (Exception e) {
-						LOGGER.error("list job " + jobConfig.getJobName() + " error", e);
+						log.error("list job " + jobConfig.getJobName() + " error", e);
 					}
 				}
 			}

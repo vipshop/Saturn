@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service("marathonRestAdapter")
 public class MarathonRestAdapter implements ContainerRestService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MarathonRestAdapter.class);
+	private static final Logger log = LoggerFactory.getLogger(MarathonRestAdapter.class);
 
 	private String getUserName(ContainerToken containerToken) {
 		try {
@@ -111,7 +111,7 @@ public class MarathonRestAdapter implements ContainerRestService {
 			return "0=curl -X PUT -H \"Content-Type:application/json\" -H \"Authorization:Basic " + auth
 					+ "\" --data '{\"instances\":" + instances + "}' " + url;
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
 		}
 	}

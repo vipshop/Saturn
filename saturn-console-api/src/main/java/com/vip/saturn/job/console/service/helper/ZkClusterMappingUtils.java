@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ZkClusterMappingUtils {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
 
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 
@@ -138,7 +138,7 @@ public class ZkClusterMappingUtils {
 		try {
 			String consoleClusterId;
 			if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-				LOGGER.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}",
+				log.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}",
 						DEFAULT_CONSOLE_CLUSTER_ID);
 				consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
 			} else {
@@ -146,13 +146,13 @@ public class ZkClusterMappingUtils {
 			}
 			String zkCluseterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (zkCluseterIdc == null) {
-				LOGGER.warn("The mapping idc is not found for the zkClusterKey that is {}", zkClusterKey);
+				log.warn("The mapping idc is not found for the zkClusterKey that is {}", zkClusterKey);
 				return true;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, consoleClusterId);
 			return zkCluseterIdc.equalsIgnoreCase(consoleIdc);
 		} catch (SaturnJobConsoleException e) {
-			LOGGER.error("error occur when judge current console is in the same idc with the zk cluster", e);
+			log.error("error occur when judge current console is in the same idc with the zk cluster", e);
 			return true;
 		}
 	}
@@ -210,7 +210,7 @@ public class ZkClusterMappingUtils {
 	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName)
 			throws SaturnJobConsoleException {
 		String idcConsoleIdMappingStr = systemConfigService.getValueDirectly(mappingName);
-		LOGGER.info("the {} str is {}", mappingName, idcConsoleIdMappingStr);
+		log.info("the {} str is {}", mappingName, idcConsoleIdMappingStr);
 		if (StringUtils.isBlank(idcConsoleIdMappingStr)) {
 			throw new SaturnJobConsoleException("the " + mappingName + " is not configured in sys_config");
 		}
