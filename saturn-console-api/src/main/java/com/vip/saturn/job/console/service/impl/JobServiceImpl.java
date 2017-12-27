@@ -11,20 +11,17 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import com.vip.saturn.job.console.vo.DependencyJob;
-import com.vip.saturn.job.console.vo.JobInfo;
-import com.vip.saturn.job.console.vo.JobMode;
-import com.vip.saturn.job.console.vo.JobStatus;
-import com.vip.saturn.job.console.vo.JobType;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import javax.annotation.Resource;
+import com.vip.saturn.job.console.vo.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author hebelala
@@ -262,14 +259,13 @@ public class JobServiceImpl implements JobService {
 						if (isSystemJob(jobConfig)) {
 							continue;
 						}
-						String tempJobName = jobConfig.getJobName();
-						if (tempJobName.equals(jobName)) {
+						if (jobConfig.getJobName().equals(jobName)) {
 							continue;
 						}
-						if (dependencyList.contains(tempJobName)) {
+						if (dependencyList.contains(jobConfig.getJobName())) {
 							DependencyJob dependencyJob = new DependencyJob();
-							dependencyJob.setJobName(tempJobName);
-							dependencyJob.setEnabled(currentJobConfig.getEnabled());
+							dependencyJob.setJobName(jobConfig.getJobName());
+							dependencyJob.setEnabled(jobConfig.getEnabled());
 							dependencyJobs.add(dependencyJob);
 						}
 					}
