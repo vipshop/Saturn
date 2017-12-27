@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -31,6 +33,7 @@ public class NamespaceManagementRestApiController extends AbstractController {
 	@Resource
 	private RestApiService restApiService;
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request) throws SaturnJobConsoleException {
 		try {
@@ -47,6 +50,7 @@ public class NamespaceManagementRestApiController extends AbstractController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces/{namespace:.+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();

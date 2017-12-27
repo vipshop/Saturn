@@ -21,7 +21,7 @@ export default {
   },
   methods: {
     getDomainInfo() {
-      this.$http.getData(`/console/home/namespaces/${this.domainName}`).then((data) => {
+      this.$http.getData('/console/home/namespace', { namespace: this.domainName }).then((data) => {
         if (data) {
           this.domainInfo = data;
         }

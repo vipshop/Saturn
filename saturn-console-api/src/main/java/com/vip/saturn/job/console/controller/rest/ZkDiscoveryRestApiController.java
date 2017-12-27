@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -33,6 +35,7 @@ public class ZkDiscoveryRestApiController extends AbstractController {
 	@Resource
 	private NamespaceZkClusterMapping4SqlService namespaceZkclusterMapping4SqlService;
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/discoverZk", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> discoverZk(String namespace, HttpServletRequest request)
 			throws SaturnJobConsoleException {

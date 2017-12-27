@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -40,6 +42,7 @@ public class AlarmRestApiController extends AbstractController {
 	@Resource
 	private RestApiService restApiService;
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.vip.saturn.job.console.filter.RecordLastVisit;
-import com.vip.saturn.job.console.filter.SaturnXssFilter;
 
 @Component
 public class SaturnFilterRegister {

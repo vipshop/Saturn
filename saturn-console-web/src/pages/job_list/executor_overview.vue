@@ -45,7 +45,7 @@
                     <el-table-column prop="load" label="负荷"></el-table-column>
                     <el-table-column prop="version" label="版本"></el-table-column>
                     <el-table-column prop="setupTime" label="启动时间"></el-table-column>
-                    <el-table-column label="操作">
+                    <el-table-column label="操作" width="100px">
                         <template slot-scope="scope">
                             <el-tooltip content="启用" placement="top">
                                 <el-button type="text" @click="handleEnabled(scope.row)"><i class="fa fa-play-circle"></i></el-button>
