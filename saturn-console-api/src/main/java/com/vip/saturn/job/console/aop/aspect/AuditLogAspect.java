@@ -4,8 +4,6 @@ import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
@@ -17,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @Aspect
 @Component
@@ -63,9 +64,8 @@ public class AuditLogAspect {
 		String userName = getUserName();
 		String ipAddr = getIpAddress();
 		String result = isSuccess ? "success" : "failed";
-		String namespace = AuditInfoContext.getNamespace();
 
-		log.info(buildLogContent(String.format(GUI_AUDIT_LOG_TEMPLATE, uri, userName, ipAddr, namespace, result)));
+		log.info(buildLogContent(String.format(GUI_AUDIT_LOG_TEMPLATE, uri, userName, ipAddr, result)));
 	}
 
 	protected void logRESTRequst(Boolean isSuccess, Signature signature) {

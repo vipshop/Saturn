@@ -7,15 +7,16 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
-import java.util.ArrayList;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Home page controller.
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/console/home")
 public class HomeController extends AbstractGUIController {
 
+	@Audit(type = AuditType.WEB)
 	@RequestMapping(value = "/namespaces", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getNamespaces(final HttpServletRequest request)
 			throws SaturnJobConsoleException {
@@ -41,7 +43,7 @@ public class HomeController extends AbstractGUIController {
 	@RequestMapping(value = "/namespace", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request,
 			@RequestParam(name = "namespace", required = true) String namespace) throws SaturnJobConsoleException {
-		AuditInfoContext.setNamespace(namespace);
+		AuditInfoContext.put("namespace", namespace);
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
 		if (registryCenterConfiguration == null) {
