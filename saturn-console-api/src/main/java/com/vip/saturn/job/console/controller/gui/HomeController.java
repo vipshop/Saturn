@@ -41,7 +41,7 @@ public class HomeController extends AbstractGUIController {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
 		if (registryCenterConfiguration == null) {
-			throw new SaturnJobConsoleGUIException("The namespace is not existing");
+			throw new SaturnJobConsoleGUIException("该域名（" + namespace + "）不存在");
 		}
 		return new ResponseEntity<>(new RequestResult(true, registryCenterConfiguration), HttpStatus.OK);
 	}

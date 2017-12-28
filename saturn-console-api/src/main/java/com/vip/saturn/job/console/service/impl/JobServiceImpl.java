@@ -2,17 +2,18 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.vo.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -308,23 +309,23 @@ public class JobServiceImpl implements JobService {
 	public void enableJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not existing");
+			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在于数据库");
 		}
 		if (jobConfig.getEnabled()) {
-			throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is already enabled");
+			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于启用状态");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		boolean allShardsFinished = isAllShardsFinished(jobName, curatorFrameworkOp);
 		if (!allShardsFinished) {
-			throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not stopped, cannot be enabled");
+			throw new SaturnJobConsoleException("不能启用该作业（" + jobName + "），因为该作业不处于STOPPED状态");
 		}
 		jobConfig.setEnabled(true);
 		jobConfig.setLastUpdateTime(new Date());
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
-			throw new SaturnJobConsoleGUIException(e);
+			throw new SaturnJobConsoleException(e);
 		}
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), true);
 	}
@@ -333,21 +334,90 @@ public class JobServiceImpl implements JobService {
 	public void disableJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is not existing");
+			throw new SaturnJobConsoleException("不能禁用该作业（" + jobName + "），因为该作业不存在于数据库");
 		}
 		if (!jobConfig.getEnabled()) {
-			throw new SaturnJobConsoleGUIException("The job(" + jobName + ") is already disabled");
+			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于禁用状态");
 		}
 		jobConfig.setEnabled(false);
 		jobConfig.setLastUpdateTime(new Date());
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
-			throw new SaturnJobConsoleGUIException(e);
+			throw new SaturnJobConsoleException(e);
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), false);
+	}
+
+	@Override
+	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
+		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig == null) {
+			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在于数据库");
+		}
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		JobStatus jobStatus = getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
+		if (JobStatus.STOPPED.equals(jobStatus)) {
+			Stat stat = curatorFrameworkOp.getStat(JobNodePath.getJobNodePath(jobName));
+			if (stat != null) {
+				long createTimeDiff = System.currentTimeMillis() - stat.getCtime();
+				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
+					throw new SaturnJobConsoleException(
+							"不能删除该作业（" + jobName + "），因为该作业创建时间距离现在不超过" + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT
+									/ 6000) + "分钟");
+				}
+			}
+			// remove job from db
+			try {
+				currentJobConfigService.deleteByPrimaryKey(jobConfig.getId());
+			} catch (Exception e) {
+				throw new SaturnJobConsoleException(e);
+			}
+			// remove job from zk
+			// 1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
+			String toDeleteNodePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
+			if (curatorFrameworkOp.checkExists(toDeleteNodePath)) {
+				curatorFrameworkOp.deleteRecursive(toDeleteNodePath);
+			}
+			curatorFrameworkOp.create(toDeleteNodePath);
+
+			for (int i = 0; i < 20; i++) {
+				// 2.作业的executor全offline的情况，或有几个online，几个offline的情况
+				String jobServerPath = JobNodePath.getServerNodePath(jobName);
+				if (!curatorFrameworkOp.checkExists(jobServerPath)) {
+					// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+				}
+				// (2)如果该作业servers下没有任何executor，可直接删除作业节点
+				List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
+				if (CollectionUtils.isEmpty(executors)) {
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+				}
+				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
+				boolean hasOnlineExecutor = false;
+				for (String executor : executors) {
+					if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "ip"))
+							&& curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(jobName, executor))) {
+						hasOnlineExecutor = true;
+					} else {
+						curatorFrameworkOp.deleteRecursive(JobNodePath.getServerNodePath(jobName, executor));
+					}
+				}
+				if (!hasOnlineExecutor) {
+					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+				}
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					throw new SaturnJobConsoleException(e);
+				}
+			}
+		} else {
+			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不处于STOPPED状态");
+		}
 	}
 
 }

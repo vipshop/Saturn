@@ -4,22 +4,23 @@ import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.vo.DependencyJob;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Job overview page controller.
@@ -138,6 +139,42 @@ public class JobOverviewController extends AbstractGUIController {
 		AuditInfoContext.putJobNames(jobNames);
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
+		}
+		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	@Audit(type = AuditType.WEB)
+	@RequestMapping(value = "/remove-job", method = RequestMethod.POST)
+	public ResponseEntity<RequestResult> removeJob(final HttpServletRequest request, @RequestParam String namespace,
+			@RequestParam String jobName) throws SaturnJobConsoleException {
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobName(jobName);
+		jobService.removeJob(namespace, jobName);
+		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	@Audit(type = AuditType.WEB)
+	@RequestMapping(value = "/remove-job-batch", method = RequestMethod.POST)
+	public ResponseEntity<RequestResult> batchRemoveJob(final HttpServletRequest request,
+			@RequestParam String namespace,
+			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
+		List<String> successJobNames = new ArrayList<>();
+		List<String> failJobNames = new ArrayList<>();
+		for (String jobName : jobNames) {
+			try {
+				jobService.removeJob(namespace, jobName);
+				successJobNames.add(jobName);
+			} catch (Exception e) {
+				failJobNames.add(jobName);
+			}
+		}
+		if (!failJobNames.isEmpty()) {
+			StringBuilder message = new StringBuilder();
+			message.append("删除成功的作业:" + successJobNames.toString()).append("，").append("删除失败的作业:")
+					.append(failJobNames.toString());
+			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}

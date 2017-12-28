@@ -23,4 +23,6 @@ public interface JobService {
 
 	void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	void removeJob(String namespace, String jobName) throws SaturnJobConsoleException;
+
 }
