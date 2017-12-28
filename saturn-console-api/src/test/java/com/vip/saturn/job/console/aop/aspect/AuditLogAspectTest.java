@@ -1,14 +1,10 @@
 package com.vip.saturn.job.console.aop.aspect;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.utils.DummyAppender;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +20,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SpringContextAOP.class)
@@ -47,6 +50,7 @@ public class AuditLogAspectTest {
 
 	@After
 	public void after() {
+		detachAppender();
 		RequestContextHolder.resetRequestAttributes();
 	}
 
@@ -58,7 +62,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{jobName=jobA, namespace=www.abc.com}.",
+				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -70,7 +74,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{jobName=jobB, namespace=www.abc.com}.",
+				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -86,7 +90,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{jobName=jobC, namespace=www.abc.com}.",
+				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -110,6 +114,16 @@ public class AuditLogAspectTest {
 		auditlog.addAppender(dummyAppender);
 	}
 
+	private void detachAppender() {
+		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory
+				.getLogger("AUDITLOG");
+		if (dummyAppender != null) {
+			dummyAppender.clear();
+		}
+
+		auditlog.detachAppender(dummyAppender);
+	}
+
 }
 
 @Configuration
@@ -126,18 +140,21 @@ class TestAspectClass {
 	public void method1() {
 		AuditInfoContext.putNamespace("www.abc.com");
 		AuditInfoContext.putJobName("jobA");
+		AuditInfoContext.putJobNames(Arrays.asList("jobB", "jobC"));
 	}
 
 	@Audit(type = AuditType.WEB)
 	public void method2() {
 		AuditInfoContext.putNamespace("www.abc.com");
-		AuditInfoContext.putJobName("jobB");
+		AuditInfoContext.putJobName("jobA");
+		AuditInfoContext.putJobNames(Arrays.asList("jobB", "jobC"));
 	}
 
 	@Audit
 	public void method3() {
 		AuditInfoContext.putNamespace("www.abc.com");
-		AuditInfoContext.putJobName("jobC");
+		AuditInfoContext.putJobName("jobA");
+		AuditInfoContext.putJobNames(Arrays.asList("jobB", "jobC"));
 
 		throw new RuntimeException("unexpected");
 	}

@@ -15,7 +15,7 @@ public class AuditInfoContext {
 	private static ThreadLocal<Map<String, String>> auditInfoHolder = new ThreadLocal<Map<String, String>>() {
 		@Override
 		protected Map<String, String> initialValue() {
-			return Maps.newHashMap();
+			return Maps.newLinkedHashMap();
 		}
 	};
 
