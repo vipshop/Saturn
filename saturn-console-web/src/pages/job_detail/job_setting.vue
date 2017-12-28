@@ -1,6 +1,6 @@
 <template>
     <div class="page-content">
-        <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="160px">
+        <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="350px">
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
@@ -8,14 +8,14 @@
                     </template>
                     <div>
                         <el-row>
-                            <el-col :span="22">
+                            <el-col :span="18">
                                 <el-form-item prop="jobClass" label="作业实现类" required>
                                     <el-input v-model="jobSettingInfo.jobClass"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="8">
+                            <el-col :span="18">
                                 <el-form-item prop="cron" label="Cron">
                                     <el-input v-model="jobSettingInfo.cron"></el-input>
                                 </el-form-item>
@@ -39,14 +39,14 @@
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="22">
+                            <el-col :span="18">
                                 <el-form-item prop="abc" label="分片序列号/参数对照表">
                                     <el-input type="textarea" v-model="jobSettingInfo.abc"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="22">
+                            <el-col :span="18">
                                 <el-form-item prop="customParams" label="自定义参数">
                                     <el-input type="textarea" v-model="jobSettingInfo.customParams"></el-input>
                                 </el-form-item>
@@ -70,55 +70,55 @@
                     <template slot="title">高级配置</template>
                     <div>
                         <el-row>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="timeoutAlarm" label="超时告警(秒)">
                                     <el-input v-model="jobSettingInfo.timeoutAlarm"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="timeoutKill" label="超时强杀(秒)">
                                     <el-input v-model="jobSettingInfo.timeoutKill"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="22">
+                            <el-col :span="18">
                                 <el-form-item prop="group" label="所属分组">
                                     <el-input v-model="jobSettingInfo.group"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="load" label="作业负荷">
                                     <el-input v-model="jobSettingInfo.load"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="processInteval" label="统计处理间隔">
                                     <el-input v-model="jobSettingInfo.processInteval"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="timeZone" label="时区">
                                     <el-input v-model="jobSettingInfo.timeZone"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="dependJob" label="依赖作业">
                                     <el-input v-model="jobSettingInfo.dependJob"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="consoleOutputLog" label="显示控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.consoleOutputLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="9">
                                 <el-form-item prop="operateStatus" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.operateStatus"></el-switch>
                                 </el-form-item>

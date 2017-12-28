@@ -38,7 +38,7 @@ export default {
     },
     createStateFilter(queryString) {
       return state =>
-        state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0;
+        state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
     },
     handleSelect(item) {
       this.toJobListPage(item.value);
