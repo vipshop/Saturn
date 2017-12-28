@@ -26,7 +26,7 @@ export default {
       this.$http.get('/console/home/namespace', { namespace: this.domainName }).then((data) => {
         this.domainInfo = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取namespaces信息请求失败！'); })
+      .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); })
       .finally(() => {
         this.loading = false;
       });

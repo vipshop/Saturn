@@ -5,10 +5,10 @@
             <div class="job-detail-header">
                 <div class="pull-left job-detail-title">作业 :  {{jobName}}</div>
                 <div class="pull-right">
-                    <el-button size="small" @click=""><i class="fa fa-play-circle text-danger"></i>启用</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-play-circle-o text-danger"></i>立即执行</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-stop-circle-o text-danger"></i>立即终止</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-trash text-danger"></i>删除</el-button>
+                    <el-button size="small" @click=""><i class="fa fa-play-circle text-btn"></i>启用</el-button>
+                    <el-button size="small" @click=""><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
+                    <el-button size="small" @click=""><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
+                    <el-button size="small" @click=""><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
             <router-view></router-view>

@@ -46,15 +46,15 @@
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
-                                <el-button @click="batchEnabled()"><i class="fa fa-play-circle text-danger"></i>启用</el-button>
-                                <el-button @click="batchStop()"><i class="fa fa-stop-circle text-danger"></i>禁用</el-button>
-                                <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
-                                <el-button @click="batchPriority()"><i class="fa fa-level-up text-danger"></i>优先</el-button>
+                                <el-button @click="batchEnabled()"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
+                                <el-button @click="batchDisabled()"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
+                                <el-button @click="batchDelete()"><i class="fa fa-trash text-btn"></i>删除</el-button>
+                                <el-button @click="batchPriority()"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                             </div>
                             <div class="pull-right">
-                                <el-button @click="handleAdd()"><i class="fa fa-plus-circle text-danger"></i>添加</el-button>
-                                <el-button @click="handleImport()"><i class="fa fa-arrow-circle-o-down text-danger"></i>导入</el-button>
-                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-danger"></i>导出</el-button>
+                                <el-button @click="handleAdd()"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
+                                <el-button @click="handleImport()"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
+                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -103,15 +103,21 @@
                     </div>
                 </template>
             </FilterPageList>
+            <div v-if="isJobInfoVisible">
+                <job-info-dialog @close-dialog="closeDialog"></job-info-dialog>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import jobInfoDialog from './job_info_dialog';
+
 export default {
   data() {
     return {
       loading: false,
+      isJobInfoVisible: false,
       domainName: this.$route.params.domain,
       filters: {
         jobName: '',
@@ -131,19 +137,42 @@ export default {
     };
   },
   methods: {
+    handleAdd() {
+      this.isJobInfoVisible = true;
+    },
+    closeDialog() {
+      this.isJobInfoVisible = false;
+    },
     batchEnabled() {
-      this.batchOperation('启用', (data) => {
-        console.log(data);
+      this.batchOperation('启用', (str, arr) => {
+        const params = {
+          namespace: this.domainName,
+          jobNames: str,
+        };
+        this.handleBatchActive(params, arr, true);
       });
     },
-    batchStop() {
-      this.batchOperation('停用', (data) => {
-        console.log(data);
+    batchDisabled() {
+      this.batchOperation('禁用', (str, arr) => {
+        const params = {
+          namespace: this.domainName,
+          jobNames: str,
+        };
+        this.handleBatchActive(params, arr, false);
       });
     },
     batchDelete() {
       this.batchOperation('删除', (data) => {
-        console.log(data);
+        const params = {
+          namespace: this.domainName,
+          jobNames: data,
+        };
+        this.$message.confirmMessage(`确认删除作业 ${data} 吗?`, () => {
+          this.$http.post('/console/job-overview/remove-job-batch', params).then(() => {
+            this.jobList();
+          })
+          .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
+        });
       });
     },
     batchPriority() {
@@ -160,9 +189,13 @@ export default {
           selectedJobNameArray.push(element.jobName);
         });
         const selectedJobNameStr = selectedJobNameArray.join(',');
-        this.$message.confirmMessage(`确认${text}作业 ${selectedJobNameStr} 吗?`, () => {
-          callback(selectedJobNameStr);
-        });
+        if (text === '启用' || text === '禁用') {
+          callback(selectedJobNameStr, selectedJobNameArray);
+        } else {
+          this.$message.confirmMessage(`确认${text}作业 ${selectedJobNameStr} 吗?`, () => {
+            callback(selectedJobNameStr);
+          });
+        }
       }
     },
     handleSelectionChange(val) {
@@ -172,7 +205,66 @@ export default {
       console.log(row);
     },
     handleDelete(row) {
-      console.log(row);
+      const params = {
+        namespace: this.domainName,
+        jobName: row.jobName,
+      };
+      this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
+        this.$http.post('/console/job-overview/remove-job', params).then(() => {
+          this.jobList();
+        })
+        .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
+      });
+    },
+    handleBatchActive(params, jobArray, enabled) {
+      let dependUrl = '';
+      let operation = '';
+      let text = '';
+      let activeRequest = '';
+      if (enabled) {
+        dependUrl = '/console/job-overview/depending-jobs-batch';
+        operation = '启用';
+        text = '禁用';
+        activeRequest = 'enable-job-batch';
+      } else {
+        dependUrl = '/console/job-overview/depended-jobs-batch';
+        operation = '禁用';
+        text = '启用';
+        activeRequest = 'disable-job-batch';
+      }
+      this.$http.get(dependUrl, params).then((data) => {
+        let warningFlag = false;
+        jobArray.forEach((ele) => {
+          if (data[ele].length > 0) {
+            if (enabled) {
+              warningFlag = data[ele].some((ele2) => {
+                if (!ele2.enabled) {
+                  return true;
+                }
+                return false;
+              });
+            } else {
+              warningFlag = data[ele].some((ele3) => {
+                if (ele3.enabled) {
+                  return true;
+                }
+                return false;
+              });
+            }
+          }
+          return false;
+        });
+        if (warningFlag) {
+          this.$message.confirmMessage(`有依赖的作业已${text}，是否继续${operation}作业?`, () => {
+            this.enabledRequest(params, activeRequest);
+          });
+        } else {
+          this.$message.confirmMessage(`确定${operation}作业${params.jobNames}吗?`, () => {
+            this.enabledRequest(params, activeRequest);
+          });
+        }
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
     },
     handleActive(row, enabled) {
       let dependUrl = '';
@@ -192,41 +284,39 @@ export default {
       }
       const params = {
         namespace: this.domainName,
-        job_name: row.jobName,
+        jobName: row.jobName,
       };
       this.$http.get(dependUrl, params).then((data) => {
-        if (data) {
-          const arr = data;
-          if (arr.length > 0) {
-            const jobArr = [];
-            if (enabled) {
-              arr.forEach((ele) => {
-                if (!ele.enabled) {
-                  jobArr.push(ele.jobName);
-                }
-              });
-            } else {
-              arr.forEach((ele) => {
-                if (ele.enabled) {
-                  jobArr.push(ele.jobName);
-                }
-              });
-            }
-            if (jobArr.length > 0) {
-              const jobStr = jobArr.join(',');
-              this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
-                this.enabledRequest(params, activeRequest);
-              });
-            } else {
-              this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-                this.enabledRequest(params, activeRequest);
-              });
-            }
+        const arr = data;
+        if (arr.length > 0) {
+          const jobArr = [];
+          if (enabled) {
+            arr.forEach((ele) => {
+              if (!ele.enabled) {
+                jobArr.push(ele.jobName);
+              }
+            });
+          } else {
+            arr.forEach((ele) => {
+              if (ele.enabled) {
+                jobArr.push(ele.jobName);
+              }
+            });
+          }
+          if (jobArr.length > 0) {
+            const jobStr = jobArr.join(',');
+            this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
+              this.enabledRequest(params, activeRequest);
+            });
           } else {
             this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
               this.enabledRequest(params, activeRequest);
             });
           }
+        } else {
+          this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
+            this.enabledRequest(params, activeRequest);
+          });
         }
       })
       .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
@@ -262,6 +352,9 @@ export default {
         this.loading = false;
       });
     },
+  },
+  components: {
+    'job-info-dialog': jobInfoDialog,
   },
   created() {
     this.getJobList();
