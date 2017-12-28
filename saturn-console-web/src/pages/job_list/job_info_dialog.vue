@@ -1,38 +1,38 @@
 <template>
     <el-dialog title="添加作业" :visible.sync="isVisible" :before-close="closeDialog">
-        <el-form :model="jobInfo" :rules="rules" ref="jobInfo" label-width="120px">
+        <el-form :model="jobInfo" :rules="rules" ref="jobInfo" label-width="200px">
             <el-form-item label="作业类型" prop="type">
-                <el-col :span="20">
+                <el-col :span="16">
                     <el-select v-model="jobInfo.type" style="width: 100%">
                         <el-option v-for="item in jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
             <el-form-item label="作业名" prop="jobName">
-                <el-col :span="20">
+                <el-col :span="16">
                     <el-input v-model="jobInfo.jobName"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="cron表达式" prop="cron">
-                <el-col :span="20">
+                <el-col :span="16">
                     <el-input v-model="jobInfo.cron"></el-input>
                 </el-col>
                 <el-col :span="4">
-                    <a>预测</a>
+                    <a style="margin-left: 5px;">预测</a>
                 </el-col>
             </el-form-item>
             <el-form-item label="作业分片总数" prop="jobShardNum">
-                <el-col :span="20">
-                    <el-input-number v-model="jobInfo.jobShardNum" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                <el-col :span="16">
+                    <el-input-number v-model="jobInfo.jobShardNum" controls-position="right" :min="1"></el-input-number>
                 </el-col>
             </el-form-item>
             <el-form-item label="分片序列号/参数对照表" prop="aaa">
-                <el-col :span="20">
+                <el-col :span="16">
                     <el-input type="textarea" v-model="jobInfo.aaa"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="描述" prop="description">
-                <el-col :span="20">
+                <el-col :span="16">
                     <el-input type="textarea" v-model="jobInfo.description"></el-input>
                 </el-col>
             </el-form-item>

@@ -51,14 +51,19 @@ form {
     color: #487bb0;
 }
 
+.page-content {
+    margin: 10px;
+}
+
+/* header */
 .el-header {
     padding: 0;
 }
-
+/* main */
 .el-main {
     overflow: hidden;
 }
-
-.page-content {
-    margin: 10px;
+/* input-number */
+.el-input-number .el-input__inner {
+    text-align: left;
 }

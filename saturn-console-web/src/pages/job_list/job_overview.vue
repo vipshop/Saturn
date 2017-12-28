@@ -3,9 +3,9 @@
         <div>
             <el-row :gutter="20">
                 <el-col :span="8">
-                    <Panel type="default">
-                        <div slot="title">启用作业数/总作业数</div>
-                        <div slot="content">2/3</div>
+                    <Panel type="success">
+                        <div slot="title">启用作业数 / 总作业数</div>
+                        <div slot="content">2 / 3</div>
                     </Panel>
                 </el-col>
                 <el-col :span="8">
@@ -73,10 +73,10 @@
                             </el-table-column>
                             <el-table-column prop="groups" label="分组"></el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数"></el-table-column>
-                            <el-table-column label="分片分布">
+                            <el-table-column label="分片情况">
                                 <template slot-scope="scope">
                                     <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
-                                        <el-tag>{{$array.strToArray(scope.row.shardingList).length}}</el-tag>
+                                        <el-tag>{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
                                         <div slot="content" v-for="item in $array.strToArray(scope.row.shardingList)" :key="item">
                                             <div>{{item}}</div>
                                         </div>
