@@ -35,11 +35,11 @@ public class AuditInfoContext {
 	}
 
 	public static void putJobName(String value) {
-		auditInfoHolder.get().put("job_name", value);
+		auditInfoHolder.get().put("jobName", value);
 	}
 
 	public static void putJobNames(List<String> value) {
-		auditInfoHolder.get().put("job_names", value.toString());
+		auditInfoHolder.get().put("jobNames", value.toString());
 	}
 
 	public static String get(String key) {
