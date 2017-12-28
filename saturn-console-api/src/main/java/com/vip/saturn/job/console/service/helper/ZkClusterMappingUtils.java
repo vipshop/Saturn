@@ -70,7 +70,7 @@ public class ZkClusterMappingUtils {
 
 	static {
 		if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-			log.warn("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}",
+			log.info("The VIP_SATURN_CONSOLE_CLUSTER is not configured, will use the default value that is {}",
 					DEFAULT_CONSOLE_CLUSTER_ID);
 			consoleClusterId = DEFAULT_CONSOLE_CLUSTER_ID;
 		} else {
@@ -99,7 +99,7 @@ public class ZkClusterMappingUtils {
 		}
 		String result = zkClusterIdcMap.get(zkClusterKey);
 		if (result == null) {
-			log.warn("idc not found by zkClusterKey: {}", zkClusterKey);
+			log.info("idc not found by zkClusterKey: {}", zkClusterKey);
 		}
 		return result;
 	}
@@ -135,7 +135,7 @@ public class ZkClusterMappingUtils {
 		}
 		String result = idcConsoleIdMap.get(consoleId);
 		if (result == null) {
-			log.warn("idc not found by consoleId: {}", consoleId);
+			log.info("idc not found by consoleId: {}", consoleId);
 		}
 		return result;
 	}
@@ -188,7 +188,7 @@ public class ZkClusterMappingUtils {
 		}
 		String result = idcConsoleDomainMap.get(idc);
 		if (result == null) {
-			log.warn("console domain not found by idc: {}", idc);
+			log.info("console domain not found by idc: {}", idc);
 		}
 		return result;
 	}
@@ -216,7 +216,7 @@ public class ZkClusterMappingUtils {
 			result = getConsoleDomainByIdc(systemConfigService, idc);
 		}
 		if (result == null) {
-			log.warn("console domain not found by zkClusterKey: {}", zkClusterKey);
+			log.info("console domain not found by zkClusterKey: {}", zkClusterKey);
 		}
 		return result;
 	}
@@ -226,9 +226,9 @@ public class ZkClusterMappingUtils {
 	 */
 	private static String getRelaMappingStr(SystemConfigService systemConfigService, String mappingName) {
 		String mappingValue = systemConfigService.getValueDirectly(mappingName);
-		log.info("the mapping key is:{}, the mapping value is: {}", mappingName, mappingValue);
+		log.debug("the mapping key is:{}, the mapping value is: {}", mappingName, mappingValue);
 		if (StringUtils.isBlank(mappingValue)) {
-			log.warn("the mapping:{} is not configured in sys_config ", mappingName);
+			log.info("the mapping:{} is not configured in sys_config ", mappingName);
 			return null;
 		}
 		return StringUtils.deleteWhitespace(mappingValue);
