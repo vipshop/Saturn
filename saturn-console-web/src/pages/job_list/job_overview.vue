@@ -106,19 +106,25 @@
             <div v-if="isJobInfoVisible">
                 <job-info-dialog @close-dialog="closeDialog"></job-info-dialog>
             </div>
+            <div v-if="isBatchPriorityVisible">
+                <batch-priority-dialog :job-names-array="jobNamesArray" :domain-name="domainName" @close-dialog="closePriorityDialog" @batch-priority-success="batchPrioritySuccess"></batch-priority-dialog>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import jobInfoDialog from './job_info_dialog';
+import batchPriorityDialog from './batch_priority_dialog';
 
 export default {
   data() {
     return {
       loading: false,
       isJobInfoVisible: false,
+      isBatchPriorityVisible: false,
       domainName: this.$route.params.domain,
+      jobNamesArray: [],
       filters: {
         jobName: '',
         groups: '',
@@ -176,9 +182,17 @@ export default {
       });
     },
     batchPriority() {
-      this.batchOperation('优先', (data) => {
-        console.log(data);
+      this.batchOperation('优先Executors', (jobNames, jobNamesArray) => {
+        this.jobNamesArray = JSON.parse(JSON.stringify(jobNamesArray));
+        this.isBatchPriorityVisible = true;
       });
+    },
+    closePriorityDialog() {
+      this.isBatchPriorityVisible = false;
+    },
+    batchPrioritySuccess() {
+      this.isBatchPriorityVisible = false;
+      this.getJobList();
     },
     batchOperation(text, callback) {
       if (this.multipleSelection.length <= 0) {
@@ -189,7 +203,7 @@ export default {
           selectedJobNameArray.push(element.jobName);
         });
         const selectedJobNameStr = selectedJobNameArray.join(',');
-        if (text === '启用' || text === '禁用') {
+        if (text === '启用' || text === '禁用' || text === '优先Executors') {
           callback(selectedJobNameStr, selectedJobNameArray);
         } else {
           this.$message.confirmMessage(`确认${text}作业 ${selectedJobNameStr} 吗?`, () => {
@@ -355,6 +369,7 @@ export default {
   },
   components: {
     'job-info-dialog': jobInfoDialog,
+    'batch-priority-dialog': batchPriorityDialog,
   },
   created() {
     this.getJobList();
