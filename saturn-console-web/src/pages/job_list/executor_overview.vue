@@ -26,10 +26,10 @@
                     </div>
                     <div class="page-table-header-separator"></div>
                     <div>
-                        <el-button @click="batchReArrange()"><i class="fa fa-repeat text-danger"></i>重排</el-button>
-                        <el-button @click="batchPickTraffic()"><i class="fa fa-hand-lizard-o text-danger"></i>摘流量</el-button>
-                        <el-button @click="batchReset()"><i class="fa fa-power-off text-danger"></i>重启</el-button>
-                        <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
+                        <el-button @click="batchReArrange()"><i class="fa fa-repeat text-btn"></i>重排</el-button>
+                        <el-button @click="batchPickTraffic()"><i class="fa fa-hand-lizard-o text-btn"></i>摘流量</el-button>
+                        <el-button @click="batchReset()"><i class="fa fa-power-off text-btn"></i>重启</el-button>
+                        <el-button @click="batchDelete()"><i class="fa fa-trash text-btn"></i>删除</el-button>
                     </div>
                 </div>
                 <el-table stripe ref="multipleTable" @selection-change="handleSelectionChange" :data="tableData" style="width: 100%">
