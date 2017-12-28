@@ -26,6 +26,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -60,6 +61,7 @@ public class AuditLogAspectTest {
 
 		testClass.method1();
 
+		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
 				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
@@ -72,6 +74,7 @@ public class AuditLogAspectTest {
 
 		testClass.method2();
 
+		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
 				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
@@ -88,6 +91,7 @@ public class AuditLogAspectTest {
 			// do nothing
 		}
 
+		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
 				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
