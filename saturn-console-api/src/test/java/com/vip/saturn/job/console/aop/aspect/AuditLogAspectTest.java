@@ -2,15 +2,11 @@ package com.vip.saturn.job.console.aop.aspect;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
-
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
-import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
+import com.vip.saturn.job.console.utils.DummyAppender;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
-import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.junit.After;
@@ -104,9 +100,6 @@ public class AuditLogAspectTest {
 		RequestContextHolder.setRequestAttributes(servletRequestAttributes);
 	}
 
-	private void when(HttpServletRequest request) {
-	}
-
 	private void initAppender() {
 		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory
 				.getLogger("AUDITLOG");
@@ -141,45 +134,12 @@ class TestAspectClass {
 		AuditInfoContext.putJobName("jobB");
 	}
 
-	@Audit(type = AuditType.WEB)
+	@Audit
 	public void method3() {
 		AuditInfoContext.putNamespace("www.abc.com");
 		AuditInfoContext.putJobName("jobC");
 
 		throw new RuntimeException("unexpected");
-	}
-}
-
-
-class DummyAppender extends AppenderBase<ILoggingEvent> {
-
-	private List<ILoggingEvent> events = Lists.newArrayList();
-
-	@Override
-	public synchronized void doAppend(ILoggingEvent eventObject) {
-		super.doAppend(eventObject);
-		events.add(eventObject);
-	}
-
-	@Override
-	protected void append(ILoggingEvent eventObject) {
-		events.add(eventObject);
-	}
-
-	public void clear() {
-		events.clear();
-	}
-
-	public ILoggingEvent getLastEvent() {
-		if (events.size() == 0) {
-			return null;
-		}
-
-		return events.get(events.size() - 1);
-	}
-
-	public List<ILoggingEvent> getEvents() {
-		return events;
 	}
 }
 
