@@ -53,7 +53,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobInfo> jobs(String namespace) throws SaturnJobConsoleException {
+	public List<JobInfo> getJobs(String namespace) throws SaturnJobConsoleException {
 		List<JobInfo> list = new ArrayList<>();
 		try {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -226,7 +226,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<String> groups(String namespace) throws SaturnJobConsoleException {
+	public List<String> getGroups(String namespace) throws SaturnJobConsoleException {
 		List<String> groups = new ArrayList<>();
 		List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfigList != null) {
@@ -244,7 +244,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<DependencyJob> dependingJobs(String namespace, String jobName) throws SaturnJobConsoleException {
+	public List<DependencyJob> getDependingJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
 		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {
@@ -283,7 +283,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<DependencyJob> dependedJobs(String namespace, String jobName) throws SaturnJobConsoleException {
+	public List<DependencyJob> getDependedJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
 		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {

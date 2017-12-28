@@ -38,13 +38,13 @@ public class JobOverviewController extends AbstractGUIController {
 	@RequestMapping(value = "/jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getJobs(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
-		return new ResponseEntity<>(new RequestResult(true, jobService.jobs(namespace)), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true, jobService.getJobs(namespace)), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/groups", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getGroups(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
-		return new ResponseEntity<>(new RequestResult(true, jobService.groups(namespace)), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true, jobService.getGroups(namespace)), HttpStatus.OK);
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> getDependingJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
-		List<DependencyJob> dependencyJobs = jobService.dependingJobs(namespace, jobName);
+		List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobs), HttpStatus.OK);
 	}
 
@@ -65,7 +65,7 @@ public class JobOverviewController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
-			List<DependencyJob> dependencyJobs = jobService.dependingJobs(namespace, jobName);
+			List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
 			dependencyJobsMap.put(jobName, dependencyJobs);
 		}
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobsMap), HttpStatus.OK);
@@ -78,7 +78,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public ResponseEntity<RequestResult> getDependedJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
-		List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
+		List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true, dependedJobs), HttpStatus.OK);
 	}
 
@@ -89,7 +89,7 @@ public class JobOverviewController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
-			List<DependencyJob> dependedJobs = jobService.dependedJobs(namespace, jobName);
+			List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
 			dependencyJobsMap.put(jobName, dependedJobs);
 		}
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobsMap), HttpStatus.OK);
