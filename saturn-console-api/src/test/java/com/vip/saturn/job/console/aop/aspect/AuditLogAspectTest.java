@@ -58,7 +58,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{job_name=jobA, namespace=www.abc.com}.",
+				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{jobName=jobA, namespace=www.abc.com}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -70,7 +70,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{job_name=jobB, namespace=www.abc.com}.",
+				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{jobName=jobB, namespace=www.abc.com}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -86,7 +86,7 @@ public class AuditLogAspectTest {
 
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{job_name=jobC, namespace=www.abc.com}.",
+				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{jobName=jobC, namespace=www.abc.com}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
