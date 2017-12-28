@@ -19,6 +19,12 @@ Saturn is a platform created by VIP.com(唯品会) to provIde a distributed, fau
 - Stand the test of billion times scheduling per day
 - and more
 
+## Releases
+
+[Click me](https://github.com/vipshop/Saturn/releases)
+
+*2.1.x is the latest stable version, or checkout the develop branch to try something new and cool.*
+
 ## Documents & Tutorials
 
 Please go to https://vipshop.github.io/Saturn for reading the documents. 
