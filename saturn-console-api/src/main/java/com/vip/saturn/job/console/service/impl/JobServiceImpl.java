@@ -1,6 +1,9 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.ExecutorProvidedType;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
@@ -12,10 +15,14 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.vo.*;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -37,6 +44,13 @@ public class JobServiceImpl implements JobService {
 
 	@Resource
 	private CurrentJobConfigService currentJobConfigService;
+
+	private MapperFacade mapper;
+
+	@Autowired
+	public void setMapperFactory(MapperFactory mapperFactory) {
+		this.mapper = mapperFactory.getMapperFacade();
+	}
 
 	@Override
 	public List<JobInfo> jobs(String namespace) throws SaturnJobConsoleException {
@@ -232,43 +246,35 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public List<DependencyJob> dependingJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
+		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (currentJobConfig == null) {
+			throw new SaturnJobConsoleException("不能获取该作业（" + jobName + "）依赖的所有作业，因为该作业不存在");
+		}
 		List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfigList != null) {
-			CurrentJobConfig currentJobConfig = null;
-			for (CurrentJobConfig jobConfig : jobConfigList) {
-				if (isSystemJob(jobConfig)) {
-					continue;
-				}
-				if (jobConfig.getJobName().equals(jobName)) {
-					currentJobConfig = jobConfig;
-					break;
-				}
-			}
-			if (currentJobConfig != null) {
-				String dependencies = currentJobConfig.getDependencies();
-				List<String> dependencyList = new ArrayList<>();
-				if (StringUtils.isNotBlank(dependencies)) {
-					String[] split = dependencies.split(",");
-					for (String tmp : split) {
-						if (StringUtils.isNotBlank(tmp)) {
-							dependencyList.add(tmp.trim());
-						}
+			String dependencies = currentJobConfig.getDependencies();
+			List<String> dependencyList = new ArrayList<>();
+			if (StringUtils.isNotBlank(dependencies)) {
+				String[] split = dependencies.split(",");
+				for (String tmp : split) {
+					if (StringUtils.isNotBlank(tmp)) {
+						dependencyList.add(tmp.trim());
 					}
 				}
-				if (!dependencyList.isEmpty()) {
-					for (CurrentJobConfig jobConfig : jobConfigList) {
-						if (isSystemJob(jobConfig)) {
-							continue;
-						}
-						if (jobConfig.getJobName().equals(jobName)) {
-							continue;
-						}
-						if (dependencyList.contains(jobConfig.getJobName())) {
-							DependencyJob dependencyJob = new DependencyJob();
-							dependencyJob.setJobName(jobConfig.getJobName());
-							dependencyJob.setEnabled(jobConfig.getEnabled());
-							dependencyJobs.add(dependencyJob);
-						}
+			}
+			if (!dependencyList.isEmpty()) {
+				for (CurrentJobConfig jobConfig : jobConfigList) {
+					if (isSystemJob(jobConfig)) {
+						continue;
+					}
+					if (jobConfig.getJobName().equals(jobName)) {
+						continue;
+					}
+					if (dependencyList.contains(jobConfig.getJobName())) {
+						DependencyJob dependencyJob = new DependencyJob();
+						dependencyJob.setJobName(jobConfig.getJobName());
+						dependencyJob.setEnabled(jobConfig.getEnabled());
+						dependencyJobs.add(dependencyJob);
 					}
 				}
 			}
@@ -279,6 +285,10 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public List<DependencyJob> dependedJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
+		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (currentJobConfig == null) {
+			throw new SaturnJobConsoleException("不能获取依赖该作业（" + jobName + "）的所有作业，因为该作业不存在");
+		}
 		List<CurrentJobConfig> jobConfigList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfigList != null) {
 			for (CurrentJobConfig jobConfig : jobConfigList) {
@@ -309,7 +319,7 @@ public class JobServiceImpl implements JobService {
 	public void enableJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在于数据库");
+			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在");
 		}
 		if (jobConfig.getEnabled()) {
 			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于启用状态");
@@ -334,7 +344,7 @@ public class JobServiceImpl implements JobService {
 	public void disableJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能禁用该作业（" + jobName + "），因为该作业不存在于数据库");
+			throw new SaturnJobConsoleException("不能禁用该作业（" + jobName + "），因为该作业不存在");
 		}
 		if (!jobConfig.getEnabled()) {
 			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于禁用状态");
@@ -355,7 +365,7 @@ public class JobServiceImpl implements JobService {
 	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		CurrentJobConfig jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在于数据库");
+			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
@@ -418,6 +428,179 @@ public class JobServiceImpl implements JobService {
 		} else {
 			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不处于STOPPED状态");
 		}
+	}
+
+	@Override
+	public List<ExecutorProvided> getExecutors(String namespace, String jobName) throws SaturnJobConsoleException {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
+		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (currentJobConfig == null) {
+			throw new SaturnJobConsoleException("不能获取该作业（" + jobName + "）可选择的优先Executor，因为该作业不存在");
+		}
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
+			return executorProvidedList;
+		}
+		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
+		if (executors != null && executors.size() > 0) {
+			for (String executor : executors) {
+				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
+					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
+				}
+				ExecutorProvided executorProvided = new ExecutorProvided();
+				executorProvided.setExecutorName(executor);
+				executorProvided.setNoTraffic(
+						curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
+				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
+				if (StringUtils.isNotBlank(ip)) {
+					executorProvided.setType(ExecutorProvidedType.ONLINE);
+				} else {
+					executorProvided.setType(ExecutorProvidedType.OFFLINE);
+				}
+				executorProvidedList.add(executorProvided);
+			}
+		}
+
+		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
+
+		if (StringUtils.isNotBlank(jobName)) {
+			String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
+			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
+				String preferList = curatorFrameworkOp.getData(preferListNodePath);
+				if (!Strings.isNullOrEmpty(preferList)) {
+					String[] preferExecutorList = preferList.split(",");
+					for (String preferExecutor : preferExecutorList) {
+						if (executors != null && !executors.contains(preferExecutor) && !preferExecutor
+								.startsWith("@")) {
+							ExecutorProvided executorProvided = new ExecutorProvided();
+							executorProvided.setExecutorName(preferExecutor);
+							executorProvided.setType(ExecutorProvidedType.DELETED);
+							executorProvided.setNoTraffic(curatorFrameworkOp
+									.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
+							executorProvidedList.add(executorProvided);
+						}
+					}
+				}
+			}
+		}
+		return executorProvidedList;
+	}
+
+	/**
+	 * 先获取DCOS节点下的taskID节点；如果没有此节点，则尝试从executor节点下获取;
+	 * <p>
+	 * 不存在既有DCOS容器，又有K8S容器的模式。
+	 */
+	private List<ExecutorProvided> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
+
+		List<String> containerTaskIds = getDCOSContainerTaskIds(curatorFrameworkOp);
+		if (CollectionUtils.isEmpty(containerTaskIds)) {
+			containerTaskIds = getK8SContainerTaskIds(curatorFrameworkOp);
+		}
+
+		if (!CollectionUtils.isEmpty(containerTaskIds)) {
+			for (String task : containerTaskIds) {
+				ExecutorProvided executorProvided = new ExecutorProvided();
+				executorProvided.setExecutorName(task);
+				executorProvided.setType(ExecutorProvidedType.DOCKER);
+				executorProvidedList.add(executorProvided);
+			}
+		}
+
+		return executorProvidedList;
+	}
+
+	private List<String> getDCOSContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> containerTaskIds = Lists.newArrayList();
+
+		String containerNodePath = ContainerNodePath.getDcosTasksNodePath();
+		if (curatorFrameworkOp.checkExists(containerNodePath)) {
+			containerTaskIds = curatorFrameworkOp.getChildren(containerNodePath);
+		}
+
+		return containerTaskIds;
+	}
+
+	private List<String> getK8SContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		List<String> taskIds = new ArrayList<>();
+		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
+		if (executors != null && executors.size() > 0) {
+			for (String executor : executors) {
+				String executorTaskNodePath = SaturnExecutorsNode.getExecutorTaskNodePath(executor);
+				if (curatorFrameworkOp.checkExists(executorTaskNodePath)) {
+					String taskId = curatorFrameworkOp.getData(executorTaskNodePath);
+					if (taskId != null && !taskIds.contains(taskId)) {
+						taskIds.add(taskId);
+					}
+				}
+			}
+		}
+		return taskIds;
+	}
+
+	@Override
+	public List<ExecutorProvided> getOnlineExecutors(String namespace) throws SaturnJobConsoleException {
+		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
+		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
+			return executorProvidedList;
+		}
+		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
+		if (executors != null && executors.size() > 0) {
+			for (String executor : executors) {
+				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
+					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
+				}
+				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
+				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
+					ExecutorProvided executorProvided = new ExecutorProvided();
+					executorProvided.setExecutorName(executor);
+					executorProvided.setNoTraffic(
+							curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
+					executorProvided.setType(ExecutorProvidedType.ONLINE);
+					executorProvidedList.add(executorProvided);
+					continue;
+				}
+			}
+		}
+
+		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
+
+		return executorProvidedList;
+	}
+
+	@Override
+	public void setPreferList(String namespace, String jobName, String preferList) throws SaturnJobConsoleException {
+		// save to db
+		CurrentJobConfig oldJobConfig = currentJobConfigService
+				.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (oldJobConfig == null) {
+			throw new SaturnJobConsoleException("设置该作业（" + jobName + "）优先Executor失败，因为该作业不存在");
+		}
+		CurrentJobConfig newJobConfig = mapper.map(oldJobConfig, CurrentJobConfig.class);
+		newJobConfig.setPreferList(preferList);
+		try {
+			currentJobConfigService.updateConfigAndSave2History(newJobConfig, oldJobConfig, null);
+		} catch (Exception e) {
+			log.error("exception is thrown during change preferList in db", e);
+			throw new SaturnJobConsoleException(e);
+		}
+
+		// save to zk
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
+		curatorFrameworkOp.update(jobConfigPreferListNodePath, preferList);
+		// delete and create the forceShard node
+		String jobConfigForceShardNodePath = SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName);
+		curatorFrameworkOp.delete(jobConfigForceShardNodePath);
+		curatorFrameworkOp.create(jobConfigForceShardNodePath);
 	}
 
 }

@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
@@ -47,7 +48,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	/**
-	 * Get the jobs. The job is depending on the jobs.
+	 * 获取该作业依赖的所有作业
 	 */
 	@RequestMapping(value = "/depending-jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getDependingJobs(final HttpServletRequest request,
@@ -71,7 +72,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	/**
-	 * Get the jobs. The job is depended by the jobs.
+	 * 获取依赖该作业的所有作业
 	 */
 	@RequestMapping(value = "/depended-jobs", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getDependedJobs(final HttpServletRequest request,
@@ -177,6 +178,43 @@ public class JobOverviewController extends AbstractGUIController {
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	/**
+	 * 获取该域下所有在线的Executor，用于批量选择优先Executor
+	 */
+	@RequestMapping(value = "/online-executors", method = RequestMethod.GET)
+	public ResponseEntity<RequestResult> getOnlineExecutors(final HttpServletRequest request,
+			@RequestParam String namespace) throws SaturnJobConsoleException {
+		List<ExecutorProvided> onlineExecutors = jobService.getOnlineExecutors(namespace);
+		return new ResponseEntity<>(new RequestResult(true, onlineExecutors), HttpStatus.OK);
+	}
+
+	/**
+	 * 批量设置作业的优先Executor
+	 */
+	@Audit(type = AuditType.WEB)
+	@RequestMapping(value = "/set-prefer-executors-batch", method = RequestMethod.POST)
+	public ResponseEntity<RequestResult> batchSetPreferExecutors(final HttpServletRequest request,
+			@RequestParam String namespace, @RequestParam List<String> jobNames, @RequestParam String preferList)
+			throws SaturnJobConsoleException {
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.putJobNames(jobNames);
+		AuditInfoContext.put("preferList", preferList);
+		for (String jobName : jobNames) {
+			jobService.setPreferList(namespace, jobName, preferList);
+		}
+		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	/**
+	 * 获取该作业可选择的优先Executor
+	 */
+	@RequestMapping(value = "/executors", method = RequestMethod.GET)
+	public ResponseEntity<RequestResult> getExecutors(final HttpServletRequest request,
+			@RequestParam String namespace, @RequestParam String jobName) throws SaturnJobConsoleException {
+		List<ExecutorProvided> executors = jobService.getExecutors(namespace, jobName);
+		return new ResponseEntity<>(new RequestResult(true, executors), HttpStatus.OK);
 	}
 
 }
