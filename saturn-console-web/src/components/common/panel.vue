@@ -31,7 +31,6 @@ export default {
 
 <style lang="sass" scoped>
 .panel {
-    margin-bottom: 20px;
     background-color: #fff;
     border: 1px solid transparent;
     border-radius: 4px;

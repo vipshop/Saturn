@@ -25,7 +25,7 @@
         <div class="page-container">
             <FilterPageList :data="jobList" :total="total" :order-by="orderBy" :filters="filters">
                 <template slot-scope="scope">
-                    <el-form :inline="true" class="demo-form-inline">
+                    <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
                             <el-select v-model="filters.groups" @change="scope.search">
                                 <el-option label="全部分组" value=""></el-option>
@@ -35,7 +35,7 @@
                         <el-form-item label="">
                             <el-input placeholder="搜索" v-model="filters.jobName"></el-input>
                         </el-form-item>
-                        <el-form-item class="filter-search">
+                        <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                         </el-form-item>
                     </el-form>

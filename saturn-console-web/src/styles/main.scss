@@ -51,8 +51,18 @@ form {
     color: #487bb0;
 }
 
+.page-container {
+    margin: 20px 0;
+}
+
 .page-content {
     margin: 10px;
+}
+
+.table-filter{
+    .el-form-item {
+        margin-bottom: 5px;
+    }
 }
 
 /* header */
@@ -67,3 +77,5 @@ form {
 .el-input-number .el-input__inner {
     text-align: left;
 }
+
+

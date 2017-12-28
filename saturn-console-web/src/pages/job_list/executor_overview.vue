@@ -11,11 +11,11 @@
             </el-row>
         </div>
         <div class="page-container">
-            <el-form :inline="true" class="demo-form-inline">
+            <el-form :inline="true" class="table-filter">
                 <el-form-item label="">
                     <el-input placeholder="搜索" v-model="executorForSearch"></el-input>
                 </el-form-item>
-                <el-form-item class="filter-search">
+                <el-form-item>
                     <el-button type="primary" icon="el-icon-search">查询</el-button>
                 </el-form-item>
             </el-form>
