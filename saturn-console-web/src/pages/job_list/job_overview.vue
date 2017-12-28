@@ -163,7 +163,16 @@ export default {
     },
     batchDelete() {
       this.batchOperation('删除', (data) => {
-        console.log(data);
+        const params = {
+          namespace: this.domainName,
+          jobNames: data,
+        };
+        this.$message.confirmMessage(`确认删除作业 ${data} 吗?`, () => {
+          this.$http.post('/console/job-overview/remove-job-batch', params).then(() => {
+            this.jobList();
+          })
+          .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
+        });
       });
     },
     batchPriority() {
@@ -196,7 +205,16 @@ export default {
       console.log(row);
     },
     handleDelete(row) {
-      console.log(row);
+      const params = {
+        namespace: this.domainName,
+        jobName: row.jobName,
+      };
+      this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
+        this.$http.post('/console/job-overview/remove-job', params).then(() => {
+          this.jobList();
+        })
+        .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
+      });
     },
     handleBatchActive(params, jobArray, enabled) {
       let dependUrl = '';
