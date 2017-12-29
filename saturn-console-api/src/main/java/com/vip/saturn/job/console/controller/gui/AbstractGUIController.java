@@ -15,7 +15,7 @@ public class AbstractGUIController extends AbstractController {
 
 	@ExceptionHandler(Throwable.class)
 	public ResponseEntity<RequestResult> handleException(Throwable ex) {
-		log.debug("exception happens inside GUI controller operation:", ex.getMessage(), ex);
+		log.error("exception happens inside GUI controller operation:" + ex.getMessage(), ex);
 		String message = ex.getMessage();
 		if (StringUtils.isBlank(message)) {
 			message = ex.toString();

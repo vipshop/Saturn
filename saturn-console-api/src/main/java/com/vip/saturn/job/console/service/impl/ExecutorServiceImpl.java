@@ -159,7 +159,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
 				// 作业状态为STOPPED的即使有残留分片也不显示该分片
-				if (JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName))) {
+				if (JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp))) {
 					continue;
 				}
 				// concat executorSharding

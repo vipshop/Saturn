@@ -1,9 +1,7 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.service.ServerDimensionService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -35,10 +33,11 @@ public class ExecutorOverviewController {
 
 	@RequestMapping(value = "/executor-allocation", method = RequestMethod.GET)
 	public ResponseEntity<RequestResult> getExecutorAllocation(final HttpServletRequest request,
-			@RequestParam String namespace, @RequestParam String jobName) {
+			@RequestParam String namespace, @RequestParam String executorName) {
 		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
-		return new ResponseEntity<>(new RequestResult(true, executorService.getExecutorAllocation(namespace, jobName)),
+		AuditInfoContext.put("executorName", executorName);
+		return new ResponseEntity<>(
+				new RequestResult(true, executorService.getExecutorAllocation(namespace, executorName)),
 				HttpStatus.OK);
 	}
 }
