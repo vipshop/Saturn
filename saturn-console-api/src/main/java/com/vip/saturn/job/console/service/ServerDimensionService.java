@@ -15,6 +15,10 @@ import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import java.util.Map;
 
+/**
+ * @deprecated Using <code>com.vip.saturn.job.console.service.ExecutorService<code/> instead
+ */
+@Deprecated
 public interface ServerDimensionService {
 
 	Map<String, Object> getAllServersBriefInfo();

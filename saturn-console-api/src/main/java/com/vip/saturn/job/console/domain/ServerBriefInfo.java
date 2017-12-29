@@ -14,14 +14,18 @@ package com.vip.saturn.job.console.domain;
 import java.io.Serializable;
 
 /**
- * @author chembo.huang
+ * Executor brief info.
  *
+ * @author chembo.huang
  */
 public final class ServerBriefInfo implements Serializable {
 
 	private static final long serialVersionUID = 1133149706443681483L;
+
 	private final String executorName;
+
 	private String serverIp;
+
 	private Integer totalLoadLevel;
 
 	private String sharding;
@@ -35,6 +39,10 @@ public final class ServerBriefInfo implements Serializable {
 	private String version;
 
 	private boolean noTraffic;
+
+	private boolean isContainer;
+
+	private String groupName;
 
 	public ServerBriefInfo(String executorName) {
 		this.executorName = executorName;
@@ -108,4 +116,19 @@ public final class ServerBriefInfo implements Serializable {
 		this.noTraffic = noTraffic;
 	}
 
+	public boolean isContainer() {
+		return isContainer;
+	}
+
+	public void setContainer(boolean container) {
+		isContainer = container;
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
 }

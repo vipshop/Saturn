@@ -1,7 +1,13 @@
 package com.vip.saturn.job.console.service.impl;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobStatus;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.ServerAllocationInfo;
+import com.vip.saturn.job.console.domain.ServerBriefInfo;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
@@ -11,6 +17,7 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
@@ -18,8 +25,11 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 import java.io.File;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import javax.annotation.Resource;
 import jxl.Workbook;
@@ -43,18 +53,21 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class ExecutorServiceImpl implements ExecutorService {
 
-	public static final String ROOT = ExecutorNodePath.get$ExecutorNodePath();
-
 	public static final String IP_NODE_NAME = "ip";
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 
+	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM,
+			Locale.SIMPLIFIED_CHINESE);
+
 	@Resource
 	private CuratorRepository curatorRepository;
+
 	@Resource
 	private JobDimensionService jobDimensionService;
+
 	@Resource
 	private JobOperationService jobOperationService;
 
@@ -64,7 +77,133 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Resource
 	private SystemConfigService systemConfigService;
 
+	@Resource
+	private RegistryCenterService registryCenterService;
+
 	private Random random = new Random();
+
+	@Override
+	public List<ServerBriefInfo> getExecutors(String namespace) {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
+
+		try {
+			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		} catch (SaturnJobConsoleException e) {
+			return Lists.newArrayList();
+		}
+
+		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
+		if (executors == null || executors.size() == 0) {
+			return Lists.newArrayList();
+		}
+
+		List<ServerBriefInfo> executorInfoList = Lists.newArrayList();
+		for (String executor : executors) {
+			ServerBriefInfo executorInfo = new ServerBriefInfo(executor);
+			String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
+			executorInfo.setServerIp(ip);
+			if (!Strings.isNullOrEmpty(ip)) {
+				executorInfo.setStatus(ServerStatus.ONLINE);
+			} else {
+				executorInfo.setStatus(ServerStatus.OFFLINE);
+			}
+			executorInfo.setNoTraffic(curatorFrameworkOp
+					.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "noTraffic")));
+			String lastBeginTime = curatorFrameworkOp
+					.getData(ExecutorNodePath.getExecutorNodePath(executorInfo.getExecutorName(), "lastBeginTime"));
+			executorInfo.setLastBeginTime(
+					null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
+			executorInfo.setVersion(
+					curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "version")));
+			String task = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "task"));
+			if (StringUtils.isNotBlank(task)) {
+				executorInfo.setGroupName(task);
+				executorInfo.setContainer(true);
+			}
+
+			executorInfoList.add(executorInfo);
+		}
+
+		return executorInfoList;
+	}
+
+	@Override
+	public ServerAllocationInfo getExecutorAllocation(String namespace, String executorName) {
+		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
+
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
+		try {
+			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		} catch (SaturnJobConsoleException e) {
+			return serverAllocationInfo;
+		}
+
+		List<String> jobs = null;
+		try {
+			jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
+
+		if (jobs == null || jobs.size() == 0) {
+			return serverAllocationInfo;
+		}
+
+		for (String jobName : jobs) {
+			String serverNodePath = JobNodePath.getServerNodePath(jobName);
+			if (!curatorFrameworkOp.checkExists(serverNodePath)) {
+				continue;
+			}
+
+			String sharding = curatorFrameworkOp
+					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
+			if (StringUtils.isNotBlank(sharding)) {
+				// 作业状态为STOPPED的即使有残留分片也不显示该分片
+				if (JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName))) {
+					continue;
+				}
+				// concat executorSharding
+				serverAllocationInfo.getAllocationMap().put(jobName, sharding);
+				// calculate totalLoad
+				String loadLevelNode = curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
+				Integer loadLevel = 1;
+				if (StringUtils.isNotBlank(loadLevelNode)) {
+					loadLevel = Integer.parseInt(loadLevelNode);
+				}
+
+				int shardingItemNum = sharding.split(",").length;
+				int curJobLoad = shardingItemNum * loadLevel;
+				int totalLoad = serverAllocationInfo.getTotalLoadLevel();
+				serverAllocationInfo.setTotalLoadLevel(totalLoad + curJobLoad);
+			}
+		}
+
+		return serverAllocationInfo;
+	}
+
+	@Override
+	public void trafficExtraction(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
+		curatorFrameworkOp.create(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
+	}
+
+	@Override
+	public void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
+		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
+	}
+
+	private void validateIfExecutorNameExisted(String executorName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executorName))) {
+			throw new SaturnJobConsoleException("The executorName(" + executorName + ") is not existed.");
+		}
+	}
 
 	@Override
 	public List<String> getAliveExecutorNames() {
