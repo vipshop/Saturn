@@ -6,7 +6,9 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.vo.DependencyJob;
 import com.vip.saturn.job.console.vo.JobInfo;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -53,5 +55,9 @@ public interface JobService {
 	void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 	void persistJobCopied(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	void importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
+
+	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
 }

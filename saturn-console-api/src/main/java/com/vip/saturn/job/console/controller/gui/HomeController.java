@@ -7,8 +7,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequestMapping("/console/home")
 public class HomeController extends AbstractGUIController {
 
-	@RequestMapping(value = "/namespaces", method = RequestMethod.GET)
+	@GetMapping(value = "/namespaces")
 	public ResponseEntity<RequestResult> getNamespaces(final HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		List<String> namespaceList = new ArrayList<>();
@@ -35,7 +35,7 @@ public class HomeController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, namespaceList), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/namespace", method = RequestMethod.GET)
+	@GetMapping(value = "/namespace")
 	public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService

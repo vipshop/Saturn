@@ -16,8 +16,14 @@ import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.console.vo.*;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import jxl.Cell;
+import jxl.CellType;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.write.*;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -25,15 +31,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
+import java.io.File;
+import java.lang.Boolean;
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author hebelala
@@ -57,6 +63,8 @@ public class JobServiceImpl implements JobService {
 	private SystemConfigService systemConfigService;
 
 	private MapperFacade mapper;
+
+	private Random random = new Random();
 
 	@Autowired
 	public void setMapperFactory(MapperFactory mapperFactory) {
@@ -951,4 +959,434 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
+	@Override
+	public void importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException {
+		try {
+			Workbook workbook = Workbook.getWorkbook(file.getInputStream());
+
+			Sheet[] sheets = workbook.getSheets();
+			List<JobConfig> jobConfigList = new ArrayList<>();
+			// 第一行为配置项提示，从第二行开始为作业配置信息
+			// 先获取数据并检测内容格式的正确性
+			for (int i = 0; i < sheets.length; i++) {
+				Sheet sheet = sheets[i];
+				int rows = sheet.getRows();
+				for (int row = 1; row < rows; row++) {
+					Cell[] rowCells = sheet.getRow(row);
+					// 如果这一行的表格全为空，则跳过这一行。
+					if (!isBlankRow(rowCells)) {
+						jobConfigList.add(convertJobConfig(i + 1, row + 1, rowCells));
+					}
+				}
+			}
+			int maxJobNum = getMaxJobNum();
+			if (jobIncExceeds(namespace, maxJobNum, jobConfigList.size())) {
+				throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum));
+			}
+			// 再进行添加
+			for (JobConfig jobConfig : jobConfigList) { // TODO 配合前台提示信息做更好
+				addJob(namespace, jobConfig);
+			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private boolean isBlankRow(Cell[] rowCells) {
+		for (int i = 0; i < rowCells.length; i++) {
+			if (!CellType.EMPTY.equals(rowCells[i].getType())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private JobConfig convertJobConfig(int sheetNumber, int rowNumber, Cell[] rowCells)
+			throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+
+		String jobName = getContents(rowCells, 0);
+		if (jobName == null || jobName.trim().isEmpty()) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名必填。"));
+		}
+		if (!jobName.matches("[0-9a-zA-Z_]*")) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 1, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
+		}
+		jobConfig.setJobName(jobName);
+
+		String jobType = getContents(rowCells, 1);
+		if (jobType == null || jobType.trim().isEmpty()) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型必填。"));
+		}
+		if (JobType.getJobType(jobType).equals(JobType.UNKOWN_JOB)) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型未知。"));
+		}
+		jobConfig.setJobType(jobType);
+
+		String jobClass = getContents(rowCells, 2);
+		if (jobType.equals(JobType.JAVA_JOB.name())) {
+			if (jobClass == null || jobClass.trim().isEmpty()) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA作业，作业实现类必填。"));
+			}
+		}
+		jobConfig.setJobClass(jobClass);
+
+		String cron = getContents(rowCells, 3);
+		if (jobType.equals(JobType.JAVA_JOB.name())
+				|| jobType.equals(JobType.SHELL_JOB.name())) {
+			if (cron == null || cron.trim().isEmpty()) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 4, "对于JAVA/SHELL作业，cron表达式必填。"));
+			}
+			cron = cron.trim();
+			try {
+				CronExpression.validateExpression(cron);
+			} catch (ParseException e) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e.toString()));
+			}
+		} else {
+			cron = "";// 其他类型的不需要持久化保存cron表达式
+		}
+
+		jobConfig.setCron(cron);
+
+		jobConfig.setDescription(getContents(rowCells, 4));
+
+		jobConfig.setLocalMode(Boolean.valueOf(getContents(rowCells, 5)));
+
+		int shardingTotalCount = 1;
+		if (jobConfig.getLocalMode()) {
+			jobConfig.setShardingTotalCount(shardingTotalCount);
+		} else {
+			String tmp = getContents(rowCells, 6);
+			if (tmp != null) {
+				try {
+					shardingTotalCount = Integer.parseInt(tmp);
+				} catch (NumberFormatException e) {
+					throw new SaturnJobConsoleException(
+							createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e.toString()));
+				}
+			} else {
+				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数必填"));
+			}
+			if (shardingTotalCount < 1) {
+				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数不能小于1"));
+			}
+			jobConfig.setShardingTotalCount(shardingTotalCount);
+		}
+
+		int timeoutSeconds = 0;
+		try {
+			String tmp = getContents(rowCells, 7);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				timeoutSeconds = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e.toString()));
+		}
+		jobConfig.setTimeoutSeconds(timeoutSeconds);
+
+		jobConfig.setJobParameter(getContents(rowCells, 8));
+
+		String shardingItemParameters = getContents(rowCells, 9);
+		if (jobConfig.getLocalMode()) {
+			if (shardingItemParameters == null) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必填。"));
+			} else {
+				String[] split = shardingItemParameters.split(",");
+				boolean includeXing = false;
+				for (String tmp : split) {
+					String[] split2 = tmp.split("=");
+					if ("*".equalsIgnoreCase(split2[0].trim())) {
+						includeXing = true;
+						break;
+					}
+				}
+				if (!includeXing) {
+					throw new SaturnJobConsoleException(
+							createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
+				}
+			}
+		} else if (shardingTotalCount > 0) {
+			if (shardingItemParameters == null || shardingItemParameters.trim().isEmpty()
+					|| shardingItemParameters.split(",").length < shardingTotalCount) {
+				throw new SaturnJobConsoleException(
+						createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
+			}
+		}
+		jobConfig.setShardingItemParameters(shardingItemParameters);
+
+		jobConfig.setQueueName(getContents(rowCells, 10));
+		jobConfig.setChannelName(getContents(rowCells, 11));
+		jobConfig.setPreferList(getContents(rowCells, 12));
+		jobConfig.setUseDispreferList(!Boolean.valueOf(getContents(rowCells, 13)));
+
+		int processCountIntervalSeconds = 300;
+		try {
+			String tmp = getContents(rowCells, 14);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				processCountIntervalSeconds = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e.toString()));
+		}
+		jobConfig.setProcessCountIntervalSeconds(processCountIntervalSeconds);
+
+		int loadLevel = 1;
+		try {
+			String tmp = getContents(rowCells, 15);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				loadLevel = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e.toString()));
+		}
+		jobConfig.setLoadLevel(loadLevel);
+
+		jobConfig.setShowNormalLog(Boolean.valueOf(getContents(rowCells, 16)));
+
+		jobConfig.setPausePeriodDate(getContents(rowCells, 17));
+
+		jobConfig.setPausePeriodTime(getContents(rowCells, 18));
+
+		jobConfig.setUseSerial(Boolean.valueOf(getContents(rowCells, 19)));
+
+		int jobDegree = 0;
+		try {
+			String tmp = getContents(rowCells, 20);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				jobDegree = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e.toString()));
+		}
+		jobConfig.setJobDegree(jobDegree);
+
+		// 第21列，上报运行状态失效，由算法决定是否上报，看下面setEnabledReport时的逻辑，看addJob
+
+		String jobMode = getContents(rowCells, 22);
+
+		if (jobMode != null && jobMode.startsWith(com.vip.saturn.job.console.domain.JobMode.SYSTEM_PREFIX)) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "作业模式有误，不能添加系统作业"));
+		}
+		jobConfig.setJobMode(jobMode);
+
+		String dependencies = getContents(rowCells, 23);
+		;
+		if (dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 24, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+		}
+		jobConfig.setDependencies(dependencies);
+
+		jobConfig.setGroups(getContents(rowCells, 24));
+
+		int timeout4AlarmSeconds = 0;
+		try {
+			String tmp = getContents(rowCells, 25);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(
+					createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e.toString()));
+		}
+		jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
+
+		String timeZone = getContents(rowCells, 26);
+		if (timeZone == null || timeZone.trim().length() == 0) {
+			timeZone = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		} else {
+			timeZone = timeZone.trim();
+			if (!SaturnConstants.TIME_ZONE_IDS.contains(timeZone)) {
+				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 27, "时区有误"));
+			}
+		}
+		jobConfig.setTimeZone(timeZone);
+
+		return jobConfig;
+	}
+
+	private String getContents(Cell[] rowCell, int column) {
+		if (rowCell.length > column) {
+			return rowCell[column].getContents();
+		}
+		return null;
+	}
+
+	private String createExceptionMessage(int sheetNumber, int rowNumber, int columnNumber, String message) {
+		return "内容格式有误，错误发生在表格页:" + sheetNumber + "，行号:" + rowNumber + "，列号:" + columnNumber + "，错误信息：" + message;
+	}
+
+	@Override
+	public File exportJobs(String namespace) throws SaturnJobConsoleException {
+		try {
+			File tmp = new File(SaturnConstants.CACHES_FILE_PATH,
+					"tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
+			if (!tmp.exists()) {
+				FileUtils.forceMkdir(tmp.getParentFile());
+				tmp.createNewFile();
+			}
+			WritableWorkbook writableWorkbook = Workbook.createWorkbook(tmp);
+			WritableSheet sheet1 = writableWorkbook.createSheet("Sheet1", 0);
+			sheet1.addCell(new Label(0, 0, "作业名称"));
+			sheet1.addCell(new Label(1, 0, "作业类型"));
+			sheet1.addCell(new Label(2, 0, "作业实现类"));
+			sheet1.addCell(new Label(3, 0, "cron表达式"));
+			sheet1.addCell(new Label(4, 0, "作业描述"));
+
+			Label localModeLabel = new Label(5, 0, "本地模式");
+			setCellComment(localModeLabel, "对于非本地模式，默认为false；对于本地模式，该配置无效，固定为true");
+			sheet1.addCell(localModeLabel);
+
+			Label shardingTotalCountLabel = new Label(6, 0, "分片数");
+			setCellComment(shardingTotalCountLabel, "对本地作业无效");
+			sheet1.addCell(shardingTotalCountLabel);
+
+			Label timeoutSecondsLabel = new Label(7, 0, "超时（Kill线程/进程）时间");
+			setCellComment(timeoutSecondsLabel, "0表示无超时");
+			sheet1.addCell(timeoutSecondsLabel);
+
+			sheet1.addCell(new Label(8, 0, "自定义参数"));
+			sheet1.addCell(new Label(9, 0, "分片序列号/参数对照表"));
+			sheet1.addCell(new Label(10, 0, "Queue名"));
+			sheet1.addCell(new Label(11, 0, "执行结果发送的Channel"));
+
+			Label preferListLabel = new Label(12, 0, "优先Executor");
+			setCellComment(preferListLabel, "可填executorName，多个元素使用英文逗号隔开");
+			sheet1.addCell(preferListLabel);
+
+			Label usePreferListOnlyLabel = new Label(13, 0, "只使用优先Executor");
+			setCellComment(usePreferListOnlyLabel, "默认为false");
+			sheet1.addCell(usePreferListOnlyLabel);
+
+			sheet1.addCell(new Label(14, 0, "统计处理数据量的间隔秒数"));
+			sheet1.addCell(new Label(15, 0, "负荷"));
+			sheet1.addCell(new Label(16, 0, "显示控制台输出日志"));
+			sheet1.addCell(new Label(17, 0, "暂停日期段"));
+			sheet1.addCell(new Label(18, 0, "暂停时间段"));
+
+			Label useSerialLabel = new Label(19, 0, "串行消费");
+			setCellComment(useSerialLabel, "默认为false");
+			sheet1.addCell(useSerialLabel);
+
+			Label jobDegreeLabel = new Label(20, 0, "作业重要等级");
+			setCellComment(jobDegreeLabel, "0:没有定义,1:非线上业务,2:简单业务,3:一般业务,4:重要业务,5:核心业务");
+			sheet1.addCell(jobDegreeLabel);
+
+			Label enabledReportLabel = new Label(21, 0, "上报运行状态");
+			setCellComment(enabledReportLabel, "对于定时作业，默认为true；对于消息作业，默认为false");
+			sheet1.addCell(enabledReportLabel);
+
+			Label jobModeLabel = new Label(22, 0, "作业模式");
+			setCellComment(jobModeLabel, "用户不能添加系统作业");
+			sheet1.addCell(jobModeLabel);
+
+			Label dependenciesLabel = new Label(23, 0, "依赖的作业");
+			setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
+			sheet1.addCell(dependenciesLabel);
+
+			Label groupsLabel = new Label(24, 0, "所属分组");
+			setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
+			sheet1.addCell(groupsLabel);
+
+			Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
+			setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
+			sheet1.addCell(timeout4AlarmSecondsLabel);
+
+			Label timeZoneLabel = new Label(26, 0, "时区");
+			setCellComment(timeZoneLabel, "作业运行时区");
+			sheet1.addCell(timeZoneLabel);
+
+			List<CurrentJobConfig> unSystemJobs = getUnSystemJobs(namespace);
+			if (unSystemJobs != null && !unSystemJobs.isEmpty()) {
+				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+						.getCuratorFrameworkOp(namespace);
+				for (int i = 0; i < unSystemJobs.size(); i++) {
+					String jobName = unSystemJobs.get(i).getJobName();
+					sheet1.addCell(new Label(0, i + 1, jobName));
+					sheet1.addCell(new Label(1, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"))));
+					sheet1.addCell(new Label(2, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobClass"))));
+					sheet1.addCell(new Label(3, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"))));
+					sheet1.addCell(new Label(4, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "description"))));
+					sheet1.addCell(new Label(5, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "localMode"))));
+					sheet1.addCell(new Label(6, i + 1,
+							curatorFrameworkOp
+									.getData(JobNodePath.getConfigNodePath(jobName, "shardingTotalCount"))));
+					sheet1.addCell(new Label(7, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeoutSeconds"))));
+					sheet1.addCell(new Label(8, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobParameter"))));
+					sheet1.addCell(new Label(9, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "shardingItemParameters"))));
+					sheet1.addCell(new Label(10, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "queueName"))));
+					sheet1.addCell(new Label(11, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "channelName"))));
+					sheet1.addCell(new Label(12, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"))));
+					String useDispreferList = curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
+					if (useDispreferList != null) {
+						useDispreferList = String.valueOf(!Boolean.valueOf(useDispreferList));
+					}
+					sheet1.addCell(new Label(13, i + 1, useDispreferList));
+					sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "processCountIntervalSeconds"))));
+					sheet1.addCell(new Label(15, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"))));
+					sheet1.addCell(new Label(16, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "showNormalLog"))));
+					sheet1.addCell(new Label(17, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodDate"))));
+					sheet1.addCell(new Label(18, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "pausePeriodTime"))));
+					sheet1.addCell(new Label(19, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "useSerial"))));
+					sheet1.addCell(new Label(20, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobDegree"))));
+					sheet1.addCell(new Label(21, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"))));
+					sheet1.addCell(new Label(22, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobMode"))));
+					sheet1.addCell(new Label(23, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "dependencies"))));
+					sheet1.addCell(new Label(24, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "groups"))));
+					sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp
+							.getData(JobNodePath.getConfigNodePath(jobName, "timeout4AlarmSeconds"))));
+					sheet1.addCell(new Label(26, i + 1,
+							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"))));
+				}
+			}
+
+			writableWorkbook.write();
+			writableWorkbook.close();
+
+			return tmp;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private void setCellComment(WritableCell cell, String comment) {
+		WritableCellFeatures cellFeatures = new WritableCellFeatures();
+		cellFeatures.setComment(comment);
+		cell.setCellFeatures(cellFeatures);
+	}
 }

@@ -13,16 +13,21 @@ import com.vip.saturn.job.console.vo.DependencyJob;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Job overview page controller.
@@ -36,13 +41,13 @@ public class JobOverviewController extends AbstractGUIController {
 	@Resource
 	private JobService jobService;
 
-	@RequestMapping(value = "/jobs", method = RequestMethod.GET)
+	@GetMapping(value = "/jobs")
 	public ResponseEntity<RequestResult> getJobs(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
 		return new ResponseEntity<>(new RequestResult(true, jobService.getJobs(namespace)), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/groups", method = RequestMethod.GET)
+	@GetMapping(value = "/groups")
 	public ResponseEntity<RequestResult> getGroups(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
 		return new ResponseEntity<>(new RequestResult(true, jobService.getGroups(namespace)), HttpStatus.OK);
@@ -51,7 +56,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取该作业依赖的所有作业
 	 */
-	@RequestMapping(value = "/depending-jobs", method = RequestMethod.GET)
+	@GetMapping(value = "/depending-jobs")
 	public ResponseEntity<RequestResult> getDependingJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
@@ -59,7 +64,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, dependencyJobs), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/depending-jobs-batch", method = RequestMethod.GET)
+	@GetMapping(value = "/depending-jobs-batch")
 	public ResponseEntity<RequestResult> batchGetDependingJob(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam List<String> jobNames)
@@ -75,7 +80,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取依赖该作业的所有作业
 	 */
-	@RequestMapping(value = "/depended-jobs", method = RequestMethod.GET)
+	@GetMapping(value = "/depended-jobs")
 	public ResponseEntity<RequestResult> getDependedJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
@@ -83,7 +88,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, dependedJobs), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/depended-jobs-batch", method = RequestMethod.GET)
+	@GetMapping(value = "/depended-jobs-batch")
 	public ResponseEntity<RequestResult> batchGetDependedJobs(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam List<String> jobNames)
@@ -97,7 +102,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/enable-job", method = RequestMethod.POST)
+	@PostMapping(value = "/enable-job")
 	public ResponseEntity<RequestResult> enableJob(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
@@ -108,7 +113,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/enable-job-batch", method = RequestMethod.POST)
+	@PostMapping(value = "/enable-job-batch")
 	public ResponseEntity<RequestResult> batchEnableJob(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam List<String> jobNames)
@@ -122,7 +127,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/disable-job", method = RequestMethod.POST)
+	@PostMapping(value = "/disable-job")
 	public ResponseEntity<RequestResult> disableJob(final HttpServletRequest request, @RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
 		AuditInfoContext.putNamespace(namespace);
@@ -132,7 +137,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/disable-job-batch", method = RequestMethod.POST)
+	@PostMapping(value = "/disable-job-batch")
 	public ResponseEntity<RequestResult> batchDisableJob(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam List<String> jobNames)
@@ -146,7 +151,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/remove-job", method = RequestMethod.POST)
+	@PostMapping(value = "/remove-job")
 	public ResponseEntity<RequestResult> removeJob(final HttpServletRequest request, @RequestParam String namespace,
 			@RequestParam String jobName) throws SaturnJobConsoleException {
 		AuditInfoContext.putNamespace(namespace);
@@ -156,7 +161,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/remove-job-batch", method = RequestMethod.POST)
+	@PostMapping(value = "/remove-job-batch")
 	public ResponseEntity<RequestResult> batchRemoveJob(final HttpServletRequest request,
 			@RequestParam String namespace,
 			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
@@ -184,7 +189,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取该域下所有在线的Executor，用于批量选择优先Executor
 	 */
-	@RequestMapping(value = "/online-executors", method = RequestMethod.GET)
+	@GetMapping(value = "/online-executors")
 	public ResponseEntity<RequestResult> getOnlineExecutors(final HttpServletRequest request,
 			@RequestParam String namespace) throws SaturnJobConsoleException {
 		List<ExecutorProvided> onlineExecutors = jobService.getOnlineExecutors(namespace);
@@ -195,7 +200,7 @@ public class JobOverviewController extends AbstractGUIController {
 	 * 批量设置作业的优先Executor
 	 */
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/set-prefer-executors-batch", method = RequestMethod.POST)
+	@PostMapping(value = "/set-prefer-executors-batch")
 	public ResponseEntity<RequestResult> batchSetPreferExecutors(final HttpServletRequest request,
 			@RequestParam String namespace, @RequestParam List<String> jobNames, @RequestParam String preferList)
 			throws SaturnJobConsoleException {
@@ -209,8 +214,8 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@RequestMapping(value = "/add-job", method = RequestMethod.POST)
-	public ResponseEntity<RequestResult> batchSetPreferExecutors(final HttpServletRequest request,
+	@PostMapping(value = "/add-job")
+	public ResponseEntity<RequestResult> addJob(final HttpServletRequest request,
 			@RequestParam String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		AuditInfoContext.putNamespace(namespace);
@@ -219,10 +224,63 @@ public class JobOverviewController extends AbstractGUIController {
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}
 
+	@Audit(type = AuditType.WEB)
+	@PostMapping(value = "/import-jobs")
+	public ResponseEntity<RequestResult> importJobs(final HttpServletRequest request,
+			@RequestParam String namespace, @RequestParam("file") MultipartFile file)
+			throws SaturnJobConsoleException {
+		AuditInfoContext.putNamespace(namespace);
+		if (file.isEmpty()) {
+			throw new SaturnJobConsoleGUIException("请上传一个有内容的文件");
+		}
+		String originalFilename = file.getOriginalFilename();
+		if (originalFilename == null || !originalFilename.endsWith(".xls")) {
+			throw new SaturnJobConsoleGUIException("仅支持.xls文件导入");
+		}
+		AuditInfoContext.put("originalFilename", originalFilename);
+		jobService.importJobs(namespace, file);
+		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	@Audit(type = AuditType.WEB)
+	@GetMapping(value = "exportJob")
+	public void exportJob(HttpServletRequest request, @RequestParam String namespace, HttpServletResponse response)
+			throws SaturnJobConsoleException {
+		File exportJobFile = null;
+		try {
+			exportJobFile = jobService.exportJobs(namespace);
+
+			String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+			String fileName = getNamespace() + "_allJobs_" + currentTime + ".xls";
+
+			response.setContentType("application/octet-stream");
+			response.setHeader("Content-disposition",
+					"attachment; filename=" + new String(fileName.getBytes("UTF-8"), "ISO8859-1"));
+
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(exportJobFile));
+			BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream());
+			byte[] buff = new byte[2048];
+			int bytesRead;
+			while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+				bos.write(buff, 0, bytesRead);
+			}
+			bis.close();
+			bos.close();
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleGUIException(e);
+		} finally {
+			if (exportJobFile != null) {
+				exportJobFile.delete();
+			}
+		}
+	}
+
 	/**
 	 * 获取该作业可选择的优先Executor
 	 */
-	@RequestMapping(value = "/executors", method = RequestMethod.GET)
+	@GetMapping(value = "/executors")
 	public ResponseEntity<RequestResult> getExecutors(final HttpServletRequest request,
 			@RequestParam String namespace, @RequestParam String jobName) throws SaturnJobConsoleException {
 		List<ExecutorProvided> executors = jobService.getExecutors(namespace, jobName);
