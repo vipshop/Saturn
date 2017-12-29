@@ -3,7 +3,7 @@
         <el-form label-width="140px">
             <el-form-item label="作业名称" prop="type">
                 <el-col :span="18">
-                    <el-tag type="success" class="job-name-tag" v-for="item in jobNamesArray" :key="item">{{item}}</el-tag>
+                    <el-tag type="success" class="form-tags" v-for="item in jobNamesArray" :key="item">{{item}}</el-tag>
                 </el-col>
             </el-form-item>
             <el-form-item label="优先Executors" prop="jobName">
@@ -65,8 +65,3 @@ export default {
   },
 };
 </script>
-<style lang="sass" scoped>
-.job-name-tag {
-    margin: 5px 5px 0;
-}
-</style>
