@@ -1,7 +1,9 @@
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
 import com.vip.saturn.job.console.vo.DependencyJob;
 import com.vip.saturn.job.console.vo.JobInfo;
 
@@ -37,5 +39,19 @@ public interface JobService {
 	List<ExecutorProvided> getOnlineExecutors(String namespace) throws SaturnJobConsoleException;
 
 	void setPreferList(String namespace, String jobName, String preferList) throws SaturnJobConsoleException;
+
+	void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	int getMaxJobNum() throws SaturnJobConsoleException;
+
+	boolean jobIncExceeds(String namespace, int maxJobNum, int inc) throws SaturnJobConsoleException;
+
+	List<CurrentJobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
+
+	void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	void persistJobCopied(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 }

@@ -3,6 +3,7 @@ package com.vip.saturn.job.console.controller.gui;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
@@ -204,6 +205,17 @@ public class JobOverviewController extends AbstractGUIController {
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList);
 		}
+		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+	}
+
+	@Audit(type = AuditType.WEB)
+	@RequestMapping(value = "/add-job", method = RequestMethod.POST)
+	public ResponseEntity<RequestResult> batchSetPreferExecutors(final HttpServletRequest request,
+			@RequestParam String namespace, JobConfig jobConfig)
+			throws SaturnJobConsoleException {
+		AuditInfoContext.putNamespace(namespace);
+		AuditInfoContext.put("jobConfig", jobConfig.toString());
+		jobService.addJob(namespace, jobConfig);
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}
 
