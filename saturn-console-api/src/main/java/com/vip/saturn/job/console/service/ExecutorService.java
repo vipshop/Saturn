@@ -29,10 +29,10 @@ public interface ExecutorService {
 
 	RequestResult addJobs(JobConfig jobConfig);
 
-	@Deprecated
 	/**
 	 * Use JobOperationService.removeJob(String jobName)
 	 */
+	@Deprecated
 	String removeJob(String jobName);
 
 	File getExportJobFile() throws SaturnJobConsoleException;
