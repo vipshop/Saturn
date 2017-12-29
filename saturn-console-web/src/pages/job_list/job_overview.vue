@@ -150,30 +150,30 @@ export default {
       this.isJobInfoVisible = false;
     },
     batchEnabled() {
-      this.batchOperation('启用', (str, arr) => {
+      this.batchOperation('启用', (arr) => {
         const params = {
           namespace: this.domainName,
-          jobNames: str,
+          jobNames: arr.join(','),
         };
         this.handleBatchActive(params, arr, true);
       });
     },
     batchDisabled() {
-      this.batchOperation('禁用', (str, arr) => {
+      this.batchOperation('禁用', (arr) => {
         const params = {
           namespace: this.domainName,
-          jobNames: str,
+          jobNames: arr.join(','),
         };
         this.handleBatchActive(params, arr, false);
       });
     },
     batchDelete() {
-      this.batchOperation('删除', (data) => {
+      this.batchOperation('删除', (arr) => {
         const params = {
           namespace: this.domainName,
-          jobNames: data,
+          jobNames: arr.join(','),
         };
-        this.$message.confirmMessage(`确认删除作业 ${data} 吗?`, () => {
+        this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
           this.$http.post('/console/job-overview/remove-job-batch', params).then(() => {
             this.jobList();
           })
@@ -182,8 +182,8 @@ export default {
       });
     },
     batchPriority() {
-      this.batchOperation('优先Executors', (jobNames, jobNamesArray) => {
-        this.jobNamesArray = JSON.parse(JSON.stringify(jobNamesArray));
+      this.batchOperation('优先Executors', (arr) => {
+        this.jobNamesArray = JSON.parse(JSON.stringify(arr));
         this.isBatchPriorityVisible = true;
       });
     },
@@ -202,14 +202,7 @@ export default {
         this.multipleSelection.forEach((element) => {
           selectedJobNameArray.push(element.jobName);
         });
-        const selectedJobNameStr = selectedJobNameArray.join(',');
-        if (text === '启用' || text === '禁用' || text === '优先Executors') {
-          callback(selectedJobNameStr, selectedJobNameArray);
-        } else {
-          this.$message.confirmMessage(`确认${text}作业 ${selectedJobNameStr} 吗?`, () => {
-            callback(selectedJobNameStr);
-          });
-        }
+        callback(selectedJobNameArray);
       }
     },
     handleSelectionChange(val) {
