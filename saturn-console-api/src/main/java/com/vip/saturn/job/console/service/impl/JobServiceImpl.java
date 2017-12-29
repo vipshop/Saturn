@@ -386,7 +386,7 @@ public class JobServiceImpl implements JobService {
 				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
 					throw new SaturnJobConsoleException(
 							"不能删除该作业（" + jobName + "），因为该作业创建时间距离现在不超过" + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT
-									/ 6000) + "分钟");
+									/ 60000) + "分钟");
 				}
 			}
 			// remove job from db
@@ -409,11 +409,13 @@ public class JobServiceImpl implements JobService {
 				if (!curatorFrameworkOp.checkExists(jobServerPath)) {
 					// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+					return;
 				}
 				// (2)如果该作业servers下没有任何executor，可直接删除作业节点
 				List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
 				if (CollectionUtils.isEmpty(executors)) {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+					return;
 				}
 				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
 				boolean hasOnlineExecutor = false;
@@ -427,6 +429,7 @@ public class JobServiceImpl implements JobService {
 				}
 				if (!hasOnlineExecutor) {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
+					return;
 				}
 				try {
 					Thread.sleep(200);
@@ -1388,5 +1391,11 @@ public class JobServiceImpl implements JobService {
 		WritableCellFeatures cellFeatures = new WritableCellFeatures();
 		cellFeatures.setComment(comment);
 		cell.setCellFeatures(cellFeatures);
+	}
+
+	@Override
+	public JobConfig getJobConfig(String namespace, String jobName) {
+
+		return null;
 	}
 }
