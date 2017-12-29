@@ -60,4 +60,6 @@ public interface JobService {
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
+	JobConfig getJobConfig(String namespace, String jobName);
+
 }
