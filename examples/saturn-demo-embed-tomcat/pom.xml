@@ -9,7 +9,7 @@
     <url>http://maven.apache.org</url>
 
     <properties>
-        <saturn-job.version>2.1.2</saturn-job.version>
+        <saturn-job.version>2.1.6</saturn-job.version>
     </properties>
 
     <dependencies>
