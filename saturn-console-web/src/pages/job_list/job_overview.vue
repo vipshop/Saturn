@@ -42,7 +42,7 @@
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>作业列表
-                                <el-button type="text" @click="handleRefresh()"><i class="fa fa-refresh"></i></el-button>
+                                <el-button type="text" @click="getJobList"><i class="fa fa-refresh"></i></el-button>
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
