@@ -104,7 +104,7 @@
                 </template>
             </FilterPageList>
             <div v-if="isJobInfoVisible">
-                <job-info-dialog @close-dialog="closeDialog"></job-info-dialog>
+                <job-info-dialog :domain-name="domainName" :job-info="jobInfo" :job-info-title="jobInfoTitle" :job-info-operation="jobInfoOperation" @job-info-success="jobInfoSuccess" @close-dialog="closeDialog"></job-info-dialog>
             </div>
             <div v-if="isBatchPriorityVisible">
                 <batch-priority-dialog :job-names-array="jobNamesArray" :domain-name="domainName" @close-dialog="closePriorityDialog" @batch-priority-success="batchPrioritySuccess"></batch-priority-dialog>
@@ -122,6 +122,9 @@ export default {
     return {
       loading: false,
       isJobInfoVisible: false,
+      jobInfoTitle: '',
+      jobInfoOperation: '',
+      jobInfo: {},
       isBatchPriorityVisible: false,
       domainName: this.$route.params.domain,
       jobNamesArray: [],
@@ -145,9 +148,25 @@ export default {
   methods: {
     handleAdd() {
       this.isJobInfoVisible = true;
+      this.jobInfoTitle = '添加作业';
+      this.jobInfoOperation = 'add';
+      const jobAddInfo = {
+        jobType: 'JAVA_JOB',
+        jobName: '',
+        jobClass: '',
+        cron: '0/5 * * * * ?',
+        shardingTotalCount: 1,
+        shardingItemParameters: '',
+        description: '',
+      };
+      this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
     },
     closeDialog() {
       this.isJobInfoVisible = false;
+    },
+    jobInfoSuccess() {
+      this.isJobInfoVisible = false;
+      this.getJobList();
     },
     batchEnabled() {
       this.batchOperation('启用', (arr) => {
