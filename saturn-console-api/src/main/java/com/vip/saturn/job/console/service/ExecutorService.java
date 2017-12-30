@@ -9,16 +9,54 @@ import java.io.File;
 import java.util.List;
 
 /**
+ * Executor 相关的服务
+ *
  * @author xiaopeng.he
+ * @author kfchu
  */
 public interface ExecutorService {
 
-	List<ServerBriefInfo> getExecutors(String namespace);
+	/**
+	 * 获取所有Executors信息；
+	 *
+	 * @param namespace 域
+	 * @return executor信息, 如果不存在则返回空的<code>java.util.List</code>；
+	 */
+	List<ServerBriefInfo> getExecutors(String namespace) throws SaturnJobConsoleException;
 
-	ServerAllocationInfo getExecutorAllocation(String namespace, String executorName);
+	/**
+	 * 获取单个Executors信息；
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 * @return executor信息, 如果不存在则返回<code>null</code>；
+	 */
+	ServerBriefInfo getExecutor(String namespace, String executorName) throws SaturnJobConsoleException;
 
+	/**
+	 * 获取Executor所分配的分片信息；
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 * @return executor分配信息
+	 */
+	ServerAllocationInfo getExecutorAllocation(String namespace, String executorName) throws SaturnJobConsoleException;
+
+	/**
+	 * 摘取流量
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 */
 	void trafficExtraction(String namespace, String executorName) throws SaturnJobConsoleException;
 
+	/**
+	 * 恢复流量
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 * @throws SaturnJobConsoleException
+	 */
 	void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	List<String> getAliveExecutorNames();
@@ -37,6 +75,9 @@ public interface ExecutorService {
 
 	File getExportJobFile() throws SaturnJobConsoleException;
 
+	@Deprecated
 	RequestResult shardAllAtOnce() throws SaturnJobConsoleException;
+
+	void shardAll(String namespace) throws SaturnJobConsoleException;
 
 }

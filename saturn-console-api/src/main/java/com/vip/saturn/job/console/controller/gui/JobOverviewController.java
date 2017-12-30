@@ -109,7 +109,7 @@ public class JobOverviewController extends AbstractGUIController {
 		AuditInfoContext.putNamespace(namespace);
 		AuditInfoContext.putJobName(jobName);
 		jobService.enableJob(namespace, jobName);
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)
@@ -123,7 +123,7 @@ public class JobOverviewController extends AbstractGUIController {
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName);
 		}
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)
@@ -133,7 +133,7 @@ public class JobOverviewController extends AbstractGUIController {
 		AuditInfoContext.putNamespace(namespace);
 		AuditInfoContext.putJobName(jobName);
 		jobService.disableJob(namespace, jobName);
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)
@@ -147,7 +147,7 @@ public class JobOverviewController extends AbstractGUIController {
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
 		}
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)
@@ -157,7 +157,7 @@ public class JobOverviewController extends AbstractGUIController {
 		AuditInfoContext.putNamespace(namespace);
 		AuditInfoContext.putJobName(jobName);
 		jobService.removeJob(namespace, jobName);
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)
@@ -183,7 +183,7 @@ public class JobOverviewController extends AbstractGUIController {
 					.append(failJobNames.toString());
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	/**
@@ -210,7 +210,7 @@ public class JobOverviewController extends AbstractGUIController {
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList);
 		}
-		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
 	@Audit(type = AuditType.WEB)

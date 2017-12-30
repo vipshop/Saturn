@@ -14,6 +14,10 @@ public class RequestResult {
 	public RequestResult() {
 	}
 
+	public RequestResult(boolean success) {
+		this(success, "", null);
+	}
+
 	public RequestResult(boolean success, String message) {
 		this(success, message, null);
 	}

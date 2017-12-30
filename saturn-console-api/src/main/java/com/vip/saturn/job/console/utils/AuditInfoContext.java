@@ -42,6 +42,10 @@ public class AuditInfoContext {
 		auditInfoHolder.get().put("jobNames", value.toString());
 	}
 
+	public static void putExecutorName(String value) {
+		auditInfoHolder.get().put("executorName", value);
+	}
+
 	public static String get(String key) {
 		return auditInfoHolder.get().get(key);
 	}

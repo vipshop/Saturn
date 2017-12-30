@@ -83,14 +83,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private Random random = new Random();
 
 	@Override
-	public List<ServerBriefInfo> getExecutors(String namespace) {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
-
-		try {
-			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-		} catch (SaturnJobConsoleException e) {
-			return Lists.newArrayList();
-		}
+	public List<ServerBriefInfo> getExecutors(String namespace) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
 		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
 		if (executors == null || executors.size() == 0) {
@@ -99,28 +93,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 		List<ServerBriefInfo> executorInfoList = Lists.newArrayList();
 		for (String executor : executors) {
-			ServerBriefInfo executorInfo = new ServerBriefInfo(executor);
-			String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "ip"));
-			executorInfo.setServerIp(ip);
-			if (!Strings.isNullOrEmpty(ip)) {
-				executorInfo.setStatus(ServerStatus.ONLINE);
-			} else {
-				executorInfo.setStatus(ServerStatus.OFFLINE);
-			}
-			executorInfo.setNoTraffic(curatorFrameworkOp
-					.checkExists(ExecutorNodePath.getExecutorNodePath(executor, "noTraffic")));
-			String lastBeginTime = curatorFrameworkOp
-					.getData(ExecutorNodePath.getExecutorNodePath(executorInfo.getExecutorName(), "lastBeginTime"));
-			executorInfo.setLastBeginTime(
-					null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
-			executorInfo.setVersion(
-					curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "version")));
-			String task = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executor, "task"));
-			if (StringUtils.isNotBlank(task)) {
-				executorInfo.setGroupName(task);
-				executorInfo.setContainer(true);
-			}
-
+			ServerBriefInfo executorInfo = getServerBriefInfo(executor, curatorFrameworkOp);
 			executorInfoList.add(executorInfo);
 		}
 
@@ -128,15 +101,45 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	@Override
-	public ServerAllocationInfo getExecutorAllocation(String namespace, String executorName) {
-		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
+	public ServerBriefInfo getExecutor(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
-		try {
-			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-		} catch (SaturnJobConsoleException e) {
-			return serverAllocationInfo;
+		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executorName))) {
+			return null;
 		}
+
+		return getServerBriefInfo(executorName, curatorFrameworkOp);
+	}
+
+	private ServerBriefInfo getServerBriefInfo(String executorName, CuratorFrameworkOp curatorFrameworkOp) {
+		ServerBriefInfo executorInfo = new ServerBriefInfo(executorName);
+		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executorName, "ip"));
+		executorInfo.setServerIp(ip);
+		if (!Strings.isNullOrEmpty(ip)) {
+			executorInfo.setStatus(ServerStatus.ONLINE);
+		} else {
+			executorInfo.setStatus(ServerStatus.OFFLINE);
+		}
+		executorInfo.setNoTraffic(curatorFrameworkOp
+				.checkExists(ExecutorNodePath.getExecutorNodePath(executorName, "noTraffic")));
+		String lastBeginTime = curatorFrameworkOp
+				.getData(ExecutorNodePath.getExecutorNodePath(executorInfo.getExecutorName(), "lastBeginTime"));
+		executorInfo.setLastBeginTime(
+				null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
+		executorInfo.setVersion(
+				curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executorName, "version")));
+		String task = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executorName, "task"));
+		if (StringUtils.isNotBlank(task)) {
+			executorInfo.setGroupName(task);
+			executorInfo.setContainer(true);
+		}
+		return executorInfo;
+	}
+
+	@Override
+	public ServerAllocationInfo getExecutorAllocation(String namespace, String executorName)
+			throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
 		List<String> jobs = null;
 		try {
@@ -144,6 +147,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 		} catch (SaturnJobConsoleException e) {
 			log.error(e.getMessage(), e);
 		}
+
+		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
 
 		if (jobs == null || jobs.size() == 0) {
 			return serverAllocationInfo;
@@ -184,16 +189,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	@Override
 	public void trafficExtraction(String namespace, String executorName) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
 		curatorFrameworkOp.create(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
 
 	@Override
 	public void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
@@ -539,4 +542,22 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 	}
 
+	@Override
+	public void shardAll(String namespace) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
+		curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
+		curatorFrameworkOp.create(shardAllAtOnceNodePath);
+	}
+
+
+	private CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
+		CuratorFrameworkOp curatorFrameworkOp;
+		try {
+			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		} catch (SaturnJobConsoleException e) {
+			throw new SaturnJobConsoleException("no CuratorFramework found for namespace:" + namespace);
+		}
+		return curatorFrameworkOp;
+	}
 }
