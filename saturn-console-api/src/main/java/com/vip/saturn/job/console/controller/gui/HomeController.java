@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -25,25 +26,25 @@ import java.util.List;
 public class HomeController extends AbstractGUIController {
 
 	@GetMapping(value = "/namespaces")
-	public ResponseEntity<RequestResult> getNamespaces(final HttpServletRequest request)
+	public SuccessResponseEntity getNamespaces(final HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		List<String> namespaceList = new ArrayList<>();
 		List<String> temp = registryCenterService.getNamespaces();
 		if (temp != null) {
 			namespaceList.addAll(temp);
 		}
-		return new ResponseEntity<>(new RequestResult(true, namespaceList), HttpStatus.OK);
+		return new SuccessResponseEntity(namespaceList);
 	}
 
 	@GetMapping(value = "/namespace")
-	public ResponseEntity<RequestResult> getNamespace(final HttpServletRequest request, @RequestParam String namespace)
+	public SuccessResponseEntity getNamespace(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
 		if (registryCenterConfiguration == null) {
 			throw new SaturnJobConsoleGUIException("该域名（" + namespace + "）不存在");
 		}
-		return new ResponseEntity<>(new RequestResult(true, registryCenterConfiguration), HttpStatus.OK);
+		return new SuccessResponseEntity(registryCenterConfiguration);
 	}
 
 }

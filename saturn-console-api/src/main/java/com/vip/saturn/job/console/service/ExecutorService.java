@@ -101,7 +101,4 @@ public interface ExecutorService {
 
 	File getExportJobFile() throws SaturnJobConsoleException;
 
-	@Deprecated
-	RequestResult shardAllAtOnce() throws SaturnJobConsoleException;
-
 }

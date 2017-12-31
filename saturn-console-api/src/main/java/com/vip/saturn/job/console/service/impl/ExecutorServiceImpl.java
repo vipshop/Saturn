@@ -552,25 +552,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	@Override
-	public RequestResult shardAllAtOnce() throws SaturnJobConsoleException {
-		try {
-			RequestResult requestResult = new RequestResult();
-			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-			String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
-			if (curatorFrameworkOp.checkExists(shardAllAtOnceNodePath)) {
-				curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
-			}
-			curatorFrameworkOp.create(shardAllAtOnceNodePath);
-			requestResult.setMessage("");
-			requestResult.setSuccess(true);
-			return requestResult;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleException(e);
-		}
-	}
-
-	@Override
 	public void shardAll(String namespace) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
