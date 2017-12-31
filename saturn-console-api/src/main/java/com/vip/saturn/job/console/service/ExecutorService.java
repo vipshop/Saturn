@@ -34,7 +34,6 @@ public interface ExecutorService {
 	 */
 	ServerBriefInfo getExecutor(String namespace, String executorName) throws SaturnJobConsoleException;
 
-
 	/**
 	 * 获取Executor状态。
 	 *
@@ -54,6 +53,14 @@ public interface ExecutorService {
 	ServerAllocationInfo getExecutorAllocation(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	/**
+	 * 移除离线的executor.
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 */
+	void removeExecutor(String namespace, String executorName) throws SaturnJobConsoleException;
+
+	/**
 	 * 摘取流量
 	 *
 	 * @param namespace 域
@@ -66,9 +73,17 @@ public interface ExecutorService {
 	 *
 	 * @param namespace 域
 	 * @param executorName 目标executor
-	 * @throws SaturnJobConsoleException
 	 */
 	void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException;
+
+	/**
+	 * 重shard域下所有作业分片
+	 *
+	 * @param namespace 域
+	 */
+	void shardAll(String namespace) throws SaturnJobConsoleException;
+
+	/** below are legacy methods which can be removed in the future **/
 
 	List<String> getAliveExecutorNames();
 
@@ -88,7 +103,5 @@ public interface ExecutorService {
 
 	@Deprecated
 	RequestResult shardAllAtOnce() throws SaturnJobConsoleException;
-
-	void shardAll(String namespace) throws SaturnJobConsoleException;
 
 }

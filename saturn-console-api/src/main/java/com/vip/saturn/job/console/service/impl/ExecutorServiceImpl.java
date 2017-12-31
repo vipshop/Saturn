@@ -210,6 +210,25 @@ public class ExecutorServiceImpl implements ExecutorService {
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
 
+	@Override
+	public void removeExecutor(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNodePath(executorName));
+		List<String> jobNames = new ArrayList<>();
+		try {
+			jobNames = jobDimensionService.getAllJobs(curatorFrameworkOp);
+		} catch (SaturnJobConsoleException e) {
+			log.error(e.getMessage(), e);
+		}
+		if (CollectionUtils.isEmpty(jobNames)) {
+			return;
+		}
+		for (String jobName : jobNames) {
+			String executorNode = JobNodePath.getServerNodePath(jobName, executorName);
+			curatorFrameworkOp.deleteRecursive(executorNode);
+		}
+	}
+
 	private void validateIfExecutorNameExisted(String executorName,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath(executorName))) {
