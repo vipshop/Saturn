@@ -1,21 +1,24 @@
 package com.vip.saturn.job.console.aop.aspect;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * Aspect to handle the audit log logic.
@@ -36,6 +39,7 @@ public class AuditLogAspect {
 
 	@Around("@annotation(audit)")
 	public Object logAuditInfo(ProceedingJoinPoint joinPoint, Audit audit) throws Throwable {
+		addAuditParamsIfPossible(joinPoint);
 		Boolean isSuccess = false;
 		try {
 			Object result = joinPoint.proceed();
@@ -46,6 +50,22 @@ public class AuditLogAspect {
 			AuditInfoContext.reset();
 		}
 	}
+
+	private void addAuditParamsIfPossible(ProceedingJoinPoint joinPoint) {
+		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+		Annotation[][] annotations = signature.getMethod().getParameterAnnotations();
+		int i = 0;
+		for (Object arg : joinPoint.getArgs()) {
+			for (Annotation annotation : annotations[i]) {
+				if (annotation.annotationType() == AuditParam.class) {
+					AuditParam auditParamAnno = (AuditParam) annotation;
+					AuditInfoContext.put(auditParamAnno.value(), arg.toString());
+				}
+			}
+			i++;
+		}
+	}
+
 
 	private void logAudit(Boolean isSuccess, AuditType auditType) {
 		String content = null;

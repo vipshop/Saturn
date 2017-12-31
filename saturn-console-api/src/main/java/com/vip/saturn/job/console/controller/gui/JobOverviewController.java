@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.domain.JobConfig;
@@ -115,11 +116,9 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/enable-job-batch")
 	public ResponseEntity<RequestResult> batchEnableJob(final HttpServletRequest request,
-			@RequestParam String namespace,
-			@RequestParam List<String> jobNames)
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName);
 		}
@@ -128,10 +127,9 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/disable-job")
-	public ResponseEntity<RequestResult> disableJob(final HttpServletRequest request, @RequestParam String namespace,
-			@RequestParam String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
+	public ResponseEntity<RequestResult> disableJob(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
 		jobService.disableJob(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
@@ -139,11 +137,9 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/disable-job-batch")
 	public ResponseEntity<RequestResult> batchDisableJob(final HttpServletRequest request,
-			@RequestParam String namespace,
-			@RequestParam List<String> jobNames)
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
 		}
@@ -152,10 +148,9 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/remove-job")
-	public ResponseEntity<RequestResult> removeJob(final HttpServletRequest request, @RequestParam String namespace,
-			@RequestParam String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
+	public ResponseEntity<RequestResult> removeJob(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
 		jobService.removeJob(namespace, jobName);
 		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
@@ -163,10 +158,8 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/remove-job-batch")
 	public ResponseEntity<RequestResult> batchRemoveJob(final HttpServletRequest request,
-			@RequestParam String namespace,
-			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		List<String> successJobNames = new ArrayList<>();
 		List<String> failJobNames = new ArrayList<>();
 		for (String jobName : jobNames) {
@@ -202,11 +195,10 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/set-prefer-executors-batch")
 	public ResponseEntity<RequestResult> batchSetPreferExecutors(final HttpServletRequest request,
-			@RequestParam String namespace, @RequestParam List<String> jobNames, @RequestParam String preferList)
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames,
+			@AuditParam("preferList") @RequestParam String preferList)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobNames(jobNames);
-		AuditInfoContext.put("preferList", preferList);
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList);
 		}
@@ -216,10 +208,8 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/add-job")
 	public ResponseEntity<RequestResult> addJob(final HttpServletRequest request,
-			@RequestParam String namespace, JobConfig jobConfig)
+			@AuditParam("namespace") @RequestParam String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.put("jobConfig", jobConfig.toString());
 		jobService.addJob(namespace, jobConfig);
 		return new ResponseEntity<>(new RequestResult(true, ""), HttpStatus.OK);
 	}
@@ -227,9 +217,8 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/import-jobs")
 	public ResponseEntity<RequestResult> importJobs(final HttpServletRequest request,
-			@RequestParam String namespace, @RequestParam("file") MultipartFile file)
+			@AuditParam("namespace") @RequestParam String namespace, @RequestParam("file") MultipartFile file)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
 		if (file.isEmpty()) {
 			throw new SaturnJobConsoleGUIException("请上传一个有内容的文件");
 		}
@@ -247,7 +236,9 @@ public class JobOverviewController extends AbstractGUIController {
 	public void exportJob(HttpServletRequest request, @RequestParam String namespace, HttpServletResponse response)
 			throws SaturnJobConsoleException {
 		File exportJobFile = null;
-		try {
+		try (BufferedInputStream bis = new BufferedInputStream(
+				new FileInputStream(exportJobFile)); BufferedOutputStream bos = new BufferedOutputStream(
+				response.getOutputStream());) {
 			exportJobFile = jobService.exportJobs(namespace);
 
 			String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
@@ -257,15 +248,11 @@ public class JobOverviewController extends AbstractGUIController {
 			response.setHeader("Content-disposition",
 					"attachment; filename=" + new String(fileName.getBytes("UTF-8"), "ISO8859-1"));
 
-			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(exportJobFile));
-			BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream());
 			byte[] buff = new byte[2048];
 			int bytesRead;
 			while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
 				bos.write(buff, 0, bytesRead);
 			}
-			bis.close();
-			bos.close();
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {

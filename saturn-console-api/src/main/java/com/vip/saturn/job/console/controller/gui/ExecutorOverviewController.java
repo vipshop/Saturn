@@ -1,8 +1,10 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
@@ -53,17 +55,16 @@ public class ExecutorOverviewController {
 	@Audit
 	@PostMapping(value = "/traffic")
 	public ResponseEntity<RequestResult> extractOrRecoverTraffic(final HttpServletRequest request,
-			@RequestParam String namespace,
-			@RequestParam String executorName, @RequestParam String operation) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putExecutorName(executorName);
-
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("executorName") @RequestParam String executorName,
+			@AuditParam("operation") @RequestParam String operation)
+			throws SaturnJobConsoleException {
 		// check executor is existed and online.
 		ServerBriefInfo executorInfo = executorService.getExecutor(namespace, executorName);
 		if (executorInfo == null) {
 			throw new SaturnJobConsoleGUIException("Executor不存在");
 		}
-		if (executorInfo.getServerIp() == null) {
+		if (ServerStatus.OFFLINE == executorInfo.getStatus()) {
 			throw new SaturnJobConsoleGUIException("Executor不在线，不能摘取流量");
 		}
 
@@ -72,7 +73,7 @@ public class ExecutorOverviewController {
 		} else if (TRAFFIC_OPERATION_RECOVER.equals(operation)) {
 			executorService.trafficRecovery(namespace, executorName);
 		} else {
-			throw new SaturnJobConsoleException("operation " + operation + "不支持");
+			throw new SaturnJobConsoleGUIException("operation " + operation + "不支持");
 		}
 
 		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
@@ -83,10 +84,28 @@ public class ExecutorOverviewController {
 	 */
 	@Audit
 	@PostMapping(value = "/shard-all")
-	public ResponseEntity<RequestResult> shardAllJobs(final HttpServletRequest request, @RequestParam String namespace)
+	public ResponseEntity<RequestResult> shardAll(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace)
 			throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
 		executorService.shardAll(namespace);
+		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
+	}
+
+	@Audit
+	@PostMapping(value = "/remove-executor")
+	public ResponseEntity<RequestResult> removeExecutor(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("executorName") @RequestParam String executorName)
+			throws SaturnJobConsoleException {
+		// check executor is existed and online.
+		ServerBriefInfo executorInfo = executorService.getExecutor(namespace, executorName);
+		if (executorInfo == null) {
+			throw new SaturnJobConsoleGUIException("Executor不存在");
+		}
+		if (ServerStatus.ONLINE == executorInfo.getStatus()) {
+			throw new SaturnJobConsoleGUIException("Executor在线，不能移除");
+		}
+
 		return new ResponseEntity<>(new RequestResult(true), HttpStatus.OK);
 	}
 
