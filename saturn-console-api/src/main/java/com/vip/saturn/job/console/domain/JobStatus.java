@@ -1,12 +1,10 @@
-/**
- *
- */
 package com.vip.saturn.job.console.domain;
 
 /**
- * @author chembo.huang
+ * @author hebelala
  */
-@Deprecated
 public enum JobStatus {
-	READY, STOPPED, RUNNING, STOPPING,
+
+	READY, STOPPED, RUNNING, STOPPING
+
 }

@@ -1,15 +1,10 @@
 package com.vip.saturn.job.console.mybatis.service.impl;
 
-import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
-import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
-import java.util.Date;
-import java.util.List;
-import javax.annotation.Resource;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import org.apache.commons.io.IOUtils;
@@ -20,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
@@ -41,13 +40,13 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Transactional(readOnly = false)
 	@Override
-	public int create(CurrentJobConfig currentJobConfig) throws Exception {
+	public int create(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.insert(currentJobConfig);
 	}
 
 	@Transactional
 	@Override
-	public int createSelective(CurrentJobConfig currentJobConfig) throws Exception {
+	public int createSelective(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.insertSelective(currentJobConfig);
 	}
 
@@ -59,34 +58,34 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public CurrentJobConfig findByPrimaryKey(Long id) throws Exception {
-		CurrentJobConfig currentJobConfig = currentJobConfigRepo.selectByPrimaryKey(id);
+	public JobConfig4DB findByPrimaryKey(Long id) throws Exception {
+		JobConfig4DB currentJobConfig = currentJobConfigRepo.selectByPrimaryKey(id);
 		return currentJobConfig;
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public int selectCount(CurrentJobConfig currentJobConfig) throws Exception {
+	public int selectCount(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.selectCount(currentJobConfig);
 	}
 
 	@Transactional
 	@Override
-	public int updateByPrimaryKey(CurrentJobConfig currentJobConfig) throws Exception {
+	public int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKey(currentJobConfig);
 	}
 
 	@Transactional
 	@Override
-	public int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfig) throws Exception {
+	public int updateByPrimaryKeySelective(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKeySelective(currentJobConfig);
 	}
 
 	@Override
-	public void batchUpdatePreferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException {
+	public void batchUpdatePreferList(List<JobConfig4DB> jobConfigs) throws SaturnJobConsoleException {
 		SqlSession batchSqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
 		try {
-			for (CurrentJobConfig currentJobConfig : jobConfigs) {
+			for (JobConfig4DB currentJobConfig : jobConfigs) {
 				batchSqlSession.getMapper(CurrentJobConfigRepository.class).updatePreferList(currentJobConfig);
 			}
 			batchSqlSession.commit();
@@ -99,45 +98,32 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public List<CurrentJobConfig> selectPage(CurrentJobConfig currentJobConfig, Pageable pageable) throws Exception {
+	public List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception {
 		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
 	@Override
-	public CurrentJobConfig findConfigByNamespaceAndJobName(String namespace, String jobName) {
+	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
 	}
 
 	@Transactional
 	@Override
-	public void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings,
+	public void updateConfigAndSave2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception {
-		HistoryJobConfig history = mapper.map(jobconfig, HistoryJobConfig.class);
-		mapper.map(jobSettings, jobconfig);
-		jobconfig.setLastUpdateBy(userName);
-		jobconfig.setLastUpdateTime(new Date());
-		updateByPrimaryKey(jobconfig);
-		history.setId(null);
-		historyJobConfigService.create(history);
-	}
-
-	@Transactional
-	@Override
-	public void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig,
-			final String userName) throws Exception {
-		HistoryJobConfig history = mapper.map(oldJobconfig, HistoryJobConfig.class);
+		JobConfig4DB history = mapper.map(oldJobConfig, JobConfig4DB.class);
 		if (userName != null) {
-			newJobconfig.setLastUpdateBy(userName);
+			history.setLastUpdateBy(userName);
 		}
-		newJobconfig.setLastUpdateTime(new Date());
-		updateByPrimaryKey(newJobconfig);
+		newJobConfig.setLastUpdateTime(new Date());
+		updateByPrimaryKey(newJobConfig);
 		history.setId(null);
 		historyJobConfigService.create(history);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<CurrentJobConfig> findConfigsByNamespace(String namespace) {
+	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
 	}
 

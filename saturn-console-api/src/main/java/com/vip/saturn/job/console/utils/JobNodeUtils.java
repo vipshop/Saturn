@@ -1,15 +1,16 @@
 package com.vip.saturn.job.console.utils;
 
 import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.exception.JobConsoleException;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.data.Stat;
+
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author timmy.hu

@@ -2,24 +2,13 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
-import com.vip.saturn.job.console.domain.RestApiJobConfig;
-import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiJobStatistics;
-import com.vip.saturn.job.console.domain.ServerStatus;
-import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.RestApiService;
@@ -31,13 +20,6 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +27,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.util.*;
 
 /**
  * @author hebelala
@@ -81,12 +66,6 @@ public class RestApiServiceImpl implements RestApiService {
 	private CuratorRepository curatorRepository;
 
 	@Resource
-	private JobDimensionService jobDimensionService;
-
-	@Resource
-	private JobOperationService jobOperationService;
-
-	@Resource
 	private JobService jobService;
 
 	@Resource
@@ -112,8 +91,8 @@ public class RestApiServiceImpl implements RestApiService {
 					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 							"Invalid request. The current number of job reach the maximum limit[" + maxJobNum + "]");
 				}
-				jobOperationService.validateJobConfig(jobConfig);
-				jobOperationService.persistJob(jobConfig, curatorFrameworkOp);
+				jobService.validateJobConfig(jobConfig);
+				jobService.persistJob(namespace, jobConfig);
 			}
 		});
 
@@ -137,18 +116,19 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public List<RestApiJobInfo> getRestApiJobInfos(String namespace) throws SaturnJobConsoleException {
+	public List<RestApiJobInfo> getRestApiJobInfos(final String namespace) throws SaturnJobConsoleException {
 		return ReuseUtils.reuse(namespace, registryCenterService, curatorRepository,
 				new ReuseCallBack<List<RestApiJobInfo>>() {
 					@Override
 					public List<RestApiJobInfo> call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 							throws SaturnJobConsoleException {
 						List<RestApiJobInfo> restApiJobInfos = new ArrayList<>();
-						List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-						if (jobs != null) {
-							for (String job : jobs) {
+						List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
+						if (unSystemJobs != null) {
+							for (JobConfig job : unSystemJobs) {
 								try {
-									RestApiJobInfo restApiJobInfo = constructJobInfo(curatorFrameworkOp, job);
+									RestApiJobInfo restApiJobInfo = constructJobInfo(curatorFrameworkOp,
+											job.getJobName());
 									restApiJobInfos.add(restApiJobInfo);
 								} catch (Exception e) {
 									log.error("getRestApiJobInfos exception:", e);
@@ -456,7 +436,7 @@ public class RestApiServiceImpl implements RestApiService {
 						checkUpdateConfigAllowed(mtime);
 						String oldcronStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"));
 						if (!cron.equals(oldcronStr)) {
-							jobOperationService.updateJobCron(jobName, cron, customContext);
+							jobService.updateJobCron(namespace, jobName, cron, customContext);
 						}
 					}
 				});
@@ -478,25 +458,23 @@ public class RestApiServiceImpl implements RestApiService {
 					@Override
 					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 							throws SaturnJobConsoleException {
-						JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+						JobStatus js = jobService.getJobStatus(namespace, jobName);
 
 						if (!JobStatus.READY.equals(js)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 									String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.READY.name()));
 						}
+						List<JobServer> jobServers = jobService.getJobServers(namespace, jobName);
 
-						Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
-
-						if (CollectionUtils.isEmpty(servers)) {
+						if (CollectionUtils.isEmpty(jobServers)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
 						}
 
 						boolean everExecute = false;
-						for (JobServer server : servers) {
+						for (JobServer server : jobServers) {
 							if (ServerStatus.ONLINE.equals(server.getStatus())) {
 								log.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
-								jobOperationService.runAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(),
-										curatorFrameworkOp);
+								jobService.runAtOnce(namespace, jobName, server.getExecutorName());
 								everExecute = true;
 							}
 						}
@@ -518,22 +496,9 @@ public class RestApiServiceImpl implements RestApiService {
 					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 							throws SaturnJobConsoleException {
 						// if job is already STOPPED then return
-						JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+						JobStatus js = jobService.getJobStatus(namespace, jobName);
 						if (JobStatus.STOPPED.equals(js)) {
 							log.debug("job is already stopped");
-							return;
-						}
-
-						String jobType = jobDimensionService.getJobType(jobName, curatorFrameworkOp);
-						// For Msg Job
-						if (JobBriefInfo.JobType.MSG_JOB.name().equals(jobType)) {
-							boolean jobEnabled = jobDimensionService.isJobEnabled(jobName, curatorFrameworkOp);
-							if (jobEnabled) {
-								throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-										"job cannot be stopped while it is enable");
-							}
-
-							stopAtOnce(jobName, curatorFrameworkOp);
 							return;
 						}
 
@@ -543,26 +508,36 @@ public class RestApiServiceImpl implements RestApiService {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 									"job cannot be stopped while its status is READY or RUNNING");
 						}
-						stopAtOnce(jobName, curatorFrameworkOp);
+
+						List<JobServer> jobServers = jobService.getJobServers(namespace, jobName);
+
+						if (CollectionUtils.isEmpty(jobServers)) {
+							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
+						}
+
+						for (JobServer server : jobServers) {
+							log.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
+							jobService.stopAtOnce(namespace, jobName, server.getExecutorName());
+						}
 					}
 				});
 	}
 
 	@Override
-	public void deleteJob(String namespace, final String jobName) throws SaturnJobConsoleException {
+	public void deleteJob(final String namespace, final String jobName) throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
 				new ReuseCallBackWithoutReturn() {
 					@Override
 					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 							throws SaturnJobConsoleException {
-						JobStatus js = jobDimensionService.getJobStatus(jobName, curatorFrameworkOp);
+						JobStatus js = jobService.getJobStatus(namespace, jobName);
 
 						if (!JobStatus.STOPPED.equals(js)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 									String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPED.name()));
 						}
 
-						jobOperationService.deleteJob(jobName, curatorFrameworkOp);
+						jobService.removeJob(namespace, jobName);
 						log.info("job:{} deletion done", jobName);
 					}
 				});
@@ -661,20 +636,6 @@ public class RestApiServiceImpl implements RestApiService {
 		namespaceInfo.setContent(namespaceDomainInfo.getContent());
 
 		return namespaceInfo;
-	}
-
-	private void stopAtOnce(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
-			throws SaturnJobConsoleHttpException {
-		Collection<JobServer> servers = jobDimensionService.getServers(jobName, curatorFrameworkOp);
-		if (CollectionUtils.isEmpty(servers)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
-		}
-
-		for (JobServer server : servers) {
-			log.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
-			jobOperationService.stopAtOnceByJobnameAndExecutorName(jobName, server.getExecutorName(),
-					curatorFrameworkOp);
-		}
 	}
 
 	@Override

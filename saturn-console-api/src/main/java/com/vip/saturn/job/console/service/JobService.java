@@ -1,15 +1,12 @@
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.ExecutorProvided;
-import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
-import com.vip.saturn.job.console.vo.DependencyJob;
-import com.vip.saturn.job.console.vo.JobInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hebelala
@@ -45,16 +42,31 @@ public interface JobService {
 
 	boolean jobIncExceeds(String namespace, int maxJobNum, int inc) throws SaturnJobConsoleException;
 
-	List<CurrentJobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
+	List<JobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
+
+	List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException;
 
 	void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
-	void persistJobCopied(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+	void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 	void importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
-	JobConfig getJobConfig(String namespace, String jobName);
+	JobConfig getJobConfigFromZK(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	List<String> getAllJobs(String namespace) throws SaturnJobConsoleException;
+
+	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobConsoleException;
+
+	List<JobServer> getJobServers(String namespace, String jobName) throws SaturnJobConsoleException;
+	// TODO
+	void runAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
+	// TODO
+	void stopAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
 }

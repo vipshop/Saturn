@@ -243,7 +243,6 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 		JobConfig jobConfig = new JobConfig();
 
 		jobConfig.setJobName(jobEntity.getJobName());
-		jobConfig.setNamespace(namespace);
 		jobConfig.setCron((String) jobEntity.getConfig("cron"));
 		jobConfig.setJobType((String) jobEntity.getConfig("jobType"));
 		jobConfig.setShardingTotalCount((Integer) jobEntity.getConfig("shardingTotalCount"));
@@ -252,7 +251,6 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 
 		jobConfig.setLocalMode(null);
 		jobConfig.setUseSerial(null);
-		jobConfig.setIsCopyJob(false);
 
 		return jobConfig;
 	}

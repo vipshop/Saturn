@@ -5,7 +5,7 @@ import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.entity.TemporarySharedStatus;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
@@ -14,12 +14,22 @@ import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlS
 import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ShareStatusModuleNames;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.CreateMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,15 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.CreateMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author hebelala
@@ -58,7 +59,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 	private CurrentJobConfigService currentJobConfigService;
 
 	@Resource
-	private JobOperationService jobOperationService;
+	private JobService jobService;
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -209,11 +210,11 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
 							.forPath(jobsNodePath);
 
-					List<CurrentJobConfig> configs = currentJobConfigService.findConfigsByNamespace(namespace);
+					List<JobConfig4DB> configs = currentJobConfigService.findConfigsByNamespace(namespace);
 					log.info("get configs success, {}", namespace);
 					if (configs != null) {
-						for (CurrentJobConfig jobConfig : configs) {
-							jobOperationService.persistJobFromDB(jobConfig, curatorFrameworkOpByNamespace);
+						for (JobConfig4DB jobConfig : configs) {
+							jobService.persistJobFromDB(namespace, jobConfig);
 							log.info("move {}-{} to zk success", namespace, jobConfig.getJobName());
 						}
 					}

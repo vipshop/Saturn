@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository" >
-  <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="job_name" property="jobName" jdbcType="VARCHAR" />
     <result column="job_class" property="jobClass" jdbcType="VARCHAR" />
@@ -70,7 +70,7 @@
     delete from job_config
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     insert into job_config (job_name, job_class, 
       sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date,
       pause_period_time, sharding_item_parameters, 
@@ -95,7 +95,7 @@
       #{customContext,jdbcType=VARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     insert into job_config
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -324,7 +324,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <update id="updateByPrimaryKeySelective" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     update job_config
     <set >
       <if test="jobName != null" >
@@ -438,7 +438,7 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <update id="updateByPrimaryKey" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     update job_config
     set job_name = #{jobName,jdbcType=VARCHAR},
       job_class = #{jobClass,jdbcType=VARCHAR},
@@ -484,7 +484,7 @@
      where namespace = #{namespace,jdbcType=VARCHAR} and job_name = #{jobName,jdbcType=VARCHAR}
   </update>
   
-  <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig" >
+  <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     select count(*) from job_config
     <where >
       <if test="id != null" >

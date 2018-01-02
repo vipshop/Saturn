@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.vo;
+package com.vip.saturn.job.console.domain;
 
 /**
  * @author hebelala

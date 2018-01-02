@@ -3,8 +3,8 @@ package com.vip.saturn.job.console.controller.rest;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
-import com.vip.saturn.job.console.domain.JobBriefInfo;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -183,8 +183,6 @@ public class JobOperationRestApiController extends AbstractController {
 
 		checkMissingParameter("namespace", namespace);
 
-		jobConfig.setNamespace(namespace);
-
 		if (!reqParams.containsKey("jobConfig")) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobConfig", "cannot be blank"));
@@ -206,7 +204,7 @@ public class JobOperationRestApiController extends AbstractController {
 				checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
 		String jobType = checkAndGetParametersValueAsString(configParams, "jobType", true);
-		if (JobBriefInfo.JobType.UNKOWN_JOB.equals(JobBriefInfo.JobType.getJobType(jobType))) {
+		if (JobType.UNKOWN_JOB.equals(JobType.getJobType(jobType))) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
 		}

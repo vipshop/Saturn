@@ -3,7 +3,6 @@ package com.vip.saturn.job.console.domain;
 /**
  * @author hebelala
  */
-@Deprecated
 public class JobMode {
 
 	public static final String SYSTEM_PREFIX = "system";

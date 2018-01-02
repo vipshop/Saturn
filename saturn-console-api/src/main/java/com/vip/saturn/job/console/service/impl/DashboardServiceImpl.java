@@ -3,20 +3,7 @@ package com.vip.saturn.job.console.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.base.Strings;
-import com.vip.saturn.job.console.domain.AbnormalContainer;
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.AbnormalShardingState;
-import com.vip.saturn.job.console.domain.DomainStatistics;
-import com.vip.saturn.job.console.domain.ExecutorProvided;
-import com.vip.saturn.job.console.domain.ExecutorProvidedType;
-import com.vip.saturn.job.console.domain.ExecutorStatistics;
-import com.vip.saturn.job.console.domain.JobBriefInfo.JobType;
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
-import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.console.domain.ZkStatistics;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerScaleJob;
 import com.vip.saturn.job.console.exception.JobConsoleException;
@@ -28,36 +15,11 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.repository.zookeeper.impl.CuratorRepositoryImpl;
 import com.vip.saturn.job.console.service.ContainerService;
 import com.vip.saturn.job.console.service.DashboardService;
-import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
-import com.vip.saturn.job.console.utils.ContainerNodePath;
-import com.vip.saturn.job.console.utils.ExecutorNodePath;
-import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.console.utils.ResetCountType;
-import com.vip.saturn.job.console.utils.SaturnConstants;
-import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
+import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -66,6 +28,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author chembo.huang
@@ -107,7 +81,7 @@ public class DashboardServiceImpl implements DashboardService {
 	private RegistryCenterService registryCenterService;
 
 	@Autowired
-	private JobDimensionService jobDimensionService;
+	private JobService jobService;
 
 	@Autowired
 	private CuratorRepository curatorRepository;
@@ -325,7 +299,7 @@ public class DashboardServiceImpl implements DashboardService {
 						}
 
 						// 遍历所有$Jobs子节点，非系统作业
-						List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+						List<String> jobs = jobService.getUnSystemJobNames(config.getNamespace());
 						SaturnStatistics saturnStatistics = saturnStatisticsService.findStatisticsByNameAndZkList(
 								StatisticsTableKeyConstant.UNNORMAL_JOB, zkCluster.getZkAddr());
 						List<AbnormalJob> oldAbnormalJobs = new ArrayList<>();
@@ -1114,7 +1088,7 @@ public class DashboardServiceImpl implements DashboardService {
 
 	/**
 	 * 判断分片状态
-	 *
+	 * <p>
 	 * 逻辑： 1、有running节点，返回正常 2.1、有completed节点，但马上就取不到Mtime，节点有变动说明正常 2.2、根据Mtime计算下次触发时间，比较下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 	 * 3、既没有running又没completed视为异常
 	 *
@@ -1148,10 +1122,10 @@ public class DashboardServiceImpl implements DashboardService {
 						nextFireTimeAfterThis = completedMtime;
 					}
 
-					Long nextFireTimeExcludePausePeriod = jobDimensionService
-							.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis,
-									abnormalJob.getJobName(),
-									new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+					Long nextFireTimeExcludePausePeriod = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
+							nextFireTimeAfterThis,
+							abnormalJob.getJobName(),
+							new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
 					// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 					if (nextFireTimeExcludePausePeriod != null
 							&& nextFireTimeExcludePausePeriod + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
@@ -1172,7 +1146,7 @@ public class DashboardServiceImpl implements DashboardService {
 			else {
 				if (abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() == 0) {
 					abnormalJob.setNextFireTimeAfterEnabledMtimeOrLastCompleteTime(
-							jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
+							getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
 									getMtime(curatorClient, enabledPath), abnormalJob.getJobName(),
 									new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient)));
 				}
@@ -1188,6 +1162,152 @@ public class DashboardServiceImpl implements DashboardService {
 		return -1;
 	}
 
+	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
+		String cronVal = curatorFrameworkOp.getData(cronPath);
+		CronExpression cronExpression = null;
+		try {
+			cronExpression = new CronExpression(cronVal);
+		} catch (ParseException e) {
+			log.error(e.getMessage(), e);
+			return null;
+		}
+		String timeZoneStr = getTimeZone(jobName, curatorFrameworkOp);
+		TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
+		cronExpression.setTimeZone(timeZone);
+
+		Date nextFireTime = cronExpression.getTimeAfter(new Date(nextFireTimeAfterThis));
+		String pausePeriodDatePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodDate");
+		String pausePeriodDate = curatorFrameworkOp.getData(pausePeriodDatePath);
+		String pausePeriodTimePath = JobNodePath.getConfigNodePath(jobName, "pausePeriodTime");
+		String pausePeriodTime = curatorFrameworkOp.getData(pausePeriodTimePath);
+
+		while (nextFireTime != null && isInPausePeriod(nextFireTime, pausePeriodDate, pausePeriodTime, timeZone)) {
+			nextFireTime = cronExpression.getTimeAfter(nextFireTime);
+		}
+		if (null == nextFireTime) {
+			return null;
+		}
+		return nextFireTime.getTime();
+	}
+
+	private String getTimeZone(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if (timeZoneStr == null || timeZoneStr.trim().length() == 0) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
+		return timeZoneStr;
+	}
+
+	/**
+	 * 该时间是否在作业暂停时间段范围内。
+	 * <p>
+	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+	 *
+	 * @return 该时间是否在作业暂停时间段范围内。
+	 */
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
+			TimeZone timeZone) {
+		Calendar calendar = Calendar.getInstance(timeZone);
+		calendar.setTime(date);
+		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
+		int d = calendar.get(Calendar.DAY_OF_MONTH);
+		int h = calendar.get(Calendar.HOUR_OF_DAY);
+		int m = calendar.get(Calendar.MINUTE);
+
+		boolean dateIn = false;
+		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
+		if (!pausePeriodDateIsEmpty) {
+			String[] periodsDate = pausePeriodDate.split(",");
+			if (periodsDate != null) {
+				for (String period : periodsDate) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] MdLeft = left.split("/");
+						String[] MdRight = right.split("/");
+						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
+							try {
+								int MLeft = Integer.parseInt(MdLeft[0]);
+								int dLeft = Integer.parseInt(MdLeft[1]);
+								int MRight = Integer.parseInt(MdRight[0]);
+								int dRight = Integer.parseInt(MdRight[1]);
+								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
+										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
+								if (dateIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								dateIn = false;
+								break;
+							}
+						} else {
+							dateIn = false;
+							break;
+						}
+					} else {
+						dateIn = false;
+						break;
+					}
+				}
+			}
+		}
+		boolean timeIn = false;
+		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
+		if (!pausePeriodTimeIsEmpty) {
+			String[] periodsTime = pausePeriodTime.split(",");
+			if (periodsTime != null) {
+				for (String period : periodsTime) {
+					String[] tmp = period.trim().split("-");
+					if (tmp != null && tmp.length == 2) {
+						String left = tmp[0].trim();
+						String right = tmp[1].trim();
+						String[] hmLeft = left.split(":");
+						String[] hmRight = right.split(":");
+						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
+							try {
+								int hLeft = Integer.parseInt(hmLeft[0]);
+								int mLeft = Integer.parseInt(hmLeft[1]);
+								int hRight = Integer.parseInt(hmRight[0]);
+								int mRight = Integer.parseInt(hmRight[1]);
+								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
+										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
+								if (timeIn) {
+									break;
+								}
+							} catch (NumberFormatException e) {
+								timeIn = false;
+								break;
+							}
+						} else {
+							timeIn = false;
+							break;
+						}
+					} else {
+						timeIn = false;
+						break;
+					}
+				}
+			}
+		}
+
+		if (pausePeriodDateIsEmpty) {
+			if (pausePeriodTimeIsEmpty) {
+				return false;
+			} else {
+				return timeIn;
+			}
+		} else {
+			if (pausePeriodTimeIsEmpty) {
+				return dateIn;
+			} else {
+				return dateIn && timeIn;
+			}
+		}
+	}
+
 	/**
 	 * 为了避免executor时钟比Console快的现象，加上一个修正值，然后计算新的nextFireTime + ALLOW_DELAY_MILLIONSECONDS 依然早于当前时间。
 	 *
@@ -1196,9 +1316,9 @@ public class DashboardServiceImpl implements DashboardService {
 	private boolean doubleCheckShardingStateAfterAddingDeltaInterval(CuratorFramework curatorClient,
 			AbnormalJob abnormalJob, long nextFireTimeAfterThis, Long nextFireTimeExcludePausePeriod,
 			long currentTime) {
-		Long nextFireTimeExcludePausePeriodWithDelta = jobDimensionService
-				.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis + INTERVAL_DELTA_IN_SECOND,
-						abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
+		Long nextFireTimeExcludePausePeriodWithDelta = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
+				nextFireTimeAfterThis + INTERVAL_DELTA_IN_SECOND,
+				abnormalJob.getJobName(), new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
 
 		if (nextFireTimeExcludePausePeriod.equals(nextFireTimeExcludePausePeriodWithDelta)
 				|| nextFireTimeExcludePausePeriodWithDelta + ALLOW_DELAY_MILLIONSECONDS < currentTime) {
@@ -1249,7 +1369,7 @@ public class DashboardServiceImpl implements DashboardService {
 						} else { // 无分片
 							abnormalJob.setCause(AbnormalJob.Cause.NO_SHARDS.name());
 
-							Long nextFireTime = jobDimensionService.getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
+							Long nextFireTime = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
 									getMtime(curatorClient, enabledPath), abnormalJob.getJobName(),
 									new CuratorRepositoryImpl().newCuratorFrameworkOp(curatorClient));
 							// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
@@ -1359,8 +1479,8 @@ public class DashboardServiceImpl implements DashboardService {
 			String preferList = getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "preferList"));
 			Boolean onlyUsePreferList = !Boolean
 					.valueOf(getData(curatorClient, JobNodePath.getConfigNodePath(jobName, "useDispreferList")));
-			List<ExecutorProvided> preferListProvided = jobDimensionService
-					.getAllExecutors(jobName, curatorFrameworkOp);
+			List<ExecutorProvided> preferListProvided = jobService
+					.getCandidateExecutors(curatorClient.getNamespace(), jobName);
 			List<String> preferListArr = new ArrayList<>();
 			if (preferList != null && preferList.trim().length() > 0) {
 				String[] split = preferList.split(",");
@@ -1885,9 +2005,8 @@ public class DashboardServiceImpl implements DashboardService {
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
 		if (registryCenterClient.isConnected()) {
 			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
 			// 遍历所有$Jobs子节点，非系统作业
-			List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+			List<String> jobs = jobService.getUnSystemJobNames(curatorClient.getNamespace());
 			for (String job : jobs) {
 				resetOneJobAnalyse(job, curatorClient);
 				// reset analyse data.
@@ -1903,9 +2022,8 @@ public class DashboardServiceImpl implements DashboardService {
 		RegistryCenterClient registryCenterClient = registryCenterService.connect(nns);
 		if (registryCenterClient.isConnected()) {
 			CuratorFramework curatorClient = registryCenterClient.getCuratorClient();
-			CuratorFrameworkOp curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorClient);
 			// 遍历所有$Jobs子节点，非系统作业
-			List<String> jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
+			List<String> jobs = jobService.getUnSystemJobNames(curatorClient.getNamespace());
 			for (String job : jobs) {
 				resetOneJobExecutorCount(job, curatorClient);
 				// reset all jobs' executor's success/failure count.

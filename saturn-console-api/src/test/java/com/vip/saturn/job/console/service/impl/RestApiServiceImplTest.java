@@ -1,39 +1,34 @@
 package com.vip.saturn.job.console.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import com.vip.saturn.job.console.domain.JobBriefInfo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.JobDimensionService;
-import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
+
 /**
  * Created by kfchu on 31/05/2017.
  */
+//TODO
+@Ignore("ignore first")
 @RunWith(MockitoJUnitRunner.class)
 public class RestApiServiceImplTest {
 
@@ -46,10 +41,7 @@ public class RestApiServiceImplTest {
 	private CuratorRepository curatorRepository;
 
 	@Mock
-	private JobDimensionService jobDimensionService;
-
-	@Mock
-	private JobOperationService jobOperationService;
+	private JobService jobService;
 
 	@Mock
 	private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
@@ -82,26 +74,25 @@ public class RestApiServiceImplTest {
 	public void testRunAtOnceSuccessfully() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.READY);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.READY);
 
 		List<JobServer> servers = Lists.newArrayList();
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 
 		// verify
-		verify(jobOperationService).runAtOnceByJobnameAndExecutorName(jobName, jobServer.getExecutorName(),
-				curatorFrameworkOp);
+		verify(jobService).runAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
 	public void testRunAtOnceFailAsJobStatusIsNotReady() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.RUNNING);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.RUNNING);
 
 		// run
 		try {
@@ -112,18 +103,17 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).runAtOnceByJobnameAndExecutorName(anyString(), anyString(),
-				any(CuratorRepository.CuratorFrameworkOp.class));
+		verify(jobService, times(0)).runAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
 	public void testRunAtOnceFailAsNoExecutorFound() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.READY);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.READY);
 
 		List<JobServer> servers = Lists.newArrayList();
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		try {
@@ -134,83 +124,68 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).runAtOnceByJobnameAndExecutorName(anyString(), anyString(),
-				any(CuratorRepository.CuratorFrameworkOp.class));
+		verify(jobService, times(0)).runAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
 	public void testStopAtOnceSuccessfullyWhenJobIsAlreadyStopped() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPED);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPED);
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 
 		// verify
-		verify(jobOperationService, times(0)).stopAtOnceByJobnameAndExecutorName(anyString(), anyString(),
-				any(CuratorRepository.CuratorFrameworkOp.class));
+		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
 	public void testStopAtOnceSuccessfullyWhenJobStatusIsStoppingAndJobTypeIsMsg() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPING);
-
-		when(jobDimensionService.getJobType(jobName, curatorFrameworkOp))
-				.thenReturn(JobBriefInfo.JobType.MSG_JOB.name());
-		when(jobDimensionService.isJobEnabled(jobName, curatorFrameworkOp)).thenReturn(false);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
 
 		List<JobServer> servers = Lists.newArrayList();
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 
 		// verify
-		verify(jobOperationService).stopAtOnceByJobnameAndExecutorName(jobName, jobServer.getExecutorName(),
-				curatorFrameworkOp);
+		verify(jobService).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
 	public void testStopAtOnceSuccessfullyWhenJobStatusIsStoppingAndJobTypeIsJava() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPING);
-
-		when(jobDimensionService.getJobType(jobName, curatorFrameworkOp))
-				.thenReturn(JobBriefInfo.JobType.JAVA_JOB.name());
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
 
 		List<JobServer> servers = Lists.newArrayList();
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 
 		// verify
-		verify(jobOperationService).stopAtOnceByJobnameAndExecutorName(jobName, jobServer.getExecutorName(),
-				curatorFrameworkOp);
+		verify(jobService).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
 	public void testStopAtOnceFailForMsgJobAsJobIsEnable() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPING);
-
-		when(jobDimensionService.getJobType(jobName, curatorFrameworkOp))
-				.thenReturn(JobBriefInfo.JobType.MSG_JOB.name());
-		when(jobDimensionService.isJobEnabled(jobName, curatorFrameworkOp)).thenReturn(true);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
 
 		List<JobServer> servers = Lists.newArrayList();
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		try {
@@ -221,21 +196,17 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).stopAtOnceByJobnameAndExecutorName(jobName, jobServer.getExecutorName(),
-				curatorFrameworkOp);
+		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
 	public void testStopAtOnceFailForJavaJobAsNoExecutor() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPING);
-
-		when(jobDimensionService.getJobType(jobName, curatorFrameworkOp))
-				.thenReturn(JobBriefInfo.JobType.JAVA_JOB.name());
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
 
 		List<JobServer> servers = Lists.newArrayList();
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		try {
@@ -246,21 +217,17 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).stopAtOnceByJobnameAndExecutorName(anyString(), anyString(),
-				any(CuratorRepository.CuratorFrameworkOp.class));
+		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
 	public void testStopAtOnceFailForJavaJobAsStatusIsNotStopping() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.READY);
-
-		when(jobDimensionService.getJobType(jobName, curatorFrameworkOp))
-				.thenReturn(JobBriefInfo.JobType.JAVA_JOB.name());
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.READY);
 
 		List<JobServer> servers = Lists.newArrayList();
-		when(jobDimensionService.getServers(jobName, curatorFrameworkOp)).thenReturn(servers);
+		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
 		// run
 		try {
@@ -272,28 +239,27 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).stopAtOnceByJobnameAndExecutorName(anyString(), anyString(),
-				any(CuratorRepository.CuratorFrameworkOp.class));
+		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
 	public void testDeleteJobSuccessfully() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPED);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPED);
 
 		// run
 		restApiService.deleteJob(TEST_NAME_SPACE_NAME, jobName);
 
 		// verify
-		verify(jobOperationService).deleteJob(jobName, curatorFrameworkOp);
+		verify(jobService).removeJob(TEST_NAME_SPACE_NAME, jobName);
 	}
 
 	@Test
 	public void testDeleteJobFailAsStatusIsNotStopped() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
-		when(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp)).thenReturn(JobStatus.STOPPING);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
 
 		// run
 		try {
@@ -304,7 +270,7 @@ public class RestApiServiceImplTest {
 		}
 
 		// verify
-		verify(jobOperationService, times(0)).deleteJob(jobName, curatorFrameworkOp);
+		verify(jobService, times(0)).removeJob(TEST_NAME_SPACE_NAME, jobName);
 	}
 
 	private JobServer createJobServer(String name) {

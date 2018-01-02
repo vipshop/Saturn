@@ -2,29 +2,26 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.ServerAllocationInfo;
-import com.vip.saturn.job.console.domain.ServerBriefInfo;
-import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Default implementation of ExecutorService.
@@ -44,7 +41,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 	private CuratorRepository curatorRepository;
 
 	@Resource
-	private JobDimensionService jobDimensionService;
+	private JobService jobService;
 
 	@Resource
 	private RegistryCenterService registryCenterService;
@@ -117,20 +114,16 @@ public class ExecutorServiceImpl implements ExecutorService {
 			throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
-		List<String> jobs = null;
-		try {
-			jobs = jobDimensionService.getAllUnSystemJobs(curatorFrameworkOp);
-		} catch (SaturnJobConsoleException e) {
-			log.error(e.getMessage(), e);
-		}
+		List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
 
 		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
 
-		if (jobs == null || jobs.size() == 0) {
+		if (unSystemJobs == null || unSystemJobs.size() == 0) {
 			return serverAllocationInfo;
 		}
 
-		for (String jobName : jobs) {
+		for (JobConfig jobConfig : unSystemJobs) {
+			String jobName = jobConfig.getJobName();
 			String serverNodePath = JobNodePath.getServerNodePath(jobName);
 			if (!curatorFrameworkOp.checkExists(serverNodePath)) {
 				continue;
@@ -140,7 +133,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
 				// 作业状态为STOPPED的即使有残留分片也不显示该分片
-				if (JobStatus.STOPPED.equals(jobDimensionService.getJobStatus(jobName, curatorFrameworkOp))) {
+				if (JobStatus.STOPPED.equals(jobService.getJobStatus(namespace, jobName))) {
 					continue;
 				}
 				// concat executorSharding
@@ -181,12 +174,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 	public void removeExecutor(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNodePath(executorName));
-		List<String> jobNames = new ArrayList<>();
-		try {
-			jobNames = jobDimensionService.getAllJobs(curatorFrameworkOp);
-		} catch (SaturnJobConsoleException e) {
-			log.error(e.getMessage(), e);
-		}
+		List<String> jobNames = jobService.getAllJobs(namespace);
+
 		if (CollectionUtils.isEmpty(jobNames)) {
 			return;
 		}

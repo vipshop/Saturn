@@ -1,39 +1,36 @@
 package com.vip.saturn.job.console.mybatis.service;
 
-import com.vip.saturn.job.console.domain.JobSettings;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
-import java.util.List;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface CurrentJobConfigService {
 
-	int create(CurrentJobConfig currentJobConfigModel) throws Exception;
+	int create(JobConfig4DB currentJobConfig) throws Exception;
 
-	int createSelective(CurrentJobConfig currentJobConfigModel) throws Exception;
+	int createSelective(JobConfig4DB currentJobConfig) throws Exception;
 
 	int deleteByPrimaryKey(Long id) throws Exception;
 
-	CurrentJobConfig findByPrimaryKey(Long id) throws Exception;
+	JobConfig4DB findByPrimaryKey(Long id) throws Exception;
 
-	int selectCount(CurrentJobConfig currentJobConfigModel) throws Exception;
+	int selectCount(JobConfig4DB currentJobConfig) throws Exception;
 
-	int updateByPrimaryKey(CurrentJobConfig currentJobConfigModel) throws Exception;
+	int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws Exception;
 
-	int updateByPrimaryKeySelective(CurrentJobConfig currentJobConfigModel) throws Exception;
+	int updateByPrimaryKeySelective(JobConfig4DB currentJobConfig) throws Exception;
 
-	void batchUpdatePreferList(List<CurrentJobConfig> jobConfigs) throws SaturnJobConsoleException;
+	void batchUpdatePreferList(List<JobConfig4DB> jobConfigs) throws SaturnJobConsoleException;
 
-	List<CurrentJobConfig> findConfigsByNamespace(String namespace);
+	List<JobConfig4DB> findConfigsByNamespace(String namespace);
 
-	CurrentJobConfig findConfigByNamespaceAndJobName(String namespace, String jobName);
+	JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName);
 
-	List<CurrentJobConfig> selectPage(CurrentJobConfig historyjobconfig, Pageable pageable) throws Exception;
+	List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception;
 
-	void updateConfigAndSave2History(final CurrentJobConfig jobconfig, final JobSettings jobSettings,
-			final String userName) throws Exception;
-
-	void updateConfigAndSave2History(final CurrentJobConfig newJobconfig, final CurrentJobConfig oldJobconfig,
+	void updateConfigAndSave2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception;
 
 	int deleteAll(int limitNum);

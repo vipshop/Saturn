@@ -1,28 +1,29 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
-import com.vip.saturn.job.console.mybatis.entity.HistoryJobConfig;
-import java.util.List;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface HistoryJobConfigRepository {
 
 	int deleteByPrimaryKey(Long id);
 
-	int insert(HistoryJobConfig historyjobconfig);
+	int insert(JobConfig4DB historyJobConfig);
 
-	int insertSelective(HistoryJobConfig historyjobconfig);
+	int insertSelective(JobConfig4DB historyJobConfig);
 
-	HistoryJobConfig selectByPrimaryKey(Long id);
+	JobConfig4DB selectByPrimaryKey(Long id);
 
-	int updateByPrimaryKeySelective(HistoryJobConfig historyjobconfig);
+	int updateByPrimaryKeySelective(JobConfig4DB historyJobConfig);
 
-	int updateByPrimaryKey(HistoryJobConfig historyjobconfig);
+	int updateByPrimaryKey(JobConfig4DB historyJobConfig);
 
-	int selectCount(HistoryJobConfig historyjobconfig);
+	int selectCount(JobConfig4DB historyJobConfig);
 
-	List<HistoryJobConfig> selectPage(@Param("historyjobconfig") HistoryJobConfig historyjobconfig,
+	List<JobConfig4DB> selectPage(@Param("historyJobConfig") JobConfig4DB historyJobConfig,
 			@Param("pageable") Pageable pageable);
 }

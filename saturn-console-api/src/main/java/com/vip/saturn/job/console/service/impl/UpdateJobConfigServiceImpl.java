@@ -1,16 +1,17 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.CurrentJobConfig;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.integrate.entity.JobConfigInfo;
 import com.vip.saturn.job.integrate.exception.UpdateJobConfigException;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author timmy.hu
@@ -26,10 +27,10 @@ public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 		if (CollectionUtils.isEmpty(jobConfigInfos)) {
 			return;
 		}
-		List<CurrentJobConfig> currentJobConfigs = new ArrayList<CurrentJobConfig>();
-		CurrentJobConfig currentJobConfig = null;
+		List<JobConfig4DB> currentJobConfigs = new ArrayList<JobConfig4DB>();
+		JobConfig4DB currentJobConfig = null;
 		for (JobConfigInfo jobConfigInfo : jobConfigInfos) {
-			currentJobConfig = new CurrentJobConfig();
+			currentJobConfig = new JobConfig4DB();
 			currentJobConfig.setNamespace(jobConfigInfo.getNamespace());
 			currentJobConfig.setJobName(jobConfigInfo.getJobName());
 			currentJobConfig.setPreferList(jobConfigInfo.getPerferList());
