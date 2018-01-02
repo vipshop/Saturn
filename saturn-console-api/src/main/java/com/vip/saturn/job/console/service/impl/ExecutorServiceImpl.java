@@ -164,14 +164,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	@Override
-	public void trafficExtraction(String namespace, String executorName) throws SaturnJobConsoleException {
+	public void extractTraffic(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
 		curatorFrameworkOp.create(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
 	}
 
 	@Override
-	public void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException {
+	public void recoverTraffic(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		validateIfExecutorNameExisted(executorName, curatorFrameworkOp);
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));

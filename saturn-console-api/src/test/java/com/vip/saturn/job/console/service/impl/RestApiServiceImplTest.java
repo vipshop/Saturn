@@ -52,9 +52,6 @@ public class RestApiServiceImplTest {
 	private JobOperationService jobOperationService;
 
 	@Mock
-	private ReportAlarmService reportAlarmService;
-
-	@Mock
 	private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
 
 	@Mock

@@ -118,9 +118,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	private void extractOrRecoverTraffic(String namespace, String executorName, String operation)
 			throws SaturnJobConsoleException {
 		if (TRAFFIC_OPERATION_EXTRACT.equals(operation)) {
-			executorService.trafficExtraction(namespace, executorName);
+			executorService.extractTraffic(namespace, executorName);
 		} else if (TRAFFIC_OPERATION_RECOVER.equals(operation)) {
-			executorService.trafficRecovery(namespace, executorName);
+			executorService.recoverTraffic(namespace, executorName);
 		} else {
 			throw new SaturnJobConsoleGUIException("operation " + operation + "不支持");
 		}

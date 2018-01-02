@@ -66,7 +66,7 @@ public interface ExecutorService {
 	 * @param namespace 域
 	 * @param executorName 目标executor
 	 */
-	void trafficExtraction(String namespace, String executorName) throws SaturnJobConsoleException;
+	void extractTraffic(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	/**
 	 * 恢复流量
@@ -74,7 +74,7 @@ public interface ExecutorService {
 	 * @param namespace 域
 	 * @param executorName 目标executor
 	 */
-	void trafficRecovery(String namespace, String executorName) throws SaturnJobConsoleException;
+	void recoverTraffic(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	/**
 	 * 重shard域下所有作业分片
