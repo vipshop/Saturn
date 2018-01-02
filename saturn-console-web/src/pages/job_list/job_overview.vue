@@ -62,7 +62,11 @@
                             <el-table-column prop="jobName" label="作业名" sortable>
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
-                                        <el-button type="text">{{scope.row.jobName}}</el-button>
+                                        <el-button type="text">
+                                          <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB'"></i>
+                                          <i class="iconfont icon-shell" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
+                                          {{scope.row.jobName}}
+                                        </el-button>
                                     </router-link>
                                 </template>
                             </el-table-column>
@@ -136,10 +140,10 @@ export default {
       groupList: [],
       jobList: [],
       statusTag: {
-        READY: '',
+        READY: 'primary',
         RUNNING: 'success',
         STOPPING: 'warning',
-        STOPPED: 'danger',
+        STOPPED: 'warning',
       },
       total: 0,
       multipleSelection: [],
@@ -395,4 +399,7 @@ export default {
 };
 </script>
 <style lang="sass" scoped>
+.devicon-java-plain:before {
+    content: "\F144";
+}
 </style>
