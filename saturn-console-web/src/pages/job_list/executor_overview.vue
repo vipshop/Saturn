@@ -50,14 +50,14 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本"></el-table-column>
-                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="90px"></el-table-column>
+                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="100px"></el-table-column>
                             <el-table-column label="操作" width="110px">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
-                                        <el-button type="text" @click="handlePickTraffic(scope.row)"><i class="fa fa-hand-lizard-o"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-hand-lizard-o"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
-                                        <el-button type="text" @click="handleRestoreFlow(scope.row)"><i class="fa fa-hand-paper-o"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-hand-paper-o"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="重启" placement="top">
                                         <el-button type="text" @click="handleReset(scope.row)"><i class="fa fa-power-off"></i></el-button>
@@ -113,7 +113,13 @@ export default {
       this.isExecutorAllocationVisible = false;
     },
     handleReArrange() {
-      console.log('一键重排');
+      this.$message.confirmMessage('确认一键重排吗?', () => {
+        this.$http.post('/console/executor-overview/shard-all', { namespace: this.domainName }).then(() => {
+          this.getExecutorList();
+          this.$message.successNotify('一键重排操作成功');
+        })
+        .catch(() => { this.$http.buildErrorHandler('一键重排请求失败！'); });
+      });
     },
     batchDelete() {
       this.batchOperation('删除', (arr) => {
@@ -142,11 +148,25 @@ export default {
     handleDelete(row) {
       console.log(row);
     },
-    handlePickTraffic(row) {
-      console.log(row);
-    },
-    handleRestoreFlow(row) {
-      console.log(row);
+    handleTraffic(row, operation) {
+      const params = {
+        namespace: this.domainName,
+        executorName: row.executorName,
+        operation,
+      };
+      let text = '';
+      if (operation === 'extract') {
+        text = '摘取';
+      } else {
+        text = '恢复';
+      }
+      this.$message.confirmMessage(`确认${text}Executor ${row.executorName} 流量吗?`, () => {
+        this.$http.post('/console/executor-overview/traffic', params).then(() => {
+          this.getExecutorList();
+          this.$message.successNotify(`${text}流量操作成功`);
+        })
+        .catch(() => { this.$http.buildErrorHandler(`${text}流量请求失败！`); });
+      });
     },
     getExecutorList() {
       this.loading = true;
