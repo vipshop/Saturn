@@ -47,6 +47,15 @@ form {
     margin-left: 0;
 }
 
+.iconfont {
+    font-size: inherit;
+}
+
+[class*="iconfont icon-"] {
+    margin-right: 5px;
+    margin-left: 0;
+}
+
 .text-btn {
     color: #487bb0;
 }
