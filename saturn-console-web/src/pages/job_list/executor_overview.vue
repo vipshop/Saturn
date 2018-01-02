@@ -19,6 +19,7 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
+                            <el-button type="primary" @click="handleReArrange()"><i class="fa fa-repeat"></i>一键重排</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
@@ -28,9 +29,6 @@
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
-                                <el-button @click="batchReArrange()"><i class="fa fa-repeat text-btn"></i>重排</el-button>
-                                <el-button @click="batchPickTraffic()"><i class="fa fa-hand-lizard-o text-btn"></i>摘流量</el-button>
-                                <el-button @click="batchReset()"><i class="fa fa-power-off text-btn"></i>重启</el-button>
                                 <el-button @click="batchDelete()"><i class="fa fa-trash text-btn"></i>删除</el-button>
                             </div>
                         </div>
@@ -44,24 +42,27 @@
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP"></el-table-column>
                             <el-table-column prop="groupName" label="分组"></el-table-column>
-                            <el-table-column label="已分配分片分布" header-align="left" align="center">
+                            <el-table-column label="获取作业分片分配" header-align="left" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="查看" placement="top">
-                                        <el-button type="text" @click=""><i class="fa fa-search-plus"></i></el-button>
+                                        <el-button type="text" @click="getExecutorAllocation(scope.row)"><i class="fa fa-search-plus"></i></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本"></el-table-column>
                             <el-table-column prop="lastBeginTime" label="启动时间" min-width="90px"></el-table-column>
-                            <el-table-column label="操作" width="100px">
+                            <el-table-column label="操作" width="110px">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="启用" placement="top">
-                                        <el-button type="text" @click="handleEnabled(scope.row)"><i class="fa fa-play-circle"></i></el-button>
+                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
+                                        <el-button type="text" @click="handlePickTraffic(scope.row)"><i class="fa fa-hand-lizard-o"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="编辑" placement="top">
-                                        <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
+                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
+                                        <el-button type="text" @click="handleRestoreFlow(scope.row)"><i class="fa fa-hand-paper-o"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="删除" placement="top">
+                                    <el-tooltip content="重启" placement="top">
+                                        <el-button type="text" @click="handleReset(scope.row)"><i class="fa fa-power-off"></i></el-button>
+                                    </el-tooltip>
+                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'ONLINE'">
                                         <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
@@ -70,11 +71,16 @@
                     </div>
                 </template>
             </FilterPageList>
+            <div v-if="isExecutorAllocationVisible">
+                <executor-allocation-dialog :executor-allocation-info="executorAllocationInfo" @close-dialog="closeExecutorAllocationDialog"></executor-allocation-dialog>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import executorAllocationDialog from './executor_allocation_dialog';
+
 export default {
   data() {
     return {
@@ -87,27 +93,33 @@ export default {
       orderBy: 'executorName',
       total: 0,
       multipleSelection: [],
+      isExecutorAllocationVisible: false,
+      executorAllocationInfo: {},
     };
   },
   methods: {
-    batchReArrange() {
-      this.batchOperation('重排', (arr) => {
-        console.log(arr);
-      });
+    getExecutorAllocation(row) {
+      const params = {
+        namespace: this.domainName,
+        executorName: row.executorName,
+      };
+      this.$http.get('/console/executor-overview/executor-allocation', params).then((data) => {
+        this.isExecutorAllocationVisible = true;
+        this.executorAllocationInfo = JSON.parse(JSON.stringify(data));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
-    batchPickTraffic() {
-      this.batchOperation('摘流量', (arr) => {
-        console.log(arr);
-      });
+    closeExecutorAllocationDialog() {
+      this.isExecutorAllocationVisible = false;
+    },
+    handleReArrange() {
+      console.log('一键重排');
     },
     batchDelete() {
       this.batchOperation('删除', (arr) => {
-        console.log(arr);
-      });
-    },
-    batchReset() {
-      this.batchOperation('重启', (arr) => {
-        console.log(arr);
+        this.$message.confirmMessage(`确定删除Executor ${arr.join(',')} 吗?`, () => {
+          console.log(arr);
+        });
       });
     },
     batchOperation(text, callback) {
@@ -124,13 +136,16 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
-    handleEdit(row) {
+    handleReset(row) {
       console.log(row);
     },
     handleDelete(row) {
       console.log(row);
     },
-    handleEnabled(row) {
+    handlePickTraffic(row) {
+      console.log(row);
+    },
+    handleRestoreFlow(row) {
       console.log(row);
     },
     getExecutorList() {
@@ -147,6 +162,9 @@ export default {
   },
   created() {
     this.getExecutorList();
+  },
+  components: {
+    'executor-allocation-dialog': executorAllocationDialog,
   },
 };
 </script>
