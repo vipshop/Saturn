@@ -18,9 +18,9 @@ import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
 import com.vip.saturn.job.console.service.JobOperationService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.service.helper.ReuseCallBack;
@@ -87,10 +87,10 @@ public class RestApiServiceImpl implements RestApiService {
 	private JobOperationService jobOperationService;
 
 	@Resource
-	private ReportAlarmService reportAlarmService;
+	private JobService jobService;
 
 	@Resource
-	private ExecutorService executorService;
+	private ReportAlarmService reportAlarmService;
 
 	@Resource
 	private NamespaceInfoService namespaceInfoService;
@@ -99,7 +99,7 @@ public class RestApiServiceImpl implements RestApiService {
 	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
 
 	@Override
-	public void createJob(String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
+	public void createJob(final String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
 		ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
 			@Override
 			public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
@@ -107,8 +107,8 @@ public class RestApiServiceImpl implements RestApiService {
 					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 							"Invalid request. Job: {" + jobConfig.getJobName() + "} already existed");
 				}
-				int maxJobNum = executorService.getMaxJobNum();
-				if (executorService.jobIncExceeds(maxJobNum, 1)) {
+				int maxJobNum = jobService.getMaxJobNum();
+				if (jobService.jobIncExceeds(namespace, maxJobNum, 1)) {
 					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 							"Invalid request. The current number of job reach the maximum limit[" + maxJobNum + "]");
 				}

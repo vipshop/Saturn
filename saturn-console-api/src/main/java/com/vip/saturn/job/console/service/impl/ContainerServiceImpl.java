@@ -21,6 +21,7 @@ import com.vip.saturn.job.console.service.ContainerRestService;
 import com.vip.saturn.job.console.service.ContainerService;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobDimensionService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
@@ -63,6 +64,9 @@ public class ContainerServiceImpl implements ContainerService {
 
 	@Resource
 	private SystemConfigService systemConfigService;
+
+	@Resource
+	private JobService jobService;
 
 	@Autowired
 	@Qualifier("marathonRestAdapter")
@@ -379,46 +383,46 @@ public class ContainerServiceImpl implements ContainerService {
 	@Override
 	public void addContainerScaleJob(String taskId, String jobDesc, Integer instances, String timeZone, String cron)
 			throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		String jobName = SaturnConstants.SYSTEM_SCALE_JOB_PREFEX + System.currentTimeMillis();
-		ContainerToken containerToken = getContainerToken();
-		JobConfig jobConfig = new JobConfig();
-		jobConfig.setJobName(jobName);
-		jobConfig.setDescription(jobDesc);
-		jobConfig.setTimeZone(timeZone);
-		jobConfig.setCron(cron);
-		jobConfig.setJobMode(JobMode.system_scale);
-		jobConfig.setJobType(JobBriefInfo.JobType.SHELL_JOB.name());
-		jobConfig.setPreferList("@" + taskId);
-		jobConfig.setShardingTotalCount(1);
-		jobConfig.setShardingItemParameters(
-				getContainerScaleJobShardingItemParameters(containerToken, taskId, instances));
-		jobConfig.setUseDispreferList(false);
-		jobConfig.setTimeout4AlarmSeconds(30);
-		jobConfig.setTimeoutSeconds(30);
-		jobConfig.setJobParameter("");
-		jobConfig.setQueueName("");
-		jobConfig.setChannelName("");
-		jobConfig.setPausePeriodDate("");
-		jobConfig.setPausePeriodTime("");
-		RequestResult requestResult = executorService.addJobs(jobConfig);
-		if (!requestResult.isSuccess()) {
-			throw new SaturnJobConsoleException(requestResult.getMessage());
-		}
-		ContainerScaleJobConfig containerScaleJobConfig = new ContainerScaleJobConfig();
-		containerScaleJobConfig.setJobName(jobName);
-		containerScaleJobConfig.setJobDesc(jobDesc);
-		containerScaleJobConfig.setInstances(instances);
-		containerScaleJobConfig.setTimeZone(timeZone);
-		containerScaleJobConfig.setCron(cron);
-		try {
-			String containerScaleJobStr = JSON.toJSONString(containerScaleJobConfig);
-			String dcosTaskScaleJobNodePath = ContainerNodePath.getDcosTaskScaleJobNodePath(taskId, jobName);
-			curatorFrameworkOp.fillJobNodeIfNotExist(dcosTaskScaleJobNodePath, containerScaleJobStr);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleException(e.getMessage(), e);
-		}
+//		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+//		String jobName = SaturnConstants.SYSTEM_SCALE_JOB_PREFEX + System.currentTimeMillis();
+//		ContainerToken containerToken = getContainerToken();
+//		JobConfig jobConfig = new JobConfig();
+//		jobConfig.setJobName(jobName);
+//		jobConfig.setDescription(jobDesc);
+//		jobConfig.setTimeZone(timeZone);
+//		jobConfig.setCron(cron);
+//		jobConfig.setJobMode(JobMode.system_scale);
+//		jobConfig.setJobType(JobBriefInfo.JobType.SHELL_JOB.name());
+//		jobConfig.setPreferList("@" + taskId);
+//		jobConfig.setShardingTotalCount(1);
+//		jobConfig.setShardingItemParameters(
+//				getContainerScaleJobShardingItemParameters(containerToken, taskId, instances));
+//		jobConfig.setUseDispreferList(false);
+//		jobConfig.setTimeout4AlarmSeconds(30);
+//		jobConfig.setTimeoutSeconds(30);
+//		jobConfig.setJobParameter("");
+//		jobConfig.setQueueName("");
+//		jobConfig.setChannelName("");
+//		jobConfig.setPausePeriodDate("");
+//		jobConfig.setPausePeriodTime("");
+//		RequestResult requestResult = executorService.addJobs(jobConfig);
+//		if (!requestResult.isSuccess()) {
+//			throw new SaturnJobConsoleException(requestResult.getMessage());
+//		}
+//		ContainerScaleJobConfig containerScaleJobConfig = new ContainerScaleJobConfig();
+//		containerScaleJobConfig.setJobName(jobName);
+//		containerScaleJobConfig.setJobDesc(jobDesc);
+//		containerScaleJobConfig.setInstances(instances);
+//		containerScaleJobConfig.setTimeZone(timeZone);
+//		containerScaleJobConfig.setCron(cron);
+//		try {
+//			String containerScaleJobStr = JSON.toJSONString(containerScaleJobConfig);
+//			String dcosTaskScaleJobNodePath = ContainerNodePath.getDcosTaskScaleJobNodePath(taskId, jobName);
+//			curatorFrameworkOp.fillJobNodeIfNotExist(dcosTaskScaleJobNodePath, containerScaleJobStr);
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//			throw new SaturnJobConsoleException(e.getMessage(), e);
+//		}
 	}
 
 	private ContainerScaleJob getContainerScaleJob(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String id,
@@ -536,41 +540,41 @@ public class ContainerServiceImpl implements ContainerService {
 	public void deleteContainerScaleJob(String taskId, String jobName) throws SaturnJobConsoleException {
 		// disable job, and delete it
 		// wait 5s to disable job at most
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
-		try {
-			String jobNodePath = JobNodePath.getJobNodePath(jobName);
-			if (curatorFrameworkOp.checkExists(jobNodePath)) {
-				String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
-				String enabledStr = curatorFrameworkOp.getData(enabledNodePath);
-				Boolean enabled = Boolean.valueOf(enabledStr);
-				if (enabled) {
-					curatorFrameworkOp.update(enabledNodePath, false);
-				}
-				long waitStopTime = 5000L;
-				while (waitStopTime > 0L) {
-					Thread.sleep(100);
-					waitStopTime -= 100;
-					JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
-					if (JobStatus.STOPPED.equals(jobStatus)) {
-						String removeResult = executorService.removeJob(jobName);
-						if (SaturnConstants.DEAL_SUCCESS.equals(removeResult)) {
-							deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
-							return;
-						} else {
-							throw new SaturnJobConsoleException(removeResult);
-						}
-					}
-				}
-				throw new SaturnJobConsoleException("The job is not stopped, cannot be deleted, please retry later");
-			} else {
-				deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
-			}
-		} catch (SaturnJobConsoleException e) {
-			throw e;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleException(e.getMessage(), e);
-		}
+//		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = curatorRepository.inSessionClient();
+//		try {
+//			String jobNodePath = JobNodePath.getJobNodePath(jobName);
+//			if (curatorFrameworkOp.checkExists(jobNodePath)) {
+//				String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
+//				String enabledStr = curatorFrameworkOp.getData(enabledNodePath);
+//				Boolean enabled = Boolean.valueOf(enabledStr);
+//				if (enabled) {
+//					curatorFrameworkOp.update(enabledNodePath, false);
+//				}
+//				long waitStopTime = 5000L;
+//				while (waitStopTime > 0L) {
+//					Thread.sleep(100);
+//					waitStopTime -= 100;
+//					JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
+//					if (JobStatus.STOPPED.equals(jobStatus)) {
+//						String removeResult = executorService.removeJob(jobName);
+//						if (SaturnConstants.DEAL_SUCCESS.equals(removeResult)) {
+//							deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
+//							return;
+//						} else {
+//							throw new SaturnJobConsoleException(removeResult);
+//						}
+//					}
+//				}
+//				throw new SaturnJobConsoleException("The job is not stopped, cannot be deleted, please retry later");
+//			} else {
+//				deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
+//			}
+//		} catch (SaturnJobConsoleException e) {
+//			throw e;
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//			throw new SaturnJobConsoleException(e.getMessage(), e);
+//		}
 	}
 
 	private List<String> getTasks(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {

@@ -83,22 +83,4 @@ public interface ExecutorService {
 	 */
 	void shardAll(String namespace) throws SaturnJobConsoleException;
 
-	/** below are legacy methods which can be removed in the future **/
-
-	List<String> getAliveExecutorNames();
-
-	boolean jobIncExceeds(int maxJobNum, int inc) throws SaturnJobConsoleException;
-
-	int getMaxJobNum();
-
-	RequestResult addJobs(JobConfig jobConfig);
-
-	/**
-	 * Use JobOperationService.removeJob(String jobName)
-	 */
-	@Deprecated
-	String removeJob(String jobName);
-
-	File getExportJobFile() throws SaturnJobConsoleException;
-
 }
