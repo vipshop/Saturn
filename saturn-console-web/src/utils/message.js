@@ -1,4 +1,4 @@
-import { MessageBox, Loading } from 'element-ui';
+import { MessageBox, Loading, Notification } from 'element-ui';
 
 export default {
   errorMessage(text) {
@@ -32,5 +32,13 @@ export default {
       text: '拼命加载中',
     });
     return loadingInstance;
+  },
+  successNotify(text) {
+    Notification.success({
+      title: '成功',
+      message: text,
+      duration: 3000,
+      type: 'success',
+    });
   },
 };
