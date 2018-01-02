@@ -116,7 +116,11 @@ OUTFILE=$LOGDIR/saturn-nohup.out
 START_HISTORY_LOGFILE=$LOGDIR/saturn-start.log
 
 JAVA_OPTS="-XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
-MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxTenuringThreshold=6 -XX:+ExplicitGCInvokesConcurrent"
+MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:+AlwaysPreTouch"
+
+CMS_GC_OPTS="-XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:MaxTenuringThreshold=6 -XX:+ParallelRefProcEnabled -XX:+ExplicitGCInvokesConcurrent"
+G1_GC_OPTS="" #place holder for G1 opts
+
 GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
 CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
 JMX_OPTS="-Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dsun.rmi.transport.tcp.threadKeepAliveTime=75000 -Djava.rmi.server.hostname=${LOCALIP}"
@@ -128,6 +132,12 @@ if [[ "$JAVA_VERSION" < "1.8" ]]; then
   MEM_OPTS="$MEM_OPTS -XX:PermSize=${PERM_SIZE} -XX:MaxPermSize=${MAX_PERM_SIZE} -Djava.security.egd=file:/dev/./urandom"
 else
   MEM_OPTS="$MEM_OPTS -XX:MetaspaceSize=${PERM_SIZE} -XX:MaxMetaspaceSize=${MAX_PERM_SIZE} "
+fi
+
+if [[ $ADDITIONAL_OPTS == *"-XX:+UseG1GC"* ]]; then
+  GC_OPTS="$G1_GC_OPTS"
+else
+  GC_OPTS="$CMS_GC_OPTS"
 fi
 
 CHECK_JMX()
@@ -219,7 +229,7 @@ START()
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
-    nohup java  $JAVA_OPTS $MEM_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
+    nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
 	PID=$!
 	echo $PID > $PID_FILE
 
