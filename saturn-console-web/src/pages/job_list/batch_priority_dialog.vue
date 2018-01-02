@@ -40,9 +40,7 @@ export default {
         preferList: this.selectedExecutors.join(','),
       };
       this.$http.post('/console/job-overview/set-prefer-executors-batch', params).then(() => {
-        this.$message.successMessage('设置成功', () => {
-          this.$emit('batch-priority-success');
-        });
+        this.$emit('batch-priority-success');
       })
       .catch(() => { this.$http.buildErrorHandler('批量设置作业的优先Executors失败！'); });
     },

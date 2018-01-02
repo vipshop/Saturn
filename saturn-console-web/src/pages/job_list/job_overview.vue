@@ -167,6 +167,7 @@ export default {
     jobInfoSuccess() {
       this.isJobInfoVisible = false;
       this.getJobList();
+      this.$message.successNotify('添加作业操作成功');
     },
     batchEnabled() {
       this.batchOperation('启用', (arr) => {
@@ -194,7 +195,8 @@ export default {
         };
         this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
           this.$http.post('/console/job-overview/remove-job-batch', params).then(() => {
-            this.jobList();
+            this.getJobList();
+            this.$message.successNotify('批量删除作业操作成功');
           })
           .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
         });
@@ -212,6 +214,7 @@ export default {
     batchPrioritySuccess() {
       this.isBatchPriorityVisible = false;
       this.getJobList();
+      this.$message.successNotify('批量设置作业的优先Executors成功');
     },
     batchOperation(text, callback) {
       if (this.multipleSelection.length <= 0) {
@@ -238,6 +241,7 @@ export default {
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
         this.$http.post('/console/job-overview/remove-job', params).then(() => {
           this.getJobList();
+          this.$message.successNotify('删除作业操作成功');
         })
         .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
       });
@@ -350,6 +354,7 @@ export default {
     enabledRequest(params, reqUrl) {
       this.loading = true;
       this.$http.post(`/console/job-overview/${reqUrl}`, params).then(() => {
+        this.$message.successNotify('操作成功');
         this.getJobList();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); })

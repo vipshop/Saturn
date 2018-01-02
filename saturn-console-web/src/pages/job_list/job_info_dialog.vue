@@ -90,9 +90,7 @@ export default {
       this.$set(this.jobInfo, 'namespace', this.domainName);
       this.loading = true;
       this.$http.post(url, this.jobInfo).then(() => {
-        this.$message.successMessage('操作成功', () => {
-          this.$emit('job-info-success');
-        });
+        this.$emit('job-info-success');
       })
       .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); })
       .finally(() => {
