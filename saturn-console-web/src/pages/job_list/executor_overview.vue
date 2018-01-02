@@ -34,15 +34,24 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="executorName" label="Executor"></el-table-column>
+                            <el-table-column prop="executorName" label="Executor">
+                                <template slot-scope="scope">
+                                    <i class="iconfont icon-docker" v-if="scope.row.container"></i>
+                                    {{scope.row.executorName}}
+                                </template>
+                            </el-table-column>
                             <el-table-column label="状态">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : 'danger'" close-transition>{{scope.row.status}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP"></el-table-column>
-                            <el-table-column prop="groupName" label="分组"></el-table-column>
-                            <el-table-column label="获取作业分片分配" header-align="left" align="center">
+                            <el-table-column prop="groupName" label="分组">
+                                <template slot-scope="scope">
+                                    {{scope.row.groupName || '——'}}
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="作业分片分配" header-align="left" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="查看" placement="top">
                                         <el-button type="text" @click="getExecutorAllocation(scope.row)"><i class="fa fa-search-plus"></i></el-button>
@@ -51,16 +60,16 @@
                             </el-table-column>
                             <el-table-column prop="version" label="版本"></el-table-column>
                             <el-table-column prop="lastBeginTime" label="启动时间" min-width="100px"></el-table-column>
-                            <el-table-column label="操作" width="110px">
+                            <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
-                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-hand-lizard-o"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
-                                        <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-hand-paper-o"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="重启" placement="top">
-                                        <el-button type="text" @click="handleReset(scope.row)"><i class="fa fa-power-off"></i></el-button>
+                                    <el-tooltip content="一键DUMP" placement="top">
+                                        <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
                                         <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
@@ -150,8 +159,18 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
-    handleReset(row) {
-      console.log(row);
+    handleDump(row) {
+      const params = {
+        namespace: this.domainName,
+        executorName: row.executorName,
+      };
+      this.$message.confirmMessage(`确定dump ${row.executorName} 吗?`, () => {
+        this.$http.post('/console/executor-overview/dump', params).then(() => {
+          this.getExecutorList();
+          this.$message.successNotify('一键DUMP操作成功');
+        })
+        .catch(() => { this.$http.buildErrorHandler('一键DUMP请求失败！'); });
+      });
     },
     handleDelete(row) {
       const params = {
