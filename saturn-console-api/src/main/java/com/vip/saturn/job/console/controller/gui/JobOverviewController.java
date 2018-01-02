@@ -11,6 +11,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.vo.DependencyJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -36,6 +35,8 @@ import java.util.*;
 @Controller
 @RequestMapping("/console/job-overview")
 public class JobOverviewController extends AbstractGUIController {
+
+	private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
 
 	@Resource
 	private JobService jobService;
@@ -228,27 +229,46 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@GetMapping(value = "exportJob")
+	@GetMapping(value = "/export-job")
 	public void exportJob(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
 			final HttpServletResponse response)
 			throws SaturnJobConsoleException {
 		File exportJobFile = null;
-		try (BufferedInputStream bis = new BufferedInputStream(
-				new FileInputStream(exportJobFile)); BufferedOutputStream bos = new BufferedOutputStream(
-				response.getOutputStream());) {
+		try {
 			exportJobFile = jobService.exportJobs(namespace);
 
 			String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-			String fileName = getNamespace() + "_allJobs_" + currentTime + ".xls";
+			String fileName = namespace + "_allJobs_" + currentTime + ".xls";
 
 			response.setContentType("application/octet-stream");
 			response.setHeader("Content-disposition",
 					"attachment; filename=" + new String(fileName.getBytes("UTF-8"), "ISO8859-1"));
 
-			byte[] buff = new byte[2048];
-			int bytesRead;
-			while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
-				bos.write(buff, 0, bytesRead);
+			BufferedInputStream bis = null;
+			BufferedOutputStream bos = null;
+			try {
+				bis = new BufferedInputStream(new FileInputStream(exportJobFile));
+				bos = new BufferedOutputStream(response.getOutputStream());
+				byte[] buff = new byte[2048];
+				int bytesRead;
+				while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+					bos.write(buff, 0, bytesRead);
+				}
+			} finally {
+				if (bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+				if (bos != null) {
+					try {
+						bos.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
 			}
 		} catch (SaturnJobConsoleException e) {
 			throw e;
