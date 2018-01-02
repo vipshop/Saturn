@@ -90,7 +90,7 @@ public class SaturnExecutorsNode {
 	/**
 	 * 获取$SaturnExecutors/executors/xx/noTraffic结点完整路径
 	 * @param executor
-	 * @return
+	 * @return true 已经被摘流量；false，otherwise；
 	 */
 	public static String getExecutorNoTrafficNodePath(String executor) {
 		return "/" + $SATURNEXECUTORS + "/" + EXECUTORS + "/" + executor + "/" + NO_TRAFFIC;
