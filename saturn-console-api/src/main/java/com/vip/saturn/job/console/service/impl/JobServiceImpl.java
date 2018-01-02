@@ -469,9 +469,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	/**
-	 * 先获取DCOS节点下的taskID节点；如果没有此节点，则尝试从executor节点下获取;
-	 * <p>
-	 * 不存在既有DCOS容器，又有K8S容器的模式。
+	 * 先获取DCOS节点下的taskID节点；如果没有此节点，则尝试从executor节点下获取; <p> 不存在既有DCOS容器，又有K8S容器的模式。
 	 */
 	private List<ExecutorProvided> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
@@ -550,8 +548,7 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.create(jobConfigForceShardNodePath);
 	}
 
-	@Override
-	public void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
+	private void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 作业名必填
 		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
 			throw new SaturnJobConsoleException("作业名必填");
@@ -696,7 +693,6 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Transactional
-	@Override
 	public void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
@@ -1352,7 +1348,8 @@ public class JobServiceImpl implements JobService {
 			result.setJobDegree(Integer.parseInt(jobDegree));
 		}
 		result.setEnabled(
-				Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
+				Boolean.valueOf(
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabled"))));// 默认是禁用的
 		result.setPreferList(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList")));
 		String useDispreferList = curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));

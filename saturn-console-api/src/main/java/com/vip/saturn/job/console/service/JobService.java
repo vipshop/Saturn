@@ -34,19 +34,17 @@ public interface JobService {
 
 	void setPreferList(String namespace, String jobName, String preferList) throws SaturnJobConsoleException;
 
-	void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException;
-
 	void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 	int getMaxJobNum() throws SaturnJobConsoleException;
 
 	boolean jobIncExceeds(String namespace, int maxJobNum, int inc) throws SaturnJobConsoleException;
 
+	// Use getJobs
+	@Deprecated
 	List<JobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
 
 	List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException;
-
-	void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
 	void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
@@ -60,6 +58,8 @@ public interface JobService {
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	// Use getJobNames
+	@Deprecated
 	List<String> getAllJobs(String namespace) throws SaturnJobConsoleException;
 
 	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobConsoleException;
