@@ -11,25 +11,22 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.vo.DependencyJob;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Job overview page controller.
@@ -106,10 +103,8 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/enable-job")
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
-			@RequestParam String namespace,
-			@RequestParam String jobName) throws SaturnJobConsoleException {
-		AuditInfoContext.putNamespace(namespace);
-		AuditInfoContext.putJobName(jobName);
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
 		jobService.enableJob(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
@@ -234,7 +229,8 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@Audit(type = AuditType.WEB)
 	@GetMapping(value = "exportJob")
-	public void exportJob(HttpServletRequest request, @RequestParam String namespace, HttpServletResponse response)
+	public void exportJob(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
+			final HttpServletResponse response)
 			throws SaturnJobConsoleException {
 		File exportJobFile = null;
 		try (BufferedInputStream bis = new BufferedInputStream(
