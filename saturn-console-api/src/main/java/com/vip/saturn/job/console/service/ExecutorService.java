@@ -43,15 +43,6 @@ public interface ExecutorService {
 	ServerBriefInfo getExecutor(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	/**
-	 * 获取Executor状态。
-	 *
-	 * @param executorName 目标executor
-	 * @param namespace 域
-	 * @return <code>ServerStatus</code>
-	 */
-	ServerStatus getExecutorStatus(String namespace, String executorName) throws SaturnJobConsoleException;
-
-	/**
 	 * 获取Executor所分配的分片信息；
 	 *
 	 * @param namespace 域
@@ -91,4 +82,11 @@ public interface ExecutorService {
 	 */
 	void shardAll(String namespace) throws SaturnJobConsoleException;
 
+	/**
+	 * 一键dump，包括threaddump和gc.log备份。
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 */
+	void dump(String namespace, String executorName) throws SaturnJobConsoleException;
 }

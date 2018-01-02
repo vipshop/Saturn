@@ -369,6 +369,12 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 
 			@Override
+			public CuratorTransactionOp delete(String znode) throws Exception {
+				curatorTransactionFinal = curatorTransactionFinal.delete().forPath(znode).and();
+				return this;
+			}
+
+			@Override
 			public Collection<CuratorTransactionResult> commit() throws Exception {
 				return curatorTransactionFinal.commit();
 			}

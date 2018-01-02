@@ -59,4 +59,8 @@ public class ExecutorNodePath {
 		return String.format("%s/%s", SHARDING_NODE_NAME, nodeName);
 	}
 
+	public static String getExecutorDumpNodePath(final String executorName) {
+		return getExecutorNodePath(executorName, "dump");
+	}
+
 }

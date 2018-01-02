@@ -62,6 +62,8 @@ public interface CuratorRepository {
 
 			CuratorTransactionOp create(String znode) throws Exception;
 
+			CuratorTransactionOp delete(String znode) throws Exception;
+
 			Collection<CuratorTransactionResult> commit() throws Exception;
 		}
 

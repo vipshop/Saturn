@@ -86,15 +86,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return getServerBriefInfo(executorName, curatorFrameworkOp);
 	}
 
-	@Override
-	public ServerStatus getExecutorStatus(String namespace, String executorName) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
-		if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorIpNodePath(executorName))) {
-			return ServerStatus.ONLINE;
-		}
-		return ServerStatus.OFFLINE;
-	}
-
 	private ServerBriefInfo getServerBriefInfo(String executorName, CuratorFrameworkOp curatorFrameworkOp) {
 		ServerBriefInfo executorInfo = new ServerBriefInfo(executorName);
 		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(executorName));
@@ -208,9 +199,18 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public void shardAll(String namespace) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		// TODO： shardAllAtOnce有子节点吗？
 		String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
 		curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
 		curatorFrameworkOp.create(shardAllAtOnceNodePath);
+	}
+
+	@Override
+	public void dump(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		String dumpNodePath = ExecutorNodePath.getExecutorDumpNodePath(executorName);
+		curatorFrameworkOp.delete(dumpNodePath);
+		curatorFrameworkOp.create(dumpNodePath);
 	}
 
 	private void validateIfExecutorNameExisted(String executorName,

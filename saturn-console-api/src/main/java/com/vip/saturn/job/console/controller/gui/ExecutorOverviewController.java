@@ -172,7 +172,6 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-
 	private void checkExecutorStatus(String namespace, String executorName, ServerStatus status, String errMsg)
 			throws SaturnJobConsoleException {
 		ServerBriefInfo executorInfo = executorService.getExecutor(namespace, executorName);
@@ -182,5 +181,20 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		if (status != executorInfo.getStatus()) {
 			throw new SaturnJobConsoleGUIException(errMsg);
 		}
+	}
+
+	/**
+	 * 一键Dump，包括threadump和gc.log。
+	 */
+	@Audit
+	@PostMapping(value = "/dump")
+	public SuccessResponseEntity dump(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("executorName") @RequestParam String executorName)
+			throws SaturnJobConsoleException {
+		// check executor is existed and online.
+		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以dump");
+		executorService.dump(namespace, executorName);
+		return new SuccessResponseEntity();
 	}
 }
