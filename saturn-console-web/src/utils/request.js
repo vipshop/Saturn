@@ -49,13 +49,11 @@ export default {
           break;
       }
       axios.request(config).then((response) => {
-        let result;
         if (response.data.success) {
-          result = response.data.obj;
+          resolve(response.data.obj);
         } else {
           message.errorMessage(response.data.message);
         }
-        resolve(result);
       })
       .catch((err) => {
         reject(err);

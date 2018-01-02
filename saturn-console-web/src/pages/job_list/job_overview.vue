@@ -237,7 +237,7 @@ export default {
       };
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
         this.$http.post('/console/job-overview/remove-job', params).then(() => {
-          this.jobList();
+          this.getJobList();
         })
         .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
       });
