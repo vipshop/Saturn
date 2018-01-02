@@ -6,8 +6,10 @@ import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
+import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.vo.DependencyJob;
@@ -40,6 +42,9 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@Resource
 	private JobService jobService;
+
+	@Resource
+	private ExecutorService executorService;
 
 	@GetMapping(value = "/jobs")
 	public SuccessResponseEntity getJobs(final HttpServletRequest request, @RequestParam String namespace)
@@ -182,8 +187,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@GetMapping(value = "/online-executors")
 	public SuccessResponseEntity getOnlineExecutors(final HttpServletRequest request,
 			@RequestParam String namespace) throws SaturnJobConsoleException {
-		List<ExecutorProvided> onlineExecutors = jobService.getOnlineExecutors(namespace);
-		return new SuccessResponseEntity(onlineExecutors);
+		return new SuccessResponseEntity(executorService.getExecutors(namespace, ServerStatus.ONLINE));
 	}
 
 	/**
@@ -287,7 +291,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@GetMapping(value = "/executors")
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
 			@RequestParam String namespace, @RequestParam String jobName) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(jobService.getExecutors(namespace, jobName));
+		return new SuccessResponseEntity(jobService.getCandidateExecutors(namespace, jobName));
 	}
 
 }

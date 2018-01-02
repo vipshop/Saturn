@@ -443,7 +443,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<ExecutorProvided> getExecutors(String namespace, String jobName) throws SaturnJobConsoleException {
+	public List<ExecutorProvided> getCandidateExecutors(String namespace, String jobName)
+			throws SaturnJobConsoleException {
 		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 		CurrentJobConfig currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {
@@ -552,39 +553,6 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 		return taskIds;
-	}
-
-	@Override
-	public List<ExecutorProvided> getOnlineExecutors(String namespace) throws SaturnJobConsoleException {
-		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
-		String executorsNodePath = SaturnExecutorsNode.getExecutorsNodePath();
-		if (!curatorFrameworkOp.checkExists(executorsNodePath)) {
-			return executorProvidedList;
-		}
-		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
-		if (executors != null && executors.size() > 0) {
-			for (String executor : executors) {
-				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
-					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
-				}
-				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
-				if (StringUtils.isNotBlank(ip)) {// if ip exists, means the executor is online
-					ExecutorProvided executorProvided = new ExecutorProvided();
-					executorProvided.setExecutorName(executor);
-					executorProvided.setNoTraffic(
-							curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
-					executorProvided.setType(ExecutorProvidedType.ONLINE);
-					executorProvidedList.add(executorProvided);
-					continue;
-				}
-			}
-		}
-
-		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
-
-		return executorProvidedList;
 	}
 
 	@Override

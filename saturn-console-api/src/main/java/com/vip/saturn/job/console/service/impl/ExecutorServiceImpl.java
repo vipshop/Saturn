@@ -51,6 +51,12 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	@Override
 	public List<ServerBriefInfo> getExecutors(String namespace) throws SaturnJobConsoleException {
+		return getExecutors(namespace, null);
+	}
+
+	@Override
+	public List<ServerBriefInfo> getExecutors(String namespace, ServerStatus expectedServerStatus)
+			throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
 		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
@@ -61,7 +67,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 		List<ServerBriefInfo> executorInfoList = Lists.newArrayList();
 		for (String executor : executors) {
 			ServerBriefInfo executorInfo = getServerBriefInfo(executor, curatorFrameworkOp);
-			executorInfoList.add(executorInfo);
+			if (expectedServerStatus == null || executorInfo.getStatus().equals(expectedServerStatus)) {
+				executorInfoList.add(executorInfo);
+			}
 		}
 
 		return executorInfoList;
@@ -96,6 +104,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		} else {
 			executorInfo.setStatus(ServerStatus.OFFLINE);
 		}
+
 		executorInfo.setNoTraffic(curatorFrameworkOp
 				.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName)));
 		String lastBeginTime = curatorFrameworkOp

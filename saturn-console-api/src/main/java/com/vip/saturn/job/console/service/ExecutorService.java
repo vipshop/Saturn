@@ -26,6 +26,14 @@ public interface ExecutorService {
 	List<ServerBriefInfo> getExecutors(String namespace) throws SaturnJobConsoleException;
 
 	/**
+	 * 获取特定状态的Executors信息；
+	 *
+	 * @param namespace 域
+	 * @return executor信息, 如果不存在则返回空的<code>java.util.List</code>；
+	 */
+	List<ServerBriefInfo> getExecutors(String namespace, ServerStatus serverStatus) throws SaturnJobConsoleException;
+
+	/**
 	 * 获取单个Executors信息；
 	 *
 	 * @param namespace 域
