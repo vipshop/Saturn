@@ -62,7 +62,7 @@
                                     <el-tooltip content="重启" placement="top">
                                         <el-button type="text" @click="handleReset(scope.row)"><i class="fa fa-power-off"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
                                         <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
@@ -123,8 +123,16 @@ export default {
     },
     batchDelete() {
       this.batchOperation('删除', (arr) => {
+        const params = {
+          namespace: this.domainName,
+          executorNames: arr.join(','),
+        };
         this.$message.confirmMessage(`确定删除Executor ${arr.join(',')} 吗?`, () => {
-          console.log(arr);
+          this.$http.post('/console/executor-overview/remove-executor-batch', params).then(() => {
+            this.getExecutorList();
+            this.$message.successNotify('批量删除Executor操作成功');
+          })
+          .catch(() => { this.$http.buildErrorHandler('批量删除Executor请求失败！'); });
         });
       });
     },
@@ -146,7 +154,17 @@ export default {
       console.log(row);
     },
     handleDelete(row) {
-      console.log(row);
+      const params = {
+        namespace: this.domainName,
+        executorName: row.executorName,
+      };
+      this.$message.confirmMessage(`确定删除Executor ${row.executorName} 吗?`, () => {
+        this.$http.post('/console/executor-overview/remove-executor', params).then(() => {
+          this.getExecutorList();
+          this.$message.successNotify('删除Executor操作成功');
+        })
+        .catch(() => { this.$http.buildErrorHandler('删除Executor请求失败！'); });
+      });
     },
     handleTraffic(row, operation) {
       const params = {
