@@ -2,7 +2,7 @@
     <div>
         <el-main>
             <div class="page-title">
-                <h3>应用域</h3>
+                <img width="250px" height="250px" src="../../image/saturn.png"/>
             </div>
             <div>
                 <el-row :gutter="20">
@@ -69,7 +69,7 @@ export default {
 .page-title {
     font-size: 19px;
     font-weight: normal;
-    margin: 10% 0 20px;
+    margin: 10% 0 0;
     text-align: center;
     color: #159e74;
 }
