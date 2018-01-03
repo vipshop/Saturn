@@ -74,7 +74,7 @@
                             <el-table-column label="分片情况">
                                 <template slot-scope="scope">
                                     <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
-                                        <el-tag>{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
+                                        <el-tag type="primary">{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
                                         <div slot="content" v-for="item in $array.strToArray(scope.row.shardingList)" :key="item">
                                             <div>{{item}}</div>
                                         </div>
@@ -89,8 +89,8 @@
                                     <el-tooltip content="禁用" placement="top" v-if="scope.row.status === 'READY' || scope.row.status === 'RUNNING'">
                                         <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="编辑" placement="top">
-                                        <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
+                                    <el-tooltip content="复制" placement="top">
+                                        <el-button type="text" @click="handleCopy(scope.row)"><i class="fa fa-clone"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top">
                                         <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
@@ -252,15 +252,15 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
-    handleEdit(row) {
+    handleCopy(row) {
       const params = {
         namespace: this.domainName,
         jobName: row.jobName,
       };
       this.$http.get('/console/job-overview/job-config', params).then((data) => {
-        const jobEditInfo = {
+        const jobCopyInfo = {
           jobType: data.jobType,
-          jobName: data.jobName,
+          jobName: '',
           jobClass: data.jobClass,
           cron: data.cron,
           shardingTotalCount: data.shardingTotalCount,
@@ -268,9 +268,9 @@ export default {
           description: data.description,
         };
         this.isJobInfoVisible = true;
-        this.jobInfoTitle = '编辑作业';
-        this.jobInfoOperation = 'edit';
-        this.jobInfo = JSON.parse(JSON.stringify(jobEditInfo));
+        this.jobInfoTitle = '复制作业';
+        this.jobInfoOperation = 'copy';
+        this.jobInfo = JSON.parse(JSON.stringify(jobCopyInfo));
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
     },
@@ -393,15 +393,11 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
     },
     enabledRequest(params, reqUrl) {
-      this.loading = true;
       this.$http.post(`/console/job-overview/${reqUrl}`, params).then(() => {
         this.$message.successNotify('操作成功');
         this.getJobList();
       })
-      .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); })
-      .finally(() => {
-        this.loading = false;
-      });
+      .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     getJobList() {
       this.loading = true;
