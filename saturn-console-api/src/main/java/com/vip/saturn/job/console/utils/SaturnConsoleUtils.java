@@ -1,7 +1,6 @@
 package com.vip.saturn.job.console.utils;
 
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import java.util.Locale;
 import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -43,8 +42,7 @@ public class SaturnConsoleUtils {
 		String jobTypeNodePath = JobNodePath.getConfigNodePath(jobName, "jobType");
 
 		// if enabledReportNodePath不存在, 如果作业类型是JAVA或者Shell，默认上报
-		if ("JAVA_JOB".equals(jobTypeNodePath)
-				|| "SHELL_JOB".equals(jobTypeNodePath)) {
+		if ("JAVA_JOB".equals(jobTypeNodePath) || "SHELL_JOB".equals(jobTypeNodePath)) {
 			return true;
 		}
 

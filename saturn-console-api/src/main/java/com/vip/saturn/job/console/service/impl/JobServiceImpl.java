@@ -1770,10 +1770,12 @@ public class JobServiceImpl implements JobService {
 
 	@Override
 	public List<ExecutionInfo> getExecutionStatus(String namespace, String jobName) throws SaturnJobConsoleException {
-		if (JobStatus.STOPPED.equals(getJobStatus(namespace, jobName))) {
+		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		JobConfig jobConfig = getJobConfig(namespace, jobName);
+		if (!jobConfig.getEnabled() && JobStatus.STOPPED.equals(getJobStatus(jobName, curatorFrameworkOp, false))) {
 			return Lists.newArrayList();
 		}
-		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+
 		// update report node and sleep for 500ms
 		updateReportNodeAndWait(jobName, curatorFrameworkOp, 500L);
 		// 如果execution节点不存在则返回空List
