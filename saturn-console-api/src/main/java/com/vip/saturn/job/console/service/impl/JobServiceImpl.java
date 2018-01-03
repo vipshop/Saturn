@@ -84,8 +84,7 @@ public class JobServiceImpl implements JobService {
 						.getCuratorFrameworkOp(namespace);
 				for (JobConfig jobConfig : unSystemJobs) {
 					try {
-						JobInfo jobInfo = new JobInfo();
-						mapper.map(jobConfig, jobConfig);
+						JobInfo jobInfo = mapper.map(jobConfig, JobInfo.class);
 
 						jobInfo.setDefaultValues();
 
@@ -670,7 +669,7 @@ public class JobServiceImpl implements JobService {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
 				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
 						.startsWith(JobMode.SYSTEM_PREFIX))) {
-					unSystemJobs.add(jobConfig4DB);
+					unSystemJobs.add(mapper.map(jobConfig4DB, JobConfig.class));
 				}
 			}
 		}
