@@ -64,12 +64,12 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态">
+                            <el-table-column label="状态" prop="status" sortable>
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{scope.row.status}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="groups" label="分组"></el-table-column>
+                            <el-table-column prop="groups" label="分组" sortable></el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数"></el-table-column>
                             <el-table-column label="分片情况">
                                 <template slot-scope="scope">
