@@ -5,7 +5,7 @@
                 <el-col :span="8">
                     <Panel type="success">
                         <div slot="title">在线数 / 总数</div>
-                        <div slot="content">1 / 2</div>
+                        <div slot="content">{{onlineNum}} / {{totalNum}}</div>
                     </Panel>
                 </el-col>
             </el-row>
@@ -34,7 +34,7 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="executorName" label="Executor">
+                            <el-table-column prop="executorName" label="Executor" min-width="140px">
                                 <template slot-scope="scope">
                                     <i class="iconfont icon-docker" v-if="scope.row.container"></i>
                                     {{scope.row.executorName}}
@@ -42,30 +42,31 @@
                             </el-table-column>
                             <el-table-column label="状态">
                                 <template slot-scope="scope"> 
-                                    <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : 'danger'" close-transition>{{scope.row.status}}</el-tag>
+                                    <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{scope.row.status}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP"></el-table-column>
                             <el-table-column prop="groupName" label="分组">
                                 <template slot-scope="scope">
-                                    {{scope.row.groupName || '——'}}
+                                    {{scope.row.groupName || '--'}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="作业分片分配" header-align="left" align="center">
+                            <el-table-column label="分片分配" header-align="left" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="查看" placement="top">
+                                    <span v-if="scope.row.status === 'OFFLINE'">--</span>
+                                    <el-tooltip content="查看" placement="top" v-else>
                                         <el-button type="text" @click="getExecutorAllocation(scope.row)"><i class="fa fa-search-plus"></i></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本"></el-table-column>
-                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="100px"></el-table-column>
+                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
+                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
+                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="一键DUMP" placement="top">
@@ -215,6 +216,20 @@ export default {
       .finally(() => {
         this.loading = false;
       });
+    },
+  },
+  computed: {
+    onlineNum() {
+      const num = [];
+      this.executorList.forEach((ele) => {
+        if (ele.status === 'ONLINE') {
+          num.push(ele);
+        }
+      });
+      return num.length;
+    },
+    totalNum() {
+      return this.executorList.length;
     },
   },
   created() {
