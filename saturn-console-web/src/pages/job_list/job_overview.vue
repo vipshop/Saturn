@@ -189,7 +189,7 @@ export default {
     jobInfoSuccess() {
       this.isJobInfoVisible = false;
       this.getJobList();
-      this.$message.successNotify('添加作业操作成功');
+      this.$message.successNotify('保存作业操作成功');
     },
     batchEnabled() {
       this.batchOperation('启用', (arr) => {
@@ -253,7 +253,26 @@ export default {
       this.multipleSelection = val;
     },
     handleEdit(row) {
-      console.log(row);
+      const params = {
+        namespace: this.domainName,
+        jobName: row.jobName,
+      };
+      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+        const jobEditInfo = {
+          jobType: data.jobType,
+          jobName: data.jobName,
+          jobClass: data.jobClass,
+          cron: data.cron,
+          shardingTotalCount: data.shardingTotalCount,
+          shardingItemParameters: data.shardingItemParameters,
+          description: data.description,
+        };
+        this.isJobInfoVisible = true;
+        this.jobInfoTitle = '编辑作业';
+        this.jobInfoOperation = 'edit';
+        this.jobInfo = JSON.parse(JSON.stringify(jobEditInfo));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
     },
     handleDelete(row) {
       const params = {

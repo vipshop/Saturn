@@ -3,14 +3,14 @@
         <el-form :model="jobInfo" :rules="rules" ref="jobInfo" label-width="180px">
             <el-form-item label="作业类型" prop="jobType">
                 <el-col :span="18">
-                    <el-select v-model="jobInfo.jobType" style="width: 100%">
+                    <el-select v-model="jobInfo.jobType" style="width: 100%" :disabled="!isEditable">
                         <el-option v-for="item in jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
             <el-form-item label="作业名" prop="jobName">
                 <el-col :span="18">
-                    <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob"></el-input>
+                    <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob" :disabled="!isEditable"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType === 'JAVA_JOB'">
@@ -82,6 +82,8 @@ export default {
         if (valid) {
           if (this.jobInfoOperation === 'add') {
             this.jobInfoRequest('/console/job-overview/add-job');
+          } else if (this.jobInfoOperation === 'edit') {
+            this.jobInfoRequest('/console/job-overview/job-config');
           }
         }
       });
@@ -99,6 +101,11 @@ export default {
     },
     closeDialog() {
       this.$emit('close-dialog');
+    },
+  },
+  computed: {
+    isEditable() {
+      return this.jobInfoOperation !== 'edit';
     },
   },
 };
