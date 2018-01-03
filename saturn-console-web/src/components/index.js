@@ -11,6 +11,7 @@ import Pie from './common/charts/pie';
 import Column from './common/charts/column';
 import Panel from './common/panel';
 import FilterPageList from './common/filterPageList';
+import ImportFileDialog from './common/importFileDialog';
 
 Vue.component('Container', Container);
 Vue.component('Header', Header);
@@ -24,3 +25,4 @@ Vue.component('Pie', Pie);
 Vue.component('Column', Column);
 Vue.component('Panel', Panel);
 Vue.component('FilterPageList', FilterPageList);
+Vue.component('ImportFileDialog', ImportFileDialog);
