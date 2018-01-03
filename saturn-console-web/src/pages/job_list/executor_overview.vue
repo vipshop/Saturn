@@ -37,6 +37,7 @@
                             <el-table-column prop="executorName" label="Executor" min-width="160px" sortable>
                                 <template slot-scope="scope">
                                     <i class="iconfont icon-docker" v-if="scope.row.container"></i>
+                                    <i class="fa fa-desktop" v-if="!scope.row.container"></i>
                                     {{scope.row.executorName}}
                                 </template>
                             </el-table-column>
