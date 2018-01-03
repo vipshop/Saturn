@@ -5,19 +5,13 @@
                 <el-col :span="8">
                     <Panel type="success">
                         <div slot="title">启用作业数 / 总作业数</div>
-                        <div slot="content">2 / 3</div>
-                    </Panel>
-                </el-col>
-                <el-col :span="8">
-                    <Panel type="warning">
-                        <div slot="title">失败率</div>
-                        <div slot="content">1%</div>
+                        <div slot="content">{{enabledNumber}} / {{totalNumber}}</div>
                     </Panel>
                 </el-col>
                 <el-col :span="8">
                     <Panel type="danger">
                         <div slot="title">异常作业数</div>
-                        <div slot="content">0</div>
+                        <div slot="content">{{abnormalNumber}}</div>
                     </Panel>
                 </el-col>
             </el-row>
@@ -113,6 +107,9 @@
             <div v-if="isBatchPriorityVisible">
                 <batch-priority-dialog :job-names-array="jobNamesArray" :domain-name="domainName" @close-dialog="closePriorityDialog" @batch-priority-success="batchPrioritySuccess"></batch-priority-dialog>
             </div>
+            <div v-if="isImportVisible">
+                <ImportFileDialog :import-data="importData" import-title="导入作业" @close-dialog="closeImportDialog" @import-success="importSuccess"></ImportFileDialog>
+            </div>
         </div>
     </div>
 </template>
@@ -124,13 +121,17 @@ import batchPriorityDialog from './batch_priority_dialog';
 export default {
   data() {
     return {
+      domainName: this.$route.params.domain,
       loading: false,
       isJobInfoVisible: false,
       jobInfoTitle: '',
       jobInfoOperation: '',
       jobInfo: {},
       isBatchPriorityVisible: false,
-      domainName: this.$route.params.domain,
+      isImportVisible: false,
+      importData: {
+        namespace: this.$route.params.domain,
+      },
       jobNamesArray: [],
       filters: {
         jobName: '',
@@ -147,9 +148,26 @@ export default {
       },
       total: 0,
       multipleSelection: [],
+      abnormalNumber: 0,
+      enabledNumber: 0,
+      totalNumber: 0,
     };
   },
   methods: {
+    handleExport() {
+      window.location.href = `/console/job-overview/export-jobs?namespace=${this.domainName}`;
+    },
+    handleImport() {
+      this.isImportVisible = true;
+    },
+    closeImportDialog() {
+      this.isImportVisible = false;
+    },
+    importSuccess() {
+      this.isImportVisible = false;
+      this.getJobList();
+      this.$message.successNotify('导入作业操作成功');
+    },
     handleAdd() {
       this.isJobInfoVisible = true;
       this.jobInfoTitle = '添加作业';
@@ -369,7 +387,10 @@ export default {
     getJobList() {
       this.loading = true;
       this.$http.get('/console/job-overview/jobs', { namespace: this.domainName }).then((data) => {
-        this.jobList = data;
+        this.jobList = data.jobs;
+        this.totalNumber = data.totalNumber;
+        this.enabledNumber = data.enabledNumber;
+        this.abnormalNumber = data.abnormalNumber;
         this.total = data.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业列表失败！'); })

@@ -1,8 +1,11 @@
 package com.vip.saturn.job.console.service.impl;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.ServerAllocationInfo;
+import com.vip.saturn.job.console.domain.ServerBriefInfo;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
@@ -11,17 +14,14 @@ import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
+import java.util.List;
+import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Default implementation of ExecutorService.
@@ -33,9 +33,6 @@ import java.util.Locale;
 public class ExecutorServiceImpl implements ExecutorService {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
-
-	private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM,
-			Locale.SIMPLIFIED_CHINESE);
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -87,23 +84,27 @@ public class ExecutorServiceImpl implements ExecutorService {
 		ServerBriefInfo executorInfo = new ServerBriefInfo(executorName);
 		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(executorName));
 		executorInfo.setServerIp(ip);
-		if (!Strings.isNullOrEmpty(ip)) {
+		if (StringUtils.isNotBlank(ip)) {
 			executorInfo.setStatus(ServerStatus.ONLINE);
 		} else {
 			executorInfo.setStatus(ServerStatus.OFFLINE);
 		}
-
+		// 是否已被摘流量
 		executorInfo.setNoTraffic(curatorFrameworkOp
 				.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName)));
+		// lastBeginTime
 		String lastBeginTime = curatorFrameworkOp
 				.getData(ExecutorNodePath.getExecutorNodePath(executorInfo.getExecutorName(), "lastBeginTime"));
-		executorInfo.setLastBeginTime(
-				null == lastBeginTime ? null : dateFormat.format(new Date(Long.parseLong(lastBeginTime))));
+		executorInfo.setLastBeginTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(lastBeginTime));
+		// version
 		executorInfo.setVersion(
 				curatorFrameworkOp.getData(ExecutorNodePath.getExecutorVersionNodePath(executorName)));
+
 		String task = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorTaskNodePath(executorName));
 		if (StringUtils.isNotBlank(task)) {
+			// 容器组
 			executorInfo.setGroupName(task);
+			// 是否容器
 			executorInfo.setContainer(true);
 		}
 		return executorInfo;
@@ -214,7 +215,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		try {
 			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
 		} catch (SaturnJobConsoleException e) {
-			throw new SaturnJobConsoleException("no CuratorFramework found for namespace:" + namespace);
+			throw new SaturnJobConsoleException("No CuratorFramework found for namespace:" + namespace);
 		}
 		return curatorFrameworkOp;
 	}

@@ -37,6 +37,7 @@
                             <el-table-column prop="executorName" label="Executor" min-width="160px" sortable>
                                 <template slot-scope="scope">
                                     <i class="iconfont icon-docker" v-if="scope.row.container"></i>
+                                    <i class="fa fa-desktop" v-if="!scope.row.container"></i>
                                     {{scope.row.executorName}}
                                 </template>
                             </el-table-column>
@@ -60,7 +61,7 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本" sortable></el-table-column>
-                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="120px"></el-table-column>
+                            <el-table-column prop="lastBeginTime" label="最近启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">

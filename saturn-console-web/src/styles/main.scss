@@ -94,5 +94,7 @@ form {
 .el-input-number .el-input__inner {
     text-align: left;
 }
-
-
+/* upload */
+.el-upload-list__item-name [class^=el-icon] {
+    height: initial;
+}
