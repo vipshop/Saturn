@@ -34,19 +34,19 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="executorName" label="Executor" min-width="140px">
+                            <el-table-column prop="executorName" label="Executor" min-width="160px" sortable>
                                 <template slot-scope="scope">
                                     <i class="iconfont icon-docker" v-if="scope.row.container"></i>
                                     {{scope.row.executorName}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态">
+                            <el-table-column prop="status" label="状态" sortable>
                                 <template slot-scope="scope"> 
                                     <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{scope.row.status}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP"></el-table-column>
-                            <el-table-column prop="groupName" label="分组">
+                            <el-table-column prop="groupName" label="分组" sortable>
                                 <template slot-scope="scope">
                                     {{scope.row.groupName || '--'}}
                                 </template>
@@ -59,7 +59,7 @@
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="version" label="版本"></el-table-column>
+                            <el-table-column prop="version" label="版本" sortable></el-table-column>
                             <el-table-column prop="lastBeginTime" label="启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
@@ -69,7 +69,7 @@
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="一键DUMP" placement="top">
+                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
