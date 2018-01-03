@@ -60,7 +60,7 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本" sortable></el-table-column>
-                            <el-table-column prop="lastBeginTime" label="启动时间" min-width="120px"></el-table-column>
+                            <el-table-column prop="lastBeginTime" label="最近启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">
