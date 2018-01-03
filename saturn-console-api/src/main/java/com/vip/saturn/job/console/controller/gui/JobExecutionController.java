@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @Controller
 @RequestMapping("/console/job/execution")
-public class JobExecutionController {
+public class JobExecutionController extends AbstractGUIController {
 
 	@Resource
 	private JobService jobService;
@@ -31,4 +31,9 @@ public class JobExecutionController {
 		return new SuccessResponseEntity(jobService.getExecutionStatus(namespace, jobName));
 	}
 
+	@GetMapping(value = "/log")
+	public SuccessResponseEntity getExecutionLog(final HttpServletRequest request, @RequestParam String namespace,
+			@RequestParam String jobName, @RequestParam String jobItem) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getExecutionLog(namespace, jobName, jobItem));
+	}
 }

@@ -85,4 +85,9 @@ public interface JobService {
 	 * 获取作业运行状态
 	 */
 	List<ExecutionInfo> getExecutionStatus(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	/**
+	 * 获取运行日志
+	 */
+	String getExecutionLog(String namespace, String jobName, String jobItem) throws SaturnJobConsoleException;
 }

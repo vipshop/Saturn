@@ -59,6 +59,8 @@ public class JobServiceImpl implements JobService {
 
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 
+	private static final String ERR_MSG_PENDING_STATUS = "job:[{}] item:[{}] on executor:[{}] execution status is PENDING as {}";
+
 	@Resource
 	private RegistryCenterService registryCenterService;
 
@@ -1780,7 +1782,7 @@ public class JobServiceImpl implements JobService {
 		}
 
 		List<ExecutionInfo> result = Lists.newArrayList();
-		Map<String, String> itemExecutorMap = getItem2ExecutorMap(jobName, curatorFrameworkOp);
+		Map<String, String> itemExecutorMap = buildItem2ExecutorMap(jobName, curatorFrameworkOp);
 		for (String shardItem : itemExecutorMap.keySet()) {
 			result.add(buildExecutionInfo(jobName, shardItem, itemExecutorMap.get(shardItem),
 					curatorFrameworkOp));
@@ -1788,6 +1790,12 @@ public class JobServiceImpl implements JobService {
 		Collections.sort(result);
 
 		return result;
+	}
+
+	@Override
+	public String getExecutionLog(String namespace, String jobName, String jobItem) throws SaturnJobConsoleException {
+		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		return curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, jobItem, "jobLog"));
 	}
 
 	private void updateReportNodeAndWait(String jobName, CuratorFrameworkOp curatorFrameworkOp, long sleepInMill) {
@@ -1856,54 +1864,83 @@ public class JobServiceImpl implements JobService {
 			return;
 		}
 
+		boolean isCompleted = false;
 		String completedNodePath = JobNodePath.getCompletedNodePath(jobName, shardItem);
 		String completedData = curatorFrameworkOp.getData(completedNodePath);
 		if (completedData != null) {
-			executionInfo.setExecutorName(StringUtils.isBlank(completedData) ? executorName : completedData);
-			executionInfo.setStatus(
-					ExecutionStatus.getExecutionStatus(false, true, false, false, isEnabledReport));
-			return;
-		}
-
-		String runningNodePath = JobNodePath.getRunningNodePath(jobName, shardItem);
-		String runningData = curatorFrameworkOp.getData(runningNodePath);
-		if (runningData != null) {
-			executionInfo.setExecutorName(StringUtils.isBlank(runningData) ? executorName : runningData);
-			long mtime = curatorFrameworkOp.getMtime(runningNodePath);
-			executionInfo.setTimeConsumed((new Date().getTime() - mtime) / 1000);
-			executionInfo.setStatus(
-					ExecutionStatus.getExecutionStatus(true, false, false, false, isEnabledReport));
-			return;
+			isCompleted = true;
+			executionInfo.setExecutorName(StringUtils.isNotBlank(completedData) ? completedData : executorName);
+			//不能立即返回还是要看看是否failed或者timeout
 		}
 
 		String failedNodePath = JobNodePath.getFailedNodePath(jobName, shardItem);
 		if (curatorFrameworkOp.checkExists(failedNodePath)) {
-			executionInfo.setExecutorName(executorName);
-			executionInfo.setStatus(
-					ExecutionStatus.getExecutionStatus(false, false, true, false, isEnabledReport));
-			return;
-		}
-
-		String failoverNodePath = JobNodePath.getFailoverNodePath(jobName, shardItem);
-		String failoverData = curatorFrameworkOp.getData(failoverNodePath);
-		if (failoverData != null) {
-			executionInfo.setExecutorName(failoverData);
-			executionInfo.setFailover(true);
-			executionInfo.setStatus(
-					ExecutionStatus.getExecutionStatus(false, false, false, false, isEnabledReport));
+			if (isCompleted) {
+				executionInfo.setStatus(ExecutionStatus.FAILED);
+			} else {
+				log.warn(ERR_MSG_PENDING_STATUS, jobName, shardItem, executorName,
+						"no completed node found but only failed node");
+				executionInfo.setExecutorName(executorName);
+				executionInfo.setStatus(ExecutionStatus.PENDING);
+			}
 			return;
 		}
 
 		String timeoutNodePath = JobNodePath.getTimeoutNodePath(jobName, shardItem);
 		if (curatorFrameworkOp.checkExists(timeoutNodePath)) {
-			executionInfo.setExecutorName(executorName);
-			executionInfo.setStatus(
-					ExecutionStatus.getExecutionStatus(false, false, false, true, isEnabledReport));
+			if (isCompleted) {
+				executionInfo.setStatus(ExecutionStatus.TIMEOUT);
+			} else {
+				log.warn(ERR_MSG_PENDING_STATUS, jobName, shardItem, executorName,
+						"no completed node found but only timeout node");
+				executionInfo.setExecutorName(executorName);
+				executionInfo.setStatus(ExecutionStatus.PENDING);
+			}
 			return;
+		}
+
+		// 只有completed节点没有timeout/failed意味着成功，于是立即返回
+		if (isCompleted) {
+			executionInfo.setStatus(ExecutionStatus.COMPLETED);
+			return;
+		}
+
+		boolean isRunning = false;
+		String runningNodePath = JobNodePath.getRunningNodePath(jobName, shardItem);
+		String runningData = curatorFrameworkOp.getData(runningNodePath);
+		if (runningData != null) {
+			isRunning = true;
+			executionInfo.setExecutorName(StringUtils.isBlank(runningData) ? executorName : runningData);
+			long mtime = curatorFrameworkOp.getMtime(runningNodePath);
+			executionInfo.setTimeConsumed((new Date().getTime() - mtime) / 1000);
+			executionInfo.setStatus(ExecutionStatus.RUNNING);
+			//不能立即返回还是要看看是否正在failover
+		}
+
+		String failoverNodePath = JobNodePath.getFailoverNodePath(jobName, shardItem);
+		String failoverData = curatorFrameworkOp.getData(failoverNodePath);
+		if (failoverData != null) {
+			// 设置为failover节点的真是executorName
+			executionInfo.setExecutorName(failoverData);
+			executionInfo.setFailover(true);
+			// 如果有failover节点，running应该配对出现，否则显示pending状态
+			if (!isRunning) {
+				log.warn(ERR_MSG_PENDING_STATUS, jobName, shardItem, executorName,
+						"no running node found but only failover node");
+				executionInfo.setStatus(ExecutionStatus.PENDING);
+			}
+
+			return;
+		}
+
+		if (!isRunning) {
+			log.warn(ERR_MSG_PENDING_STATUS, jobName, shardItem, executorName,
+					"no running node or completed node found");
+			executionInfo.setStatus(ExecutionStatus.PENDING);
 		}
 	}
 
-	private Map<String, String> getItem2ExecutorMap(String jobName,
+	private Map<String, String> buildItem2ExecutorMap(String jobName,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
