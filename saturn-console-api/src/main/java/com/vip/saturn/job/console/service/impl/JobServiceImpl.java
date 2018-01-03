@@ -663,22 +663,52 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
+	@Transactional
 	@Override
 	public void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+		addOrCopyJob(namespace, jobConfig, null);
+	}
+
+	@Transactional
+	@Override
+	public void copyJob(String namespace, JobConfig jobConfig, String jobNameCopied) throws SaturnJobConsoleException {
+		addOrCopyJob(namespace, jobConfig, jobNameCopied);
+	}
+
+	private void addOrCopyJob(String namespace, JobConfig jobConfig, String jobNameCopied)
+			throws SaturnJobConsoleException {
 		validateJobConfig(jobConfig);
+		String jobName = jobConfig.getJobName();
+		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (oldJobConfig != null) {
+			throw new SaturnJobConsoleException(String.format("该作业（%s）已经存在", jobName));
+		}
+		int maxJobNum = getMaxJobNum();
+		if (jobIncExceeds(namespace, maxJobNum, 1)) {
+			throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
+		} else {
+			JobConfig jobConfig2 = jobConfig;
+			if (jobNameCopied != null) {
+				JobConfig4DB jobConfig4DBCopied = currentJobConfigService
+						.findConfigByNamespaceAndJobName(namespace, jobNameCopied);
+				jobConfig2 = mapper.map(jobConfig4DBCopied, JobConfig.class);
+				// 空字段不拷贝，see MapperFactoryBean
+				mapper.map(jobConfig, jobConfig2);
+			}
+
+			persistJob(namespace, jobConfig2);
+		}
+	}
+
+	private void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
-		String jobName = jobConfig.getJobName();
-		if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))) {
-			int maxJobNum = getMaxJobNum();
-			if (jobIncExceeds(namespace, maxJobNum, 1)) {
-				throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
-			} else {
-				persistJob(namespace, jobConfig);
-			}
-		} else {
-			throw new SaturnJobConsoleException(String.format("作业名%s已经存在", jobName));
+		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
+			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
 		}
+		correctConfigValueIfNeeded(jobConfig);
+		saveJobConfigToDb(namespace, jobConfig);
+		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
 	}
 
 	@Override
@@ -726,24 +756,12 @@ public class JobServiceImpl implements JobService {
 		return unSystemJobs;
 	}
 
-	@Transactional
-	public void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
-		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
-			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
-		}
-		correctConfigValueIfNeeded(jobConfig);
-		saveJobConfigToDb(namespace, jobConfig);
-		saveJobConfigToZkWhenPersist(jobConfig, curatorFrameworkOp, false);
-	}
-
 	@Override
 	public void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
 		jobConfig.setDefaultValues();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
-		saveJobConfigToZkWhenPersist(jobConfig, curatorFrameworkOp, true);
+		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
 	}
 
 	/**
@@ -828,15 +846,11 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	private void saveJobConfigToZkWhenPersist(JobConfig jobConfig,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, boolean fromDB) {
+	private void saveJobConfigToZk(JobConfig jobConfig,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String jobName = jobConfig.getJobName();
-		if (!fromDB) {
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"), "false");
-		} else {
-			curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"),
-					jobConfig.getEnabled());
-		}
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "enabled"),
+				jobConfig.getEnabled());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "description"),
 				jobConfig.getDescription());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, "customContext"),
@@ -1536,7 +1550,8 @@ public class JobServiceImpl implements JobService {
 		try {
 			// config changed, update current config and save a copy to history config.
 			if (bw.isValue()) {
-				JobConfig4DB newJobConfig4DB = mapper.map(jobConfig, JobConfig4DB.class);
+				JobConfig4DB newJobConfig4DB = mapper.map(jobConfig4DB, JobConfig4DB.class);
+				mapper.map(jobConfig, newJobConfig4DB);
 				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
 			}
 			if (curatorTransactionOp != null) {

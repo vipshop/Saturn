@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.component;
 
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
-import com.vip.saturn.job.console.domain.JobInfo;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -18,8 +17,7 @@ public class MapperFactoryBean implements FactoryBean<MapperFactory> {
 	public MapperFactory getObject() throws Exception {
 		MapperFactory factory = new DefaultMapperFactory.Builder().build();
 		factory.classMap(JobConfig.class, JobConfig4DB.class).mapNulls(false).byDefault().register();
-		factory.classMap(JobConfig.class, JobInfo.class).mapNulls(false).byDefault().register();
-		factory.classMap(JobConfig4DB.class, JobInfo.class).mapNulls(false).byDefault().register();
+		factory.classMap(JobConfig.class, JobConfig.class).mapNulls(false).byDefault().register();
 		return factory;
 	}
 

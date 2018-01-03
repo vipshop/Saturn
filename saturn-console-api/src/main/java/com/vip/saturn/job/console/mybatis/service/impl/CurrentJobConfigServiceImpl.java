@@ -5,8 +5,6 @@ import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
-import ma.glasnost.orika.MapperFacade;
-import ma.glasnost.orika.MapperFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -30,13 +28,6 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	private CurrentJobConfigRepository currentJobConfigRepo;
 	@Autowired
 	private SqlSessionFactory sqlSessionFactory;
-
-	private MapperFacade mapper;
-
-	@Autowired
-	public void setMapperFactory(MapperFactory mapperFactory) {
-		this.mapper = mapperFactory.getMapperFacade();
-	}
 
 	@Transactional(readOnly = false)
 	@Override
@@ -111,22 +102,16 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	@Override
 	public void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception {
-		// 拷贝出历史配置
-		JobConfig4DB history = mapper.map(oldJobConfig, JobConfig4DB.class);
-		// 将新配置覆盖更新至历史配置，新生成当前配置
-		JobConfig4DB current = mapper.map(oldJobConfig, JobConfig4DB.class);
-		mapper.map(newJobConfig, current);
-
 		// 持久化当前配置
 		if (userName != null) {
-			current.setLastUpdateBy(userName);
+			newJobConfig.setLastUpdateBy(userName);
 		}
-		current.setLastUpdateTime(new Date());
-		updateByPrimaryKey(current);
+		newJobConfig.setLastUpdateTime(new Date());
+		updateByPrimaryKey(newJobConfig);
 
 		// 持久化历史配置
-		history.setId(null);
-		historyJobConfigService.create(history);
+		oldJobConfig.setId(null);
+		historyJobConfigService.create(oldJobConfig);
 	}
 
 	@Transactional(readOnly = true)

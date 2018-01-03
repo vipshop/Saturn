@@ -36,6 +36,8 @@ public interface JobService {
 
 	void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
+	void copyJob(String namespace, JobConfig jobConfig, String copyingJobName) throws SaturnJobConsoleException;
+
 	int getMaxJobNum() throws SaturnJobConsoleException;
 
 	boolean jobIncExceeds(String namespace, int maxJobNum, int inc) throws SaturnJobConsoleException;

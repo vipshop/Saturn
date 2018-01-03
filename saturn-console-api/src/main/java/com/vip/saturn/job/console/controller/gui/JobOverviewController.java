@@ -215,6 +215,16 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
+	@PostMapping(value = "/copy-job")
+	public SuccessResponseEntity copyJob(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobNameCopied") @RequestParam String jobNameCopied, JobConfig jobConfig)
+			throws SaturnJobConsoleException {
+		jobService.copyJob(namespace, jobConfig, jobNameCopied);
+		return new SuccessResponseEntity();
+	}
+
+	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/import-jobs")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
 			@AuditParam("namespace") @RequestParam String namespace, @RequestParam("file") MultipartFile file)
