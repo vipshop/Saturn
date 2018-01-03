@@ -113,4 +113,29 @@ public final class JobNodePath {
 	public static String getServerSharding(final String jobName, final String executorName) {
 		return String.format("/%s/%s/servers/%s/sharding", $JOBS_NODE_NAME, jobName, executorName);
 	}
+
+	public static String getFailoverNodePath(final String jobName, final String item) {
+		return JobNodePath.getExecutionNodePath(jobName, item, "failover");
+	}
+
+	public static String getRunningNodePath(final String jobName, final String item) {
+		return JobNodePath.getExecutionNodePath(jobName, item, "running");
+	}
+
+	public static String getCompletedNodePath(final String jobName, final String item) {
+		return JobNodePath.getExecutionNodePath(jobName, item, "completed");
+	}
+
+	public static String getFailedNodePath(final String jobName, final String item) {
+		return JobNodePath.getExecutionNodePath(jobName, item, "failed");
+	}
+
+	public static String getTimeoutNodePath(final String jobName, final String item) {
+		return JobNodePath.getExecutionNodePath(jobName, item, "timeout");
+	}
+
+	public static String getEnabledReportNodePath(final String jobName) {
+		return JobNodePath.getConfigNodePath(jobName, "enabledReport");
+	}
+
 }
