@@ -174,7 +174,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 	public void removeExecutor(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		curatorFrameworkOp.deleteRecursive(ExecutorNodePath.getExecutorNodePath(executorName));
-		List<String> jobNames = jobService.getAllJobs(namespace);
+		List<String> jobNames = jobService.getAllJobNamesFromZK(namespace);
 
 		if (CollectionUtils.isEmpty(jobNames)) {
 			return;

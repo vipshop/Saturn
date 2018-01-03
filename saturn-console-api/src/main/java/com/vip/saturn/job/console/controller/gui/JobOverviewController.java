@@ -48,7 +48,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@GetMapping(value = "/jobs")
 	public SuccessResponseEntity getJobs(final HttpServletRequest request, @RequestParam String namespace)
 			throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(jobService.getJobs(namespace));
+		return new SuccessResponseEntity(jobService.getJobOverviewVo(namespace));
 	}
 
 	@GetMapping(value = "/groups")

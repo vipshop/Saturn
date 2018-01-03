@@ -1,13 +1,16 @@
 package com.vip.saturn.job.console.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
+import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
@@ -62,6 +65,9 @@ public class JobServiceImpl implements JobService {
 	@Resource
 	private SystemConfigService systemConfigService;
 
+	@Resource
+	private DashboardService dashboardService;
+
 	private MapperFacade mapper;
 
 	private Random random = new Random();
@@ -75,9 +81,11 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobInfo> getJobs(String namespace) throws SaturnJobConsoleException {
-		List<JobInfo> list = new ArrayList<>();
+	public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
+		JobOverviewVo jobOverviewVo = new JobOverviewVo();
 		try {
+			List<JobInfo> jobInfoList = new ArrayList<>();
+			int enabledNumber = 0;
 			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 			if (unSystemJobs != null) {
 				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -111,11 +119,38 @@ public class JobServiceImpl implements JobService {
 
 						updateJobInfoShardingList(curatorFrameworkOp, jobConfig.getJobName(), jobInfo);
 
-						list.add(jobInfo);
+						if (jobInfo.getEnabled()) {
+							enabledNumber++;
+						}
+						jobInfoList.add(jobInfo);
 					} catch (Exception e) {
 						log.error("list job " + jobConfig.getJobName() + " error", e);
 					}
 				}
+			}
+			jobOverviewVo.setJobs(jobInfoList);
+			jobOverviewVo.setEnabledNumber(enabledNumber);
+			jobOverviewVo.setTotalNumber(jobInfoList.size());
+
+			// 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
+			try {
+				RegistryCenterConfiguration conf = registryCenterService.findConfigByNamespace(namespace);
+				if (conf != null) {
+					SaturnStatistics saturnStatistics = dashboardService.allUnnormalJob(conf.getZkAddressList());
+					if (saturnStatistics != null) {
+						String result = saturnStatistics.getResult();
+						if (result != null) {
+							List<AbnormalJob> abnormalJobs = JSON.parseArray(result, AbnormalJob.class);
+							if (abnormalJobs != null) {
+								jobOverviewVo.setAbnormalNumber(abnormalJobs.size());
+							}
+						}
+					}
+				} else {
+					throw new SaturnJobConsoleException(String.format("没有找到该域（%s）的注册信息", namespace));
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -123,7 +158,7 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(e);
 		}
 
-		return list;
+		return jobOverviewVo;
 	}
 
 	private JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
@@ -1399,7 +1434,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<String> getAllJobs(String namespace) throws SaturnJobConsoleException {
+	public List<String> getAllJobNamesFromZK(String namespace) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		List<String> allJobs = new ArrayList<>();
