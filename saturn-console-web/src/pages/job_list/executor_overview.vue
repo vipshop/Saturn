@@ -65,10 +65,10 @@
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">
-                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-play-circle"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
-                                        <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-stop-circle"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
