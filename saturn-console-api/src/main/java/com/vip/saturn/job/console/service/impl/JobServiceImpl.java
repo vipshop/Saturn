@@ -3,13 +3,16 @@ package com.vip.saturn.job.console.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -1755,12 +1758,178 @@ public class JobServiceImpl implements JobService {
 
 	@Override
 	public void stopAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
+		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
 		String path = JobNodePath.getStopOneTimePath(jobName, executorName);
 		if (curatorFrameworkOp.checkExists(path)) {
 			curatorFrameworkOp.delete(path);
 		}
 		curatorFrameworkOp.create(path);
 	}
+
+	@Override
+	public List<ExecutionInfo> getExecutionStatus(String namespace, String jobName) throws SaturnJobConsoleException {
+		if (JobStatus.STOPPED.equals(getJobStatus(namespace, jobName))) {
+			return Lists.newArrayList();
+		}
+		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+		// update report node and sleep for 500ms
+		updateReportNodeAndWait(jobName, curatorFrameworkOp, 500L);
+		// 如果execution节点不存在则返回空List
+		if (!curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName))) {
+			return Lists.newArrayList();
+		}
+
+		List<ExecutionInfo> result = Lists.newArrayList();
+		Map<String, String> itemExecutorMap = getItem2ExecutorMap(jobName, curatorFrameworkOp);
+		for (String shardItem : itemExecutorMap.keySet()) {
+			result.add(buildExecutionInfo(jobName, shardItem, itemExecutorMap.get(shardItem),
+					curatorFrameworkOp));
+		}
+		Collections.sort(result);
+
+		return result;
+	}
+
+	private void updateReportNodeAndWait(String jobName, CuratorFrameworkOp curatorFrameworkOp, long sleepInMill) {
+		curatorFrameworkOp.update(JobNodePath.getReportPath(jobName), System.currentTimeMillis());
+		try {
+			Thread.sleep(sleepInMill);
+		} catch (InterruptedException e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private ExecutionInfo buildExecutionInfo(String jobName, String shardItem, String executorName,
+			CuratorFrameworkOp curatorFrameworkOp) {
+		ExecutionInfo executionInfo = new ExecutionInfo();
+		executionInfo.setJobName(jobName);
+		executionInfo.setItem(Integer.parseInt(shardItem));
+
+		setExecutorNameAndStatus(jobName, shardItem, executorName, curatorFrameworkOp, executionInfo);
+
+		// jobMsg
+		String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "jobMsg"));
+		executionInfo.setJobMsg(jobMsg);
+
+		// timeZone
+		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "timeZone"));
+		if (StringUtils.isBlank(timeZoneStr)) {
+			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
+		}
+		executionInfo.setTimeZone(timeZoneStr);
+		TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
+		// last begin time
+		String lastBeginTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "lastBeginTime"));
+		executionInfo
+				.setLastBeginTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(lastBeginTime, timeZone));
+		// next fire time
+		String nextFireTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "nextFireTime"));
+		executionInfo.setNextFireTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(nextFireTime, timeZone));
+		// last complete time
+		String lastCompleteTime = curatorFrameworkOp
+				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "lastCompleteTime"));
+		if (lastCompleteTime != null) {
+			long lastCompleteTimeLong = Long.parseLong(lastCompleteTime);
+			if (lastBeginTime == null) {
+				executionInfo.setLastCompleteTime(
+						SaturnConsoleUtils.parseMillisecond2DisplayTime(lastCompleteTime, timeZone));
+			} else {
+				long lastBeginTimeLong = Long.parseLong(lastBeginTime);
+				if (lastCompleteTimeLong >= lastBeginTimeLong) {
+					executionInfo.setLastCompleteTime(
+							SaturnConsoleUtils.parseMillisecond2DisplayTime(lastCompleteTime, timeZone));
+				}
+			}
+		}
+
+		return executionInfo;
+	}
+
+	private void setExecutorNameAndStatus(String jobName, String shardItem, String executorName,
+			CuratorFrameworkOp curatorFrameworkOp, ExecutionInfo executionInfo) {
+		boolean isEnabledReport = SaturnConsoleUtils.checkIfJobIsEnabledReport(jobName, curatorFrameworkOp);
+		if (!isEnabledReport) {
+			executionInfo.setExecutorName(executorName);
+			executionInfo.setStatus(ExecutionStatus.BLANK);
+			return;
+		}
+
+		String completedNodePath = JobNodePath.getCompletedNodePath(jobName, shardItem);
+		String completedData = curatorFrameworkOp.getData(completedNodePath);
+		if (completedData != null) {
+			executionInfo.setExecutorName(StringUtils.isBlank(completedData) ? executorName : completedData);
+			executionInfo.setStatus(
+					ExecutionStatus.getExecutionStatus(false, true, false, false, isEnabledReport));
+			return;
+		}
+
+		String runningNodePath = JobNodePath.getRunningNodePath(jobName, shardItem);
+		String runningData = curatorFrameworkOp.getData(runningNodePath);
+		if (runningData != null) {
+			executionInfo.setExecutorName(StringUtils.isBlank(runningData) ? executorName : runningData);
+			long mtime = curatorFrameworkOp.getMtime(runningNodePath);
+			executionInfo.setTimeConsumed((new Date().getTime() - mtime) / 1000);
+			executionInfo.setStatus(
+					ExecutionStatus.getExecutionStatus(true, false, false, false, isEnabledReport));
+			return;
+		}
+
+		String failedNodePath = JobNodePath.getFailedNodePath(jobName, shardItem);
+		if (curatorFrameworkOp.checkExists(failedNodePath)) {
+			executionInfo.setExecutorName(executorName);
+			executionInfo.setStatus(
+					ExecutionStatus.getExecutionStatus(false, false, true, false, isEnabledReport));
+			return;
+		}
+
+		String failoverNodePath = JobNodePath.getFailoverNodePath(jobName, shardItem);
+		String failoverData = curatorFrameworkOp.getData(failoverNodePath);
+		if (failoverData != null) {
+			executionInfo.setExecutorName(failoverData);
+			executionInfo.setFailover(true);
+			executionInfo.setStatus(
+					ExecutionStatus.getExecutionStatus(false, false, false, false, isEnabledReport));
+			return;
+		}
+
+		String timeoutNodePath = JobNodePath.getTimeoutNodePath(jobName, shardItem);
+		if (curatorFrameworkOp.checkExists(timeoutNodePath)) {
+			executionInfo.setExecutorName(executorName);
+			executionInfo.setStatus(
+					ExecutionStatus.getExecutionStatus(false, false, false, true, isEnabledReport));
+			return;
+		}
+	}
+
+	private Map<String, String> getItem2ExecutorMap(String jobName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+
+		String serverNodePath = JobNodePath.getServerNodePath(jobName);
+		List<String> servers = curatorFrameworkOp.getChildren(serverNodePath);
+
+		if (servers == null || servers.size() == 0) {
+			return Maps.newHashMap();
+		}
+
+		Map<String, String> resultMap = new HashMap<>();
+		for (String server : servers) {
+			String shardingData = curatorFrameworkOp.getData(JobNodePath.getServerSharding(jobName, server));
+			if (StringUtils.isBlank(shardingData)) {
+				continue;
+			}
+
+			String[] shardingValues = shardingData.split(",");
+			for (String value : shardingValues) {
+				if (StringUtils.isBlank(value)) {
+					continue;
+				}
+
+				resultMap.put(value.trim(), server);
+			}
+		}
+		return resultMap;
+	}
+
 }

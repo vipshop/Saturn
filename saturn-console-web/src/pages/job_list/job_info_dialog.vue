@@ -10,7 +10,7 @@
             </el-form-item>
             <el-form-item label="作业名" prop="jobName">
                 <el-col :span="18">
-                    <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob" :disabled="!isEditable"></el-input>
+                    <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType === 'JAVA_JOB'">
@@ -82,8 +82,8 @@ export default {
         if (valid) {
           if (this.jobInfoOperation === 'add') {
             this.jobInfoRequest('/console/job-overview/add-job');
-          } else if (this.jobInfoOperation === 'edit') {
-            this.jobInfoRequest('/console/job-overview/job-config');
+          } else if (this.jobInfoOperation === 'copy') {
+            console.log('copy');
           }
         }
       });
@@ -105,7 +105,7 @@ export default {
   },
   computed: {
     isEditable() {
-      return this.jobInfoOperation !== 'edit';
+      return this.jobInfoOperation !== 'copy';
     },
   },
 };

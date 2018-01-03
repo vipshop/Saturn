@@ -1,6 +1,7 @@
 <template>
     <div>
         <div class="top-bar">
+            <i class="fa fa-home"></i>
             <span>当前域：
                 <router-link tag="a" :to="{ name: 'job_overview', params: { domain: domain } }">{{this.domain}}</router-link>
             </span>

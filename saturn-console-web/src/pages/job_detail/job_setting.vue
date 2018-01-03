@@ -1,13 +1,13 @@
 <template>
-    <div class="page-content">
+    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
-                        基本配置<el-button size="small" type="primary" icon="el-icon-refresh" style="margin-left: 20px;">更新</el-button>
+                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" icon="el-icon-refresh" style="margin-left: 20px;">更新</el-button>
                     </template>
                     <div class="job-setting-content">
-                        <el-row>
+                        <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="jobClass" label="作业实现类" required>
                                     <el-input v-model="jobSettingInfo.jobClass"></el-input>
@@ -28,8 +28,8 @@
                         </el-row>
                         <el-row :gutter="30">
                             <el-col :span="11">
-                                <el-form-item prop="shardNum" label="作业分片数">
-                                    <el-input v-model="jobSettingInfo.shardNum"></el-input>
+                                <el-form-item prop="shardingTotalCount" label="作业分片数">
+                                    <el-input v-model="jobSettingInfo.shardingTotalCount"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
@@ -40,27 +40,32 @@
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="abc" label="分片序列号/参数对照表">
-                                    <el-input type="textarea" v-model="jobSettingInfo.abc"></el-input>
+                                <el-form-item prop="shardingItemParameters" label="分片序列号/参数对照表">
+                                    <el-input type="textarea" v-model="jobSettingInfo.shardingItemParameters"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="customParams" label="自定义参数">
-                                    <el-input type="textarea" v-model="jobSettingInfo.customParams"></el-input>
+                                <el-form-item prop="jobParameter" label="自定义参数">
+                                    <el-input type="textarea" v-model="jobSettingInfo.jobParameter"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row :gutter="30">
                             <el-col :span="11">
-                                <el-form-item prop="executor" label="优先executor">
-                                    <el-input v-model="jobSettingInfo.executor"></el-input>
+                                <el-form-item prop="preferList" label="优先executor">
+                                    <el-select filterable multiple v-model="jobSettingInfo.preferList">
+                                        <el-option v-for="item in preferListArray" :label="item.executorName" :value="item.executorName" :key="item.executorName">
+                                            <span style="float: left">{{ item.executorName }}</span>
+                                            <span style="float: left">({{ statusOnline[item.type] }})</span>
+                                        </el-option>
+                                    </el-select>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="onlyExecutor" label="只使用优先executor">
-                                    <el-switch v-model="jobSettingInfo.localMode"></el-switch>
+                                <el-form-item prop="useDispreferList" label="只使用优先executor">
+                                    <el-switch v-model="jobSettingInfo.useDispreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -71,56 +76,58 @@
                     <div class="job-setting-content">
                         <el-row>
                             <el-col :span="11">
-                                <el-form-item prop="timeoutAlarm" label="超时告警(秒)">
-                                    <el-input v-model="jobSettingInfo.timeoutAlarm"></el-input>
+                                <el-form-item prop="timeout4AlarmSeconds" label="超时告警(秒)">
+                                    <el-input v-model="jobSettingInfo.timeout4AlarmSeconds"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="timeoutKill" label="超时强杀(秒)">
-                                    <el-input v-model="jobSettingInfo.timeoutKill"></el-input>
+                                <el-form-item prop="timeoutSeconds" label="超时强杀(秒)">
+                                    <el-input v-model="jobSettingInfo.timeoutSeconds"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="group" label="所属分组">
-                                    <el-input v-model="jobSettingInfo.group"></el-input>
+                                <el-form-item prop="groups" label="所属分组">
+                                    <el-input v-model="jobSettingInfo.groups"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="11">
-                                <el-form-item prop="load" label="作业负荷">
-                                    <el-input v-model="jobSettingInfo.load"></el-input>
+                                <el-form-item prop="loadLevel" label="作业负荷">
+                                    <el-input v-model="jobSettingInfo.loadLevel"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="processInteval" label="统计处理间隔">
-                                    <el-input v-model="jobSettingInfo.processInteval"></el-input>
+                                <el-form-item prop="processCountIntervalSeconds" label="统计处理间隔">
+                                    <el-input v-model="jobSettingInfo.processCountIntervalSeconds"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="11">
                                 <el-form-item prop="timeZone" label="时区">
-                                    <el-input v-model="jobSettingInfo.timeZone"></el-input>
+                                    <el-select filterable v-model="jobSettingInfo.timeZone">
+                                        <el-option v-for="item in timeZones" :label="item" :value="item" :key="item"></el-option>
+                                    </el-select>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="dependJob" label="依赖作业">
-                                    <el-input v-model="jobSettingInfo.dependJob"></el-input>
+                                <el-form-item prop="dependencies" label="依赖作业">
+                                    <el-input v-model="jobSettingInfo.dependencies"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="11">
-                                <el-form-item prop="consoleOutputLog" label="显示控制台输出日志">
-                                    <el-switch v-model="jobSettingInfo.consoleOutputLog"></el-switch>
+                                <el-form-item prop="showNormalLog" label="显示控制台输出日志">
+                                    <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="operateStatus" label="上报运行状态">
-                                    <el-switch v-model="jobSettingInfo.operateStatus"></el-switch>
+                                <el-form-item prop="enabledReport" label="上报运行状态">
+                                    <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -134,30 +141,50 @@
 export default {
   data() {
     return {
+      loading: false,
+      domainName: this.$route.params.domain,
+      jobName: this.$route.params.jobName,
       activeNames: ['1'],
-      jobSettingInfo: {
-        jobClass: '',
-        cron: '',
-        shardNum: '',
-        localMode: true,
-        abc: '',
-        customParams: '',
-        executor: '',
-        onlyExecutor: true,
-        timeoutAlarm: 10,
-        timeoutKill: 10,
-        group: '',
-        load: 2,
-        processInteval: 200,
-        timeZone: '',
-        dependJob: '',
-        consoleOutputLog: true,
-        operateStatus: false,
-      },
+      jobSettingInfo: {},
+      preferListArray: [],
+      timeZones: [],
       rules: {
         jobClass: [{ required: true, message: '作业实现类不能为空', trigger: 'blur' }],
       },
+      statusOnline: {
+        ONLINE: '在线',
+        OFFLINE: '离线',
+      },
     };
+  },
+  methods: {
+    getJobSettingInfo() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.loading = true;
+      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+        this.jobSettingInfo = JSON.parse(JSON.stringify(data));
+        this.preferListArray = JSON.parse(JSON.stringify(data.preferListProvided));
+        this.timeZones = JSON.parse(JSON.stringify(data.timeZonesProvided));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
+    },
+    updateInfo() {
+      this.$set(this.jobSettingInfo, 'namespace', this.domainName);
+      this.$http.post('/console/job-overview/job-config', this.jobSettingInfo).then(() => {
+        this.getJobSettingInfo();
+        this.$message.successNotify('更新作业操作成功');
+      })
+      .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
+    },
+  },
+  created() {
+    this.getJobSettingInfo();
   },
 };
 </script>

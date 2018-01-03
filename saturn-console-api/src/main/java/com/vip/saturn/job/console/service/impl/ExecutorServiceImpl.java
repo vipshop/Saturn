@@ -211,12 +211,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	private CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
-		CuratorFrameworkOp curatorFrameworkOp;
-		try {
-			curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-		} catch (SaturnJobConsoleException e) {
-			throw new SaturnJobConsoleException("No CuratorFramework found for namespace:" + namespace);
-		}
-		return curatorFrameworkOp;
+		return registryCenterService.getCuratorFrameworkOp(namespace);
 	}
 }
