@@ -64,6 +64,7 @@
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-exec.version>1.3</commons-exec.version>
 		<commons-lang3.version>3.7</commons-lang3.version>
+		<joda-time.version>2.9.9</joda-time.version>
 
 		<slf4j.version>1.7.7</slf4j.version>
 		<logback.version>1.1.7</logback.version>
@@ -188,6 +189,12 @@
 				<groupId>net.sourceforge.jexcelapi</groupId>
 				<artifactId>jxl</artifactId>
 				<version>${jxl.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>${joda-time.version}</version>
 			</dependency>
 			<!-- common end -->
 			<!-- ZK Client begin -->
