@@ -284,6 +284,52 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 	}
 
+	@GetMapping(value = "/export-jobs-template")
+	public void exportJobs(final HttpServletRequest request, final HttpServletResponse response)
+			throws SaturnJobConsoleException {
+		try {
+			InputStream is = getClass().getResourceAsStream("/download/jobs-template.xls");
+			if (is == null) {
+				throw new SaturnJobConsoleGUIException("The jobs-template is not existing");
+			}
+
+			response.setContentType("application/octet-stream");
+			response.setHeader("Content-disposition",
+					"attachment; filename=" + new String("jobs-template.xls".getBytes("UTF-8"), "ISO8859-1"));
+
+			BufferedInputStream bis = null;
+			BufferedOutputStream bos = null;
+			try {
+				bis = new BufferedInputStream(is);
+				bos = new BufferedOutputStream(response.getOutputStream());
+				byte[] buff = new byte[2048];
+				int bytesRead;
+				while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+					bos.write(buff, 0, bytesRead);
+				}
+			} finally {
+				if (bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+				if (bos != null) {
+					try {
+						bos.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleGUIException(e);
+		}
+	}
+
 	/**
 	 * 获取该作业可选择的优先Executor
 	 */
