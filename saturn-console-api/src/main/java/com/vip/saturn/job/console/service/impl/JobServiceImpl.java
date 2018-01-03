@@ -565,7 +565,7 @@ public class JobServiceImpl implements JobService {
 		JobConfig4DB newJobConfig = mapper.map(oldJobConfig, JobConfig4DB.class);
 		newJobConfig.setPreferList(preferList);
 		try {
-			currentJobConfigService.updateConfigAndSave2History(newJobConfig, oldJobConfig, null);
+			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change preferList in db", e);
 			throw new SaturnJobConsoleException(e);
@@ -1418,8 +1418,11 @@ public class JobServiceImpl implements JobService {
 
 	@Override
 	public JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException {
-
-		return null;
+		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig == null) {
+			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
+		}
+		return mapper.map(jobConfig, JobConfig.class);
 	}
 
 	@Override
@@ -1431,6 +1434,118 @@ public class JobServiceImpl implements JobService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		return getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
+	}
+
+	@Override
+	public JobInfo getJobInfo(String namespace, String jobName) throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig == null) {
+			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
+		}
+		JobInfo jobInfo = mapper.map(jobConfig, JobInfo.class);
+		jobInfo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
+		jobInfo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
+
+		List<String> unSystemJobNames = getUnSystemJobNames(namespace);
+		if (unSystemJobNames != null) {
+			unSystemJobNames.remove(jobName);
+			jobInfo.setDependenciesProvided(unSystemJobNames);
+		}
+
+		return jobInfo;
+	}
+
+	@Transactional
+	@Override
+	public void updateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = currentJobConfigService
+				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
+		if (jobConfig4DB == null) {
+			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobConfig.getJobName()));
+		}
+		jobConfig.setDefaultValues();
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		BooleanWrapper bw = new BooleanWrapper(false);
+		CuratorRepository.CuratorFrameworkOp.CuratorTransactionOp curatorTransactionOp = null;
+		try {
+			curatorTransactionOp = curatorFrameworkOp.inTransaction()
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "jobMode"),
+							jobConfig.getJobMode(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "shardingTotalCount"),
+							jobConfig.getShardingTotalCount(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "loadLevel"),
+							jobConfig.getLoadLevel(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "jobDegree"),
+							jobConfig.getJobDegree(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "enabledReport"),
+							jobConfig.getEnabledReport(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "timeZone"),
+							StringUtils.trim(jobConfig.getTimeZone()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "cron"),
+							StringUtils.trim(jobConfig.getCron()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "pausePeriodDate"),
+							jobConfig.getPausePeriodDate(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "pausePeriodTime"),
+							jobConfig.getPausePeriodTime(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "shardingItemParameters"),
+							jobConfig.getShardingItemParameters(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "jobParameter"),
+							jobConfig.getJobParameter(), bw)
+					.replaceIfchanged(
+							JobNodePath.getConfigNodePath(jobConfig.getJobName(), "processCountIntervalSeconds"),
+							jobConfig.getProcessCountIntervalSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "timeout4AlarmSeconds"),
+							jobConfig.getTimeout4AlarmSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "timeoutSeconds"),
+							jobConfig.getTimeoutSeconds(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "dependencies"),
+							jobConfig.getDependencies(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "groups"),
+							jobConfig.getGroups(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "description"),
+							jobConfig.getDescription(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "channelName"),
+							StringUtils.trim(jobConfig.getChannelName()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "queueName"),
+							StringUtils.trim(jobConfig.getQueueName()), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "showNormalLog"),
+							jobConfig.getShowNormalLog(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "preferList"),
+							jobConfig.getPreferList(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "useDispreferList"),
+							jobConfig.getUseDispreferList(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "failover"),
+							jobConfig.getFailover(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "localMode"),
+							jobConfig.getLocalMode(), bw)
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "useSerial"),
+							jobConfig.getUseSerial(), bw);
+			// 当enabledReport关闭上报时，要清理execution节点
+			if (jobConfig.getEnabledReport() != null && !jobConfig.getEnabledReport()) {
+				log.info("the switch of enabledReport set to false, now deleteJob the execution zk node");
+				String executionNodePath = JobNodePath.getExecutionNodePath(jobConfig.getJobName());
+				if (curatorFrameworkOp.checkExists(executionNodePath)) {
+					curatorFrameworkOp.deleteRecursive(executionNodePath);
+				}
+			}
+		} catch (Exception e) {
+			log.error("update settings to zk failed: {}", e);
+			throw new SaturnJobConsoleException(e);
+		}
+		try {
+			// config changed, update current config and save a copy to history config.
+			if (bw.isValue()) {
+				JobConfig4DB newJobConfig4DB = mapper.map(jobConfig, JobConfig4DB.class);
+				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
+			}
+			if (curatorTransactionOp != null) {
+				curatorTransactionOp.commit();
+			}
+		} catch (Exception e) {
+			log.error("update settings to db failed: {}", e);
+			throw new SaturnJobConsoleException(e);
+		}
 	}
 
 	@Override
@@ -1522,7 +1637,7 @@ public class JobServiceImpl implements JobService {
 		}
 
 		try {
-			currentJobConfigService.updateConfigAndSave2History(newCurrentJobConfig, oldCurrentJobConfig, null);
+			currentJobConfigService.updateNewAndSaveOld2History(newCurrentJobConfig, oldCurrentJobConfig, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change job state in db", e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);

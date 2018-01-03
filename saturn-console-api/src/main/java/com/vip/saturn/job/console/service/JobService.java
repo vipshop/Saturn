@@ -56,13 +56,20 @@ public interface JobService {
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	JobInfo getJobInfo(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	void updateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
 	List<String> getAllJobNamesFromZK(String namespace) throws SaturnJobConsoleException;
 
-	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext) throws SaturnJobConsoleException;
+	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
+			throws SaturnJobConsoleException;
 
 	List<JobServer> getJobServers(String namespace, String jobName) throws SaturnJobConsoleException;
+
 	// TODO
 	void runAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
+
 	// TODO
 	void stopAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
 }

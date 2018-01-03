@@ -30,7 +30,7 @@ public interface CurrentJobConfigService {
 
 	List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception;
 
-	void updateConfigAndSave2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
+	void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception;
 
 	int deleteAll(int limitNum);

@@ -330,6 +330,22 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 	}
 
+	@GetMapping(value = "/job-config")
+	public SuccessResponseEntity getJobConfig(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getJobInfo(namespace, jobName));
+	}
+
+	@Audit(type = AuditType.WEB)
+	@PostMapping(value = "/job-config")
+	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
+			@AuditParam("namespace") @RequestParam String namespace, JobConfig jobConfig)
+			throws SaturnJobConsoleException {
+		jobService.updateJobConfig(namespace, jobConfig);
+		return new SuccessResponseEntity();
+	}
+
 	/**
 	 * 获取该作业可选择的优先Executor
 	 */

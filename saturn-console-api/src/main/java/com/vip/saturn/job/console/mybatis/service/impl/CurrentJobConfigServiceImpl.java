@@ -1,7 +1,7 @@
 package com.vip.saturn.job.console.mybatis.service.impl;
 
-import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
@@ -109,14 +109,22 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Transactional
 	@Override
-	public void updateConfigAndSave2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
+	public void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception {
+		// 拷贝出历史配置
 		JobConfig4DB history = mapper.map(oldJobConfig, JobConfig4DB.class);
+		// 将新配置覆盖更新至历史配置，新生成当前配置
+		JobConfig4DB current = mapper.map(oldJobConfig, JobConfig4DB.class);
+		mapper.map(newJobConfig, current);
+
+		// 持久化当前配置
 		if (userName != null) {
-			history.setLastUpdateBy(userName);
+			current.setLastUpdateBy(userName);
 		}
-		newJobConfig.setLastUpdateTime(new Date());
-		updateByPrimaryKey(newJobConfig);
+		current.setLastUpdateTime(new Date());
+		updateByPrimaryKey(current);
+
+		// 持久化历史配置
 		history.setId(null);
 		historyJobConfigService.create(history);
 	}
