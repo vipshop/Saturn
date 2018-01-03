@@ -232,8 +232,8 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@GetMapping(value = "/export-job")
-	public void exportJob(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
+	@GetMapping(value = "/export-jobs")
+	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
 			final HttpServletResponse response)
 			throws SaturnJobConsoleException {
 		File exportJobFile = null;
