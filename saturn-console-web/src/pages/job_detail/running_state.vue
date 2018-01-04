@@ -28,8 +28,8 @@
                 <el-table-column prop="executorName" label="Executor"></el-table-column>
                 <el-table-column label="最近执行时间">
                     <template slot-scope="scope"> 
-                        <span>起:{{scope.row.lastBeginTime || '——'}}</span>
-                        <span>止:{{scope.row.lastCompleteTime || '——'}}</span>
+                        <div>起:{{scope.row.lastBeginTime || ' ——'}}</div>
+                        <div>止:{{scope.row.lastCompleteTime || ' ——'}}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="nextFireTime" label="下次开始时间"></el-table-column>
