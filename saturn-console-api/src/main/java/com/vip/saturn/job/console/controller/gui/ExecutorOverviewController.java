@@ -12,8 +12,12 @@ import com.vip.saturn.job.console.service.ExecutorService;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author kfchu
  */
 @Controller
-@RequestMapping("/console/executor-overview")
+@RequestMapping("/console/{namespace}/executors")
 public class ExecutorOverviewController extends AbstractGUIController {
 
 	private static final String TRAFFIC_OPERATION_EXTRACT = "extract";
@@ -37,18 +41,23 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 获取域下所有executor基本信息
 	 */
-	@GetMapping(value = "/executors")
+	@GetMapping
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
-			@RequestParam String namespace) throws SaturnJobConsoleException {
+			@PathVariable String namespace, @RequestParam(required = false) String status)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isNotBlank(status) && "online".equals(status.toLowerCase())) {
+			return new SuccessResponseEntity(executorService.getExecutors(namespace, ServerStatus.ONLINE));
+		}
+
 		return new SuccessResponseEntity(executorService.getExecutors(namespace));
 	}
 
 	/**
 	 * 获取executor被分配的作业分片信息
 	 */
-	@GetMapping(value = "/executor-allocation")
+	@GetMapping(value = "/{executorName}/allocation")
 	public SuccessResponseEntity getExecutorAllocation(final HttpServletRequest request,
-			@RequestParam String namespace, @RequestParam String executorName) throws SaturnJobConsoleException {
+			@PathVariable String namespace, @PathVariable String executorName) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(executorService.getExecutorAllocation(namespace, executorName));
 	}
 
@@ -56,9 +65,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键重排
 	 */
 	@Audit
-	@PostMapping(value = "/shard-all")
+	@PostMapping(value = "/shardAll")
 	public SuccessResponseEntity shardAll(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace)
+			@AuditParam("namespace") @PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		executorService.shardAll(namespace);
 		return new SuccessResponseEntity();
@@ -68,10 +77,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 *	摘流量与流量恢复，其中executor必须online
 	 */
 	@Audit
-	@PostMapping(value = "/traffic")
+	@PostMapping(value = "/{executorName}/traffic")
 	public SuccessResponseEntity extractOrRecoverTraffic(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("executorName") @RequestParam String executorName,
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("executorName") @PathVariable String executorName,
 			@AuditParam("operation") @RequestParam String operation)
 			throws SaturnJobConsoleException {
 		// check executor is existed and online.
@@ -85,9 +94,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 *	批量摘流量与流量恢复，其中executor必须online
 	 */
 	@Audit
-	@PostMapping(value = "/traffic-batch")
+	@PostMapping(value = "/traffic")
 	public SuccessResponseEntity batchExtractOrRecoverTraffic(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorNames") @RequestParam List<String> executorNames,
 			@AuditParam("operation") @RequestParam String operation)
 			throws SaturnJobConsoleException {
@@ -130,10 +139,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 移除executor
 	 */
 	@Audit
-	@PostMapping(value = "/remove-executor")
+	@DeleteMapping(value = "/{executorName}")
 	public SuccessResponseEntity removeExecutor(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("executorName") @RequestParam String executorName)
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("executorName") @PathVariable String executorName)
 			throws SaturnJobConsoleException {
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.OFFLINE, "Executor在线，不能移除");
@@ -145,9 +154,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 批量移除executor
 	 */
 	@Audit
-	@PostMapping(value = "/remove-executor-batch")
+	@DeleteMapping
 	public SuccessResponseEntity batchRemoveExecutors(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorNames") @RequestParam List<String> executorNames)
 			throws SaturnJobConsoleException {
 		// check executor is existed and online.
@@ -187,10 +196,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键Dump，包括threadump和gc.log。
 	 */
 	@Audit
-	@PostMapping(value = "/dump")
+	@PostMapping(value = "/{executorName}/dump")
 	public SuccessResponseEntity dump(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("executorName") @RequestParam String executorName)
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("executorName") @PathVariable String executorName)
 			throws SaturnJobConsoleException {
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以dump");

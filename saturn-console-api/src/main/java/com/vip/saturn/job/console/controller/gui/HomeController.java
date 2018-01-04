@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -22,10 +23,10 @@ import java.util.List;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/home")
+@RequestMapping("/console/namespaces")
 public class HomeController extends AbstractGUIController {
 
-	@GetMapping(value = "/namespaces")
+	@GetMapping
 	public SuccessResponseEntity getNamespaces(final HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		List<String> namespaceList = new ArrayList<>();
@@ -36,8 +37,8 @@ public class HomeController extends AbstractGUIController {
 		return new SuccessResponseEntity(namespaceList);
 	}
 
-	@GetMapping(value = "/namespace")
-	public SuccessResponseEntity getNamespace(final HttpServletRequest request, @RequestParam String namespace)
+	@GetMapping(value = "/{namespace}")
+	public SuccessResponseEntity getNamespace(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
