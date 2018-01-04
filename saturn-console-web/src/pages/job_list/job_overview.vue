@@ -66,7 +66,7 @@
                             </el-table-column>
                             <el-table-column label="状态" prop="status" sortable>
                                 <template slot-scope="scope"> 
-                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{scope.row.status}}</el-tag>
+                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" sortable></el-table-column>
@@ -145,6 +145,12 @@ export default {
         RUNNING: 'success',
         STOPPING: 'warning',
         STOPPED: 'warning',
+      },
+      translateStatus: {
+        READY: '准备中',
+        RUNNING: '运行中',
+        STOPPING: '停止中',
+        STOPPED: '已停止',
       },
       total: 0,
       multipleSelection: [],
