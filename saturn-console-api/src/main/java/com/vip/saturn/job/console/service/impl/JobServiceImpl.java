@@ -1457,11 +1457,11 @@ public class JobServiceImpl implements JobService {
 
 	@Override
 	public JobInfo getJobInfo(String namespace, String jobName) throws SaturnJobConsoleException {
-		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
-		if (jobConfig == null) {
+		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
 		}
-		JobInfo jobInfo = mapper.map(jobConfig, JobInfo.class);
+		JobInfo jobInfo = mapper.map(jobConfig4DB, JobInfo.class);
 		jobInfo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
 		jobInfo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
 
