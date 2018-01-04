@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author kfchu
  */
 @Controller
-@RequestMapping("/console/{namespace}/executors")
+@RequestMapping("/console/{namespace:.+}/executors")
 public class ExecutorOverviewController extends AbstractGUIController {
 
 	private static final String TRAFFIC_OPERATION_EXTRACT = "extract";

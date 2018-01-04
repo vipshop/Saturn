@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author kfchu
  */
 @Controller
-@RequestMapping("/console/{namespace}/jobs/{jobName}/execution")
+@RequestMapping("/console/{namespace:.+}/jobs/{jobName}/execution")
 public class JobExecutionController extends AbstractGUIController {
 
 	@Resource

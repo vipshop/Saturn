@@ -36,7 +36,7 @@ import java.util.*;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{namespace}/jobs")
+@RequestMapping("/console/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 
 	private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
@@ -70,7 +70,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(dependencyJobs);
 	}
 
-	@GetMapping(value = "/batchDependency")
+	@GetMapping(value = "/dependency")
 	public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request,
 			@PathVariable String namespace,
 			@RequestParam List<String> jobNames)
@@ -86,14 +86,14 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取依赖该作业的所有作业
 	 */
-	@GetMapping(value = "/{jobName}/dependedJobs")
+	@GetMapping(value = "/{jobName}/beDependedJobs")
 	public SuccessResponseEntity getDependedJobs(final HttpServletRequest request,
 			@PathVariable String namespace, @PathVariable String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
 		return new SuccessResponseEntity(dependedJobs);
 	}
 
-	@GetMapping(value = "/dependedJobs")
+	@GetMapping(value = "/beDependedJobs")
 	public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request,
 			@PathVariable String namespace, @RequestParam List<String> jobNames)
 			throws SaturnJobConsoleException {
@@ -209,7 +209,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/jobs")
-	public SuccessResponseEntity addJob(final HttpServletRequest request,
+	public SuccessResponseEntity createJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		jobService.addJob(namespace, jobConfig);

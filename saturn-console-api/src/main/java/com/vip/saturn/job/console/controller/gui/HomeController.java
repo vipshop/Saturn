@@ -37,7 +37,7 @@ public class HomeController extends AbstractGUIController {
 		return new SuccessResponseEntity(namespaceList);
 	}
 
-	@GetMapping(value = "/{namespace}")
+	@GetMapping(value = "/{namespace:.+}")
 	public SuccessResponseEntity getNamespace(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService

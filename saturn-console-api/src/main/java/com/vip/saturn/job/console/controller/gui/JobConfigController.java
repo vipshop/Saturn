@@ -21,13 +21,13 @@ import javax.servlet.http.HttpServletRequest;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{namespace}/jobs")
+@RequestMapping("/console/{namespace:.+}/jobs/{jobName}/config")
 public class JobConfigController extends AbstractGUIController {
 
 	@Resource
 	private JobService jobService;
 
-	@GetMapping(value = "/{jobName}/config")
+	@GetMapping
 	public SuccessResponseEntity getJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
@@ -35,7 +35,7 @@ public class JobConfigController extends AbstractGUIController {
 	}
 
 	@Audit(type = AuditType.WEB)
-	@PostMapping(value = "/{jobName}/config")
+	@PostMapping
 	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName, JobConfig jobConfig)
