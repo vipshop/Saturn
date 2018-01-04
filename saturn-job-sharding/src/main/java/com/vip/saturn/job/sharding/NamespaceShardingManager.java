@@ -143,8 +143,8 @@ public class NamespaceShardingManager {
 		if (curatorFramework.checkExists().forPath(path) == null) {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
-			} catch (KeeperException.NodeExistsException e) {
-				log.info("node {} already existed, so skip creation", path); // NOSONAR
+			} catch (KeeperException.NodeExistsException e) {// NOSONAR
+				log.info("node {} already existed, so skip creation", path);
 			}
 		}
 	}
