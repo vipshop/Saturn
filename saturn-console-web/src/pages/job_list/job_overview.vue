@@ -257,7 +257,7 @@ export default {
         namespace: this.domainName,
         jobName: row.jobName,
       };
-      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+      this.$http.get('/console/job-detail/config/get-config', params).then((data) => {
         const jobCopyInfo = {
           jobType: data.jobType,
           jobName: '',
