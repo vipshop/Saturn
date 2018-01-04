@@ -1,7 +1,7 @@
 <template>
     <div class="my-sider">
         <el-container>
-            <el-aside :width="siderWidth">
+            <el-aside :width="siderWidth" style="background-color: #283340;">
                 <div class="page-sidebar-container">
                   <div class="page-sidebar" :class="{collapse: collapse}" :style="sidebarHeight">
                     <el-menu mode="vertical" default-active="1" :router="true">
@@ -70,6 +70,13 @@
         }
         return w;
       },
+    },
+    mounted() {
+      this.sidebarHeight.height = document.documentElement.clientHeight - 90;
+      const that = this;
+      window.onresize = function temp() {
+        that.sidebarHeight.height = document.documentElement.clientHeight - 90;
+      };
     },
   };
 </script>

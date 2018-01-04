@@ -9,6 +9,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,23 +21,24 @@ import javax.servlet.http.HttpServletRequest;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/job-detail/config")
+@RequestMapping("/console/{namespace}/jobs")
 public class JobConfigController extends AbstractGUIController {
 
 	@Resource
 	private JobService jobService;
 
-	@GetMapping(value = "/get-config")
+	@GetMapping(value = "/{jobName}/config")
 	public SuccessResponseEntity getJobConfig(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(jobService.getJobConfigVo(namespace, jobName));
 	}
 
 	@Audit(type = AuditType.WEB)
-	@PostMapping(value = "/update-config")
+	@PostMapping(value = "/{jobName}/config")
 	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace, JobConfig jobConfig)
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		jobService.updateJobConfig(namespace, jobConfig);
 		return new SuccessResponseEntity();
