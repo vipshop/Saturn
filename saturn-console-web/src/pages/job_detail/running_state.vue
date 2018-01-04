@@ -3,33 +3,40 @@
         <div class="page-table">
             <div class="page-table-header">
                 <div class="page-table-header-title"><i class="fa fa-list"></i>运行状态
-                    <el-button type="text" @click="handleRefresh()"><i class="fa fa-refresh"></i></el-button>
+                    <el-button type="text" @click="getJobExecutors()"><i class="fa fa-refresh"></i></el-button>
                 </div>
                 <div class="page-table-header-separator"></div>
                 <div>
                     <span class="refresh-text">自动刷新：</span>
-                    <el-select v-model="autoRefreshTime" placeholder="请选择" size="mini" style="width: 120px;">
-                        <el-option value="30" label="30秒"></el-option>
+                    <el-select v-model="autoRefreshTime" placeholder="请选择" size="mini" style="width: 120px;" @change="refreshExecutions">
+                        <el-option v-for="item in refreshTimes" :value="item.value" :label="item.label" :key="item.value"></el-option>
                     </el-select>
                 </div>
             </div>
-            <el-table stripe :data="tableData" style="width: 100%">
-                <el-table-column prop="shard" label="分片项"></el-table-column>
+            <el-table stripe border :data="executions" style="width: 100%">
+                <el-table-column prop="item" label="分片项"></el-table-column>
                 <el-table-column label="状态">
                     <template slot-scope="scope"> 
-                        <el-tag :type="scope.row.status ? 'success' : 'danger'" close-transition>{{scope.row.status}}</el-tag>
+                        <el-tag :type="statusTag[scope.row.status]">{{translateStatus[scope.row.status]}}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="executor" label="Executor"></el-table-column>
-                <el-table-column prop="executeTime" label="最近执行时间"></el-table-column>
-                <el-table-column prop="nextTime" label="下次开始时间"></el-table-column>
-                <el-table-column label="操作" width="80px">
-                    <template slot-scope="scope">
-                        <el-tooltip content="分片返回信息" placement="top">
-                            <el-button type="text" @click=""><i class="fa fa-reply-all"></i></el-button>
-                        </el-tooltip>
+                <el-table-column prop="jobMsg" label="分片返回信息" width="180px" show-overflow-tooltip>
+                    <template slot-scope="scope"> 
+                        {{scope.row.jobMsg}}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="executorName" label="Executor"></el-table-column>
+                <el-table-column label="最近执行时间">
+                    <template slot-scope="scope"> 
+                        <span>起:{{scope.row.lastBeginTime || '——'}}</span>
+                        <span>止:{{scope.row.lastCompleteTime || '——'}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="nextFireTime" label="下次开始时间"></el-table-column>
+                <el-table-column label="日志" width="50px" align="center">
+                    <template slot-scope="scope"> 
                         <el-tooltip content="查看日志" placement="top">
-                            <el-button type="text" @click=""><i class="fa fa-file-text-o"></i></el-button>
+                            <el-button type="text" @click="getLog(scope.row)"><i class="fa fa-file-text-o"></i></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -41,29 +48,71 @@
 export default {
   data() {
     return {
-      autoRefreshTime: '30',
-      tableData: [{
-        shard: '0',
-        status: true,
-        executor: '123',
-        executeTime: '2017-01-12',
-        nextTime: '2017-01-12',
+      domainName: this.$route.params.domain,
+      jobName: this.$route.params.jobName,
+      autoRefreshTime: 30000,
+      refreshTimes: [{
+        label: '15秒',
+        value: 15000,
       }, {
-        shard: '1',
-        status: false,
-        executor: '123',
-        executeTime: '2017-01-12',
-        nextTime: '2017-01-12',
+        label: '30秒',
+        value: 30000,
       }, {
-        shard: '2',
-        status: true,
-        executor: '123',
-        executeTime: '2017-01-12',
-        nextTime: '2017-01-12',
+        label: '60秒',
+        value: 60000,
       }],
+      statusTag: {
+        RUNNING: 'success',
+        COMPLETED: 'primary',
+        FAILED: 'danger',
+        TIMEOUT: 'warning',
+        PENDING: 'warning',
+      },
+      translateStatus: {
+        RUNNING: '运行',
+        COMPLETED: '完成',
+        FAILED: '失败',
+        TIMEOUT: '超时',
+        PENDING: '未知',
+      },
+      executions: [],
+      interval: 0,
     };
   },
   methods: {
+    getLog(row) {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+        jobItem: row.item,
+      };
+      this.$http.get('/console/job/execution/log', params).then((data) => {
+        console.log(data);
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取日志请求失败！'); });
+    },
+    refreshExecutions() {
+      this.interval = setInterval(() => {
+        this.getJobExecutors();
+      }, this.autoRefreshTime);
+    },
+    getJobExecutors() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$http.get('/console/job/execution/status', params).then((data) => {
+        this.executions = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业运行状态请求失败！'); });
+    },
+  },
+  created() {
+    this.getJobExecutors();
+    this.refreshExecutions();
+  },
+  destroyed() {
+    clearInterval(this.interval);
   },
 };
 </script>
