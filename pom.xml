@@ -78,6 +78,8 @@
 		<javaee-web-api.version>7.0</javaee-web-api.version>
 		<javax.servlet-api.version>3.1.0</javax.servlet-api.version>
 
+		<swagger.version>2.4.0</swagger.version>
+
 		<junit.version>4.12</junit.version>
 		<assertj.version>1.7.1</assertj.version>
 		<unitils.core.version>3.4.2</unitils.core.version>
@@ -371,6 +373,21 @@
 				<version>${druid.version}</version>
 			</dependency>
 			<!-- DB end -->
+
+			<!-- Swagger begin -->
+			<dependency>
+				<groupId>io.springfox</groupId>
+				<artifactId>springfox-swagger2</artifactId>
+				<version>${swagger.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.springfox</groupId>
+				<artifactId>springfox-swagger-ui</artifactId>
+				<version>${swagger.version}</version>
+			</dependency>
+			<!-- Swagger end -->
+
 
 			<!-- Test begin -->
 			<dependency>

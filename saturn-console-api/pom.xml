@@ -217,6 +217,13 @@
 		</dependency>
 		<!-- Http Client End -->
 
+		<!-- Swagger Begin -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+		</dependency>
+		<!-- Swagger End -->
+
 		<!-- Test Begin -->
 		<dependency>
 			<groupId>javax.servlet</groupId>

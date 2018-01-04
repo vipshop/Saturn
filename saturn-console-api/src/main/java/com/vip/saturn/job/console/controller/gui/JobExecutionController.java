@@ -1,8 +1,11 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
@@ -26,12 +29,14 @@ public class JobExecutionController extends AbstractGUIController {
 	/**
 	 * 获取作业执行状态
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/status")
 	public SuccessResponseEntity getExecutionStatus(final HttpServletRequest request, @PathVariable String namespace,
 			@PathVariable String jobName) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(jobService.getExecutionStatus(namespace, jobName));
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/log")
 	public SuccessResponseEntity getExecutionLog(final HttpServletRequest request, @PathVariable String namespace,
 			@PathVariable String jobName, @RequestParam String jobItem) throws SaturnJobConsoleException {

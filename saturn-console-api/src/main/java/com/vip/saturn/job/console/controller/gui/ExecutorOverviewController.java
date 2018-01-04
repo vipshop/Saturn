@@ -4,11 +4,14 @@ import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * Executor overview page controller.
+ * Executor overview related operations.
  *
  * @author kfchu
  */
@@ -41,6 +44,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 获取域下所有executor基本信息
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
 			@PathVariable String namespace, @RequestParam(required = false) String status)
@@ -55,6 +59,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 获取executor被分配的作业分片信息
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{executorName}/allocation")
 	public SuccessResponseEntity getExecutorAllocation(final HttpServletRequest request,
 			@PathVariable String namespace, @PathVariable String executorName) throws SaturnJobConsoleException {
@@ -64,6 +69,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 一键重排
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/shardAll")
 	public SuccessResponseEntity shardAll(final HttpServletRequest request,
@@ -76,6 +82,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/*
 	 *	摘流量与流量恢复，其中executor必须online
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/{executorName}/traffic")
 	public SuccessResponseEntity extractOrRecoverTraffic(final HttpServletRequest request,
@@ -93,6 +100,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/*
 	 *	批量摘流量与流量恢复，其中executor必须online
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/traffic")
 	public SuccessResponseEntity batchExtractOrRecoverTraffic(final HttpServletRequest request,
@@ -138,6 +146,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 移除executor
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@DeleteMapping(value = "/{executorName}")
 	public SuccessResponseEntity removeExecutor(final HttpServletRequest request,
@@ -153,6 +162,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 批量移除executor
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveExecutors(final HttpServletRequest request,
@@ -195,6 +205,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	/**
 	 * 一键Dump，包括threadump和gc.log。
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/{executorName}/dump")
 	public SuccessResponseEntity dump(final HttpServletRequest request,

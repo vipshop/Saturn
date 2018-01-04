@@ -6,12 +6,15 @@ import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.DependencyJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -31,7 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Job overview page controller.
+ * Job overview related operations.
  *
  * @author hebelala
  */
@@ -47,12 +50,14 @@ public class JobOverviewController extends AbstractGUIController {
 	@Resource
 	private ExecutorService executorService;
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping
 	public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(jobService.getJobOverviewVo(namespace));
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/groups")
 	public SuccessResponseEntity getGroups(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
@@ -62,6 +67,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取该作业依赖的所有作业
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/dependency")
 	public SuccessResponseEntity getDependingJobs(final HttpServletRequest request,
 			@PathVariable String namespace,
@@ -70,6 +76,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(dependencyJobs);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/dependency")
 	public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request,
 			@PathVariable String namespace,
@@ -86,6 +93,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取依赖该作业的所有作业
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/beDependedJobs")
 	public SuccessResponseEntity getDependedJobs(final HttpServletRequest request,
 			@PathVariable String namespace, @PathVariable String jobName) throws SaturnJobConsoleException {
@@ -93,6 +101,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(dependedJobs);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/beDependedJobs")
 	public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request,
 			@PathVariable String namespace, @RequestParam List<String> jobNames)
@@ -105,6 +114,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(dependencyJobsMap);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/{jobName}/enable")
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
@@ -126,6 +136,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/{jobName}/disable")
 	public SuccessResponseEntity disableJob(final HttpServletRequest request,
@@ -135,6 +146,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/disable")
 	public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
@@ -156,6 +168,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
@@ -181,21 +194,11 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	/**
-	 * 获取该域下所有在线的Executor，用于批量选择优先Executor
-	 */
-	@Deprecated
-	// 前端传参数
-	@GetMapping(value = "/executors")
-	public SuccessResponseEntity getOnlineExecutors(final HttpServletRequest request,
-			@PathVariable String namespace) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(executorService.getExecutors(namespace, ServerStatus.ONLINE));
-	}
-
-	/**
 	 * 批量设置作业的优先Executor
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
-	@PostMapping(value = "/setPreferExecutors")
+	@PostMapping(value = "/preferExecutors")
 	public SuccessResponseEntity batchSetPreferExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames,
@@ -207,6 +210,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/jobs")
 	public SuccessResponseEntity createJob(final HttpServletRequest request,
@@ -216,6 +220,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/{jobNameCopied}/copy")
 	public SuccessResponseEntity copyJob(final HttpServletRequest request,
@@ -226,6 +231,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/import")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
@@ -243,6 +249,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@GetMapping(value = "/export")
 	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
@@ -299,6 +306,7 @@ public class JobOverviewController extends AbstractGUIController {
 	/**
 	 * 获取该作业可选择的优先Executor
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/executors")
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
 			@PathVariable String namespace, @PathVariable String jobName) throws SaturnJobConsoleException {
