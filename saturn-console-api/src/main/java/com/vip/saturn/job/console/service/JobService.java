@@ -1,18 +1,12 @@
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.DependencyJob;
-import com.vip.saturn.job.console.domain.ExecutionInfo;
-import com.vip.saturn.job.console.domain.ExecutorProvided;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobInfo;
-import com.vip.saturn.job.console.domain.JobOverviewVo;
-import com.vip.saturn.job.console.domain.JobServer;
-import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author hebelala
@@ -64,7 +58,7 @@ public interface JobService {
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	JobInfo getJobInfo(String namespace, String jobName) throws SaturnJobConsoleException;
+	JobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	void updateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 

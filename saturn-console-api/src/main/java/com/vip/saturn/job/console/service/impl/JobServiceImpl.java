@@ -89,7 +89,7 @@ public class JobServiceImpl implements JobService {
 	public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
 		JobOverviewVo jobOverviewVo = new JobOverviewVo();
 		try {
-			List<JobInfo> jobInfoList = new ArrayList<>();
+			List<JobListElementVo> jobList = new ArrayList<>();
 			int enabledNumber = 0;
 			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 			if (unSystemJobs != null) {
@@ -97,45 +97,37 @@ public class JobServiceImpl implements JobService {
 						.getCuratorFrameworkOp(namespace);
 				for (JobConfig jobConfig : unSystemJobs) {
 					try {
-						JobInfo jobInfo = mapper.map(jobConfig, JobInfo.class);
+						JobListElementVo jobListElementVo = mapper.map(jobConfig, JobListElementVo.class);
 
-						jobInfo.setDefaultValues();
+						jobListElementVo.setDefaultValues();
 
 						JobType jobType = JobType.getJobType(jobConfig.getJobType());
 						if (JobType.UNKOWN_JOB.equals(jobType)) {
-							if (jobInfo.getJobClass() != null
-									&& jobInfo.getJobClass().indexOf("SaturnScriptJob") != -1) {
-								jobInfo.setJobType(JobType.SHELL_JOB.name());
+							if (jobListElementVo.getJobClass() != null
+									&& jobListElementVo.getJobClass().indexOf("SaturnScriptJob") != -1) {
+								jobListElementVo.setJobType(JobType.SHELL_JOB.name());
 							} else {
-								jobInfo.setJobType(JobType.JAVA_JOB.name());
+								jobListElementVo.setJobType(JobType.JAVA_JOB.name());
 							}
 						}
 
-						jobInfo.setStatus(
+						jobListElementVo.setStatus(
 								getJobStatus(jobConfig.getJobName(), curatorFrameworkOp, jobConfig.getEnabled()));
 
-						if (StringUtils.isNotBlank(jobConfig.getPreferList())) {
-							String containerTaskIdsNodePath = ContainerNodePath.getDcosTasksNodePath();
-							List<String> containerTaskIds = curatorFrameworkOp.getChildren(containerTaskIdsNodePath);
-							jobInfo.setMigrateEnabled(isMigrateEnabled(jobConfig.getPreferList(), containerTaskIds));
-						} else {
-							jobInfo.setMigrateEnabled(false);
-						}
+						updateJobInfoShardingList(curatorFrameworkOp, jobConfig.getJobName(), jobListElementVo);
 
-						updateJobInfoShardingList(curatorFrameworkOp, jobConfig.getJobName(), jobInfo);
-
-						if (jobInfo.getEnabled()) {
+						if (jobListElementVo.getEnabled()) {
 							enabledNumber++;
 						}
-						jobInfoList.add(jobInfo);
+						jobList.add(jobListElementVo);
 					} catch (Exception e) {
 						log.error("list job " + jobConfig.getJobName() + " error", e);
 					}
 				}
 			}
-			jobOverviewVo.setJobs(jobInfoList);
+			jobOverviewVo.setJobs(jobList);
 			jobOverviewVo.setEnabledNumber(enabledNumber);
-			jobOverviewVo.setTotalNumber(jobInfoList.size());
+			jobOverviewVo.setTotalNumber(jobList.size());
 
 			// 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
 			try {
@@ -226,8 +218,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void updateJobInfoShardingList(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName,
-			JobInfo jobInfo) {
-		if (JobStatus.STOPPED.equals(jobInfo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
+			JobListElementVo jobListElementVo) {
+		if (JobStatus.STOPPED.equals(jobListElementVo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
 			return;
 		}
 		String executorsPath = JobNodePath.getServerNodePath(jobName);
@@ -243,7 +235,7 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 		if (shardingListSb != null && shardingListSb.length() > 0) {
-			jobInfo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
+			jobListElementVo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
 		}
 	}
 
@@ -1456,22 +1448,27 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public JobInfo getJobInfo(String namespace, String jobName) throws SaturnJobConsoleException {
+	public JobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
 		}
-		JobInfo jobInfo = mapper.map(jobConfig4DB, JobInfo.class);
-		jobInfo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-		jobInfo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
+		JobConfigVo jobConfigVo = mapper.map(jobConfig4DB, JobConfigVo.class);
+		jobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
+		jobConfigVo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
 
 		List<String> unSystemJobNames = getUnSystemJobNames(namespace);
 		if (unSystemJobNames != null) {
 			unSystemJobNames.remove(jobName);
-			jobInfo.setDependenciesProvided(unSystemJobNames);
+			jobConfigVo.setDependenciesProvided(unSystemJobNames);
 		}
 
-		return jobInfo;
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		jobConfigVo.setStatus(
+				getJobStatus(jobConfigVo.getJobName(), curatorFrameworkOp, jobConfigVo.getEnabled()));
+
+		return jobConfigVo;
 	}
 
 	@Transactional
