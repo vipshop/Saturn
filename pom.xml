@@ -123,14 +123,14 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<!-- bean mapper begin -->
+			<!-- bean mapper begin, TODO orika is just use in saturn-console-old, could be removed -->
 			<dependency>
 			    <groupId>ma.glasnost.orika</groupId>
 			    <artifactId>orika-core</artifactId>
 			    <version>${ma.glasnost.version}</version>
 			</dependency>
 			<!-- bean mapper end -->
-			
+
 			<!-- common begin -->
 			<dependency>
 				<groupId>org.projectlombok</groupId>

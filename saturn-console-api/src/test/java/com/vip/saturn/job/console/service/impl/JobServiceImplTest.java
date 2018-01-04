@@ -1,27 +1,23 @@
 package com.vip.saturn.job.console.service.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
-
-import com.vip.saturn.job.console.component.MapperFactoryBean;
 import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import java.util.List;
-import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JobServiceImplTest {
@@ -40,8 +36,6 @@ public class JobServiceImplTest {
 
 	@Test
 	public void testGetExecutionStatusSuccessfully() throws Exception {
-		jobService.setMapperFactory(new MapperFactoryBean().getObject());
-
 		String namespace = "ns1";
 		String jobName = "jobA";
 		String executorName = "exec1";

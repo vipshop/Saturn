@@ -25,8 +25,6 @@ import jxl.CellType;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.write.*;
-import ma.glasnost.orika.MapperFacade;
-import ma.glasnost.orika.MapperFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
@@ -34,7 +32,7 @@ import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -73,17 +71,10 @@ public class JobServiceImpl implements JobService {
 	@Resource
 	private DashboardService dashboardService;
 
-	private MapperFacade mapper;
-
 	private Random random = new Random();
 
 	private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class,
 			String.class);
-
-	@Autowired
-	public void setMapperFactory(MapperFactory mapperFactory) {
-		this.mapper = mapperFactory.getMapperFacade();
-	}
 
 	@Override
 	public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
@@ -97,7 +88,8 @@ public class JobServiceImpl implements JobService {
 						.getCuratorFrameworkOp(namespace);
 				for (JobConfig jobConfig : unSystemJobs) {
 					try {
-						JobListElementVo jobListElementVo = mapper.map(jobConfig, JobListElementVo.class);
+						JobListElementVo jobListElementVo = new JobListElementVo();
+						SaturnBeanUtils.copyProperties(jobConfig, jobListElementVo);
 
 						jobListElementVo.setDefaultValues();
 
@@ -559,7 +551,8 @@ public class JobServiceImpl implements JobService {
 		if (oldJobConfig == null) {
 			throw new SaturnJobConsoleException("设置该作业（" + jobName + "）优先Executor失败，因为该作业不存在");
 		}
-		JobConfig4DB newJobConfig = mapper.map(oldJobConfig, JobConfig4DB.class);
+		JobConfig4DB newJobConfig = new JobConfig4DB();
+		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
 		newJobConfig.setPreferList(preferList);
 		try {
 			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, null);
@@ -688,9 +681,8 @@ public class JobServiceImpl implements JobService {
 			if (jobNameCopied != null) {
 				JobConfig4DB jobConfig4DBCopied = currentJobConfigService
 						.findConfigByNamespaceAndJobName(namespace, jobNameCopied);
-				jobConfig2 = mapper.map(jobConfig4DBCopied, JobConfig.class);
-				// 空字段不拷贝，see MapperFactoryBean
-				mapper.map(jobConfig, jobConfig2);
+				SaturnBeanUtils.copyProperties(jobConfig4DBCopied, jobConfig2);
+				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, jobConfig2);
 			}
 
 			persistJob(namespace, jobConfig2);
@@ -731,7 +723,9 @@ public class JobServiceImpl implements JobService {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
 				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
 						.startsWith(JobMode.SYSTEM_PREFIX))) {
-					unSystemJobs.add(mapper.map(jobConfig4DB, JobConfig.class));
+					JobConfig jobConfig = new JobConfig();
+					SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
+					unSystemJobs.add(jobConfig);
 				}
 			}
 		}
@@ -831,7 +825,7 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 		JobConfig4DB currentJobConfig = new JobConfig4DB();
-		mapper.map(jobConfig, currentJobConfig);
+		SaturnBeanUtils.copyProperties(jobConfig, currentJobConfig);
 		currentJobConfig.setCreateTime(new Date());
 		currentJobConfig.setLastUpdateTime(new Date());
 		currentJobConfig.setNamespace(namespace);
@@ -1429,11 +1423,13 @@ public class JobServiceImpl implements JobService {
 
 	@Override
 	public JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException {
-		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
-		if (jobConfig == null) {
+		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
 		}
-		return mapper.map(jobConfig, JobConfig.class);
+		JobConfig jobConfig = new JobConfig();
+		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
+		return jobConfig;
 	}
 
 	@Override
@@ -1453,7 +1449,8 @@ public class JobServiceImpl implements JobService {
 		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
 		}
-		JobConfigVo jobConfigVo = mapper.map(jobConfig4DB, JobConfigVo.class);
+		JobConfigVo jobConfigVo = new JobConfigVo();
+		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfigVo);
 		jobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
 		jobConfigVo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
 
@@ -1552,8 +1549,9 @@ public class JobServiceImpl implements JobService {
 		try {
 			// config changed, update current config and save a copy to history config.
 			if (bw.isValue()) {
-				JobConfig4DB newJobConfig4DB = mapper.map(jobConfig4DB, JobConfig4DB.class);
-				mapper.map(jobConfig, newJobConfig4DB);
+				JobConfig4DB newJobConfig4DB = new JobConfig4DB();
+				SaturnBeanUtils.copyProperties(jobConfig4DB, newJobConfig4DB);
+				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
 				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
 			}
 			if (curatorTransactionOp != null) {
@@ -1638,23 +1636,24 @@ public class JobServiceImpl implements JobService {
 			String newCustomContextStr, String newCron)
 			throws SaturnJobConsoleException {
 		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
-		JobConfig4DB oldCurrentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
+		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
 				jobName);
-		if (oldCurrentJobConfig == null) {
-			String errorMsg = "在DB找不到该作业的配置, namespace：" + namespace + " jobname:" + jobName;
+		if (jobConfig4DB == null) {
+			String errorMsg = "在DB找不到该作业的配置, namespace：" + namespace + " jobName:" + jobName;
 			log.error(errorMsg);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), errorMsg);
 		}
-		JobConfig4DB newCurrentJobConfig = mapper.map(oldCurrentJobConfig, JobConfig4DB.class);
+		JobConfig4DB newJobConfig4DB = new JobConfig4DB();
+		SaturnBeanUtils.copyProperties(jobConfig4DB, newJobConfig4DB);
 		if (newCustomContextStr != null) {
-			newCurrentJobConfig.setCustomContext(newCustomContextStr);
+			newJobConfig4DB.setCustomContext(newCustomContextStr);
 		}
 		if (newCron != null) {
-			newCurrentJobConfig.setCron(newCron);
+			newJobConfig4DB.setCron(newCron);
 		}
 
 		try {
-			currentJobConfigService.updateNewAndSaveOld2History(newCurrentJobConfig, oldCurrentJobConfig, null);
+			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change job state in db", e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
