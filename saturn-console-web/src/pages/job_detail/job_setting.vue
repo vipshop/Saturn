@@ -1,10 +1,10 @@
 <template>
-    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
+    <div class="page-content">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
-                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" icon="el-icon-refresh" style="margin-left: 20px;">更新</el-button>
+                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;"><i class="fa fa-undo"></i>更新</el-button>
                     </template>
                     <div class="job-setting-content">
                         <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
@@ -27,12 +27,12 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="30">
-                            <el-col :span="11">
+                            <el-col :span="14">
                                 <el-form-item prop="shardingTotalCount" label="作业分片数">
                                     <el-input v-model="jobSettingInfo.shardingTotalCount"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="8">
                                 <el-form-item prop="localMode" label="本地模式">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
                                 </el-form-item>
@@ -52,10 +52,17 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="description" label="作业描述信息">
+                                    <el-input type="textarea" v-model="jobSettingInfo.description"></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
                         <el-row :gutter="30">
-                            <el-col :span="11">
+                            <el-col :span="14">
                                 <el-form-item prop="preferList" label="优先executor">
-                                    <el-select filterable multiple v-model="jobSettingInfo.preferList">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
                                         <el-option v-for="item in preferListArray" :label="item.executorName" :value="item.executorName" :key="item.executorName">
                                             <span style="float: left">{{ item.executorName }}</span>
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
@@ -63,7 +70,7 @@
                                     </el-select>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="8">
                                 <el-form-item prop="useDispreferList" label="只使用优先executor">
                                     <el-switch v-model="jobSettingInfo.useDispreferList"></el-switch>
                                 </el-form-item>
@@ -108,14 +115,16 @@
                         <el-row>
                             <el-col :span="11">
                                 <el-form-item prop="timeZone" label="时区">
-                                    <el-select filterable v-model="jobSettingInfo.timeZone">
+                                    <el-select size="small" filterable v-model="jobSettingInfo.timeZone">
                                         <el-option v-for="item in timeZones" :label="item" :value="item" :key="item"></el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
                                 <el-form-item prop="dependencies" label="依赖作业">
-                                    <el-input v-model="jobSettingInfo.dependencies"></el-input>
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependencies" style="width: 100%;">
+                                        <el-option v-for="item in dependenciesArray" :label="item" :value="item" :key="item"> </el-option>
+                                    </el-select>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -139,14 +148,15 @@
 </template>
 <script>
 export default {
+  props: [],
   data() {
     return {
-      loading: false,
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       activeNames: ['1'],
       jobSettingInfo: {},
       preferListArray: [],
+      dependenciesArray: [],
       timeZones: [],
       rules: {
         jobClass: [{ required: true, message: '作业实现类不能为空', trigger: 'blur' }],
@@ -158,22 +168,6 @@ export default {
     };
   },
   methods: {
-    getJobSettingInfo() {
-      const params = {
-        namespace: this.domainName,
-        jobName: this.jobName,
-      };
-      this.loading = true;
-      this.$http.get('/console/job-overview/job-config', params).then((data) => {
-        this.jobSettingInfo = JSON.parse(JSON.stringify(data));
-        this.preferListArray = JSON.parse(JSON.stringify(data.preferListProvided));
-        this.timeZones = JSON.parse(JSON.stringify(data.timeZonesProvided));
-      })
-      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); })
-      .finally(() => {
-        this.loading = false;
-      });
-    },
     updateInfo() {
       this.$set(this.jobSettingInfo, 'namespace', this.domainName);
       this.$http.post('/console/job-overview/job-config', this.jobSettingInfo).then(() => {
@@ -181,6 +175,16 @@ export default {
         this.$message.successNotify('更新作业操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
+    },
+    getJobSettingInfo() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+        this.jobSettingInfo = JSON.parse(JSON.stringify(data));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
     },
   },
   created() {

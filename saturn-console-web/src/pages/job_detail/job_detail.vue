@@ -3,7 +3,10 @@
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus">
             <div class="job-detail-header">
-                <div class="pull-left job-detail-title">作业 :  {{jobName}}</div>
+                <div class="pull-left job-detail-title">
+                  <span>作业 :  {{jobName}}</span>
+                  <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态:{{jobInfo.status}}</el-tag>
+                </div>
                 <div class="pull-right">
                     <el-button size="small" @click=""><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                     <el-button size="small" @click=""><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
@@ -11,7 +14,7 @@
                     <el-button size="small" @click=""><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
-            <router-view></router-view>
+            <router-view :job-setting-info="jobInfo"></router-view>
         </Aside>
     </div>
 </template>
@@ -30,6 +33,13 @@ export default {
         { index: 'job_statistics', title: '作业统计', icon: 'fa fa-bar-chart', name: 'job_statistics', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
       ],
       domainInfo: {},
+      jobInfo: {},
+      statusTag: {
+        READY: 'primary',
+        RUNNING: 'success',
+        STOPPING: 'warning',
+        STOPPED: 'warning',
+      },
     };
   },
   methods: {
@@ -43,9 +53,20 @@ export default {
         this.loading = false;
       });
     },
+    getJobInfo() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+        this.jobInfo = JSON.parse(JSON.stringify(data));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
+    },
   },
   created() {
     this.getDomainInfo();
+    this.getJobInfo();
   },
 };
 </script>
@@ -57,9 +78,14 @@ export default {
   .job-detail-title {
     height: 30px;
     line-height: 30px;
-    font-weight: bold;
-    font-size: 16px;
-    color: #777;
+    .status-tag {
+      font-size: 12px;
+    }
+    span {
+      font-weight: bold;
+      font-size: 16px;
+      color: #777;
+    }
   }
   >* {
     display: inline-block;
