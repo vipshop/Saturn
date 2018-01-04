@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/alarm-statistics")
+@RequestMapping("/console/{namespace:.+}/{jobName}/alarmStatistics")
 public class JobAlarmStatisticsController extends AbstractGUIController {
 
 }
