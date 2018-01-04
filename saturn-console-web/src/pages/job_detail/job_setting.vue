@@ -148,12 +148,13 @@
 </template>
 <script>
 export default {
-  props: ['jobSettingInfo'],
+  props: [],
   data() {
     return {
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       activeNames: ['1'],
+      jobSettingInfo: {},
       preferListArray: [],
       dependenciesArray: [],
       timeZones: [],
@@ -175,6 +176,19 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
     },
+    getJobSettingInfo() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+        this.jobSettingInfo = JSON.parse(JSON.stringify(data));
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
+    },
+  },
+  created() {
+    this.getJobSettingInfo();
   },
 };
 </script>
