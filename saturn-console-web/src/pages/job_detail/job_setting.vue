@@ -17,7 +17,9 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="cron" label="Cron">
-                                    <el-input v-model="jobSettingInfo.cron"></el-input>
+                                    <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
+                                        <el-input v-model="jobSettingInfo.cron"></el-input>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="2">
@@ -29,7 +31,7 @@
                         <el-row :gutter="30">
                             <el-col :span="14">
                                 <el-form-item prop="shardingTotalCount" label="作业分片数">
-                                    <el-input v-model="jobSettingInfo.shardingTotalCount"></el-input>
+                                    <el-input-number v-model="jobSettingInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="8">
@@ -41,14 +43,18 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="shardingItemParameters" label="分片序列号/参数对照表">
-                                    <el-input type="textarea" v-model="jobSettingInfo.shardingItemParameters"></el-input>
+                                    <el-tooltip popper-class="form-tooltip" content="分片序列号和参数用等号分隔，多个键值对用逗号分隔，类似map。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c; 英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替,。特别的，对于本地模式的作业，只需要输入如：*=a，就可以了。" placement="bottom">
+                                        <el-input type="textarea" v-model="jobSettingInfo.shardingItemParameters"></el-input>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="jobParameter" label="自定义参数">
-                                    <el-input type="textarea" v-model="jobSettingInfo.jobParameter"></el-input>
+                                    <el-tooltip popper-class="form-tooltip" content="配置格式: 多个配置使用逗号分隔(key1=value1, key2=value2)。在分片序列号/参数对照表中可作为alias形式引用，格式为{key1}" placement="bottom">
+                                        <el-input type="textarea" v-model="jobSettingInfo.jobParameter"></el-input>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
