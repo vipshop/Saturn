@@ -42,6 +42,9 @@
                 </el-table-column>
             </el-table>
         </div>
+        <div v-if="isViewLogVisible">
+            <ViewContentDialog title="查看日志" :content="logContent" @close-dialog="closeViewLogDialog"></ViewContentDialog>
+        </div>
     </div>
 </template>
 <script>
@@ -50,6 +53,7 @@ export default {
     return {
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
+      isViewLogVisible: false,
       autoRefreshTime: 30000,
       refreshTimes: [{
         label: '15秒',
@@ -77,6 +81,7 @@ export default {
       },
       executions: [],
       interval: 0,
+      logContent: '',
     };
   },
   methods: {
@@ -87,9 +92,13 @@ export default {
         jobItem: row.item,
       };
       this.$http.get('/console/job/execution/log', params).then((data) => {
-        console.log(data);
+        this.logContent = data;
+        this.isViewLogVisible = true;
       })
       .catch(() => { this.$http.buildErrorHandler('获取日志请求失败！'); });
+    },
+    closeViewLogDialog() {
+      this.isViewLogVisible = false;
     },
     refreshExecutions() {
       this.interval = setInterval(() => {

@@ -12,6 +12,7 @@ import Column from './common/charts/column';
 import Panel from './common/panel';
 import FilterPageList from './common/filterPageList';
 import ImportFileDialog from './common/importFileDialog';
+import ViewContentDialog from './common/viewContentDialog';
 
 Vue.component('Container', Container);
 Vue.component('Header', Header);
@@ -26,3 +27,4 @@ Vue.component('Column', Column);
 Vue.component('Panel', Panel);
 Vue.component('FilterPageList', FilterPageList);
 Vue.component('ImportFileDialog', ImportFileDialog);
+Vue.component('ViewContentDialog', ViewContentDialog);
