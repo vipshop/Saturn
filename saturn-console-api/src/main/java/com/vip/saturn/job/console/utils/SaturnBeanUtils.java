@@ -4,6 +4,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
+import java.beans.PropertyDescriptor;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,9 +19,9 @@ public class SaturnBeanUtils {
 
 	public static void copyPropertiesIgnoreNull(Object source, Object target) {
 		final BeanWrapper beanWrapper = new BeanWrapperImpl(source);
-		java.beans.PropertyDescriptor[] pds = beanWrapper.getPropertyDescriptors();
+		PropertyDescriptor[] pds = beanWrapper.getPropertyDescriptors();
 		Set<String> names = new HashSet<>();
-		for (java.beans.PropertyDescriptor pd : pds) {
+		for (PropertyDescriptor pd : pds) {
 			Object value = beanWrapper.getPropertyValue(pd.getName());
 			if (value == null) {
 				names.add(pd.getName());
