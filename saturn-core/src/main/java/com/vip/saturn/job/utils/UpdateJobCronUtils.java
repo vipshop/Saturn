@@ -1,6 +1,7 @@
 package com.vip.saturn.job.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -46,11 +47,13 @@ public class UpdateJobCronUtils {
 			CloseableHttpClient httpClient = null;
 			try {
 				checkParameters(cron);
-				if (customContext == null) {
-					customContext = new HashMap<String, String>();
+
+				Map<String, String> bodyEntity = Maps.newHashMap();
+				if (customContext != null) {
+					bodyEntity.putAll(customContext);
 				}
-				customContext.put("cron", cron);
-				String json = JsonUtils.toJSON(customContext);
+				bodyEntity.put("cron", cron);
+				String json = JsonUtils.toJSON(bodyEntity);
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPut request = new HttpPut(targetUrl);

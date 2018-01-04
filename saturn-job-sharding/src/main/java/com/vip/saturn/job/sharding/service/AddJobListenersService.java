@@ -15,7 +15,8 @@ import java.util.List;
  * @author chembo.huang
  */
 public class AddJobListenersService {
-	private static final Logger LOGGER = LoggerFactory.getLogger(AddJobListenersService.class);
+
+	private static final Logger log = LoggerFactory.getLogger(AddJobListenersService.class);
 
 	private CuratorFramework curatorFramework;
 	private NamespaceShardingService namespaceShardingService;
@@ -33,7 +34,7 @@ public class AddJobListenersService {
 	public void addExistJobPathListener() throws Exception {
 		if (null != curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH)) {
 			List<String> jobs = curatorFramework.getChildren().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
-			LOGGER.info("addExistJobPathListener, jobs = {}", jobs);
+			log.info("addExistJobPathListener, jobs = {}", jobs);
 			if (jobs != null) {
 				for (String job : jobs) {
 					addJobPathListener(job);
@@ -71,7 +72,6 @@ public class AddJobListenersService {
 	 */
 	private boolean addJobConfigPathListener(String jobName) throws Exception {
 		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/config";
-		int depth = 1;
 		String fullPath = namespace + path;
 
 		int waitConfigPathCreatedCounts = 50;
@@ -81,12 +81,13 @@ public class AddJobListenersService {
 				break;
 			}
 			if (waitConfigPathCreatedCounts == 0) {
-				LOGGER.warn("the path {} is not existing", fullPath);
+				log.warn("the path {} is not existing", fullPath);
 				return false;
 			}
 			Thread.sleep(100L);
 		} while(true);
 
+		int depth = 1;
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
 				new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
@@ -99,7 +100,7 @@ public class AddJobListenersService {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
 			} catch (KeeperException.NodeExistsException e) {
-				LOGGER.info(e.getMessage());
+				log.info("node {} already existed, so skip creation", path); // NOSONAR
 			}
 		}
 		int depth = 2;

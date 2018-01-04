@@ -4,14 +4,15 @@
         <Aside :sidebar-menus="sidebarMenus">
             <div class="job-detail-header">
                 <div class="pull-left job-detail-title">
-                  <span>作业 :  {{jobName}}</span>
+                  <span class="job-span">作业 :  {{jobName}}</span>
                   <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态:{{jobInfo.status}}</el-tag>
                 </div>
                 <div class="pull-right">
-                    <el-button size="small" @click=""><i class="fa fa-play-circle text-btn"></i>启用</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
+                    <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
+                    <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
+                    <el-button size="small" @click="" ><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
                     <el-button size="small" @click=""><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-trash text-btn"></i>删除</el-button>
+                    <el-button size="small" @click="handleDelete"><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
             <router-view :job-setting-info="jobInfo"></router-view>
@@ -43,6 +44,81 @@ export default {
     };
   },
   methods: {
+    handleDelete() {
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$message.confirmMessage(`确认删除作业 ${this.jobName} 吗?`, () => {
+        this.$http.post('/console/job-overview/remove-job', params).then(() => {
+          this.$message.successNotify('删除作业操作成功');
+          this.$router.push({ name: 'job_overview', params: { domain: this.domainName } });
+        })
+        .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
+      });
+    },
+    handleActive(enabled) {
+      let dependUrl = '';
+      let operation = '';
+      let text = '';
+      let activeRequest = '';
+      if (enabled) {
+        dependUrl = '/console/job-overview/depending-jobs';
+        operation = '启用';
+        text = '禁用';
+        activeRequest = 'enable-job';
+      } else {
+        dependUrl = '/console/job-overview/depended-jobs';
+        operation = '禁用';
+        text = '启用';
+        activeRequest = 'disable-job';
+      }
+      const params = {
+        namespace: this.domainName,
+        jobName: this.jobName,
+      };
+      this.$http.get(dependUrl, params).then((data) => {
+        const arr = data;
+        if (arr.length > 0) {
+          const jobArr = [];
+          if (enabled) {
+            arr.forEach((ele) => {
+              if (!ele.enabled) {
+                jobArr.push(ele.jobName);
+              }
+            });
+          } else {
+            arr.forEach((ele) => {
+              if (ele.enabled) {
+                jobArr.push(ele.jobName);
+              }
+            });
+          }
+          if (jobArr.length > 0) {
+            const jobStr = jobArr.join(',');
+            this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
+              this.enabledRequest(params, activeRequest);
+            });
+          } else {
+            this.$message.confirmMessage(`确定${operation}作业${this.jobName}吗?`, () => {
+              this.enabledRequest(params, activeRequest);
+            });
+          }
+        } else {
+          this.$message.confirmMessage(`确定${operation}作业${this.jobName}吗?`, () => {
+            this.enabledRequest(params, activeRequest);
+          });
+        }
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+    },
+    enabledRequest(params, reqUrl) {
+      this.$http.post(`/console/job-overview/${reqUrl}`, params).then(() => {
+        this.$message.successNotify('操作成功');
+        this.getJobInfo();
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
+    },
     getDomainInfo() {
       this.loading = true;
       this.$http.get('/console/home/namespace', { namespace: this.domainName }).then((data) => {
@@ -58,7 +134,7 @@ export default {
         namespace: this.domainName,
         jobName: this.jobName,
       };
-      this.$http.get('/console/job-overview/job-config', params).then((data) => {
+      this.$http.get('/console/job-detail/config/get-config', params).then((data) => {
         this.jobInfo = JSON.parse(JSON.stringify(data));
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
@@ -80,8 +156,9 @@ export default {
     line-height: 30px;
     .status-tag {
       font-size: 12px;
+      margin-left: 5px;
     }
-    span {
+    .job-span {
       font-weight: bold;
       font-size: 16px;
       color: #777;

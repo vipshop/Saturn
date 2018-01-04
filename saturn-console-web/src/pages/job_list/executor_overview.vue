@@ -43,7 +43,7 @@
                             </el-table-column>
                             <el-table-column prop="status" label="状态" sortable>
                                 <template slot-scope="scope"> 
-                                    <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{scope.row.status}}</el-tag>
+                                    <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP"></el-table-column>
@@ -100,6 +100,10 @@ export default {
       executorList: [],
       filters: {
         executorName: '',
+      },
+      translateStatus: {
+        ONLINE: '在线',
+        OFFLINE: '离线',
       },
       orderBy: 'executorName',
       total: 0,
