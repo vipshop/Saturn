@@ -7,10 +7,13 @@
                 </div>
             </div>
             <el-table stripe border :data="jobShardings" style="width: 100%">
-                <el-table-column prop="executorName" label="Executor" min-width="100px">
+                <el-table-column prop="executorName" label="Executor" min-width="110px">
                     <template slot-scope="scope">
                         <i class="iconfont icon-docker" v-if="scope.row.container"></i>
                         <i class="iconfont icon-zhuji" v-if="!scope.row.container"></i>
+                        <el-tooltip content="leader" placement="top" v-if="scope.row.leader">
+                            <i class="fa fa-flag" style="color: red;"></i>
+                        </el-tooltip>
                         {{scope.row.executorName}}
                     </template>
                 </el-table-column>
