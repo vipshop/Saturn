@@ -47,6 +47,8 @@ public final class JobServer implements Serializable {
 
 	private JobStatus jobStatus;
 
+	private boolean isContainer;
+
 	public String getPercentage() {
 		int count = processSuccessCount;
 		int total = processSuccessCount + processFailureCount;
@@ -155,5 +157,13 @@ public final class JobServer implements Serializable {
 
 	public void setJobVersion(String jobVersion) {
 		this.jobVersion = jobVersion;
+	}
+
+	public boolean isContainer() {
+		return isContainer;
+	}
+
+	public void setContainer(boolean container) {
+		isContainer = container;
 	}
 }

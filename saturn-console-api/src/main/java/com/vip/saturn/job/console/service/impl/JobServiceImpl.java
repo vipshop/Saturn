@@ -1715,18 +1715,20 @@ public class JobServiceImpl implements JobService {
 		result.setExecutorName(executorName);
 		result.setIp(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "ip")));
 		result.setVersion(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "version")));
-		String processSuccessCount = curatorFrameworkOp
-				.getData(JobNodePath.getServerNodePath(jobName, executorName, "processSuccessCount"));
-		result.setProcessSuccessCount(null == processSuccessCount ? 0 : Integer.parseInt(processSuccessCount));
-		String processFailureCount = curatorFrameworkOp
-				.getData(JobNodePath.getServerNodePath(jobName, executorName, "processFailureCount"));
-		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
+//		String processSuccessCount = curatorFrameworkOp
+//				.getData(JobNodePath.getServerNodePath(jobName, executorName, "processSuccessCount"));
+//		result.setProcessSuccessCount(null == processSuccessCount ? 0 : Integer.parseInt(processSuccessCount));
+//		String processFailureCount = curatorFrameworkOp
+//				.getData(JobNodePath.getServerNodePath(jobName, executorName, "processFailureCount"));
+//		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
 		result.setSharding(
 				curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding")));
 		result.setStatus(getServerStatus(executorName, curatorFrameworkOp));
 		result.setLeader(executorName.equals(leaderIp));
 		result.setJobStatus(getJobStatus(namespace, jobName));
 		result.setJobVersion(getJobVersion(jobName, executorName, curatorFrameworkOp));
+		result.setContainer(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorTaskNodePath(executorName)));
+
 		return result;
 	}
 
