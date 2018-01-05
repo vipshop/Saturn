@@ -139,11 +139,10 @@ export default {
     batchDelete() {
       this.batchOperation('删除', (arr) => {
         const params = {
-          namespace: this.domainName,
           executorNames: arr.join(','),
         };
         this.$message.confirmMessage(`确定删除Executor ${arr.join(',')} 吗?`, () => {
-          this.$http.post('/console/executor-overview/remove-executor-batch', params).then(() => {
+          this.$http.delete(`/console/${this.domainName}/executors`, params).then(() => {
             this.getExecutorList();
             this.$message.successNotify('批量删除Executor操作成功');
           })
@@ -166,12 +165,8 @@ export default {
       this.multipleSelection = val;
     },
     handleDump(row) {
-      const params = {
-        namespace: this.domainName,
-        executorName: row.executorName,
-      };
       this.$message.confirmMessage(`确定dump ${row.executorName} 吗?`, () => {
-        this.$http.post('/console/executor-overview/dump', params).then(() => {
+        this.$http.post(`/console/${this.domainName}/executors/${row.executorName}/dump`, '').then(() => {
           this.getExecutorList();
           this.$message.successNotify('一键DUMP操作成功');
         })
@@ -179,12 +174,8 @@ export default {
       });
     },
     handleDelete(row) {
-      const params = {
-        namespace: this.domainName,
-        executorName: row.executorName,
-      };
       this.$message.confirmMessage(`确定删除Executor ${row.executorName} 吗?`, () => {
-        this.$http.post('/console/executor-overview/remove-executor', params).then(() => {
+        this.$http.delete(`/console/${this.domainName}/executors/${row.executorName}`).then(() => {
           this.getExecutorList();
           this.$message.successNotify('删除Executor操作成功');
         })
@@ -213,7 +204,7 @@ export default {
     },
     getExecutorList() {
       this.loading = true;
-      this.$http.get('/console/executor-overview/executors', { namespace: this.domainName }).then((data) => {
+      this.$http.get(`/console/${this.domainName}/executors`).then((data) => {
         this.executorList = data;
         this.total = data.length;
       })
