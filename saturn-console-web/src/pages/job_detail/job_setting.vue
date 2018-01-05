@@ -175,19 +175,14 @@ export default {
   },
   methods: {
     updateInfo() {
-      this.$set(this.jobSettingInfo, 'namespace', this.domainName);
-      this.$http.post('/console/job-detail/config/update-config', this.jobSettingInfo).then(() => {
+      this.$http.post(`/console/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
     },
     getJobSettingInfo() {
-      const params = {
-        namespace: this.domainName,
-        jobName: this.jobName,
-      };
-      this.$http.get('/console/job-detail/config/get-config', params).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
         this.jobSettingInfo = JSON.parse(JSON.stringify(data));
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
