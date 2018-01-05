@@ -39,7 +39,7 @@ export default {
         READY: 'primary',
         RUNNING: 'success',
         STOPPING: 'warning',
-        STOPPED: 'warning',
+        STOPPED: '',
       },
     };
   },
