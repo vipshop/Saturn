@@ -39,6 +39,9 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 	 */
 	private long timeConsumed;
 
+	// 上次执行完成的耗时
+	private double lastTimeConsumedInSec;
+
 	/** 运行作业服务器 */
 	private String executorName;
 
@@ -139,6 +142,14 @@ public final class ExecutionInfo implements Serializable, Comparable<ExecutionIn
 
 	public void setLogMsg(String logMsg) {
 		this.logMsg = logMsg;
+	}
+
+	public double getLastTimeConsumedInSec() {
+		return lastTimeConsumedInSec;
+	}
+
+	public void setLastTimeConsumedInSec(double lastTimeConsumedInSec) {
+		this.lastTimeConsumedInSec = lastTimeConsumedInSec;
 	}
 
 	@Override

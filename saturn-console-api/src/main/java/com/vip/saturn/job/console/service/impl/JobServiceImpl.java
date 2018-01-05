@@ -1846,6 +1846,8 @@ public class JobServiceImpl implements JobService {
 				if (lastCompleteTimeLong >= lastBeginTimeLong) {
 					executionInfo.setLastCompleteTime(
 							SaturnConsoleUtils.parseMillisecond2DisplayTime(lastCompleteTime, timeZone));
+
+					executionInfo.setLastTimeConsumedInSec((lastBeginTimeLong - lastBeginTimeLong) / 1000d);
 				}
 			}
 		}
