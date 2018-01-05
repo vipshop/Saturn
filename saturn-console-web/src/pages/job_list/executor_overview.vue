@@ -114,11 +114,7 @@ export default {
   },
   methods: {
     getExecutorAllocation(row) {
-      const params = {
-        namespace: this.domainName,
-        executorName: row.executorName,
-      };
-      this.$http.get('/console/executor-overview/executor-allocation', params).then((data) => {
+      this.$http.get(`/console/${this.domainName}/executors/${row.executorName}/allocation`).then((data) => {
         this.isExecutorAllocationVisible = true;
         this.executorAllocationInfo = JSON.parse(JSON.stringify(data));
       })
