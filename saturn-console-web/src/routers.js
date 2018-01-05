@@ -7,7 +7,7 @@ import JobOverview from './pages/job_list/job_overview';
 import ExecutorOverview from './pages/job_list/executor_overview';
 import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
-import JobExecutor from './pages/job_detail/job_executor';
+import JobSharding from './pages/job_detail/job_sharding';
 import RunningState from './pages/job_detail/running_state';
 import JobStatistics from './pages/job_detail/job_statistics';
 import DashboardManage from './pages/dashboard_manage/dashboard_manage';
@@ -38,7 +38,7 @@ export default new Router({
       children: [
         { path: '', redirect: 'job_setting' },
         { name: 'job_setting', path: RouterMapper.GetPath('jobSetting'), component: JobSetting },
-        { name: 'job_executor', path: RouterMapper.GetPath('jobExecutor'), component: JobExecutor },
+        { name: 'job_sharding', path: RouterMapper.GetPath('jobSharding'), component: JobSharding },
         { name: 'running_state', path: RouterMapper.GetPath('runningState'), component: RunningState },
         { name: 'job_statistics', path: RouterMapper.GetPath('jobStatistics'), component: JobStatistics },
       ],
