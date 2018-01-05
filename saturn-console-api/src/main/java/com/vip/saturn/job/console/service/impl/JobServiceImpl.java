@@ -677,15 +677,14 @@ public class JobServiceImpl implements JobService {
 		if (jobIncExceeds(namespace, maxJobNum, 1)) {
 			throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
 		} else {
-			JobConfig jobConfig2 = jobConfig;
-			if (jobNameCopied != null) {
+			if (jobNameCopied == null) {
+				persistJob(namespace, jobConfig);
+			} else {
 				JobConfig4DB jobConfig4DBCopied = currentJobConfigService
 						.findConfigByNamespaceAndJobName(namespace, jobNameCopied);
-				SaturnBeanUtils.copyProperties(jobConfig4DBCopied, jobConfig2);
-				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, jobConfig2);
+				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, jobConfig4DBCopied);
+				persistJob(namespace, jobConfig4DBCopied);
 			}
-
-			persistJob(namespace, jobConfig2);
 		}
 	}
 
