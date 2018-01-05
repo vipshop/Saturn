@@ -29,8 +29,8 @@ export default {
       jobName: this.$route.params.jobName,
       sidebarMenus: [
         { index: 'job_setting', title: '作业设置', icon: 'fa fa-gear', name: 'job_setting', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-        { index: 'job_executor', title: '分片情况', icon: 'fa fa-server', name: 'job_executor', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-        { index: 'running_state', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'running_state', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_sharding', title: '分片情况', icon: 'fa fa-server', name: 'job_sharding', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_execution', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'job_execution', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
         { index: 'job_statistics', title: '作业统计', icon: 'fa fa-bar-chart', name: 'job_statistics', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
       ],
       domainInfo: {},
