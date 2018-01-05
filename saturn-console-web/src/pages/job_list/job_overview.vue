@@ -258,14 +258,11 @@ export default {
       this.multipleSelection = val;
     },
     handleCopy(row) {
-      const params = {
-        namespace: this.domainName,
-        jobName: row.jobName,
-      };
-      this.$http.get('/console/job-detail/config/get-config', params).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs/${row.jobName}/config`).then((data) => {
         const jobCopyInfo = {
           jobType: data.jobType,
           jobName: '',
+          jobNameCopied: row.jobName,
           jobClass: data.jobClass,
           cron: data.cron,
           shardingTotalCount: data.shardingTotalCount,
