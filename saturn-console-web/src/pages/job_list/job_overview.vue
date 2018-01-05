@@ -108,7 +108,7 @@
                 <batch-priority-dialog :job-names-array="jobNamesArray" :domain-name="domainName" @close-dialog="closePriorityDialog" @batch-priority-success="batchPrioritySuccess"></batch-priority-dialog>
             </div>
             <div v-if="isImportVisible">
-                <ImportFileDialog :import-data="importData" import-title="导入作业" @close-dialog="closeImportDialog" @import-success="importSuccess"></ImportFileDialog>
+                <ImportFileDialog :import-data="importData" import-template-url="/console/static/jobTemplate/download" :import-url="importUrl" import-title="导入作业" @close-dialog="closeImportDialog" @import-success="importSuccess"></ImportFileDialog>
             </div>
         </div>
     </div>
@@ -132,6 +132,7 @@ export default {
       importData: {
         namespace: this.$route.params.domain,
       },
+      importUrl: '',
       jobNamesArray: [],
       filters: {
         jobName: '',
@@ -161,10 +162,11 @@ export default {
   },
   methods: {
     handleExport() {
-      window.location.href = `/console/job-overview/export-jobs?namespace=${this.domainName}`;
+      window.location.href = `/console/${this.domainName}/jobs/export`;
     },
     handleImport() {
       this.isImportVisible = true;
+      this.importUrl = `/console/${this.domainName}/jobs/import`;
     },
     closeImportDialog() {
       this.isImportVisible = false;
@@ -278,12 +280,8 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
     },
     handleDelete(row) {
-      const params = {
-        namespace: this.domainName,
-        jobName: row.jobName,
-      };
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
-        this.$http.post('/console/job-overview/remove-job', params).then(() => {
+        this.$http.delete(`/console/${this.domainName}/jobs/${row.jobName}`).then(() => {
           this.getJobList();
           this.$message.successNotify('删除作业操作成功');
         })
