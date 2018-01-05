@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n" />
-    
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder charset="${log.charset}">
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-    </appender>
-	
-    <root>
-        <level value="INFO" />
-		<appender-ref ref="STDOUT" />
-    </root>
+  <property name="log.pattern"
+    value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder charset="${log.charset}">
+      <pattern>${log.pattern}</pattern>
+    </encoder>
+  </appender>
+
+  <root>
+    <level value="INFO"/>
+    <appender-ref ref="STDOUT"/>
+  </root>
 </configuration>
