@@ -136,7 +136,7 @@ public class JobServiceImpl implements JobService {
 						}
 					}
 				} else {
-					throw new SaturnJobConsoleException(String.format("没有找到该域（%s）的注册信息", namespace));
+					throw new SaturnJobConsoleException(String.format("没有找到该域(%s)的注册信息", namespace));
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -671,7 +671,7 @@ public class JobServiceImpl implements JobService {
 		String jobName = jobConfig.getJobName();
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
-			throw new SaturnJobConsoleException(String.format("该作业（%s）已经存在", jobName));
+			throw new SaturnJobConsoleException(String.format("该作业(%s)已经存在", jobName));
 		}
 		int maxJobNum = getMaxJobNum();
 		if (jobIncExceeds(namespace, maxJobNum, 1)) {
@@ -1424,7 +1424,7 @@ public class JobServiceImpl implements JobService {
 	public JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
+			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobName));
 		}
 		JobConfig jobConfig = new JobConfig();
 		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
@@ -1446,7 +1446,7 @@ public class JobServiceImpl implements JobService {
 	public JobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobName));
+			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobName));
 		}
 		JobConfigVo jobConfigVo = new JobConfigVo();
 		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfigVo);
@@ -1473,7 +1473,7 @@ public class JobServiceImpl implements JobService {
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业（%s）不存在", jobConfig.getJobName()));
+			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobConfig.getJobName()));
 		}
 		jobConfig.setDefaultValues();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService

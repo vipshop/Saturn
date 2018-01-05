@@ -4,10 +4,8 @@ import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
-import com.vip.saturn.job.console.service.ZkClusterAlarmStatisticsService;
+import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.stereotype.Controller;
@@ -24,49 +22,37 @@ import javax.annotation.Resource;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{zkClusterKey:.*}/alarmStatistics")
-public class ZkClusterAlarmStatisticsController extends AbstractGUIController {
+@RequestMapping("/console/alarmStatistics/zkCluster/{zkClusterKey:.+}")
+public class AlarmStatistics4ZkClusterController extends AbstractGUIController {
 
 	@Resource
-	private ZkClusterAlarmStatisticsService zkClusterAlarmStatisticsService;
-
-	private ZkCluster validateAndGetZKCluster(String zkClusterKey) throws SaturnJobConsoleGUIException {
-		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-		if (zkCluster == null) {
-			throw new SaturnJobConsoleGUIException(String.format("该集群key（%s）不存在", zkClusterKey));
-		}
-		return zkCluster;
-	}
+	private AlarmStatisticsService alarmStatisticsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalJobs")
 	public SuccessResponseEntity getAbnormalJobs(@PathVariable String zkClusterKey) throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		return new SuccessResponseEntity(zkClusterAlarmStatisticsService.getAbnormalJobs(zkCluster.getZkAddr()));
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/unableFailoverJobs")
 	public SuccessResponseEntity getUnableFailoverJobs(@PathVariable String zkClusterKey)
 			throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		return new SuccessResponseEntity(zkClusterAlarmStatisticsService.getUnableFailoverJobs(zkCluster.getZkAddr()));
+		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/timeout4AlarmJobs")
 	public SuccessResponseEntity getTimeout4AlarmJobs(@PathVariable String zkClusterKey)
 			throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		return new SuccessResponseEntity(zkClusterAlarmStatisticsService.getTimeout4AlarmJobs(zkCluster.getZkAddr()));
+		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalContainers")
 	public SuccessResponseEntity getAbnormalContainers(@PathVariable String zkClusterKey)
 			throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		return new SuccessResponseEntity(zkClusterAlarmStatisticsService.getAbnormalContainers(zkCluster.getZkAddr()));
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
@@ -75,8 +61,7 @@ public class ZkClusterAlarmStatisticsController extends AbstractGUIController {
 	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(
 			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
 			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		zkClusterAlarmStatisticsService.setAbnormalJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
+		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(zkClusterKey, uuid);
 		return new SuccessResponseEntity();
 	}
 
@@ -86,8 +71,7 @@ public class ZkClusterAlarmStatisticsController extends AbstractGUIController {
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(
 			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
 			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		zkClusterAlarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
+		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(zkClusterKey, uuid);
 		return new SuccessResponseEntity();
 	}
 
