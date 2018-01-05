@@ -8,7 +8,7 @@
             </el-form-item>
             <el-form-item label="优先Executors" prop="jobName">
                 <el-col :span="18">
-                    <el-select v-model="selectedExecutors" filterable multiple placeholder="请选择" style="width: 100%;">
+                    <el-select size="small" v-model="selectedExecutors" filterable multiple placeholder="请选择" style="width: 100%;">
                         <el-option v-for="item in onlineExecutors" :key="item.executorName" :label="item.executorName" :value="item.executorName"></el-option>
                     </el-select>
                 </el-col>
@@ -35,11 +35,10 @@ export default {
   methods: {
     handleSubmit() {
       const params = {
-        namespace: this.domainName,
         jobNames: this.jobNamesArray.join(','),
         preferList: this.selectedExecutors.join(','),
       };
-      this.$http.post('/console/job-overview/set-prefer-executors-batch', params).then(() => {
+      this.$http.post(`/console/${this.domainName}/jobs/preferExecutors`, params).then(() => {
         this.$emit('batch-priority-success');
       })
       .catch(() => { this.$http.buildErrorHandler('批量设置作业的优先Executors失败！'); });
@@ -49,10 +48,14 @@ export default {
     },
     getOnlineExecutors() {
       this.loading = true;
-      this.$http.get('/console/job-overview/online-executors', { namespace: this.domainName }).then((data) => {
-        this.onlineExecutors = data;
+      this.$http.get(`/console/${this.domainName}/executors`).then((data) => {
+        data.forEach((ele) => {
+          if (ele.status === 'ONLINE') {
+            this.onlineExecutors.push(ele);
+          }
+        });
       })
-      .catch(() => { this.$http.buildErrorHandler('获取在线Executors失败！'); })
+      .catch(() => { this.$http.buildErrorHandler('获取Executors失败！'); })
       .finally(() => {
         this.loading = false;
       });
