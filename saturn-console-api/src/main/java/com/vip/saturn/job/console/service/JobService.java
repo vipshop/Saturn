@@ -67,6 +67,9 @@ public interface JobService {
 	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
 			throws SaturnJobConsoleException;
 
+	/**
+	 * 获取作业所分配的executor及先关分配信息。
+	 */
 	List<JobServer> getJobServers(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	// TODO
