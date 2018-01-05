@@ -1,7 +1,10 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -15,12 +18,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Home page controller.
+ * Static resource controller.
  *
  * @author kfchu
  */
 @Controller
-@RequestMapping("/console/static/")
+@RequestMapping("/console/static")
 public class StaticResourceController extends AbstractGUIController {
 
 	private static final Logger log = LoggerFactory.getLogger(StaticResourceController.class);

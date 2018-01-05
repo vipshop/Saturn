@@ -15,7 +15,7 @@
                         :on-error="handleError"
                         :on-success="handleSuccess">
                         <el-button slot="trigger" size="small" type="primary" @click="handleUpload">选取文件</el-button>
-                        <div slot="tip" class="el-upload__tip">温馨提示：(Shell消息作业导入要求所有executor版本都是1.1.2及以上)</div>
+                        <div slot="tip" class="el-upload__tip">{{importTip}}</div>
                     </el-upload>
                 </div>
             </el-form-item>
@@ -29,7 +29,7 @@
 
 <script>
 export default {
-  props: ['importTitle', 'importData'],
+  props: ['importTitle', 'importData', 'importTip'],
   data() {
     return {
       isVisible: true,
@@ -46,7 +46,6 @@ export default {
       this.$message.errorMessage(`上传失败: ${err}`);
     },
     handleSuccess(response) {
-      console.log(response);
       if (response.success) {
         this.$emit('import-success');
       } else {

@@ -5,6 +5,8 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Home page controller.
+ * Name space related operations.
  *
  * @author hebelala
  */
@@ -26,6 +28,7 @@ import java.util.List;
 @RequestMapping("/console/namespaces")
 public class HomeController extends AbstractGUIController {
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping
 	public SuccessResponseEntity getNamespaces(final HttpServletRequest request)
 			throws SaturnJobConsoleException {
@@ -37,7 +40,8 @@ public class HomeController extends AbstractGUIController {
 		return new SuccessResponseEntity(namespaceList);
 	}
 
-	@GetMapping(value = "/{namespace}")
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/{namespace:.+}")
 	public SuccessResponseEntity getNamespace(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
