@@ -15,7 +15,7 @@
                     <el-button size="small" @click="handleDelete"><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
-            <router-view :job-setting-info="jobInfo"></router-view>
+            <router-view></router-view>
         </Aside>
     </div>
 </template>
