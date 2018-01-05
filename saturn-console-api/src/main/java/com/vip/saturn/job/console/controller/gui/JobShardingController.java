@@ -10,6 +10,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -30,9 +31,9 @@ public class JobShardingController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/status")
-	public SuccessResponseEntity getShardingStatus(final HttpServletRequest request, @RequestParam String namespace,
-			@RequestParam String jobName) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity();
+	public SuccessResponseEntity getShardingStatus(final HttpServletRequest request, @PathVariable String namespace,
+			@PathVariable String jobName) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getJobServers(namespace, jobName));
 	}
 
 }

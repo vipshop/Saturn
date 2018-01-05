@@ -23,7 +23,7 @@ export default {
   methods: {
     getDomainInfo() {
       this.loading = true;
-      this.$http.get('/console/home/namespace', { namespace: this.domainName }).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}`).then((data) => {
         this.domainInfo = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); })

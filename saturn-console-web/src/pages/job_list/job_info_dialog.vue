@@ -81,15 +81,14 @@ export default {
       this.$refs.jobInfo.validate((valid) => {
         if (valid) {
           if (this.jobInfoOperation === 'add') {
-            this.jobInfoRequest('/console/job-overview/add-job');
+            this.jobInfoRequest(`/console/${this.domainName}/jobs/jobs`);
           } else if (this.jobInfoOperation === 'copy') {
-            console.log('copy');
+            this.jobInfoRequest(`/console/${this.domainName}/jobs/${this.jobInfo.jobNameCopied}/copy`);
           }
         }
       });
     },
     jobInfoRequest(url) {
-      this.$set(this.jobInfo, 'namespace', this.domainName);
       this.loading = true;
       this.$http.post(url, this.jobInfo).then(() => {
         this.$emit('job-info-success');

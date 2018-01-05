@@ -47,7 +47,7 @@ export default {
       this.$router.push({ name: 'job_overview', params: { domain } });
     },
     loadAllDomains() {
-      this.$http.get('/console/home/namespaces').then((data) => {
+      this.$http.get('/console/namespaces').then((data) => {
         this.domains = data.map((obj) => {
           const rObj = {};
           rObj.value = obj;

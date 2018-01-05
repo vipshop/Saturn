@@ -73,8 +73,8 @@ export default {
         PENDING: 'warning',
       },
       translateStatus: {
-        RUNNING: '运行',
-        COMPLETED: '完成',
+        RUNNING: '运行中',
+        COMPLETED: '成功',
         FAILED: '失败',
         TIMEOUT: '超时',
         PENDING: '未知',

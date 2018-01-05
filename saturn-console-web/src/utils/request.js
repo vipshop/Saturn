@@ -35,6 +35,7 @@ export default {
       /* eslint-disable no-case-declarations */
       switch (methodType) {
         case 'GET':
+        case 'DELETE':
           config.params = dataObj;
           break;
         case 'POST':

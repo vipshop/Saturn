@@ -224,7 +224,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/{jobNameCopied}/copy")
 	public SuccessResponseEntity copyJob(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNameCopied") @PathVariable String jobNameCopied, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		jobService.copyJob(namespace, jobConfig, jobNameCopied);
@@ -235,7 +235,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/import")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
-			@AuditParam("namespace") @RequestParam String namespace, @RequestParam("file") MultipartFile file)
+			@AuditParam("namespace") @PathVariable String namespace, @RequestParam("file") MultipartFile file)
 			throws SaturnJobConsoleException {
 		if (file.isEmpty()) {
 			throw new SaturnJobConsoleGUIException("请上传一个有内容的文件");
@@ -252,7 +252,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@GetMapping(value = "/export")
-	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @RequestParam String namespace,
+	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
 			final HttpServletResponse response)
 			throws SaturnJobConsoleException {
 		File exportJobFile = null;

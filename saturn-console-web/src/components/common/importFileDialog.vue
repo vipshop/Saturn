@@ -8,7 +8,7 @@
                 <div>
                     <el-upload
                         ref="upload"
-                        action="/console/job-overview/import-jobs"
+                        :action="importUrl"
                         :data= "importData"
                         :auto-upload="false"
                         :multiple="false"
@@ -29,7 +29,7 @@
 
 <script>
 export default {
-  props: ['importTitle', 'importData', 'importTip'],
+  props: ['importTitle', 'importUrl', 'importTemplateUrl', 'importData', 'importTip'],
   data() {
     return {
       isVisible: true,
@@ -37,7 +37,7 @@ export default {
   },
   methods: {
     exportModel() {
-      window.location.href = '/console/job-overview/export-jobs-template';
+      window.location.href = this.importTemplateUrl;
     },
     handleUpload() {
       this.$refs.upload.clearFiles();
