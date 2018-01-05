@@ -34,7 +34,6 @@ public class NamespaceShardingContentServiceTest {
 	}
 
 	@Test
-	@Ignore
 	public void testBigData() throws Exception {
 		CuratorFramework framework = nestedZkUtils.createClient("namespace");
 		NamespaceShardingContentService namespaceShardingContentService = new NamespaceShardingContentService(
