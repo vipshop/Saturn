@@ -900,7 +900,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public void importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException {
+	public List<ImportJobResult> importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException {
 		try {
 			Workbook workbook = Workbook.getWorkbook(file.getInputStream());
 
@@ -924,9 +924,23 @@ public class JobServiceImpl implements JobService {
 				throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum));
 			}
 			// 再进行添加
-			for (JobConfig jobConfig : jobConfigList) { // TODO 配合前台提示信息做更好
-				addJob(namespace, jobConfig);
+			List<ImportJobResult> results = new ArrayList<>();
+			for (JobConfig jobConfig : jobConfigList) {
+				ImportJobResult importJobResult = new ImportJobResult();
+				importJobResult.setJobName(jobConfig.getJobName());
+				try {
+					addJob(namespace, jobConfig);
+					importJobResult.setSuccess(true);
+				} catch (SaturnJobConsoleException e) {
+					importJobResult.setSuccess(false);
+					importJobResult.setMessage(e.getMessage());
+				} catch (Exception e) {
+					importJobResult.setSuccess(false);
+					importJobResult.setMessage(e.toString());
+				}
+				results.add(importJobResult);
 			}
+			return results;
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {

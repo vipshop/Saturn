@@ -48,7 +48,7 @@ public interface JobService {
 
 	void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
 
-	void importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
+	List<ImportJobResult> importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
