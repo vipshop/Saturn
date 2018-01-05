@@ -144,10 +144,10 @@ export default {
         READY: 'primary',
         RUNNING: 'success',
         STOPPING: 'warning',
-        STOPPED: 'warning',
+        STOPPED: '',
       },
       translateStatus: {
-        READY: '准备中',
+        READY: '已就绪',
         RUNNING: '运行中',
         STOPPING: '停止中',
         STOPPED: '已停止',
