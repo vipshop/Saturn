@@ -7,9 +7,19 @@
                 </div>
             </div>
             <el-table stripe border :data="jobShardings" style="width: 100%">
-                <el-table-column prop="executorName" label="Executor" min-width="120px"></el-table-column>
+                <el-table-column prop="executorName" label="Executor" min-width="100px">
+                    <template slot-scope="scope">
+                        <i class="iconfont icon-docker" v-if="scope.row.container"></i>
+                        <i class="iconfont icon-zhuji" v-if="!scope.row.container"></i>
+                        {{scope.row.executorName}}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="ip" label="IP"></el-table-column>
-                <el-table-column prop="sharding" label="分片项"></el-table-column>
+                <el-table-column label="分片项">
+                    <template slot-scope="scope">
+                        <el-tag class="sharding-tag" type="primary" v-for="item in $array.strToArray(scope.row.sharding)" :key="item">{{item}}</el-tag>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="version" label="作业版本"></el-table-column>
             </el-table>
         </div>
@@ -37,3 +47,8 @@ export default {
   },
 };
 </script>
+<style lang="sass" scoped>
+.sharding-tag {
+  margin-right: 3px;
+}
+</style>
