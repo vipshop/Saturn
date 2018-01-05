@@ -28,6 +28,7 @@ public class StaticResourceController extends AbstractGUIController {
 
 	private static final Logger log = LoggerFactory.getLogger(StaticResourceController.class);
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/jobTemplate/download")
 	public void exportJobs(final HttpServletRequest request, final HttpServletResponse response)
 			throws SaturnJobConsoleException {

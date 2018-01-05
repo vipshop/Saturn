@@ -124,6 +124,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@PostMapping(value = "/enable")
 	public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
@@ -159,6 +160,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit(type = AuditType.WEB)
 	@DeleteMapping(value = "/{jobName}")
 	public SuccessResponseEntity removeJob(final HttpServletRequest request,
