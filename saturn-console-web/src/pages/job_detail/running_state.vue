@@ -87,11 +87,9 @@ export default {
   methods: {
     getLog(row) {
       const params = {
-        namespace: this.domainName,
-        jobName: this.jobName,
         jobItem: row.item,
       };
-      this.$http.get('/console/job/execution/log', params).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/execution/log`, params).then((data) => {
         this.logContent = data;
         this.isViewLogVisible = true;
       })
@@ -106,11 +104,7 @@ export default {
       }, this.autoRefreshTime);
     },
     getJobExecutors() {
-      const params = {
-        namespace: this.domainName,
-        jobName: this.jobName,
-      };
-      this.$http.get('/console/job/execution/status', params).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/execution/status`).then((data) => {
         this.executions = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业运行状态请求失败！'); });
