@@ -129,7 +129,7 @@ export default {
     },
     handleReArrange() {
       this.$message.confirmMessage('确认一键重排吗?', () => {
-        this.$http.post('/console/executor-overview/shard-all', { namespace: this.domainName }).then(() => {
+        this.$http.post(`/console/${this.domainName}/executors/shardAll`, '').then(() => {
           this.getExecutorList();
           this.$message.successNotify('一键重排操作成功');
         })
@@ -184,8 +184,6 @@ export default {
     },
     handleTraffic(row, operation) {
       const params = {
-        namespace: this.domainName,
-        executorName: row.executorName,
         operation,
       };
       let text = '';
@@ -195,7 +193,7 @@ export default {
         text = '恢复';
       }
       this.$message.confirmMessage(`确认${text}Executor ${row.executorName} 流量吗?`, () => {
-        this.$http.post('/console/executor-overview/traffic', params).then(() => {
+        this.$http.post(`/console/${this.domainName}/executors/${row.executorName}/traffic`, params).then(() => {
           this.getExecutorList();
           this.$message.successNotify(`${text}流量操作成功`);
         })
