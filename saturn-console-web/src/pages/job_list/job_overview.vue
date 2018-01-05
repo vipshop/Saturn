@@ -200,7 +200,6 @@ export default {
     batchEnabled() {
       this.batchOperation('启用', (arr) => {
         const params = {
-          namespace: this.domainName,
           jobNames: arr.join(','),
         };
         this.handleBatchActive(params, arr, true);
@@ -209,7 +208,6 @@ export default {
     batchDisabled() {
       this.batchOperation('禁用', (arr) => {
         const params = {
-          namespace: this.domainName,
           jobNames: arr.join(','),
         };
         this.handleBatchActive(params, arr, false);
@@ -218,11 +216,10 @@ export default {
     batchDelete() {
       this.batchOperation('删除', (arr) => {
         const params = {
-          namespace: this.domainName,
           jobNames: arr.join(','),
         };
         this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
-          this.$http.post('/console/job-overview/remove-job-batch', params).then(() => {
+          this.$http.delete(`/console/${this.domainName}/jobs`, params).then(() => {
             this.getJobList();
             this.$message.successNotify('批量删除作业操作成功');
           })
@@ -299,15 +296,15 @@ export default {
       let text = '';
       let activeRequest = '';
       if (enabled) {
-        dependUrl = '/console/job-overview/depending-jobs-batch';
+        dependUrl = `/console/${this.domainName}/jobs/dependency`;
         operation = '启用';
         text = '禁用';
-        activeRequest = 'enable-job-batch';
+        activeRequest = 'enable';
       } else {
-        dependUrl = '/console/job-overview/depended-jobs-batch';
+        dependUrl = `/console/${this.domainName}/jobs/beDependedJobs`;
         operation = '禁用';
         text = '启用';
-        activeRequest = 'disable-job-batch';
+        activeRequest = 'disable';
       }
       this.$http.get(dependUrl, params).then((data) => {
         let warningFlag = false;
@@ -333,11 +330,11 @@ export default {
         });
         if (warningFlag) {
           this.$message.confirmMessage(`有依赖的作业已${text}，是否继续${operation}作业?`, () => {
-            this.enabledRequest(params, activeRequest);
+            this.batchActiveRequest(params, activeRequest);
           });
         } else {
           this.$message.confirmMessage(`确定${operation}作业${params.jobNames}吗?`, () => {
-            this.enabledRequest(params, activeRequest);
+            this.batchActiveRequest(params, activeRequest);
           });
         }
       })
@@ -349,21 +346,17 @@ export default {
       let text = '';
       let activeRequest = '';
       if (enabled) {
-        dependUrl = '/console/job-overview/depending-jobs';
+        dependUrl = `/console/${this.domainName}/jobs/${row.jobName}/dependency`;
         operation = '启用';
         text = '禁用';
-        activeRequest = 'enable-job';
+        activeRequest = 'enable';
       } else {
-        dependUrl = '/console/job-overview/depended-jobs';
+        dependUrl = `/console/${this.domainName}/jobs/${row.jobName}/beDependedJobs`;
         operation = '禁用';
         text = '启用';
-        activeRequest = 'disable-job';
+        activeRequest = 'disable';
       }
-      const params = {
-        namespace: this.domainName,
-        jobName: row.jobName,
-      };
-      this.$http.get(dependUrl, params).then((data) => {
+      this.$http.get(dependUrl).then((data) => {
         const arr = data;
         if (arr.length > 0) {
           const jobArr = [];
@@ -383,23 +376,30 @@ export default {
           if (jobArr.length > 0) {
             const jobStr = jobArr.join(',');
             this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
-              this.enabledRequest(params, activeRequest);
+              this.activeRequest(row.jobName, activeRequest);
             });
           } else {
             this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-              this.enabledRequest(params, activeRequest);
+              this.activeRequest(row.jobName, activeRequest);
             });
           }
         } else {
           this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-            this.enabledRequest(params, activeRequest);
+            this.activeRequest(row.jobName, activeRequest);
           });
         }
       })
       .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
     },
-    enabledRequest(params, reqUrl) {
-      this.$http.post(`/console/job-overview/${reqUrl}`, params).then(() => {
+    batchActiveRequest(params, reqUrl) {
+      this.$http.post(`/console/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
+        this.$message.successNotify('操作成功');
+        this.getJobList();
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
+    },
+    activeRequest(jobName, reqUrl) {
+      this.$http.post(`/console/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
         this.getJobList();
       })
@@ -407,7 +407,7 @@ export default {
     },
     getJobList() {
       this.loading = true;
-      this.$http.get('/console/job-overview/jobs', { namespace: this.domainName }).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs`).then((data) => {
         this.jobList = data.jobs;
         this.totalNumber = data.totalNumber;
         this.enabledNumber = data.enabledNumber;
@@ -421,7 +421,7 @@ export default {
     },
     getGroupList() {
       this.loading = true;
-      this.$http.get('/console/job-overview/groups', { namespace: this.domainName }).then((data) => {
+      this.$http.get(`/console/${this.domainName}/jobs/groups`).then((data) => {
         this.groupList = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); })
