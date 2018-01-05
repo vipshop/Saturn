@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -51,6 +52,7 @@ public class AlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
 	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid) {
 		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(uuid);
@@ -58,6 +60,7 @@ public class AlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid) {
 		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(uuid);

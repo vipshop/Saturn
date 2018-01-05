@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -69,6 +70,7 @@ public class ZkClusterAlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@GetMapping(value = "/setAbnormalJobMonitorStatusToRead")
 	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(
 			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
@@ -79,6 +81,7 @@ public class ZkClusterAlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@GetMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(
 			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
