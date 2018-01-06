@@ -12,15 +12,17 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
+import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,27 +35,23 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/console/dashboard")
 public class DashboardController extends AbstractGUIController {
 
-	private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
-
 	@Autowired
 	private DashboardService dashboardService;
 
 	/**
 	 * 域overview统计
 	 *
-	 * @param allZkCluster true，统计全域；false 或 null代表特定zk集群
-	 * @param zkClusterKey 特定的zkClusterKey
+	 * @param zkClusterKey 如果非空，即返回特定的zkClusterKey的统计信息，否则返回全域信息
 	 */
 	@GetMapping(value = "count")
 	@ResponseBody
-	public Map<String, Integer> count(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey) {
+	public Map<String, Integer> count(@RequestParam(required = false) String zkClusterKey) {
 		Map<String, Integer> countMap = new HashMap<>();
 		int executorInDockerCount = 0;
 		int executorNotInDockerCount = 0;
 		int jobCount = 0;
 		int domainCount = 0;
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 			for (ZkCluster zkCluster : zkClusterList) {
 				String zkAddr = zkCluster.getZkAddr();
@@ -85,10 +83,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10FailJob")
 	@ResponseBody
-	public String top10FailJob(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey)
+	public String top10FailJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10FailureJobByAllZkCluster();
 		}
 
@@ -107,10 +104,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10FailExecutor")
 	@ResponseBody
-	public String top10FailExecutor(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey)
+	public String top10FailExecutor(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10FailureExecutorByAllZkCluster();
 		}
 
@@ -121,10 +117,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10ActiveJob")
 	@ResponseBody
-	public String top10ActiveJob(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey)
+	public String top10ActiveJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10AactiveJobByAllZkCluster();
 		}
 
@@ -135,9 +130,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10LoadJob")
 	@ResponseBody
-	public String top10LoadJob(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+	public String top10LoadJob(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleGUIException {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10LoadJobByAllZkCluster();
 		}
 
@@ -148,9 +143,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10FailDomain")
 	@ResponseBody
-	public String top10FailDomain(@RequestParam(required = false) Boolean allZkCluster,
+	public String top10FailDomain(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10FailureDomainByAllZkCluster();
 		}
 
@@ -161,9 +156,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10UnstableDomain")
 	@ResponseBody
-	public String top10UnstableDomain(@RequestParam(required = false) Boolean allZkCluster,
+	public String top10UnstableDomain(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10UnstableDomainByAllZkCluster();
 		}
 
@@ -174,9 +169,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "top10LoadExecutor")
 	@ResponseBody
-	public String top10LoadExecutor(@RequestParam(required = false) Boolean allZkCluster,
+	public String top10LoadExecutor(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.top10LoadExecutorByAllZkCluster();
 		}
 
@@ -188,51 +183,22 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "domainProcessCount")
 	@ResponseBody
-	public String domainProcessCount(@RequestParam(required = false) Boolean allZkCluster,
-			@RequestParam(required = false) String zkClusterKey) {
-		if (allZkCluster != null && allZkCluster) {
+	public String domainProcessCount(
+			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster();
-		} else {
-			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if (zkCluster != null) {
-				SaturnStatistics ss = dashboardService.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
-				return ss == null ? null : ss.getResult();
-			}
-			return null;
 		}
-	}
 
-	@PostMapping(value = "cleanShardingCount")
-	public SuccessResponseEntity cleanShardingCount(@RequestParam String nns) throws Exception {
-		dashboardService.cleanShardingCount(nns);
-		return new SuccessResponseEntity();
-	}
-
-	@PostMapping(value = "cleanOneJobAnalyse")
-	public SuccessResponseEntity cleanOneJobAnalyse(@RequestParam String nns, @RequestParam String job)
-			throws Exception {
-		dashboardService.cleanOneJobAnalyse(job, nns);
-		return new SuccessResponseEntity();
-	}
-
-	@PostMapping(value = "cleanOneJobExecutorCount")
-	public SuccessResponseEntity cleanOneJobExecutorCount(@RequestParam String nns, @RequestParam String job)
-			throws Exception {
-		dashboardService.cleanOneJobExecutorCount(job, nns);
-		return new SuccessResponseEntity();
-	}
-
-	@PostMapping(value = "cleanAllJobAnalyse")
-	public SuccessResponseEntity cleanAllJobAnalyse(@RequestParam String nns) throws Exception {
-		dashboardService.cleanAllJobAnalyse(nns);
-		return new SuccessResponseEntity();
+		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
+		SaturnStatistics ss = dashboardService.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
+		return ss == null ? null : ss.getResult();
 	}
 
 	@GetMapping(value = "domainRank")
 	@ResponseBody
-	public Map<String, Integer> loadDomainRank(@RequestParam(required = false) Boolean allZkCluster,
+	public Map<String, Integer> loadDomainRank(
 			@RequestParam(required = false) String zkClusterKey) {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.loadDomainRankDistributionByAllZkCluster();
 		}
 		return dashboardService.loadDomainRankDistribution(zkClusterKey);
@@ -240,9 +206,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "jobRank")
 	@ResponseBody
-	public Map<Integer, Integer> loadJobRank(@RequestParam(required = false) Boolean allZkCluster,
+	public Map<Integer, Integer> loadJobRank(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.loadJobRankDistributionByAllZkCluster();
 		}
 
@@ -253,9 +219,9 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "domainExecutorVersionNumber")
 	@ResponseBody
-	public Map<String, Long> versionDomainNumber(@RequestParam(required = false) Boolean allZkCluster,
+	public Map<String, Long> versionDomainNumber(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.versionDomainNumberByAllZkCluster();
 		}
 
@@ -265,14 +231,44 @@ public class DashboardController extends AbstractGUIController {
 
 	@GetMapping(value = "executorVersionNumber")
 	@ResponseBody
-	public Map<String, Long> versionExecutorNumber(@RequestParam(required = false) Boolean allZkCluster,
+	public Map<String, Long> versionExecutorNumber(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
-		if (allZkCluster != null && allZkCluster) {
+		if (StringUtils.isBlank(zkClusterKey)) {
 			return dashboardService.versionExecutorNumberByAllZkCluster();
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		return dashboardService.versionExecutorNumber(zkCluster.getZkAddr());
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@PostMapping(value = "cleanShardingCount")
+	public SuccessResponseEntity cleanShardingCount(@RequestParam String nns) throws Exception {
+		dashboardService.cleanShardingCount(nns);
+		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@PostMapping(value = "cleanOneJobAnalyse")
+	public SuccessResponseEntity cleanOneJobAnalyse(@RequestParam String nns, @RequestParam String job)
+			throws Exception {
+		dashboardService.cleanOneJobAnalyse(job, nns);
+		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@PostMapping(value = "cleanOneJobExecutorCount")
+	public SuccessResponseEntity cleanOneJobExecutorCount(@RequestParam String nns, @RequestParam String job)
+			throws Exception {
+		dashboardService.cleanOneJobExecutorCount(job, nns);
+		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@PostMapping(value = "cleanAllJobAnalyse")
+	public SuccessResponseEntity cleanAllJobAnalyse(@RequestParam String nns) throws Exception {
+		dashboardService.cleanAllJobAnalyse(nns);
+		return new SuccessResponseEntity();
 	}
 
 }
