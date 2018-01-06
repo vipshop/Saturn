@@ -488,29 +488,25 @@ public class NamespaceShardingService {
 			Map<String, List<String>> preferListConfiguredMap = new HashMap<>();
 			// 是否使用非优先节点的作业的映射
 			Map<String, Boolean> useDispreferListMap = new HashMap<>();
-			{
-				Iterator<Shard> iterator = shardList.iterator();
-				while (iterator.hasNext()) {
-					String jobName = iterator.next().getJobName();
-					if (!noDockerTrafficExecutorsMapByJob.containsKey(jobName)) {
-						noDockerTrafficExecutorsMapByJob.put(jobName, filterExecutorsByJob(notDockerExecutors, jobName));
-					}
-					if (!lastOnlineTrafficExecutorListMapByJob.containsKey(jobName)) {
-						lastOnlineTrafficExecutorListMapByJob.put(jobName, filterExecutorsByJob(lastOnlineTrafficExecutorList, jobName));
-					}
-					if (!localModeMap.containsKey(jobName)) {
-						localModeMap.put(jobName, isLocalMode(jobName));
-					}
-					if (!preferListIsConfiguredMap.containsKey(jobName)) {
-						preferListIsConfiguredMap.put(jobName, preferListIsConfigured(jobName));
-					}
-					if (!preferListConfiguredMap.containsKey(jobName)) {
-						preferListConfiguredMap.put(jobName, getPreferListConfigured(jobName));
-					}
-					if (!useDispreferListMap.containsKey(jobName)) {
-						useDispreferListMap.put(jobName, useDispreferList(jobName));
-					}
-				}
+
+			Iterator<Shard> iterator = shardList.iterator();
+			while (iterator.hasNext()) {
+				String jobName = iterator.next().getJobName();
+
+				checkAndPutIntoMap(jobName,
+						filterExecutorsByJob(notDockerExecutors, jobName), noDockerTrafficExecutorsMapByJob);
+
+				checkAndPutIntoMap(jobName, filterExecutorsByJob(lastOnlineTrafficExecutorList, jobName),
+						lastOnlineTrafficExecutorListMapByJob);
+
+				checkAndPutIntoMap(jobName, isLocalMode(jobName), localModeMap);
+
+				checkAndPutIntoMap(jobName, preferListIsConfigured(jobName), preferListIsConfiguredMap);
+
+				checkAndPutIntoMap(jobName, getPreferListConfigured(jobName), preferListConfiguredMap);
+
+				checkAndPutIntoMap(jobName, useDispreferList(jobName), useDispreferListMap);
+
 			}
 
 			// 整体算法放回算法：拿取Shard，放进负荷最小的executor
@@ -519,83 +515,110 @@ public class NamespaceShardingService {
 			// 如果配置了preferList，则选取preferList中的executor。
 			// 如果preferList中的executor都挂了，则不转移；否则，选取没有接管该作业的executor列表的loadLevel最小的一个。
 			// 如果没有配置preferList，则选取没有接管该作业的executor列表的loadLevel最小的一个。
-			{
-				Iterator<Shard> iterator = shardList.iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					String jobName = shard.getJobName();
-					if (localModeMap.get(jobName)) {
-						if (preferListIsConfiguredMap.get(jobName)) {
-							List<String> preferListConfigured = preferListConfiguredMap.get(jobName);
-							if (!preferListConfigured.isEmpty()) {
-								List<Executor> preferExecutorList = new ArrayList<>();
-								List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob.get(jobName);
-								for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
-									Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
-									if (preferListConfigured.contains(executor.getExecutorName())) {
-										preferExecutorList.add(executor);
-									}
-								}
-								if (!preferExecutorList.isEmpty()) {
-									Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList,
-											jobName);
-									putShardIntoExecutor(shard, executor);
-								}
-							}
-						} else {
-							Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(noDockerTrafficExecutorsMapByJob.get(jobName),
-									jobName);
-							putShardIntoExecutor(shard, executor);
-						}
-						iterator.remove();
-					}
-				}
-			}
+			putBackShardWithLocalMode(shardList, noDockerTrafficExecutorsMapByJob,
+					lastOnlineTrafficExecutorListMapByJob,
+					localModeMap, preferListIsConfiguredMap, preferListConfiguredMap);
 
 			// 2、放回配置了preferList的Shard
-			{
-				Iterator<Shard> iterator = shardList.iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					String jobName = shard.getJobName();
-					if (preferListIsConfiguredMap.get(jobName)) { // fix,
-																	// preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
-						List<String> preferList = preferListConfiguredMap.get(jobName);
-						List<Executor> preferExecutorList = new ArrayList<>();
-						List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob.get(jobName);
-						for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
-							Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
-							if (preferList.contains(executor.getExecutorName())) {
-								preferExecutorList.add(executor);
-							}
+			putBackShardWithPreferList(shardList, lastOnlineTrafficExecutorListMapByJob, preferListIsConfiguredMap,
+					preferListConfiguredMap, useDispreferListMap);
+
+			// 3、放回没有配置preferList的Shard
+			putBackShardWithoutPreferlist(shardList, noDockerTrafficExecutorsMapByJob);
+		}
+
+		private <T> void checkAndPutIntoMap(String key, T value, Map<String, T> targetMap) {
+			if (!targetMap.containsKey(key)) {
+				targetMap.put(key, value);
+			}
+		}
+
+		private void putBackShardWithoutPreferlist(List<Shard> shardList,
+				Map<String, List<Executor>> noDockerTrafficExecutorsMapByJob) {
+			Iterator<Shard> iterator = shardList.iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				Executor executor = getExecutorWithMinLoadLevel(
+						noDockerTrafficExecutorsMapByJob.get(shard.getJobName()));
+				putShardIntoExecutor(shard, executor);
+				iterator.remove();
+			}
+		}
+
+		private void putBackShardWithPreferList(List<Shard> shardList,
+				Map<String, List<Executor>> lastOnlineTrafficExecutorListMapByJob,
+				Map<String, Boolean> preferListIsConfiguredMap, Map<String, List<String>> preferListConfiguredMap,
+				Map<String, Boolean> useDispreferListMap) {
+			Iterator<Shard> iterator = shardList.iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				String jobName = shard.getJobName();
+				if (preferListIsConfiguredMap.get(jobName)) { // fix,
+					// preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
+					List<String> preferList = preferListConfiguredMap.get(jobName);
+					List<Executor> preferExecutorList = new ArrayList<>();
+					List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
+							.get(jobName);
+					for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
+						Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
+						if (preferList.contains(executor.getExecutorName())) {
+							preferExecutorList.add(executor);
 						}
-						// 如果preferList的Executor都offline，则放回到全部online的Executor中某一个。如果是这种情况，则后续再操作，避免不均衡的情况
-						// 如果存在preferExecutor，择优放回
-						if (!preferExecutorList.isEmpty()) {
-							Executor executor = getExecutorWithMinLoadLevel(preferExecutorList);
-							putShardIntoExecutor(shard, executor);
+					}
+					// 如果preferList的Executor都offline，则放回到全部online的Executor中某一个。如果是这种情况，则后续再操作，避免不均衡的情况
+					// 如果存在preferExecutor，择优放回
+					if (!preferExecutorList.isEmpty()) {
+						Executor executor = getExecutorWithMinLoadLevel(preferExecutorList);
+						putShardIntoExecutor(shard, executor);
+						iterator.remove();
+					} else { // 如果不存在preferExecutor
+						// 如果“只使用preferExecutor”，则丢弃；否则，等到后续（在第3步）进行放回操作，避免不均衡的情况
+						if (!useDispreferListMap.get(jobName)) {
 							iterator.remove();
-						} else { // 如果不存在preferExecutor
-							// 如果“只使用preferExecutor”，则丢弃；否则，等到后续（在第3步）进行放回操作，避免不均衡的情况
-							if (!useDispreferListMap.get(jobName)) {
-								iterator.remove();
-							}
 						}
 					}
 				}
 			}
+		}
 
-			// 3、放回没有配置preferList的Shard
-			{
-				Iterator<Shard> iterator = shardList.iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					Executor executor = getExecutorWithMinLoadLevel(noDockerTrafficExecutorsMapByJob.get(shard.getJobName()));
-					putShardIntoExecutor(shard, executor);
+		private void putBackShardWithLocalMode(List<Shard> shardList,
+				Map<String, List<Executor>> noDockerTrafficExecutorsMapByJob,
+				Map<String, List<Executor>> lastOnlineTrafficExecutorListMapByJob, Map<String, Boolean> localModeMap,
+				Map<String, Boolean> preferListIsConfiguredMap, Map<String, List<String>> preferListConfiguredMap) {
+			Iterator<Shard> iterator = shardList.iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				String jobName = shard.getJobName();
+				if (localModeMap.get(jobName)) {
+					if (preferListIsConfiguredMap.get(jobName)) {
+						List<String> preferListConfigured = preferListConfiguredMap.get(jobName);
+						if (!preferListConfigured.isEmpty()) {
+							List<Executor> preferExecutorList = new ArrayList<>();
+							List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
+									.get(jobName);
+							for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
+								Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
+								if (preferListConfigured.contains(executor.getExecutorName())) {
+									preferExecutorList.add(executor);
+								}
+							}
+							if (!preferExecutorList.isEmpty()) {
+								Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList,
+										jobName);
+								putShardIntoExecutor(shard, executor);
+							}
+						}
+					} else {
+						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(
+								noDockerTrafficExecutorsMapByJob.get(jobName),
+								jobName);
+						putShardIntoExecutor(shard, executor);
+					}
 					iterator.remove();
 				}
 			}
 		}
+
 
 		/**
 		 * 是否使用非preferList<br>
@@ -940,27 +963,27 @@ public class NamespaceShardingService {
 				return false;
 			}
 
-			Executor theExecutor = null;
+			Executor targetExecutor = null;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 				Executor tmp = lastOnlineExecutorList.get(i);
 				if (tmp.getExecutorName().equals(executorName)) {
-					theExecutor = tmp;
+					targetExecutor = tmp;
 					break;
 				}
 			}
-			if (theExecutor == null) {
-				theExecutor = new Executor();
-				theExecutor.setExecutorName(executorName);
-				theExecutor.setIp(ip);
-				theExecutor.setNoTraffic(getExecutorNoTraffic(executorName));
-				theExecutor.setShardList(new ArrayList<Shard>());
-				theExecutor.setJobNameList(new ArrayList<String>());
-				lastOnlineExecutorList.add(theExecutor);
-				if(!theExecutor.isNoTraffic()) {
-					lastOnlineTrafficExecutorList.add(theExecutor);
+			if (targetExecutor == null) {
+				targetExecutor = new Executor();
+				targetExecutor.setExecutorName(executorName);
+				targetExecutor.setIp(ip);
+				targetExecutor.setNoTraffic(getExecutorNoTraffic(executorName));
+				targetExecutor.setShardList(new ArrayList<Shard>());
+				targetExecutor.setJobNameList(new ArrayList<String>());
+				lastOnlineExecutorList.add(targetExecutor);
+				if (!targetExecutor.isNoTraffic()) {
+					lastOnlineTrafficExecutorList.add(targetExecutor);
 				}
 			} else { // 重新设置下ip
-				theExecutor.setIp(ip);
+				targetExecutor.setIp(ip);
 			}
 
 			return true;
@@ -990,33 +1013,31 @@ public class NamespaceShardingService {
 			/**
 			 * 摘取下线的executor全部Shard
 			 */
-			Executor theExecutor = null;
-			{
-				Iterator<Executor> iterator = lastOnlineExecutorList.iterator();
-				while (iterator.hasNext()) {
-					Executor executor = iterator.next();
-					if (executor.getExecutorName().equals(executorName)) {
-						theExecutor = executor;
-						iterator.remove();
-						shardList.addAll(executor.getShardList());
-						break;
-					}
+			Executor targetExecutor = null;
+			Iterator<Executor> lastOnlineExecutorsIterator = lastOnlineExecutorList.iterator();
+			while (lastOnlineExecutorsIterator.hasNext()) {
+				Executor executor = lastOnlineExecutorsIterator.next();
+				if (executor.getExecutorName().equals(executorName)) {
+					targetExecutor = executor;
+					lastOnlineExecutorsIterator.remove();
+					shardList.addAll(executor.getShardList());
+					break;
 				}
 			}
 
-			if (theExecutor != null) {
-				Iterator<Executor> iterator = lastOnlineTrafficExecutorList.iterator();
-				while (iterator.hasNext()) {
-					Executor executor = iterator.next();
-					if (theExecutor.equals(executor)) {
-						iterator.remove();
+			if (targetExecutor != null) {
+				Iterator<Executor> lastOnlineTrafficExecutorsIterator = lastOnlineTrafficExecutorList.iterator();
+				while (lastOnlineTrafficExecutorsIterator.hasNext()) {
+					Executor executor = lastOnlineTrafficExecutorsIterator.next();
+					if (targetExecutor.equals(executor)) {
+						lastOnlineTrafficExecutorsIterator.remove();
 						break;
 					}
 				}
 			}
 			
 			// 如果该executor实际上已经在此之前下线，则摘取失败
-			if (theExecutor == null) {
+			if (targetExecutor == null) {
 				return false;
 			}
 
@@ -1054,38 +1075,40 @@ public class NamespaceShardingService {
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 							   List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 			// 摘取该executor的所有作业分片
-			Executor theExecutor = null;
-			{
-				Iterator<Executor> iterator = lastOnlineTrafficExecutorList.iterator();
-				while (iterator.hasNext()) {
-					Executor executor = iterator.next();
-					if (executor.getExecutorName().equals(executorName)) {
-						shardList.addAll(executor.getShardList());
-						executor.getShardList().clear();
-						executor.setNoTraffic(true);
-						executor.setTotalLoadLevel(0);
-						theExecutor = executor;
-						iterator.remove();
-						break;
-					}
+			Executor targetExecutor = null;
+			Iterator<Executor> iterator = lastOnlineTrafficExecutorList.iterator();
+			while (iterator.hasNext()) {
+				Executor executor = iterator.next();
+				if (executor.getExecutorName().equals(executorName)) {
+					shardList.addAll(executor.getShardList());
+					clearTargetExecutorShards(executor);
+					targetExecutor = executor;
+					iterator.remove();
+					break;
 				}
 			}
 
-			if (theExecutor == null) {
+			if (targetExecutor == null) {
 				LOGGER.warn("The executor {} maybe offline, unnecessary to extract traffic", executorName);
 				return false;
 			}
 
 			// 移除本地模式的作业分片
-			Iterator<Shard> iterator = shardList.iterator();
-			while (iterator.hasNext()) {
-				Shard shard = iterator.next();
+			Iterator<Shard> shardIterator = shardList.iterator();
+			while (shardIterator.hasNext()) {
+				Shard shard = shardIterator.next();
 				if (isLocalMode(shard.getJobName())) {
-					iterator.remove();
+					shardIterator.remove();
 				}
 			}
 
 			return true;
+		}
+
+		private void clearTargetExecutorShards(Executor executor) {
+			executor.getShardList().clear();
+			executor.setNoTraffic(true);
+			executor.setTotalLoadLevel(0);
 		}
 	}
 
@@ -1109,24 +1132,24 @@ public class NamespaceShardingService {
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 							   List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 			// 设置该executor的noTraffic为false
-			Executor theExecutor = null;
+			Executor targetExecutor = null;
 			Iterator<Executor> iterator = lastOnlineExecutorList.iterator();
 			while (iterator.hasNext()) {
 				Executor executor = iterator.next();
 				if (executor.getExecutorName().equals(executorName)) {
 					executor.setNoTraffic(false);
 					lastOnlineTrafficExecutorList.add(executor);
-					theExecutor = executor;
+					targetExecutor = executor;
 					break;
 				}
 			}
-			if (theExecutor == null) {
+			if (targetExecutor == null) {
 				LOGGER.warn("The executor {} maybe offline, unnecessary to recover traffic", executorName);
 				return false;
 			}
 
 			// 平衡摘取每个作业能够运行的分片，可以视为jobNameList中每个作业的jobServerOnline
-			final List<String> jobNameList = theExecutor.getJobNameList();
+			final List<String> jobNameList = targetExecutor.getJobNameList();
 			for(String jobName : jobNameList) {
 				new ExecuteJobServerOnlineShardingTask(jobName, executorName)
 						.pickIntelligent(allEnableJobs, shardList, lastOnlineTrafficExecutorList);
@@ -1555,33 +1578,33 @@ public class NamespaceShardingService {
 			// 很小的可能性：status的新增事件先于ip的新增事件
 			// 那么，如果lastOnlineExecutorList不包含executorName，则添加一个新的Executor
 			// 添加当前作业至jobNameList
-			Executor theExecutor = null;
+			Executor targetExecutor = null;
 			for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 				Executor executor = lastOnlineExecutorList.get(i);
 				if (executor.getExecutorName().equals(executorName)) {
-					theExecutor = executor;
+					targetExecutor = executor;
 					break;
 				}
 			}
-			if (theExecutor == null) {
-				theExecutor = new Executor();
-				theExecutor.setExecutorName(executorName);
-				theExecutor.setIp(getExecutorIp());
-				theExecutor.setNoTraffic(getExecutorNoTraffic(executorName));
-				theExecutor.setShardList(new ArrayList<Shard>());
-				theExecutor.setJobNameList(new ArrayList<String>());
-				theExecutor.setTotalLoadLevel(0);
-				lastOnlineExecutorList.add(theExecutor);
-				if(!theExecutor.isNoTraffic()) {
-					lastOnlineTrafficExecutorList.add(theExecutor);
+			if (targetExecutor == null) {
+				targetExecutor = new Executor();
+				targetExecutor.setExecutorName(executorName);
+				targetExecutor.setIp(getExecutorIp());
+				targetExecutor.setNoTraffic(getExecutorNoTraffic(executorName));
+				targetExecutor.setShardList(new ArrayList<Shard>());
+				targetExecutor.setJobNameList(new ArrayList<String>());
+				targetExecutor.setTotalLoadLevel(0);
+				lastOnlineExecutorList.add(targetExecutor);
+				if (!targetExecutor.isNoTraffic()) {
+					lastOnlineTrafficExecutorList.add(targetExecutor);
 				}
 			}
-			if (!theExecutor.getJobNameList().contains(jobName)) {
-				theExecutor.getJobNameList().add(jobName);
+			if (!targetExecutor.getJobNameList().contains(jobName)) {
+				targetExecutor.getJobNameList().add(jobName);
 			}
 			
 			// 如果该Executor流量被摘取，则无需摘取，返回true
-			if(theExecutor.isNoTraffic()) {
+			if (targetExecutor.isNoTraffic()) {
 				return true;
 			}
 			
