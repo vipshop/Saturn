@@ -228,54 +228,37 @@ public class SaturnJavaJob extends CrondJob {
 	public void postTimeout(final String jobName, final Integer key, final String value,
 			SaturnExecutionContext shardingContext,
 			final JavaShardingItemCallable callable) {
-		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob onTimeout,  jobClass is {} ", jobName, jobClass);
-
-		try {
-			new JobBusinessClassMethodCaller() {
-				@Override
-				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
-						throws Exception {
-					return jobBusinessInstance.getClass()
-							.getMethod("onTimeout", String.class, Integer.class, String.class,
-									saturnJobExecutionContextClazz)
-							.invoke(jobBusinessInstance, jobName, key, value,
-									callable.getContextForJob(jobClassLoader));
-				}
-			}.call(jobBusinessInstance, saturnExecutorService);
-		} catch (Exception e) {
-			logBusinessExceptionIfNecessary(jobName, e);
-		}
+		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "onTimeout", key, value);
 	}
 
 	public void beforeTimeout(final String jobName, final Integer key, final String value,
 			SaturnExecutionContext shardingContext,
 			final JavaShardingItemCallable callable) {
-		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob beforeTimeout,  jobClass is {} ", jobName, jobClass);
-
-		try {
-			new JobBusinessClassMethodCaller() {
-				@Override
-				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
-						throws Exception {
-					return jobBusinessInstance.getClass()
-							.getMethod("beforeTimeout", String.class, Integer.class, String.class,
-									saturnJobExecutionContextClazz)
-							.invoke(jobBusinessInstance, jobName, key, value,
-									callable.getContextForJob(jobClassLoader));
-				}
-			}.call(jobBusinessInstance, saturnExecutorService);
-		} catch (Exception e) {
-			logBusinessExceptionIfNecessary(jobName, e);
-		}
+		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "beforeTimeout", key, value);
 	}
 
 	public void postForceStop(final String jobName, final Integer key, final String value,
 			SaturnExecutionContext shardingContext,
 			final JavaShardingItemCallable callable) {
+		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "postForceStop", key, value);
+	}
+
+	@Override
+	public void notifyJobEnabled() {
+		callJobBusinessClassMethodEnableOrDisable("onEnabled");
+	}
+
+	@Override
+	public void notifyJobDisabled() {
+		callJobBusinessClassMethodEnableOrDisable("onDisabled");
+	}
+
+	private void callJobBusinessClassMethodTimeoutOrForceStop(final String jobName,
+			SaturnExecutionContext shardingContext,
+			final JavaShardingItemCallable callable, final String methodName, final Integer key,
+			final String value) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob postForceStop,  jobClass is {} ", jobName, jobClass);
+		log.info("[{}] msg=SaturnJavaJob postForceStop,  jobClass is {}", jobName, methodName, jobClass);
 
 		try {
 			new JobBusinessClassMethodCaller() {
@@ -283,7 +266,7 @@ public class SaturnJavaJob extends CrondJob {
 				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
 						throws Exception {
 					return jobBusinessInstance.getClass()
-							.getMethod("postForceStop", String.class, Integer.class, String.class,
+							.getMethod(methodName, String.class, Integer.class, String.class,
 									saturnJobExecutionContextClazz)
 							.invoke(jobBusinessInstance, jobName, key, value,
 									callable.getContextForJob(jobClassLoader));
@@ -294,34 +277,15 @@ public class SaturnJavaJob extends CrondJob {
 		}
 	}
 
-	@Override
-	public void notifyJobEnabled() {
+	private void callJobBusinessClassMethodEnableOrDisable(final String methodName) {
 		String jobClass = configService.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob onEnabled,  jobClass is {} ", jobName, jobClass);
+		log.info("[{}] msg=SaturnJavaJob {},  jobClass is {}", jobName, methodName, jobClass);
 		try {
 			new JobBusinessClassMethodCaller() {
 				@Override
 				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
 						throws Exception {
-					return jobBusinessInstance.getClass().getMethod("onEnabled", String.class)
-							.invoke(jobBusinessInstance, jobName);
-				}
-			}.call(jobBusinessInstance, saturnExecutorService);
-		} catch (Exception e) {
-			logBusinessExceptionIfNecessary(jobName, e);
-		}
-	}
-
-	@Override
-	public void notifyJobDisabled() {
-		String jobClass = configService.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob onDisabled,  jobClass is {} ", jobName, jobClass);
-		try {
-			new JobBusinessClassMethodCaller() {
-				@Override
-				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
-						throws Exception {
-					return jobBusinessInstance.getClass().getMethod("onDisabled", String.class)
+					return jobBusinessInstance.getClass().getMethod(methodName, String.class)
 							.invoke(jobBusinessInstance, jobName);
 				}
 			}.call(jobBusinessInstance, saturnExecutorService);
