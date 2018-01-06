@@ -6,6 +6,7 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobException;
+import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -190,37 +191,31 @@ public class SaturnJavaJob extends CrondJob {
 		return handleJavaJob(jobName, key, value, shardingContext, callable);
 	}
 
-	public SaturnJobReturn handleJavaJob(String jobName, Integer key, String value,
-			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable {
+	public SaturnJobReturn handleJavaJob(final String jobName, final Integer key, final String value,
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) throws Throwable {
 
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=Running SaturnJavaJob,  jobClass [{}], item [{}]", jobName, jobClass, key);
 
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				Class<?> saturnJobExecutionContextClazz = jobClassLoader
-						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
-
-				Object ret = jobBusinessInstance.getClass()
-						.getMethod("handleJavaJob", String.class, Integer.class, String.class,
-								saturnJobExecutionContextClazz)
-						.invoke(jobBusinessInstance, jobName, key, value, callable.getContextForJob(jobClassLoader));
-				SaturnJobReturn saturnJobReturn = (SaturnJobReturn) JavaShardingItemCallable.cloneObject(ret,
-						saturnExecutorService.getExecutorClassLoader());
-				if (saturnJobReturn != null) {
-					callable.setBusinessReturned(true);
+			Object ret = new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass()
+							.getMethod("handleJavaJob", String.class, Integer.class, String.class,
+									saturnJobExecutionContextClazz)
+							.invoke(jobBusinessInstance, jobName, key, value,
+									callable.getContextForJob(jobClassLoader));
 				}
-				return saturnJobReturn;
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			}.call(jobBusinessInstance, saturnExecutorService);
 
+			SaturnJobReturn saturnJobReturn = (SaturnJobReturn) JavaShardingItemCallable.cloneObject(ret,
+					saturnExecutorService.getExecutorClassLoader());
+			if (saturnJobReturn != null) {
+				callable.setBusinessReturned(true);
+			}
+			return saturnJobReturn;
 		} catch (Exception e) {
 			if (e.getCause() instanceof ThreadDeath) {
 				throw e.getCause();
@@ -230,86 +225,70 @@ public class SaturnJavaJob extends CrondJob {
 		}
 	}
 
-	public void postTimeout(String jobName, Integer key, String value, SaturnExecutionContext shardingContext,
-			JavaShardingItemCallable callable) {
+	public void postTimeout(final String jobName, final Integer key, final String value,
+			SaturnExecutionContext shardingContext,
+			final JavaShardingItemCallable callable) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob onTimeout,  jobClass is {} ", jobName, jobClass);
 
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				Class<?> saturnJobExecutionContextClazz = jobClassLoader
-						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
-
-				jobBusinessInstance.getClass()
-						.getMethod("onTimeout", String.class, Integer.class, String.class,
-								saturnJobExecutionContextClazz)
-						.invoke(jobBusinessInstance, jobName, key, value, callable.getContextForJob(jobClassLoader));
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass()
+							.getMethod("onTimeout", String.class, Integer.class, String.class,
+									saturnJobExecutionContextClazz)
+							.invoke(jobBusinessInstance, jobName, key, value,
+									callable.getContextForJob(jobClassLoader));
+				}
+			}.call(jobBusinessInstance, saturnExecutorService);
 		} catch (Exception e) {
 			logBusinessExceptionIfNecessary(jobName, e);
 		}
 	}
 
-	public void beforeTimeout(String jobName, Integer key, String value, SaturnExecutionContext shardingContext,
-			JavaShardingItemCallable callable) {
+	public void beforeTimeout(final String jobName, final Integer key, final String value,
+			SaturnExecutionContext shardingContext,
+			final JavaShardingItemCallable callable) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob beforeTimeout,  jobClass is {} ", jobName, jobClass);
 
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				Class<?> saturnJobExecutionContextClazz = jobClassLoader
-						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
-
-				jobBusinessInstance.getClass()
-						.getMethod("beforeTimeout", String.class, Integer.class, String.class,
-								saturnJobExecutionContextClazz)
-						.invoke(jobBusinessInstance, jobName, key, value, callable.getContextForJob(jobClassLoader));
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass()
+							.getMethod("beforeTimeout", String.class, Integer.class, String.class,
+									saturnJobExecutionContextClazz)
+							.invoke(jobBusinessInstance, jobName, key, value,
+									callable.getContextForJob(jobClassLoader));
+				}
+			}.call(jobBusinessInstance, saturnExecutorService);
 		} catch (Exception e) {
 			logBusinessExceptionIfNecessary(jobName, e);
 		}
 	}
 
-	public void postForceStop(String jobName, Integer key, String value, SaturnExecutionContext shardingContext,
-			JavaShardingItemCallable callable) {
+	public void postForceStop(final String jobName, final Integer key, final String value,
+			SaturnExecutionContext shardingContext,
+			final JavaShardingItemCallable callable) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob postForceStop,  jobClass is {} ", jobName, jobClass);
 
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				Class<?> saturnJobExecutionContextClazz = jobClassLoader
-						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
-
-				jobBusinessInstance.getClass()
-						.getMethod("postForceStop", String.class, Integer.class, String.class,
-								saturnJobExecutionContextClazz)
-						.invoke(jobBusinessInstance, jobName, key, value, callable.getContextForJob(jobClassLoader));
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass()
+							.getMethod("postForceStop", String.class, Integer.class, String.class,
+									saturnJobExecutionContextClazz)
+							.invoke(jobBusinessInstance, jobName, key, value,
+									callable.getContextForJob(jobClassLoader));
+				}
+			}.call(jobBusinessInstance, saturnExecutorService);
 		} catch (Exception e) {
 			logBusinessExceptionIfNecessary(jobName, e);
 		}
@@ -320,19 +299,14 @@ public class SaturnJavaJob extends CrondJob {
 		String jobClass = configService.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob onEnabled,  jobClass is {} ", jobName, jobClass);
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				jobBusinessInstance.getClass().getMethod("onEnabled", String.class).invoke(jobBusinessInstance,
-						jobName);
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass().getMethod("onEnabled", String.class)
+							.invoke(jobBusinessInstance, jobName);
+				}
+			}.call(jobBusinessInstance, saturnExecutorService);
 		} catch (Exception e) {
 			logBusinessExceptionIfNecessary(jobName, e);
 		}
@@ -343,19 +317,14 @@ public class SaturnJavaJob extends CrondJob {
 		String jobClass = configService.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob onDisabled,  jobClass is {} ", jobName, jobClass);
 		try {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				jobBusinessInstance.getClass().getMethod("onDisabled", String.class).invoke(jobBusinessInstance,
-						jobName);
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
+			new JobBusinessClassMethodCaller() {
+				@Override
+				protected Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+						throws Exception {
+					return jobBusinessInstance.getClass().getMethod("onDisabled", String.class)
+							.invoke(jobBusinessInstance, jobName);
+				}
+			}.call(jobBusinessInstance, saturnExecutorService);
 		} catch (Exception e) {
 			logBusinessExceptionIfNecessary(jobName, e);
 		}
@@ -374,4 +343,25 @@ public class SaturnJavaJob extends CrondJob {
 		// TODO: need to raise alarm by implementor
 	}
 
+	private static abstract class JobBusinessClassMethodCaller {
+
+		public Object call(Object jobBusinessInstance, SaturnExecutorService saturnExecutorService) throws Exception {
+			if (jobBusinessInstance == null) {
+				throw new JobException("the job business instance is not initialized");
+			}
+			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				final Class<?> saturnJobExecutionContextClazz = jobClassLoader
+						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
+				return internalCall(jobClassLoader, saturnJobExecutionContextClazz);
+			} finally {
+				Thread.currentThread().setContextClassLoader(oldClassLoader);
+			}
+		}
+
+		protected abstract Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+				throws Exception;
+	}
 }
