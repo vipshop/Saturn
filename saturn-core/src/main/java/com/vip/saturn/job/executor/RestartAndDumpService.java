@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
  */
 public class RestartAndDumpService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestartAndDumpService.class);
+    private static final Logger log = LoggerFactory.getLogger(RestartAndDumpService.class);
 
     private String executorName;
     private CoordinatorRegistryCenter coordinatorRegistryCenter;
@@ -39,7 +39,7 @@ public class RestartAndDumpService {
 
     public void start() throws Exception {
         if (!SystemEnvProperties.VIP_SATURN_ENABLE_EXEC_SCRIPT) {
-            LOGGER.info("The RestartAndDumpService is disabled");
+            log.info("The RestartAndDumpService is disabled");
             return;
         }
         validateFile(SystemEnvProperties.NAME_VIP_SATURN_PRG, SystemEnvProperties.VIP_SATURN_PRG);
@@ -65,7 +65,7 @@ public class RestartAndDumpService {
         if (StringUtils.isBlank(value)) {
             throw new SaturnJobException(name + " is not configured");
         }
-        LOGGER.info("The {} is configured as {}", name, value);
+        log.info("The {} is configured as {}", name, value);
     }
 
     private void initRestart() throws Exception {
@@ -80,29 +80,11 @@ public class RestartAndDumpService {
             public void nodeChanged() throws Exception {
                 // Watch create, update event
                 if (restartNC.getCurrentData() != null) {
-                    LOGGER.info("The executor {} restart event is received", executorName);
+                    log.info("The executor {} restart event is received", executorName);
                     restartES.execute(new Runnable() {
                         @Override
                         public void run() {
-                            try {
-                                // The apache's Executor maybe destroy process on some conditions,
-                                // and don't provide the api for redirect process's streams to file.
-                                // It's not expected, so I use the original way.
-                                LOGGER.info("Begin to execute restart script");
-                                String command = "chmod +x " + SystemEnvProperties.VIP_SATURN_PRG + ";" + SystemEnvProperties.VIP_SATURN_PRG + " restart";
-                                Process process = new ProcessBuilder()
-                                        .command("/bin/bash", "-c", command)
-                                        .directory(prgDir)
-                                        .redirectOutput(ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
-                                        .redirectError(ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
-                                        .start();
-                                int exit = process.waitFor();
-                                LOGGER.info("Executed restart script, the exit value {} is returned", exit);
-                            } catch (InterruptedException e) {
-                                LOGGER.info("Restart thread is interrupted");
-                            } catch (Exception e) {
-                                LOGGER.error("Execute restart script error", e);
-                            }
+                            executeRestartOrDumpCmd("restart");
                         }
                     });
                 }
@@ -125,29 +107,12 @@ public class RestartAndDumpService {
             public void nodeChanged() throws Exception {
                 // Watch create, update event
                 if (dumpNC.getCurrentData() != null) {
-                    LOGGER.info("The executor {} dump event is received", executorName);
+                    log.info("The executor {} dump event is received", executorName);
                     dumpES.execute(new Runnable() {
                         @Override
                         public void run() {
-                            try {
-                                // dump threads and gc
-                                LOGGER.info("Begin to execute script dump");
-                                String command = "chmod +x " + SystemEnvProperties.VIP_SATURN_PRG + ";" + SystemEnvProperties.VIP_SATURN_PRG + " dump";
-                                Process process = new ProcessBuilder()
-                                        .command("/bin/bash", "-c", command)
-                                        .directory(prgDir)
-                                        .redirectOutput(ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
-                                        .redirectError(ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
-                                        .start();
-                                int exit = process.waitFor();
-                                LOGGER.info("Execute script dump done, the exit value {} is returned", exit);
-                            } catch (InterruptedException e) {
-                                LOGGER.info("Dump thread is interrupted");
-                            } catch (Exception e) {
-                                LOGGER.error(e.getMessage(), e);
-                            } finally {
-                                coordinatorRegistryCenter.remove(nodePath);
-                            }
+                            executeRestartOrDumpCmd("dump");
+                            coordinatorRegistryCenter.remove(nodePath);
                         }
                     });
                 }
@@ -157,29 +122,51 @@ public class RestartAndDumpService {
         dumpNC.start(false);
     }
 
+    // The apache's Executor maybe destroy process on some conditions,
+    // and don't provide the api for redirect process's streams to file.
+    // It's not expected, so I use the original way.
+    private void executeRestartOrDumpCmd(String cmd) {
+        try {
+            log.info("Begin to execute {} script", cmd);
+            String command = "chmod +x " + SystemEnvProperties.VIP_SATURN_PRG + ";" + SystemEnvProperties.VIP_SATURN_PRG
+                    + " " + cmd;
+            Process process = new ProcessBuilder()
+                    .command("/bin/bash", "-c", command)
+                    .directory(prgDir)
+                    .redirectOutput(
+                            ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
+                    .redirectError(
+                            ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
+                    .start();
+            int exit = process.waitFor();
+            log.info("Executed {} script, the exit value {} is returned", cmd, exit);
+        } catch (InterruptedException e) {
+            log.info("{} thread is interrupted", cmd);
+        } catch (Exception e) {
+            log.error("Execute {} script error", cmd, e);
+        }
+    }
 
     public void stop() {
-        try {
-            if (restartNC != null) {
-                restartNC.close();
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
+        closeNodeCacheQuietly(restartNC);
         if (restartES != null) {
             restartES.shutdownNow();
         }
-        try {
-            if (dumpNC != null) {
-                dumpNC.close();
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
+        closeNodeCacheQuietly(dumpNC);
         if (dumpES != null) {
             dumpES.shutdownNow();
         }
     }
 
+
+    private void closeNodeCacheQuietly(NodeCache nodeCache) {
+        try {
+            if (nodeCache != null) {
+                nodeCache.close();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+    }
 
 }
