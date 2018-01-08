@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{namespace:.+}/jobs/{jobName}/config")
+@RequestMapping("/console/namespaces/{namespace:.+}/jobs/{jobName}/config")
 public class JobConfigController extends AbstractGUIController {
 
 	@Resource
