@@ -3,6 +3,8 @@ package com.vip.saturn.job.console.controller.gui;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Lists;
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.JobConfigMetaGroup;
@@ -55,8 +57,10 @@ public class SystemConfigController extends AbstractController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping
-	public SuccessResponseEntity createOrUpdate(@RequestParam String key, @RequestParam String value)
+	public SuccessResponseEntity createOrUpdateConfig(@AuditParam(value = "key") @RequestParam String key,
+			@AuditParam(value = "value") @RequestParam String value)
 			throws SaturnJobConsoleException {
 		SystemConfig systemConfig = new SystemConfig();
 		systemConfig.setProperty(key);
