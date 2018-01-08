@@ -114,7 +114,7 @@ export default {
   },
   methods: {
     getExecutorAllocation(row) {
-      this.$http.get(`/console/${this.domainName}/executors/${row.executorName}/allocation`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/executors/${row.executorName}/allocation`).then((data) => {
         this.isExecutorAllocationVisible = true;
         this.executorAllocationInfo = JSON.parse(JSON.stringify(data));
       })
@@ -125,7 +125,7 @@ export default {
     },
     handleReArrange() {
       this.$message.confirmMessage('确认一键重排吗?', () => {
-        this.$http.post(`/console/${this.domainName}/executors/shardAll`, '').then(() => {
+        this.$http.post(`/console/namespaces/${this.domainName}/executors/shardAll`, '').then(() => {
           this.getExecutorList();
           this.$message.successNotify('一键重排操作成功');
         })
@@ -138,7 +138,7 @@ export default {
           executorNames: arr.join(','),
         };
         this.$message.confirmMessage(`确定删除Executor ${arr.join(',')} 吗?`, () => {
-          this.$http.delete(`/console/${this.domainName}/executors`, params).then(() => {
+          this.$http.delete(`/console/namespaces/${this.domainName}/executors`, params).then(() => {
             this.getExecutorList();
             this.$message.successNotify('批量删除Executor操作成功');
           })
@@ -162,7 +162,7 @@ export default {
     },
     handleDump(row) {
       this.$message.confirmMessage(`确定dump ${row.executorName} 吗?`, () => {
-        this.$http.post(`/console/${this.domainName}/executors/${row.executorName}/dump`, '').then(() => {
+        this.$http.post(`/console/namespaces/${this.domainName}/executors/${row.executorName}/dump`, '').then(() => {
           this.getExecutorList();
           this.$message.successNotify('一键DUMP操作成功');
         })
@@ -171,7 +171,7 @@ export default {
     },
     handleDelete(row) {
       this.$message.confirmMessage(`确定删除Executor ${row.executorName} 吗?`, () => {
-        this.$http.delete(`/console/${this.domainName}/executors/${row.executorName}`).then(() => {
+        this.$http.delete(`/console/namespaces/${this.domainName}/executors/${row.executorName}`).then(() => {
           this.getExecutorList();
           this.$message.successNotify('删除Executor操作成功');
         })
@@ -189,7 +189,7 @@ export default {
         text = '恢复';
       }
       this.$message.confirmMessage(`确认${text}Executor ${row.executorName} 流量吗?`, () => {
-        this.$http.post(`/console/${this.domainName}/executors/${row.executorName}/traffic`, params).then(() => {
+        this.$http.post(`/console/namespaces/${this.domainName}/executors/${row.executorName}/traffic`, params).then(() => {
           this.getExecutorList();
           this.$message.successNotify(`${text}流量操作成功`);
         })
@@ -198,7 +198,7 @@ export default {
     },
     getExecutorList() {
       this.loading = true;
-      this.$http.get(`/console/${this.domainName}/executors`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/executors`).then((data) => {
         this.executorList = data;
         this.total = data.length;
       })
