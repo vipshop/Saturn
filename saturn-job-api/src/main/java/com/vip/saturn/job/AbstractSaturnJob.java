@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Abstract Saturn Job for user to implement.
  */
-public abstract class AbstractSaturnJob {
+abstract class AbstractSaturnJob {
 
 	private static final String EMPTY_VERSION = "";
 

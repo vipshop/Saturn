@@ -258,7 +258,7 @@ public class SaturnJavaJob extends CrondJob {
 			final JavaShardingItemCallable callable, final String methodName, final Integer key,
 			final String value) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob postForceStop,  jobClass is {}", jobName, methodName, jobClass);
+		log.info("[{}] msg=SaturnJavaJob {},  jobClass is {}", jobName, methodName, jobClass);
 
 		try {
 			new JobBusinessClassMethodCaller() {
