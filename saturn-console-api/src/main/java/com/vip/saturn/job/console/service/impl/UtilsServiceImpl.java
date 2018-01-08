@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.service.UtilsService;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,6 +18,7 @@ import java.util.TimeZone;
 /**
  * @author hebelala
  */
+@Service
 public class UtilsServiceImpl implements UtilsService {
 
 	@Override
