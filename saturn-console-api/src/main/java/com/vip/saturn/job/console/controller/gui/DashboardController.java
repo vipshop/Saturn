@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/console/dashboard")
+@RequestMapping("/console/zkClusters/{zkClusterKey}/dashboard")
 public class DashboardController extends AbstractGUIController {
 
 	@Autowired
@@ -43,9 +43,9 @@ public class DashboardController extends AbstractGUIController {
 	 *
 	 * @param zkClusterKey 如果非空，即返回特定的zkClusterKey的统计信息，否则返回全域信息
 	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "count")
-	@ResponseBody
-	public Map<String, Integer> count(@RequestParam(required = false) String zkClusterKey) {
+	public SuccessResponseEntity count(@RequestParam(required = false) String zkClusterKey) {
 		Map<String, Integer> countMap = new HashMap<>();
 		int executorInDockerCount = 0;
 		int executorNotInDockerCount = 0;
@@ -78,20 +78,20 @@ public class DashboardController extends AbstractGUIController {
 		countMap.put("executorNotInDockerCount", executorNotInDockerCount);
 		countMap.put("jobCount", jobCount);
 		countMap.put("domainCount", domainCount);
-		return countMap;
+		return new SuccessResponseEntity(countMap);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10FailJob")
-	@ResponseBody
-	public String top10FailJob(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity top10FailJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10FailureJobByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10FailureJobByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10FailureJob(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
 	private ZkCluster checkAndGetZkCluster(String zkClusterKey) throws SaturnJobConsoleGUIException {
@@ -102,143 +102,140 @@ public class DashboardController extends AbstractGUIController {
 		return zkCluster;
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10FailExecutor")
-	@ResponseBody
-	public String top10FailExecutor(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity top10FailExecutor(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10FailureExecutorByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10FailureExecutorByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10FailureExecutor(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10ActiveJob")
-	@ResponseBody
-	public String top10ActiveJob(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity top10ActiveJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10AactiveJobByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10AactiveJobByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10AactiveJob(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
 	@GetMapping(value = "top10LoadJob")
-	@ResponseBody
-	public String top10LoadJob(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity top10LoadJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10LoadJobByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10LoadJobByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10LoadJob(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10FailDomain")
-	@ResponseBody
-	public String top10FailDomain(
+	public SuccessResponseEntity top10FailDomain(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10FailureDomainByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10FailureDomainByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10FailureDomain(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10UnstableDomain")
-	@ResponseBody
-	public String top10UnstableDomain(
+	public SuccessResponseEntity top10UnstableDomain(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10UnstableDomainByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10UnstableDomainByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10UnstableDomain(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "top10LoadExecutor")
-	@ResponseBody
-	public String top10LoadExecutor(
+	public SuccessResponseEntity top10LoadExecutor(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.top10LoadExecutorByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.top10LoadExecutorByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.top10LoadExecutor(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
-
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "domainProcessCount")
-	@ResponseBody
-	public String domainProcessCount(
+	public SuccessResponseEntity domainProcessCount(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.allProcessAndErrorCountOfTheDayByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 		SaturnStatistics ss = dashboardService.allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
-		return ss == null ? null : ss.getResult();
+		return ss == null ? new SuccessResponseEntity() : new SuccessResponseEntity(ss.getResult());
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "domainRank")
-	@ResponseBody
-	public Map<String, Integer> loadDomainRank(
+	public SuccessResponseEntity loadDomainRank(
 			@RequestParam(required = false) String zkClusterKey) {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.loadDomainRankDistributionByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.loadDomainRankDistributionByAllZkCluster());
 		}
-		return dashboardService.loadDomainRankDistribution(zkClusterKey);
+		return new SuccessResponseEntity(dashboardService.loadDomainRankDistribution(zkClusterKey));
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "jobRank")
-	@ResponseBody
-	public Map<Integer, Integer> loadJobRank(
+	public SuccessResponseEntity loadJobRank(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.loadJobRankDistributionByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.loadJobRankDistributionByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
-		return dashboardService.loadJobRankDistribution(zkCluster.getZkAddr());
+		return new SuccessResponseEntity(dashboardService.loadJobRankDistribution(zkCluster.getZkAddr()));
 
 	}
 
 	@GetMapping(value = "domainExecutorVersionNumber")
-	@ResponseBody
-	public Map<String, Long> versionDomainNumber(
+	public SuccessResponseEntity versionDomainNumber(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.versionDomainNumberByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.versionDomainNumberByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
-		return dashboardService.versionDomainNumber(zkCluster.getZkAddr());
+		return new SuccessResponseEntity(dashboardService.versionDomainNumber(zkCluster.getZkAddr()));
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "executorVersionNumber")
-	@ResponseBody
-	public Map<String, Long> versionExecutorNumber(
+	public SuccessResponseEntity versionExecutorNumber(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleGUIException {
 		if (StringUtils.isBlank(zkClusterKey)) {
-			return dashboardService.versionExecutorNumberByAllZkCluster();
+			return new SuccessResponseEntity(dashboardService.versionExecutorNumberByAllZkCluster());
 		}
 
 		ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
-		return dashboardService.versionExecutorNumber(zkCluster.getZkAddr());
+		return new SuccessResponseEntity(dashboardService.versionExecutorNumber(zkCluster.getZkAddr()));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

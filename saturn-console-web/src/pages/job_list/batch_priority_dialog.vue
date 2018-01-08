@@ -38,7 +38,7 @@ export default {
         jobNames: this.jobNamesArray.join(','),
         preferList: this.selectedExecutors.join(','),
       };
-      this.$http.post(`/console/${this.domainName}/jobs/preferExecutors`, params).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/preferExecutors`, params).then(() => {
         this.$emit('batch-priority-success');
       })
       .catch(() => { this.$http.buildErrorHandler('批量设置作业的优先Executors失败！'); });
@@ -48,7 +48,7 @@ export default {
     },
     getOnlineExecutors() {
       this.loading = true;
-      this.$http.get(`/console/${this.domainName}/executors`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/executors`).then((data) => {
         data.forEach((ele) => {
           if (ele.status === 'ONLINE') {
             this.onlineExecutors.push(ele);

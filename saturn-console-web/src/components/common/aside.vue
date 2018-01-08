@@ -30,14 +30,14 @@
 
 <script>
   export default {
-    props: ['sidebarMenus'],
+    props: ['sidebarMenus', 'headerHeight'],
     data() {
       const activeMenu = this.getActiveMenu();
       return {
         collapse: false,
         activeMenu,
         sidebarHeight: {
-          height: document.body.clientHeight - 90,
+          height: document.body.clientHeight - this.headerHeight,
         },
       };
     },
@@ -72,10 +72,10 @@
       },
     },
     mounted() {
-      this.sidebarHeight.height = document.documentElement.clientHeight - 90;
+      this.sidebarHeight.height = document.documentElement.clientHeight - this.headerHeight;
       const that = this;
       window.onresize = function temp() {
-        that.sidebarHeight.height = document.documentElement.clientHeight - 90;
+        that.sidebarHeight.height = document.documentElement.clientHeight - that.headerHeight;
       };
     },
   };

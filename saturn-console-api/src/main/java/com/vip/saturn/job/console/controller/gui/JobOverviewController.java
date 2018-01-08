@@ -33,7 +33,7 @@ import java.util.*;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/{namespace:.+}/jobs")
+@RequestMapping("/console/namespaces/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 
 	private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
