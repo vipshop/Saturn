@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
-        <Aside :sidebar-menus="sidebarMenus">
+        <Aside :sidebar-menus="sidebarMenus" headerHeight="90">
             <router-view style="margin: 20px;"></router-view>
         </Aside>
     </div>

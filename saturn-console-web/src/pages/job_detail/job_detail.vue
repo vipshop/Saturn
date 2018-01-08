@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
-        <Aside :sidebar-menus="sidebarMenus">
+        <Aside :sidebar-menus="sidebarMenus" headerHeight="90">
             <div class="job-detail-header">
                 <div class="pull-left job-detail-title">
                   <span class="job-span">作业 :  {{jobName}}</span>
