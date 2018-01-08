@@ -81,9 +81,9 @@ export default {
       this.$refs.jobInfo.validate((valid) => {
         if (valid) {
           if (this.jobInfoOperation === 'add') {
-            this.jobInfoRequest(`/console/${this.domainName}/jobs/jobs`);
+            this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/jobs`);
           } else if (this.jobInfoOperation === 'copy') {
-            this.jobInfoRequest(`/console/${this.domainName}/jobs/${this.jobInfo.jobNameCopied}/copy`);
+            this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/${this.jobInfo.jobNameCopied}/copy`);
           }
         }
       });

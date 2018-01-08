@@ -162,11 +162,11 @@ export default {
   },
   methods: {
     handleExport() {
-      window.location.href = `/console/${this.domainName}/jobs/export`;
+      window.location.href = `/console/namespaces/${this.domainName}/jobs/export`;
     },
     handleImport() {
       this.isImportVisible = true;
-      this.importUrl = `/console/${this.domainName}/jobs/import`;
+      this.importUrl = `/console/namespaces/${this.domainName}/jobs/import`;
     },
     closeImportDialog() {
       this.isImportVisible = false;
@@ -221,7 +221,7 @@ export default {
           jobNames: arr.join(','),
         };
         this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
-          this.$http.delete(`/console/${this.domainName}/jobs`, params).then(() => {
+          this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
             this.getJobList();
             this.$message.successNotify('批量删除作业操作成功');
           })
@@ -258,7 +258,7 @@ export default {
       this.multipleSelection = val;
     },
     handleCopy(row) {
-      this.$http.get(`/console/${this.domainName}/jobs/${row.jobName}/config`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${row.jobName}/config`).then((data) => {
         const jobCopyInfo = {
           jobType: data.jobType,
           jobName: '',
@@ -278,7 +278,7 @@ export default {
     },
     handleDelete(row) {
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
-        this.$http.delete(`/console/${this.domainName}/jobs/${row.jobName}`).then(() => {
+        this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${row.jobName}`).then(() => {
           this.getJobList();
           this.$message.successNotify('删除作业操作成功');
         })
@@ -291,12 +291,12 @@ export default {
       let text = '';
       let activeRequest = '';
       if (enabled) {
-        dependUrl = `/console/${this.domainName}/jobs/dependency`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/dependency`;
         operation = '启用';
         text = '禁用';
         activeRequest = 'enable';
       } else {
-        dependUrl = `/console/${this.domainName}/jobs/beDependedJobs`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/beDependedJobs`;
         operation = '禁用';
         text = '启用';
         activeRequest = 'disable';
@@ -341,12 +341,12 @@ export default {
       let text = '';
       let activeRequest = '';
       if (enabled) {
-        dependUrl = `/console/${this.domainName}/jobs/${row.jobName}/dependency`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/dependency`;
         operation = '启用';
         text = '禁用';
         activeRequest = 'enable';
       } else {
-        dependUrl = `/console/${this.domainName}/jobs/${row.jobName}/beDependedJobs`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/beDependedJobs`;
         operation = '禁用';
         text = '启用';
         activeRequest = 'disable';
@@ -387,14 +387,14 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
     },
     batchActiveRequest(params, reqUrl) {
-      this.$http.post(`/console/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
         this.$message.successNotify('操作成功');
         this.getJobList();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     activeRequest(jobName, reqUrl) {
-      this.$http.post(`/console/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
         this.getJobList();
       })
@@ -402,7 +402,7 @@ export default {
     },
     getJobList() {
       this.loading = true;
-      this.$http.get(`/console/${this.domainName}/jobs`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs`).then((data) => {
         this.jobList = data.jobs;
         this.totalNumber = data.totalNumber;
         this.enabledNumber = data.enabledNumber;
@@ -416,7 +416,7 @@ export default {
     },
     getGroupList() {
       this.loading = true;
-      this.$http.get(`/console/${this.domainName}/jobs/groups`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
         this.groupList = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); })
