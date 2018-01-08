@@ -11,6 +11,10 @@ import JobSharding from './pages/job_detail/job_sharding';
 import JobExecution from './pages/job_detail/job_execution';
 import JobStatistics from './pages/job_detail/job_statistics';
 import DashboardManage from './pages/dashboard_manage/dashboard_manage';
+import DashboardDetail from './pages/dashboard_manage/dashboard_detail';
+import DomainStatistic from './pages/dashboard_manage/domain_statistic';
+import ExecutorStatistic from './pages/dashboard_manage/executor_statistic';
+import JobStatistic from './pages/dashboard_manage/job_statistic';
 import RegistryManage from './pages/registry_manage/registry_manage';
 
 Vue.use(Router);
@@ -46,6 +50,15 @@ export default new Router({
       path: RouterMapper.GetPath('dashboardManage'),
       name: 'dashboard_manage',
       component: DashboardManage,
+    }, {
+      path: RouterMapper.GetPath('dashboardDetail'),
+      component: DashboardDetail,
+      children: [
+        { path: '', redirect: 'domain_statistic' },
+        { name: 'domain_statistic', path: RouterMapper.GetPath('domainStatistic'), component: DomainStatistic },
+        { name: 'executor_statistic', path: RouterMapper.GetPath('executorStatistic'), component: ExecutorStatistic },
+        { name: 'job_statistic', path: RouterMapper.GetPath('jobStatistic'), component: JobStatistic },
+      ],
     }, {
       path: RouterMapper.GetPath('registryManage'),
       name: 'registry_manage',
