@@ -27,6 +27,8 @@ public final class JobNodePath {
 
 	public static final String $JOBS_NODE_NAME = "$Jobs";
 
+	public static final String ROOT = "/" + $JOBS_NODE_NAME;
+
 	/**
 	 * 获取作业节点全路径
 	 * @return 作业节点全路径

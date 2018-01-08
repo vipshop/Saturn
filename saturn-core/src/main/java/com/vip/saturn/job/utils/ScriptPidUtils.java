@@ -352,9 +352,9 @@ public class ScriptPidUtils {
 
 	/**
 	 * 检查是否已经已有作业名重复运行
-	 * @param zkJobNames 作业名列表
 	 */
-	public static void checkAllExistJobs(final CoordinatorRegistryCenter regCenter, final List<String> zkJobNames) {
+	public static void checkAllExistJobs(final CoordinatorRegistryCenter regCenter) {
+		List<String> zkJobNames = regCenter.getChildrenKeys(JobNodePath.ROOT);
 		if (zkJobNames == null || zkJobNames.size() == 0) {
 			return;
 		}

@@ -10,8 +10,11 @@ import com.vip.saturn.job.utils.SaturnVersionUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.*;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +24,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 /**
- * 
  * @author xiaopeng.he
- *
  */
 public class SaturnExecutorService {
 
@@ -37,7 +38,7 @@ public class SaturnExecutorService {
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 
 	private List<String> jobNames = new ArrayList<String>();
-	private TreeCache $JobsTreeCache;
+	private TreeCache jobsTreeCache;
 	private String ipNode;
 	private ClassLoader jobClassLoader;
 	private ClassLoader executorClassLoader;
@@ -49,17 +50,6 @@ public class SaturnExecutorService {
 		if (coordinatorRegistryCenter != null) {
 			coordinatorRegistryCenter.setExecutorName(executorName);
 		}
-	}
-
-	/**
-	 * 获取该域下所有作业名
-	 */
-	public List<String> registerJobNames() {
-		jobNames.clear();
-		// be careful, coordinatorRegistryCenter.getChildrenKeys maybe return Collections.emptyList(), it's immutable
-		jobNames.addAll(coordinatorRegistryCenter.getChildrenKeys("/" + JobNodePath.$JOBS_NODE_NAME));
-
-		return jobNames;
 	}
 
 	private void registerExecutor0() throws Exception {
@@ -74,8 +64,8 @@ public class SaturnExecutorService {
 		coordinatorRegistryCenter.persist(lastBeginTimeNode, String.valueOf(System.currentTimeMillis()));
 		String executorVersion = SaturnVersionUtils.getVersion();
 		// 持久化版本
-		if(executorVersion != null) {
-			coordinatorRegistryCenter.persist(versionNode, executorVersion);	
+		if (executorVersion != null) {
+			coordinatorRegistryCenter.persist(versionNode, executorVersion);
 		}
 
 		// 持久化clean
@@ -142,18 +132,17 @@ public class SaturnExecutorService {
 		}
 	}
 
-	private TreeCache buildAndStart$JobsTreeCache(CuratorFramework client) throws Exception {
-		TreeCache tc = TreeCache.newBuilder(client, "/" + JobNodePath.$JOBS_NODE_NAME)
+	/**
+	 * Register NewJobCallback, and async start existing jobs. The TreeCache will publish the create events for already
+	 * existing jobs.
+	 */
+	public void registerCallbackAndStartExistingJob(final ScheduleNewJobCallback callback) throws Exception {
+		jobsTreeCache = TreeCache
+				.newBuilder((CuratorFramework) coordinatorRegistryCenter.getRawClient(), JobNodePath.ROOT)
 				.setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(
 						new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true))
 				.setMaxDepth(1).build();
-		tc.start();
-		return tc;
-	}
-
-	public void addNewJobListenerCallback(final ScheduleNewJobCallback callback) throws Exception {
-		$JobsTreeCache = buildAndStart$JobsTreeCache((CuratorFramework) coordinatorRegistryCenter.getRawClient());
-		$JobsTreeCache.getListenable().addListener(new TreeCacheListener() {
+		jobsTreeCache.getListenable().addListener(new TreeCacheListener() {
 			@Override
 			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
 				if (event != null) {
@@ -161,7 +150,7 @@ public class SaturnExecutorService {
 					ChildData data = event.getData();
 					if (type != null && data != null) {
 						String path = data.getPath();
-						if (path != null && !path.equals("/" + JobNodePath.$JOBS_NODE_NAME)) {
+						if (path != null && !path.equals(JobNodePath.ROOT)) {
 							if (type.equals(Type.NODE_ADDED)) { // add a job
 								String jobName = StringUtils.substringAfterLast(path, "/");
 								String jobClassPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_CLASS);
@@ -192,6 +181,7 @@ public class SaturnExecutorService {
 				}
 			}
 		});
+		jobsTreeCache.start();
 	}
 
 	public void removeJobName(String jobName) {
@@ -223,8 +213,8 @@ public class SaturnExecutorService {
 
 	private void close$JobsTreeCache() {
 		try {
-			if ($JobsTreeCache != null) {
-				$JobsTreeCache.close();
+			if (jobsTreeCache != null) {
+				jobsTreeCache.close();
 			}
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
@@ -272,14 +262,6 @@ public class SaturnExecutorService {
 
 	public void setJobNames(List<String> jobNames) {
 		this.jobNames = jobNames;
-	}
-
-	public TreeCache get$JobsTreeCache() {
-		return $JobsTreeCache;
-	}
-
-	public void set$JobsTreeCache(TreeCache $JobsTreeCache) {
-		this.$JobsTreeCache = $JobsTreeCache;
 	}
 
 	public void setExecutorName(String executorName) {

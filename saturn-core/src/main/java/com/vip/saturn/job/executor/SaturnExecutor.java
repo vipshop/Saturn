@@ -354,11 +354,10 @@ public class SaturnExecutor {
 					throw e;
 				}
 
-				// 注册作业名
+				// 检测是否存在仍然有正在运行的SHELL作业
 				LOGGER.info("start to check all exist jobs.");
-				List<String> zkJobNames = saturnExecutorService.registerJobNames();
 				try {
-					ScriptPidUtils.checkAllExistJobs(regCenter, zkJobNames);
+					ScriptPidUtils.checkAllExistJobs(regCenter);
 					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.JOBKILL);
 				} catch (IllegalStateException e) {
 					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
@@ -366,7 +365,7 @@ public class SaturnExecutor {
 				}
 
 				// 初始化timeout scheduler
-				LOGGER.info("start to create scheduler.");
+				LOGGER.info("start to create timeout scheduler.");
 				TimeoutSchedulerExecutor.createScheduler(executorName);
 
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
@@ -380,30 +379,20 @@ public class SaturnExecutor {
 					throw e;
 				}
 
-				// 启动作业
-				if (zkJobNames != null) {
-					LOGGER.info("start to schedule jobs.");
-					Iterator<String> iterator = zkJobNames.iterator();
-					while (iterator.hasNext()) {
-						String jobName = iterator.next();
-						if (scheduleJob(jobName)) {
-							LOGGER.info("The job {} initialize successfully", jobName);
-						} else {
-							iterator.remove();
-							LOGGER.warn("The job {} initialize fail", jobName);
-						}
-					}
-				}
-
 				LOGGER.info("start to register periodic truncate nohup out service.");
 				if (inited.get()) {
 					periodicTruncateNohupOutService = new PeriodicTruncateNohupOutService(executorName);
 					periodicTruncateNohupOutService.start();
 				}
 
-				LOGGER.info("start to process the remaining steps.");
-				// 添加新增作业时的回调方法
-				saturnExecutorService.addNewJobListenerCallback(new ScheduleNewJobCallback() {
+				// 启动零点清0成功数错误数的线程
+				LOGGER.info("start the ResetCountService");
+				resetCountService = new ResetCountService(executorName);
+				resetCountService.startRestCountTimer();
+
+				// 添加新增作业时的回调方法，启动已经存在的作业
+				LOGGER.info("start to register newJobCallback, and async start existing jobs.");
+				saturnExecutorService.registerCallbackAndStartExistingJob(new ScheduleNewJobCallback() {
 					@Override
 					public boolean call(String jobName) {
 						try {
@@ -414,10 +403,6 @@ public class SaturnExecutor {
 						}
 					}
 				});
-
-				// 启动零点清0成功数错误数线程
-				resetCountService = new ResetCountService(executorName);
-				resetCountService.startRestCountTimer();
 
 				LOGGER.info("The executor {} start successfully which used {} ms", executorName,
 						System.currentTimeMillis() - startTime);
