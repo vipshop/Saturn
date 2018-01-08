@@ -175,14 +175,14 @@ export default {
   },
   methods: {
     updateInfo() {
-      this.$http.post(`/console/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
     },
     getJobSettingInfo() {
-      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
         this.jobSettingInfo = JSON.parse(JSON.stringify(data));
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });

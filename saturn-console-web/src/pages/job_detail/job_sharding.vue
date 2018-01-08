@@ -39,7 +39,7 @@ export default {
   },
   methods: {
     getJobSharding() {
-      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
         this.jobShardings = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取分片情况请求失败！'); });

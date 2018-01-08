@@ -46,7 +46,7 @@ export default {
   methods: {
     handleDelete() {
       this.$message.confirmMessage(`确认删除作业 ${this.jobName} 吗?`, () => {
-        this.$http.delete(`/console/${this.domainName}/jobs/${this.jobName}`).then(() => {
+        this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${this.jobName}`).then(() => {
           this.$router.push({ name: 'job_overview', params: { domain: this.domainName } });
           this.$message.successNotify('删除作业操作成功');
         })
@@ -59,12 +59,12 @@ export default {
       let text = '';
       let activeRequest = '';
       if (enabled) {
-        dependUrl = `/console/${this.domainName}/jobs/${this.jobName}/dependency`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/${this.jobName}/dependency`;
         operation = '启用';
         text = '禁用';
         activeRequest = 'enable';
       } else {
-        dependUrl = `/console/${this.domainName}/jobs/${this.jobName}/beDependedJobs`;
+        dependUrl = `/console/namespaces/${this.domainName}/jobs/${this.jobName}/beDependedJobs`;
         operation = '禁用';
         text = '启用';
         activeRequest = 'disable';
@@ -105,7 +105,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
     },
     activeRequest(jobName, reqUrl) {
-      this.$http.post(`/console/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
         this.getJobInfo();
       })
@@ -122,7 +122,7 @@ export default {
       });
     },
     getJobInfo() {
-      this.$http.get(`/console/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
         this.jobInfo = JSON.parse(JSON.stringify(data));
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
