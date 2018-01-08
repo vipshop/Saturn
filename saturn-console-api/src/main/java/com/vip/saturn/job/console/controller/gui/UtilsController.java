@@ -7,7 +7,7 @@ import com.vip.saturn.job.console.service.UtilsService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -24,7 +24,7 @@ public class UtilsController extends AbstractGUIController {
 	private UtilsService utilsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/checkAndForecastCron")
+	@PostMapping(value = "/checkAndForecastCron")
 	public SuccessResponseEntity checkAndForecastCron(@RequestParam String timeZone, @RequestParam String cron)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(utilsService.checkAndForecastCron(timeZone, cron));
