@@ -20,7 +20,7 @@ import javax.annotation.Resource;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/alarmStatistics/namespace/{namespace:.+}")
+@RequestMapping("/console/namespaces/{namespace:.+}/alarmStatistics")
 public class AlarmStatistics4NamespaceController extends AbstractGUIController {
 
 	@Resource

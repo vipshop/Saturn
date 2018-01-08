@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/alarmStatistics/all")
+@RequestMapping("/console/zkClusters/alarmStatistics")
 public class AlarmStatistics4AllController extends AbstractGUIController {
 
 	@Resource
