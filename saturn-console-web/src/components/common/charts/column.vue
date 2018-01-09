@@ -67,7 +67,11 @@ export default {
             cursor: 'pointer',
             events: {
               click: (e) => {
-                this.$router.push({ name: 'job_overview', params: { domain: e.point.domainName } });
+                if (e.point.columnType === 'domain') {
+                  this.$router.push({ name: 'job_overview', params: { domain: e.point.domainName } });
+                } else if (e.point.columnType === 'job') {
+                  this.$router.push({ name: 'job_setting', params: { domain: e.point.domainName, jobName: e.point.jobName } });
+                }
               },
             },
           },

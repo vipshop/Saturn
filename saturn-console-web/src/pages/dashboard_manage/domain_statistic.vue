@@ -103,6 +103,7 @@ export default {
         resultData.forEach((ele) => {
           domains.push(ele.domainName);
           this.$set(ele, 'y', ele.failureRateOfAllTime);
+          this.$set(ele, 'columnType', 'domain');
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
@@ -113,7 +114,7 @@ export default {
           <button class="chart-tooltip-btn" onclick="vm.cleanShardingCount('allen')">清除zk</button>`;
         };
         const optionInfo = {
-          seriesData: [{ data: resultData }],
+          seriesData: [{ data: dataArr }],
           xCategories: domains,
           yTitle: '失败率(小数)',
           tooltip,
@@ -136,6 +137,7 @@ export default {
         resultData.forEach((ele) => {
           domains.push(ele.domainName);
           this.$set(ele, 'y', ele.shardingCount);
+          this.$set(ele, 'columnType', 'domain');
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
