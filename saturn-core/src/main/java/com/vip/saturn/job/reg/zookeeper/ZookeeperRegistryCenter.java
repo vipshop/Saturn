@@ -59,7 +59,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	/**
 	 * 最大连接超时时间
 	 */
-	private static int MAX_CONNECTION_TIMEOUT = 60 * 1000;
+	private static int MAX_CONNECTION_TIMEOUT = 300 * 1000;
 
 	/**
 	 * 最小会话超时时间
@@ -69,7 +69,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	/**
 	 * 最大会话超时时间
 	 */
-	private static int MAX_SESSION_TIMEOUT = 40 * 1000;
+	private static int MAX_SESSION_TIMEOUT = 300 * 1000;
 
 	/**
 	 * 会话超时时间
@@ -213,11 +213,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	@Override
 	public String get(final String key) {
 		return getDirectly(key);
-		/*
-		 * TreeCache cache = findTreeCache(key); if (null == cache) { return getDirectly(key); } ChildData resultIncache
-		 * = cache.getCurrentData(key); if (null != resultIncache) { return null == resultIncache.getData() ? null : new
-		 * String(resultIncache.getData(), Charset.forName("UTF-8")); } return null;
-		 */
 	}
 
 	@Override
