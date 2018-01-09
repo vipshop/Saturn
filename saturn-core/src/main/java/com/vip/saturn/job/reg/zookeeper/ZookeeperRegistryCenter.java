@@ -57,19 +57,9 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	private static int MIN_CONNECTION_TIMEOUT = 20 * 1000;
 
 	/**
-	 * 最大连接超时时间
-	 */
-	private static int MAX_CONNECTION_TIMEOUT = 300 * 1000;
-
-	/**
 	 * 最小会话超时时间
 	 */
 	private static int MIN_SESSION_TIMEOUT = 20 * 1000;
-
-	/**
-	 * 最大会话超时时间
-	 */
-	private static int MAX_SESSION_TIMEOUT = 300 * 1000;
 
 	/**
 	 * 会话超时时间
@@ -179,10 +169,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			return MIN_CONNECTION_TIMEOUT;
 		}
 
-		if (connectionTimeoutInMillSeconds >= MAX_CONNECTION_TIMEOUT) {
-			return MAX_CONNECTION_TIMEOUT;
-		}
-
 		return connectionTimeoutInMillSeconds;
 	}
 
@@ -192,10 +178,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
 		if (sessionTimeoutInMillSeconds <= MIN_SESSION_TIMEOUT) {
 			return MIN_SESSION_TIMEOUT;
-		}
-
-		if (sessionTimeoutInMillSeconds >= MAX_SESSION_TIMEOUT) {
-			return MAX_SESSION_TIMEOUT;
 		}
 
 		return sessionTimeoutInMillSeconds;
