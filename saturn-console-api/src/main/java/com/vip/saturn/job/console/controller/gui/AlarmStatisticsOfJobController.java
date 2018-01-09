@@ -20,27 +20,27 @@ import javax.annotation.Resource;
  */
 @Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs/{jobName}/alarmStatistics")
-public class AlarmStatistics4JobController extends AbstractGUIController {
+public class AlarmStatisticsOfJobController extends AbstractGUIController {
 
 	@Resource
 	private AlarmStatisticsService alarmStatisticsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/isAbnormalJob")
+	@GetMapping(value = "/abnormalJob")
 	public SuccessResponseEntity isAbnormalJob(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.isAbnormalJob(namespace, jobName));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/isUnableFailoverJob")
+	@GetMapping(value = "/unableFailoverJob")
 	public SuccessResponseEntity isUnableFailoverJob(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.isUnableFailoverJob(namespace, jobName));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/isTimeout4AlarmJob")
+	@GetMapping(value = "/timeout4AlarmJob")
 	public SuccessResponseEntity isTimeout4AlarmJob(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.isTimeout4AlarmJob(namespace, jobName));

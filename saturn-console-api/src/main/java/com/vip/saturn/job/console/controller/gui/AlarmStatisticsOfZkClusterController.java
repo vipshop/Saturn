@@ -10,63 +10,68 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 
 /**
- * 所有集群的告警统计
+ * 集群的告警统计
  *
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/zkClusters/alarmStatistics")
-public class AlarmStatistics4AllController extends AbstractGUIController {
+@RequestMapping("/console/zkClusters/{zkClusterKey:.+}/alarmStatistics")
+public class AlarmStatisticsOfZkClusterController extends AbstractGUIController {
 
 	@Resource
 	private AlarmStatisticsService alarmStatisticsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalJobs")
-	public SuccessResponseEntity getAbnormalJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs());
+	public SuccessResponseEntity getAbnormalJobs(@PathVariable String zkClusterKey) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/unableFailoverJobs")
-	public SuccessResponseEntity getUnableFailoverJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs());
+	public SuccessResponseEntity getUnableFailoverJobs(@PathVariable String zkClusterKey)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/timeout4AlarmJobs")
-	public SuccessResponseEntity getTimeout4AlarmJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs());
+	public SuccessResponseEntity getTimeout4AlarmJobs(@PathVariable String zkClusterKey)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalContainers")
-	public SuccessResponseEntity getAbnormalContainers() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers());
+	public SuccessResponseEntity getAbnormalContainers(@PathVariable String zkClusterKey)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
-	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
-			throws SaturnJobConsoleException {
-		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(uuid);
+	@GetMapping(value = "/setAbnormalJobMonitorStatusToRead")
+	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(
+			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
+			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
+		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(zkClusterKey, uuid);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@PostMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
-	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
-			throws SaturnJobConsoleException {
-		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(uuid);
+	@GetMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
+	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(
+			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
+			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
+		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(zkClusterKey, uuid);
 		return new SuccessResponseEntity();
 	}
 

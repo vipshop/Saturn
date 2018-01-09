@@ -21,7 +21,7 @@ import javax.annotation.Resource;
  */
 @Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/alarmStatistics")
-public class AlarmStatistics4NamespaceController extends AbstractGUIController {
+public class AlarmStatisticsOfNamespaceController extends AbstractGUIController {
 
 	@Resource
 	private AlarmStatisticsService alarmStatisticsService;
@@ -41,14 +41,14 @@ public class AlarmStatistics4NamespaceController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@PostMapping(value = "/timeout4AlarmJobs")
+	@GetMapping(value = "/timeout4AlarmJobs")
 	public SuccessResponseEntity getTimeout4AlarmJobs(@PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobsByNamespace(namespace));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@PostMapping(value = "/abnormalContainers")
+	@GetMapping(value = "/abnormalContainers")
 	public SuccessResponseEntity getAbnormalContainers(@PathVariable String namespace)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainersByNamespace(namespace));
