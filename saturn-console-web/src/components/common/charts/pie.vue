@@ -8,14 +8,12 @@
 import Highcharts from 'highcharts';
 import Highcharts3D from 'highcharts/highcharts-3d';
 import Exporting from 'highcharts/modules/exporting';
-// import DarkUnica from 'highcharts/themes/dark-unica';
 
 Exporting(Highcharts);
 Highcharts3D(Highcharts);
-// DarkUnica(Highcharts);
 
 export default {
-  props: ['id'],
+  props: ['id', 'dataOption'],
   data() {
     return {
       options: {
@@ -46,24 +44,20 @@ export default {
             depth: 45,
           },
         },
-        series: [{
-          name: '该等级域数量',
-          data: [
-            ['核心业务', 8],
-            ['重要业务', 3],
-            ['简单业务', 1],
-            ['一般业务', 6],
-            ['非线上业务', 8],
-            ['没有定义', 4],
-          ],
-        }],
+        series: this.dataOption.seriesData,
       },
     };
   },
-  methods: {
+  watch: {
+    dataOption: 'buildPage',
   },
-  mounted() {
-    Highcharts.chart(this.id, this.options);
+  methods: {
+    buildPage() {
+      if (this.dataOption) {
+        this.options.series = this.dataOption.seriesData;
+        Highcharts.chart(this.id, this.options);
+      }
+    },
   },
 };
 </script>

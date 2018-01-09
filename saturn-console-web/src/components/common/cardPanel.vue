@@ -23,14 +23,14 @@
 </template>
 <script>
 export default {
-  props: ['type', 'title', 'icon', 'num', 'toUrl'],
+  props: ['type', 'title', 'icon', 'num', 'toUrl', 'urlQuery'],
   data() {
     return {
     };
   },
   methods: {
     viewDetail() {
-      this.$router.push({ name: this.toUrl });
+      this.$router.push({ name: this.toUrl, query: { zkCluster: this.urlQuery } });
     },
   },
   computed: {

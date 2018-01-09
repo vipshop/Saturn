@@ -15,9 +15,15 @@ Vue.use(ElementUI);
 Vue.use(Utils);
 
 /* eslint-disable no-new */
-new Vue({
+/* eslint-disable no-undef */
+window.vm = new Vue({
   el: '#app',
   store: Store,
   template: '<div><Container></Container></div>',
   router,
 });
+vm.cleanShardingCount = function clearZk(value) {
+  this.$message.confirmMessage('确定清除zk吗?', () => {
+    console.log(value);
+  });
+};

@@ -10,10 +10,11 @@
 export default {
   data() {
     return {
+      zkCluster: this.$route.query.zkCluster,
       sidebarMenus: [
-        { index: 'domain_statistic', title: '域统计', icon: 'fa fa-navicon', name: 'domain_statistic' },
-        { index: 'executor_statistic', title: 'Executor统计', icon: 'fa fa-server', name: 'executor_statistic' },
-        { index: 'job_statistic', title: '作业统计', icon: 'fa fa-cubes', name: 'job_statistic' },
+        { index: 'domain_statistic', title: '域统计', icon: 'fa fa-navicon', name: 'domain_statistic', query: { zkCluster: this.$route.query.zkCluster } },
+        { index: 'executor_statistic', title: 'Executor统计', icon: 'fa fa-server', name: 'executor_statistic', query: { zkCluster: this.$route.query.zkCluster } },
+        { index: 'job_statistic', title: '作业统计', icon: 'fa fa-cubes', name: 'job_statistic', query: { zkCluster: this.$route.query.zkCluster } },
       ],
     };
   },

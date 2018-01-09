@@ -11,13 +11,13 @@
             <div>
                 <el-row :gutter="20">
                     <el-col :span="8">
-                        <CardPanel type="primary" icon="fa fa-navicon" title="总域数" num="49" to-url="domain_statistic"></CardPanel>
+                        <CardPanel type="primary" icon="fa fa-navicon" title="总域数" :num="domainCount" to-url="domain_statistic" :url-query="clusterKey"></CardPanel>
                     </el-col>
                     <el-col :span="8">
-                        <CardPanel type="green" icon="fa fa-server" title="Executor数: 物理机+容器" num="6+2" to-url="executor_statistic"></CardPanel>
+                        <CardPanel type="green" icon="fa fa-server" title="Executor数: 物理机+容器" :num="executorCount" to-url="executor_statistic" :url-query="clusterKey"></CardPanel>
                     </el-col>
                     <el-col :span="8">
-                        <CardPanel type="yellow" icon="fa fa-cubes" title="总作业数" num="543" to-url="job_statistic"></CardPanel>
+                        <CardPanel type="yellow" icon="fa fa-cubes" title="总作业数" :num="jobCount" to-url="job_statistic" :url-query="clusterKey"></CardPanel>
                     </el-col>
                 </el-row>
             </div>
@@ -31,20 +31,45 @@ export default {
     return {
       clusterKey: '',
       clusterKeys: [],
+      domainCount: '',
+      executorInDockerCount: '',
+      executorNotInDockerCount: '',
+      jobCount: '',
     };
   },
   methods: {
     clusterChange() {
-      console.log('111');
+      this.getDashboardCount();
     },
     getDashboardCount() {
-      this.$http.get('/console/dashboard/count', { zkClusterKey: this.clusterKey }).then((data) => {
-        console.log(JSON.stringify(data));
+      let url = '';
+      if (this.clusterKey !== '') {
+        url = `/console/zkClusters/${this.clusterKey}/dashboard/count`;
+      } else {
+        url = '/console/zkClusters/dashboard/count';
+      }
+      this.$http.get(url).then((data) => {
+        this.domainCount = data.domainCount;
+        this.executorInDockerCount = data.executorInDockerCount;
+        this.executorNotInDockerCount = data.executorNotInDockerCount;
+        this.jobCount = data.jobCount;
       })
       .catch(() => { this.$http.buildErrorHandler('获取dashboard统计请求失败！'); });
     },
+    getZkClusters() {
+      this.$http.get('/console/zkClusters/zkClusterKeys').then((data) => {
+        this.clusterKeys = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取所有zk集群请求失败！'); });
+    },
+  },
+  computed: {
+    executorCount() {
+      return `${this.executorNotInDockerCount}+${this.executorInDockerCount}`;
+    },
   },
   created() {
+    this.getZkClusters();
     this.getDashboardCount();
   },
 };

@@ -7,24 +7,14 @@
 <script>
 import Highcharts from 'highcharts';
 import Exporting from 'highcharts/modules/exporting';
-// import DarkUnica from 'highcharts/themes/dark-unica';
 
 Exporting(Highcharts);
-// DarkUnica(Highcharts);
 
 export default {
-  props: ['id'],
+  props: ['id', 'optionInfo'],
   data() {
     return {
       options: {
-        lang: {
-          downloadJPEG: '下载JPEG图片',
-          downloadPDF: '下载PDF文件',
-          downloadPNG: '下载PNG文件',
-          downloadSVG: '下载SVG文件',
-          printChart: '打印图表',
-          resetZoom: '恢复缩放',
-        },
         chart: {
           type: 'column',
           marginTop: 25,
@@ -36,51 +26,55 @@ export default {
           text: null,
         },
         xAxis: {
-          text: '时间',
-          type: 'datetime',
-          dateTimeLabelFormats: {
-            day: '%Y-%m-%d %H:%M:%S',
+          categories: this.optionInfo.xCategories,
+          labels: {
+            rotation: -20,
           },
         },
         yAxis: {
+          min: 0,
           title: {
-            text: '数量',
+            text: this.optionInfo.yTitle,
+          },
+          stackLabels: {
+            enabled: true,
+            style: {
+              fontWeight: 'bold',
+              color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray',
+            },
           },
         },
+        legend: {
+          enabled: false,
+        },
         tooltip: {
-          pointFormat: '<div>{series.name}：<span style="color:{series.color}">{point.y}</span></div>',
-          valueSuffix: '个',
-          xDateFormat: '%Y-%m-%d %H:%M:%S',
-          shared: true,
           useHTML: true,
+          hideDelay: 1000,
+          formatter: this.optionInfo.tooltip,
         },
         plotOptions: {
           column: {
-            pointPadding: 0.2,
-            borderWidth: 0,
+            stacking: 'normal',
+            dataLabels: {
+              enabled: false,
+              color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+              style: {
+                textShadow: '0 0 3px black',
+              },
+            },
           },
           series: {
-            pointStart: Date.UTC(2012, 0, 1),
-            pointInterval: 3600 * 1000,
+            cursor: 'pointer',
+            events: {
+              click: (e) => {
+                this.$router.push({ name: 'job_overview', params: { domain: e.point.domainName } });
+              },
+            },
           },
         },
-        series: [{
-          name: 'colomn1',
-          data: [49.9, 71.5, 106.4, 129.2, 144.0],
-        }, {
-          name: 'colomn2',
-          data: [83.6, 78.8, 98.5, 93.4, 106.0],
-        }, {
-          name: 'colomn3',
-          data: [48.9, 38.8, 39.3, 41.4, 47.0],
-        }, {
-          name: 'colomn4',
-          data: [42.4, 33.2, 34.5, 39.7, 52.6],
-        }],
+        series: this.optionInfo.seriesData,
       },
     };
-  },
-  methods: {
   },
   mounted() {
     Highcharts.chart(this.id, this.options);
