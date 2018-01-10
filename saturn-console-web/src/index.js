@@ -22,8 +22,11 @@ window.vm = new Vue({
   template: '<div><Container></Container></div>',
   router,
 });
-vm.cleanShardingCount = function clearZk(value) {
+vm.clearZk = function clear(url) {
   this.$message.confirmMessage('确定清除zk吗?', () => {
-    console.log(value);
+    this.$http.post(url, '').then(() => {
+      this.$message.successNotify('清除zk操作成功，请稍后刷新页面获取最新数据。');
+    })
+    .catch(() => { this.$http.buildErrorHandler('清除zk请求失败！'); });
   });
 };

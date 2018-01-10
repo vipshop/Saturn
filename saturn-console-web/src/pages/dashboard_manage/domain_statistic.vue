@@ -64,32 +64,6 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取全域当天执行数据请求失败！'); });
     },
     getTop10FailDomain() {
-    //   const resultData = [{
-    //     domainName: 'vipapis.com',
-    //     failureRateOfAllTime: 0.0247,
-    //     errorCountOfAllTime: 523,
-    //     processCountOfAllTime: 21103,
-    //   }, {
-    //     domainName: 'abc.com',
-    //     failureRateOfAllTime: 0.0289,
-    //     errorCountOfAllTime: 510,
-    //     processCountOfAllTime: 21703,
-    //   }];
-    //   const domains = [];
-    //   const dataArr = [];
-    //   resultData.forEach((ele) => {
-    //     domains.push(ele.domainName);
-    //     this.$set(ele, 'y', ele.failureRateOfAllTime);
-    //     this.$set(ele, 'url', `/job_list/${ele.domainName}/job_overview`);
-    //     dataArr.push(ele);
-    //   });
-    //   const optionInfo = {
-    //     seriesData: [{ data: resultData }],
-    //     xCategories: domains,
-    //     yTitle: '失败率(小数)',
-    //   };
-    //   this.$set(this.top10FailDomainOption, 'optionInfo', optionInfo);
-    //   console.log(JSON.stringify(this.top10FailDomainOption));
       let url = '';
       if (this.zkCluster !== '') {
         url = `/console/zkClusters/${this.zkCluster}/dashboard/top10FailDomain`;
@@ -111,7 +85,7 @@ export default {
           错误率: ${this.point.y}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
           失败总数: ${this.point.errorCountOfAllTime}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.cleanShardingCount('allen')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -143,7 +117,7 @@ export default {
         const tooltip = function setTooltip() {
           return `<b>${this.point.category}</b><br/>
           分片次数: ${this.point.y}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.cleanShardingCount('allen')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
