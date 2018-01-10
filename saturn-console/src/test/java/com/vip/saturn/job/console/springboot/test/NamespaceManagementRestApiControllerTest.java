@@ -6,7 +6,7 @@ import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
 import com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -39,7 +39,7 @@ public class NamespaceManagementRestApiControllerTest extends AbstractSaturnCons
 	private MockMvc mvc;
 
 	@MockBean
-	private RestApiService restApiService;
+	private RegistryCenterService registryCenterService;
 
 
 	@Test
@@ -47,12 +47,13 @@ public class NamespaceManagementRestApiControllerTest extends AbstractSaturnCons
 		NamespaceDomainInfo namespaceDomainInfo = new NamespaceDomainInfo();
 		namespaceDomainInfo.setNamespace("testns");
 		namespaceDomainInfo.setZkCluster("default");
+		namespaceDomainInfo.setContent("");
 
 		mvc.perform(post("/rest/v1/namespaces").contentType(MediaType.APPLICATION_JSON).content(gson.toJson(namespaceDomainInfo)))
 				.andExpect(status().isCreated());
 
 		ArgumentCaptor<NamespaceDomainInfo> argument = ArgumentCaptor.forClass(NamespaceDomainInfo.class);
-		verify(restApiService).createNamespace(argument.capture());
+		verify(registryCenterService).createNamespace(argument.capture());
 		assertTrue("namespaceDomainInfo is not equal", namespaceDomainInfo.equals(argument.getValue()));
 	}
 
@@ -86,7 +87,7 @@ public class NamespaceManagementRestApiControllerTest extends AbstractSaturnCons
 		namespaceDomainInfo.setNamespace(ns);
 		namespaceDomainInfo.setZkCluster(zkCluster);
 
-		given(restApiService.getNamespace("testns")).willReturn(namespaceDomainInfo);
+		given(registryCenterService.getNamespace("testns")).willReturn(namespaceDomainInfo);
 
 		MvcResult result = mvc.perform(get("/rest/v1/namespaces/" + ns)).andExpect(status().isOk()).andReturn();
 		String body = result.getResponse().getContentAsString();
@@ -99,7 +100,8 @@ public class NamespaceManagementRestApiControllerTest extends AbstractSaturnCons
 	public void queryFailAsNamespaceNotFound() throws Exception {
 		String ns = "testns";
 
-		given(restApiService.getNamespace(ns)).willThrow(new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The namespace does not exists."));
+		given(registryCenterService.getNamespace(ns)).willThrow(
+				new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The namespace does not exists."));
 
 		MvcResult result = mvc.perform(get("/rest/v1/namespaces/" + ns)).andExpect(status().isNotFound()).andReturn();
 		String message = fetchErrorMessage(result);

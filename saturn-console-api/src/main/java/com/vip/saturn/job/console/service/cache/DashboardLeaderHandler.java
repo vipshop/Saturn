@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.helper;
+package com.vip.saturn.job.console.service.cache;
 
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.LocalHostService;
@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author hebelala
  */
-public class DashboardLeaderTreeCache {
+public class DashboardLeaderHandler {
 
-	private static final Logger log = LoggerFactory.getLogger(DashboardLeaderTreeCache.class);
+	private static final Logger log = LoggerFactory.getLogger(DashboardLeaderHandler.class);
 
 	private final String hostValue = LocalHostService.cachedIpAddress + "-" + UUID.randomUUID().toString();
 
@@ -32,14 +32,14 @@ public class DashboardLeaderTreeCache {
 	private ExecutorService executorService;
 	private DashboardLeaderConnectionListener dashboardLeaderConnectionListener;
 
-	public DashboardLeaderTreeCache(String zkAlias, CuratorFramework curatorFramework) {
+	public DashboardLeaderHandler(String zkAlias, CuratorFramework curatorFramework) {
 		this.zkAlias = zkAlias;
 		this.curatorFramework = curatorFramework;
 	}
 
 	public void start() throws Exception {
 		dashboardLeaderConnectionListener = new DashboardLeaderConnectionListener(
-				"connectionListener-for-dashboardLeaderTreeCache-" + zkAlias);
+				"connectionListener-for-dashboardLeaderHandler-" + zkAlias);
 		curatorFramework.getConnectionStateListenable().addListener(dashboardLeaderConnectionListener);
 		createNodeCache();
 		electLeaderIfNecessary();

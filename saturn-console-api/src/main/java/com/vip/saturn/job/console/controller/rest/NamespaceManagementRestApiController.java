@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.RestApiService;
 import java.util.Map;
 import javax.annotation.Resource;
@@ -29,19 +30,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/rest/v1")
 public class NamespaceManagementRestApiController extends AbstractController {
 
-	@Resource
-	private RestApiService restApiService;
-
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		try {
 			NamespaceDomainInfo namespaceInfo = constructNamespaceDomainInfo(reqParams);
-			restApiService.createNamespace(namespaceInfo);
-			//TODO: 改成异步
-			registryCenterService.refreshRegCenter();
-
+			registryCenterService.createNamespace(namespaceInfo);
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -56,7 +51,7 @@ public class NamespaceManagementRestApiController extends AbstractController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			checkMissingParameter("namespace", namespace);
-			NamespaceDomainInfo namespaceDomainInfo = restApiService.getNamespace(namespace);
+			NamespaceDomainInfo namespaceDomainInfo = registryCenterService.getNamespace(namespace);
 			return new ResponseEntity<Object>(namespaceDomainInfo, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -71,6 +66,7 @@ public class NamespaceManagementRestApiController extends AbstractController {
 
 		namespaceInfo.setNamespace(checkAndGetParametersValueAsString(reqParams, "namespace", true));
 		namespaceInfo.setZkCluster(checkAndGetParametersValueAsString(reqParams, "zkCluster", true));
+		namespaceInfo.setContent("");
 
 		return namespaceInfo;
 	}

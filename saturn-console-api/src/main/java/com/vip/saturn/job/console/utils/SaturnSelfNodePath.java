@@ -13,6 +13,8 @@ public class SaturnSelfNodePath {
 
 	public static final String SATURN_CONSOLE_DASHBOARD = SATURN_CONSOLE + "/dashboard";
 
+	public static final String SATURN_CONSOLE_REFRESH = SATURN_CONSOLE + "/refresh";
+
 	public static final String SATURN_CONSOLE_DASHBOARD_LEADER = SATURN_CONSOLE_DASHBOARD + "/leader";
 
 	public static final String SATURN_CONSOLE_DASHBOARD_LEADER_LATCH = SATURN_CONSOLE_DASHBOARD_LEADER + "/latch";
