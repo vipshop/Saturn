@@ -14,10 +14,7 @@ import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.utils.BooleanWrapper;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.vip.saturn.job.sharding.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.CuratorFrameworkFactory.Builder;
@@ -34,6 +31,11 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Repository
 public class CuratorRepositoryImpl implements CuratorRepository {
@@ -203,7 +205,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		public void deleteRecursive(final String znode) {
 			try {
 				if (null != curatorFramework.checkExists().forPath(znode)) {
-					curatorFramework.delete().deletingChildrenIfNeeded().forPath(znode);
+					CuratorUtils.deletingChildrenIfNeeded(curatorFramework, znode);
 				}
 			} catch (final NoNodeException ex) {
 				// CHECKSTYLE:OFF
@@ -216,7 +218,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		/**
 		 * 如果节点不存在则填充节点数据.
 		 *
-		 * @param node 作业节点名称
+		 * @param node  作业节点名称
 		 * @param value 作业节点数据值
 		 */
 		@Override

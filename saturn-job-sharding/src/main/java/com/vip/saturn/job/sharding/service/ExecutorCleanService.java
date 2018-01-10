@@ -1,8 +1,9 @@
 package com.vip.saturn.job.sharding.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.vip.saturn.job.integrate.entity.JobConfigInfo;
+import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.sharding.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
@@ -10,17 +11,16 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.integrate.entity.JobConfigInfo;
-import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * This class should be modified, when the curator bug is fixed. The bug is
- * <a href="https://issues.apache.org/jira/browse/CURATOR-430">CURATOR-430</a>
+ * This class should be modified, when the curator bug is fixed. The bug is <a href="https://issues.apache.org/jira/browse/CURATOR-430">CURATOR-430</a>
  *
  * @author hebelala
  */
 public class ExecutorCleanService {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorCleanService.class);
 
 	private CuratorFramework curatorFramework;
@@ -33,9 +33,8 @@ public class ExecutorCleanService {
 	}
 
 	/**
-	 * delete $SaturnExecutors/executors/xxx<br>
-	 * delete $Jobs/job/servers/xxx<br>
-	 * delete $Jobs/job/config/preferList content about xxx
+	 * delete $SaturnExecutors/executors/xxx<br> delete $Jobs/job/servers/xxx<br> delete $Jobs/job/config/preferList
+	 * content about xxx
 	 */
 	public void clean(String executorName) {
 		List<JobConfigInfo> jobConfigInfos = new ArrayList<>();
@@ -114,27 +113,11 @@ public class ExecutorCleanService {
 	/**
 	 * delete $SaturnExecutors/executors/xxx
 	 */
-	private void deleteExecutor(String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
+	private void deleteExecutor(String executorName)
+			throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String executorNodePath = SaturnExecutorsNode.getExecutorNodePath(executorName);
-			if (curatorFramework.checkExists().forPath(executorNodePath) != null) {
-				List<String> executorChildren = curatorFramework.getChildren().forPath(executorNodePath);
-				// 删除executor下子节点，catch异常，打日志，继续删其他节点
-				if (executorChildren != null) {
-					for (String tmp : executorChildren) {
-						try {
-							curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath + "/" + tmp);
-						} catch (NoNodeException e) { // NOSONAR
-							// ignore
-						} catch (Exception e) {
-							LOGGER.error("Clean the executor " + executorName + " error", e);
-						}
-					}
-				}
-				curatorFramework.delete().deletingChildrenIfNeeded().forPath(executorNodePath);
-			}
-		} catch (NoNodeException e) { // NOSONAR
-			// ignore
+			CuratorUtils.deletingChildrenIfNeeded(curatorFramework, executorNodePath);
 		} catch (KeeperException.ConnectionLossException e) {
 			throw e;
 		} catch (InterruptedException e) {
@@ -147,29 +130,12 @@ public class ExecutorCleanService {
 	/**
 	 * delete $Jobs/job/servers/xxx
 	 */
-	private void deleteJobServerExecutor(String jobName, String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
+	private void deleteJobServerExecutor(String jobName, String executorName)
+			throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String jobServersExecutorNodePath = SaturnExecutorsNode.getJobServersExecutorNodePath(jobName,
 					executorName);
-			if (curatorFramework.checkExists().forPath(jobServersExecutorNodePath) != null) {
-				List<String> jobServersChildren = curatorFramework.getChildren().forPath(jobServersExecutorNodePath);
-				// 删除servers下子节点，catch异常，打日志，继续删其他节点
-				if (jobServersChildren != null) {
-					for (String tmp : jobServersChildren) {
-						try {
-							curatorFramework.delete().deletingChildrenIfNeeded()
-									.forPath(jobServersExecutorNodePath + "/" + tmp);
-						} catch (NoNodeException e) { // NOSONAR
-							// ignore
-						} catch (Exception e) {
-							LOGGER.error("Clean the executor " + executorName + " error", e);
-						}
-					}
-				}
-				curatorFramework.delete().deletingChildrenIfNeeded().forPath(jobServersExecutorNodePath);
-			}
-		} catch (NoNodeException e) { // NOSONAR
-			// ignore
+			CuratorUtils.deletingChildrenIfNeeded(curatorFramework, jobServersExecutorNodePath);
 		} catch (KeeperException.ConnectionLossException e) {
 			throw e;
 		} catch (InterruptedException e) {
@@ -182,7 +148,8 @@ public class ExecutorCleanService {
 	/**
 	 * delete $Jobs/job/config/preferList content about xxx
 	 */
-	private String updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName) throws KeeperException.ConnectionLossException, InterruptedException {
+	private String updateJobConfigPreferListContentToRemoveDeletedExecutor(String jobName, String executorName)
+			throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
 			if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {

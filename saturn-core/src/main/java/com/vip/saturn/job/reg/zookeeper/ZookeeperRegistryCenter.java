@@ -1,15 +1,10 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at <p>
+ * http://www.apache.org/licenses/LICENSE-2.0 <p> Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and limitations under the
+ * License. </p>
  */
 
 package com.vip.saturn.job.reg.zookeeper;
@@ -18,6 +13,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
+import com.vip.saturn.job.sharding.utils.CuratorUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -39,10 +35,9 @@ import java.util.List;
 
 /**
  * 基于Zookeeper的注册中心.
- *
- *
  */
 public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
+
 	static Logger log = LoggerFactory.getLogger(ZookeeperRegistryCenter.class);
 
 	private static final String SLASH_CONSTNAT = "/";
@@ -102,9 +97,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 				throw new RuntimeException("the zk client is not connected while reach connection timeout");
 			}
 
-			client.checkExists().forPath(SLASH_CONSTNAT + zkConfig.getNamespace()); // check namespace node by using
-																					// client, for UnknownHostException
-																					// of connection string.
+			// check namespace node by using client, for UnknownHostException of connection string.
+			client.checkExists().forPath(SLASH_CONSTNAT + zkConfig.getNamespace());
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			throw new RuntimeException("zk connect fail, zkList is " + zkConfig.getServerLists(), ex);
@@ -303,7 +297,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	@Override
 	public void remove(final String key) {
 		try {
-			client.delete().guaranteed().deletingChildrenIfNeeded().forPath(key);
+			CuratorUtils.deletingChildrenIfNeeded(client, key);
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON
