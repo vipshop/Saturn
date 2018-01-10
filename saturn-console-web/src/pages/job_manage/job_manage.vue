@@ -2,7 +2,7 @@
     <div>
         <el-main>
             <div class="page-title">
-                <img width="250px" height="250px" src="../../image/saturn.png"/>
+                <img width="200px" height="200px" src="../../image/saturn.png"/>
             </div>
             <div>
                 <el-row :gutter="20">
