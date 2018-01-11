@@ -76,6 +76,10 @@ form {
     text-align: left;
 }
 
+.margin-20 {
+    margin: 20px;
+}
+
 .page-container {
     margin: 20px 0;
 }
@@ -117,4 +121,9 @@ form {
 /* upload */
 .el-upload-list__item-name [class^=el-icon] {
     height: initial;
+}
+
+/* tab */
+.el-tabs__item {
+    color: #888;
 }

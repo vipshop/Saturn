@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <div class="page-container">
-            <AbnormalJobs :abnormal-jobs-list="abnormalJobsList" @refresh-list="getAbnormalJobs"></AbnormalJobs>
+            <AbnormalJobs :abnormal-jobs-list="namespaceAbnormalJobsList" @refresh-list="getAbnormalJobs"></AbnormalJobs>
         </div>
     </div>
 </template>
@@ -10,15 +10,16 @@ export default {
   data() {
     return {
       loading: false,
-      abnormalJobsList: [],
+      domainName: this.$route.params.domain,
+      namespaceAbnormalJobsList: [],
     };
   },
   methods: {
     getAbnormalJobs() {
       this.loading = true;
-      this.$http.get('/console/zkClusters/alarmStatistics/abnormalJobs').then((data) => {
-        this.abnormalJobsList = JSON.parse(data);
-        this.total = this.abnormalJobsList.length;
+      this.$http.get(`/console/namespaces/${this.domainName}/alarmStatistics/abnormalJobs`).then((data) => {
+        this.namespaceAbnormalJobsList = JSON.parse(data);
+        this.total = this.namespaceAbnormalJobsList.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
       .finally(() => {

@@ -14,6 +14,10 @@ import CardPanel from './common/cardPanel';
 import FilterPageList from './common/filterPageList';
 import ImportFileDialog from './common/importFileDialog';
 import ViewContentDialog from './common/viewContentDialog';
+import AbnormalJobs from './common/abnormalJobs';
+import TimeoutJobs from './common/timeoutJobs';
+import UnableFailoverJobs from './common/unableFailoverJobs';
+import AbnormalContainers from './common/abnormalContainers';
 
 Vue.component('Container', Container);
 Vue.component('Header', Header);
@@ -30,3 +34,7 @@ Vue.component('CardPanel', CardPanel);
 Vue.component('FilterPageList', FilterPageList);
 Vue.component('ImportFileDialog', ImportFileDialog);
 Vue.component('ViewContentDialog', ViewContentDialog);
+Vue.component('AbnormalJobs', AbnormalJobs);
+Vue.component('TimeoutJobs', TimeoutJobs);
+Vue.component('UnableFailoverJobs', UnableFailoverJobs);
+Vue.component('AbnormalContainers', AbnormalContainers);

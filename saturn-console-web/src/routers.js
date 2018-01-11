@@ -5,6 +5,11 @@ import JobManage from './pages/job_manage/job_manage';
 import JobList from './pages/job_list/job_list';
 import JobOverview from './pages/job_list/job_overview';
 import ExecutorOverview from './pages/job_list/executor_overview';
+import NamespaceAlarmCenter from './pages/job_list/alarm/namespace_alarm_center';
+import NamespaceAbnormalJobs from './pages/job_list/alarm/namespace_abnormal_jobs';
+import NamespaceTimeoutJobs from './pages/job_list/alarm/namespace_timeout_jobs';
+import NamespaceFailoverJobs from './pages/job_list/alarm/namespace_failover_jobs';
+import NamespaceAbnormalContainers from './pages/job_list/alarm/namespace_abnormal_containers';
 import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
 import JobSharding from './pages/job_detail/job_sharding';
@@ -40,6 +45,18 @@ export default new Router({
         { path: '', redirect: 'job_overview' },
         { name: 'job_overview', path: RouterMapper.GetPath('jobOverview'), component: JobOverview },
         { name: 'executor_overview', path: RouterMapper.GetPath('executorOverview'), component: ExecutorOverview },
+        {
+          path: RouterMapper.GetPath('namespaceAlarmCenter'),
+          component: NamespaceAlarmCenter,
+          name: 'namespace_alarm_center',
+          children: [
+            { path: RouterMapper.GetPath('namespaceAlarmCenter'), redirect: 'namespace_abnormal_jobs' },
+            { name: 'namespace_abnormal_jobs', path: RouterMapper.GetPath('namespaceAbnormalJobs'), component: NamespaceAbnormalJobs },
+            { name: 'namespace_timeout_jobs', path: RouterMapper.GetPath('namespaceTimeoutJobs'), component: NamespaceTimeoutJobs },
+            { name: 'namespace_failover_jobs', path: RouterMapper.GetPath('namespaceFailoverJobs'), component: NamespaceFailoverJobs },
+            { name: 'namespace_abnormal_containers', path: RouterMapper.GetPath('namespaceAbnormalContainers'), component: NamespaceAbnormalContainers },
+          ],
+        },
       ],
     }, {
       path: RouterMapper.GetPath('jobDetail'),

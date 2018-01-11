@@ -49,7 +49,10 @@
         this.activeMenu = this.getActiveMenu();
       },
       getActiveMenu() {
-        return `${this.$route.name}`;
+        if (this.$route.path.split('/')[1] === 'job_list') {
+          return this.$route.path.split('/')[3];
+        }
+        return this.$route.name;
       },
     },
     watch: {
@@ -126,6 +129,14 @@
         &:hover {
           background-color: #334656;
           border-color: #14212e;
+        }
+        &:focus {
+          background-color: #3e596c;
+          color: #fff;
+          border-left: 2px solid #70d7b9;
+          i.fa {
+            color: #9db9d2;
+          }
         }
         &.active {
           background-color: #3e596c;
