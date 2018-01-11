@@ -18,7 +18,7 @@ public class CuratorUtils {
 		List<String> children;
 		try {
 			children = curatorFramework.getChildren().forPath(path);
-		} catch (KeeperException.NoNodeException e) {
+		} catch (KeeperException.NoNodeException e) { //NOSONAR
 			return;
 		}
 		if (children != null && !children.isEmpty()) {
@@ -28,10 +28,9 @@ public class CuratorUtils {
 		}
 		try {
 			curatorFramework.delete().guaranteed().forPath(path);
-		} catch (KeeperException.NotEmptyException e) {
+		} catch (KeeperException.NotEmptyException e) { //NOSONAR
 			deletingChildrenIfNeeded(curatorFramework, path);
-		} catch (KeeperException.NoNodeException e) {
-			// ignore, the node maybe be removed by someone
+		} catch (KeeperException.NoNodeException e) { //NOSONAR
 		}
 	}
 
