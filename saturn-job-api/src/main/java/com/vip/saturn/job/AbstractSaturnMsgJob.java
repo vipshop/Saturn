@@ -2,7 +2,7 @@ package com.vip.saturn.job;
 
 import com.vip.saturn.job.msg.MsgHolder;
 
-public abstract class AbstractSaturnMsgJob extends AbstractSaturnJob {
+public abstract class AbstractSaturnMsgJob extends BaseSaturnJob {
 
 	/**
 	 * vms 作业处理入口

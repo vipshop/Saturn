@@ -5,10 +5,7 @@ import com.vip.saturn.job.exception.SaturnJobException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Abstract Saturn Job for user to implement.
- */
-public abstract class AbstractSaturnJob {
+public abstract class BaseSaturnJob {
 
 	private static final String EMPTY_VERSION = "";
 
