@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="margin-20">
         <div>
             <el-row :gutter="20">
                 <el-col :span="8">

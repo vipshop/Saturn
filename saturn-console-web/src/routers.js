@@ -5,11 +5,20 @@ import JobManage from './pages/job_manage/job_manage';
 import JobList from './pages/job_list/job_list';
 import JobOverview from './pages/job_list/job_overview';
 import ExecutorOverview from './pages/job_list/executor_overview';
+import NamespaceAlarmCenter from './pages/job_list/alarm/namespace_alarm_center';
+import NamespaceAbnormalJobs from './pages/job_list/alarm/namespace_abnormal_jobs';
+import NamespaceTimeoutJobs from './pages/job_list/alarm/namespace_timeout_jobs';
+import NamespaceFailoverJobs from './pages/job_list/alarm/namespace_failover_jobs';
+import NamespaceAbnormalContainers from './pages/job_list/alarm/namespace_abnormal_containers';
 import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
 import JobSharding from './pages/job_detail/job_sharding';
 import JobExecution from './pages/job_detail/job_execution';
 import JobStatistics from './pages/job_detail/job_statistics';
+import JobAlarmCenter from './pages/job_detail/alarm/job_alarm_center';
+import JobAbnormalJobs from './pages/job_detail/alarm/job_abnormal_jobs';
+import JobTimeoutJobs from './pages/job_detail/alarm/job_timeout_jobs';
+import JobFailoverJobs from './pages/job_detail/alarm/job_failover_jobs';
 import DashboardManage from './pages/dashboard_manage/dashboard_manage';
 import DashboardDetail from './pages/dashboard_manage/dashboard_detail';
 import DomainStatistic from './pages/dashboard_manage/domain_statistic';
@@ -40,6 +49,18 @@ export default new Router({
         { path: '', redirect: 'job_overview' },
         { name: 'job_overview', path: RouterMapper.GetPath('jobOverview'), component: JobOverview },
         { name: 'executor_overview', path: RouterMapper.GetPath('executorOverview'), component: ExecutorOverview },
+        {
+          path: RouterMapper.GetPath('namespaceAlarmCenter'),
+          component: NamespaceAlarmCenter,
+          name: 'namespace_alarm_center',
+          children: [
+            { path: RouterMapper.GetPath('namespaceAlarmCenter'), redirect: 'namespace_abnormal_jobs' },
+            { name: 'namespace_abnormal_jobs', path: RouterMapper.GetPath('namespaceAbnormalJobs'), component: NamespaceAbnormalJobs },
+            { name: 'namespace_timeout_jobs', path: RouterMapper.GetPath('namespaceTimeoutJobs'), component: NamespaceTimeoutJobs },
+            { name: 'namespace_failover_jobs', path: RouterMapper.GetPath('namespaceFailoverJobs'), component: NamespaceFailoverJobs },
+            { name: 'namespace_abnormal_containers', path: RouterMapper.GetPath('namespaceAbnormalContainers'), component: NamespaceAbnormalContainers },
+          ],
+        },
       ],
     }, {
       path: RouterMapper.GetPath('jobDetail'),
@@ -50,6 +71,17 @@ export default new Router({
         { name: 'job_sharding', path: RouterMapper.GetPath('jobSharding'), component: JobSharding },
         { name: 'job_execution', path: RouterMapper.GetPath('jobExecution'), component: JobExecution },
         { name: 'job_statistics', path: RouterMapper.GetPath('jobStatistics'), component: JobStatistics },
+        {
+          path: RouterMapper.GetPath('jobAlarmCenter'),
+          component: JobAlarmCenter,
+          name: 'job_alarm_center',
+          children: [
+            { path: RouterMapper.GetPath('jobAlarmCenter'), redirect: 'job_abnormal_jobs' },
+            { name: 'job_abnormal_jobs', path: RouterMapper.GetPath('jobAbnormalJobs'), component: JobAbnormalJobs },
+            { name: 'job_timeout_jobs', path: RouterMapper.GetPath('jobTimeoutJobs'), component: JobTimeoutJobs },
+            { name: 'job_failover_jobs', path: RouterMapper.GetPath('jobFailoverJobs'), component: JobFailoverJobs },
+          ],
+        },
       ],
     }, {
       path: RouterMapper.GetPath('dashboardManage'),
