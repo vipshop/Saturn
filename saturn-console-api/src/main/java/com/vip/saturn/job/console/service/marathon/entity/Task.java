@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.marathon.entity;
+package com.vip.saturn.job.console.service.marathon.entity;
 
 import java.util.List;
 

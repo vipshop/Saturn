@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.vip.saturn.job.console.controller;
 
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
@@ -25,6 +22,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
+ * //TODO 删除session中存储的域、集群等信息，这些信息从每个请求中获取
  * @author chembo.huang
  */
 public class AbstractController {

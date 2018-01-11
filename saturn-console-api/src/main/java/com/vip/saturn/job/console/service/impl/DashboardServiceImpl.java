@@ -13,9 +13,9 @@ import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.repository.zookeeper.impl.CuratorRepositoryImpl;
-import com.vip.saturn.job.console.service.ContainerService;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobService;
+import com.vip.saturn.job.console.service.MarathonService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
 import com.vip.saturn.job.console.utils.*;
@@ -90,7 +90,7 @@ public class DashboardServiceImpl implements DashboardService {
 	private ReportAlarmService reportAlarmService;
 
 	@Autowired
-	private ContainerService containerService;
+	private MarathonService marathonService;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -1581,7 +1581,8 @@ public class DashboardServiceImpl implements DashboardService {
 					return null;
 				}
 
-				int count = containerService.getContainerRunningInstances(taskId, curatorFrameworkOp);
+				int count = marathonService
+						.getContainerRunningInstances(curatorFrameworkOp.getCuratorFramework().getNamespace(), taskId);
 				if (myInstance != count) {
 					abnormalContainer.setCause(AbnormalContainer.Cause.CONTAINER_INSTANCE_MISMATCH.name());
 					abnormalContainer.setConfigInstances(myInstance);
