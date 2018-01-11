@@ -1,6 +1,6 @@
 package com.vip.saturn.job;
 
-public abstract class AbstractSaturnJavaJob extends AbstractSaturnJob {
+public abstract class AbstractSaturnJavaJob extends BaseSaturnJob {
 
 	/**
 	 * java 作业处理入口

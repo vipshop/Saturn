@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Ivy01.li on 2016/9/12.
@@ -63,7 +64,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	public void multiJobSharding(String preferListJob3) throws Exception {
 		// 作业1，负荷为1,分片数为2
-		String jobName1 = "JOB_1LOAD_2SHARDING";
+		String jobName1 = "JOB_LOAD1_SHARDING2";
 		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
 		jobConfiguration1.setCron("* * 1 * * ?");
 		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
@@ -73,17 +74,17 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		addSimpleJavaJob(jobName1, 2, jobConfiguration1);
 
 		// 作业2，负荷为2,分片数为2
-		String jobName2 = "JOB_2LOAD_2SHARDING";
+		String jobName2 = "JOB_LOAD2_SHARDING2";
 		final JobConfiguration jobConfiguration2 = new JobConfiguration(jobName2);
 		jobConfiguration2.setCron("* * 1 * * ?");
 		jobConfiguration2.setJobType(JobType.JAVA_JOB.toString());
 		jobConfiguration2.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		jobConfiguration2.setLoadLevel(2);
-		jobConfiguration2.setShardingItemParameters("0=0,1=1,2=2");
+		jobConfiguration2.setShardingItemParameters("0=0,1=1");
 		addSimpleJavaJob(jobName2, 2, jobConfiguration2);
 
 		// 作业3，负荷为1,分片数为3
-		String jobName3 = "JOB_1LOAD_3SHARDING";
+		String jobName3 = "JOB_LOAD1_SHARDING3";
 		final JobConfiguration jobConfiguration3 = new JobConfiguration(jobName3);
 		jobConfiguration3.setCron("* * 1 * * ?");
 		jobConfiguration3.setJobType(JobType.JAVA_JOB.toString());
@@ -157,7 +158,18 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		List<Integer> itemsJob2Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
 				JobNodePath.getNodeFullPath(jobName2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
 		System.out.println("job2 at exe2 :" + itemsJob2Exe2);
-		assertThat(itemsJob2Exe2).contains(0, 1);
+
+		List<Integer> itemsJob1Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(jobName1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		System.out.println("job1 at exe2:" + itemsJob1Exe2);
+
+		List<Integer> itemsJob3Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(jobName3, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		System.out.println("job3 at exe2:" + itemsJob3Exe2);
+
+		int totalLoadOfExe2 = itemsJob2Exe2.size() * 2 + itemsJob1Exe2.size() + itemsJob3Exe2.size();
+
+		assertEquals("total load of exe2 not equal", 4, totalLoadOfExe2);
 
 		Main executor3 = startOneNewExecutorList();// 启动第3台executor
 		Thread.sleep(1000);
@@ -213,7 +225,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		}, 10);
 
 		if (!itemsJob1Exe1.isEmpty()) {
-			List<Integer> itemsJob1Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
+			itemsJob1Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
 			itemsJob1Exe3 = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName1, ShardingNode.getShardingNode(executor3.getExecutorName()))));
@@ -235,7 +247,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		}
 
 		if (!itemsJob3Exe1.isEmpty()) {
-			List<Integer> itemsJob3Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
+			itemsJob3Exe2 = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName3, ShardingNode.getShardingNode(executor2.getExecutorName()))));
 			itemsJob3Exe3 = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName3, ShardingNode.getShardingNode(executor3.getExecutorName()))));
