@@ -17,9 +17,9 @@ public interface AlarmStatisticsService {
 
 	String getAbnormalContainers() throws SaturnJobConsoleException;
 
-	boolean setAbnormalJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
+	void setAbnormalJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
 
-	boolean setTimeout4AlarmJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
+	void setTimeout4AlarmJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
 
 	// 集群的告警统计
 
@@ -30,10 +30,6 @@ public interface AlarmStatisticsService {
 	String getTimeout4AlarmJobs(String zkClusterKey) throws SaturnJobConsoleException;
 
 	String getAbnormalContainers(String zkClusterKey) throws SaturnJobConsoleException;
-
-	boolean setAbnormalJobMonitorStatusToRead(String zkClusterKey, String uuid) throws SaturnJobConsoleException;
-
-	boolean setTimeout4AlarmJobMonitorStatusToRead(String zkClusterKey, String uuid) throws SaturnJobConsoleException;
 
 	// 域的告警统计
 

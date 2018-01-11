@@ -1,7 +1,5 @@
 package com.vip.saturn.job.console.controller.gui;
 
-import com.vip.saturn.job.console.aop.annotation.Audit;
-import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 
@@ -53,26 +50,6 @@ public class AlarmStatisticsOfZkClusterController extends AbstractGUIController 
 	public SuccessResponseEntity getAbnormalContainers(@PathVariable String zkClusterKey)
 			throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers(zkClusterKey));
-	}
-
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
-	@GetMapping(value = "/setAbnormalJobMonitorStatusToRead")
-	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(
-			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
-			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
-		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(zkClusterKey, uuid);
-		return new SuccessResponseEntity();
-	}
-
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
-	@GetMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
-	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(
-			@AuditParam("zkClusterKey") @PathVariable String zkClusterKey,
-			@AuditParam("uuid") @RequestParam String uuid) throws SaturnJobConsoleException {
-		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(zkClusterKey, uuid);
-		return new SuccessResponseEntity();
 	}
 
 }

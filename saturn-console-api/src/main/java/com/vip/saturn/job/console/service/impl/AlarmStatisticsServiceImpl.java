@@ -86,33 +86,68 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	@Override
-	public boolean setAbnormalJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException {
+	public void setAbnormalJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException {
 		if (StringUtils.isBlank(uuid)) {
-			return false;
+			throw new SaturnJobConsoleException("uuid不能为空");
 		}
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
-			boolean success = setAbnormalJobMonitorStatusToRead(zkCluster.getZkClusterKey(), uuid);
-			if (success) {
-				return true;
+			SaturnStatistics saturnStatistics = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkCluster.getZkAddr());
+			if (saturnStatistics != null) {
+				String result = saturnStatistics.getResult();
+				List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
+				if (jobs != null) {
+					boolean find = false;
+					for (AbnormalJob job : jobs) {
+						if (uuid.equals(job.getUuid())) {
+							job.setRead(true);
+							find = true;
+							break;
+						}
+					}
+					if (find) {
+						saturnStatistics.setResult(JSON.toJSONString(jobs));
+						saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+						return;
+					}
+				}
 			}
 		}
-		return false;
+		throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
 	}
 
 	@Override
-	public boolean setTimeout4AlarmJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException {
+	public void setTimeout4AlarmJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException {
 		if (StringUtils.isBlank(uuid)) {
-			return false;
+			throw new SaturnJobConsoleException("uuid不能为空");
 		}
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
-			boolean success = setTimeout4AlarmJobMonitorStatusToRead(zkCluster.getZkAddr(), uuid);
-			if (success) {
-				return true;
+			SaturnStatistics saturnStatistics = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB,
+							zkCluster.getZkAddr());
+			if (saturnStatistics != null) {
+				String result = saturnStatistics.getResult();
+				List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
+				if (jobs != null) {
+					boolean find = false;
+					for (Timeout4AlarmJob job : jobs) {
+						if (uuid.equals(job.getUuid())) {
+							job.setRead(true);
+							find = true;
+							break;
+						}
+					}
+					if (find) {
+						saturnStatistics.setResult(JSON.toJSONString(jobs));
+						saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
+						return;
+					}
+				}
 			}
 		}
-		return false;
+		throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
 	}
 
 	private ZkCluster validateAndGetZKCluster(String zkClusterKey) throws SaturnJobConsoleException {
@@ -153,72 +188,6 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 		SaturnStatistics saturnStatistics = saturnStatisticsService
 				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.ABNORMAL_CONTAINER, zkCluster.getZkAddr());
 		return saturnStatistics != null ? saturnStatistics.getResult() : null;
-	}
-
-	@Override
-	public boolean setAbnormalJobMonitorStatusToRead(String zkClusterKey, String uuid)
-			throws SaturnJobConsoleException {
-		if (StringUtils.isBlank(uuid)) {
-			return false;
-		}
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		SaturnStatistics saturnStatistics = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.UNNORMAL_JOB, zkCluster.getZkAddr());
-		if (saturnStatistics != null) {
-			String result = saturnStatistics.getResult();
-			List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-			if (jobs != null) {
-				boolean find = false;
-				for (AbnormalJob job : jobs) {
-					if (uuid.equals(job.getUuid())) {
-						job.setRead(true);
-						find = true;
-						break;
-					}
-				}
-				if (find) {
-					saturnStatistics.setResult(JSON.toJSONString(jobs));
-					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
-					return true;
-				} else {
-					throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
-				}
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public boolean setTimeout4AlarmJobMonitorStatusToRead(String zkClusterKey, String uuid)
-			throws SaturnJobConsoleException {
-		if (StringUtils.isBlank(uuid)) {
-			return false;
-		}
-		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
-		SaturnStatistics saturnStatistics = saturnStatisticsService
-				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, zkCluster.getZkAddr());
-		if (saturnStatistics != null) {
-			String result = saturnStatistics.getResult();
-			List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
-			if (jobs != null) {
-				boolean find = false;
-				for (Timeout4AlarmJob job : jobs) {
-					if (uuid.equals(job.getUuid())) {
-						job.setRead(true);
-						find = true;
-						break;
-					}
-				}
-				if (find) {
-					saturnStatistics.setResult(JSON.toJSONString(jobs));
-					saturnStatisticsService.updateByPrimaryKeySelective(saturnStatistics);
-					return true;
-				} else {
-					throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
-				}
-			}
-		}
-		return false;
 	}
 
 	private RegistryCenterConfiguration validateAndGetConf(String namespace) throws SaturnJobConsoleException {
