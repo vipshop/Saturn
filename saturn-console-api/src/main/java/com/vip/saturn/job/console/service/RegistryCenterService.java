@@ -9,6 +9,7 @@
 
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
@@ -50,6 +51,22 @@ public interface RegistryCenterService {
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
 
 	List<String> getNamespaces() throws SaturnJobConsoleException;
+
+	/**
+	 * Create Namespace.
+	 */
+	void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
+
+	/**
+	 * Update Namespace.
+	 */
+	void updateNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
+
+	/**
+	 * Get namespace by key.
+	 */
+	NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException;
+
 
 	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
 

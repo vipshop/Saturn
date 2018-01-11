@@ -14,6 +14,8 @@ package com.vip.saturn.job.console.domain;
 import java.io.Serializable;
 
 /**
+ * 域信息
+ *
  * @author chembo.huang
  *
  */

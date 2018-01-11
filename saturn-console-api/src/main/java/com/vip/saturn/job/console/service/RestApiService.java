@@ -82,23 +82,6 @@ public interface RestApiService {
 	 */
 	void deleteJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
-
-	/**
-	 * Create Namespace.
-	 */
-	void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
-
-	/**
-	 * Update Namespace.
-	 */
-	void updateNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException;
-
-
-	/**
-	 * Get namespace by key.
-	 */
-	NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException;
-
 	/**
 	 * Raise alarm for specified job/shard exception.
 	 *

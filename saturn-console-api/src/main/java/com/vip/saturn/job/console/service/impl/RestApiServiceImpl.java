@@ -51,14 +51,6 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final String EXECUTOR_RESTART_TIME_PREFIX = "restart on ";
 
-	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
-
-	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new namespace {%s} for reason {%s}";
-
-	private static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
-
-	private static final String ERR_MSG_NS_ALREADY_EXIST = "Invalid request. Namespace: {%s} already existed";
-
 	@Resource
 	private RegistryCenterService registryCenterService;
 
@@ -70,12 +62,6 @@ public class RestApiServiceImpl implements RestApiService {
 
 	@Resource
 	private ReportAlarmService reportAlarmService;
-
-	@Resource
-	private NamespaceInfoService namespaceInfoService;
-
-	@Resource
-	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
 
 	@Override
 	public void createJob(final String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -531,101 +517,6 @@ public class RestApiServiceImpl implements RestApiService {
 						log.info("job:{} deletion done", jobName);
 					}
 				});
-	}
-
-	@Transactional(rollbackFor = {Exception.class})
-	@Override
-	public void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException {
-		String namespace = namespaceDomainInfo.getNamespace();
-		String zkClusterKey = namespaceDomainInfo.getZkCluster();
-		ZkCluster currentCluster = registryCenterService.getZkCluster(zkClusterKey);
-
-		if (currentCluster == null) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "not found zkcluster" + zkClusterKey));
-		}
-
-		if (checkNamespaceExists(namespace)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					String.format(ERR_MSG_NS_ALREADY_EXIST, namespace));
-		}
-
-		try {
-			// 创建 namespaceInfo
-			NamespaceInfo namespaceInfo = constructNamespaceInfo(namespaceDomainInfo);
-			namespaceInfoService.create(namespaceInfo);
-			// 创建 zkcluster 和 namespaceInfo 关系
-			namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, NAMESPACE_CREATOR_NAME);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
-		}
-	}
-
-	@Override
-	public void updateNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException {
-		String namespace = namespaceDomainInfo.getNamespace();
-
-		if (!checkNamespaceExists(namespace)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					ERR_MSG_NS_NOT_FOUND);
-		}
-
-		try {
-			// 创建 namespaceInfo
-			NamespaceInfo namespaceInfo = constructNamespaceInfo(namespaceDomainInfo);
-			namespaceInfoService.update(namespaceInfo);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
-		}
-	}
-
-	@Override
-	public NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException {
-		if (namespaceInfoService.selectByNamespace(namespace) == null) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
-		}
-
-		String zkClusterKey = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
-		if (StringUtils.isBlank(zkClusterKey)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), ERR_MSG_NS_NOT_FOUND);
-		}
-
-		NamespaceDomainInfo namespaceDomainInfo = new NamespaceDomainInfo();
-		namespaceDomainInfo.setNamespace(namespace);
-		namespaceDomainInfo.setZkCluster(zkClusterKey);
-
-		return namespaceDomainInfo;
-	}
-
-	private boolean checkNamespaceExists(String namespace) {
-		if (namespaceInfoService.selectByNamespace(namespace) != null) {
-			return true;
-		}
-
-		// 判断其它集群是否有该域
-		String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
-		if (zkClusterKeyOther != null) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private NamespaceInfo constructNamespaceInfo(NamespaceDomainInfo namespaceDomainInfo) {
-		NamespaceInfo namespaceInfo = new NamespaceInfo();
-		namespaceInfo.setCreatedBy(NAMESPACE_CREATOR_NAME);
-		namespaceInfo.setCreateTime(new Date());
-		namespaceInfo.setIsDeleted(0);
-		namespaceInfo.setLastUpdatedBy(NAMESPACE_CREATOR_NAME);
-		namespaceInfo.setLastUpdateTime(new Date());
-		namespaceInfo.setNamespace(namespaceDomainInfo.getNamespace());
-		namespaceInfo.setContent(namespaceDomainInfo.getContent());
-
-		return namespaceInfo;
 	}
 
 	@Override

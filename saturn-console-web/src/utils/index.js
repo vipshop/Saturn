@@ -3,6 +3,7 @@ import http from './request';
 import message from './message';
 import validate from './validate';
 import routerMapper from './router_mapper';
+import map from './map';
 
 const Utils = {
   array,
@@ -18,5 +19,6 @@ Utils.install = (Vue) => {
   Vue.prototype.$message = message;
   Vue.prototype.$validate = validate;
   Vue.prototype.$routermapper = routerMapper;
+  Vue.prototype.$map = map;
 };
 export default Utils;
