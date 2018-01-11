@@ -58,7 +58,7 @@ export default {
         jobName: '',
       },
       orderBy: 'jobName',
-      total: 0,
+      total: this.unableFailoverJobsList.length,
     };
   },
   methods: {

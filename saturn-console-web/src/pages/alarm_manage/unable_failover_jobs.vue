@@ -18,7 +18,6 @@ export default {
       this.loading = true;
       this.$http.get('/console/zkClusters/alarmStatistics/unableFailoverJobs').then((data) => {
         this.unableFailoverJobsList = JSON.parse(data);
-        this.total = this.unableFailoverJobsList.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
       .finally(() => {

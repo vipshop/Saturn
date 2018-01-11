@@ -32,6 +32,7 @@ export default {
         { index: 'job_sharding', title: '分片情况', icon: 'fa fa-server', name: 'job_sharding', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
         { index: 'job_execution', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'job_execution', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
         { index: 'job_statistics', title: '作业统计', icon: 'fa fa-bar-chart', name: 'job_statistics', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_alarm_center', title: '告警中心', icon: 'fa fa-bell', name: 'job_abnormal_jobs', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
       ],
       domainInfo: {},
       jobInfo: {},

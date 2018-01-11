@@ -34,7 +34,7 @@ export default {
         containerName: '',
       },
       orderBy: 'containerName',
-      total: 0,
+      total: this.abnormalContainersList.length,
     };
   },
   methods: {

@@ -18,7 +18,6 @@ export default {
       this.loading = true;
       this.$http.get('/console/zkClusters/alarmStatistics/abnormalJobs').then((data) => {
         this.abnormalJobsList = JSON.parse(data);
-        this.total = this.abnormalJobsList.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
       .finally(() => {

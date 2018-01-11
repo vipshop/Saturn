@@ -19,7 +19,6 @@ export default {
       this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/alarmStatistics/timeout4AlarmJobs`).then((data) => {
         this.namespaceTimeoutJobsList = JSON.parse(data);
-        this.total = this.namespaceTimeoutJobsList.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
       .finally(() => {

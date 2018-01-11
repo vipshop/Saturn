@@ -12,11 +12,6 @@ export default {
       loading: false,
       domainName: this.$route.params.domain,
       namespaceUnableFailoverJobsList: [],
-      filters: {
-        jobName: '',
-      },
-      orderBy: 'jobName',
-      total: 0,
     };
   },
   methods: {
@@ -24,7 +19,6 @@ export default {
       this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/alarmStatistics/unableFailoverJobs`).then((data) => {
         this.namespaceUnableFailoverJobsList = JSON.parse(data);
-        this.total = this.namespaceUnableFailoverJobsList.length;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
       .finally(() => {

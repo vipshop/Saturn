@@ -65,7 +65,7 @@ export default {
         jobName: '',
       },
       orderBy: 'jobName',
-      total: 0,
+      total: this.timeoutJobsList.length,
     };
   },
   methods: {

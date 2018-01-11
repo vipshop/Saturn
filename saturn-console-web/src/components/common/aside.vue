@@ -49,8 +49,11 @@
         this.activeMenu = this.getActiveMenu();
       },
       getActiveMenu() {
-        if (this.$route.path.split('/')[1] === 'job_list') {
-          return this.$route.path.split('/')[3];
+        const pathArr = this.$route.path.split('/');
+        if (pathArr[1] === 'job_list') {
+          return pathArr[3];
+        } else if (pathArr[1] === 'job_detail') {
+          return pathArr[4];
         }
         return this.$route.name;
       },

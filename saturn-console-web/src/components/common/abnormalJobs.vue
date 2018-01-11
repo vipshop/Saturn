@@ -69,7 +69,7 @@ export default {
         jobName: '',
       },
       orderBy: 'jobName',
-      total: 0,
+      total: this.abnormalJobsList.length,
     };
   },
   methods: {
