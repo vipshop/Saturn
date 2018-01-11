@@ -18,7 +18,7 @@ export default {
   methods: {
     getUnableFailoverJobs() {
       this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/alarmStatistics/unableFailoverJobs`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/alarmStatistics/unableFailoverJob`).then((data) => {
         this.jobUnableFailoverJobsList = JSON.parse(data);
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })

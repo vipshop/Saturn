@@ -4,7 +4,6 @@
             <el-tab-pane name="job_abnormal_jobs"><span slot="label"><i class="fa fa-list-alt"></i>异常作业</span></el-tab-pane>
             <el-tab-pane name="job_timeout_jobs"><span slot="label"><i class="fa fa-clock-o"></i>超时作业</span></el-tab-pane>
             <el-tab-pane name="job_failover_jobs"><span slot="label"><i class="fa fa-exclamation-triangle"></i>无法高可用作业</span></el-tab-pane>
-            <el-tab-pane name="job_abnormal_containers"><span slot="label"><i class="fa fa-cube"></i>异常容器</span></el-tab-pane>
         </el-tabs>
         <router-view></router-view>
     </div>

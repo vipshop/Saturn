@@ -3,7 +3,7 @@
         <template slot-scope="scope">
             <el-form :inline="true" class="table-filter">
                 <el-form-item label="">
-                    <el-input placeholder="搜索" v-model="filters.jobName"></el-input>
+                    <el-input placeholder="搜索" v-model="filters.taskId"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
@@ -16,10 +16,22 @@
                     </div>
                 </div>
                 <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
-                    <el-table-column prop="containerName" label="容器名"></el-table-column>
-                    <el-table-column prop="domainName" label="所属域"></el-table-column>
-                    <el-table-column prop="degree" label="域等级"></el-table-column>
-                    <el-table-column prop="jobDegree" label="作业等级"></el-table-column>
+                    <el-table-column prop="taskId" label="容器名"></el-table-column>
+                    <el-table-column prop="domainName" label="所属域" sortable>
+                        <template slot-scope="scope">
+                            <router-link tag="a" :to="{ name: 'job_overview', params: { domain: scope.row.domainName } }">
+                                <el-button type="text">
+                                    {{scope.row.domainName}}
+                                </el-button>
+                            </router-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="degree" label="域等级" sortable>
+                        <template slot-scope="scope">
+                            {{$map.degreeMap[scope.row.degree]}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="cause" label="异常原因"></el-table-column>
                 </el-table>
             </div>
         </template>
@@ -31,9 +43,9 @@ export default {
   data() {
     return {
       filters: {
-        containerName: '',
+        taskId: '',
       },
-      orderBy: 'containerName',
+      orderBy: 'taskId',
       total: this.abnormalContainersList.length,
     };
   },
