@@ -534,13 +534,9 @@ public class ContainerServiceImpl implements ContainerService {
 					waitStopTime -= 100;
 					JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
 					if (JobStatus.STOPPED.equals(jobStatus)) {
-						String removeResult = executorService.removeJob(jobName);
-						if (SaturnConstants.DEAL_SUCCESS.equals(removeResult)) {
-							deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
-							return;
-						} else {
-							throw new SaturnJobConsoleException(removeResult);
-						}
+						executorService.removeJob(jobName);
+						deleteScaleJobNodePath(curatorFrameworkOp, taskId, jobName);
+						return;
 					}
 				}
 				throw new SaturnJobConsoleException("The job is not stopped, cannot be deleted, please retry later");

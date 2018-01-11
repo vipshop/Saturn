@@ -313,21 +313,18 @@ public class JobOperationController extends AbstractController {
 		RequestResult requestResult = new RequestResult();
 		JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
 		if (JobStatus.STOPPED.equals(jobStatus)) {
-			String result = executorService.removeJob(jobName);
-			if (SaturnConstants.DEAL_SUCCESS.equals(result)) {
+			try {
+				executorService.removeJob(jobName);
 				requestResult.setSuccess(true);
-				return requestResult;
-			} else {
+			} catch (SaturnJobConsoleException e) {
 				requestResult.setSuccess(false);
-				requestResult.setMessage(result);
-				return requestResult;
+				requestResult.setMessage(e.getMessage());
 			}
-			// let zk and the watchers update theirselves.
 		} else {
 			requestResult.setSuccess(false);
 			requestResult.setMessage("作业【" + jobName + "】不处于STOPPED状态，不能删除.");
-			return requestResult;
 		}
+		return requestResult;
 	}
 
 	@RequestMapping(value = "batchRemove/jobs", method = RequestMethod.POST)
@@ -340,9 +337,10 @@ public class JobOperationController extends AbstractController {
 		for (String jobName : jobNamesArr) {
 			JobStatus jobStatus = jobDimensionService.getJobStatus(jobName);
 			if (JobStatus.STOPPED.equals(jobStatus)) {
-				String removeResult = executorService.removeJob(jobName);
-				if (!SaturnConstants.DEAL_SUCCESS.equals(removeResult)) {
-					errorLog.append(removeResult).append(",");
+				try {
+					executorService.removeJob(jobName);
+				} catch (SaturnJobConsoleException e) {
+					errorLog.append(e.getMessage()).append(",");
 				}
 				// let zk and the watchers update theirselves.
 			} else {

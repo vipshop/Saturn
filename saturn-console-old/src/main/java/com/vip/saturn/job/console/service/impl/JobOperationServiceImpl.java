@@ -42,10 +42,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import javax.transaction.Transactional;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
@@ -557,6 +557,7 @@ public class JobOperationServiceImpl implements JobOperationService {
 		}
 	}
 
+	@Transactional
 	@Override
 	public void deleteJob(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 			throws SaturnJobConsoleException {

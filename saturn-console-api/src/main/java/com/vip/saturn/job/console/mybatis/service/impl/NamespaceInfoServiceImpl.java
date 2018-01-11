@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.vip.saturn.job.console.mybatis.service.impl;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
@@ -8,11 +5,11 @@ import com.vip.saturn.job.console.mybatis.repository.NamespaceInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 /**

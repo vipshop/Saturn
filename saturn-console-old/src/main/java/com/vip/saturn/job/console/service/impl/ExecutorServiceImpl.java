@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -145,16 +146,16 @@ public class ExecutorServiceImpl implements ExecutorService {
 		return requestResult;
 	}
 
+	@Transactional
 	@Override
-	public String removeJob(String jobName) {
+	public void removeJob(String jobName) throws SaturnJobConsoleException {
 		try {
 			Stat itemStat = ThreadLocalCuratorClient.getCuratorClient().checkExists()
 					.forPath(JobNodePath.getJobNodePath(jobName));
 			if (itemStat != null) {
 				long createTimeDiff = System.currentTimeMillis() - itemStat.getCtime();
 				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
-					return "作业【" + jobName + "】创建后" + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60 / 1000)
-							+ "分钟内不允许删除";
+					throw new SaturnJobConsoleException(String.format("作业%s创建后%d分钟内不允许删除", jobName, SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60 / 1000));
 				}
 			}
 
@@ -174,13 +175,13 @@ public class ExecutorServiceImpl implements ExecutorService {
 				if (!curatorFrameworkOp.checkExists(jobServerPath)) {
 					// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
-					return SaturnConstants.DEAL_SUCCESS;
+					return;
 				}
 				// (2)如果该作业servers下没有任何executor，可直接删除作业节点
 				List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
 				if (CollectionUtils.isEmpty(executors)) {
 					curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
-					return SaturnConstants.DEAL_SUCCESS;
+					return;
 				}
 				// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
 				boolean hasOnlineExecutor = false;
@@ -197,11 +198,12 @@ public class ExecutorServiceImpl implements ExecutorService {
 				}
 				Thread.sleep(200);
 			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
-			return t.getMessage();
+			throw new SaturnJobConsoleException(t);
 		}
-		return SaturnConstants.DEAL_SUCCESS;
 	}
 
 	private void deleteJobFromDb(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName)

@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * 
- * @author xiaopeng.he
+ * @author hebelala
  *
  */
 public interface ExecutorService {
@@ -26,7 +26,7 @@ public interface ExecutorService {
 	 * Use JobOperationService.removeJob(String jobName)
 	 */
 	@Deprecated
-	String removeJob(String jobName);
+	void removeJob(String jobName) throws SaturnJobConsoleException;
 
 	File getExportJobFile() throws SaturnJobConsoleException;
 

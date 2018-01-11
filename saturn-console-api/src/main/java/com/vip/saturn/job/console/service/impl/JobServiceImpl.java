@@ -35,11 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.transaction.Transactional;
 import java.io.File;
 import java.lang.Boolean;
 import java.text.ParseException;
@@ -360,6 +360,7 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, "enabled"), false);
 	}
 
+	@Transactional
 	@Override
 	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -375,8 +376,9 @@ public class JobServiceImpl implements JobService {
 				long createTimeDiff = System.currentTimeMillis() - stat.getCtime();
 				if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
 					throw new SaturnJobConsoleException(
-							"不能删除该作业（" + jobName + "），因为该作业创建时间距离现在不超过" + (SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT
-									/ 60000) + "分钟");
+							String.format("不能删除该作业(%s)，因为该作业创建时间距离现在不超过%d分钟", jobName,
+									SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT
+											/ 60000));
 				}
 			}
 			// remove job from db
@@ -428,7 +430,7 @@ public class JobServiceImpl implements JobService {
 				}
 			}
 		} else {
-			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不处于STOPPED状态");
+			throw new SaturnJobConsoleException(String.format("不能删除该作业(%s)，因为该作业不处于STOPPED状态", jobName));
 		}
 	}
 
