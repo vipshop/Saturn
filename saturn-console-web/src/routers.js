@@ -16,6 +16,11 @@ import DomainStatistic from './pages/dashboard_manage/domain_statistic';
 import ExecutorStatistic from './pages/dashboard_manage/executor_statistic';
 import JobStatistic from './pages/dashboard_manage/job_statistic';
 import RegistryManage from './pages/registry_manage/registry_manage';
+import AlarmManage from './pages/alarm_manage/alarm_manage';
+import AlarmAbnormalJobs from './pages/alarm_manage/alarm_abnormal_jobs';
+import AlarmTimeoutJobs from './pages/alarm_manage/alarm_timeout_jobs';
+import UnableFailoverJobs from './pages/alarm_manage/unable_failover_jobs';
+import AlarmAbnormalContainers from './pages/alarm_manage/alarm_abnormal_containers';
 
 Vue.use(Router);
 
@@ -63,6 +68,16 @@ export default new Router({
       path: RouterMapper.GetPath('registryManage'),
       name: 'registry_manage',
       component: RegistryManage,
+    }, {
+      path: RouterMapper.GetPath('alarmManage'),
+      component: AlarmManage,
+      children: [
+        { path: '', redirect: 'alarm_abnormal_jobs' },
+        { name: 'alarm_abnormal_jobs', path: RouterMapper.GetPath('alarmAbnormalJobs'), component: AlarmAbnormalJobs },
+        { name: 'alarm_timeout_jobs', path: RouterMapper.GetPath('alarmTimeoutJobs'), component: AlarmTimeoutJobs },
+        { name: 'unable_failover_jobs', path: RouterMapper.GetPath('unableFailoverJobs'), component: UnableFailoverJobs },
+        { name: 'alarm_abnormal_containers', path: RouterMapper.GetPath('alarmAbnormalContainers'), component: AlarmAbnormalContainers },
+      ],
     },
   ],
 });
