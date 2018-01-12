@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -57,7 +58,12 @@ public class RegistryCenterController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/namespaces/detail")
 	public SuccessResponseEntity queryAllNamespaceInfo() {
-		return new SuccessResponseEntity(registryCenterService.getZkClusterList());
+		List<RegistryCenterConfiguration> namespaceInfoList = Lists.newLinkedList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		for (ZkCluster zkCluster : zkClusterList) {
+			namespaceInfoList.addAll(zkCluster.getRegCenterConfList());
+		}
+		return new SuccessResponseEntity(namespaceInfoList);
 	}
 
 	/**
