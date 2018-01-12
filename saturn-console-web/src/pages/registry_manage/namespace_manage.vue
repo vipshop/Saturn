@@ -16,6 +16,7 @@
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加新域</el-button>
+                            <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
@@ -91,6 +92,16 @@ export default {
     };
   },
   methods: {
+    handleRefreshCenter() {
+      this.loading = true;
+      this.$http.post('/console/registryCenter/refresh', '').then(() => {
+        this.getAllNamespace();
+      })
+      .catch(() => { this.$http.buildErrorHandler('刷新注册中心请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
+    },
     batchMigrate() {
       this.batchOperation('迁移', (arr) => {
         this.isBatchMigrateVisible = true;
