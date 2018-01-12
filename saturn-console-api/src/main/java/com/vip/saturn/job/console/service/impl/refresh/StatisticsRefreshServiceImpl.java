@@ -21,7 +21,6 @@ import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
@@ -29,11 +28,9 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -83,13 +80,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	@Resource
 	private JobService jobService;
 
-	@Resource(name = "reportAlarmServiceFactoryBean")
+	@Resource
 	private ReportAlarmService reportAlarmService;
 
 	private ExecutorService statExecutorService;
-
-	@Value("${simple.auth.token}")
-	private String simpleToken;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -245,7 +239,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private HttpPost createHttpRequest(String url) {
 		HttpPost httpPost = new HttpPost(url);
-		httpPost.addHeader(new BasicHeader(HttpHeaders.AUTHORIZATION, HEADER_VALUE_PREFIX + simpleToken));
 		RequestConfig cfg = RequestConfig.custom().setConnectTimeout(CONNECT_TIMEOUT_MS).setSocketTimeout(SO_TIMEOUT_MS)
 				.build();
 		httpPost.setConfig(cfg);
