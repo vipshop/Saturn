@@ -284,8 +284,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private boolean analyzeStatistics(StatisticsModel statisticsModel, ZkCluster zkCluster,
 			RegistryCenterConfiguration config) {
+		String namespace = config.getNamespace();
 		try {
-			String namespace = config.getNamespace();
 			DomainStatistics domain = statisticsModel.getDomainStatisticsAnalyzer().initDomain(zkCluster, config);
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 					.getCuratorFrameworkOp(namespace);
@@ -309,13 +309,12 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 							jobDegree, config);
 					statisticsModel.analyzeUnableFailoverJob(curatorFrameworkOp, job, jobDegree, config);
 				} catch (Exception e) {
-					log.info("statistics namespace:{} ,jobName:{} ,exception:{}", domain.getNns(), job,
-							e.getMessage());
+					log.info(String.format("analyzeStatistics namespace(%s) jobName(%s) error", namespace, job), e);
 				}
 			}
 			statisticsModel.analyzeProcessCount(domain, jobs, config);
 		} catch (Exception e) {
-			log.info("analyzeStatistics namespace:{} ,exception:{}", config.getNameAndNamespace(), e.getMessage());
+			log.info(String.format("analyzeStatistics namespace(%s) error", namespace), e);
 			return false;
 		}
 		return true;

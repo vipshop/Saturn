@@ -289,7 +289,7 @@ public class DashboardController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobAnalyse(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
-		dashboardService.cleanOneJobAnalyse(jobName, namespace);
+		dashboardService.cleanOneJobAnalyse(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
@@ -304,7 +304,7 @@ public class DashboardController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
 	public SuccessResponseEntity cleanJobExecutorCount(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
-		dashboardService.cleanOneJobExecutorCount(jobName, namespace);
+		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
