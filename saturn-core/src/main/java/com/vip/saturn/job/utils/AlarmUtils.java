@@ -59,7 +59,7 @@ public class AlarmUtils {
 				// send request
 				CloseableHttpResponse httpResponse = httpClient.execute(request);
 				// handle response
-				handleResponse(httpResponse);
+				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
 				LOGGER.error("SaturnJobException throws: {}", se);
@@ -73,37 +73,8 @@ public class AlarmUtils {
 				LOGGER.error("Other exception throws: {}", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
-				if (httpClient != null) {
-					try {
-						httpClient.close();
-					} catch (IOException e) {
-						LOGGER.error("Exception during httpclient closed.", e);
-					}
-				}
+				HttpUtils.closeHttpClientQuitetly(httpClient);
 			}
-		}
-	}
-
-	private static void handleResponse(CloseableHttpResponse httpResponse) throws IOException, SaturnJobException {
-		int status = httpResponse.getStatusLine().getStatusCode();
-
-		if (status == HttpStatus.SC_CREATED) {
-			LOGGER.info("raise alarm successfully.");
-			return;
-		}
-
-		if (status >= HttpStatus.SC_BAD_REQUEST && status <= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-			String responseBody = EntityUtils.toString(httpResponse.getEntity());
-			if (StringUtils.isNotBlank(responseBody)) {
-				String errMsg = JSONObject.parseObject(responseBody).getString("message");
-				throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, errMsg);
-			} else {
-				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");
-			}
-		} else {
-			// if have unexpected status, then throw RuntimeException directly.
-			String errMsg = "unexpected status returned from Saturn Server.";
-			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, errMsg);
 		}
 	}
 

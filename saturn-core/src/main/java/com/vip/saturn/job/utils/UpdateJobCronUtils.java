@@ -18,12 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Util for handling update job cron .
- * 
+ *
  * @author timmy.hu
  */
 public class UpdateJobCronUtils {
@@ -64,7 +63,7 @@ public class UpdateJobCronUtils {
 				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 				request.setEntity(params);
 				CloseableHttpResponse httpResponse = httpClient.execute(request);
-				handleResponse(httpResponse);
+				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
 				logger.error("SaturnJobException throws: {}", se);
@@ -78,38 +77,11 @@ public class UpdateJobCronUtils {
 				logger.error("Other exception throws: {}", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
-				if (httpClient != null) {
-					try {
-						httpClient.close();
-					} catch (IOException e) {
-						logger.error("Exception during httpclient closed.", e);
-					}
-				}
+				HttpUtils.closeHttpClientQuitetly(httpClient);
 			}
 		}
 	}
 
-	private static void handleResponse(CloseableHttpResponse httpResponse) throws IOException, SaturnJobException {
-		int status = httpResponse.getStatusLine().getStatusCode();
-
-		if (status == HttpStatus.SC_OK) {
-			logger.info("update job cron successfully.");
-			return;
-		}
-
-		if (status >= HttpStatus.SC_BAD_REQUEST && status <= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-			String responseBody = EntityUtils.toString(httpResponse.getEntity());
-			if (StringUtils.isNotBlank(responseBody)) {
-				String errMsg = JSONObject.parseObject(responseBody).getString("message");
-				throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, errMsg);
-			} else {
-				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");
-			}
-		} else {
-			String errMsg = "unexpected status returned from Saturn Server.";
-			throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, errMsg);
-		}
-	}
 
 	private static void checkParameters(String cron) throws SaturnJobException {
 		if (StringUtils.isEmpty(cron)) {
