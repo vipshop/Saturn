@@ -23,7 +23,7 @@ import javax.annotation.Resource;
  */
 @Controller
 @RequestMapping("/console/zkClusters/alarmStatistics")
-public class AlarmStatisticsOverallController extends AbstractGUIController {
+public class OverallAlarmStatisticsController extends AbstractGUIController {
 
 	@Resource
 	private AlarmStatisticsService alarmStatisticsService;

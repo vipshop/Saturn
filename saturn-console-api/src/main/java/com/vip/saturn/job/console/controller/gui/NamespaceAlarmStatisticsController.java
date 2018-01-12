@@ -21,7 +21,7 @@ import javax.annotation.Resource;
  */
 @Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/alarmStatistics")
-public class AlarmStatisticsOfNamespaceController extends AbstractGUIController {
+public class NamespaceAlarmStatisticsController extends AbstractGUIController {
 
 	@Resource
 	private AlarmStatisticsService alarmStatisticsService;
