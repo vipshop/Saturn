@@ -6,7 +6,7 @@
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
                             <el-select v-model="filters.zkClusterKey" @change="scope.search">
-                                <el-option label="全部集群" value=""></el-option>
+                                <el-option label="全部ZK集群" value=""></el-option>
                                 <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
                             </el-select>
                         </el-form-item>
@@ -15,13 +15,13 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
-                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加新域</el-button>
-                            <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button>
+                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加域</el-button>
+                            <!-- <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button> -->
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
-                            <div class="page-table-header-title"><i class="fa fa-list"></i>在线域信息
+                            <div class="page-table-header-title"><i class="fa fa-list"></i>域信息
                                 <el-button type="text" @click="getAllNamespace"><i class="fa fa-refresh"></i></el-button>
                             </div>
                             <div class="page-table-header-separator"></div>
@@ -40,15 +40,21 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="name" label="业务组"></el-table-column>
+                            <el-table-column prop="name" label="描述"></el-table-column>
                             <el-table-column prop="degree" label="重要等级" sortable>
                                 <template slot-scope="scope">
                                     {{$map.degreeMap[scope.row.degree]}}
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="Executor版本"></el-table-column>
-                            <el-table-column prop="zkClusterKey" label="zkClusterKey"></el-table-column>
-                            <el-table-column prop="zkAlias" label="zk集群"></el-table-column>
+                            <el-table-column prop="zkAlias" label="ZK集群名称">
+                                <template slot-scope="scope">
+                                    <el-tooltip placement="top">
+                                        <div slot="content">{{scope.row.zkAddressList}}</div>
+                                        <span>{{scope.row.zkAlias}}</span>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
                         </el-table>
                     </div>
                 </template>
@@ -108,7 +114,6 @@ export default {
         const batchMigrateData = {
           namespacesArray: arr,
           zkClusterKeyNew: '',
-          updateDBOnly: false,
         };
         this.batchMigrateInfo = JSON.parse(JSON.stringify(batchMigrateData));
       });

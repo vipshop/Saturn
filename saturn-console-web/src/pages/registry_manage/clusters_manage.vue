@@ -13,19 +13,19 @@
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
-                            <div class="page-table-header-title"><i class="fa fa-list"></i>在线域信息
+                            <div class="page-table-header-title"><i class="fa fa-list"></i>ZK集群信息
                                 <el-button type="text" @click="getAllClusters"><i class="fa fa-refresh"></i></el-button>
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
-                            <el-table-column prop="zkClusterKey" label="zkClusterKey" sortable></el-table-column>
-                            <el-table-column prop="zkAlias" label="zk集群"></el-table-column>
+                            <el-table-column prop="zkClusterKey" label="ID" sortable></el-table-column>
+                            <el-table-column prop="zkAlias" label="名称"></el-table-column>
                             <el-table-column prop="offline" label="状态">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="scope.row.offline ? '' : 'success'" close-transition>{{statusMap[scope.row.offline]}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="zkAddr" label="zk地址" width="500px" :show-overflow-tooltip="true"></el-table-column>
+                            <el-table-column prop="zkAddr" label="连接串" width="500px" :show-overflow-tooltip="true"></el-table-column>
                         </el-table>
                     </div>
                 </template>

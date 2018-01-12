@@ -13,9 +13,6 @@
                     </el-select>
                 </el-col>
             </el-form-item>
-            <el-form-item prop="updateDBOnly" label="只更新映射表">
-                <el-switch v-model="batchMigrateInfo.updateDBOnly"></el-switch>
-            </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="closeDialog()">取消</el-button>
@@ -40,7 +37,7 @@ export default {
     handleSubmit() {
       this.$refs.batchMigrateInfo.validate((valid) => {
         if (valid) {
-          this.$message.confirmMessage(`确定将域 ${this.batchMigrateInfo.namespacesArray.join(',')} 迁移到 ${this.batchMigrateInfo.zkClusterKeyNew} 吗?`, () => {
+          this.$message.confirmMessage(`确定将这 ${this.batchMigrateInfo.namespacesArray.length} 个域迁移到 ${this.batchMigrateInfo.zkClusterKeyNew} 吗?`, () => {
             this.migrateRequest();
           });
         }
@@ -50,7 +47,6 @@ export default {
       const params = {
         namespaces: this.batchMigrateInfo.namespacesArray.join(','),
         zkClusterKeyNew: this.batchMigrateInfo.zkClusterKeyNew,
-        updateDBOnly: this.batchMigrateInfo.updateDBOnly,
       };
       this.$http.post('/console/namespaces/zkCluster/migrate', params).then(() => {
         this.$emit('batch-migrate-complete', this.batchMigrateInfo.zkClusterKeyNew);
