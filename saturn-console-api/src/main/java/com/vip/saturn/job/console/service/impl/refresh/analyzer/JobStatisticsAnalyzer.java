@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.domain.JobStatistics;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,12 +63,13 @@ public class JobStatisticsAnalyzer {
 
 	public static int getProcessCountAllTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String processCountOfThisJobAllTimeStr = curatorFrameworkOp.getData(JobNodePath.getProcessCountPath(jobName));
-		return processCountOfThisJobAllTimeStr == null ? 0 : Integer.valueOf(processCountOfThisJobAllTimeStr);
+		return StringUtils.isBlank(processCountOfThisJobAllTimeStr) ? 0
+				: Integer.valueOf(processCountOfThisJobAllTimeStr);
 	}
 
 	public static int getErrorCountAllTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String errorCountOfThisJobAllTimeStr = curatorFrameworkOp.getData(JobNodePath.getErrorCountPath(jobName));
-		return errorCountOfThisJobAllTimeStr == null ? 0 : Integer.valueOf(errorCountOfThisJobAllTimeStr);
+		return StringUtils.isBlank(errorCountOfThisJobAllTimeStr) ? 0 : Integer.valueOf(errorCountOfThisJobAllTimeStr);
 	}
 
 	public Map<String, JobStatistics> getJobMap() {

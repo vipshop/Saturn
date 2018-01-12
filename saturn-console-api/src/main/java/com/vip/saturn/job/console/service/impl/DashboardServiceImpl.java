@@ -326,7 +326,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public void cleanShardingCount(String namespace) throws SaturnJobConsoleException {
 		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-		curatorFrameworkOp.update(ExecutorNodePath.SHARDING_COUNT_PATH, "0".getBytes());
+		curatorFrameworkOp.update(ExecutorNodePath.SHARDING_COUNT_PATH, "0");
 		asyncForceRefreshStatistics(namespace);
 	}
 
@@ -372,15 +372,15 @@ public class DashboardServiceImpl implements DashboardService {
 		if (curatorFrameworkOp.checkExists(JobNodePath.getServerNodePath(jobName))) {
 			List<String> servers = curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName));
 			for (String server : servers) {
-				curatorFrameworkOp.update(JobNodePath.getProcessSucessCount(jobName, server), "0".getBytes());
-				curatorFrameworkOp.update(JobNodePath.getProcessFailureCount(jobName, server), "0".getBytes());
+				curatorFrameworkOp.update(JobNodePath.getProcessSucessCount(jobName, server), "0");
+				curatorFrameworkOp.update(JobNodePath.getProcessFailureCount(jobName, server), "0");
 			}
 		}
 	}
 
 	private void resetOneJobAnalyse(String jobName, CuratorFrameworkOp curatorFrameworkOp) {
-		curatorFrameworkOp.update(JobNodePath.getProcessCountPath(jobName), "0".getBytes());
-		curatorFrameworkOp.update(JobNodePath.getErrorCountPath(jobName), "0".getBytes());
+		curatorFrameworkOp.update(JobNodePath.getProcessCountPath(jobName), "0");
+		curatorFrameworkOp.update(JobNodePath.getErrorCountPath(jobName), "0");
 	}
 
 	private void updateResetValue(CuratorFrameworkOp curatorFrameworkOp, String job, String value) {

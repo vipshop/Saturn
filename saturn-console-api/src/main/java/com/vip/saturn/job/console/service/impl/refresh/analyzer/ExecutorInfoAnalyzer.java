@@ -127,9 +127,9 @@ public class ExecutorInfoAnalyzer {
 							.getData(JobNodePath.getProcessSucessCount(job, server));
 					String processFailureCountOfThisExeStr = curatorFrameworkOp
 							.getData(JobNodePath.getProcessFailureCount(job, server));
-					int processSuccessCountOfThisExe = processSuccessCountOfThisExeStr == null ? 0
+					int processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
 							: Integer.valueOf(processSuccessCountOfThisExeStr);
-					int processFailureCountOfThisExe = processFailureCountOfThisExeStr == null ? 0
+					int processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
 							: Integer.valueOf(processFailureCountOfThisExeStr);
 
 					// executor当天运行成功失败数
@@ -149,7 +149,7 @@ public class ExecutorInfoAnalyzer {
 					jobStatistics.incrProcessCountOfTheDay(processSuccessCountOfThisExe + processFailureCountOfThisExe);
 					jobStatistics.incrFailureCountOfTheDay(processFailureCountOfThisExe);
 				} catch (Exception e) {
-					log.info(e.getMessage());
+					log.info(e.getMessage(), e);
 				}
 
 				// 2.统计executor的loadLevel;
@@ -190,7 +190,7 @@ public class ExecutorInfoAnalyzer {
 						}
 					}
 				} catch (Exception e) {
-					log.info(e.getMessage());
+					log.info(e.getMessage(), e);
 				}
 			}
 		}

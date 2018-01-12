@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +62,9 @@ public class DomainStatisticsAnalyzer {
 			DomainStatistics domainStatistics) {
 		if (curatorFrameworkOp.checkExists(ExecutorNodePath.SHARDING_COUNT_PATH)) {
 			String countStr = curatorFrameworkOp.getData(ExecutorNodePath.SHARDING_COUNT_PATH);
-			domainStatistics.setShardingCount(Integer.valueOf(countStr));
+			if(StringUtils.isNotBlank(countStr)) {
+				domainStatistics.setShardingCount(Integer.valueOf(countStr));
+			}
 		}
 	}
 
