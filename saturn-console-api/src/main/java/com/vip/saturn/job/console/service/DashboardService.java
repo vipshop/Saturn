@@ -1,10 +1,8 @@
-/**
- *
- */
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
+
 import java.util.Map;
 
 /**
@@ -12,125 +10,92 @@ import java.util.Map;
  */
 public interface DashboardService {
 
-	void refreshStatistics2DB(boolean force);
+	int executorInDockerCount(String key) throws SaturnJobConsoleException;
 
-	void refreshStatistics2DB(String zkClusterKey) throws SaturnJobConsoleException;
+	int executorNotInDockerCount(String key) throws SaturnJobConsoleException;
 
-	int executorInDockerCount(String key);
-
-	int executorNotInDockerCount(String key);
-
-	int jobCount(String key);
+	int jobCount(String key) throws SaturnJobConsoleException;
 
 	/**
 	 * 失败率top10的域列表
 	 */
-	SaturnStatistics top10FailureDomain(String key);
+	SaturnStatistics top10FailureDomain(String key) throws SaturnJobConsoleException;
 
-	String top10FailureDomainByAllZkCluster();
+	String top10FailureDomainByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 根据失败率top10的作业列表
 	 */
-	SaturnStatistics top10FailureJob(String key);
+	SaturnStatistics top10FailureJob(String key) throws SaturnJobConsoleException;
 
-	String top10FailureJobByAllZkCluster();
+	String top10FailureJobByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 最活跃作业的作业列表(即当天执行次数最多的作业)
 	 */
-	SaturnStatistics top10AactiveJob(String key);
+	SaturnStatistics top10AactiveJob(String key) throws SaturnJobConsoleException;
 
-	String top10AactiveJobByAllZkCluster();
+	String top10AactiveJobByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 负荷最重的top10的Executor列表
 	 */
-	SaturnStatistics top10LoadExecutor(String key);
+	SaturnStatistics top10LoadExecutor(String key) throws SaturnJobConsoleException;
 
-	String top10LoadExecutorByAllZkCluster();
+	String top10LoadExecutorByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 负荷最重的top10的作业列表以及其成功率
 	 */
-	SaturnStatistics top10LoadJob(String key);
+	SaturnStatistics top10LoadJob(String key) throws SaturnJobConsoleException;
 
-	String top10LoadJobByAllZkCluster();
+	String top10LoadJobByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 稳定性最差的top10的域列表
 	 */
-	SaturnStatistics top10UnstableDomain(String key);
+	SaturnStatistics top10UnstableDomain(String key) throws SaturnJobConsoleException;
 
-	String top10UnstableDomainByAllZkCluster();
+	String top10UnstableDomainByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 全域当天处理总数，失败总数
 	 */
-	SaturnStatistics allProcessAndErrorCountOfTheDay(String key);
+	SaturnStatistics allProcessAndErrorCountOfTheDay(String key) throws SaturnJobConsoleException;
 
-	String allProcessAndErrorCountOfTheDayByAllZkCluster();
+	String allProcessAndErrorCountOfTheDayByAllZkCluster() throws SaturnJobConsoleException;
 
-	/**
-	 * 异常作业列表 (如下次调度时间已经过了，但是作业没有被调度)<br> 根据$Jobs/xx/config/cron计算出下次执行时间，如果大于当前时间且作业不在running，则为异常
-	 */
-	SaturnStatistics allUnnormalJob(String key);
+	SaturnStatistics top10FailureExecutor(String key) throws SaturnJobConsoleException;
 
-	String allUnnormalJobByAllZkCluster();
-
-	SaturnStatistics allTimeout4AlarmJob(String key);
-
-	String allTimeout4AlarmJobByAllZkCluster();
-
-	/**
-	 * 无法高可用作业列表 当只有一个可用的物理机Executor运行该作业分片时，如果该Executor宕机将造成无法飘移分片到其他Executor
-	 */
-	SaturnStatistics allUnableFailoverJob(String key);
-
-	String allUnableFailoverJobByAllZkCluster();
-
-	SaturnStatistics top10FailureExecutor(String key);
-
-	String top10FailureExecutorByAllZkCluster();
+	String top10FailureExecutorByAllZkCluster() throws SaturnJobConsoleException;
 
 	/**
 	 * 清除该域下的/$SaturnExecutors/sharding/count
 	 */
-	void cleanShardingCount(String nns) throws Exception;
+	void cleanShardingCount(String namespace) throws SaturnJobConsoleException;
 
-	void cleanOneJobAnalyse(String jobName, String nns) throws Exception;
+	void cleanOneJobAnalyse(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void cleanAllJobAnalyse(String nns) throws Exception;
+	void cleanAllJobAnalyse(String namespace) throws SaturnJobConsoleException;
 
-	void cleanAllJobExecutorCount(String nns) throws Exception;
+	void cleanAllJobExecutorCount(String namespace) throws SaturnJobConsoleException;
 
-	void cleanOneJobExecutorCount(String jobName, String nns) throws Exception;
+	void cleanOneJobExecutorCount(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	Map<String, Integer> loadDomainRankDistribution(String key);
+	Map<String, Integer> loadDomainRankDistribution(String key) throws SaturnJobConsoleException;
 
-	Map<String, Integer> loadDomainRankDistributionByAllZkCluster();
+	Map<String, Integer> loadDomainRankDistributionByAllZkCluster() throws SaturnJobConsoleException;
 
-	Map<Integer, Integer> loadJobRankDistribution(String key);
+	Map<Integer, Integer> loadJobRankDistribution(String key) throws SaturnJobConsoleException;
 
-	Map<Integer, Integer> loadJobRankDistributionByAllZkCluster();
+	Map<Integer, Integer> loadJobRankDistributionByAllZkCluster() throws SaturnJobConsoleException;
 
-	SaturnStatistics abnormalContainer(String key);
+	Map<String, Long> versionDomainNumber(String key) throws SaturnJobConsoleException;
 
-	String abnormalContainerByAllZkCluster();
+	Map<String, Long> versionDomainNumberByAllZkCluster() throws SaturnJobConsoleException;
 
-	Map<String, Long> versionDomainNumber(String key);
+	Map<String, Long> versionExecutorNumber(String key) throws SaturnJobConsoleException;
 
-	Map<String, Long> versionDomainNumberByAllZkCluster();
+	Map<String, Long> versionExecutorNumberByAllZkCluster() throws SaturnJobConsoleException;
 
-	Map<String, Long> versionExecutorNumber(String key);
-
-	Map<String, Long> versionExecutorNumberByAllZkCluster();
-
-	void setUnnormalJobMonitorStatusToRead(String key, String uuid);
-
-	void setUnnormalJobMonitorStatusToReadByAllZkCluster(String uuid);
-
-	void setTimeout4AlarmJobMonitorStatusToRead(String key, String uuid);
-
-	void setTimeout4AlarmJobMonitorStatusToReadByAllZkCluster(String uuid);
 }

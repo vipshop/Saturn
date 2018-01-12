@@ -9,11 +9,10 @@ import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
-import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import com.vip.saturn.job.console.service.DashboardService;
+import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
@@ -69,7 +68,7 @@ public class JobServiceImpl implements JobService {
 	private SystemConfigService systemConfigService;
 
 	@Resource
-	private DashboardService dashboardService;
+	private AlarmStatisticsService alarmStatisticsService;
 
 	private Random random = new Random();
 
@@ -123,20 +122,12 @@ public class JobServiceImpl implements JobService {
 
 			// 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
 			try {
-				RegistryCenterConfiguration conf = registryCenterService.findConfigByNamespace(namespace);
-				if (conf != null) {
-					SaturnStatistics saturnStatistics = dashboardService.allUnnormalJob(conf.getZkAddressList());
-					if (saturnStatistics != null) {
-						String result = saturnStatistics.getResult();
-						if (result != null) {
-							List<AbnormalJob> abnormalJobs = JSON.parseArray(result, AbnormalJob.class);
-							if (abnormalJobs != null) {
-								jobOverviewVo.setAbnormalNumber(abnormalJobs.size());
-							}
-						}
+				String result = alarmStatisticsService.getAbnormalJobsByNamespace(namespace);
+				if (result != null) {
+					List<AbnormalJob> abnormalJobs = JSON.parseArray(result, AbnormalJob.class);
+					if (abnormalJobs != null) {
+						jobOverviewVo.setAbnormalNumber(abnormalJobs.size());
 					}
-				} else {
-					throw new SaturnJobConsoleException(String.format("没有找到该域(%s)的注册信息", namespace));
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 				abnormalJobList.addAll(tempList);
 			}
 		}
-		return JSON.toJSONString(abnormalJobList);
+		return JSON.toJSONString(DashboardServiceHelper.sortUnnormaoJobByTimeDesc(abnormalJobList));
 	}
 
 	@Override

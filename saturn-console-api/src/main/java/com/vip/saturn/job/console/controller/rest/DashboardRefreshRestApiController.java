@@ -5,15 +5,16 @@ import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.service.DashboardService;
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.vip.saturn.job.console.service.StatisticsRefreshService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * RESTful APIs of dashboard refresh.
@@ -24,8 +25,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/rest/v1")
 public class DashboardRefreshRestApiController extends AbstractController {
 
-	@Autowired
-	private DashboardService dashboardService;
+	@Resource
+	private StatisticsRefreshService statisticsRefreshService;
 
 	/**
 	 * 根据ZK集群key，刷新该集群的dashboard信息
@@ -38,7 +39,7 @@ public class DashboardRefreshRestApiController extends AbstractController {
 		try {
 			checkMissingParameter("zkClusterKey", zkClusterKey);
 			long beforeRefresh = System.currentTimeMillis();
-			dashboardService.refreshStatistics2DB(zkClusterKey);
+			statisticsRefreshService.refreshDirectly(zkClusterKey);
 			long afterRefresh = System.currentTimeMillis();
 			long takeTime = afterRefresh - beforeRefresh;
 			return new ResponseEntity<Object>(takeTime, HttpStatus.OK);
