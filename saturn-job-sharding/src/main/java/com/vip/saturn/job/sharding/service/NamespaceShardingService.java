@@ -1,5 +1,6 @@
 package com.vip.saturn.job.sharding.service;
 
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1186,17 +1187,7 @@ public class NamespaceShardingService {
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 				List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
-			for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
-				Executor executor = lastOnlineTrafficExecutorList.get(i);
-				Iterator<Shard> iterator = executor.getShardList().iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					if (jobName.equals(shard.getJobName())) {
-						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
-						iterator.remove();
-					}
-				}
-			}
+			removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
 
 			// 修正该所有executor的对该作业的jobNameList
 			fixJobNameList(lastOnlineExecutorList, jobName);
@@ -1229,18 +1220,7 @@ public class NamespaceShardingService {
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 				List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) {
 			// 摘取所有该作业的Shard
-			for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
-				Executor executor = lastOnlineTrafficExecutorList.get(i);
-				Iterator<Shard> iterator = executor.getShardList().iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					if (shard.getJobName().equals(jobName)) {
-						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
-						iterator.remove();
-						shardList.add(shard);
-					}
-				}
-			}
+			shardList.addAll(removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName));
 
 			// 如果shardList为空，则没必要进行放回等操作，摘取失败
 			if (shardList.isEmpty()) {
@@ -1298,17 +1278,7 @@ public class NamespaceShardingService {
 		protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 				List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 			// 移除已经在Executor运行的该作业的所有Shard
-			for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
-				Executor executor = lastOnlineTrafficExecutorList.get(i);
-				Iterator<Shard> iterator = executor.getShardList().iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					if (jobName.equals(shard.getJobName())) {
-						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
-						iterator.remove();
-					}
-				}
-			}
+			removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
 			// 修正所有executor对该作业的jobNameList
 			fixJobNameList(lastOnlineExecutorList, jobName);
 			// 如果该作业是启用状态，则创建该作业的Shard
@@ -1318,6 +1288,25 @@ public class NamespaceShardingService {
 
 			return true;
 		}
+	}
+
+	private List<Shard> removeAllShardsOnExecutors(List<Executor> lastOnlineTrafficExecutorList, String jobName) {
+		List<Shard> removedShards = Lists.newArrayList();
+
+		for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
+			Executor executor = lastOnlineTrafficExecutorList.get(i);
+			Iterator<Shard> iterator = executor.getShardList().iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				if (jobName.equals(shard.getJobName())) {
+					executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
+					iterator.remove();
+					removedShards.add(shard);
+				}
+			}
+		}
+
+		return removedShards;
 	}
 
 	/**
