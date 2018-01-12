@@ -28,6 +28,8 @@ const routermapperlist = [
     { name: 'unableFailoverJobs', path: '/alarm_manage/unable_failover_jobs' },
     { name: 'alarmAbnormalContainers', path: '/alarm_manage/alarm_abnormal_containers' },
     { name: 'registryManage', path: '/registry_manage' },
+    { name: 'namespaceManage', path: '/registry_manage/namespace_manage' },
+    { name: 'clustersManage', path: '/registry_manage/clusters_manage' },
 ];
 
 export default {

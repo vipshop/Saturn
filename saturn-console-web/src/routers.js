@@ -25,6 +25,8 @@ import DomainStatistic from './pages/dashboard_manage/domain_statistic';
 import ExecutorStatistic from './pages/dashboard_manage/executor_statistic';
 import JobStatistic from './pages/dashboard_manage/job_statistic';
 import RegistryManage from './pages/registry_manage/registry_manage';
+import ClustersManage from './pages/registry_manage/clusters_manage';
+import NamespaceManage from './pages/registry_manage/namespace_manage';
 import AlarmManage from './pages/alarm_manage/alarm_manage';
 import AlarmAbnormalJobs from './pages/alarm_manage/alarm_abnormal_jobs';
 import AlarmTimeoutJobs from './pages/alarm_manage/alarm_timeout_jobs';
@@ -98,8 +100,12 @@ export default new Router({
       ],
     }, {
       path: RouterMapper.GetPath('registryManage'),
-      name: 'registry_manage',
       component: RegistryManage,
+      children: [
+        { path: '', redirect: 'namespace_manage' },
+        { name: 'namespace_manage', path: RouterMapper.GetPath('namespaceManage'), component: NamespaceManage },
+        { name: 'clusters_manage', path: RouterMapper.GetPath('clustersManage'), component: ClustersManage },
+      ],
     }, {
       path: RouterMapper.GetPath('alarmManage'),
       component: AlarmManage,
