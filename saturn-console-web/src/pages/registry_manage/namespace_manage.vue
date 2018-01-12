@@ -55,20 +55,32 @@
             <div v-if="isNamespaceVisible">
                 <namespace-info-dialog :namespace-info="namespaceInfo" :zk-cluster-keys="zkClusterKeys" @close-dialog="closeInfoDialog" @namespace-info-success="namespaceInfoSuccess"></namespace-info-dialog>
             </div>
+            <div v-if="isBatchMigrateVisible">
+                <batch-migrate-dialog :batch-migrate-info="batchMigrateInfo" :zk-cluster-keys="zkClusterKeys" @batch-migrate-complete="batchMigrateComplete" @close-dialog="closeMigrateDialog"></batch-migrate-dialog>
+            </div>
+            <div v-if="isMigrateStatusVisible">
+                <migrate-status-dialog :migrate-status-title="migrateStatusTitle" @close-dialog="closeMigrateStatusDialog"></migrate-status-dialog>
+            </div>
         </div>
     </div>
 </template>
 <script>
 import namespaceInfoDialog from './namespace_info_dialog';
+import batchMigrateDialog from './batch_migrate_dialog';
+import migrateStatusDialog from './migrate_status_dialog';
 
 export default {
   data() {
     return {
       loading: false,
       isNamespaceVisible: false,
+      isBatchMigrateVisible: false,
+      isMigrateStatusVisible: false,
+      migrateStatusTitle: '',
       namespaceList: [],
       namespaceInfo: {},
       zkClusterKeys: [],
+      batchMigrateInfo: {},
       filters: {
         namespace: '',
         zkClusterKey: '',
@@ -81,8 +93,26 @@ export default {
   methods: {
     batchMigrate() {
       this.batchOperation('迁移', (arr) => {
-        console.log(arr);
+        this.isBatchMigrateVisible = true;
+        const batchMigrateData = {
+          namespacesArray: arr,
+          zkClusterKeyNew: '',
+          updateDBOnly: false,
+        };
+        this.batchMigrateInfo = JSON.parse(JSON.stringify(batchMigrateData));
       });
+    },
+    closeMigrateDialog() {
+      this.isBatchMigrateVisible = false;
+    },
+    batchMigrateComplete(zkClusterKeyNew) {
+      this.isBatchMigrateVisible = false;
+      this.isMigrateStatusVisible = true;
+      this.migrateStatusTitle = `状态（批量域迁移到${zkClusterKeyNew}）`;
+    },
+    closeMigrateStatusDialog() {
+      this.isMigrateStatusVisible = false;
+      this.getAllNamespace();
     },
     batchOperation(text, callback) {
       if (this.multipleSelection.length <= 0) {
@@ -142,6 +172,8 @@ export default {
   },
   components: {
     'namespace-info-dialog': namespaceInfoDialog,
+    'batch-migrate-dialog': batchMigrateDialog,
+    'migrate-status-dialog': migrateStatusDialog,
   },
 };
 </script>
