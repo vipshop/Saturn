@@ -430,6 +430,13 @@
 				<version>${spring-boot-test.version}</version>
 				<scope>test</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-loader</artifactId>
+				<version>${spring-boot-test.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>

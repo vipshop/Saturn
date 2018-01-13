@@ -229,7 +229,7 @@ START()
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
-    nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
+    nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -cp ${BASE_DIR}/saturn-executor.jar com.vip.saturn.job.executor.Main ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
 	PID=$!
 	echo $PID > $PID_FILE
 

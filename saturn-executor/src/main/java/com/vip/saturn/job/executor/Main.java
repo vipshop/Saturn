@@ -1,9 +1,10 @@
 package com.vip.saturn.job.executor;
 
+import com.vip.saturn.job.executor.classloader.JobClassLoaderFactory;
+import com.vip.saturn.job.executor.classloader.SaturnClassLoader;
+import com.vip.saturn.job.executor.utils.URLUtils;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -85,37 +86,11 @@ public class Main {
 		return lib.getAbsolutePath();
 	}
 
-	private static List<URL> getUrls(File file) throws MalformedURLException {
-		List<URL> urls = new ArrayList<>();
-		if (!file.exists()) {
-			return urls;
-		}
-		if (file.isDirectory()) {
-			if ("classes".equals(file.getName())) {
-				urls.add(file.toURI().toURL());
-				return urls;
-			}
-			File[] files = file.listFiles();
-			if (files != null && files.length > 0) {
-				for (File tmp : files) {
-					urls.addAll(getUrls(tmp));
-				}
-			}
-			return urls;
-		}
-		if (file.isFile()) {
-			urls.add(file.toURI().toURL());
-		}
-		return urls;
-	}
-
 	private void initClassLoader() throws Exception {
-		List<URL> urls = getUrls(new File(saturnLibDir));
+		List<URL> urls = URLUtils.getFileUrls(new File(saturnLibDir));
 		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());// NOSONAR
-		if (new File(appLibDir).isDirectory()) {
-			urls = getUrls(new File(appLibDir));
-			jobClassLoader = new JobClassLoader(urls.toArray(new URL[urls.size()]));// NOSONAR
-		} else {
+		jobClassLoader = JobClassLoaderFactory.getJobClassLoader(appLibDir);
+		if (jobClassLoader == null) {
 			jobClassLoader = executorClassLoader;
 		}
 	}

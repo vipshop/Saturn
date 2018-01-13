@@ -25,6 +25,11 @@
 			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-loader</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -35,8 +40,8 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<addClasspath>false</addClasspath>
-							<mainClass>com.vip.saturn.job.executor.Main</mainClass>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>
 				</configuration>
