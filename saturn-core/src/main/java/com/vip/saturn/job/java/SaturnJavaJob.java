@@ -307,25 +307,4 @@ public class SaturnJavaJob extends CrondJob {
 		// TODO: need to raise alarm by implementor
 	}
 
-	private static abstract class JobBusinessClassMethodCaller {
-
-		public Object call(Object jobBusinessInstance, SaturnExecutorService saturnExecutorService) throws Exception {
-			if (jobBusinessInstance == null) {
-				throw new JobException("the job business instance is not initialized");
-			}
-			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-			Thread.currentThread().setContextClassLoader(jobClassLoader);
-			try {
-				final Class<?> saturnJobExecutionContextClazz = jobClassLoader
-						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
-				return internalCall(jobClassLoader, saturnJobExecutionContextClazz);
-			} finally {
-				Thread.currentThread().setContextClassLoader(oldClassLoader);
-			}
-		}
-
-		protected abstract Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
-				throws Exception;
-	}
 }

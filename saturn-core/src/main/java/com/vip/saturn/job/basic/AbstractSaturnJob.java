@@ -1,10 +1,13 @@
 package com.vip.saturn.job.basic;
 
 import com.google.common.base.Strings;
+import com.vip.saturn.job.SaturnJobExecutionContext;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
+import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.exception.SaturnJobException;
+import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,4 +187,26 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 
 	public abstract SaturnJobReturn doExecution(String jobName, Integer key, String value,
 			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable;
+
+	protected static abstract class JobBusinessClassMethodCaller {
+
+		public Object call(Object jobBusinessInstance, SaturnExecutorService saturnExecutorService) throws Exception {
+			if (jobBusinessInstance == null) {
+				throw new JobException("the job business instance is not initialized");
+			}
+			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				final Class<?> saturnJobExecutionContextClazz = jobClassLoader
+						.loadClass(SaturnJobExecutionContext.class.getCanonicalName());
+				return internalCall(jobClassLoader, saturnJobExecutionContextClazz);
+			} finally {
+				Thread.currentThread().setContextClassLoader(oldClassLoader);
+			}
+		}
+
+		protected abstract Object internalCall(ClassLoader jobClassLoader, Class<?> saturnJobExecutionContextClazz)
+				throws Exception;
+	}
 }
