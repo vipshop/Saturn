@@ -748,7 +748,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	}
 
 	/**
-	 * 如果prefer不是docker容器，并且preferList不包含，则直接添加；<br> 如果prefer是docker容器（以@开头），则prefer为task，获取该task下的所有executor，如果不包含，添加进preferList。
+	 * 如果prefer不是docker容器，并且preferList不包含，则直接添加；
+	 *
+	 * 如果prefer是docker容器（以@开头），则prefer为task，获取该task下的所有executor，如果不包含，添加进preferList。
 	 */
 	private void fillRealPreferListIfIsDockerOrNot(List<String> preferList, String prefer,
 			List<String> allExistsExecutors) throws Exception {
