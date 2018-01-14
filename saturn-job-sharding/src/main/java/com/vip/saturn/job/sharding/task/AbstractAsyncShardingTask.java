@@ -46,8 +46,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	protected abstract void logStartInfo();
 
 	/**
-	 * Special enable jobs that need to be notified prior, not consider whether whose shards are changed.<br/> By
-	 * default, notify enable jobs whose shards are changed.
+	 * Special enable jobs that need to be notified prior, not consider whether whose shards are changed.
+	 * By default, notify enable jobs whose shards are changed.
 	 */
 	protected List<String> notifyEnableJobsPrior() {
 		return null;
@@ -233,7 +233,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 
 	/**
 	 * Get the jobs, that are enabled, and whose shards are changed. Specially, return all enabled jobs when the current
-	 * thread is all-shard-task<br/> Return the jobs and their shardContent.
+	 * thread is all-shard-task
+	 * Return the jobs and their shardContent.
 	 */
 	private Map<String, Map<String, List<Integer>>> getEnabledAndShardsChangedJobShardContent(
 			boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList,
@@ -589,7 +590,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 
 
 	/**
-	 * 是否使用非preferList<br> 1、存在结点，并且该结点值为false，返回false；<br> 2、其他情况，返回true
+	 * 是否使用非preferList:
+	 * 1、存在结点，并且该结点值为false，返回false；
+	 * 2、其他情况，返回true
 	 */
 	protected boolean useDispreferList(String jobName) throws Exception {
 		String jobConfigUseDispreferListNodePath = SaturnExecutorsNode
