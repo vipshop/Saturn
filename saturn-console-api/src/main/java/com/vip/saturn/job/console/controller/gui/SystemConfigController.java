@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
-import com.vip.saturn.job.console.domain.JobConfigMetaGroup;
+import com.vip.saturn.job.console.domain.JobConfigMeta;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
@@ -90,7 +90,7 @@ public class SystemConfigController extends AbstractGUIController {
 	public SuccessResponseEntity getConfigMeta() throws IOException {
 		ClassLoader classLoader = getClass().getClassLoader();
 		File systemConfigMetaFile = new File(classLoader.getResource(SYSTEM_CONFIG_META_FILE_NAME).getFile());
-		Map<String, JobConfigMetaGroup> jobConfigGroups = YAML_OBJ_MAPPER.readValue(systemConfigMetaFile, Map.class);
+		Map<String, List<JobConfigMeta>> jobConfigGroups = YAML_OBJ_MAPPER.readValue(systemConfigMetaFile, Map.class);
 		return new SuccessResponseEntity(jobConfigGroups);
 	}
 

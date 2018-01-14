@@ -1,18 +1,18 @@
 # System Config Meta --------------------------------------
 job_configs:
-    MAX_JOB_NUM:
-        description_zh: 每个域最大作业数
+    - name: MAX_JOB_NUM
+      desc_zh: 每个域最大作业数
 
 executor_configs:
-    ALARM_RAISED_ON_EXECUTOR_RESTART:
-        description_zh: executor restart是否发送告警
+    - name: ALARM_RAISED_ON_EXECUTOR_RESTART
+      desc_zh: executor restart是否发送告警
 
 cluster_configs:
-    CONSOLE_ZK_CLUSTER_MAPPING:
-        description_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-DG:/saturn,/forVdos;CONSOLE-FS:/zk3;default:/saturn;
-    IDC_ZK_CLUSTER_MAPPING:
-        description_zh: IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：gd6:/forVdos,/saturn;gd9:/test,/shanghai;
-    IDC_CONSOLE_ID_MAPPING:
-        description_zh: IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。其中IDC机房和Console之间是一对多的关系，一个IDC下面包含多个Console，Console之间用逗号隔开。参考配置格式：gd6:CONSOLE-DG,default;gd9:CONSOLE-FS;
-    IDC_CONSOLE_DOMAIN_MAPPING:
-        description_zh: IDC机房与Console访问域名的映射关系，用于识别不同机房对应的Console的访问域名。其中IDC机房和域名之间是一对一的关系,一个IDC机房只能对应一个域名。参考配置格式：gd6:http://saturn.vip.vip.com;gd9:http://gd9-saturn.vip.vip.com;
+    - name: CONSOLE_ZK_CLUSTER_MAPPING
+      desc_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-DG:/saturn,/forVdos;CONSOLE-FS:/zk3;default:/saturn;
+    - name: IDC_ZK_CLUSTER_MAPPING
+      desc_zh: IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：gd6:/forVdos,/saturn;gd9:/test,/shanghai;
+    - name: IDC_CONSOLE_ID_MAPPING
+      desc_zh: IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。其中IDC机房和Console之间是一对多的关系，一个IDC下面包含多个Console，Console之间用逗号隔开。参考配置格式：gd6:CONSOLE-DG,default;gd9:CONSOLE-FS;
+    - name: IDC_CONSOLE_DOMAIN_MAPPING
+      desc_zh: IDC机房与Console访问域名的映射关系，用于识别不同机房对应的Console的访问域名。其中IDC机房和域名之间是一对一的关系,一个IDC机房只能对应一个域名。参考配置格式：gd6:http://saturn.vip.vip.com;gd9:http://gd9-saturn.vip.vip.com;
