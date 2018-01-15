@@ -187,6 +187,7 @@ export default {
         cron: '0/5 * * * * ?',
         shardingTotalCount: 1,
         shardingItemParameters: '',
+        timeZone: 'Asia/Shanghai',
         description: '',
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
@@ -415,14 +416,10 @@ export default {
       });
     },
     getGroupList() {
-      this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
         this.groupList = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); })
-      .finally(() => {
-        this.loading = false;
-      });
+      .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); });
     },
   },
   components: {
