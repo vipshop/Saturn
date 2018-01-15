@@ -122,8 +122,11 @@ form {
 .el-upload-list__item-name [class^=el-icon] {
     height: initial;
 }
-
 /* tab */
 .el-tabs__item {
     color: #888;
+}
+/* collapse */
+.el-collapse-item__header {
+    font-size: 16px;
 }

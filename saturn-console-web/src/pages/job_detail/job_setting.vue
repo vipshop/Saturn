@@ -55,13 +55,6 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
-                            <el-col :span="22">
-                                <el-form-item prop="description" label="作业描述信息">
-                                    <el-input type="textarea" v-model="jobSettingInfo.description"></el-input>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
                         <el-row :gutter="30">
                             <el-col :span="14">
                                 <el-form-item prop="preferList" label="优先executor">
@@ -79,10 +72,19 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="description" label="作业描述信息">
+                                    <el-input type="textarea" v-model="jobSettingInfo.description"></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
                     </div>
                 </el-collapse-item>
                 <el-collapse-item name="2">
-                    <template slot="title">高级配置</template>
+                    <template slot="title">
+                        高级配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;"><i class="fa fa-undo"></i>更新</el-button>
+                    </template>
                     <div class="job-setting-content">
                         <el-row>
                             <el-col :span="11">
@@ -110,7 +112,7 @@
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="processCountIntervalSeconds" label="统计处理间隔">
+                                <el-form-item prop="processCountIntervalSeconds" label="统计处理间隔(秒)">
                                     <el-input v-model="jobSettingInfo.processCountIntervalSeconds"></el-input>
                                 </el-form-item>
                             </el-col>
