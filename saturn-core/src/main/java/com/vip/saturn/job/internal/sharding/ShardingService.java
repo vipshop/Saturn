@@ -154,6 +154,7 @@ public class ShardingService extends AbstractSaturnService {
 			while (!isShutdown) {
 				boolean needRetry = false;
 				int version = getDataStat.getVersion();
+				// 首先尝试从job/leader/sharding/neccessary节点获取，如果失败，会从$SaturnExecutors/sharding/content下面获取
 				// key is executor, value is sharding items
 				Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardContent(jobName,
 						getDataStat.getData());
