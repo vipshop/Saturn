@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.impl.refresh;
+package com.vip.saturn.job.console.service.impl.statistics;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -14,7 +14,7 @@ import com.vip.saturn.job.console.service.StatisticsRefreshService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.DashboardConstants;
 import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
-import com.vip.saturn.job.console.service.impl.refresh.analyzer.*;
+import com.vip.saturn.job.console.service.impl.statistics.analyzer.*;
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;

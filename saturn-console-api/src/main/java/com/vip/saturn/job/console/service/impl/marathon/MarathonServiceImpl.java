@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.impl;
+package com.vip.saturn.job.console.service.impl.marathon;
 
 import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.SaturnEnvProperties;
@@ -17,7 +17,6 @@ import com.vip.saturn.job.console.service.MarathonService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
-import com.vip.saturn.job.console.service.marathon.MarathonRestClient;
 import com.vip.saturn.job.console.utils.ContainerNodePath;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;

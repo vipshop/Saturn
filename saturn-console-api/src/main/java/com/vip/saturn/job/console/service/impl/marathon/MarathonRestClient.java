@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.marathon;
+package com.vip.saturn.job.console.service.impl.marathon;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -7,8 +7,8 @@ import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.container.ContainerConfig;
 import com.vip.saturn.job.console.domain.container.ContainerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.service.marathon.entity.Tasks;
-import com.vip.saturn.job.console.service.marathon.entity.WrapperApp;
+import com.vip.saturn.job.console.service.impl.marathon.entity.Tasks;
+import com.vip.saturn.job.console.service.impl.marathon.entity.WrapperApp;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;

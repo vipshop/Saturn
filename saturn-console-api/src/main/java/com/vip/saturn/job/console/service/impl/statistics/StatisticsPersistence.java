@@ -1,11 +1,11 @@
-package com.vip.saturn.job.console.service.impl.refresh;
+package com.vip.saturn.job.console.service.impl.statistics;
 
 import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
-import com.vip.saturn.job.console.service.impl.refresh.analyzer.StatisticsModel;
+import com.vip.saturn.job.console.service.impl.statistics.analyzer.StatisticsModel;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

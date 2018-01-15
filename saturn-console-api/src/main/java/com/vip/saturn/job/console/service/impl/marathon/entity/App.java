@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.marathon.entity;
+package com.vip.saturn.job.console.service.impl.marathon.entity;
 
 /**
  * @author hebelala

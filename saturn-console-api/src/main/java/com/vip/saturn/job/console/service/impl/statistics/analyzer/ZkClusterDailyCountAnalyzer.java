@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.service.impl.refresh.analyzer;
+package com.vip.saturn.job.console.service.impl.statistics.analyzer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
