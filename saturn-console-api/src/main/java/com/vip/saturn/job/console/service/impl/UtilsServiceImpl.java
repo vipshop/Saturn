@@ -13,6 +13,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -61,5 +62,10 @@ public class UtilsServiceImpl implements UtilsService {
 			throw new SaturnJobConsoleException(String.format("cron(%s)可能描述的是一个过去的时间，将不会被执行", cronTrim));
 		}
 		return forecastCronResult;
+	}
+
+	@Override
+	public List<String> getTimeZones() throws SaturnJobConsoleException {
+		return SaturnConstants.TIME_ZONE_IDS;
 	}
 }

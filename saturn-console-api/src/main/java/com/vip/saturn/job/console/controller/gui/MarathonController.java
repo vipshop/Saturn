@@ -10,7 +10,6 @@ import com.vip.saturn.job.console.domain.container.ContainerToken;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.MarathonService;
 import com.vip.saturn.job.console.utils.CronExpression;
-import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -144,11 +143,6 @@ public class MarathonController extends AbstractGUIController {
 	public SuccessResponseEntity getRegistryRepositoryTags(@PathVariable String namespace,
 			@RequestParam String repository) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(marathonService.getRegistryRepositoryTags(namespace, repository));
-	}
-
-	@GetMapping(value = "/timeZoneIds")
-	public SuccessResponseEntity getTimeZoneIds(@PathVariable String namespace) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(SaturnConstants.TIME_ZONE_IDS);
 	}
 
 	@Audit
