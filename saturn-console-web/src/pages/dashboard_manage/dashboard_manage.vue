@@ -44,7 +44,7 @@ export default {
     getDashboardCount() {
       let url = '';
       if (this.clusterKey !== '') {
-        url = `/console/zkClusters/${this.clusterKey}/dashboard/count`;
+        url = `/console/zkClusters/${encodeURIComponent(this.clusterKey)}/dashboard/count`;
       } else {
         url = '/console/zkClusters/dashboard/count';
       }
