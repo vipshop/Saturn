@@ -18,7 +18,7 @@
                 <el-table-column label="状态" min-width="60px">
                     <template slot-scope="scope"> 
                         <el-tag :type="statusTag[scope.row.status]">{{translateStatus[scope.row.status]}}</el-tag>
-                        <el-tag type="danger" v-if="!scope.row.failover">failover</el-tag>
+                        <el-tag type="danger" v-if="scope.row.failover">failover</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="jobMsg" label="分片返回信息" width="180px" show-overflow-tooltip>
