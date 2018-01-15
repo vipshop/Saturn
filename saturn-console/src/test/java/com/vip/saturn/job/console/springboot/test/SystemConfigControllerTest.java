@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
 import com.vip.saturn.job.console.controller.gui.SystemConfigController;
 import com.vip.saturn.job.console.domain.JobConfigMeta;
+import com.vip.saturn.job.console.domain.JobConfigVo;
 import java.util.List;
 import java.util.Map;
 import org.junit.Ignore;
@@ -29,16 +30,16 @@ public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
 
 	@Test
 	public void testGetConfigMeta() throws Exception {
-		MvcResult result = mvc.perform(get("/console/configs/meta")).andExpect(status().isOk()).andReturn();
+		MvcResult result = mvc.perform(get("/console/configs")).andExpect(status().isOk()).andReturn();
 		String body = result.getResponse().getContentAsString();
 		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
 		Map<String, Object> objValue = (Map<String, Object>) resultMap.get("obj");
 		assertEquals(3, objValue.size());
-		List<JobConfigMeta> metas = (List<JobConfigMeta>) objValue.get("job_configs");
+		List<JobConfigVo> metas = (List<JobConfigVo>) objValue.get("job_configs");
 		assertEquals(1, metas.size());
-		metas = (List<JobConfigMeta>) objValue.get("executor_configs");
+		metas = (List<JobConfigVo>) objValue.get("executor_configs");
 		assertEquals(1, metas.size());
-		metas = (List<JobConfigMeta>) objValue.get("cluster_configs");
+		metas = (List<JobConfigVo>) objValue.get("cluster_configs");
 		assertEquals(4, metas.size());
 	}
 }

@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.mybatis.entity;
 
+import java.util.Objects;
+
 /**
  * @author hebelala
  */
@@ -33,4 +35,23 @@ public class SystemConfig {
 		this.value = value;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SystemConfig that = (SystemConfig) o;
+		return Objects.equals(id, that.id) &&
+				Objects.equals(property, that.property) &&
+				Objects.equals(value, that.value);
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash(id, property, value);
+	}
 }
