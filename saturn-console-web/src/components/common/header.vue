@@ -12,7 +12,7 @@
                     <el-submenu index="">
                         <template slot="title"><i class="fa fa-user"></i>{{loginUser || 'null'}}</template>
                         <el-menu-item index=""><a><i class="fa fa-sign-out"></i>注销</a></el-menu-item>
-                        <el-menu-item index=""><a><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
+                        <el-menu-item index=""><a href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
                     </el-submenu>
                 </div>
             </el-menu>
