@@ -18,7 +18,7 @@ export default {
   methods: {
     getTimeoutJobs() {
       this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/alarmStatistics/timeout4AlarmJob`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isTimeout4Alarm`).then((data) => {
         this.jobTimeoutJobsList = JSON.parse(data);
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })

@@ -18,7 +18,7 @@ export default {
   methods: {
     getAbnormalJobs() {
       this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/alarmStatistics/abnormalJob`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isAbnormal`).then((data) => {
         this.jobAbnormalJobsList = JSON.parse(data);
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
