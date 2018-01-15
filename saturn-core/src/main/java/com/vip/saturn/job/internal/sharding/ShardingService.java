@@ -76,6 +76,7 @@ public class ShardingService extends AbstractSaturnService {
 
 	/**
 	 * 判断是否需要重分片.
+	 * necessar节点的内容来自于AbstractAsyncShardingTask::run()
 	 * @return 是否需要重分片
 	 */
 	public boolean isNeedSharding() {
@@ -133,23 +134,31 @@ public class ShardingService extends AbstractSaturnService {
 		if (getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)) {
 			getDataStat = getNecessaryDataStat();
 		}
+		// sharding neccessary内容非空，而且不为0，意味着要进行sharding分配
 		if (getDataStat == null || SHARDING_UN_NECESSARY.equals(getDataStat.getData())) {
 			return;
 		}
+		// 如果不是leader，则等待leader处理完成（这也是一个死循环，知道满足跳出循环的条件：1. 被shutdown 2. 无须sharding而且不处于processing状态）
 		if (blockUntilShardingComplatedIfNotLeader()) {
 			return;
 		}
+		// 如果有作业分片处于running状态则等待（无限期）
 		waitingOtherJobCompleted();
+		// 建立一个临时节点，标记shardig处理中
 		getJobNodeStorage().fillEphemeralJobNode(ShardingNode.PROCESSING, "");
 		try {
+			// 删除作业下面的所有JobServer的sharding节点
 			clearShardingInfo();
+
 			int retryCount = 3;
 			while (!isShutdown) {
 				boolean needRetry = false;
 				int version = getDataStat.getVersion();
+				// key is executor, value is sharding items
 				Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardContent(jobName,
 						getDataStat.getData());
 				try {
+					// 所有jobserver的（检查+创建），加上设置sharding necessary内容为0，都是一个事务
 					CuratorTransactionFinal curatorTransactionFinal = getJobNodeStorage().getClient().inTransaction()
 							.check().forPath("/").and();
 					for (Entry<String, List<Integer>> entry : shardingItems.entrySet()) {
