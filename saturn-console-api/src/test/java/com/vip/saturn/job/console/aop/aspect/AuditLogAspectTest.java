@@ -64,7 +64,7 @@ public class AuditLogAspectTest {
 		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] REST API:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
+				"[INFO] REST API:[method1] path:[/home/path] is called by IP:[192.168.1.1], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -77,7 +77,7 @@ public class AuditLogAspectTest {
 		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
+				"[INFO] GUI API:[method2] path:[/home/path2] is called by User:[usera] with IP:[192.168.1.2], result is success. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -140,14 +140,14 @@ class SpringContextAOP {
 @Component
 class TestAspectClass {
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "method1")
 	public void method1() {
 		AuditInfoContext.putNamespace("www.abc.com");
 		AuditInfoContext.putJobName("jobA");
 		AuditInfoContext.putJobNames(Arrays.asList("jobB", "jobC"));
 	}
 
-	@Audit(type = AuditType.WEB)
+	@Audit(type = AuditType.WEB, name = "method2")
 	public void method2() {
 		AuditInfoContext.putNamespace("www.abc.com");
 		AuditInfoContext.putJobName("jobA");

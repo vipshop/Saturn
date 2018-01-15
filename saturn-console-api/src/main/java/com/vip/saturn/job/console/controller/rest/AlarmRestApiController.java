@@ -39,7 +39,7 @@ public class AlarmRestApiController extends AbstractController {
 	@Resource
 	private RestApiService restApiService;
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "raiseAlarm")
 	@RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {

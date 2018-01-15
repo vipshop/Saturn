@@ -31,7 +31,7 @@ public class DashboardRefreshRestApiController extends AbstractController {
 	/**
 	 * 根据ZK集群key，刷新该集群的dashboard信息
 	 */
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "dashboardRefresh")
 	@RequestMapping(value = "/dashboard/refresh", method = {RequestMethod.POST,
 			RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> dashboardRefresh(String zkClusterKey, HttpServletRequest request)
