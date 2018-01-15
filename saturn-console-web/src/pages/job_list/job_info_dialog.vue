@@ -126,11 +126,20 @@ export default {
     closeDialog() {
       this.$emit('close-dialog');
     },
+    getTimeZones() {
+      this.$http.get('/console/utils/timeZones').then((data) => {
+        this.timeZonesArray = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取时区请求失败！'); });
+    },
   },
   computed: {
     isEditable() {
       return this.jobInfoOperation !== 'copy';
     },
+  },
+  created() {
+    this.getTimeZones();
   },
 };
 </script>
