@@ -33,7 +33,7 @@ public class ZkDiscoveryRestApiController extends AbstractController {
 	@Resource
 	private NamespaceZkClusterMapping4SqlService namespaceZkclusterMapping4SqlService;
 
-	@Audit(type = AuditType.REST, name = "discoverZK")
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/discoverZk", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> discoverZk(String namespace, HttpServletRequest request)
 			throws SaturnJobConsoleException {

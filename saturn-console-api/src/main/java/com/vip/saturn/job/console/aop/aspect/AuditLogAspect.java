@@ -40,15 +40,23 @@ public class AuditLogAspect {
 	@Around("@annotation(audit)")
 	public Object logAuditInfo(ProceedingJoinPoint joinPoint, Audit audit) throws Throwable {
 		addAuditParamsIfPossible(joinPoint);
+		String methodName = getMethodName(joinPoint, audit);
 		Boolean isSuccess = false;
 		try {
 			Object result = joinPoint.proceed();
 			isSuccess = true;
 			return result;
 		} finally {
-			logAudit(isSuccess, audit);
+			logAudit(isSuccess, audit.type(), methodName);
 			AuditInfoContext.reset();
 		}
+	}
+
+	private String getMethodName(ProceedingJoinPoint joinPoint, Audit audit) {
+		if (StringUtils.isNotBlank(audit.name())) {
+			return audit.name();
+		}
+		return joinPoint.getSignature().getName();
 	}
 
 	private void addAuditParamsIfPossible(ProceedingJoinPoint joinPoint) {
@@ -67,15 +75,15 @@ public class AuditLogAspect {
 	}
 
 
-	private void logAudit(Boolean isSuccess, Audit audit) {
+	private void logAudit(Boolean isSuccess, AuditType auditType, String methodName) {
 		String content = null;
-		switch (audit.type()) {
+		switch (auditType) {
 			case REST:
-				content = getRESTRequstContent(audit.name(), isSuccess);
+				content = getRESTRequstContent(methodName, isSuccess);
 				break;
 			case WEB:
 			default:
-				content = getWebRequestContent(audit.name(), isSuccess);
+				content = getWebRequestContent(methodName, isSuccess);
 		}
 		log.info(content);
 	}

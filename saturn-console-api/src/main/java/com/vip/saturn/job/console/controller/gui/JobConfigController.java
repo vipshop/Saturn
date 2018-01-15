@@ -39,7 +39,7 @@ public class JobConfigController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "updateJobConfig")
+	@Audit
 	@PostMapping
 	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,

@@ -109,7 +109,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "启动作业")
+	@Audit
 	@PostMapping(value = "/{jobName}/enable")
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -119,7 +119,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "batchEnableJob")
+	@Audit
 	@PostMapping(value = "/enable")
 	public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -132,7 +132,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "disableJob")
+	@Audit
 	@PostMapping(value = "/{jobName}/disable")
 	public SuccessResponseEntity disableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -142,7 +142,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "batchDisableJob")
+	@Audit
 	@PostMapping(value = "/disable")
 	public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -155,7 +155,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "removeJob")
+	@Audit
 	@DeleteMapping(value = "/{jobName}")
 	public SuccessResponseEntity removeJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -165,7 +165,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "batchRemoveJob")
+	@Audit
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -193,7 +193,7 @@ public class JobOverviewController extends AbstractGUIController {
 	 * 批量设置作业的优先Executor
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "batchSetPreferExecutors")
+	@Audit
 	@PostMapping(value = "/preferExecutors")
 	public SuccessResponseEntity batchSetPreferExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -207,7 +207,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "createJob")
+	@Audit
 	@PostMapping(value = "/jobs")
 	public SuccessResponseEntity createJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
@@ -217,7 +217,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "copyJob")
+	@Audit
 	@PostMapping(value = "/{jobNameCopied}/copy")
 	public SuccessResponseEntity copyJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -228,7 +228,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "importJobs")
+	@Audit
 	@PostMapping(value = "/import")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, @RequestParam("file") MultipartFile file)
@@ -245,7 +245,7 @@ public class JobOverviewController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit(name = "exportJobs")
+	@Audit
 	@GetMapping(value = "/export")
 	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
 			final HttpServletResponse response)

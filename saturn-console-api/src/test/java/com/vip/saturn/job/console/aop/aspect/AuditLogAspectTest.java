@@ -94,7 +94,7 @@ public class AuditLogAspectTest {
 		assertTrue(AuditInfoContext.currentAuditInfo().isEmpty());
 		assertEquals("log size should be 1", 1, dummyAppender.getEvents().size());
 		assertEquals("log content is not equal",
-				"[INFO] GUI API:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
+				"[INFO] GUI API:[method3] path:[/home/path3] is called by User:[userb] with IP:[192.168.1.3], result is failed. Context info:{namespace=www.abc.com, jobName=jobA, jobNames=[jobB, jobC]}.",
 				dummyAppender.getLastEvent().toString());
 	}
 
@@ -147,7 +147,7 @@ class TestAspectClass {
 		AuditInfoContext.putJobNames(Arrays.asList("jobB", "jobC"));
 	}
 
-	@Audit(type = AuditType.WEB, name = "method2")
+	@Audit(type = AuditType.WEB)
 	public void method2() {
 		AuditInfoContext.putNamespace("www.abc.com");
 		AuditInfoContext.putJobName("jobA");
