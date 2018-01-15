@@ -37,7 +37,7 @@ export default {
   methods: {
     getSystemConfig() {
       this.loading = true;
-      this.$http.get('/console/configs/meta').then((data) => {
+      this.$http.get('/console/configs').then((data) => {
         this.systemConfig = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取系统配置请求失败！'); })

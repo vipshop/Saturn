@@ -4,8 +4,8 @@
             <el-table :data="parameters" border style="width: 100%">
                 <el-table-column label="key" header-align="left">
                     <template slot-scope="scope">
-                        <el-tooltip popper-class="form-tooltip" :content="scope.row.desc_zh" placement="bottom">
-                            <el-input v-model="scope.row.name" readonly></el-input>
+                        <el-tooltip popper-class="form-tooltip" :content="scope.row.description" placement="bottom">
+                            <el-input v-model="scope.row.key" readonly></el-input>
                         </el-tooltip>
                     </template>
                 </el-table-column>
