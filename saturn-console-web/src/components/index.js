@@ -18,6 +18,7 @@ import AbnormalJobs from './common/abnormalJobs';
 import TimeoutJobs from './common/timeoutJobs';
 import UnableFailoverJobs from './common/unableFailoverJobs';
 import AbnormalContainers from './common/abnormalContainers';
+import CronPredictDialog from './common/cronPredictDialog';
 
 Vue.component('Container', Container);
 Vue.component('Header', Header);
@@ -38,3 +39,4 @@ Vue.component('AbnormalJobs', AbnormalJobs);
 Vue.component('TimeoutJobs', TimeoutJobs);
 Vue.component('UnableFailoverJobs', UnableFailoverJobs);
 Vue.component('AbnormalContainers', AbnormalContainers);
+Vue.component('CronPredictDialog', CronPredictDialog);
