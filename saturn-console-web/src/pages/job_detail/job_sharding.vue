@@ -23,6 +23,11 @@
                         <el-tag class="sharding-tag" type="primary" v-for="item in $array.strToArray(scope.row.sharding)" :key="item">{{item}}</el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="分片总数">
+                    <template slot-scope="scope">
+                        {{$array.strToArray(scope.row.sharding).length}}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="version" label="作业版本"></el-table-column>
             </el-table>
         </div>
@@ -40,7 +45,11 @@ export default {
   methods: {
     getJobSharding() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
-        this.jobShardings = data;
+        data.forEach((ele) => {
+          if (ele.sharding !== '') {
+            this.jobShardings.push(ele);
+          }
+        });
       })
       .catch(() => { this.$http.buildErrorHandler('获取分片情况请求失败！'); });
     },
