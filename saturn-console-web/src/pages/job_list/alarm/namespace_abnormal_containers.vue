@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <div class="page-container">
-            <AbnormalContainers @abnormal-containers-list="namespaceAbnormalContainersList" @refresh-list="getAbnormalContainers"></AbnormalContainers>
+            <AbnormalContainers :abnormal-containers-list="namespaceAbnormalContainersList" @refresh-list="getAbnormalContainers"></AbnormalContainers>
         </div>
     </div>
 </template>
