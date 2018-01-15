@@ -10,8 +10,8 @@
                 <div class="pull-right">
                     <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                     <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
-                    <el-button size="small" @click="" ><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
-                    <el-button size="small" @click=""><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
+                    <el-button size="small" @click="handleOperate('runAtOnce')" ><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
+                    <el-button size="small" @click="handleOperate('stopAtOnce')"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
                     <el-button size="small" @click="handleDelete"><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
@@ -45,6 +45,13 @@ export default {
     };
   },
   methods: {
+    handleOperate(operation) {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config/${operation}`, '').then(() => {
+        this.$message.successNotify('操作成功');
+        this.getJobInfo();
+      })
+      .catch(() => { this.$http.buildErrorHandler(`${operation}请求失败！`); });
+    },
     handleDelete() {
       this.$message.confirmMessage(`确认删除作业 ${this.jobName} 吗?`, () => {
         this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${this.jobName}`).then(() => {
