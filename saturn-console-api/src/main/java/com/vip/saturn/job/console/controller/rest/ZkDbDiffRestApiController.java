@@ -33,7 +33,7 @@ public class ZkDbDiffRestApiController extends AbstractController {
 	@Resource
 	private ZkDBDiffService zkDBDiffService;
 
-	@Audit(type = AuditType.REST, name = "diffZKWithDB")
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/diff", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@ResponseBody
 	public ResponseEntity<Object> diff(String zkcluster, HttpServletRequest request)

@@ -35,7 +35,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity(marathonService.getContainerToken(namespace));
 	}
 
-	@Audit(name = "saveToken")
+	@Audit
 	@PostMapping(value = "/token")
 	public SuccessResponseEntity saveToken(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("userName") @RequestParam String userName,
@@ -109,7 +109,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-	@Audit(name = "updateContainerInstances")
+	@Audit
 	@PostMapping(value = "/containerInstances")
 	public SuccessResponseEntity updateContainerInstances(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("taskId") @RequestParam String taskId,
@@ -121,7 +121,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-	@Audit(name = "removeContainer")
+	@Audit
 	@DeleteMapping(value = "/container")
 	public SuccessResponseEntity removeContainer(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("taskId") @RequestParam String taskId) throws SaturnJobConsoleException {
@@ -151,7 +151,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity(SaturnConstants.TIME_ZONE_IDS);
 	}
 
-	@Audit(name = "addContainerScaleJob")
+	@Audit
 	@PostMapping(value = "/containerScaleJob")
 	public SuccessResponseEntity addContainerScaleJob(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("taskId") @RequestParam String taskId,
@@ -177,7 +177,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity(marathonService.getContainerScaleJobVo(namespace, taskId, jobName));
 	}
 
-	@Audit(name = "enableContainerScaleJob")
+	@Audit
 	@PostMapping(value = "/enableContainerScaleJob")
 	public SuccessResponseEntity enableContainerScaleJob(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
@@ -185,7 +185,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-	@Audit(name = "disableContainerScaleJob")
+	@Audit
 	@PostMapping(value = "/disableContainerScaleJob")
 	public SuccessResponseEntity disableContainerScaleJob(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @RequestParam String jobName) throws SaturnJobConsoleException {
@@ -193,7 +193,7 @@ public class MarathonController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-	@Audit(name = "deleteContainerScaleJob")
+	@Audit
 	@DeleteMapping(value = "/containerScaleJob")
 	public SuccessResponseEntity deleteContainerScaleJob(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("taskId") @RequestParam String taskId,
