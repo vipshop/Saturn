@@ -11,13 +11,13 @@
             <div>
                 <el-row :gutter="20">
                     <el-col :span="8">
-                        <CardPanel type="primary" icon="fa fa-navicon" title="总域数" :num="domainCount" to-url="domain_statistic" :url-query="clusterKey"></CardPanel>
+                        <CardPanel type="primary" icon="fa fa-navicon" title="总域数" :num="domainCount" to-url="domain_statistic" :url-query="encodeURIComponent(clusterKey)"></CardPanel>
                     </el-col>
                     <el-col :span="8">
-                        <CardPanel type="green" icon="fa fa-server" title="Executor数: 物理机+容器" :num="executorCount" to-url="executor_statistic" :url-query="clusterKey"></CardPanel>
+                        <CardPanel type="green" icon="fa fa-server" title="Executor数: 物理机+容器" :num="executorCount" to-url="executor_statistic" :url-query="encodeURIComponent(clusterKey)"></CardPanel>
                     </el-col>
                     <el-col :span="8">
-                        <CardPanel type="yellow" icon="fa fa-cubes" title="总作业数" :num="jobCount" to-url="job_statistic" :url-query="clusterKey"></CardPanel>
+                        <CardPanel type="yellow" icon="fa fa-cubes" title="总作业数" :num="jobCount" to-url="job_statistic" :url-query="encodeURIComponent(clusterKey)"></CardPanel>
                     </el-col>
                 </el-row>
             </div>
