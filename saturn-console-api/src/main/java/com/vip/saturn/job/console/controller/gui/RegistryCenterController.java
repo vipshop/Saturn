@@ -34,7 +34,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 创建域
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "createNamespace")
 	@PostMapping(value = "/namespaces")
 	public SuccessResponseEntity createNamespace(@AuditParam("namespace") @RequestParam String namespace,
 			@AuditParam("zkClusterKey") @RequestParam String zkClusterKey)
@@ -70,7 +70,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 刷新注册中心
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "refreshRegistryCenter")
 	@PostMapping(value = "/registryCenter/refresh")
 	public SuccessResponseEntity refreshRegistryCenter() {
 		registryCenterService.refreshRegCenter();
@@ -109,7 +109,7 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	// 域迁移
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "migrateZkCluster")
 	@PostMapping(value = "/namespaces/zkCluster/migrate")
 	public SuccessResponseEntity migrateZkCluster(@AuditParam("namespaces") @RequestParam String namespaces,
 			@AuditParam("zkClusterNew") @RequestParam String zkClusterKeyNew,

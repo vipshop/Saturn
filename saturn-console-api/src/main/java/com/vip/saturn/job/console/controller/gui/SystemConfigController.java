@@ -50,7 +50,7 @@ public class SystemConfigController extends AbstractGUIController {
 	 * @param value 配置值
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "createOrUpdateSystemConfig")
 	@PostMapping
 	public SuccessResponseEntity createOrUpdateConfig(@AuditParam(value = "key") @RequestParam String key,
 			@AuditParam(value = "value") @RequestParam String value) throws SaturnJobConsoleException {

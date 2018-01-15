@@ -33,9 +33,9 @@ public class AuditLogAspect {
 
 	private static final String UNKNOWN = "Unkown";
 
-	private static final String GUI_AUDIT_LOG_TEMPLATE = "GUI API:[%s] is called by User:[%s] with IP:[%s], result is %s.";
+	private static final String GUI_AUDIT_LOG_TEMPLATE = "GUI API:[%s] path:[%s] is called by User:[%s] with IP:[%s], result is %s.";
 
-	private static final String REST_AUDIT_LOG_TEMPLATE = "REST API:[%s] is called by IP:[%s], result is %s.";
+	private static final String REST_AUDIT_LOG_TEMPLATE = "REST API:[%s] path:[%s] is called by IP:[%s], result is %s.";
 
 	@Around("@annotation(audit)")
 	public Object logAuditInfo(ProceedingJoinPoint joinPoint, Audit audit) throws Throwable {
@@ -46,7 +46,7 @@ public class AuditLogAspect {
 			isSuccess = true;
 			return result;
 		} finally {
-			logAudit(isSuccess, audit.type());
+			logAudit(isSuccess, audit);
 			AuditInfoContext.reset();
 		}
 	}
@@ -67,28 +67,30 @@ public class AuditLogAspect {
 	}
 
 
-	private void logAudit(Boolean isSuccess, AuditType auditType) {
+	private void logAudit(Boolean isSuccess, Audit audit) {
 		String content = null;
-		switch (auditType) {
+		switch (audit.type()) {
 			case REST:
-				content = getRESTRequstContent(isSuccess);
+				content = getRESTRequstContent(audit.name(), isSuccess);
 				break;
 			case WEB:
 			default:
-				content = getWebRequestContent(isSuccess);
+				content = getWebRequestContent(audit.name(), isSuccess);
 		}
 		log.info(content);
 	}
 
-	protected String getWebRequestContent(Boolean isSuccess) {
+	protected String getWebRequestContent(String name, Boolean isSuccess) {
+		String apiName = StringUtils.isNotBlank(name) ? name : "";
 		return buildLogContent(
-				String.format(GUI_AUDIT_LOG_TEMPLATE, getUri(), getUserName(), getIpAddress(),
+				String.format(GUI_AUDIT_LOG_TEMPLATE, apiName, getUri(), getUserName(), getIpAddress(),
 						getResultValue(isSuccess)));
 	}
 
-	protected String getRESTRequstContent(Boolean isSuccess) {
+	protected String getRESTRequstContent(String name, Boolean isSuccess) {
+		String apiName = StringUtils.isNotBlank(name) ? name : "";
 		return buildLogContent(
-				String.format(REST_AUDIT_LOG_TEMPLATE, getUri(), getIpAddress(), getResultValue(isSuccess)));
+				String.format(REST_AUDIT_LOG_TEMPLATE, apiName, getUri(), getIpAddress(), getResultValue(isSuccess)));
 	}
 
 	private String buildLogContent(String initValue) {

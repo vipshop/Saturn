@@ -39,7 +39,7 @@ public class JobOperationRestApiController extends AbstractController {
 	@Resource
 	private RestApiService restApiService;
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "createJob")
 	@RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
@@ -54,7 +54,6 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
@@ -83,7 +82,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "enableJob")
 	@RequestMapping(value = {"/{namespace}/{jobName}/enable",
 			"/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace,
@@ -99,7 +98,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "disableJob")
 	@RequestMapping(value = {"/{namespace}/{jobName}/disable",
 			"/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace,
@@ -115,7 +114,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "updateCron")
 	@RequestMapping(value = {"/{namespace}/{jobName}/cron",
 			"/{namespace}/jobs/{jobName}/cron"}, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace,
@@ -134,7 +133,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "runJob")
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/run", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
@@ -148,7 +147,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "stopJob")
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
@@ -163,7 +162,7 @@ public class JobOperationRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "deleteJob")
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {

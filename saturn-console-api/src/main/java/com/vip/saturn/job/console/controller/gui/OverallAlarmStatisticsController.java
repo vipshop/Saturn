@@ -53,7 +53,7 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "setAbnormalJobMonitorStatusToRead")
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
 	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
 			throws SaturnJobConsoleException {
@@ -62,7 +62,7 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "setTimeout4AlarmJobMonitorStatusToRead")
 	@PostMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
 			throws SaturnJobConsoleException {

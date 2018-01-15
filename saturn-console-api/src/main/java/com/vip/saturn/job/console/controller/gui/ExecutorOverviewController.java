@@ -70,7 +70,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键重排
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "shardAll")
 	@PostMapping(value = "/shardAll")
 	public SuccessResponseEntity shardAll(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace)
@@ -83,7 +83,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 *	摘流量与流量恢复，其中executor必须online
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "extractOrRecoverTraffic")
 	@PostMapping(value = "/{executorName}/traffic")
 	public SuccessResponseEntity extractOrRecoverTraffic(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -101,7 +101,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 *	批量摘流量与流量恢复，其中executor必须online
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "batchExtractOrRecoverTraffic")
 	@PostMapping(value = "/traffic")
 	public SuccessResponseEntity batchExtractOrRecoverTraffic(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -147,7 +147,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 移除executor
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "removeExecutor")
 	@DeleteMapping(value = "/{executorName}")
 	public SuccessResponseEntity removeExecutor(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -163,7 +163,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 批量移除executor
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "batchRemoveExecutors")
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -206,7 +206,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键Dump，包括threadump和gc.log。
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@Audit
+	@Audit(name = "dump")
 	@PostMapping(value = "/{executorName}/dump")
 	public SuccessResponseEntity dump(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,

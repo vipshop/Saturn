@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/rest/v1")
 public class NamespaceManagementRestApiController extends AbstractController {
 
-	@Audit(type = AuditType.REST)
+	@Audit(type = AuditType.REST, name = "createNamespace")
 	@RequestMapping(value = "/namespaces", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
 			throws SaturnJobConsoleException {
@@ -45,7 +45,6 @@ public class NamespaceManagementRestApiController extends AbstractController {
 		}
 	}
 
-	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces/{namespace:.+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
