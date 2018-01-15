@@ -1752,24 +1752,56 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public void runAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-				.getCuratorFrameworkOp(namespace);
-		String path = JobNodePath.getRunOneTimePath(jobName, executorName);
-		if (curatorFrameworkOp.checkExists(path)) {
-			curatorFrameworkOp.delete(path);
+	public void runAtOnce(String namespace, String jobName) throws SaturnJobConsoleException {
+		JobStatus jobStatus = getJobStatus(namespace, jobName);
+		if (!JobStatus.READY.equals(jobStatus)) {
+			throw new SaturnJobConsoleException(String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
 		}
-		curatorFrameworkOp.create(path);
+		List<JobServer> jobServers = getJobServers(namespace, jobName);
+		if (jobServers != null && !jobServers.isEmpty()) {
+			boolean hasOnlineExecutor = false;
+			CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+			for (JobServer jobServer : jobServers) {
+				if (ServerStatus.ONLINE.equals(jobServer.getStatus())) {
+					hasOnlineExecutor = true;
+					String executorName = jobServer.getExecutorName();
+					String path = JobNodePath.getRunOneTimePath(jobName, executorName);
+					if (curatorFrameworkOp.checkExists(path)) {
+						curatorFrameworkOp.delete(path);
+					}
+					curatorFrameworkOp.create(path);
+					log.info("runAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName, executorName);
+				}
+			}
+			if (!hasOnlineExecutor) {
+				throw new SaturnJobConsoleException("没有ONLINE的executor，不能立即执行");
+			}
+		} else {
+			throw new SaturnJobConsoleException(String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
+		}
 	}
 
 	@Override
-	public void stopAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException {
-		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-		String path = JobNodePath.getStopOneTimePath(jobName, executorName);
-		if (curatorFrameworkOp.checkExists(path)) {
-			curatorFrameworkOp.delete(path);
+	public void stopAtOnce(String namespace, String jobName) throws SaturnJobConsoleException {
+		JobStatus jobStatus = getJobStatus(namespace, jobName);
+		if (!JobStatus.STOPPING.equals(jobStatus)) {
+			throw new SaturnJobConsoleException(String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
 		}
-		curatorFrameworkOp.create(path);
+		List<JobServer> jobServers = getJobServers(namespace, jobName);
+		if (jobServers != null && !jobServers.isEmpty()) {
+			CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
+			for (JobServer jobServer : jobServers) {
+				String executorName = jobServer.getExecutorName();
+				String path = JobNodePath.getStopOneTimePath(jobName, executorName);
+				if (curatorFrameworkOp.checkExists(path)) {
+					curatorFrameworkOp.delete(path);
+				}
+				curatorFrameworkOp.create(path);
+				log.info("stopAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName, executorName);
+			}
+		} else {
+			throw new SaturnJobConsoleException(String.format("没有executor接管该作业(%s)，不能立即终止", jobName));
+		}
 	}
 
 	@Override

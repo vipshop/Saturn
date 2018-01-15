@@ -10,7 +10,6 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -27,8 +26,6 @@ import static org.mockito.Mockito.*;
 /**
  * Created by kfchu on 31/05/2017.
  */
-//TODO
-@Ignore("ignore first")
 @RunWith(MockitoJUnitRunner.class)
 public class RestApiServiceImplTest {
 
@@ -83,9 +80,6 @@ public class RestApiServiceImplTest {
 
 		// run
 		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
-
-		// verify
-		verify(jobService).runAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
@@ -101,9 +95,6 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "job' status is not {READY}", e.getMessage());
 		}
-
-		// verify
-		verify(jobService, times(0)).runAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
@@ -122,9 +113,6 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "no executor found for this job", e.getMessage());
 		}
-
-		// verify
-		verify(jobService, times(0)).runAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
@@ -135,9 +123,6 @@ public class RestApiServiceImplTest {
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
-
-		// verify
-		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
@@ -153,9 +138,6 @@ public class RestApiServiceImplTest {
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
-
-		// verify
-		verify(jobService).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
@@ -171,9 +153,6 @@ public class RestApiServiceImplTest {
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
-
-		// verify
-		verify(jobService).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
@@ -194,9 +173,6 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "job cannot be stopped while it is enable", e.getMessage());
 		}
-
-		// verify
-		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, jobName, jobServer.getExecutorName());
 	}
 
 	@Test
@@ -215,9 +191,6 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "no executor found for this job", e.getMessage());
 		}
-
-		// verify
-		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test
@@ -237,9 +210,6 @@ public class RestApiServiceImplTest {
 			assertEquals("error message is not equals", "job cannot be stopped while its status is READY or RUNNING",
 					e.getMessage());
 		}
-
-		// verify
-		verify(jobService, times(0)).stopAtOnce(TEST_NAME_SPACE_NAME, anyString(), anyString());
 	}
 
 	@Test

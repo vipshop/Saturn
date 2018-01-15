@@ -5,9 +5,6 @@ import com.google.common.base.Strings;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
-import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
-import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -20,16 +17,17 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hebelala
@@ -449,9 +447,15 @@ public class RestApiServiceImpl implements RestApiService {
 						boolean everExecute = false;
 						for (JobServer server : jobServers) {
 							if (ServerStatus.ONLINE.equals(server.getStatus())) {
-								log.info("run at once: job:{} executor:{}", jobName, server.getExecutorName());
-								jobService.runAtOnce(namespace, jobName, server.getExecutorName());
 								everExecute = true;
+								String executorName = server.getExecutorName();
+								String path = JobNodePath.getRunOneTimePath(jobName, executorName);
+								if (curatorFrameworkOp.checkExists(path)) {
+									curatorFrameworkOp.delete(path);
+								}
+								curatorFrameworkOp.create(path);
+								log.info("runAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName,
+										executorName);
 							}
 						}
 
@@ -492,8 +496,14 @@ public class RestApiServiceImpl implements RestApiService {
 						}
 
 						for (JobServer server : jobServers) {
-							log.info("stop at once: job:{} executor:{}", jobName, server.getExecutorName());
-							jobService.stopAtOnce(namespace, jobName, server.getExecutorName());
+							String executorName = server.getExecutorName();
+							String path = JobNodePath.getStopOneTimePath(jobName, executorName);
+							if (curatorFrameworkOp.checkExists(path)) {
+								curatorFrameworkOp.delete(path);
+							}
+							curatorFrameworkOp.create(path);
+							log.info("stopAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName,
+									executorName);
 						}
 					}
 				});

@@ -49,4 +49,24 @@ public class JobConfigController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping("/runAtOnce")
+	public SuccessResponseEntity runAtOnce(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName)
+			throws SaturnJobConsoleException {
+		jobService.runAtOnce(namespace, jobName);
+		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping("/stopAtOnce")
+	public SuccessResponseEntity stopAtOnce(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName)
+			throws SaturnJobConsoleException {
+		jobService.stopAtOnce(namespace, jobName);
+		return new SuccessResponseEntity();
+	}
+
 }

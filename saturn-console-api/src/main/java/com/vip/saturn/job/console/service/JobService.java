@@ -72,11 +72,9 @@ public interface JobService {
 	 */
 	List<JobServer> getJobServers(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	// TODO
-	void runAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
+	void runAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	// TODO
-	void stopAtOnce(String namespace, String jobName, String executorName) throws SaturnJobConsoleException;
+	void stopAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	/**
 	 * 获取作业运行状态
