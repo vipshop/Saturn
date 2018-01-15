@@ -63,7 +63,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 		List<Timeout4AlarmJob> timeout4AlarmJobList = new ArrayList<>();
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
-			String result = getAbnormalJobs(zkCluster.getZkClusterKey());
+			String result = getTimeout4AlarmJobs(zkCluster.getZkClusterKey());
 			List<Timeout4AlarmJob> tempList = JSON.parseArray(result, Timeout4AlarmJob.class);
 			if (tempList != null) {
 				timeout4AlarmJobList.addAll(tempList);
