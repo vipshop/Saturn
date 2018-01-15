@@ -203,7 +203,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	public String getAbnormalJobsByNamespace(String namespace) throws SaturnJobConsoleException {
 		List<AbnormalJob> jobsByNamespace = new ArrayList<>();
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
-		String result = getAbnormalContainers(conf.getZkClusterKey());
+		String result = getAbnormalJobs(conf.getZkClusterKey());
 		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
 		if (jobs != null) {
 			for (AbnormalJob job : jobs) {
@@ -266,7 +266,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	@Override
 	public boolean isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
-		String result = getAbnormalContainers(conf.getZkClusterKey());
+		String result = getAbnormalJobs(conf.getZkClusterKey());
 		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
 		if (jobs != null) {
 			for (AbnormalJob job : jobs) {
