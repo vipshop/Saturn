@@ -32,6 +32,7 @@ import AlarmAbnormalJobs from './pages/alarm_manage/alarm_abnormal_jobs';
 import AlarmTimeoutJobs from './pages/alarm_manage/alarm_timeout_jobs';
 import UnableFailoverJobs from './pages/alarm_manage/unable_failover_jobs';
 import AlarmAbnormalContainers from './pages/alarm_manage/alarm_abnormal_containers';
+import SystemConfigManage from './pages/system_config_manage/system_config_manage';
 
 Vue.use(Router);
 
@@ -116,6 +117,10 @@ export default new Router({
         { name: 'unable_failover_jobs', path: RouterMapper.GetPath('unableFailoverJobs'), component: UnableFailoverJobs },
         { name: 'alarm_abnormal_containers', path: RouterMapper.GetPath('alarmAbnormalContainers'), component: AlarmAbnormalContainers },
       ],
+    }, {
+      path: RouterMapper.GetPath('systemConfigManage'),
+      name: 'system_config_manage',
+      component: SystemConfigManage,
     },
   ],
 });

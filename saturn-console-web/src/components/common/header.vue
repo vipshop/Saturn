@@ -28,7 +28,8 @@ export default {
         { index: '/job', title: '作业管理', icon: 'fa fa-list-alt', path: this.$routermapper.GetPath('jobManage') },
         { index: '/dashboard', title: 'Dashboard', icon: 'fa fa-pie-chart', path: this.$routermapper.GetPath('dashboardManage') },
         { index: '/alarm', title: '告警中心', icon: 'fa fa-bell', path: this.$routermapper.GetPath('alarmManage') },
-        { index: '/registry', title: '注册中心管理', icon: 'fa fa-server', path: this.$routermapper.GetPath('registryManage') },
+        { index: '/registry', title: '注册中心', icon: 'fa fa-server', path: this.$routermapper.GetPath('registryManage') },
+        { index: '/system', title: '系统配置', icon: 'fa fa-cog', path: this.$routermapper.GetPath('systemConfigManage') },
       ],
       loginUser: '',
     };

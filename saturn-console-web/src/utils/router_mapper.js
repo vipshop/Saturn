@@ -30,6 +30,7 @@ const routermapperlist = [
     { name: 'registryManage', path: '/registry_manage' },
     { name: 'namespaceManage', path: '/registry_manage/namespace_manage' },
     { name: 'clustersManage', path: '/registry_manage/clusters_manage' },
+    { name: 'systemConfigManage', path: '/system_config_manage' },
 ];
 
 export default {
