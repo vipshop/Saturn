@@ -1,5 +1,5 @@
 <template>
-    <div class="page-content">
+    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
@@ -18,13 +18,10 @@
                             <el-col :span="22">
                                 <el-form-item prop="cron" label="Cron">
                                     <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
-                                        <el-input v-model="jobSettingInfo.cron"></el-input>
+                                        <el-input v-model="jobSettingInfo.cron">
+                                            <el-button slot="append" @click="checkAndForecastCron" style="margin-top: -15px">预测</el-button>
+                                        </el-input>
                                     </el-tooltip>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="2">
-                                <el-form-item label-width="10">
-                                    <a>预测</a>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -69,7 +66,7 @@
                             <el-col :span="14">
                                 <el-form-item prop="preferList" label="优先executor">
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
-                                        <el-option v-for="item in preferListArray" :label="item.executorName" :value="item.executorName" :key="item.executorName">
+                                        <el-option v-for="item in jobSettingInfo.preferListProvided" :label="item.executorName" :value="item.executorName" :key="item.executorName">
                                             <span style="float: left">{{ item.executorName }}</span>
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
                                         </el-option>
@@ -122,14 +119,14 @@
                             <el-col :span="11">
                                 <el-form-item prop="timeZone" label="时区">
                                     <el-select size="small" filterable v-model="jobSettingInfo.timeZone">
-                                        <el-option v-for="item in timeZones" :label="item" :value="item" :key="item"></el-option>
+                                        <el-option v-for="item in jobSettingInfo.timeZonesProvided" :label="item" :value="item" :key="item"></el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
                                 <el-form-item prop="dependencies" label="依赖作业">
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.dependencies" style="width: 100%;">
-                                        <el-option v-for="item in dependenciesArray" :label="item" :value="item" :key="item"> </el-option>
+                                        <el-option v-for="item in jobSettingInfo.dependenciesProvided" :label="item" :value="item" :key="item"> </el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
@@ -150,6 +147,9 @@
                 </el-collapse-item>
             </el-collapse>
         </el-form>
+        <div v-if="isCronPredictVisible">
+            <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
+        </div>
     </div>
 </template>
 <script>
@@ -157,13 +157,13 @@ export default {
   props: [],
   data() {
     return {
+      loading: false,
+      isCronPredictVisible: false,
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       activeNames: ['1'],
       jobSettingInfo: {},
-      preferListArray: [],
-      dependenciesArray: [],
-      timeZones: [],
+      cronPredictParams: {},
       rules: {
         jobClass: [{ required: true, message: '作业实现类不能为空', trigger: 'blur' }],
       },
@@ -174,6 +174,17 @@ export default {
     };
   },
   methods: {
+    checkAndForecastCron() {
+      const cronData = {
+        timeZone: this.jobSettingInfo.timeZone,
+        cron: this.jobSettingInfo.cron,
+      };
+      this.cronPredictParams = JSON.parse(JSON.stringify(cronData));
+      this.isCronPredictVisible = true;
+    },
+    closeCronDialog() {
+      this.isCronPredictVisible = false;
+    },
     updateInfo() {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
         this.getJobSettingInfo();
@@ -182,10 +193,14 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
     },
     getJobSettingInfo() {
+      this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
         this.jobSettingInfo = JSON.parse(JSON.stringify(data));
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
     },
   },
   created() {
