@@ -37,7 +37,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/count")
-	public SuccessResponseEntity countByZkCluster(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity getStatistics(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleException {
 		Map<String, Integer> countMap = Maps.newHashMap();
 		int executorInDockerCount = 0;
@@ -118,7 +118,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/top10LoadJob")
-	public SuccessResponseEntity top10LoadJobOfZkCluster(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity top10LoadJob(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
@@ -154,7 +154,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/top10LoadExecutor")
-	public SuccessResponseEntity top10LoadExecutorOfZkCluster(
+	public SuccessResponseEntity top10LoadExecutor(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
@@ -166,7 +166,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/domainProcessCount")
-	public SuccessResponseEntity domainProcessCountOfZkCluster(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity domainProcessCount(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
@@ -188,7 +188,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/jobRank")
-	public SuccessResponseEntity loadJobRankOfZkCluster(
+	public SuccessResponseEntity loadJobRank(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
@@ -199,7 +199,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/domainExecutorVersionNumber")
-	public SuccessResponseEntity versionDomainNumberOfZkCluster(@RequestParam(required = false) String zkClusterKey)
+	public SuccessResponseEntity versionDomainNumber(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
@@ -210,7 +210,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/executorVersionNumber")
-	public SuccessResponseEntity versionExecutorNumberOfZkCluster(
+	public SuccessResponseEntity versionExecutorNumber(
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
