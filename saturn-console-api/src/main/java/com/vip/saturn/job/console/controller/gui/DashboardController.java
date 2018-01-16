@@ -25,7 +25,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -93,7 +92,7 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/zkClusters/{zkClusterKey:.+}/dashboard/top10FailExecutor")
+	@GetMapping(value = "/top10FailExecutor")
 	public SuccessResponseEntity top10FailExecutor(@RequestParam(required = false) String zkClusterKey)
 			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
