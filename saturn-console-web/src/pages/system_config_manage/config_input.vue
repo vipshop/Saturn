@@ -35,7 +35,7 @@ export default {
   methods: {
     handleSubmit(row) {
       const params = {
-        key: row.name,
+        key: row.key,
         value: row.value,
       };
       this.$http.post('/console/configs', params).then(() => {

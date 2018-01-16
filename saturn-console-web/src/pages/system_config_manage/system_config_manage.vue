@@ -4,13 +4,13 @@
             <el-collapse-item name="1">
                 <template slot="title"><i class="fa fa-list-alt"></i>作业配置</template>
                 <div>
-                    <config-input :parameters="systemConfig.job_configs"></config-input>
+                    <config-input :parameters="systemConfig.job_configs" @config-input-success="configInputSuccess"></config-input>
                 </div>
             </el-collapse-item>
             <el-collapse-item name="2">
                 <template slot="title"><i class="fa fa-area-chart"></i>Executor配置</template>
                 <div>
-                    <config-input :parameters="systemConfig.executor_configs"></config-input>
+                    <config-input :parameters="systemConfig.executor_configs" @config-input-success="configInputSuccess"></config-input>
                 </div>
             </el-collapse-item>
             <el-collapse-item name="3">
@@ -46,8 +46,8 @@ export default {
       });
     },
     configInputSuccess() {
-      this.getSystemConfig();
       this.$message.successNotify('更新成功');
+      this.getSystemConfig();
     },
   },
   created() {
