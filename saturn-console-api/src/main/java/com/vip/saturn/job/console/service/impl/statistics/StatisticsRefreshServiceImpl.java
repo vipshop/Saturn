@@ -200,6 +200,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		String url = null;
 		try {
 			String domain = ZkClusterMappingUtils.getConsoleDomainByZkClusterKey(systemConfigService, zkClusterKey);
+			if (StringUtils.isBlank(domain)) {
+				throw new SaturnJobConsoleException(
+						String.format("The console domain is not found by zkClusterKey(%s)", zkClusterKey));
+			}
 			url = domain + "/rest/v1/dashboard/refresh?zkClusterKey=" + zkClusterKey;
 			httpClient = HttpClientBuilder.create().build();
 			HttpPost httpPost = createHttpRequest(url);
