@@ -42,7 +42,7 @@
                 </el-form-item>
                 <el-form-item prop="timeZone" label="时区">
                     <el-col :span="18">
-                        <el-select size="small" filterable v-model="jobInfo.timeZone" style="width: 100%">
+                        <el-select filterable v-model="jobInfo.timeZone" style="width: 100%">
                             <el-option v-for="item in timeZonesArray" :label="item" :value="item" :key="item"></el-option>
                         </el-select>
                     </el-col>
