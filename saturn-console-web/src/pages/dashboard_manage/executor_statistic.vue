@@ -39,13 +39,7 @@ export default {
   },
   methods: {
     getTop10FailExecutor() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10FailExecutor`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10FailExecutor';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10FailExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const executors = [];
         const dataArr = [];
@@ -72,13 +66,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10 Executor请求失败！'); });
     },
     getTop10LoadExecutor() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10LoadExecutor`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10LoadExecutor';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10LoadExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const executors = [];
         const dataArr = [];
@@ -105,13 +93,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取负荷最重的Top10 Executor请求失败！'); });
     },
     getExecutorVersionNumber() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/executorVersionNumber`;
-      } else {
-        url = '/console/zkClusters/dashboard/executorVersionNumber';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/executorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
         const seriesData = [{ name: '该版本Executor数量', data: Object.entries(data) }];
         this.$set(this.executorVersionNumberOption, 'seriesData', seriesData);
       })

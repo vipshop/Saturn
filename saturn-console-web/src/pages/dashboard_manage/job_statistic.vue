@@ -39,13 +39,7 @@ export default {
   },
   methods: {
     getTop10FailJob() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10FailJob`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10FailJob';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10FailJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -60,7 +54,7 @@ export default {
           所属域: ${this.point.domainName}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
           失败总数: ${this.point.errorCountOfAllTime}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobAnalyse/clean')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobAnalyse/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -73,13 +67,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10作业请求失败！'); });
     },
     getTop10ActiveJob() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10ActiveJob`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10ActiveJob';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10ActiveJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -94,7 +82,7 @@ export default {
           所属域: ${this.point.domainName}<br/>
           当天执行总数: ${this.point.processCountOfTheDay}<br/>
           当天失败数: ${this.point.failureCountOfTheDay}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobExecutorCount/clean')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobExecutorCount/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -107,13 +95,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取最活跃的Top10作业请求失败！'); });
     },
     getTop10LoadJob() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10LoadJob`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10LoadJob';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10LoadJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
