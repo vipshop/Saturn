@@ -1,11 +1,15 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.UtilsService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +39,17 @@ public class UtilsController extends AbstractGUIController {
 	@GetMapping(value = "/timeZones")
 	public SuccessResponseEntity getTimeZones() throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(utilsService.getTimeZones());
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/zkClusterKeys")
+	public SuccessResponseEntity getZkClusterKeys() throws SaturnJobConsoleException {
+		Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
+		List<String> zkClusterKeys = Lists.newArrayList();
+		for (ZkCluster zkCluster : zkClusters) {
+			zkClusterKeys.add(zkCluster.getZkClusterKey());
+		}
+		return new SuccessResponseEntity(zkClusterKeys);
 	}
 
 }
