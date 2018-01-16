@@ -264,47 +264,47 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	@Override
-	public boolean isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException {
+	public AbnormalJob isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getAbnormalJobs(conf.getZkClusterKey());
 		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
 		if (jobs != null) {
 			for (AbnormalJob job : jobs) {
 				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
-					return true;
+					return job;
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 
 	@Override
-	public boolean isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException {
+	public AbnormalJob isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getUnableFailoverJobs(conf.getZkClusterKey());
 		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
 		if (jobs != null) {
 			for (AbnormalJob job : jobs) {
 				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
-					return true;
+					return job;
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 
 	@Override
-	public boolean isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException {
+	public Timeout4AlarmJob isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getTimeout4AlarmJobs(conf.getZkClusterKey());
 		List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
 		if (jobs != null) {
 			for (Timeout4AlarmJob job : jobs) {
 				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
-					return true;
+					return job;
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 }

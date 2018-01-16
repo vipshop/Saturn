@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
 /**
@@ -43,9 +45,9 @@ public interface AlarmStatisticsService {
 
 	// 作业的告警统计
 
-	boolean isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException;
+	AbnormalJob isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	boolean isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException;
+	AbnormalJob isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	boolean isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException;
+	Timeout4AlarmJob isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException;
 }
