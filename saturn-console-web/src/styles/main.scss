@@ -134,3 +134,11 @@ form {
 .el-select .el-tag {
     background-color: #4185cd;
 }
+/* dialog */
+.el-dialog__header {
+    border-bottom: 1px solid #b7c0c9;
+}
+.el-dialog__title {
+    font-size: 16px;
+    font-weight: bold;
+}
