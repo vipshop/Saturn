@@ -9,10 +9,10 @@ executor_configs:
 
 cluster_configs:
     - name: CONSOLE_ZK_CLUSTER_MAPPING
-      desc_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-DG:/saturn,/forVdos;CONSOLE-FS:/zk3;default:/saturn;
+      desc_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3;default:/zk;
     - name: IDC_ZK_CLUSTER_MAPPING
-      desc_zh: IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：gd6:/forVdos,/saturn;gd9:/test,/shanghai;
+      desc_zh: IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：gd:/zk1,/zk2;bj:/test,/zk;
     - name: IDC_CONSOLE_ID_MAPPING
-      desc_zh: IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。其中IDC机房和Console之间是一对多的关系，一个IDC下面包含多个Console，Console之间用逗号隔开。参考配置格式：gd6:CONSOLE-DG,default;gd9:CONSOLE-FS;
+      desc_zh: IDC机房标识与Console的映射关系，用于识别某个Console所处的机房。其中IDC机房和Console之间是一对多的关系，一个IDC下面包含多个Console，Console之间用逗号隔开。参考配置格式：gd:CONSOLE-GD;bj:CONSOLE-BJ;
     - name: IDC_CONSOLE_DOMAIN_MAPPING
-      desc_zh: IDC机房与Console访问域名的映射关系，用于识别不同机房对应的Console的访问域名。其中IDC机房和域名之间是一对一的关系,一个IDC机房只能对应一个域名。参考配置格式：gd6:http://saturn.vip.vip.com;gd9:http://gd9-saturn.vip.vip.com;
+      desc_zh: IDC机房与Console访问域名的映射关系，用于识别不同机房对应的Console的访问域名。其中IDC机房和域名之间是一对一的关系,一个IDC机房只能对应一个域名。参考配置格式：gd:http://gd-namespace;bj:http://bj-namespace;
