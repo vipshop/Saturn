@@ -1,9 +1,11 @@
 package com.vip.saturn.job.console.controller;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.alibaba.fastjson.JSONObject;
+import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.service.DashboardService;
+import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -23,12 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.alibaba.fastjson.JSONObject;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.service.DashboardService;
-import com.vip.saturn.job.console.service.SystemConfigService;
-import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
  * @author timmy.hu
@@ -95,6 +93,10 @@ public class DashboardRefreshController extends AbstractController {
 		String url = null;
 		try {
 			String domain = ZkClusterMappingUtils.getConsoleDomainByZkClusterKey(systemConfigService, zkClusterKey);
+			if (StringUtils.isBlank(domain)) {
+				throw new SaturnJobConsoleException(
+						String.format("The console domain is not found by zkClusterKey(%s)", zkClusterKey));
+			}
 			url = domain + "/rest/v1/dashboard/refresh?zkClusterKey=" + zkClusterKey;
 			httpClient = HttpClientBuilder.create().build();
 			HttpPost httpPost = createHttpRequest(url);
