@@ -8,6 +8,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +23,7 @@ import javax.annotation.Resource;
  * @author hebelala
  */
 @Controller
-@RequestMapping("/console/zkClusters/alarmStatistics")
+@RequestMapping("/console/alarmStatistics")
 public class OverallAlarmStatisticsController extends AbstractGUIController {
 
 	@Resource
@@ -30,26 +31,42 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalJobs")
-	public SuccessResponseEntity getAbnormalJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs());
+	public SuccessResponseEntity getAbnormalJobs(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(zkClusterKey)) {
+			return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs());
+		}
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/unableFailoverJobs")
-	public SuccessResponseEntity getUnableFailoverJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs());
+	public SuccessResponseEntity getUnableFailoverJobs(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(zkClusterKey)) {
+			return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs());
+		}
+		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/timeout4AlarmJobs")
-	public SuccessResponseEntity getTimeout4AlarmJobs() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs());
+	public SuccessResponseEntity getTimeout4AlarmJobs(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(zkClusterKey)) {
+			return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs());
+		}
+		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobs(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/abnormalContainers")
-	public SuccessResponseEntity getAbnormalContainers() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers());
+	public SuccessResponseEntity getAbnormalContainers(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(zkClusterKey)) {
+			return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers());
+		}
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalContainers(zkClusterKey));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
