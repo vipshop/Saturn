@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 import * as types from './types';
+import Http from '../utils/request';
 
 export default {
   state: {
@@ -8,10 +9,12 @@ export default {
       sysAdmin: '',
       techAdmin: '',
     },
+    jobInfo: {},
   },
 
   getters: {
     domainInfo: state => state.domainInfo,
+    jobInfo: state => state.jobInfo,
   },
 
   mutations: {
@@ -23,11 +26,22 @@ export default {
         techAdmin: item.techAdmin,
       };
     },
+    [types.SET_JOB_INFO](state, item) {
+      state.jobInfo = {
+        ...item,
+      };
+    },
   },
 
   actions: {
     [types.SET_DOMAIN_INFO]({ commit }, domainInfo) {
       commit(types.SET_DOMAIN_INFO, domainInfo);
+    },
+    [types.SET_JOB_INFO]({ commit }, jobInfoParams) {
+      return Http.get(`/console/namespaces/${jobInfoParams.domainName}/jobs/${jobInfoParams.jobName}/config`).then((data) => {
+        commit(types.SET_JOB_INFO, data);
+        return data;
+      });
     },
   },
 };

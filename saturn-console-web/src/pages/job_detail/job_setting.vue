@@ -4,7 +4,7 @@
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
-                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;"><i class="fa fa-undo"></i>更新</el-button>
+                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
                     </template>
                     <div class="job-setting-content">
                         <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
@@ -83,7 +83,7 @@
                 </el-collapse-item>
                 <el-collapse-item name="2">
                     <template slot="title">
-                        高级配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;"><i class="fa fa-undo"></i>更新</el-button>
+                        高级配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
                     </template>
                     <div class="job-setting-content">
                         <el-row>
@@ -164,7 +164,6 @@ export default {
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       activeNames: ['1'],
-      jobSettingInfo: {},
       cronPredictParams: {},
       rules: {
         jobClass: [{ required: true, message: '作业实现类不能为空', trigger: 'blur' }],
@@ -195,18 +194,24 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
     },
     getJobSettingInfo() {
+      const params = {
+        domainName: this.domainName,
+        jobName: this.jobName,
+      };
       this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
-        this.jobSettingInfo = JSON.parse(JSON.stringify(data));
+      this.$store.dispatch('setJobInfo', params).then((resp) => {
+        console.log(resp);
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); })
+      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'))
       .finally(() => {
         this.loading = false;
       });
     },
   },
-  created() {
-    this.getJobSettingInfo();
+  computed: {
+    jobSettingInfo() {
+      return this.$store.state.global.jobInfo;
+    },
   },
 };
 </script>

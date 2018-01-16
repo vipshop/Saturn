@@ -1,5 +1,5 @@
 <template>
-    <div v-loading="loading" element-loading-text="请稍等···">
+    <div>
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus" headerHeight="90">
             <div class="job-detail-header">
@@ -15,11 +15,11 @@
                     <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                     <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
                     <el-button size="small" @click="handleOperate('runAtOnce')" v-if="jobInfo.enabled"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
-                    <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING'"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
-                    <el-button size="small" @click="handleDelete" v-if="jobInfo.status === 'STOPPED'"><i class="fa fa-trash text-btn"></i>删除</el-button>
+                    <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING' || !jobInfo.enabled"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
+                    <el-button size="small" @click="handleDelete" v-if="jobInfo.status === 'STOPPED' || !jobInfo.enabled"><i class="fa fa-trash text-btn"></i>删除</el-button>
                 </div>
             </div>
-            <router-view></router-view>
+            <router-view v-loading="loading" element-loading-text="请稍等···"></router-view>
         </Aside>
     </div>
 </template>
@@ -39,7 +39,6 @@ export default {
         { index: 'job_alarm_center', title: '告警中心', icon: 'fa fa-bell', name: 'job_abnormal_jobs', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
       ],
       domainInfo: {},
-      jobInfo: {},
       statusTag: {
         READY: 'primary',
         RUNNING: 'success',
@@ -124,20 +123,29 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     getDomainInfo() {
-      this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}`).then((data) => {
         this.domainInfo = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); })
+      .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); });
+    },
+    getJobInfo() {
+      const params = {
+        domainName: this.domainName,
+        jobName: this.jobName,
+      };
+      this.loading = true;
+      this.$store.dispatch('setJobInfo', params).then((resp) => {
+        console.log(resp);
+      })
+      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'))
       .finally(() => {
         this.loading = false;
       });
     },
-    getJobInfo() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`).then((data) => {
-        this.jobInfo = JSON.parse(JSON.stringify(data));
-      })
-      .catch(() => { this.$http.buildErrorHandler('获取作业信息请求失败！'); });
+  },
+  computed: {
+    jobInfo() {
+      return this.$store.state.global.jobInfo;
     },
   },
   created() {
