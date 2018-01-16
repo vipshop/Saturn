@@ -278,6 +278,12 @@ START()
 DUMP()
 {
     LOG_FMT "Begin to dump executor."
+    # backup gc log
+    LOGDIR=$(GET_LOGDIR ${PID})
+    cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
+    LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
+    LOG_FMT "Dump executor successfully."
+
     local PID=$(GET_PID)
     while true; do
         case "$1" in
@@ -286,21 +292,17 @@ DUMP()
         esac
     done
     if [ "$PID" != "" ]; then
-		if [ -d /proc/${PID} ];then
-		    LOGDIR=$(GET_LOGDIR ${PID})
-            # do the thread dump
-            LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
-            jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
-            LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
-            # backup gc log
-            cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
-            LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
-            LOG_FMT "Dump executor successfully."
-        else
-			LOG_FMT "Executor(pid:${PID}) is not running."
-		fi
-	else
-		LOG_FMT "Executor is not running."
+      if [ -d /proc/${PID} ];then
+        LOG_FMT "Start doing thread dump."
+        # do the thread dump
+        LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
+        jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
+        LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
+      else
+        LOG_FMT "Executor(pid:${PID}) is not running."
+      fi
+    else
+      LOG_FMT "Executor is not running."
     fi
 }
 
@@ -308,35 +310,34 @@ STOP()
 {
     LOG_FMT "Begin to stop executor."
     PID=$(GET_PID)
-    LOGDIR=$(GET_LOGDIR ${PID})
-	stoptime=0
+    DUMP -pid ${PID}
+	  stoptime=0
     if [ "$PID" != "" ]; then
-		if [ -d /proc/$PID ];then
-		    DUMP -pid ${PID}
-			RUN_PARAMS=`cat ${STATUS_FILE}`
-			LOG_FMT "Saturn executor pid is ${PID}, params are : ${RUN_PARAMS}."
-			LOG_FMT "Stopping...\c"
-			while [ -d /proc/$PID ]; do
-				if	[[ "$stoptime" -lt 300 ]];	then
-					kill $PID
-					sleep 1
-					((stoptime++))
-					echo -e ".\c"
-				else
-				    echo -e ""
-					LOG_FMT "Stop failed after 300 seconds. now kill -9 ${PID}"
-					kill -9 $PID
-				fi
-			done
-			echo -e ""
-			LOG_FMT "Kill the process successfully."
-			LOG_STARTLOG "Saturn executor is stopped."
-		else
-			LOG_FMT "Saturn executor is not running."
-		fi
-	else
-		LOG_FMT "Saturn executor is not running."
-	fi
+      if [ -d /proc/$PID ];then
+        RUN_PARAMS=`cat ${STATUS_FILE}`
+        LOG_FMT "Saturn executor pid is ${PID}, params are : ${RUN_PARAMS}."
+        LOG_FMT "Stopping...\c"
+        while [ -d /proc/$PID ]; do
+          if	[[ "$stoptime" -lt 300 ]];	then
+            kill $PID
+            sleep 1
+            ((stoptime++))
+            echo -e ".\c"
+          else
+            echo -e ""
+            LOG_FMT "Stop failed after 300 seconds. now kill -9 ${PID}"
+            kill -9 $PID
+          fi
+        done
+        echo -e ""
+        LOG_FMT "Kill the process successfully."
+        LOG_STARTLOG "Saturn executor is stopped."
+      else
+        LOG_FMT "Saturn executor is not running."
+		  fi
+	  else
+		  LOG_FMT "Saturn executor is not running."
+	  fi
 }
 
 RESTART()
