@@ -47,13 +47,7 @@ export default {
   },
   methods: {
     getDomainProcessCount() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/domainProcessCount`;
-      } else {
-        url = '/console/zkClusters/dashboard/domainProcessCount';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/domainProcessCount', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const error = resultData.error;
         const count = resultData.count;
@@ -64,13 +58,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取全域当天执行数据请求失败！'); });
     },
     getTop10FailDomain() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10FailDomain`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10FailDomain';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10FailDomain', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -85,7 +73,7 @@ export default {
           错误率: ${this.point.y}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
           失败总数: ${this.point.errorCountOfAllTime}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -98,13 +86,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10域请求失败！'); });
     },
     getTop10UnstableDomain() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/top10UnstableDomain`;
-      } else {
-        url = '/console/zkClusters/dashboard/top10UnstableDomain';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/top10UnstableDomain', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -117,7 +99,7 @@ export default {
         const tooltip = function setTooltip() {
           return `<b>${this.point.category}</b><br/>
           分片次数: ${this.point.y}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
+          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -130,13 +112,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取稳定性最差的Top10域请求失败！'); });
     },
     getDomainExecutorVersionNumber() {
-      let url = '';
-      if (this.zkCluster !== '') {
-        url = `/console/zkClusters/${this.zkCluster}/dashboard/domainExecutorVersionNumber`;
-      } else {
-        url = '/console/zkClusters/dashboard/domainExecutorVersionNumber';
-      }
-      this.$http.get(url).then((data) => {
+      this.$http.get('/console/dashboard/domainExecutorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
         const arr = [];
         Object.entries(data).forEach((ele) => {
           if (ele[0] === '-1') {
