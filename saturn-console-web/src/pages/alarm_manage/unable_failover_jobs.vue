@@ -16,7 +16,7 @@ export default {
   methods: {
     getUnableFailoverJobs() {
       this.loading = true;
-      this.$http.get('/console/zkClusters/alarmStatistics/unableFailoverJobs').then((data) => {
+      this.$http.get('/console/alarmStatistics/unableFailoverJobs').then((data) => {
         this.unableFailoverJobsList = JSON.parse(data);
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })

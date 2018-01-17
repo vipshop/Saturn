@@ -16,7 +16,7 @@ export default {
   methods: {
     getAbnormalJobs() {
       this.loading = true;
-      this.$http.get('/console/zkClusters/alarmStatistics/abnormalJobs').then((data) => {
+      this.$http.get('/console/alarmStatistics/abnormalJobs').then((data) => {
         this.abnormalJobsList = JSON.parse(data);
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业请求失败！'); })
