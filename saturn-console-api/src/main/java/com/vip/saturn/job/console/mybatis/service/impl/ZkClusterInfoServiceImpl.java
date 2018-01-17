@@ -3,10 +3,12 @@ package com.vip.saturn.job.console.mybatis.service.impl;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.repository.ZkClusterInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author hebelala
@@ -29,4 +31,18 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 		return zkClusterInfoRepository.selectByClusterKey(clusterKey);
 	}
 
+	@Transactional
+	@Override
+	public int createZkCluster(String clusterKey, String alias, String connectString, String createdBy) {
+		ZkClusterInfo zkClusterInfo = new ZkClusterInfo();
+		Date now = new Date();
+		zkClusterInfo.setCreateTime(now);
+		zkClusterInfo.setCreatedBy(createdBy);
+		zkClusterInfo.setLastUpdateTime(now);
+		zkClusterInfo.setLastUpdatedBy(createdBy);
+		zkClusterInfo.setZkClusterKey(clusterKey);
+		zkClusterInfo.setAlias(alias);
+		zkClusterInfo.setConnectString(connectString);
+		return zkClusterInfoRepository.insert(zkClusterInfo);
+	}
 }

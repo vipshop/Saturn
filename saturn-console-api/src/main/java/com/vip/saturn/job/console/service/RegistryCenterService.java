@@ -6,23 +6,17 @@
  * either express or implied. See the License for the specific language governing permissions and limitations under the
  * License. </p>
  */
-
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import java.util.Collection;
-import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 
-public interface RegistryCenterService {
+import java.util.Collection;
+import java.util.List;
 
-	RequestResult refreshNamespaceFromCmdb(String userName);
+public interface RegistryCenterService {
 
 	RequestResult refreshRegCenter();
 
@@ -43,6 +37,8 @@ public interface RegistryCenterService {
 	boolean isDashboardLeader(String key);
 
 	ZkCluster getZkCluster(String key);
+
+	void createZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
 
 	Collection<ZkCluster> getZkClusterList();
 

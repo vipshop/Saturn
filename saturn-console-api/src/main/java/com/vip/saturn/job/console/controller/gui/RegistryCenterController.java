@@ -4,24 +4,21 @@ import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
-import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
-import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collection;
-import java.util.List;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.List;
 
 @Controller
 @RequestMapping("/console")
@@ -105,6 +102,15 @@ public class RegistryCenterController extends AbstractGUIController {
 		}
 
 		return onlineZkClusters;
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping(value = "/zkClusters")
+	public SuccessResponseEntity createZkCluster(@RequestParam String zkClusterKey, @RequestParam String alias,
+			@RequestParam String connectString) throws SaturnJobConsoleException {
+		registryCenterService.createZkCluster(zkClusterKey, alias, connectString);
+		return new SuccessResponseEntity();
 	}
 
 	// 域迁移

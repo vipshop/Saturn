@@ -1,12 +1,10 @@
 /**
  * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License. </p>
+ * except in compliance with the License. You may obtain a copy of the License at <p>
+ * http://www.apache.org/licenses/LICENSE-2.0 <p> Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and limitations under the
+ * License. </p>
  */
 
 package com.vip.saturn.job.console.service.impl;
@@ -15,11 +13,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
-import com.vip.saturn.job.console.domain.RegistryCenterClient;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
@@ -34,36 +28,11 @@ import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.cache.DashboardLeaderHandler;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
-import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
-import com.vip.saturn.job.console.utils.ExecutorNodePath;
-import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.console.utils.LocalHostService;
-import com.vip.saturn.job.console.utils.SaturnSelfNodePath;
+import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -77,6 +46,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
@@ -919,6 +898,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
+	public void createZkCluster(String zkClusterKey, String alias, String connectString)
+			throws SaturnJobConsoleException {
+		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+	}
+
+	@Override
 	public Collection<ZkCluster> getZkClusterList() {
 		return zkClusterMap.values();
 	}
@@ -1125,12 +1110,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			throw new SaturnJobConsoleException("Connect zookeeper failed");
 		}
 		return curatorFrameworkOp;
-	}
-
-	@Override
-	public RequestResult refreshNamespaceFromCmdb(String userName) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }
