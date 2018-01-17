@@ -1,15 +1,15 @@
 <template>
     <el-dialog title="添加新域" width="35%" :visible.sync="isVisible" :before-close="closeDialog" v-loading="loading" element-loading-text="请稍等···">
-        <el-form :model="namespaceInfo" :rules="rules" ref="namespaceInfo" label-width="90px">
+        <el-form :model="namespaceInfo" :rules="rules" ref="namespaceInfo" label-width="100px">
             <el-form-item label="zk集群" prop="zkClusterKey">
-                <el-col :span="18">
+                <el-col :span="20">
                     <el-select size="small" v-model="namespaceInfo.zkClusterKey" style="width: 100%">
                         <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
             <el-form-item label="域名" prop="namespace">
-                <el-col :span="18">
+                <el-col :span="20">
                     <el-input v-model="namespaceInfo.namespace"></el-input>
                 </el-col>
             </el-form-item>

@@ -9,6 +9,7 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
+                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加集群</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
@@ -30,15 +31,22 @@
                     </div>
                 </template>
             </FilterPageList>
+            <div v-if="isClusterVisible">
+                <cluster-info-dialog :cluster-info="clusterInfo" @cluster-info-success="clusterInfoSuccess" @close-dialog="closeInfoDialog"></cluster-info-dialog>
+            </div>
         </div>
     </div>
 </template>
 <script>
+import clusterInfoDialog from './cluster_info_dialog';
+
 export default {
   data() {
     return {
       loading: false,
+      isClusterVisible: false,
       zkClusterList: [],
+      clusterInfo: {},
       filters: {
         zkClusterKey: '',
       },
@@ -51,6 +59,23 @@ export default {
     };
   },
   methods: {
+    handleAdd() {
+      this.isClusterVisible = true;
+      const clusterAddInfo = {
+        zkClusterKey: '',
+        alias: '',
+        connectString: '',
+      };
+      this.clusterInfo = JSON.parse(JSON.stringify(clusterAddInfo));
+    },
+    closeInfoDialog() {
+      this.isClusterVisible = false;
+    },
+    clusterInfoSuccess() {
+      this.isClusterVisible = false;
+      this.getAllClusters();
+      this.$message.successNotify('保存ZK集群操作成功');
+    },
     getAllClusters() {
       this.loading = true;
       this.$http.get('/console/zkClusters').then((data) => {
@@ -65,6 +90,9 @@ export default {
   },
   created() {
     this.getAllClusters();
+  },
+  components: {
+    'cluster-info-dialog': clusterInfoDialog,
   },
 };
 </script>
