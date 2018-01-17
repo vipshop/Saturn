@@ -1,10 +1,11 @@
 <template>
     <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
+            <el-button type="primary" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
-                        基本配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
+                        基本配置
                     </template>
                     <div class="job-setting-content">
                         <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
@@ -83,7 +84,7 @@
                 </el-collapse-item>
                 <el-collapse-item name="2">
                     <template slot="title">
-                        高级配置<el-button size="small" type="primary" @click.stop="updateInfo" style="margin-left: 20px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
+                        高级配置
                     </template>
                     <div class="job-setting-content">
                         <el-row>
@@ -148,6 +149,7 @@
                     </div>
                 </el-collapse-item>
             </el-collapse>
+            <el-button type="primary" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
         </el-form>
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
