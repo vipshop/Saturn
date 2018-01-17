@@ -24,15 +24,19 @@
                                         </el-input>
                                     </el-tooltip>
                                 </el-form-item>
+                                <el-form-item class="form-annotation">
+                                    <span>1. 每10秒运行:*/10****?</span><br/>
+                                    <span>2. 每5分钟运行:0*/5***?</span>
+                                </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row :gutter="30">
-                            <el-col :span="14">
+                            <el-col :span="11">
                                 <el-form-item prop="shardingTotalCount" label="作业分片数">
                                     <el-input-number v-model="jobSettingInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="8">
+                            <el-col :span="11">
                                 <el-form-item prop="localMode" label="本地模式">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
                                 </el-form-item>
@@ -57,7 +61,7 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="30">
-                            <el-col :span="14">
+                            <el-col :span="11">
                                 <el-form-item prop="preferList" label="优先executor">
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.preferListProvided" :label="item.executorName" :value="item.executorName" :key="item.executorName">
@@ -67,7 +71,7 @@
                                     </el-select>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="8">
+                            <el-col :span="11">
                                 <el-form-item prop="useDispreferList" label="只使用优先executor">
                                     <el-switch v-model="jobSettingInfo.useDispreferList"></el-switch>
                                 </el-form-item>
@@ -143,6 +147,24 @@
                             <el-col :span="11">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="pausePeriodDate" label="暂停日期段">
+                                    <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个日期段，逗号隔开。例如03/12-03/15,11/23-12/25。当日期为空，时间段不为空，表示每天那些时间段都暂停" placement="bottom">
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodDate" title="日期段"></InputTags>
+                                    </el-tooltip>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="pausePeriodTime" label="暂停时间段">
+                                    <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开。例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停" placement="bottom">
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTime" title="时间段"></InputTags>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>

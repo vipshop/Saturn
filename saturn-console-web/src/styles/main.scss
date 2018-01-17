@@ -106,6 +106,16 @@ form {
     pointer-events: visible;
 }
 
+.form-annotation {
+    .el-form-item__content {
+        line-height: initial;
+    }
+    span {
+        font-size: 8px;
+        color: #a0a0a0;;
+    }
+}
+
 /* header */
 .el-header {
     padding: 0;
@@ -141,4 +151,11 @@ form {
 .el-dialog__title {
     font-size: 16px;
     font-weight: bold;
+}
+/* timedate */
+.el-range-editor.el-input__inner {
+    padding: 0px 10px;
+}
+.el-date-editor .el-range-input, .el-date-editor .el-range-separator {
+    height: initial;
 }
