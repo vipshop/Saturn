@@ -8,7 +8,10 @@
  */
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import org.apache.curator.framework.CuratorFramework;
@@ -18,7 +21,7 @@ import java.util.List;
 
 public interface RegistryCenterService {
 
-	RequestResult refreshRegCenter();
+	void notifyRefreshRegCenter() throws SaturnJobConsoleException;
 
 	void init() throws Exception;
 

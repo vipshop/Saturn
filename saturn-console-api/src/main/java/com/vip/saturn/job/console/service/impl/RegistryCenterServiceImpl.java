@@ -6,18 +6,21 @@
  * either express or implied. See the License for the specific language governing permissions and limitations under the
  * License. </p>
  */
-
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
+import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
@@ -34,12 +37,7 @@ import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.NodeCache;
-import org.apache.curator.framework.recipes.cache.NodeCacheListener;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,7 +53,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
@@ -63,8 +60,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private static final Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
 
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
-
-	private final AtomicBoolean refreshingRegCenter = new AtomicBoolean(false);
 
 	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
 
@@ -95,8 +90,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	@Resource
 	private NamespaceInfoService namespaceInfoService;
 
-
-	/** 为保证values有序 **/
+	/**
+	 * 为保证values有序
+	 **/
 	private LinkedHashMap<String, ZkCluster> zkClusterMap = new LinkedHashMap<>();
 
 	private ConcurrentHashMap<String, DashboardLeaderHandler> dashboardLeaderTreeCacheMap = new ConcurrentHashMap<>();
@@ -116,17 +112,19 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private Set<String> restrictComputeZkClusterKeys = Sets.newHashSet();
 
-	private Timer refreshAllTimer = null;
+	private Timer localRefreshTimer = null;
 
-	private NodeCache regCenterRefreshNodeCache;
+	private Timer localRefreshIfNecessaryTimer = null;
 
-	private ExecutorService regCenterRefreshExecutorService;
+	private ExecutorService localRefreshThreadPool = null;
 
 	@PostConstruct
 	public void init() {
 		getConsoleClusterId();
-		refreshRegCenter();
-		startRefreshAllTimer();
+		localRefresh();
+		initLocalRefreshThreadPool();
+		startLocalRefreshTimer();
+		startLocalRefreshIfNecessaryTimer();
 	}
 
 	private void getConsoleClusterId() {
@@ -145,41 +143,99 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		while (iterator.hasNext()) {
 			closeZkCluster(iterator.next().getValue());
 		}
-		if (refreshAllTimer != null) {
-			refreshAllTimer.cancel();
+		if (localRefreshTimer != null) {
+			localRefreshTimer.cancel();
+		}
+		if (localRefreshIfNecessaryTimer != null) {
+			localRefreshIfNecessaryTimer.cancel();
+		}
+		if (localRefreshThreadPool != null) {
+			localRefreshThreadPool.shutdownNow();
 		}
 	}
 
-	private void startRefreshAllTimer() {
-		refreshAllTimer = new Timer("refresh-RegCenter-timer", true);
+	private void initLocalRefreshThreadPool() {
+		localRefreshThreadPool = Executors.newSingleThreadExecutor(
+				new ConsoleThreadFactory("refresh-RegCenter-thread", false));
+	}
+
+	private void startLocalRefreshTimer() {
+		localRefreshTimer = new Timer("refresh-RegCenter-timer", true);
 		// 每隔5分钟刷新一次
-		refreshAllTimer.scheduleAtFixedRate(new TimerTask() {
+		localRefreshTimer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					refreshRegCenter();
-				} catch (Throwable t) {
-					log.error("refresh regCenter error", t);
+					localRefreshThreadPool.submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								localRefresh();
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					});
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}, 1000 * 60 * 5, 1000 * 60 * 5);
 	}
 
-	private void refreshAll() throws Exception {
-		refreshRestrictComputeZkClusters();
-		if (restrictComputeZkClusterKeys.size() == 0) {
-			log.warn("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
-			return;
+	private void startLocalRefreshIfNecessaryTimer() {
+		localRefreshIfNecessaryTimer = new Timer("refresh-RegCenter-if-necessary-timer", true);
+		localRefreshIfNecessaryTimer.schedule(new TimerTask() {
+
+			private String lastUuid = null;
+
+			@Override
+			public void run() {
+				try {
+					String uuid = systemConfigService
+							.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
+					if (StringUtils.isBlank(uuid)) {
+						notifyRefreshRegCenter();
+					} else if (!uuid.equals(lastUuid)) {
+						lastUuid = uuid;
+						localRefreshThreadPool.submit(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									localRefresh();
+								} catch (Exception e) {
+									log.error(e.getMessage(), e);
+								}
+							}
+						});
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}, 1000, 1000);
+	}
+
+	private synchronized void localRefresh() {
+		try {
+			log.info("Start refresh RegCenter");
+			long startTime = System.currentTimeMillis();
+			refreshRestrictComputeZkClusters();
+			if (restrictComputeZkClusterKeys.size() == 0) {
+				log.warn("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
+				return;
+			}
+			refreshRegistryCenter();
+			refreshDashboardLeaderTreeCache();
+			refreshNamespaceShardingListenerManagerMap();
+			log.info("End refresh RegCenter, cost {}ms", System.currentTimeMillis() - startTime);
+		} catch (Exception e) {
+			log.error("refresh RegCenter error", e);
 		}
-		refreshRegistryCenter();
-		refreshDashboardLeaderTreeCache();
-		refreshNamespaceShardingListenerManagerMap();
 	}
 
 	/**
-	 * 解析Console集群和zk的映射关系
-	 * 数据库中配置的例子如下： CONSOLE-1:/saturn,/forVdos;CONSOLE-2:/zk3;
-	 * 如果不存在此配置项，则可以计算所有zk集群；
+	 * 解析Console集群和zk的映射关系 数据库中配置的例子如下： CONSOLE-1:/saturn,/forVdos;CONSOLE-2:/zk3; 如果不存在此配置项，则可以计算所有zk集群；
 	 */
 	private void refreshRestrictComputeZkClusters() throws SaturnJobConsoleException {
 		// clear 当前可计算的zkCluster集群列表
@@ -596,21 +652,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				zkCluster.setConnectionListener(null);
 				zkCluster.setOffline(true);
 			} else {
-				createRegCenterRefreshNodeIfPossible(curatorFramework);
-
 				AbstractConnectionListener connectionListener = new AbstractConnectionListener(
 						"zk-connectionListener-thread-for-zkCluster-" + zkCluster.getZkAlias()) {
 					@Override
 					public void stop() {
 						zkCluster.setOffline(true);
-						closeRegCenterRefreshNodeCache();
 					}
 
 					@Override
 					public void restart() {
 						try {
 							zkCluster.setOffline(false);
-							initRegCenterRefreshNodeCache(zkCluster.getZkClusterKey(), curatorFramework);
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
@@ -620,9 +672,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				zkCluster.setConnectionListener(connectionListener);
 				zkCluster.setOffline(false);
 				curatorFramework.getConnectionStateListenable().addListener(connectionListener);
-
-				// init reg center refresh zk NodeCache
-				initRegCenterRefreshNodeCache(zkCluster.getZkClusterKey(), curatorFramework);
 			}
 		} catch (Exception e) {
 			log.error("found an offline zkCluster, zkAddr is {}", zkAddr);
@@ -630,45 +679,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			zkCluster.setCuratorFramework(null);
 			zkCluster.setConnectionListener(null);
 			zkCluster.setOffline(true);
-		}
-	}
-
-	private void createRegCenterRefreshNodeIfPossible(CuratorFramework curatorFramework) {
-		try {
-			curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(
-					SaturnSelfNodePath.SATURN_CONSOLE_REFRESH);
-		} catch (NodeExistsException e) {
-			log.debug("node already exsited");
-		} catch (Exception e) {
-			log.error("error during create regcenter refresh node", e);
-		}
-	}
-
-	private void initRegCenterRefreshNodeCache(String zkClusterKey, CuratorFramework curatorFramework)
-			throws Exception {
-		regCenterRefreshExecutorService = Executors.newSingleThreadExecutor(
-				new ConsoleThreadFactory("nodeCache-for-console-regcenter-refresh-" + zkClusterKey, false));
-		regCenterRefreshNodeCache = new NodeCache(curatorFramework, SaturnSelfNodePath.SATURN_CONSOLE_REFRESH);
-		regCenterRefreshNodeCache.start();
-		regCenterRefreshNodeCache.getListenable().addListener(new NodeCacheListener() {
-			@Override
-			public void nodeChanged() {
-				log.info("regcenter-refresh node changed event is triggered.");
-				refreshRegCenter();
-			}
-		}, regCenterRefreshExecutorService);
-	}
-
-	private void closeRegCenterRefreshNodeCache() {
-		try {
-			if (regCenterRefreshNodeCache != null) {
-				regCenterRefreshNodeCache.close();
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		if (regCenterRefreshExecutorService != null) {
-			regCenterRefreshExecutorService.shutdownNow();
 		}
 	}
 
@@ -856,26 +866,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public RequestResult refreshRegCenter() {
-		RequestResult result = new RequestResult();
-		if (refreshingRegCenter.compareAndSet(false, true)) {
-			try {
-				log.info("begin to refresh registry center");
-				refreshAll();
-				result.setSuccess(true);
-			} catch (Throwable t) {
-				log.error(t.getMessage(), t);
-				result.setSuccess(false);
-				result.setMessage(ExceptionUtils.getMessage(t));
-			} finally {
-				log.info("end refresh registry center");
-				refreshingRegCenter.set(false);
-			}
-		} else {
-			result.setSuccess(false);
-			result.setMessage("refreshing, try it later!");
-		}
-		return result;
+	public void notifyRefreshRegCenter() throws SaturnJobConsoleException {
+		SystemConfig systemConfig = new SystemConfig();
+		systemConfig.setProperty(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
+		systemConfig.setValue(UUID.randomUUID().toString());
+		systemConfigService.insertOrUpdate(systemConfig);
 	}
 
 	@Override
@@ -897,10 +892,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return zkClusterMap.get(zkClusterKey);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void createZkCluster(String zkClusterKey, String alias, String connectString)
 			throws SaturnJobConsoleException {
 		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+		notifyRefreshRegCenter();
 	}
 
 	@Override
@@ -979,21 +976,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			namespaceInfoService.create(namespaceInfo);
 			// 创建 zkcluster 和 namespaceInfo 关系
 			namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, NAMESPACE_CREATOR_NAME);
-			// touch refresh node
-			touchRegCenterRefreshNode(currentCluster);
+			// refresh
+			notifyRefreshRegCenter();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, e.getMessage()));
-		}
-	}
-
-	private void touchRegCenterRefreshNode(ZkCluster currentCluster) {
-		try {
-			currentCluster.getCuratorFramework().setData()
-					.forPath(SaturnSelfNodePath.SATURN_CONSOLE_REFRESH, "".getBytes());
-		} catch (Exception e) {
-			log.error("fail to touch regcenter fresh node", e);
 		}
 	}
 

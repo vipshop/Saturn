@@ -18,4 +18,6 @@ public class SystemConfigProperties {
 	public static final String IDC_CONSOLE_ID_MAPPING = "IDC_CONSOLE_ID_MAPPING";
 
 	public static final String INTERVAL_TIME_OF_ENABLED_REPORT = "INTERVAL_TIME_OF_ENABLED_REPORT";
+
+	public static final String REFRESH_REGISTRY_CENTER_UUID = "REFRESH_REGISTRY_CENTER_UUID";
 }
