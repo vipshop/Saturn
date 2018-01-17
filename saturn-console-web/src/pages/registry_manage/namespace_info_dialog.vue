@@ -4,7 +4,7 @@
             <el-form-item label="zk集群" prop="zkClusterKey">
                 <el-col :span="20">
                     <el-select size="small" v-model="namespaceInfo.zkClusterKey" style="width: 100%">
-                        <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
+                        <el-option v-for="item in onLineClusters" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
@@ -50,6 +50,17 @@ export default {
     },
     closeDialog() {
       this.$emit('close-dialog');
+    },
+  },
+  computed: {
+    onLineClusters() {
+      const onlineArr = [];
+      this.zkClusterKeys.forEach((element) => {
+        if (!element.offline) {
+          onlineArr.push(element);
+        }
+      });
+      return onlineArr;
     },
   },
 };
