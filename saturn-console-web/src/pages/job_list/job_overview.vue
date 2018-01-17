@@ -9,10 +9,12 @@
                     </Panel>
                 </el-col>
                 <el-col :span="8">
-                    <Panel type="danger">
-                        <div slot="title">异常作业数</div>
-                        <div slot="content">{{abnormalNumber}}</div>
-                    </Panel>
+                    <a @click="toAbnormalJobPage">
+                        <Panel type="danger">
+                            <div slot="title">异常作业数</div>
+                            <div slot="content">{{abnormalNumber}}</div>
+                        </Panel>
+                    </a>
                 </el-col>
             </el-row>
         </div>
@@ -161,6 +163,9 @@ export default {
     };
   },
   methods: {
+    toAbnormalJobPage() {
+      this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
+    },
     handleExport() {
       window.location.href = `/console/namespaces/${this.domainName}/jobs/export`;
     },

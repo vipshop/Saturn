@@ -50,6 +50,9 @@ export default {
     padding-bottom: 5px;
     text-decoration: none;
     opacity: .8;
+    &:hover {
+      background-color: red;
+    }
 }
 .panel-warning-info {
     background-color: #f80;
