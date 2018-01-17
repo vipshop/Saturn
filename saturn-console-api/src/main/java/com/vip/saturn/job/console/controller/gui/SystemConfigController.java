@@ -16,12 +16,12 @@ import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,12 +37,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/console/configs")
 public class SystemConfigController extends AbstractGUIController {
 
-	private static final String SYSTEM_CONFIG_META_FILE_NAME = "system-config-meta.yaml";
-
 	private static final ObjectMapper YAML_OBJ_MAPPER = new ObjectMapper(new YAMLFactory());
 
 	@Resource
 	private SystemConfigService systemConfigService;
+
+	@Value(value = "classpath:system-config-meta.yaml")
+	private org.springframework.core.io.Resource configYaml;
 
 	/**
 	 * 创建或者更新配置项。
@@ -96,13 +97,11 @@ public class SystemConfigController extends AbstractGUIController {
 	}
 
 	private Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
-		ClassLoader classLoader = getClass().getClassLoader();
-		File systemConfigMetaFile = new File(classLoader.getResource(SYSTEM_CONFIG_META_FILE_NAME).getFile());
 		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef
 				= new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
 		};
 
-		return YAML_OBJ_MAPPER.readValue(systemConfigMetaFile, typeRef);
+		return YAML_OBJ_MAPPER.readValue(configYaml.getInputStream(), typeRef);
 	}
 
 	Map<String, SystemConfig> convertList2Map(List<SystemConfig> configList) {

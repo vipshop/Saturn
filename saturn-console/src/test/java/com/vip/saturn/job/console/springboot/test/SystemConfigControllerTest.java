@@ -20,7 +20,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@Ignore("ignore first for debugging")
 @RunWith(SpringRunner.class)
 @WebMvcTest(SystemConfigController.class)
 public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
