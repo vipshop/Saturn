@@ -2,14 +2,14 @@
     <div>
         <div class="param-table">
             <el-table :data="parameters" border style="width: 100%">
-                <el-table-column label="key" header-align="left">
+                <el-table-column label="配置项" header-align="left">
                     <template slot-scope="scope">
                         <el-tooltip popper-class="form-tooltip" :content="scope.row.description" placement="bottom">
                             <el-input v-model="scope.row.key" readonly></el-input>
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <el-table-column label="Value" header-align="left">
+                <el-table-column label="值" header-align="left">
                     <template slot-scope="scope">
                         <el-input v-model="scope.row.value"></el-input>
                     </template>
