@@ -94,7 +94,7 @@
                                     <el-tooltip content="复制" placement="top">
                                         <el-button type="text" @click="handleCopy(scope.row)"><i class="fa fa-clone"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="删除" placement="top">
+                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'STOPPED'">
                                         <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
@@ -112,6 +112,9 @@
             <div v-if="isImportVisible">
                 <ImportFileDialog :import-data="importData" import-template-url="/console/static/jobTemplate/download" :import-url="importUrl" import-title="导入作业" @close-dialog="closeImportDialog" @import-success="importSuccess"></ImportFileDialog>
             </div>
+            <div v-if="isImportResultVisible">
+                <import-result-dialog :import-result="importResult" @close-dialog="closeImportResultDialog"></import-result-dialog>
+            </div>
         </div>
     </div>
 </template>
@@ -119,6 +122,7 @@
 <script>
 import jobInfoDialog from './job_info_dialog';
 import batchPriorityDialog from './batch_priority_dialog';
+import importResultDialog from './import_result_dialog';
 
 export default {
   data() {
@@ -131,6 +135,8 @@ export default {
       jobInfo: {},
       isBatchPriorityVisible: false,
       isImportVisible: false,
+      importResult: [],
+      isImportResultVisible: false,
       importData: {
         namespace: this.$route.params.domain,
       },
@@ -176,10 +182,14 @@ export default {
     closeImportDialog() {
       this.isImportVisible = false;
     },
-    importSuccess() {
+    importSuccess(importResult) {
       this.isImportVisible = false;
+      this.importResult = importResult;
+      this.isImportResultVisible = true;
+    },
+    closeImportResultDialog() {
+      this.isImportResultVisible = false;
       this.getJobList();
-      this.$message.successNotify('导入作业操作成功');
     },
     handleAdd() {
       this.isJobInfoVisible = true;
@@ -207,37 +217,53 @@ export default {
     },
     batchEnabled() {
       this.batchOperation('启用', (arr) => {
-        const params = {
-          jobNames: arr.join(','),
-        };
-        this.handleBatchActive(params, arr, true);
+        const stopedJob = this.getStoptedJobArray(arr);
+        if (stopedJob.length === 0) {
+          this.$message.errorMessage('没有可以启用的作业,请重新勾选!');
+        } else {
+          const params = {
+            jobNames: this.getJobNameArray(stopedJob).join(','),
+          };
+          this.handleBatchActive(params, this.getJobNameArray(stopedJob), true);
+        }
       });
     },
     batchDisabled() {
       this.batchOperation('禁用', (arr) => {
-        const params = {
-          jobNames: arr.join(','),
-        };
-        this.handleBatchActive(params, arr, false);
+        const unstopedJob = this.getUnstoptedJobArray(arr);
+        if (unstopedJob.length === 0) {
+          this.$message.errorMessage('没有可以禁用的作业,请重新勾选!');
+        } else {
+          const params = {
+            jobNames: this.getJobNameArray(unstopedJob).join(','),
+          };
+          this.handleBatchActive(params, this.getJobNameArray(unstopedJob), false);
+        }
       });
     },
     batchDelete() {
       this.batchOperation('删除', (arr) => {
-        const params = {
-          jobNames: arr.join(','),
-        };
-        this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
-          this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
-            this.getJobList();
-            this.$message.successNotify('批量删除作业操作成功');
-          })
-          .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
-        });
+        const stopedJob = this.getStoptedJobArray(arr);
+        if (stopedJob.length === 0) {
+          this.$message.errorMessage('没有可以删除的作业,请重新勾选!');
+        } else {
+          const params = {
+            jobNames: this.getJobNameArray(stopedJob).join(','),
+          };
+          this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
+            this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
+              this.getJobList();
+              this.$message.successNotify('批量删除作业操作成功');
+            })
+            .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
+          });
+        }
       });
     },
     batchPriority() {
       this.batchOperation('优先Executors', (arr) => {
-        this.jobNamesArray = JSON.parse(JSON.stringify(arr));
+        const jobNames = this.getJobNameArray(arr);
+        this.jobNamesArray = JSON.parse(JSON.stringify(jobNames));
         this.isBatchPriorityVisible = true;
       });
     },
@@ -255,7 +281,7 @@ export default {
       } else {
         const selectedJobNameArray = [];
         this.multipleSelection.forEach((element) => {
-          selectedJobNameArray.push(element.jobName);
+          selectedJobNameArray.push(element);
         });
         callback(selectedJobNameArray);
       }
@@ -406,6 +432,31 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
+    getJobNameArray(arr) {
+      const jobNameArray = [];
+      arr.forEach((ele) => {
+        jobNameArray.push(ele.jobName);
+      });
+      return jobNameArray;
+    },
+    getUnstoptedJobArray(arr) {
+      const resultArr = [];
+      arr.forEach((ele) => {
+        if (ele.status !== 'STOPPED') {
+          resultArr.push(ele);
+        }
+      });
+      return resultArr;
+    },
+    getStoptedJobArray(arr) {
+      const resultArr = [];
+      arr.forEach((ele) => {
+        if (ele.status === 'STOPPED') {
+          resultArr.push(ele);
+        }
+      });
+      return resultArr;
+    },
     getJobList() {
       this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/jobs`).then((data) => {
@@ -430,6 +481,7 @@ export default {
   components: {
     'job-info-dialog': jobInfoDialog,
     'batch-priority-dialog': batchPriorityDialog,
+    'import-result-dialog': importResultDialog,
   },
   created() {
     this.getJobList();

@@ -32,8 +32,11 @@
                         </el-row>
                         <el-row :gutter="30">
                             <el-col :span="11">
-                                <el-form-item prop="shardingTotalCount" label="作业分片数">
+                                <el-form-item prop="shardingTotalCount" label="作业分片数" v-if="!jobSettingInfo.localMode">
                                     <el-input-number v-model="jobSettingInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                                </el-form-item>
+                                <el-form-item prop="shardingTotalCount" label="作业分片数" v-if="jobSettingInfo.localMode">
+                                    <el-input value="N/A" disabled style="width: 100%;"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
@@ -71,7 +74,7 @@
                                     </el-select>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="11" v-if="!jobSettingInfo.localMode">
                                 <el-form-item prop="useDispreferList" label="只使用优先executor">
                                     <el-switch v-model="jobSettingInfo.useDispreferList"></el-switch>
                                 </el-form-item>
@@ -211,11 +214,34 @@ export default {
       this.isCronPredictVisible = false;
     },
     updateInfo() {
+      this.$refs.jobSettingInfo.validate((valid) => {
+        if (valid) {
+          if (this.validateLocalMode()) {
+            if (this.jobSettingInfo.localMode) {
+              this.jobSettingInfo.shardingTotalCount = 'N/A';
+              this.jobSettingInfoRequest();
+            }
+          } else {
+            this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
+          }
+        }
+      });
+    },
+    jobSettingInfoRequest() {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
+    },
+    validateLocalMode() {
+      let flag = true;
+      if (this.jobSettingInfo.localMode) {
+        if (!this.jobSettingInfo.shardingItemParameters.startsWith('*=')) {
+          flag = false;
+        }
+      }
+      return flag;
     },
     getJobSettingInfo() {
       const params = {

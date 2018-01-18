@@ -134,16 +134,21 @@ export default {
     },
     batchDelete() {
       this.batchOperation('删除', (arr) => {
-        const params = {
-          executorNames: arr.join(','),
-        };
-        this.$message.confirmMessage(`确定删除Executor ${arr.join(',')} 吗?`, () => {
-          this.$http.delete(`/console/namespaces/${this.domainName}/executors`, params).then(() => {
-            this.getExecutorList();
-            this.$message.successNotify('批量删除Executor操作成功');
-          })
-          .catch(() => { this.$http.buildErrorHandler('批量删除Executor请求失败！'); });
-        });
+        const offlineExecutors = this.getOfflineExecutorArray(arr);
+        if (offlineExecutors.length === 0) {
+          this.$message.errorMessage('没有可以删除的Executor,请重新勾选!');
+        } else {
+          const params = {
+            executorNames: this.getExecutorNameArray(offlineExecutors).join(','),
+          };
+          this.$message.confirmMessage(`确定删除Executor ${params.executorNames} 吗?`, () => {
+            this.$http.delete(`/console/namespaces/${this.domainName}/executors`, params).then(() => {
+              this.getExecutorList();
+              this.$message.successNotify('批量删除Executor操作成功');
+            })
+            .catch(() => { this.$http.buildErrorHandler('批量删除Executor请求失败！'); });
+          });
+        }
       });
     },
     batchOperation(text, callback) {
@@ -152,7 +157,7 @@ export default {
       } else {
         const selectedExecutorArray = [];
         this.multipleSelection.forEach((element) => {
-          selectedExecutorArray.push(element.executorName);
+          selectedExecutorArray.push(element);
         });
         callback(selectedExecutorArray);
       }
@@ -195,6 +200,22 @@ export default {
         })
         .catch(() => { this.$http.buildErrorHandler(`${text}流量请求失败！`); });
       });
+    },
+    getExecutorNameArray(arr) {
+      const executorNameArray = [];
+      arr.forEach((ele) => {
+        executorNameArray.push(ele.executorName);
+      });
+      return executorNameArray;
+    },
+    getOfflineExecutorArray(arr) {
+      const resultArr = [];
+      arr.forEach((ele) => {
+        if (ele.status === 'OFFLINE') {
+          resultArr.push(ele);
+        }
+      });
+      return resultArr;
     },
     getExecutorList() {
       this.loading = true;

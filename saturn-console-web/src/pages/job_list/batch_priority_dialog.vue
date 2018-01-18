@@ -9,7 +9,10 @@
             <el-form-item label="优先Executors" prop="jobName">
                 <el-col :span="18">
                     <el-select size="small" v-model="selectedExecutors" filterable multiple placeholder="请选择" style="width: 100%;">
-                        <el-option v-for="item in onlineExecutors" :key="item.executorName" :label="item.executorName" :value="item.executorName"></el-option>
+                        <el-option v-for="item in onlineExecutors" :key="item.executorName" :label="item.executorName" :value="item.executorName">
+                            <span style="float: left">{{ item.executorName }}</span>
+                            <span style="float: left" v-if="item.container"> (容器)</span>
+                        </el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
