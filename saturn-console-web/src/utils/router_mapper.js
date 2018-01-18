@@ -13,7 +13,6 @@ const routermapperlist = [
     { name: 'jobSharding', path: '/job_detail/:domain/:jobName/job_sharding' },
     { name: 'jobExecution', path: '/job_detail/:domain/:jobName/job_execution' },
     { name: 'jobAlarm', path: '/job_detail/:domain/:jobName/job_alarm' },
-    { name: 'jobStatistics', path: '/job_detail/:domain/:jobName/job_statistics' },
     { name: 'dashboardManage', path: '/dashboard_manage' },
     { name: 'dashboardDetail', path: '/dashboard_detail' },
     { name: 'domainStatistic', path: '/dashboard_detail/domain_statistic' },

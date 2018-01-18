@@ -14,7 +14,6 @@ import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
 import JobSharding from './pages/job_detail/job_sharding';
 import JobExecution from './pages/job_detail/job_execution';
-import JobStatistics from './pages/job_detail/job_statistics';
 import JobAlarm from './pages/job_detail/job_alarm';
 import DashboardManage from './pages/dashboard_manage/dashboard_manage';
 import DashboardDetail from './pages/dashboard_manage/dashboard_detail';
@@ -70,7 +69,6 @@ export default new Router({
         { name: 'job_setting', path: RouterMapper.GetPath('jobSetting'), component: JobSetting },
         { name: 'job_sharding', path: RouterMapper.GetPath('jobSharding'), component: JobSharding },
         { name: 'job_execution', path: RouterMapper.GetPath('jobExecution'), component: JobExecution },
-        { name: 'job_statistics', path: RouterMapper.GetPath('jobStatistics'), component: JobStatistics },
         { name: 'job_alarm', path: RouterMapper.GetPath('jobAlarm'), component: JobAlarm },
       ],
     }, {
