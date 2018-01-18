@@ -55,7 +55,7 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="jobName" label="作业名" sortable>
+                            <el-table-column prop="jobName" label="作业名" min-width="110" sortable>
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
                                         <el-button type="text">
@@ -66,13 +66,13 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" sortable>
+                            <el-table-column label="状态" prop="status" width="100" sortable>
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" sortable></el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数"></el-table-column>
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="100"></el-table-column>
                             <el-table-column label="分片情况">
                                 <template slot-scope="scope">
                                     <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
