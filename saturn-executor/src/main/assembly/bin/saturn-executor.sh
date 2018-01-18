@@ -16,25 +16,23 @@ PRG_DIR=`dirname "$PRG"`
 BASE_DIR=`cd "$PRG_DIR/.." >/dev/null; pwd`
 PARENT_DIR=`cd "$BASE_DIR/.." >/dev/null; pwd`
 
-LOGDIR=""
-OUTFILE=""
-START_HISTORY_LOGFILE=""
 NAMESPACE=""
 EXECUTORNAME=`hostname`
-LOCALIP=`ip addr| grep 'inet '| grep -v '127.0.0.1'`
-LOCALIP=`echo $LOCALIP | cut -d/ -f1|awk '{print $2}'`
-JMX_PORT="24501"
-START_TIME=20
 SATURN_LIB_DIR=$BASE_DIR/lib
 APP_LIB_DIR=$PARENT_DIR/app
-
-STATUS_FILE=${PRG_DIR}/status
-PID_FILE=${PRG_DIR}/PID
-LAST_START_COMMAND_FILE=${PRG_DIR}/last_start_command.sh
-
 RUN_MODE="background"
+JMX_PORT="24501"
+RUN_ENVIRONMENT=""
+CUSTOM_LOGDIR=""
 
-STARTUP_DELAY_SECONDS=20
+TEMP_DIR=${PRG_DIR}/temp
+if [ ! -d $TEMP_DIR ]; then
+		mkdir -p $TEMP_DIR
+fi
+STATUS_FILE=$TEMP_DIR/status
+PID_FILE=$TEMP_DIR/PID
+LOGDIR_FILE=$TEMP_DIR/LOGDIR
+LAST_START_COMMAND_FILE=$TEMP_DIR/last_start_command.sh
 
 USAGE()
 {
@@ -69,12 +67,6 @@ LOG_FMT()
     echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [saturn-executor] ${MSG}"
 }
 
-LOG_STARTLOG()
-{
-    local MSG=$*
-    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [saturn-executor] ${MSG}" >> $LOGDIR/saturn-start.log
-}
-
 CMD="$1"
 shift
 
@@ -86,59 +78,12 @@ while true; do
 		-r| --runmode) RUN_MODE="$2"; shift 2;;
 		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
 		-env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
-		-sld|--saturnLogDir) LOGDIR="$2" ; shift 2 ;;
+		-sld|--saturnLogDir) CUSTOM_LOGDIR="$2" ; shift 2 ;;
 		*) break;;
 	esac
 done
 
 ADDITIONAL_OPTS=$*;
-
-PERM_SIZE="256m"
-MAX_PERM_SIZE="512m"
-
-if [[ "$RUN_ENVIRONMENT" = "dev" ]]; then
-  ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
-  PERM_SIZE="128m"
-  MAX_PERM_SIZE="256m"
-elif [[ "$RUN_ENVIRONMENT" = "docker" ]]; then
-  ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
-  PERM_SIZE="128m"
-  MAX_PERM_SIZE="256m"
-else
-  ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
-fi
-
-if [[ "$LOGDIR" = "" ]]; then
-  LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
-fi
-
-OUTFILE=$LOGDIR/saturn-nohup.out
-START_HISTORY_LOGFILE=$LOGDIR/saturn-start.log
-
-JAVA_OPTS="-XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
-MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:+AlwaysPreTouch"
-
-CMS_GC_OPTS="-XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:MaxTenuringThreshold=6 -XX:+ParallelRefProcEnabled -XX:+ExplicitGCInvokesConcurrent"
-G1_GC_OPTS="" #place holder for G1 opts
-
-GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
-CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
-JMX_OPTS="-Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dsun.rmi.transport.tcp.threadKeepAliveTime=75000 -Djava.rmi.server.hostname=${LOCALIP}"
-SETTING_CONF="-DVIP_SATURN_ENABLE_EXEC_SCRIPT=true -DVIP_SATURN_PRG=${PRG} -DVIP_SATURN_LOG_DIR=${LOGDIR} -DVIP_SATURN_LOG_OUTFILE=${OUTFILE} -Dstart.check.outfile=${STATUS_FILE}"
-
-JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
-
-if [[ "$JAVA_VERSION" < "1.8" ]]; then
-  MEM_OPTS="$MEM_OPTS -XX:PermSize=${PERM_SIZE} -XX:MaxPermSize=${MAX_PERM_SIZE} -Djava.security.egd=file:/dev/./urandom"
-else
-  MEM_OPTS="$MEM_OPTS -XX:MetaspaceSize=${PERM_SIZE} -XX:MaxMetaspaceSize=${MAX_PERM_SIZE} "
-fi
-
-if [[ $ADDITIONAL_OPTS == *"-XX:+UseG1GC"* ]]; then
-  GC_OPTS="$G1_GC_OPTS"
-else
-  GC_OPTS="$CMS_GC_OPTS"
-fi
 
 CHECK_JMX()
 {
@@ -163,11 +108,6 @@ GET_PID()
     fi
 }
 
-GET_LOGDIR()
-{
-    echo `ps -ef | grep java | grep "\-jar" | grep "saturn-executor.jar" | grep $1 | sed -r 's/.*HeapDumpPath=(.*)/\1/' | awk '{print $1}'`
-}
-
 CHECK_PARAMETERS()
 {
 	if [ x$NAMESPACE == x ]; then
@@ -179,24 +119,81 @@ CHECK_PARAMETERS()
 
 STARTUP_DELAY()
 {
-    if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
-        i=1
-        while(($i<=$STARTUP_DELAY_SECONDS)); do
-        	echo -e ".\c"
-        	sleep 1
-        	i=$(($i+1))
-        done
-    fi
+  STARTUP_DELAY_SECONDS=20
+  if [[ "$RUN_ENVIRONMENT" = "production" ]]; then
+      i=1
+      while(($i<=$STARTUP_DELAY_SECONDS)); do
+        echo -e ".\c"
+        sleep 1
+        i=$(($i+1))
+      done
+  fi
+}
+
+LOG_STARTLOG()
+{
+  local LOGDIR=`cat $LOGDIR_FILE`
+  local MSG=$*
+  echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [saturn-executor] ${MSG}" >> $LOGDIR/saturn-start.log
 }
 
 START()
 {
-    LOG_FMT "Begin to start executor."
-    LOG_FMT "The java version is ${JAVA_VERSION}"
-	LOG_FMT "Log redirects to ${LOGDIR}"
-	CHECK_JMX
-
+  CHECK_JMX
 	CHECK_PARAMETERS
+
+  PERM_SIZE="256m"
+  MAX_PERM_SIZE="512m"
+
+  if [[ "$RUN_ENVIRONMENT" = "dev" ]]; then
+    ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
+    PERM_SIZE="128m"
+    MAX_PERM_SIZE="256m"
+  elif [[ "$RUN_ENVIRONMENT" = "docker" ]]; then
+    ENVIRONMENT_MEM="-Xms512m -Xmx512m -Xss256K"
+    PERM_SIZE="128m"
+    MAX_PERM_SIZE="256m"
+  else
+    ENVIRONMENT_MEM="-Xms2048m -Xmx2048m"
+  fi
+
+  LOGDIR="$CUSTOM_LOGDIR"
+  if [[ "$LOGDIR" = "" ]]; then
+    LOCALIP=`ip addr| grep 'inet '| grep -v '127.0.0.1'`
+    LOCALIP=`echo $LOCALIP | cut -d/ -f1|awk '{print $2}'`
+    LOGDIR=/apps/logs/saturn/${NAMESPACE}/${EXECUTORNAME}-${LOCALIP}
+  fi
+
+  OUTFILE=$LOGDIR/saturn-nohup.out
+
+  JAVA_OPTS="-XX:+PrintCommandLineFlags -XX:-OmitStackTraceInFastThrow -XX:-UseBiasedLocking -XX:AutoBoxCacheMax=20000"
+  MEM_OPTS="-server ${ENVIRONMENT_MEM} -XX:+AlwaysPreTouch"
+
+  CMS_GC_OPTS="-XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:MaxTenuringThreshold=6 -XX:+ParallelRefProcEnabled -XX:+ExplicitGCInvokesConcurrent"
+  G1_GC_OPTS="" #place holder for G1 opts
+
+  GCLOG_OPTS="-Xloggc:${LOGDIR}/gc.log  -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
+  CRASH_OPTS="-XX:ErrorFile=${LOGDIR}/hs_err_%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGDIR}/"
+  JMX_OPTS="-Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dsun.rmi.transport.tcp.threadKeepAliveTime=75000 -Djava.rmi.server.hostname=${LOCALIP}"
+  SETTING_CONF="-DVIP_SATURN_ENABLE_EXEC_SCRIPT=true -DVIP_SATURN_PRG=${PRG} -DVIP_SATURN_LOG_DIR=${LOGDIR} -DVIP_SATURN_LOG_OUTFILE=${OUTFILE} -Dstart.check.outfile=${STATUS_FILE}"
+
+  JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+
+  if [[ "$JAVA_VERSION" < "1.8" ]]; then
+    MEM_OPTS="$MEM_OPTS -XX:PermSize=${PERM_SIZE} -XX:MaxPermSize=${MAX_PERM_SIZE} -Djava.security.egd=file:/dev/./urandom"
+  else
+    MEM_OPTS="$MEM_OPTS -XX:MetaspaceSize=${PERM_SIZE} -XX:MaxMetaspaceSize=${MAX_PERM_SIZE} "
+  fi
+
+  if [[ $ADDITIONAL_OPTS == *"-XX:+UseG1GC"* ]]; then
+    GC_OPTS="$G1_GC_OPTS"
+  else
+    GC_OPTS="$CMS_GC_OPTS"
+  fi
+
+  LOG_FMT "Begin to start executor."
+  LOG_FMT "The java version is ${JAVA_VERSION}"
+  LOG_FMT "Log redirects to ${LOGDIR}"
 
 	if [ ! -d $LOGDIR ]; then
 		LOG_FMT "Warning, the log directory of $LOGDIR is not existed, try to create it."
@@ -207,7 +204,7 @@ START()
 			LOG_FMT "Create log directory failed."
 			exit -1
 		fi
-    fi
+  fi
 
 	if [ -f $PID_FILE ] ; then
 		PID=`cat $PID_FILE`
@@ -220,42 +217,44 @@ START()
 		fi
 	fi
 
-    # delete nohup.out if possible
+  # delete nohup.out if possible
 	if [ -f $OUTFILE ] ; then
-        rm -rf $OUTFILE
-    fi
+    rm -rf $OUTFILE
+  fi
 
 	STARTUP_DELAY
 
 	echo "" > ${STATUS_FILE}
 	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
-    nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
+  nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
 	PID=$!
 	echo $PID > $PID_FILE
+	echo $LOGDIR > $LOGDIR_FILE
 
 	#record the start command
 	echo -e "#!/bin/bash\ncd ${WORKING_DIR}\nchmod +x ${PRG_DIRECT}\n${COMMAND}" > ${LAST_START_COMMAND_FILE}
 	chmod +x ${LAST_START_COMMAND_FILE}
 
-    LOG_FMT "Starting...\c"
+  LOG_FMT "Starting...\c"
 	sleep 3
 
 	CHECK_STATUS=`cat ${STATUS_FILE}`
+	START_TIME=20
 	starttime=0
 	while  [ x"$CHECK_STATUS" == x ]; do
-        if [[ "$starttime" -lt ${START_TIME} ]]; then
-          sleep 1
-          ((starttime++))
-          echo -e ".\c"
-          CHECK_STATUS=`cat ${STATUS_FILE}`
-        else
-          echo -e ""
-          LOG_FMT "Saturn executor start may fails, checking not finished until reach the starting timeout! See ${OUTFILE} for more information."
-          exit -1
-        fi
+    if [[ "$starttime" -lt ${START_TIME} ]]; then
+      sleep 1
+      ((starttime++))
+      echo -e ".\c"
+      CHECK_STATUS=`cat ${STATUS_FILE}`
+    else
+      echo -e ""
+      LOG_FMT "Saturn executor start may fails, checking not finished until reach the starting timeout! See ${OUTFILE} for more information."
+      exit -1
+    fi
 	done
 
-    echo -e ""
+  echo -e ""
 
 	if [ $CHECK_STATUS = "SUCCESS" ]; then
 		LOG_FMT "Saturn executor start successfully, running as process:$PID."
@@ -278,39 +277,37 @@ START()
 DUMP()
 {
     LOG_FMT "Begin to dump executor."
-    # backup gc log
-    LOGDIR=$(GET_LOGDIR ${PID})
-    cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
-    LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
-    LOG_FMT "Dump executor successfully."
+    if [ -f $LOGDIR_FILE ]; then
+      LOGDIR=`cat $LOGDIR_FILE`
+      LOG_FILE_POSTFIX="`date '+%Y-%m-%d-%H%M%S'`"
+      cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
+      LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
+      LOG_FMT "Dump executor successfully."
 
-    local PID=$(GET_PID)
-    while true; do
-        case "$1" in
-            -pid) PID="$2"; shift 2;;
-            *) break;;
-        esac
-    done
-    if [ "$PID" != "" ]; then
-      if [ -d /proc/${PID} ];then
-        LOG_FMT "Start doing thread dump."
-        # do the thread dump
-        LOG_FILE_POSTFIX="${PID}_`date '+%Y-%m-%d-%H%M%S'`"
-        jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
-        LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
+      PID=$(GET_PID)
+      if [ "$PID" != "" ]; then
+        if [ -d /proc/${PID} ];then
+          LOG_FMT "Start doing thread dump."
+          # do the thread dump
+          LOG_FILE_POSTFIX="${LOG_FILE_POSTFIX}_${PID}"
+          jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
+          LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
+        else
+          LOG_FMT "Executor(pid:${PID}) is not running."
+        fi
       else
-        LOG_FMT "Executor(pid:${PID}) is not running."
+        LOG_FMT "Executor is not running."
       fi
     else
-      LOG_FMT "Executor is not running."
+      LOG_FMT "Dump failed, because the LOGDIR is not found."
     fi
 }
 
 STOP()
 {
     LOG_FMT "Begin to stop executor."
+    DUMP
     PID=$(GET_PID)
-    DUMP -pid ${PID}
 	  stoptime=0
     if [ "$PID" != "" ]; then
       if [ -d /proc/$PID ];then
