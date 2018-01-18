@@ -30,7 +30,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row :gutter="30">
+                        <el-row :gutter="10">
                             <el-col :span="11">
                                 <el-form-item prop="shardingTotalCount" label="作业分片数" v-if="!jobSettingInfo.localMode">
                                     <el-input-number v-model="jobSettingInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
@@ -39,9 +39,14 @@
                                     <el-input value="N/A" disabled style="width: 100%;"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
-                                <el-form-item prop="localMode" label="本地模式">
+                            <el-col :span="5">
+                                <el-form-item prop="localMode" label="本地模式" label-width="80px">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="6" v-if="!jobSettingInfo.localMode">
+                                <el-form-item prop="onlyUsePreferList" label="只使用优先executor">
+                                    <el-switch v-model="jobSettingInfo.onlyUsePreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -63,20 +68,15 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row :gutter="30">
-                            <el-col :span="11">
-                                <el-form-item prop="preferList" label="优先executor">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="preferListList" label="优先executor">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferListList" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.preferListProvided" :label="item.executorName" :value="item.executorName" :key="item.executorName">
                                             <span style="float: left">{{ item.executorName }}</span>
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
                                         </el-option>
                                     </el-select>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="11" v-if="!jobSettingInfo.localMode">
-                                <el-form-item prop="useDispreferList" label="只使用优先executor">
-                                    <el-switch v-model="jobSettingInfo.useDispreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -133,40 +133,40 @@
                                     </el-select>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
-                                <el-form-item prop="dependencies" label="依赖作业">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependencies" style="width: 100%;">
-                                        <el-option v-for="item in jobSettingInfo.dependenciesProvided" :label="item" :value="item" :key="item"> </el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                        <el-row>
-                            <el-col :span="11">
-                                <el-form-item prop="showNormalLog" label="显示控制台输出日志">
+                            <el-col :span="6">
+                                <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
-                                <el-form-item prop="enabledReport" label="上报运行状态">
+                            <el-col :span="6">
+                                <el-form-item prop="enabledReport" label="上报运行状态" label-width="100px">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="pausePeriodDate" label="暂停日期段">
+                                <el-form-item prop="dependenciesList" label="依赖作业">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependenciesList" style="width: 100%;">
+                                        <el-option v-for="item in jobSettingInfo.dependenciesProvided" :label="item" :value="item" :key="item"> </el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="pausePeriodDateList" label="暂停日期段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个日期段，逗号隔开。例如03/12-03/15,11/23-12/25。当日期为空，时间段不为空，表示每天那些时间段都暂停" placement="bottom">
-                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodDate" title="日期段"></InputTags>
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodDateList" title="日期段"></InputTags>
                                     </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="pausePeriodTime" label="暂停时间段">
+                                <el-form-item prop="pausePeriodTimeList" label="暂停时间段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开。例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停" placement="bottom">
-                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTime" title="时间段"></InputTags>
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTimeList" title="时间段"></InputTags>
                                     </el-tooltip>
                                 </el-form-item>
                             </el-col>

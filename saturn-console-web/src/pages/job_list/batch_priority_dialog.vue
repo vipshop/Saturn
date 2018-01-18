@@ -9,8 +9,8 @@
             <el-form-item label="优先Executors" prop="jobName">
                 <el-col :span="18">
                     <el-select size="small" v-model="selectedExecutors" filterable multiple placeholder="请选择" style="width: 100%;">
-                        <el-option v-for="item in onlineExecutors" :key="item.executorName" :label="item.executorName" :value="item.executorName">
-                            <span style="float: left">{{ item.executorName }}</span>
+                        <el-option v-for="item in onlineExecutors" :key="item.value" :label="item.value" :value="item.value">
+                            <span style="float: left">{{ item.value }}</span>
                             <span style="float: left" v-if="item.container"> (容器)</span>
                         </el-option>
                     </el-select>
@@ -52,11 +52,31 @@ export default {
     getOnlineExecutors() {
       this.loading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/executors`).then((data) => {
+        const onlineExecutorsArray = [];
         data.forEach((ele) => {
           if (ele.status === 'ONLINE') {
-            this.onlineExecutors.push(ele);
+            onlineExecutorsArray.push(ele);
           }
         });
+        const setOnlineExecutors = onlineExecutorsArray.map((obj) => {
+          const rObj = {};
+          if (obj.container) {
+            rObj.container = obj.container;
+            rObj.value = obj.groupName;
+          } else {
+            rObj.container = obj.container;
+            rObj.value = obj.executorName;
+          }
+          return rObj;
+        });
+        const hash = {};
+        this.onlineExecutors = setOnlineExecutors.reduce((item, next) => {
+          if (!hash[next.value]) {
+            hash[next.value] = true;
+            item.push(next);
+          }
+          return item;
+        }, []);
       })
       .catch(() => { this.$http.buildErrorHandler('获取Executors失败！'); })
       .finally(() => {

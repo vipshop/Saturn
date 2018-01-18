@@ -34,7 +34,7 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="executorName" label="Executor" min-width="160px" sortable>
+                            <el-table-column prop="executorName" label="Executor" min-width="160px" show-overflow-tooltip sortable>
                                 <template slot-scope="scope">
                                     <i class="iconfont icon-docker" v-if="scope.row.container"></i>
                                     <i class="iconfont icon-zhuji" v-if="!scope.row.container"></i>
@@ -46,8 +46,8 @@
                                     <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="serverIp" label="IP"></el-table-column>
-                            <el-table-column prop="groupName" label="分组" sortable>
+                            <el-table-column prop="serverIp" label="IP" width="120"></el-table-column>
+                            <el-table-column prop="groupName" label="分组" show-overflow-tooltip sortable>
                                 <template slot-scope="scope">
                                     {{scope.row.groupName || '--'}}
                                 </template>
