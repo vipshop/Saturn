@@ -43,7 +43,7 @@ export default {
   },
 };
 </script>
-<style lang="sass">
+<style lang="sass" scoped>
 .input-tags {
     padding: 10px;
     border: 1px solid #b7c0c9;
@@ -52,11 +52,11 @@ export default {
     height: 100px;
     overflow-y: auto;
 }
-.el-tag + .el-tag {
-  margin-left: 10px;
+.el-tag {
+  margin-right: 5px;
+  margin-bottom: 5px;
 }
 .button-new-tag {
-  margin-left: 10px;
   height: 24px;
   line-height: 24px;
   padding-top: 0;
