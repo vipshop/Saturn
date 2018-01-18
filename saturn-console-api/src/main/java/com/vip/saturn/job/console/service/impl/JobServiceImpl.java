@@ -1471,6 +1471,8 @@ public class JobServiceImpl implements JobService {
 		jobConfigVo.setStatus(
 				getJobStatus(jobConfigVo.getJobName(), curatorFrameworkOp, jobConfigVo.getEnabled()));
 
+		jobConfigVo.toVo();
+
 		return jobConfigVo;
 	}
 

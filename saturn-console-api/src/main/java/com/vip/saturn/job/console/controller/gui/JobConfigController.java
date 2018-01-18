@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.controller.gui;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
-import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobConfigVo;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
@@ -43,9 +43,10 @@ public class JobConfigController extends AbstractGUIController {
 	@PostMapping
 	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobName") @PathVariable String jobName, JobConfig jobConfig)
+			@AuditParam("jobName") @PathVariable String jobName, JobConfigVo jobConfigVo)
 			throws SaturnJobConsoleException {
-		jobService.updateJobConfig(namespace, jobConfig);
+		jobConfigVo.fromVo();
+		jobService.updateJobConfig(namespace, jobConfigVo);
 		return new SuccessResponseEntity();
 	}
 
