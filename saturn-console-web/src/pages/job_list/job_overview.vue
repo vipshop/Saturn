@@ -112,6 +112,9 @@
             <div v-if="isImportVisible">
                 <ImportFileDialog :import-data="importData" import-template-url="/console/static/jobTemplate/download" :import-url="importUrl" import-title="导入作业" @close-dialog="closeImportDialog" @import-success="importSuccess"></ImportFileDialog>
             </div>
+            <div v-if="isImportResultVisible">
+                <import-result-dialog :import-result="importResult" @close-dialog="closeImportResultDialog"></import-result-dialog>
+            </div>
         </div>
     </div>
 </template>
@@ -119,6 +122,7 @@
 <script>
 import jobInfoDialog from './job_info_dialog';
 import batchPriorityDialog from './batch_priority_dialog';
+import importResultDialog from './import_result_dialog';
 
 export default {
   data() {
@@ -131,6 +135,8 @@ export default {
       jobInfo: {},
       isBatchPriorityVisible: false,
       isImportVisible: false,
+      importResult: [],
+      isImportResultVisible: false,
       importData: {
         namespace: this.$route.params.domain,
       },
@@ -176,10 +182,14 @@ export default {
     closeImportDialog() {
       this.isImportVisible = false;
     },
-    importSuccess() {
+    importSuccess(importResult) {
       this.isImportVisible = false;
+      this.importResult = importResult;
+      this.isImportResultVisible = true;
+    },
+    closeImportResultDialog() {
+      this.isImportResultVisible = false;
       this.getJobList();
-      this.$message.successNotify('导入作业操作成功');
     },
     handleAdd() {
       this.isJobInfoVisible = true;
@@ -430,6 +440,7 @@ export default {
   components: {
     'job-info-dialog': jobInfoDialog,
     'batch-priority-dialog': batchPriorityDialog,
+    'import-result-dialog': importResultDialog,
   },
   created() {
     this.getJobList();

@@ -47,7 +47,7 @@ export default {
     },
     handleSuccess(response) {
       if (response.success) {
-        this.$emit('import-success');
+        this.$emit('import-success', response.obj);
       } else {
         this.$message.errorMessage(response.message);
       }
