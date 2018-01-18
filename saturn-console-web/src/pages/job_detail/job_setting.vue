@@ -25,8 +25,8 @@
                                     </el-tooltip>
                                 </el-form-item>
                                 <el-form-item class="form-annotation">
-                                    <span>1. 每10秒运行:*/10****?</span><br/>
-                                    <span>2. 每5分钟运行:0*/5***?</span>
+                                    <span>1. 每10秒运行: */10 * * * * ?</span><br/>
+                                    <span>2. 每5分钟运行: 0*/5 * * * ?</span>
                                 </el-form-item>
                             </el-col>
                         </el-row>
