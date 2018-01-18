@@ -75,36 +75,45 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		 */
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
 				boolean sendEventFlag = configurationService.needSendJobEnabledOrDisabledEvent();
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
-					if (jobScheduler != null && jobScheduler.getJob() != null) {
-						if (jobScheduler.getReportService() != null) {
-							jobScheduler.getReportService().clearInfoMap();
-						}
-						failoverService.removeFailoverInfo();
-						jobScheduler.getJob().enableJob();
-						if (sendEventFlag) {
-							configurationService.notifyJobEnabled();
-						}
+					if (!isJobNotNull()) {
+						return;
+					}
+
+					if (jobScheduler.getReportService() != null) {
+						jobScheduler.getReportService().clearInfoMap();
+					}
+					failoverService.removeFailoverInfo();
+					jobScheduler.getJob().enableJob();
+					if (sendEventFlag) {
+						configurationService.notifyJobEnabled();
 					}
 				} else {
-					if (jobScheduler != null && jobScheduler.getJob() != null) {
-						jobScheduler.getJob().disableJob();
-						failoverService.removeFailoverInfo(); // clear failover info when disable job.
-						if (sendEventFlag) {
-							configurationService.notifyJobDisabled();
-						}
+					if (!isJobNotNull()) {
+						return;
+					}
+
+					jobScheduler.getJob().disableJob();
+					failoverService.removeFailoverInfo(); // clear failover info when disable job.
+					if (sendEventFlag) {
+						configurationService.notifyJobDisabled();
 					}
 				}
 			}
 		}
 
+	}
+
+	private boolean isJobNotNull() {
+		return jobScheduler != null && jobScheduler.getJob() != null;
 	}
 
 	/**
@@ -114,8 +123,9 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				log.info("[{}] msg={} 's cron update", jobName, jobName);
 

@@ -1,36 +1,33 @@
 /**
- * Copyright 2016 vip.com.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
+ * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * </p>
+ * specific language governing permissions and limitations under the License. </p>
  */
 
 package com.vip.saturn.job.internal.server;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 作业控制监听管理器.
  * @author dylan.xue
  */
 public class JobOperationListenerManager extends AbstractListenerManager {
+
 	static Logger log = LoggerFactory.getLogger(JobOperationListenerManager.class);
 
 	private boolean isShutdown = false;
@@ -41,9 +38,6 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 	@Override
 	public void start() {
-		// addDataListener(new TriggerJobRunAtOnceListener(), jobName);
-		// addDataListener(new JobForcedToStopListener(), jobName);
-		// addDataListener(new JobDeleteListener(), jobName);
 		zkCacheManager.addTreeCacheListener(new TriggerJobRunAtOnceListener(),
 				JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, executorName)), 0);
 		zkCacheManager.addTreeCacheListener(new JobForcedToStopListener(),
@@ -73,8 +67,9 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())
 					&& ServerNode.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
@@ -97,8 +92,9 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if (ConfigurationNode.isToDeletePath(jobName, path)
 					&& (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())) {
 				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
@@ -116,8 +112,9 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
 				try {
 					log.info("[{}] msg={} is going to be stopped at once.", jobName, jobName);

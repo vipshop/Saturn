@@ -57,8 +57,9 @@ public class ControlListenerManager extends AbstractListenerManager {
 	class ReportPathListener extends AbstractJobListener {
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
-			if (isShutdown)
+			if (isShutdown) {
 				return;
+			}
 			if (ControlNode.isReportPath(jobName, path)
 					&& (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
 				log.info("[{}] msg={} received report event from console, start to flush data to zk.", jobName,

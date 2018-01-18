@@ -1,30 +1,27 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.trigger;
 
+import com.vip.saturn.job.basic.AbstractElasticJob;
+import com.vip.saturn.job.basic.SaturnConstant;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.basic.AbstractElasticJob;
-import com.vip.saturn.job.basic.SaturnConstant;
-
 /**
  * @author chembo.huang
- *
  */
 public class SaturnWorker implements Runnable {
-	static Logger log = LoggerFactory.getLogger(SaturnWorker.class);
 
+	static Logger log = LoggerFactory.getLogger(SaturnWorker.class);
+	private final Object sigLock = new Object();
 	private AbstractElasticJob job;
 	private volatile OperableTrigger triggerObj;
-	private final Object sigLock = new Object();
 	private volatile boolean paused = false;
 	private volatile boolean triggered = false;
 	private AtomicBoolean halted = new AtomicBoolean(false);
@@ -42,8 +39,9 @@ public class SaturnWorker implements Runnable {
 	}
 
 	private void initTrigger(Trigger trigger) throws SchedulerException {
-		if (trigger == null)
+		if (trigger == null) {
 			return;
+		}
 
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
@@ -138,17 +136,17 @@ public class SaturnWorker implements Runnable {
 					// 重置立即执行标志；
 					if (triggered) {
 						triggered = false;
-					} else if(goAhead){ // 非立即执行。即，执行时间到了，或者没有下次执行时间
+					} else if (goAhead) { // 非立即执行。即，执行时间到了，或者没有下次执行时间
 						goAhead = goAhead && !noFireTime; // 有下次执行时间，即执行时间到了，才执行作业
 						if (goAhead) { // 执行时间到了，更新执行时间
-							if(triggerObj != null) {
+							if (triggerObj != null) {
 								triggerObj.triggered(null);
 							}
 						} else { // 没有下次执行时间，则尝试睡一秒，防止不停的循环导致CPU使用率过高（如果cron不再改为周期性执行）
-                            try {
-                                sigLock.wait(1000L);
-                            } catch (InterruptedException ignore) {
-                            }
+							try {
+								sigLock.wait(1000L);
+							} catch (InterruptedException ignore) {
+							}
 						}
 					}
 				}

@@ -101,8 +101,9 @@ public class FailoverListenerManager extends AbstractListenerManager {
 		@Override
 		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
 			try {
-				if (isShutdown)
+				if (isShutdown) {
 					return;
+				}
 				if (executionPath.equals(path)) {
 					return;
 				}
@@ -149,8 +150,9 @@ public class FailoverListenerManager extends AbstractListenerManager {
 				@Override
 				public void run() {
 					try {
-						if (isShutdown)
+						if (isShutdown) {
 							return;
+						}
 						if (!executionService.isRunning(item)) {
 							failover(item);
 						}
@@ -176,8 +178,9 @@ public class FailoverListenerManager extends AbstractListenerManager {
 				@Override
 				public void run() {
 					try {
-						if (isShutdown)
+						if (isShutdown) {
 							return;
+						}
 						if (!executionService.isFailover(item)) {
 							failover(item);
 						}
