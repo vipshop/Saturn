@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.domain;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,9 @@ public class JobConfigVo extends JobConfig {
 		List<String> list = new ArrayList<>();
 		String[] split = str.split(",");
 		for (String temp : split) {
-			list.add(temp);
+			if (StringUtils.isNotBlank(temp)) {
+				list.add(temp);
+			}
 		}
 		return list;
 	}
@@ -51,9 +55,12 @@ public class JobConfigVo extends JobConfig {
 		}
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0, size = list.size(); i < size; i++) {
-			sb.append(list.get(i));
-			if (i < size - 1) {
-				sb.append(",");
+			String element = list.get(i);
+			if (StringUtils.isNotBlank(element)) {
+				if (sb.length() > 0) {
+					sb.append(",");
+				}
+				sb.append(element);
 			}
 		}
 		return sb.toString();
