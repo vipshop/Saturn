@@ -239,11 +239,11 @@ public class JobConfiguration {
 		}
 
 		failover = Boolean
-				.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.FAILOVER)));
+				.parseBoolean(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.FAILOVER)));
 		enabled = Boolean
-				.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED)));
+				.parseBoolean(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED)));
 		description = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.DESCRIPTION));
-		showNormalLog = Boolean.valueOf(
+		showNormalLog = Boolean.parseBoolean(
 				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.SHOW_NORMAL_LOG)));
 		queueName = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.QUEUE_NAME));
 		channelName = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CHANNEL_NAME));
@@ -262,10 +262,12 @@ public class JobConfiguration {
 		}
 
 		localMode = Boolean
-				.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
+				.parseBoolean(
+						regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
 		useSerial = Boolean
-				.valueOf(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
-		useDispreferList = Boolean.valueOf(
+				.parseBoolean(
+						regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
+		useDispreferList = Boolean.parseBoolean(
 				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
 	}
 

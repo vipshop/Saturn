@@ -177,7 +177,7 @@ public class ConfigurationService extends AbstractSaturnService {
 			String item = "";
 			String exec = "";
 
-			int index = each.indexOf("=");
+			int index = each.indexOf('=');
 			if (index > -1) {
 				item = each.substring(0, index).trim();
 				exec = each.substring(index + 1, each.length()).trim();
@@ -208,7 +208,7 @@ public class ConfigurationService extends AbstractSaturnService {
 				String item = next.getKey();
 				String exec = next.getValue();
 				try {
-					result.put(Integer.parseInt(item), exec);
+					result.put(Integer.valueOf(item), exec);
 				} catch (final NumberFormatException ex) {
 					throw new ShardingItemParametersException("Sharding item parameters key '%s' is not an integer.",
 							item);
@@ -304,94 +304,64 @@ public class ConfigurationService extends AbstractSaturnService {
 		String pausePeriodDate = jobConfiguration.getPausePeriodDate();
 		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
 		if (!pausePeriodDateIsEmpty) {
-			String[] periodsDate = pausePeriodDate.split(",");
-			if (periodsDate != null) {
-				for (String period : periodsDate) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] MdLeft = left.split("/");
-						String[] MdRight = right.split("/");
-						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
-							try {
-								int MLeft = Integer.parseInt(MdLeft[0]);
-								int dLeft = Integer.parseInt(MdLeft[1]);
-								int MRight = Integer.parseInt(MdRight[0]);
-								int dRight = Integer.parseInt(MdRight[1]);
-								dateIn = (M > MLeft || M == MLeft && d >= dLeft) // NOSONAR
-										&& (M < MRight || M == MRight && d <= dRight); // NOSONAR
-								if (dateIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								dateIn = false;
-								break;
-							}
-						} else {
-							dateIn = false;
-							break;
-						}
-					} else {
-						dateIn = false;
-						break;
-					}
-				}
-			}
+			dateIn = parsePausePeriodTime(M, d, pausePeriodDate);
 		}
 		boolean timeIn = false;
 		String pausePeriodTime = jobConfiguration.getPausePeriodTime();
 		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
 		if (!pausePeriodTimeIsEmpty) {
-			String[] periodsTime = pausePeriodTime.split(",");
-			if (periodsTime != null) {
-				for (String period : periodsTime) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] hmLeft = left.split(":");
-						String[] hmRight = right.split(":");
-						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
-							try {
-								int hLeft = Integer.parseInt(hmLeft[0]);
-								int mLeft = Integer.parseInt(hmLeft[1]);
-								int hRight = Integer.parseInt(hmRight[0]);
-								int mRight = Integer.parseInt(hmRight[1]);
-								timeIn = (h > hLeft || h == hLeft && m >= mLeft) // NOSONAR
-										&& (h < hRight || h == hRight && m <= mRight); // NOSONAR
-								if (timeIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								timeIn = false;
-								break;
-							}
-						} else {
-							timeIn = false;
-							break;
-						}
-					} else {
-						timeIn = false;
-						break;
-					}
-				}
-			}
+			timeIn = parsePausePeriodTime(h, m, pausePeriodTime);
 		}
 
 		if (pausePeriodDateIsEmpty) {
 			if (pausePeriodTimeIsEmpty) {
 				return false;
-			} else {
-				return timeIn;
 			}
-		} else {
-			if (pausePeriodTimeIsEmpty) {
-				return dateIn;
+			return timeIn;
+		}
+
+		if (pausePeriodTimeIsEmpty) {
+			return dateIn;
+		}
+		return dateIn && timeIn;
+	}
+
+	private boolean parsePausePeriodTime(int h, int m, String pausePeriodTimeOrDateStr) {
+		String[] periodsTime = pausePeriodTimeOrDateStr.split(",");
+		if (periodsTime == null) {
+			return false;
+		}
+
+		boolean result = false;
+		for (String period : periodsTime) {
+			String[] tmp = period.trim().split("-");
+			if (tmp != null && tmp.length == 2) {
+				String left = tmp[0].trim();
+				String right = tmp[1].trim();
+				String[] hmLeft = left.split(":");
+				String[] hmRight = right.split(":");
+				if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
+					try {
+						int hLeft = Integer.parseInt(hmLeft[0]);
+						int mLeft = Integer.parseInt(hmLeft[1]);
+						int hRight = Integer.parseInt(hmRight[0]);
+						int mRight = Integer.parseInt(hmRight[1]);
+						result = (h > hLeft || h == hLeft && m >= mLeft) // NOSONAR
+								&& (h < hRight || h == hRight && m <= mRight); // NOSONAR
+						if (result) {
+							return true;
+						}
+					} catch (NumberFormatException e) {
+						return false;
+					}
+				} else {
+					return false;
+				}
 			} else {
-				return dateIn && timeIn;
+				return false;
 			}
 		}
+		return result;
 	}
 
 	/**
