@@ -29,7 +29,7 @@
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
-                                <el-button @click="batchDelete()"><i class="fa fa-trash text-btn"></i>删除</el-button>
+                                <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -65,7 +65,7 @@
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">
-                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle"></i></el-button>
+                                        <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
@@ -74,7 +74,7 @@
                                         <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
-                                        <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
+                                        <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
