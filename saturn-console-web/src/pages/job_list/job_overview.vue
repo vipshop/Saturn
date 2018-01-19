@@ -299,6 +299,7 @@ export default {
           cron: data.cron,
           shardingTotalCount: data.shardingTotalCount,
           shardingItemParameters: data.shardingItemParameters,
+          timeZone: data.timeZone,
           description: data.description,
         };
         this.isJobInfoVisible = true;
