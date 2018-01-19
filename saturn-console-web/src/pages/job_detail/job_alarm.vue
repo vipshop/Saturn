@@ -1,5 +1,5 @@
 <template>
-    <div class="margin-20">
+    <div class="margin-20" v-loading="loading" element-loading-text="请稍等···">
         <div v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === ''">
             <el-col :span="24">
                 <div class="job-alarm-empty">
@@ -52,28 +52,29 @@
 export default {
   data() {
     return {
+      loading: false,
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
-      abnormalJob: {},
-      timeoutJob: {},
-      unableFailoverJob: {},
+      abnormalJob: '',
+      timeoutJob: '',
+      unableFailoverJob: '',
     };
   },
   methods: {
     getAbnormal() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isAbnormal`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isAbnormal`).then((data) => {
         this.abnormalJob = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取异常作业信息请求失败！'); });
     },
     getTimeout() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isTimeout4Alarm`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isTimeout4Alarm`).then((data) => {
         this.timeoutJob = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取超时作业信息请求失败！'); });
     },
     getUnableFailover() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isUnableFailover`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isUnableFailover`).then((data) => {
         this.unableFailoverJob = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取无法高可用作业信息请求失败！'); });
@@ -93,9 +94,11 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
     },
     init() {
-      this.getAbnormal();
-      this.getTimeout();
-      this.getUnableFailover();
+      this.loading = true;
+      Promise.all(
+      [this.getAbnormal(), this.getTimeout(), this.getUnableFailover()]).then(() => {
+        this.loading = false;
+      });
     },
   },
   created() {
