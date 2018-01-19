@@ -2,24 +2,26 @@
     <div>
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
         <Aside :sidebar-menus="sidebarMenus" headerHeight="90">
-            <div class="job-detail-header">
-                <div class="pull-left job-detail-title">
-                  <span class="job-span">
-                      <i class="iconfont icon-java" v-if="jobInfo.jobType === 'JAVA_JOB'"></i>
-                      <i class="iconfont icon-shell" v-if="jobInfo.jobType === 'SHELL_JOB'"></i>
-                      作业 : {{jobName}}
-                  </span>
-                  <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态: {{translateStatus[jobInfo.status]}}</el-tag>
-                </div>
-                <div class="pull-right">
-                    <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
-                    <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
-                    <el-button size="small" @click="handleOperate('runAtOnce')" v-if="jobInfo.enabled"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
-                    <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING' || !jobInfo.enabled"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
-                    <el-button size="small" @click="handleDelete" v-if="jobInfo.status === 'STOPPED' || !jobInfo.enabled"><i class="fa fa-trash text-btn"></i>删除</el-button>
-                </div>
+            <div v-loading="loading" element-loading-text="请稍等···">
+              <div class="job-detail-header">
+                  <div class="pull-left job-detail-title">
+                    <span class="job-span">
+                        <i class="iconfont icon-java" v-if="jobInfo.jobType === 'JAVA_JOB'"></i>
+                        <i class="iconfont icon-msnui-logo-linux" v-if="jobInfo.jobType === 'SHELL_JOB'"></i>
+                        作业 : {{jobName}}
+                    </span>
+                    <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态: {{translateStatus[jobInfo.status]}}</el-tag>
+                  </div>
+                  <div class="pull-right">
+                      <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
+                      <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
+                      <el-button size="small" @click="handleOperate('runAtOnce')" v-if="jobInfo.enabled"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
+                      <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING' || !jobInfo.enabled"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
+                      <el-button size="small" @click="handleDelete" v-if="jobInfo.status === 'STOPPED' || !jobInfo.enabled"><i class="fa fa-trash text-btn"></i>删除</el-button>
+                  </div>
+              </div>
+              <router-view></router-view>
             </div>
-            <router-view v-loading="loading" element-loading-text="请稍等···"></router-view>
         </Aside>
     </div>
 </template>

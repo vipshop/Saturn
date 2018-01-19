@@ -1,10 +1,17 @@
 <template>
     <div class="margin-20">
-        <div>
+        <div v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === ''">
+            <el-col :span="24">
+                <div class="job-alarm-empty">
+                    <span><i class="fa fa-info-circle"></i>当前没有告警信息</span>
+                </div>
+            </el-col>
+        </div>
+        <div v-else>
             <el-row :gutter="20">
-                <el-col :span="8" v-if="abnormalJob !== ''">
+                <el-col :span="8" v-show="abnormalJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
-                        <div slot="title" class="job-alarm-title">异常作业</div>
+                        <div slot="title" class="job-alarm-title">异常告警</div>
                         <div slot="content">
                             <div class="job-alarm-content">
                                 <div class="panel-row">{{abnormalJob.nextFireTimeWithTimeZoneFormat}}</div>
@@ -14,9 +21,9 @@
                         </div>
                     </Panel>
                 </el-col>
-                <el-col :span="8" v-if="timeoutJob !== ''">
+                <el-col :span="8" v-show="timeoutJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
-                        <div slot="title" class="job-alarm-title">超时作业</div>
+                        <div slot="title" class="job-alarm-title">超时告警</div>
                         <div slot="content">
                             <div class="job-alarm-content">
                                 <div class="panel-row">超时秒数: {{timeoutJob.timeout4AlarmSeconds}}s</div>
@@ -26,9 +33,9 @@
                         </div>
                     </Panel>
                 </el-col>
-                <el-col :span="8" v-if="unableFailoverJob !== ''">
+                <el-col :span="8" v-show="unableFailoverJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
-                        <div slot="title" class="job-alarm-title">无法高可用作业</div>
+                        <div slot="title" class="job-alarm-title">无法高可用告警</div>
                         <div slot="content">
                             <div class="job-alarm-content">
                                 <div class="panel-row">域等级: {{$map.degreeMap[unableFailoverJob.degree]}}</div>
@@ -36,11 +43,6 @@
                             </div>
                         </div>
                     </Panel>
-                </el-col>
-                <el-col :span="24" v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === ''">
-                    <div class="job-alarm-empty">
-                        <span><i class="fa fa-info-circle"></i>当前没有告警信息</span>
-                    </div>
                 </el-col>
             </el-row>
         </div>
@@ -103,6 +105,7 @@ export default {
 </script>
 <style lang="sass" scoped>
 .job-alarm-panel {
+    height: 140px;
     animation:alarmBkg 2s infinite;
 	-webkit-animation:alarmBkg 2s infinite;
     animation-timing-function:linear;
