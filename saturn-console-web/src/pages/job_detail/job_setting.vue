@@ -71,8 +71,8 @@
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="preferListList" label="优先executor">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferListList" style="width: 100%;">
+                                <el-form-item prop="preferList" label="优先executor">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.preferListProvided" :label="item.executorName" :value="item.executorName" :key="item.executorName">
                                             <span style="float: left">{{ item.executorName }}</span>
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
@@ -136,7 +136,7 @@
                         <el-row>
                             <el-col :span="11">
                                 <el-form-item prop="timeZone" label="时区">
-                                    <el-select size="small" filterable v-model="jobSettingInfo.timeZone">
+                                    <el-select filterable v-model="jobSettingInfo.timeZone" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.timeZonesProvided" :label="item" :value="item" :key="item"></el-option>
                                     </el-select>
                                 </el-form-item>
@@ -154,8 +154,8 @@
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="dependenciesList" label="依赖作业">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependenciesList" style="width: 100%;">
+                                <el-form-item prop="dependencies" label="依赖作业">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependencies" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.dependenciesProvided" :label="item" :value="item" :key="item"> </el-option>
                                     </el-select>
                                 </el-form-item>
@@ -163,18 +163,18 @@
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="pausePeriodDateList" label="暂停日期段">
+                                <el-form-item prop="pausePeriodDate" label="暂停日期段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个日期段，逗号隔开。例如03/12-03/15,11/23-12/25。当日期为空，时间段不为空，表示每天那些时间段都暂停" placement="bottom">
-                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodDateList" title="日期段"></InputTags>
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodDate" title="日期段"></InputTags>
                                     </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="pausePeriodTimeList" label="暂停时间段">
+                                <el-form-item prop="pausePeriodTime" label="暂停时间段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开。例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停" placement="bottom">
-                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTimeList" title="时间段"></InputTags>
+                                        <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTime" title="时间段"></InputTags>
                                     </el-tooltip>
                                 </el-form-item>
                             </el-col>
@@ -229,10 +229,10 @@ export default {
             if (this.jobSettingInfo.localMode) {
               this.jobSettingInfo.shardingTotalCount = 1;
             }
+            this.jobSettingInfoRequest();
           } else {
             this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
           }
-          this.jobSettingInfoRequest();
         }
       });
     },
