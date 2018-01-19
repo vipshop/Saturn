@@ -60,7 +60,7 @@
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
                                         <el-button type="text">
                                           <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB'"></i>
-                                          <i class="iconfont icon-shell" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
+                                          <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
                                           {{scope.row.jobName}}
                                         </el-button>
                                     </router-link>

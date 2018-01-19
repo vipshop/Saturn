@@ -1,5 +1,5 @@
 <template>
-    <el-dialog title="预测" :visible.sync="isVisible" :before-close="closeDialog">
+    <el-dialog title="预测" width="500px" :visible.sync="isVisible" :before-close="closeDialog">
         <el-form label-width="180px">
             <el-form-item label="检验结果">
                 <el-col :span="20">
@@ -12,9 +12,7 @@
                 </el-col>
             </el-form-item>
             <el-form-item label="预测执行时间点">
-                <el-col :span="20">
-                    <el-tag class="form-tags" type="" v-for="item in cronPredictInfo.nextFireTimes" :key="item">{{item}}</el-tag>
-                </el-col>
+                <el-tag class="form-tags" type="" v-for="item in cronPredictInfo.nextFireTimes" :key="item">{{item}}</el-tag>
             </el-form-item>
         </el-form>
     </el-dialog>
