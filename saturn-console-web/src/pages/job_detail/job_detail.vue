@@ -9,7 +9,7 @@
                       <i class="iconfont icon-shell" v-if="jobInfo.jobType === 'SHELL_JOB'"></i>
                       作业 : {{jobName}}
                   </span>
-                  <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态:{{jobInfo.status}}</el-tag>
+                  <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态: {{translateStatus[jobInfo.status]}}</el-tag>
                 </div>
                 <div class="pull-right">
                     <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
@@ -43,6 +43,12 @@ export default {
         RUNNING: 'success',
         STOPPING: 'warning',
         STOPPED: '',
+      },
+      translateStatus: {
+        READY: '已就绪',
+        RUNNING: '运行中',
+        STOPPING: '停止中',
+        STOPPED: '已停止',
       },
     };
   },
