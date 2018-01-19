@@ -44,7 +44,7 @@
                             {{$map.degreeMap[scope.row.jobDegree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="nextFireTimeWithTimeZoneFormat" label="本该调度时间"></el-table-column>
+                    <el-table-column prop="nextFireTimeWithTimeZoneFormat" label="本该调度时间" min-width="120px"></el-table-column>
                     <el-table-column prop="cause" label="异常原因" min-width="100">
                         <template slot-scope="scope">
                             {{$map.causeMap[scope.row.cause]}}

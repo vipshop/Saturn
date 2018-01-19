@@ -29,17 +29,23 @@
                     </el-col>
                 </el-form-item>
                 <el-form-item class="form-annotation">
-                    <span>1. 每10秒运行: */10 * * * * ?</span><br/>
-                    <span>2. 每5分钟运行: 0*/5 * * * ?</span>
+                    <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
+                    <span>2. 每小时运行一次的表达式：0 * * * * ?</span>
                 </el-form-item>
                 <el-form-item label="作业分片总数" prop="shardingTotalCount">
                     <el-col :span="18">
                         <el-input-number v-model="jobInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="分片序列号/参数对照表" prop="shardingItemParameters">
+                <el-form-item label="分片参数" prop="shardingItemParameters">
                     <el-col :span="18">
-                        <el-tooltip popper-class="form-tooltip" content="分片序列号和参数用等号分隔，多个键值对用逗号分隔，类似map。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c; 英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替,。特别的，对于本地模式的作业，只需要输入如：*=a，就可以了。" placement="bottom">
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                分片序列号和参数用等号分隔，多个键值对用逗号分隔 。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c;<br/>
+                                英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替。<br/>
+                                如果作业所有分片无须参数，则只要保持值为0。例如有2个分片无须参数，则为“0=0”。<br/>
+                                对于本地模式的作业，格式为*=value
+                            </div>
                             <el-input type="textarea" v-model="jobInfo.shardingItemParameters"></el-input>
                         </el-tooltip>
                     </el-col>

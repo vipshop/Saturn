@@ -2,9 +2,10 @@
     <div>
         <div class="top-bar">
             <i class="fa fa-home"></i>
-            <span>当前域：
+            <span>当前域: 
                 <router-link tag="a" :to="{ name: 'job_overview', params: { domain: domain } }">{{this.domain}}</router-link>
             </span>
+            <span>所属集群: {{domainInfo.zkAlias}}</span>
             <el-tooltip placement="right">
                 <div slot="content">
                     运维负责人：<span>{{domainInfo.techAdmin || '空'}}</span><br/>
@@ -30,7 +31,7 @@ export default {
     line-height: 40px;
     color: #97a8be;
     >span {
-        margin-right: 5px;
+        margin-right: 15px;
         a {
             color: #c2d0d7;
             &:hover {

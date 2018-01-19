@@ -43,8 +43,8 @@
                             <div class="page-table-header-separator"></div>
                             <div>
                                 <el-button @click="batchEnabled()"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
-                                <el-button @click="batchDisabled()"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
-                                <el-button @click="batchDelete()"><i class="fa fa-trash text-btn"></i>删除</el-button>
+                                <el-button @click="batchDisabled()"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
+                                <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                             </div>
                             <div class="pull-right">
@@ -76,7 +76,7 @@
                             <el-table-column label="分片情况">
                                 <template slot-scope="scope">
                                     <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
-                                        <el-tag type="primary">{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
+                                        <el-tag :type="$array.strToArray(scope.row.shardingList).length === 0 ? '' : 'primary'">{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
                                         <div slot="content" v-for="item in $array.strToArray(scope.row.shardingList)" :key="item">
                                             <div>{{item}}</div>
                                         </div>
@@ -89,13 +89,13 @@
                                         <el-button type="text" @click="handleActive(scope.row, true)"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="禁用" placement="top" v-if="scope.row.status === 'READY' || scope.row.status === 'RUNNING'">
-                                        <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle"></i></el-button>
+                                        <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="复制" placement="top">
                                         <el-button type="text" @click="handleCopy(scope.row)"><i class="fa fa-clone"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'STOPPED'">
-                                        <el-button type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"></el-button>
+                                        <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
@@ -299,6 +299,7 @@ export default {
           cron: data.cron,
           shardingTotalCount: data.shardingTotalCount,
           shardingItemParameters: data.shardingItemParameters,
+          timeZone: data.timeZone,
           description: data.description,
         };
         this.isJobInfoVisible = true;

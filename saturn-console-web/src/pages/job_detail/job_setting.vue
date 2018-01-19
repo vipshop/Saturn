@@ -1,7 +1,7 @@
 <template>
     <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
-            <el-button type="primary" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
+            <el-button type="primary" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
@@ -25,8 +25,8 @@
                                     </el-tooltip>
                                 </el-form-item>
                                 <el-form-item class="form-annotation">
-                                    <span>1. 每10秒运行: */10 * * * * ?</span><br/>
-                                    <span>2. 每5分钟运行: 0*/5 * * * ?</span>
+                                    <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
+                                    <span>2. 每小时运行一次的表达式：0 * * * * ?</span>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -39,21 +39,22 @@
                                     <el-input value="N/A" disabled style="width: 100%;"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="5">
-                                <el-form-item prop="localMode" label="本地模式" label-width="80px">
+                            <el-col :span="11">
+                                <el-form-item prop="localMode" label="本地模式">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="6" v-if="!jobSettingInfo.localMode">
-                                <el-form-item prop="onlyUsePreferList" label="只使用优先executor">
-                                    <el-switch v-model="jobSettingInfo.onlyUsePreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="22">
-                                <el-form-item prop="shardingItemParameters" label="分片序列号/参数对照表">
-                                    <el-tooltip popper-class="form-tooltip" content="分片序列号和参数用等号分隔，多个键值对用逗号分隔，类似map。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c; 英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替,。特别的，对于本地模式的作业，只需要输入如：*=a，就可以了。" placement="bottom">
+                                <el-form-item prop="shardingItemParameters" label="分片参数">
+                                    <el-tooltip popper-class="form-tooltip" placement="bottom">
+                                        <div slot="content">
+                                            分片序列号和参数用等号分隔，多个键值对用逗号分隔 。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c;<br/>
+                                            英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替。<br/>
+                                            如果作业所有分片无须参数，则只要保持值为0。例如有2个分片无须参数，则为“0=0”。<br/>
+                                            对于本地模式的作业，格式为*=value
+                                        </div>
                                         <el-input type="textarea" v-model="jobSettingInfo.shardingItemParameters"></el-input>
                                     </el-tooltip>
                                 </el-form-item>
@@ -77,6 +78,13 @@
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
                                         </el-option>
                                     </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="6" v-if="!jobSettingInfo.localMode">
+                                <el-form-item prop="onlyUsePreferList" label="只使用优先executor">
+                                    <el-switch v-model="jobSettingInfo.onlyUsePreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -174,7 +182,7 @@
                     </div>
                 </el-collapse-item>
             </el-collapse>
-            <el-button type="primary" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-undo"></i>更新</el-button>
+            <el-button type="primary" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
         </el-form>
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
@@ -198,6 +206,7 @@ export default {
       statusOnline: {
         ONLINE: '在线',
         OFFLINE: '离线',
+        DOCKER: '容器',
       },
     };
   },
@@ -218,12 +227,12 @@ export default {
         if (valid) {
           if (this.validateLocalMode()) {
             if (this.jobSettingInfo.localMode) {
-              this.jobSettingInfo.shardingTotalCount = 'N/A';
-              this.jobSettingInfoRequest();
+              this.jobSettingInfo.shardingTotalCount = 1;
             }
           } else {
             this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
           }
+          this.jobSettingInfoRequest();
         }
       });
     },
