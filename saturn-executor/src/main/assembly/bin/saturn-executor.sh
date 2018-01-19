@@ -196,7 +196,7 @@ START()
   LOG_FMT "Log redirects to ${LOGDIR}"
 
 	if [ ! -d $LOGDIR ]; then
-		LOG_FMT "Warning, the log directory of $LOGDIR is not existed, try to create it."
+		LOG_FMT "[WARNING] the log directory of $LOGDIR is not existed, try to create it."
 		mkdir -p $LOGDIR
 		if [ -d $LOGDIR ]; then
 			LOG_FMT "Create log directory successfully."
@@ -212,7 +212,7 @@ START()
 
 	if [ "$PID" != "" ]; then
 		if [ -d /proc/$PID ];then
-		 LOG_FMT "Saturn executor is running, please stop it first!!"
+		 LOG_FMT "Saturn executor is running as process:$PID, please stop it first!!"
 		 exit -1
 		fi
 	fi
@@ -249,7 +249,7 @@ START()
       CHECK_STATUS=`cat ${STATUS_FILE}`
     else
       echo -e ""
-      LOG_FMT "Saturn executor start may fails, checking not finished until reach the starting timeout! See ${OUTFILE} for more information."
+      LOG_FMT "Saturn executor start may be fail! See ${OUTFILE} for more information."
       exit -1
     fi
 	done
@@ -264,7 +264,7 @@ START()
 
 	if [ $CHECK_STATUS = "ERROR" ]; then
 		kill -9 $PID
-		LOG_FMT "Saturn executor start failed ! See ${OUTFILE} for more information."
+		LOG_FMT "Saturn executor start is failed ! See ${OUTFILE} for more information."
 		exit -1
 	fi
 
@@ -281,17 +281,16 @@ DUMP()
       LOGDIR=`cat $LOGDIR_FILE`
       LOG_FILE_POSTFIX="`date '+%Y-%m-%d-%H%M%S'`"
       cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
-      LOG_FMT "Backup gc log done: gc_${LOG_FILE_POSTFIX}.log"
-      LOG_FMT "Dump executor successfully."
+      LOG_FMT "Backup gc log is done: gc_${LOG_FILE_POSTFIX}.log"
 
       PID=$(GET_PID)
       if [ "$PID" != "" ]; then
         if [ -d /proc/${PID} ];then
-          LOG_FMT "Start doing thread dump."
+          LOG_FMT "Start to do thread dump."
           # do the thread dump
           LOG_FILE_POSTFIX="${LOG_FILE_POSTFIX}_${PID}"
           jstack -l ${PID} > ${LOGDIR}/dump_${LOG_FILE_POSTFIX}.log
-          LOG_FMT "Thread dump done: dump_${LOG_FILE_POSTFIX}.log"
+          LOG_FMT "Thread dump is done: dump_${LOG_FILE_POSTFIX}.log"
         else
           LOG_FMT "Executor(pid:${PID}) is not running."
         fi
@@ -299,7 +298,7 @@ DUMP()
         LOG_FMT "Executor is not running."
       fi
     else
-      LOG_FMT "Dump failed, because the LOGDIR is not found."
+      LOG_FMT "[WARNING] Dump failed as the LOGDIR is not found."
     fi
 }
 
@@ -327,10 +326,10 @@ STOP()
           fi
         done
         echo -e ""
-        LOG_FMT "Kill the process successfully."
+        LOG_FMT "Kill the executor process successfully."
         LOG_STARTLOG "Saturn executor is stopped."
       else
-        LOG_FMT "Saturn executor is not running."
+        LOG_FMT "Saturn executor with PID:$PID is not running."
 		  fi
 	  else
 		  LOG_FMT "Saturn executor is not running."
@@ -344,7 +343,7 @@ RESTART()
         chmod +x ${LAST_START_COMMAND_FILE}
         ${LAST_START_COMMAND_FILE}
     else
-        LOG_FMT "The ${LAST_START_COMMAND_FILE} is not existing."
+        LOG_FMT "[WARNING] Cannot restart the executor as the ${LAST_START_COMMAND_FILE} is not existing."
     fi
 }
 
@@ -356,7 +355,7 @@ STATUS()
     if [ "$PID" != "" ] ; then
         if [ -d /proc/$PID ] ; then
             RUN_PARAMS=`cat ${STATUS_FILE}`
-            LOG_FMT "Saturn executor is running, params are : ${RUN_PARAMS}."
+            LOG_FMT "Saturn executor with PID:$PID is running, params are : ${RUN_PARAMS}."
             exit 0
         fi
     fi
