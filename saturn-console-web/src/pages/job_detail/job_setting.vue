@@ -39,14 +39,9 @@
                                     <el-input value="N/A" disabled style="width: 100%;"></el-input>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="5">
-                                <el-form-item prop="localMode" label="本地模式" label-width="80px">
+                            <el-col :span="11">
+                                <el-form-item prop="localMode" label="本地模式">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="6" v-if="!jobSettingInfo.localMode">
-                                <el-form-item prop="onlyUsePreferList" label="只使用优先executor">
-                                    <el-switch v-model="jobSettingInfo.onlyUsePreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -77,6 +72,13 @@
                                             <span style="float: left">({{ statusOnline[item.type] }})</span>
                                         </el-option>
                                     </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="6" v-if="!jobSettingInfo.localMode">
+                                <el-form-item prop="onlyUsePreferList" label="只使用优先executor">
+                                    <el-switch v-model="jobSettingInfo.onlyUsePreferList"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -218,12 +220,12 @@ export default {
         if (valid) {
           if (this.validateLocalMode()) {
             if (this.jobSettingInfo.localMode) {
-              this.jobSettingInfo.shardingTotalCount = 'N/A';
-              this.jobSettingInfoRequest();
+              this.jobSettingInfo.shardingTotalCount = 1;
             }
           } else {
             this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
           }
+          this.jobSettingInfoRequest();
         }
       });
     },
