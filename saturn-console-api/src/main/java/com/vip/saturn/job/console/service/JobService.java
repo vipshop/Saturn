@@ -2,6 +2,8 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.vo.GetJobConfigVo;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -58,9 +60,9 @@ public interface JobService {
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	JobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
+	GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void updateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+	void updateJobConfig(String namespace, UpdateJobConfigVo jobConfig) throws SaturnJobConsoleException;
 
 	List<String> getAllJobNamesFromZK(String namespace) throws SaturnJobConsoleException;
 

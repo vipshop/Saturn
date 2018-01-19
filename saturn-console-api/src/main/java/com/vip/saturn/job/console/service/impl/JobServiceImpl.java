@@ -18,6 +18,8 @@ import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.*;
+import com.vip.saturn.job.console.vo.GetJobConfigVo;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import jxl.Cell;
 import jxl.CellType;
@@ -1450,35 +1452,38 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public JobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
+	public GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobName));
 		}
-		JobConfigVo jobConfigVo = new JobConfigVo();
-		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfigVo);
-		jobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
-		jobConfigVo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
+		GetJobConfigVo getJobConfigVo = new GetJobConfigVo();
+		JobConfig jobConfig = new JobConfig();
+		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
+		getJobConfigVo.copyFrom(jobConfig);
+
+		getJobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
+		getJobConfigVo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
 
 		List<String> unSystemJobNames = getUnSystemJobNames(namespace);
 		if (unSystemJobNames != null) {
 			unSystemJobNames.remove(jobName);
-			jobConfigVo.setDependenciesProvided(unSystemJobNames);
+			getJobConfigVo.setDependenciesProvided(unSystemJobNames);
 		}
 
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
-		jobConfigVo.setStatus(
-				getJobStatus(jobConfigVo.getJobName(), curatorFrameworkOp, jobConfigVo.getEnabled()));
+		getJobConfigVo.setStatus(
+				getJobStatus(getJobConfigVo.getJobName(), curatorFrameworkOp, getJobConfigVo.getEnabled()));
 
-		jobConfigVo.toVo();
-
-		return jobConfigVo;
+		return getJobConfigVo;
 	}
 
 	@Transactional
 	@Override
-	public void updateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+	public void updateJobConfig(String namespace, UpdateJobConfigVo updateJobConfigVo)
+			throws SaturnJobConsoleException {
+		JobConfig jobConfig = updateJobConfigVo.toJobConfig();
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {

@@ -1,17 +1,9 @@
 package com.vip.saturn.job.console.springboot.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
 import com.vip.saturn.job.console.controller.gui.SystemConfigController;
 import com.vip.saturn.job.console.domain.JobConfigMeta;
-import com.vip.saturn.job.console.domain.JobConfigVo;
-import java.util.List;
-import java.util.Map;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +11,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(SystemConfigController.class)
@@ -34,11 +33,11 @@ public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
 		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
 		Map<String, Object> objValue = (Map<String, Object>) resultMap.get("obj");
 		assertEquals(3, objValue.size());
-		List<JobConfigVo> metas = (List<JobConfigVo>) objValue.get("job_configs");
+		List<JobConfigMeta> metas = (List<JobConfigMeta>) objValue.get("job_configs");
 		assertEquals(1, metas.size());
-		metas = (List<JobConfigVo>) objValue.get("executor_configs");
+		metas = (List<JobConfigMeta>) objValue.get("executor_configs");
 		assertEquals(1, metas.size());
-		metas = (List<JobConfigVo>) objValue.get("cluster_configs");
+		metas = (List<JobConfigMeta>) objValue.get("cluster_configs");
 		assertEquals(4, metas.size());
 	}
 }
