@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -36,8 +36,8 @@ import java.util.concurrent.Executors;
 
 /**
  * 弹性化分布式作业配置服务.
- * 
- * 
+ *
+ *
  */
 public class ConfigurationService extends AbstractSaturnService {
 
@@ -127,11 +127,11 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 判断是否需要发送Enabled或者Disabled事件
-	 * 
+	 *
 	 * 非Local模式的作业，所有的Executor都会收到事件
-	 * 
+	 *
 	 * 对于Local模式的作业，如果配置了优先Executor，那么事件只会给优先Executor的服务器发送
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean needSendJobEnabledOrDisabledEvent() {
@@ -147,7 +147,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取作业分片总数.
-	 * 
+	 *
 	 * @return 作业分片总数
 	 */
 	public int getShardingTotalCount() {
@@ -161,7 +161,7 @@ public class ConfigurationService extends AbstractSaturnService {
 	/**
 	 * 获取分片序列号和个性化参数对照表.<br>
 	 * 如果是本地模式的作业，则获取到[-1=xx]
-	 * 
+	 *
 	 * @return 分片序列号和个性化参数对照表
 	 */
 	public Map<Integer, String> getShardingItemParameters() {
@@ -220,7 +220,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取作业自定义参数.
-	 * 
+	 *
 	 * @return 作业自定义参数
 	 */
 	public String getJobParameter() {
@@ -256,7 +256,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取作业启动时间的cron表达式.
-	 * 
+	 *
 	 * @return 作业启动时间的cron表达式
 	 */
 	public String getCron() {
@@ -287,9 +287,9 @@ public class ConfigurationService extends AbstractSaturnService {
 	 * 该时间是否在作业暂停时间段范围内。
 	 * <p>
 	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
-	 * 
+	 *
 	 * @param date 时间，本机时区的时间
-	 * 
+	 *
 	 * @return 该时间是否在作业暂停时间段范围内。
 	 */
 	public boolean isInPausePeriod(Date date) {
@@ -304,42 +304,44 @@ public class ConfigurationService extends AbstractSaturnService {
 		String pausePeriodDate = jobConfiguration.getPausePeriodDate();
 		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
 		if (!pausePeriodDateIsEmpty) {
-			dateIn = parsePausePeriodTime(M, d, pausePeriodDate);
+			dateIn = checkIsInPausePeriodDateOrTime(M, d, "/", pausePeriodDate);
 		}
 		boolean timeIn = false;
 		String pausePeriodTime = jobConfiguration.getPausePeriodTime();
 		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
 		if (!pausePeriodTimeIsEmpty) {
-			timeIn = parsePausePeriodTime(h, m, pausePeriodTime);
+			timeIn = checkIsInPausePeriodDateOrTime(h, m, ":", pausePeriodTime);
 		}
 
 		if (pausePeriodDateIsEmpty) {
 			if (pausePeriodTimeIsEmpty) {
 				return false;
+			} else {
+				return timeIn;
 			}
-			return timeIn;
+		} else {
+			if (pausePeriodTimeIsEmpty) {
+				return dateIn;
+			} else {
+				return dateIn && timeIn;
+			}
 		}
-
-		if (pausePeriodTimeIsEmpty) {
-			return dateIn;
-		}
-		return dateIn && timeIn;
 	}
 
-	private boolean parsePausePeriodTime(int h, int m, String pausePeriodTimeOrDateStr) {
-		String[] periodsTime = pausePeriodTimeOrDateStr.split(",");
-		if (periodsTime == null) {
+	private boolean checkIsInPausePeriodDateOrTime(int h, int m, String splitChar, String pausePeriodDateOrTime) {
+		String[] periods = pausePeriodDateOrTime.split(",");
+		if (periods == null) {
 			return false;
 		}
 
 		boolean result = false;
-		for (String period : periodsTime) {
+		for (String period : periods) {
 			String[] tmp = period.trim().split("-");
 			if (tmp != null && tmp.length == 2) {
 				String left = tmp[0].trim();
 				String right = tmp[1].trim();
-				String[] hmLeft = left.split(":");
-				String[] hmRight = right.split(":");
+				String[] hmLeft = left.split(splitChar);
+				String[] hmRight = right.split(splitChar);
 				if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
 					try {
 						int hLeft = Integer.parseInt(hmLeft[0]);
@@ -349,7 +351,7 @@ public class ConfigurationService extends AbstractSaturnService {
 						result = (h > hLeft || h == hLeft && m >= mLeft) // NOSONAR
 								&& (h < hRight || h == hRight && m <= mRight); // NOSONAR
 						if (result) {
-							return true;
+							break;
 						}
 					} catch (NumberFormatException e) {
 						return false;
@@ -366,7 +368,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取是否开启失效转移.
-	 * 
+	 *
 	 * @return 是否开启失效转移
 	 */
 	public boolean isFailover() {
@@ -375,7 +377,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取是否开启作业.
-	 * 
+	 *
 	 * @return 作业是否开启
 	 */
 	public boolean isJobEnabled() {
@@ -393,7 +395,7 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取超时时间
-	 * 
+	 *
 	 * @return 超时时间
 	 */
 	public int getTimeoutSeconds() {
