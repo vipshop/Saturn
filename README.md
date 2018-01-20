@@ -2,7 +2,6 @@
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
 [![Read the Docs](https://img.shields.io/readthedocs/pip.svg)](https://vipshop.github.io/Saturn/)
-[![Releases](https://img.shields.io/github/release/coreos/etcd/all.svg?style=flat-square)](https://github.com/vipshop/Saturn/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 Saturn is a platform created by VIP.com(唯品会) to provIde a distributed, fault tolerant and high available job scheduling service.
