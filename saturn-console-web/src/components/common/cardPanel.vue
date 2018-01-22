@@ -53,26 +53,26 @@ export default {
     box-shadow: 0 1px 1px rgba(0,0,0,.05);
 }
 .card-panel-primary {
-    border-color: #337ab7;
+    border-color: #409EFF;
     >.card-panel-heading {
         color: #fff;
-        background-color: #337ab7;
-        border-color: #337ab7;
+        background-color: #409EFF;
+        border-color: #409EFF;
     }
 }
 .card-panel-green {
-    border-color: #5cb85c;
+    border-color: #67c23a;
     >.card-panel-heading {
-        background-color: #5cb85c;
-        border-color: #5cb85c;
+        background-color: #67c23a;
+        border-color: #67c23a;
         color: #fff;
     }
 }
 .card-panel-yellow {
-    border-color: #f0ad4e;
+    border-color: #f80;
     >.card-panel-heading {
-        background-color: #f0ad4e;
-        border-color: #f0ad4e;
+        background-color: #f80;
+        border-color: #f80;
         color: #fff;
     }
 }
@@ -98,6 +98,6 @@ export default {
     line-height: normal;
 }
 .title-size {
-    font-size: 14px;
+    font-size: 18px;
 }
 </style>
