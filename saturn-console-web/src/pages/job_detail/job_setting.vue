@@ -285,6 +285,17 @@ export default {
             jobInfoData.preferList[index] = ele.replace('@', '');
           }
         });
+        const preferListArray = [];
+        if (jobInfoData.preferListProvided) {
+          jobInfoData.preferListProvided.forEach((element) => {
+            preferListArray.push(element.executorName);
+          });
+        }
+        jobInfoData.preferList.forEach((ele1, index1) => {
+          if (!preferListArray.includes(ele1)) {
+            jobInfoData.preferList[index1] = `${ele1}(已删除)`;
+          }
+        });
       }
       return jobInfoData;
     },
