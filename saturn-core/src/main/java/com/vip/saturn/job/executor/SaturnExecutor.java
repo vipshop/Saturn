@@ -379,11 +379,10 @@ public class SaturnExecutor {
 					throw e;
 				}
 
+				// 启动定时清空nohup文件的线程
 				LOGGER.info("start to register periodic truncate nohup out service.");
-				if (inited.get()) {
-					periodicTruncateNohupOutService = new PeriodicTruncateNohupOutService(executorName);
-					periodicTruncateNohupOutService.start();
-				}
+				periodicTruncateNohupOutService = new PeriodicTruncateNohupOutService(executorName);
+				periodicTruncateNohupOutService.start();
 
 				// 启动零点清0成功数错误数的线程
 				LOGGER.info("start the ResetCountService");

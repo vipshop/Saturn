@@ -43,11 +43,11 @@ public class PeriodicTruncateNohupOutService {
 	public void shutdown() {
 		log.info("shutdown PeriodicTruncateNohupOutService");
 		if (truncateLogService != null) {
-			truncateLogService.shutdown();
+			truncateLogService.shutdownNow();
 		}
 	}
 
-	private static class TruncateLogRunnable implements Runnable {
+	private class TruncateLogRunnable implements Runnable {
 
 		@Override
 		public void run() {
