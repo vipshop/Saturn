@@ -1,12 +1,24 @@
 package com.vip.saturn.job.console.utils;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Random;
 import java.util.TimeZone;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utils for saturn console.
@@ -15,7 +27,11 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class SaturnConsoleUtils {
 
+	private static final Logger log = LoggerFactory.getLogger(SaturnConsoleUtils.class);
+
 	private static DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
+	private static Random random = new Random();
 
 	public static String parseMillisecond2DisplayTime(String longInStr) {
 		return parseMillisecond2DisplayTime(longInStr, null);
@@ -48,4 +64,74 @@ public class SaturnConsoleUtils {
 
 		return false;
 	}
+
+	public static File createTmpFile() throws SaturnJobConsoleException, IOException {
+		int loopTimes = 5;
+
+		int i = 0;
+		File tmp = null;
+		for (; i < loopTimes; i++) {
+			tmp = new File(SaturnConstants.CACHES_FILE_PATH, genTmpFileName());
+			if (!tmp.exists()) {
+				break;
+			}
+		}
+
+		if (i == loopTimes) {
+			throw new SaturnJobConsoleException("fail to create temp file.");
+		}
+
+		FileUtils.forceMkdir(tmp.getParentFile());
+		tmp.createNewFile();
+
+		return tmp;
+	}
+
+	private static String genTmpFileName() {
+		return "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls";
+	}
+
+	public static void exportExcelFile(HttpServletResponse response, File srcFile, String exportFileName,
+			boolean deleteTmpFile)
+			throws SaturnJobConsoleGUIException {
+		try {
+			response.setContentType("application/octet-stream");
+			response.setHeader("Content-disposition",
+					"attachment; filename=" + new String(exportFileName.getBytes("UTF-8"), "ISO8859-1"));
+
+			BufferedInputStream bis = null;
+			BufferedOutputStream bos = null;
+			try {
+				bis = new BufferedInputStream(new FileInputStream(srcFile));
+				bos = new BufferedOutputStream(response.getOutputStream());
+				byte[] buff = new byte[2048];
+				int bytesRead;
+				while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+					bos.write(buff, 0, bytesRead);
+				}
+			} finally {
+				if (bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+				if (bos != null) {
+					try {
+						bos.close();
+					} catch (IOException e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new SaturnJobConsoleGUIException(e);
+		} finally {
+			if (deleteTmpFile && srcFile != null) {
+				srcFile.delete();
+			}
+		}
+	}
+
 }

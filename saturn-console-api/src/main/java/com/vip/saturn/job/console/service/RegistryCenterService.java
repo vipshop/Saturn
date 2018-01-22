@@ -14,6 +14,7 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import java.io.File;
 import org.apache.curator.framework.CuratorFramework;
 
 import java.util.Collection;
@@ -50,6 +51,8 @@ public interface RegistryCenterService {
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;
 
 	List<String> getNamespaces() throws SaturnJobConsoleException;
+
+	File exportNamespaceInfo(List<String> namespaces) throws SaturnJobConsoleException;
 
 	/**
 	 * Create Namespace.

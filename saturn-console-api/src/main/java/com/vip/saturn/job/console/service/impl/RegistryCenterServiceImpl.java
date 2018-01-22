@@ -17,6 +17,7 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
@@ -36,6 +37,16 @@ import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -951,6 +962,60 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	@Override
 	public List<String> getNamespaces() throws SaturnJobConsoleException {
 		return allOnlineNamespaces;
+	}
+
+	@Override
+	public File exportNamespaceInfo(List<String> namespaceList) throws SaturnJobConsoleException {
+		Set<String> targetNamespaceSet = null;
+		if (namespaceList != null) {
+			targetNamespaceSet = Sets.newHashSet(namespaceList);
+		}
+
+		List<RegistryCenterConfiguration> namespaceInfoList = Lists.newLinkedList();
+		Collection<ZkCluster> zkClusterList = getZkClusterList();
+		for (ZkCluster zkCluster : zkClusterList) {
+			List<RegistryCenterConfiguration> namespacesOfZkCluster = zkCluster.getRegCenterConfList();
+			for (RegistryCenterConfiguration ns : namespacesOfZkCluster) {
+				if (targetNamespaceSet == null || targetNamespaceSet.contains(ns.getNamespace())) {
+					namespaceInfoList.add(ns);
+				}
+			}
+		}
+
+		return exportNamespaceInfo2Excel(namespaceInfoList);
+	}
+
+	/**
+	 * Export namespac
+	 */
+	private File exportNamespaceInfo2Excel(List<RegistryCenterConfiguration> namespaceInfoList)
+			throws SaturnJobConsoleException {
+		try {
+			File tmpFile = SaturnConsoleUtils.createTmpFile();
+			WritableWorkbook writableWorkbook = Workbook.createWorkbook(tmpFile);
+			WritableSheet sheet1 = writableWorkbook.createSheet("ns", 0);
+			sheet1.addCell(new Label(0, 0, "域名"));
+			sheet1.addCell(new Label(1, 0, "描述"));
+			sheet1.addCell(new Label(2, 0, "重要等级"));
+			sheet1.addCell(new Label(3, 0, "Executor版本"));
+			sheet1.addCell(new Label(4, 0, "ZK集群"));
+
+			for (int i = 0; i < namespaceInfoList.size(); i++) {
+				RegistryCenterConfiguration namespaceInfo = namespaceInfoList.get(i);
+				sheet1.addCell(new Label(0, i + 1, namespaceInfo.getNamespace()));
+				sheet1.addCell(new Label(1, i + 1, namespaceInfo.getName()));
+				sheet1.addCell(new Label(2, i + 1, namespaceInfo.getDegree()));
+				sheet1.addCell(new Label(3, i + 1, namespaceInfo.getVersion()));
+				sheet1.addCell(new Label(4, i + 1, namespaceInfo.getZkAlias()));
+			}
+
+			writableWorkbook.write();
+			writableWorkbook.close();
+
+			return tmpFile;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
 	}
 
 	@Transactional(rollbackFor = {Exception.class})
