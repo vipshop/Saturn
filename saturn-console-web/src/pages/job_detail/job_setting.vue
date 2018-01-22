@@ -237,6 +237,15 @@ export default {
       });
     },
     jobSettingInfoRequest() {
+      if (this.jobSettingInfo.preferList.length > 0) {
+        this.jobSettingInfo.preferList.forEach((ele1, index1) => {
+          this.jobSettingInfo.preferListProvided.forEach((ele2) => {
+            if (ele1 === ele2.executorName && ele2.type === 'DOCKER') {
+              this.jobSettingInfo.preferList[index1] = `@${ele1}`;
+            }
+          });
+        });
+      }
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
@@ -269,7 +278,15 @@ export default {
   },
   computed: {
     jobSettingInfo() {
-      return this.$store.state.global.jobInfo;
+      const jobInfoData = this.$store.state.global.jobInfo;
+      if (jobInfoData.preferList) {
+        jobInfoData.preferList.forEach((ele, index) => {
+          if (ele.startsWith('@')) {
+            jobInfoData.preferList[index] = ele.replace('@', '');
+          }
+        });
+      }
+      return jobInfoData;
     },
   },
 };
