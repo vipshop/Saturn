@@ -170,9 +170,11 @@ public class SaturnScriptJob extends CrondJob {
 			for (SaturnExecuteWatchdog watchDog : tmp) {
 				log.info("[{}] msg=Job {}-{} is stopped, force the script {} to exit.", jobName, watchDog.getJobName(),
 						watchDog.getJobItem(), watchDog.getExecParam());
-				// kill processes.
+				// kill process and stop watchdog, not mark timeout
+				// it will use kill, but not kill -9.
 				watchDog.destroyProcess();
 
+				// use kill -9
 				int jobItem = watchDog.getJobItem();
 				long pid = ScriptPidUtils.getFirstPidFromFile(serverService.getExecutorName(), watchDog.getJobName(),
 						"" + Integer.toString(jobItem));
@@ -183,6 +185,8 @@ public class SaturnScriptJob extends CrondJob {
 						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 					}
 				}
+
+				// remove pid files
 				ScriptPidUtils.removeAllPidFile(serverService.getExecutorName(), watchDog.getJobName(), jobItem);
 
 				onForceStop(jobItem);
