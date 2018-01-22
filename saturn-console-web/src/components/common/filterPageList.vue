@@ -16,7 +16,7 @@ export default {
   props: ['data', 'total', 'orderBy', 'filters'],
   data() {
     return {
-      pageSize: 10,
+      pageSize: 50,
       currentPage: 1,
       orderby: this.orderBy,
       pageData: [],

@@ -32,8 +32,9 @@ export default {
       isVisible: true,
       loading: false,
       rules: {
-        zkClusterKey: [{ required: true, message: '请输入zk集群', trigger: 'blur' }],
+        zkClusterKey: [{ required: true, message: '请输入Zk集群', trigger: 'blur' }],
         alias: [{ required: true, message: '请输入集群名称', trigger: 'blur' }],
+        connectString: [{ required: true, message: '请输入ZK连接串', trigger: 'blur' }],
       },
     };
   },

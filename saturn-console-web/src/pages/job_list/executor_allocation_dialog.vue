@@ -13,7 +13,10 @@
             </el-form-item>
             <el-form-item label="分片分布">
                 <el-col :span="18">
-                    <el-tag type="success" class="form-tags" v-for="item in Object.entries(executorAllocationInfo.allocationMap)" :key="item[0]">{{item[0]}}:{{item[1]}}</el-tag>
+                    <div v-if="Object.entries(executorAllocationInfo.allocationMap).length === 0">无</div>
+                    <div v-else>
+                        <el-tag type="success" class="form-tags" v-for="item in Object.entries(executorAllocationInfo.allocationMap)" :key="item[0]">{{item[0]}}:{{item[1]}}</el-tag>
+                    </div>
                 </el-col>
             </el-form-item>
         </el-form>
