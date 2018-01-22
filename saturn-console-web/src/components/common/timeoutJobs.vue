@@ -2,8 +2,9 @@
     <FilterPageList :data="timeoutJobsList" :total="total" :order-by="orderBy" :filters="filters">
         <template slot-scope="scope">
             <el-form :inline="true" class="table-filter">
+                <input type="text" v-show="false"/>
                 <el-form-item label="">
-                    <el-input placeholder="搜索" v-model="filters.jobName"></el-input>
+                    <el-input placeholder="搜索" v-model="filters.jobName" @keyup.enter.native="scope.search"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>

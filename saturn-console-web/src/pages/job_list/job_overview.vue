@@ -29,7 +29,7 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="搜索" v-model="filters.jobName"></el-input>
+                            <el-input placeholder="搜索" v-model="filters.jobName" @keyup.enter.native="scope.search"></el-input>
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
