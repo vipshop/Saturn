@@ -2,6 +2,8 @@
 job_configs:
     - name: MAX_JOB_NUM
       desc_zh: 每个域最大作业数
+    - name: INTERVAL_TIME_OF_ENABLED_REPORT
+      desc_zh: 根据cron计算执行间隔时间，如果间隔时间小于此值，则不上报作业运行状态；否则，则上报
 
 executor_configs:
     - name: ALARM_RAISED_ON_EXECUTOR_RESTART
