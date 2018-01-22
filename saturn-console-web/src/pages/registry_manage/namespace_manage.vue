@@ -27,6 +27,7 @@
                             <div class="page-table-header-separator"></div>
                             <div>
                                 <el-button @click="batchMigrate()"><i class="fa fa-play-circle text-btn"></i>批量迁移</el-button>
+                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -98,6 +99,11 @@ export default {
     };
   },
   methods: {
+    handleExport() {
+      this.batchOperation('导出', (data) => {
+        window.location.href = `/console/namespaces/export?namespaceList=${data}`;
+      });
+    },
     handleRefreshCenter() {
       this.loading = true;
       this.$http.post('/console/registryCenter/refresh', '').then(() => {
@@ -132,7 +138,7 @@ export default {
     },
     batchOperation(text, callback) {
       if (this.multipleSelection.length <= 0) {
-        this.$message.errorMessage(`请选择要批量${text}的作业！！！`);
+        this.$message.errorMessage(`请选择要批量${text}的域！！！`);
       } else {
         const selectedNamespaceArray = [];
         this.multipleSelection.forEach((element) => {
