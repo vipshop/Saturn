@@ -37,7 +37,7 @@ public class SaturnExecutorService {
 	private String executorName;
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 
-	private List<String> jobNames = new ArrayList<String>();
+	private List<String> jobNames = new ArrayList<>();
 	private TreeCache jobsTreeCache;
 	private String ipNode;
 	private ClassLoader jobClassLoader;
@@ -145,39 +145,46 @@ public class SaturnExecutorService {
 		jobsTreeCache.getListenable().addListener(new TreeCacheListener() {
 			@Override
 			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
-				if (event != null) {
-					Type type = event.getType();
-					ChildData data = event.getData();
-					if (type != null && data != null) {
-						String path = data.getPath();
-						if (path != null && !path.equals(JobNodePath.ROOT)) {
-							if (type.equals(Type.NODE_ADDED)) { // add a job
-								String jobName = StringUtils.substringAfterLast(path, "/");
-								String jobClassPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_CLASS);
-								// wait 5 seconds at most until jobClass created.
-								for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i++) {
-									if (client.checkExists().forPath(jobClassPath) == null) {
-										Thread.sleep(200);
-									} else {
-										log.info("new job: {} 's jobClass created event received", jobName);
-										if (!jobNames.contains(jobName)) {
-											if (callback.call(jobName)) {
-												jobNames.add(jobName);
-												log.info("the job {} initialize successfully", jobName);
-											} else {
-												log.warn("the job {} initialize fail", jobName);
-											}
-										} else {
-											log.warn(
-													"the job {} is unnecessary to initialize, because it's already existing",
-													jobName);
-										}
-										break;
-									}
-								}
-							}
-						}
+				if (event == null) {
+					return;
+				}
+
+				ChildData data = event.getData();
+				if (data == null) {
+					return;
+				}
+
+				String path = data.getPath();
+				if (path == null || path.equals(JobNodePath.ROOT)) {
+					return;
+				}
+
+				Type type = event.getType();
+				if (type == null || !type.equals(Type.NODE_ADDED)) {
+					return;
+				}
+
+				String jobName = StringUtils.substringAfterLast(path, "/");
+				String jobClassPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_CLASS);
+				// wait 5 seconds at most until jobClass created.
+				for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i++) {
+					if (client.checkExists().forPath(jobClassPath) == null) {
+						Thread.sleep(200);
+						continue;
 					}
+
+					log.info("new job: {} 's jobClass created event received", jobName);
+					if (!jobNames.contains(jobName)) {
+						if (callback.call(jobName)) {
+							jobNames.add(jobName);
+							log.info("the job {} initialize successfully", jobName);
+						} else {
+							log.warn("the job {} initialize fail", jobName);
+						}
+					} else {
+						log.warn("the job {} is unnecessary to initialize, because it's already existing", jobName);
+					}
+					break;
 				}
 			}
 		});
