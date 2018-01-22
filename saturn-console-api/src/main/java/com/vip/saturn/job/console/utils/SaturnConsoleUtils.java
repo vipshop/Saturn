@@ -7,7 +7,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Random;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletResponse;
@@ -92,8 +94,21 @@ public class SaturnConsoleUtils {
 	}
 
 	public static void exportExcelFile(HttpServletResponse response, File srcFile, String exportFileName,
-			boolean deleteTmpFile)
-			throws SaturnJobConsoleGUIException {
+			boolean deleteTmpFile) throws SaturnJobConsoleException {
+		try {
+			InputStream inputStream = new FileInputStream(srcFile);
+			exportExcelFile(response, inputStream, exportFileName);
+		} catch (FileNotFoundException e) {
+			throw new SaturnJobConsoleException("file not found:" + srcFile.getName());
+		} finally {
+			if (deleteTmpFile && srcFile != null) {
+				srcFile.delete();
+			}
+		}
+	}
+
+	public static void exportExcelFile(HttpServletResponse response, InputStream inputStream, String exportFileName)
+			throws SaturnJobConsoleException {
 		try {
 			response.setContentType("application/octet-stream");
 			response.setHeader("Content-disposition",
@@ -102,7 +117,7 @@ public class SaturnConsoleUtils {
 			BufferedInputStream bis = null;
 			BufferedOutputStream bos = null;
 			try {
-				bis = new BufferedInputStream(new FileInputStream(srcFile));
+				bis = new BufferedInputStream(inputStream);
 				bos = new BufferedOutputStream(response.getOutputStream());
 				byte[] buff = new byte[2048];
 				int bytesRead;
@@ -126,11 +141,7 @@ public class SaturnConsoleUtils {
 				}
 			}
 		} catch (Exception e) {
-			throw new SaturnJobConsoleGUIException(e);
-		} finally {
-			if (deleteTmpFile && srcFile != null) {
-				srcFile.delete();
-			}
+			throw new SaturnJobConsoleException(e);
 		}
 	}
 

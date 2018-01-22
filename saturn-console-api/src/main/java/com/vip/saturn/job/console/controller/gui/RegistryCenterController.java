@@ -92,14 +92,10 @@ public class RegistryCenterController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/namespaces/export")
-	public SuccessResponseEntity exportNamespaceInfo(@RequestParam(required = false) List<String> namespaceList,
+	public void exportNamespaceInfo(@RequestParam(required = false) List<String> namespaceList,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
-
 		File exportFile = registryCenterService.exportNamespaceInfo(namespaceList);
-
 		SaturnConsoleUtils.exportExcelFile(response, exportFile, EXPORT_FILE_NAME, true);
-
-		return new SuccessResponseEntity();
 	}
 
 	/**
