@@ -24,6 +24,7 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 
 public class ScriptJobRunner {
+
 	static Logger log = LoggerFactory.getLogger(ScriptJobRunner.class);
 
 	private static final String PREFIX_COMAND = " source /etc/profile; ";
@@ -86,7 +87,7 @@ public class ScriptJobRunner {
 				+ ScriptPidUtils.filterEnvInCmdStr(env, itemValue);
 		// CommandLine cmdLine = CommandLine.parse(execParameter);
 		final CommandLine cmdLine = new CommandLine("/bin/sh");
-		cmdLine.addArguments(new String[] { "-c", execParameter }, false);
+		cmdLine.addArguments(new String[]{"-c", execParameter}, false);
 		return cmdLine;
 	}
 
@@ -109,7 +110,7 @@ public class ScriptJobRunner {
 		return tmp;
 	}
 
-	public SaturnExecuteWatchdog getWatchdog() {
+	public synchronized SaturnExecuteWatchdog getWatchdog() {
 		if (watchdog == null) {
 			long timeoutSeconds = saturnExecutionContext.getTimetoutSeconds();
 			if (timeoutSeconds > 0) {
@@ -139,10 +140,7 @@ public class ScriptJobRunner {
 			streamHandler.setStopTimeout(timeoutSeconds * 1000); // 关闭线程等待时间, (注意commons-exec会固定增加2秒的addition)
 			executor.setExitValue(0);
 			executor.setStreamHandler(streamHandler);
-			if (watchdog == null) {
-				getWatchdog();
-			}
-			executor.setWatchdog(watchdog);
+			executor.setWatchdog(getWatchdog());
 
 			// filter env key in execParameter. like cd ${mypath} -> cd /root/my.
 			Map<String, String> env = ScriptPidUtils.loadEnv();
@@ -162,12 +160,19 @@ public class ScriptJobRunner {
 				}
 				saturnJobReturn = tmp;
 			} catch (Exception e) {
-				ExecuteWatchdog watchDog = executor.getWatchdog();
 				String errMsg = e.toString();
-				if (watchDog != null && watchDog.killedProcess()) { // 超时
-					saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-							"Timeout(" + timeoutSeconds + "s): " + errMsg, SaturnSystemErrorGroup.TIMEOUT);
-					log.error("[{}] msg={}-{} Timeout: {}", jobName, jobName, item, errMsg);
+				if (watchdog != null && watchdog.killedProcess()) {
+					if (watchdog.isTimeout()) { // 超时
+						saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+								String.format("execute job timeout(%sms), %s", timeoutSeconds * 1000, errMsg),
+								SaturnSystemErrorGroup.TIMEOUT);
+						log.error("[{}] msg={}-{} timeout, {}", jobName, jobName, item, errMsg);
+					} else { // 被强杀
+						saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+								"the job was forced to stop, " + errMsg,
+								SaturnSystemErrorGroup.FAIL);
+						log.error("[{}] msg={}-{} force stopped, {}", jobName, jobName, item, errMsg);
+					}
 				} else { // 出错
 					saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 							SaturnSystemErrorGroup.FAIL);

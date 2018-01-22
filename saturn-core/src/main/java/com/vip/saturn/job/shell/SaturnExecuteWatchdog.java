@@ -34,6 +34,8 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
 	private String executorName;
 
+	private volatile boolean isTimeout;
+
 	/**
 	 * Creates a new watchdog with a given timeout.
 	 * 
@@ -100,6 +102,10 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 	 */
 	public synchronized void timeoutOccured(final Watchdog w) {
 		try {
+			// If timeout, the watchdog will not be null. Others, it's null, see super.destroyProcess()
+			if (w != null) {
+				isTimeout = true;
+			}
 			try {
 				if (monitoringProcess != null) {
 					monitoringProcess.exitValue();
@@ -152,5 +158,9 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 			log.error("msg=Getting pid error: {}", e.getMessage(), e);
 			return Long.valueOf(-1);
 		}
+	}
+
+	public boolean isTimeout() {
+		return isTimeout;
 	}
 }
