@@ -5,7 +5,7 @@
       @current-change="onCurrentChange"
       @size-change="onPageSize"
       :current-page="currentPage"
-      :page-sizes="[10, 25, 50, 100, 200]"
+      :page-sizes="[10, 25, 50, 100, 200, '所有']"
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="totalRecords">
@@ -126,7 +126,11 @@ export default {
       this.getDataByParams();
     },
     onPageSize(pageSize) {
-      this.pageSize = pageSize;
+      if (JSON.stringify(pageSize) === 'null') {
+        this.pageSize = this.totalRecords;
+      } else {
+        this.pageSize = pageSize;
+      }
       this.getDataByParams();
     },
   },
