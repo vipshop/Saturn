@@ -16,6 +16,9 @@
                     <el-input type="textarea" v-model="clusterInfo.connectString" placeholder="连接串用','分隔"></el-input>
                 </el-col>
             </el-form-item>
+            <el-form-item class="form-annotation">
+                <span>格式: 例如192.168.0.1:2181,192.168.0.2:2181</span>
+            </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="closeDialog()">取消</el-button>

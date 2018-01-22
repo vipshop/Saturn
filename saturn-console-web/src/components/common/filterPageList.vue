@@ -5,6 +5,7 @@
       @current-change="onCurrentChange"
       @size-change="onPageSize"
       :current-page="currentPage"
+      :page-sizes="[10, 25, 50, 100, 200]"
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="totalRecords">
@@ -16,7 +17,7 @@ export default {
   props: ['data', 'total', 'orderBy', 'filters'],
   data() {
     return {
-      pageSize: 50,
+      pageSize: 10,
       currentPage: 1,
       orderby: this.orderBy,
       pageData: [],
@@ -76,7 +77,7 @@ export default {
           Object.entries(this.filters).forEach((item) => {
             const key = item[0];
             const value = item[1];
-            if (value) {
+            if (value || (typeof value === 'boolean')) {
               filtered = filtered.filter((e) => {
                 if (typeof e[key] === 'string') {
                   return e[key].indexOf(value) > -1;
@@ -88,11 +89,18 @@ export default {
         }
         if (this.orderby) {
           const key = this.orderby.replace(/^-/, '');
+          let order = 1;
           if (this.orderby[0] === '-') {
-            filtered.sort((a, b) => (b[key] - a[key]));
-          } else {
-            filtered.sort((a, b) => (a[key] - b[key]));
+            order = -1;
           }
+          filtered.sort((a, b) => {
+            if (a[key] === b[key]) {
+              return 0;
+            } else if (a[key] > b[key]) {
+              return order;
+            }
+            return -order;
+          });
         }
         this.filtered = filtered;
         if (filtered.length > this.pageSize) {

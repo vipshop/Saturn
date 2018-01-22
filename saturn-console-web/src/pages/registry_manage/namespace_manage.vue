@@ -46,8 +46,8 @@
                                     {{$map.degreeMap[scope.row.degree]}}
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="version" label="Executor版本"></el-table-column>
-                            <el-table-column prop="zkAlias" label="ZK集群名称">
+                            <el-table-column prop="version" label="Executor版本" sortable></el-table-column>
+                            <el-table-column prop="zkAlias" label="ZK集群名称" sortable>
                                 <template slot-scope="scope">
                                     <el-tooltip placement="top">
                                         <div slot="content">{{scope.row.zkAddressList}}</div>

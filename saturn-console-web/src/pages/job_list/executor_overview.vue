@@ -105,7 +105,7 @@ export default {
         ONLINE: '在线',
         OFFLINE: '离线',
       },
-      orderBy: 'executorName',
+      orderBy: '-status',
       total: 0,
       multipleSelection: [],
       isExecutorAllocationVisible: false,
