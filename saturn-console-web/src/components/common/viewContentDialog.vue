@@ -29,7 +29,6 @@ export default {
 }
 .view-content {
     height: 350px;
-    color: #fff;
     overflow-y: auto;
 }
 </style>
