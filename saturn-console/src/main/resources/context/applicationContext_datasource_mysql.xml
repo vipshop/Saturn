@@ -13,12 +13,13 @@
         <property name="url" value="${SATURN_CONSOLE_DB_URL:jdbc:mysql://a.b.c.d}" />
         <property name="username" value="${SATURN_CONSOLE_DB_USERNAME:}" />
         <property name="password" value="${SATURN_CONSOLE_DB_PASSWORD:}" />
-        <property name="initialSize" value="3" />
-        <property name="maxActive" value="15" />
-        <property name="minIdle" value="3" />
-        <property name="maxWait" value="5000" />
-        <property name="timeBetweenEvictionRunsMillis" value="90000" />
-        <property name="minEvictableIdleTimeMillis" value="1800000" />
+        <property name="initialSize" value="1" />
+        <property name="minIdle" value="1" />
+        <property name="maxActive" value="20" />
+        <property name="maxWait" value="60000" />
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+        <property name="validationQuery" value="SELECT 'x'" />
         <property name="testOnBorrow" value="false" />
         <property name="testOnReturn" value="false" />
         <property name="testWhileIdle" value="true" />

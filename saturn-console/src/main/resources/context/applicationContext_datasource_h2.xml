@@ -14,12 +14,13 @@
 		<property name="url" value="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false" />
 		<property name="username" value="sa" />
 		<property name="password" value="" />
-		<property name="initialSize" value="3" />
-		<property name="maxActive" value="15" />
-		<property name="minIdle" value="3" />
-		<property name="maxWait" value="5000" />
-		<property name="timeBetweenEvictionRunsMillis" value="90000" />
-		<property name="minEvictableIdleTimeMillis" value="1800000" />
+		<property name="initialSize" value="1" />
+		<property name="minIdle" value="1" />
+		<property name="maxActive" value="20" />
+		<property name="maxWait" value="60000" />
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+		<property name="validationQuery" value="SELECT 'x'" />
 		<property name="testOnBorrow" value="false" />
 		<property name="testOnReturn" value="false" />
 		<property name="testWhileIdle" value="true" />
