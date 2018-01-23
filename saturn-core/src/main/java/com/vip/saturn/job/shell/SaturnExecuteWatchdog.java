@@ -19,19 +19,25 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
-	static Logger log = LoggerFactory.getLogger(SaturnExecuteWatchdog.class);
+	private static final int INIT = 0;
+
+	private static final int TIMEOUT = 1;
+
+	private static final int FORCE_STOP = 2;
+
+	private static final Logger log = LoggerFactory.getLogger(SaturnExecuteWatchdog.class);
 
 	private String jobName;
+
 	private int jobItem;
+
 	private String execParam;
+
 	private String executorName;
 
 	private long pid = -1;
 
 	private AtomicInteger status = new AtomicInteger(0);
-	private static final int INIT = 0;
-	private static final int TIMEOUT = 1;
-	private static final int FORCE_STOP = 2;
 
 	public SaturnExecuteWatchdog(final long timeout, final String jobName, final int jobItem, final String execParam,
 			final String executorName) {
