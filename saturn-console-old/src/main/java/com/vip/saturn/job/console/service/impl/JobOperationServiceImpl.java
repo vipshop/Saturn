@@ -58,6 +58,8 @@ public class JobOperationServiceImpl implements JobOperationService {
 
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 
+	private static final int CALCULATE_NEXT_FIRE_TIME_MAX_TIMES = 5;
+
 	@Resource
 	private CuratorRepository curatorRepository;
 
@@ -388,38 +390,42 @@ public class JobOperationServiceImpl implements JobOperationService {
 	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
 	 */
 	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
-		boolean enabledReport = true;
-		if (jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) || jobType.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
-			try {
-				Integer intervalTimeConfigured = systemConfigService.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
-				if (intervalTimeConfigured == null) {
-					log.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
-					intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
-				}
-				CronExpression cronExpression = new CronExpression(cron);
-				cronExpression.setTimeZone(TimeZone.getTimeZone(timeZone));
-				Date lastNextTime = cronExpression.getNextValidTimeAfter(new Date());
-				if (lastNextTime != null) {
-					for (int i = 0; i < 5; i++) {
-						Date nextTime = cronExpression.getNextValidTimeAfter(lastNextTime);
-						if (nextTime == null) {
-							break;
-						}
-						long interval = nextTime.getTime() - lastNextTime.getTime();
-						if (interval < intervalTimeConfigured * 1000) {
-							enabledReport = false;
-							break;
-						}
-						lastNextTime = nextTime;
-					}
-				}
-			} catch (ParseException e) {
-				log.warn(e.getMessage(), e);
-			}
-		} else {
-			enabledReport = false;
+		if (!jobType.equals(JobBriefInfo.JobType.JAVA_JOB.name()) && !jobType
+				.equals(JobBriefInfo.JobType.SHELL_JOB.name())) {
+			return false;
 		}
-		return enabledReport;
+
+		try {
+			Integer intervalTimeConfigured = systemConfigService
+					.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT,
+							DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
+			if (intervalTimeConfigured == null) {
+				log.debug("System config INTERVAL_TIME_OF_ENABLED_REPORT is null");
+				intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
+			}
+			CronExpression cronExpression = new CronExpression(cron);
+			cronExpression.setTimeZone(TimeZone.getTimeZone(timeZone));
+			// 基于当前时间的下次调度时间
+			Date lastNextTime = cronExpression.getNextValidTimeAfter(new Date());
+			if (lastNextTime != null) {
+				for (int i = 0; i < CALCULATE_NEXT_FIRE_TIME_MAX_TIMES; i++) {
+					Date nextTime = cronExpression.getNextValidTimeAfter(lastNextTime);
+					// no next fire time
+					if (nextTime == null) {
+						return true;
+					}
+					long interval = nextTime.getTime() - lastNextTime.getTime();
+					if (interval < intervalTimeConfigured * 1000L) {
+						return false;
+					}
+					lastNextTime = nextTime;
+				}
+			}
+		} catch (ParseException e) {
+			log.warn(e.getMessage(), e);
+		}
+
+		return true;
 	}
 
 	private void saveJobConfigToDb(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp)
