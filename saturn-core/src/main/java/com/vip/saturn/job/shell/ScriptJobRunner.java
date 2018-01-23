@@ -1,19 +1,5 @@
 package com.vip.saturn.job.shell;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
@@ -22,6 +8,18 @@ import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class ScriptJobRunner {
 
@@ -113,16 +111,17 @@ public class ScriptJobRunner {
 	public synchronized SaturnExecuteWatchdog getWatchdog() {
 		if (watchdog == null) {
 			long timeoutSeconds = saturnExecutionContext.getTimetoutSeconds();
+			String executorName = job.getExecutorName();
 			if (timeoutSeconds > 0) {
-				watchdog = new SaturnExecuteWatchdog(timeoutSeconds * 1000, jobName, item, itemValue);
+				watchdog = new SaturnExecuteWatchdog(timeoutSeconds * 1000, jobName, item, itemValue, executorName);
 				log.info("[{}] msg=Job {} enable timeout control : {} s ", jobName, jobName, timeoutSeconds);
 			} else { // 需要指定超时值，才会启用watchdog: 强行指定为5年
-				watchdog = new SaturnExecuteWatchdog(5L * 365 * 24 * 3600 * 1000, jobName, item, itemValue);
+				watchdog = new SaturnExecuteWatchdog(5L * 365 * 24 * 3600 * 1000, jobName, item, itemValue,
+						executorName);
 				if (log.isDebugEnabled()) {
 					log.debug("[{}] msg=Job {} disable timeout control", jobName, jobName);
 				}
 			}
-			watchdog.setExecutorName(job.getExecutorName());
 		}
 		return watchdog;
 	}
@@ -161,19 +160,17 @@ public class ScriptJobRunner {
 				saturnJobReturn = tmp;
 			} catch (Exception e) {
 				String errMsg = e.toString();
-				if (watchdog != null && watchdog.killedProcess()) {
-					if (watchdog.isTimeout()) { // 超时
-						saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-								String.format("execute job timeout(%sms), %s", timeoutSeconds * 1000, errMsg),
-								SaturnSystemErrorGroup.TIMEOUT);
-						log.error("[{}] msg={}-{} timeout, {}", jobName, jobName, item, errMsg);
-					} else { // 被强杀
-						saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-								"the job was forced to stop, " + errMsg,
-								SaturnSystemErrorGroup.FAIL);
-						log.error("[{}] msg={}-{} force stopped, {}", jobName, jobName, item, errMsg);
-					}
-				} else { // 出错
+				if (watchdog.isTimeout()) {
+					saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+							String.format("execute job timeout(%sms), %s", timeoutSeconds * 1000, errMsg),
+							SaturnSystemErrorGroup.TIMEOUT);
+					log.error("[{}] msg={}-{} timeout, {}", jobName, jobName, item, errMsg);
+				} else if (watchdog.isForceStop()) {
+					saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+							"the job was forced to stop, " + errMsg,
+							SaturnSystemErrorGroup.FAIL);
+					log.error("[{}] msg={}-{} force stopped, {}", jobName, jobName, item, errMsg);
+				} else {
 					saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 							SaturnSystemErrorGroup.FAIL);
 					log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} Exception: " + errMsg, e);
@@ -200,7 +197,7 @@ public class ScriptJobRunner {
 					log.debug("[{}] msg={}-{} Error at closing log stream. Should not be concern: {}", jobName, jobName,
 							item, ex);
 				}
-				ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getProcessId());
+				ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getPid());
 			}
 
 		} catch (Throwable t) {

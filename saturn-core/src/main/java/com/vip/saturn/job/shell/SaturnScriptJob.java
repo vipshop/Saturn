@@ -20,9 +20,11 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * 处理通用Script的调度(也支持PHP)
+ *
  * @author linzhaoming
  */
 public class SaturnScriptJob extends CrondJob {
+
 	private static Logger log = LoggerFactory.getLogger(SaturnScriptJob.class);
 
 	private Object watchDogLock = new Object();
@@ -170,7 +172,7 @@ public class SaturnScriptJob extends CrondJob {
 			for (SaturnExecuteWatchdog watchDog : tmp) {
 				log.info("[{}] msg=Job {}-{} is stopped, force the script {} to exit.", jobName, watchDog.getJobName(),
 						watchDog.getJobItem(), watchDog.getExecParam());
-				// kill process and stop watchdog, not mark timeout
+				// kill process and stop watchdog, mark forceStop
 				// it will use kill, but not kill -9.
 				watchDog.destroyProcess();
 
