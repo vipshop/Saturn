@@ -78,7 +78,7 @@ export default {
       this.$emit('refresh-list');
     },
     handleRead(row) {
-      this.$http.post('/console/zkClusters/alarmStatistics/setAbnormalJobMonitorStatusToRead', { uuid: row.uuid }).then(() => {
+      this.$http.post('/console/alarmStatistics/setAbnormalJobMonitorStatusToRead', { uuid: row.uuid }).then(() => {
         this.refreshList();
         this.$message.successNotify('操作成功');
       })
