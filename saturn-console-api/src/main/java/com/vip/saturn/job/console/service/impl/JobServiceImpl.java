@@ -442,26 +442,31 @@ public class JobServiceImpl implements JobService {
 			return executorProvidedList;
 		}
 		List<String> executors = curatorFrameworkOp.getChildren(executorsNodePath);
-		if (executors != null && executors.size() > 0) {
+		if (executors == null) {
+			executors = new ArrayList<>();
+		}
+		if (!executors.isEmpty()) {
 			for (String executor : executors) {
 				if (curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
 					continue;// 过滤容器中的Executor，容器资源只需要可以选择taskId即可
 				}
 				ExecutorProvided executorProvided = new ExecutorProvided();
+				executorProvided.setType(ExecutorProvidedType.PHYSICAL);
 				executorProvided.setExecutorName(executor);
 				executorProvided.setNoTraffic(
 						curatorFrameworkOp.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executor)));
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
 				if (StringUtils.isNotBlank(ip)) {
-					executorProvided.setType(ExecutorProvidedType.ONLINE);
+					executorProvided.setStatus(ExecutorProvidedStatus.ONLINE);
 				} else {
-					executorProvided.setType(ExecutorProvidedType.OFFLINE);
+					executorProvided.setStatus(ExecutorProvidedStatus.OFFLINE);
 				}
 				executorProvidedList.add(executorProvided);
 			}
 		}
 
-		executorProvidedList.addAll(getContainerTaskIds(curatorFrameworkOp));
+		List<ExecutorProvided> dockerExecutorProvided = getContainerTaskIds(curatorFrameworkOp);
+		executorProvidedList.addAll(dockerExecutorProvided);
 
 		if (StringUtils.isNotBlank(jobName)) {
 			String preferListNodePath = JobNodePath.getConfigNodePath(jobName, "preferList");
@@ -470,14 +475,32 @@ public class JobServiceImpl implements JobService {
 				if (!Strings.isNullOrEmpty(preferList)) {
 					String[] preferExecutorList = preferList.split(",");
 					for (String preferExecutor : preferExecutorList) {
-						if (executors != null && !executors.contains(preferExecutor) && !preferExecutor
-								.startsWith("@")) {
-							ExecutorProvided executorProvided = new ExecutorProvided();
-							executorProvided.setExecutorName(preferExecutor);
-							executorProvided.setType(ExecutorProvidedType.DELETED);
-							executorProvided.setNoTraffic(curatorFrameworkOp
-									.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
-							executorProvidedList.add(executorProvided);
+						if (!preferExecutor.startsWith("@")) {
+							if (!executors.contains(preferExecutor)) {
+								ExecutorProvided executorProvided = new ExecutorProvided();
+								executorProvided.setExecutorName(preferExecutor);
+								executorProvided.setType(ExecutorProvidedType.PHYSICAL);
+								executorProvided.setStatus(ExecutorProvidedStatus.DELETED);
+								executorProvided.setNoTraffic(curatorFrameworkOp
+										.checkExists(SaturnExecutorsNode.getExecutorNoTrafficNodePath(preferExecutor)));
+								executorProvidedList.add(executorProvided);
+							}
+						} else {
+							String executorName = preferExecutor.substring(1);
+							boolean include = false;
+							for(ExecutorProvided executorProvided : dockerExecutorProvided) {
+								if(executorProvided.getExecutorName().equals(executorName)) {
+									include = true;
+									break;
+								}
+							}
+							if(!include) {
+								ExecutorProvided executorProvided = new ExecutorProvided();
+								executorProvided.setExecutorName(executorName);
+								executorProvided.setType(ExecutorProvidedType.DOCKER);
+								executorProvided.setStatus(ExecutorProvidedStatus.DELETED);
+								executorProvidedList.add(executorProvided);
+							}
 						}
 					}
 				}

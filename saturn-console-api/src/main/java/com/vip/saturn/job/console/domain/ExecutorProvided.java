@@ -7,7 +7,8 @@ public class ExecutorProvided {
 
 	private String executorName;
 	private ExecutorProvidedType type;
-	private boolean noTraffic;
+	private ExecutorProvidedStatus status;
+	private Boolean noTraffic;
 
 	public String getExecutorName() {
 		return executorName;
@@ -25,11 +26,19 @@ public class ExecutorProvided {
 		this.type = type;
 	}
 
-	public boolean isNoTraffic() {
+	public ExecutorProvidedStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ExecutorProvidedStatus status) {
+		this.status = status;
+	}
+
+	public Boolean isNoTraffic() {
 		return noTraffic;
 	}
 
-	public void setNoTraffic(boolean noTraffic) {
+	public void setNoTraffic(Boolean noTraffic) {
 		this.noTraffic = noTraffic;
 	}
 }

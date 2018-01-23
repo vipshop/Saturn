@@ -3,9 +3,10 @@ package com.vip.saturn.job.console.domain;
 /**
  * @author hebelala
  */
-public enum ExecutorProvidedType {
+public enum ExecutorProvidedStatus {
 
-	DOCKER,
-	PHYSICAL
+	ONLINE,
+	OFFLINE,
+	DELETED
 
 }

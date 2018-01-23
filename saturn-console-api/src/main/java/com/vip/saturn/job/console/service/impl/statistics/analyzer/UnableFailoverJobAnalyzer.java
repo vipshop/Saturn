@@ -1,9 +1,6 @@
 package com.vip.saturn.job.console.service.impl.statistics.analyzer;
 
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.ExecutorProvided;
-import com.vip.saturn.job.console.domain.ExecutorProvidedType;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.JobNodePath;
@@ -64,7 +61,8 @@ public class UnableFailoverJobAnalyzer {
 						if (ExecutorProvidedType.DOCKER.equals(executorProvided.getType())) {
 							containerSelected = true;
 							break;
-						} else if (ExecutorProvidedType.ONLINE.equals(executorProvided.getType())) {
+						} else if (ExecutorProvidedType.PHYSICAL.equals(executorProvided.getType())
+								&& ExecutorProvidedStatus.ONLINE.equals(executorProvided.getStatus())) {
 							count++;
 						}
 					}
@@ -76,7 +74,8 @@ public class UnableFailoverJobAnalyzer {
 						containerSelected = true;
 						break;
 					}
-					if (ExecutorProvidedType.ONLINE.equals(executorProvided.getType())) {
+					if (ExecutorProvidedType.PHYSICAL.equals(executorProvided.getType()) &&
+							ExecutorProvidedStatus.ONLINE.equals(executorProvided.getStatus())) {
 						count++;
 						if (count > 1) {
 							break;
