@@ -16,7 +16,7 @@ import static com.vip.saturn.job.console.service.helper.SystemConfigProperties.*
  */
 public class ZkClusterMappingUtils {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(ZkClusterMappingUtils.class);
 
 	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 
@@ -33,7 +33,7 @@ public class ZkClusterMappingUtils {
 
 	static {
 		if (StringUtils.isBlank(VIP_SATURN_CONSOLE_CLUSTER_ID)) {
-			LOGGER.warn("The {} is not configured, will use the default value that is {}",
+			log.warn("The {} is not configured, will use the default value that is {}",
 					NAME_VIP_SATURN_CONSOLE_CLUSTER,
 					DEFAULT_CONSOLE_CLUSTER_ID);
 			VIP_SATURN_CONSOLE_CLUSTER_ID = DEFAULT_CONSOLE_CLUSTER_ID;
@@ -51,14 +51,14 @@ public class ZkClusterMappingUtils {
 		String mappingValue = StringUtils
 				.deleteWhitespace(systemConfigService.getValueDirectly(mappingName));
 		if (StringUtils.isBlank(mappingValue)) {
-			LOGGER.warn("The {} is not configured in sys_config", mappingName);
+			log.warn("The {} is not configured in sys_config", mappingName);
 			return null;
 		}
 		String[] split = mappingValue.split(";");
 		for (String temp : split) {
 			int idx = temp.indexOf(":");
 			if (idx < 0) {
-				LOGGER.warn(
+				log.warn(
 						"The {}' value {}, whose format is not correct, should like key:value1,value2;key2:value3,value4",
 						mappingName, mappingValue);
 				return null;
@@ -89,13 +89,13 @@ public class ZkClusterMappingUtils {
 		try {
 			String zkClusterIdc = getIdcByZkClusterKey(systemConfigService, zkClusterKey);
 			if (StringUtils.isBlank(zkClusterIdc)) {
-				LOGGER.warn("The mapping idc is not found for the zkClusterKey that is {}", zkClusterKey);
+				log.warn("The mapping idc is not found for the zkClusterKey that is {}", zkClusterKey);
 				return true;
 			}
 			String consoleIdc = getIdcByConsoleId(systemConfigService, VIP_SATURN_CONSOLE_CLUSTER_ID);
 			return zkClusterIdc.equalsIgnoreCase(consoleIdc);
 		} catch (Exception e) {
-			LOGGER.error("isCurrentConsoleInTheSameIdc error, will return true", e);
+			log.error("isCurrentConsoleInTheSameIdc error, will return true", e);
 			return true;
 		}
 	}
@@ -107,14 +107,14 @@ public class ZkClusterMappingUtils {
 		String mappingValue = StringUtils
 				.deleteWhitespace(systemConfigService.getValueDirectly(IDC_CONSOLE_DOMAIN_MAPPING));
 		if (StringUtils.isBlank(mappingValue)) {
-			LOGGER.warn("The {} is not configured in sys_config", IDC_CONSOLE_DOMAIN_MAPPING);
+			log.warn("The {} is not configured in sys_config", IDC_CONSOLE_DOMAIN_MAPPING);
 			return null;
 		}
 		String[] split = mappingValue.split(";");
 		for (String temp : split) {
 			int idx = temp.indexOf(":");
 			if (idx < 0) {
-				LOGGER.warn("The {}' value {}, whose format is not correct, should like key:value;key2:value2",
+				log.warn("The {}' value {}, whose format is not correct, should like key:value;key2:value2",
 						IDC_CONSOLE_DOMAIN_MAPPING, mappingValue);
 				return null;
 			}
