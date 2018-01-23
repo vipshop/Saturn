@@ -15,8 +15,8 @@
                   <div class="pull-right">
                       <el-button size="small" @click="handleActive(true)" v-if="jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED'"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                       <el-button size="small" @click="handleActive(false)" v-if="jobInfo.status === 'READY' || jobInfo.status === 'RUNNING'"><i class="fa fa-stop-circle text-btn"></i>禁用</el-button>
-                      <el-button size="small" @click="handleOperate('runAtOnce')" v-if="jobInfo.enabled"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
-                      <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING' || !jobInfo.enabled"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
+                      <el-button size="small" @click="handleOperate('runAtOnce')" v-if="jobInfo.status === 'READY' && jobStatusJudge()"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
+                      <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="jobInfo.status === 'STOPPING'"><i class="fa fa-stop-circle-o text-btn"></i>立即终止</el-button>
                       <el-button size="small" @click="handleDelete" v-if="jobInfo.status === 'STOPPED' || !jobInfo.enabled"><i class="fa fa-trash text-btn"></i>删除</el-button>
                   </div>
               </div>
@@ -52,6 +52,7 @@ export default {
         STOPPING: '停止中',
         STOPPED: '已停止',
       },
+      jobShardings: [],
     };
   },
   methods: {
@@ -149,6 +150,20 @@ export default {
         this.loading = false;
       });
     },
+    jobStatusJudge() {
+      return this.jobShardings.some((ele) => {
+        if (ele.status === 'ONLINE') {
+          return true;
+        }
+        return false;
+      });
+    },
+    getJobExecutors() {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
+        this.jobShardings = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业运行状态请求失败！'); });
+    },
   },
   computed: {
     jobInfo() {
@@ -158,6 +173,7 @@ export default {
   created() {
     this.getDomainInfo();
     this.getJobInfo();
+    this.getJobExecutors();
   },
 };
 </script>
