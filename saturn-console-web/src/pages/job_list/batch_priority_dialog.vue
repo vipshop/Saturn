@@ -37,6 +37,7 @@ export default {
   },
   methods: {
     handleSubmit() {
+      this.setSelectedExecutor();
       const params = {
         jobNames: this.jobNamesArray.join(','),
         preferList: this.selectedExecutors.join(','),
@@ -48,6 +49,17 @@ export default {
     },
     closeDialog() {
       this.$emit('close-dialog');
+    },
+    setSelectedExecutor() {
+      if (this.selectedExecutors.length > 0) {
+        this.selectedExecutors.forEach((ele, index) => {
+          this.onlineExecutors.forEach((ele2) => {
+            if (ele === ele2.value && ele2.container) {
+              this.selectedExecutors[index] = `@${ele}`;
+            }
+          });
+        });
+      }
     },
     getOnlineExecutors() {
       this.loading = true;
