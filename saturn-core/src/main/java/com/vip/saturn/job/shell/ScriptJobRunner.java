@@ -27,7 +27,7 @@ public class ScriptJobRunner {
 
 	private static final String PREFIX_COMAND = " source /etc/profile; ";
 
-	private Map<String, String> envMap = new HashMap<String, String>();
+	private Map<String, String> envMap = new HashMap<>();
 
 	private AbstractSaturnJob job;
 
@@ -83,7 +83,6 @@ public class ScriptJobRunner {
 		}
 		String execParameter = envStringBuilder.toString() + PREFIX_COMAND
 				+ ScriptPidUtils.filterEnvInCmdStr(env, itemValue);
-		// CommandLine cmdLine = CommandLine.parse(execParameter);
 		final CommandLine cmdLine = new CommandLine("/bin/sh");
 		cmdLine.addArguments(new String[]{"-c", execParameter}, false);
 		return cmdLine;
@@ -128,7 +127,6 @@ public class ScriptJobRunner {
 
 	public SaturnJobReturn runJob() {
 		SaturnJobReturn saturnJobReturn = null;
-		// String jobName = job.getJobName();
 		long timeoutSeconds = saturnExecutionContext.getTimetoutSeconds();
 		try {
 			createSaturnJobReturnFile();
@@ -179,14 +177,7 @@ public class ScriptJobRunner {
 		} finally {
 			try {
 				// 将日志set进jobLog, 写不写zk再由ExecutionService控制
-				String jobLog = processOutputStream.getJobLog();
-				saturnExecutionContext.putJobLog(item, jobLog);
-
-				// 提供给saturn-job-executor.log日志输出shell命令jobLog，以后若改为重定向到日志，则可删除此输出
-				System.out.println("[" + jobName + "] msg=" + jobName + "-" + item + ":" + jobLog);// NOSONAR
-
-				log.info("[{}] msg={}-{}: {}", jobName, jobName, item, jobLog);
-
+				handleJobLog(processOutputStream.getJobLog());
 				processOutputStream.close();
 			} catch (Exception ex) {
 				log.error("[{}] msg={}-{} Error at closing output stream. Should not be concern: {}", jobName,
@@ -196,6 +187,15 @@ public class ScriptJobRunner {
 			ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getPid());
 		}
 		return saturnJobReturn;
+	}
+
+	private void handleJobLog(String jobLog) {
+		saturnExecutionContext.putJobLog(item, jobLog);
+
+		// 提供给saturn-job-executor.log日志输出shell命令jobLog，以后若改为重定向到日志，则可删除此输出
+		System.out.println("[" + jobName + "] msg=" + jobName + "-" + item + ":" + jobLog);// NOSONAR
+
+		log.info("[{}] msg={}-{}: {}", jobName, jobName, item, jobLog);
 	}
 
 	private void stopStreamHandler(PumpStreamHandler streamHandler) {
@@ -215,16 +215,20 @@ public class ScriptJobRunner {
 					String.format("execute job timeout(%sms), %s", timeoutSeconds * 1000, errMsg),
 					SaturnSystemErrorGroup.TIMEOUT);
 			log.error("[{}] msg={}-{} timeout, {}", jobName, jobName, item, errMsg);
-		} else if (watchdog.isForceStop()) {
+			return saturnJobReturn;
+		}
+
+		if (watchdog.isForceStop()) {
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
 					"the job was forced to stop, " + errMsg,
 					SaturnSystemErrorGroup.FAIL);
 			log.error("[{}] msg={}-{} force stopped, {}", jobName, jobName, item, errMsg);
-		} else {
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
-					SaturnSystemErrorGroup.FAIL);
-			log.error("[{}] msg={}-{} Exception: {}", jobName, jobName, errMsg, e);
+			return saturnJobReturn;
 		}
+
+		saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
+				SaturnSystemErrorGroup.FAIL);
+		log.error("[{}] msg={}-{} Exception: {}", jobName, jobName, errMsg, e);
 		return saturnJobReturn;
 	}
 }
