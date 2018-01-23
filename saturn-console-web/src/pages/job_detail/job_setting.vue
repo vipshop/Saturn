@@ -10,8 +10,8 @@
                     <div class="job-setting-content">
                         <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
                             <el-col :span="22">
-                                <el-form-item prop="jobClass" label="作业实现类" required>
-                                    <el-input v-model="jobSettingInfo.jobClass"></el-input>
+                                <el-form-item prop="jobClass" label="作业实现类">
+                                    <el-input v-model="jobSettingInfo.jobClass" disabled></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -73,9 +73,7 @@
                             <el-col :span="22">
                                 <el-form-item prop="preferList" label="优先executor">
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
-                                        <el-option v-for="item in jobSettingInfo.preferListProvided" :label="item.executorName" :value="item.executorName" :key="item.executorName">
-                                            <span style="float: left">{{ item.executorName }}</span>
-                                            <span style="float: left">({{ statusOnline[item.type] }})</span>
+                                        <el-option v-for="item in preferListProvidedArray" :label="item.executorDes" :value="item.executorName" :key="item.executorDes">
                                         </el-option>
                                     </el-select>
                                 </el-form-item>
@@ -201,13 +199,10 @@ export default {
       activeNames: ['1'],
       cronPredictParams: {},
       rules: {
-        jobClass: [{ required: true, message: '作业实现类不能为空', trigger: 'blur' }],
+        cron: [{ required: true, message: 'cron表达式不能为空', trigger: 'blur' }],
+        shardingItemParameters: [{ required: true, message: '分片序列号/参数对照表不能为空', trigger: 'blur' }],
       },
-      statusOnline: {
-        ONLINE: '在线',
-        OFFLINE: '离线',
-        DOCKER: '容器',
-      },
+      preferListProvidedArray: [],
     };
   },
   methods: {
@@ -285,16 +280,39 @@ export default {
             jobInfoData.preferList[index] = ele.replace('@', '');
           }
         });
-        const preferListArray = [];
-        if (jobInfoData.preferListProvided) {
-          jobInfoData.preferListProvided.forEach((element) => {
-            preferListArray.push(element.executorName);
-          });
-        }
-        jobInfoData.preferList.forEach((ele1, index1) => {
-          if (!preferListArray.includes(ele1)) {
-            jobInfoData.preferList[index1] = `${ele1}(已删除)`;
+      }
+      if (jobInfoData.preferListProvided) {
+        this.preferListProvidedArray = jobInfoData.preferListProvided.map((obj) => {
+          const rObj = {};
+          rObj.executorName = obj.executorName;
+          rObj.noTraffic = obj.noTraffic;
+          rObj.type = obj.type;
+          rObj.status = obj.status;
+          if (rObj.type === 'PHYSICAL') {
+            switch (rObj.status) {
+              case 'OFFLINE':
+                rObj.executorDes = `${rObj.executorName}(离线)`;
+                break;
+              case 'ONLINE':
+                rObj.executorDes = `${rObj.executorName}(在线)`;
+                break;
+              case 'DELETE':
+                rObj.executorDes = `${rObj.executorName}(已删除)`;
+                break;
+              default:
+                break;
+            }
+          } else {
+            switch (rObj.status) {
+              case 'DELETED':
+                rObj.executorDes = `${rObj.executorName}(容器已删除)`;
+                break;
+              default:
+                rObj.executorDes = `${rObj.executorName}(容器)`;
+                break;
+            }
           }
+          return rObj;
         });
       }
       return jobInfoData;
