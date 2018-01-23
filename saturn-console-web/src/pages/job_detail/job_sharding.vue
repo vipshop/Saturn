@@ -6,7 +6,7 @@
                     <el-button type="text" @click="getJobSharding"><i class="fa fa-refresh"></i></el-button>
                 </div>
             </div>
-            <el-table stripe border :data="jobShardings" style="width: 100%">
+            <el-table stripe border :data="haveShardJobShardings" style="width: 100%">
                 <el-table-column prop="executorName" label="Executor" min-width="110px">
                     <template slot-scope="scope">
                         <i class="iconfont icon-docker" v-if="scope.row.container"></i>
@@ -45,13 +45,20 @@ export default {
   methods: {
     getJobSharding() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
-        data.forEach((ele) => {
-          if (ele.sharding !== '') {
-            this.jobShardings.push(ele);
-          }
-        });
+        this.jobShardings = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取分片情况请求失败！'); });
+    },
+  },
+  computed: {
+    haveShardJobShardings() {
+      const arr = [];
+      this.jobShardings.forEach((ele) => {
+        if (ele.sharding !== '') {
+          arr.push(ele);
+        }
+      });
+      return arr;
     },
   },
   created() {
