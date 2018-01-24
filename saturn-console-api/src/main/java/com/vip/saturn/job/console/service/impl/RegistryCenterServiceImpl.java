@@ -916,6 +916,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return zkClusterMap.values();
 	}
 
+	@Override
+	public List<ZkCluster> getOnlineZkClusterList() {
+		List<ZkCluster> onlineClusters = Lists.newArrayList();
+		for (ZkCluster zkCluster : zkClusterMap.values()) {
+			if (!zkCluster.isOffline()) {
+				onlineClusters.add(zkCluster);
+			}
+		}
+		return onlineClusters;
+	}
+
 	private List<String> getZkClusterKeys() {
 		Collection<ZkCluster> zkClusters = getZkClusterList();
 		List<String> zkClusterKeys = Lists.newArrayList();

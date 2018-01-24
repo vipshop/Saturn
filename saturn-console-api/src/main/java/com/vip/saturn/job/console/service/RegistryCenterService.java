@@ -46,6 +46,8 @@ public interface RegistryCenterService {
 
 	Collection<ZkCluster> getZkClusterList();
 
+	List<ZkCluster> getOnlineZkClusterList();
+
 	int domainCount(String key);
 
 	boolean namespaceIsCorrect(String namespace, CuratorFramework curatorFramework) throws SaturnJobConsoleException;

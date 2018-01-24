@@ -126,7 +126,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10FailureJobByAllZkCluster() throws SaturnJobConsoleException {
 		List<JobStatistics> jobStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10FailureJob(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -152,7 +152,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10FailureExecutorByAllZkCluster() throws SaturnJobConsoleException {
 		List<ExecutorStatistics> executorStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10FailureExecutor(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -178,7 +178,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10AactiveJobByAllZkCluster() throws SaturnJobConsoleException {
 		List<JobStatistics> jobStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10AactiveJob(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -204,7 +204,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10LoadExecutorByAllZkCluster() throws SaturnJobConsoleException {
 		List<ExecutorStatistics> executorStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10LoadExecutor(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -230,7 +230,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10LoadJobByAllZkCluster() throws SaturnJobConsoleException {
 		List<JobStatistics> jobStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10LoadJob(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -256,8 +256,13 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10UnstableDomainByAllZkCluster() throws SaturnJobConsoleException {
 		List<DomainStatistics> domainStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
+			//只显示在线的zk集群
+			if (zkCluster.isOffline()) {
+				continue;
+			}
+
 			SaturnStatistics saturnStatistics = top10UnstableDomain(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
 				String result = saturnStatistics.getResult();
@@ -282,7 +287,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String allProcessAndErrorCountOfTheDayByAllZkCluster() throws SaturnJobConsoleException {
 		int count = 0, error = 0;
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -306,7 +311,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public String top10FailureDomainByAllZkCluster() throws SaturnJobConsoleException {
 		List<DomainStatistics> domainStatisticsList = new ArrayList<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = top10FailureDomain(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
@@ -425,7 +430,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public Map<String, Integer> loadDomainRankDistributionByAllZkCluster() throws SaturnJobConsoleException {
 		Map<String, Integer> domainMap = new HashMap<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
 			if (regCenterConfList != null) {
@@ -457,7 +462,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public Map<Integer, Integer> loadJobRankDistributionByAllZkCluster() throws SaturnJobConsoleException {
 		Map<Integer, Integer> jobDegreeCountMap = new HashMap<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<Integer, Integer> temp = loadJobRankDistribution(zkAddr);
@@ -496,7 +501,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public Map<String, Long> versionDomainNumberByAllZkCluster() throws SaturnJobConsoleException {
 		Map<String, Long> versionDomainNumberMap = new HashMap<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<String, Long> temp = versionDomainNumber(zkAddr);
@@ -535,7 +540,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public Map<String, Long> versionExecutorNumberByAllZkCluster() throws SaturnJobConsoleException {
 		Map<String, Long> versionExecutorNumberMap = new HashMap<>();
-		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<String, Long> temp = versionExecutorNumber(zkAddr);
