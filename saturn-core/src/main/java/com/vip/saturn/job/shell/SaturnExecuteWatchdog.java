@@ -37,7 +37,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
 	private long pid = -1;
 
-	private AtomicInteger status = new AtomicInteger(0);
+	private AtomicInteger status = new AtomicInteger(INIT);
 
 	public SaturnExecuteWatchdog(final long timeout, final String jobName, final int jobItem, final String execParam,
 			final String executorName) {
