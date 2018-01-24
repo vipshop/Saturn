@@ -109,38 +109,38 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				namespaceShardingService.shardingCountIncrementAndGet();
 				executorService.submit(new ExecuteAllShardingTask(namespaceShardingService));
 			} else { // 如果当前是全量分片，则告警并关闭当前服务，重选leader来做事情
-				if (reportAlarmService != null) {
-					try {
-						reportAlarmService
-								.allShardingError(namespaceShardingService.getNamespace(),
-										namespaceShardingService.getHostValue());
-					} catch (Throwable t2) {
-						if (t2 instanceof InterruptedException) { // NOSONAR
-							log.info("{}-{} {}-allShardingError is interrupted",
-									namespaceShardingService.getNamespace(), namespaceShardingService.getHostValue(),
-									this.getClass().getSimpleName());
-							Thread.currentThread().interrupt();
-						} else {
-							log.error(t2.getMessage(), t2);
-						}
-					}
-				}
-				try {
-					namespaceShardingService.shutdownInner(false);
-				} catch (InterruptedException e) {
-					log.info("{}-{} {}-shutdownInner is interrupted", namespaceShardingService.getNamespace(),
-							namespaceShardingService.getHostValue(),
-							this.getClass().getSimpleName());
-					Thread.currentThread().interrupt();
-				} catch (Throwable t3) {
-					log.error(t3.getMessage(), t3);
-				}
+				raiseAlarm();
+				shutdownNamespaceShardingService();
 			}
 		} finally {
 			if (isAllShardingTask) { // 如果是全量分片，不再进行全量分片
 				namespaceShardingService.setNeedAllSharding(false);
 			}
 			namespaceShardingService.shardingCountDecrementAndGet();
+		}
+	}
+
+	private void shutdownNamespaceShardingService() {
+		try {
+			namespaceShardingService.shutdownInner(false);
+		} catch (InterruptedException e) {
+			log.info("{}-{} {}-shutdownInner is interrupted", namespaceShardingService.getNamespace(),
+					namespaceShardingService.getHostValue(),
+					this.getClass().getSimpleName());
+			Thread.currentThread().interrupt();
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}
+
+	private void raiseAlarm() {
+		if (reportAlarmService != null) {
+			try {
+				reportAlarmService.allShardingError(namespaceShardingService.getNamespace(),
+						namespaceShardingService.getHostValue());
+			} catch (Throwable t) {
+				log.error(t.getMessage(), t);
+			}
 		}
 	}
 
