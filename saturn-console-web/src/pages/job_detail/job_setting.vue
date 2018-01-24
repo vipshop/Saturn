@@ -224,7 +224,11 @@ export default {
             if (this.jobSettingInfo.localMode) {
               this.jobSettingInfo.shardingTotalCount = 1;
             }
-            this.jobSettingInfoRequest();
+            if (!this.validateShardingParams()) {
+              this.$message.errorMessage('分片参数不能小于作业分片总数!');
+            } else {
+              this.jobSettingInfoRequest();
+            }
           } else {
             this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
           }
@@ -252,6 +256,23 @@ export default {
       if (this.jobSettingInfo.localMode) {
         if (!this.jobSettingInfo.shardingItemParameters.startsWith('*=')) {
           flag = false;
+        }
+      }
+      return flag;
+    },
+    validateShardingParams() {
+      let flag = false;
+      if (!this.jobSettingInfo.localMode) {
+        let arr = [];
+        if (this.jobSettingInfo.shardingItemParameters.indexOf(',') > 0) {
+          arr = this.jobSettingInfo.shardingItemParameters.split(',');
+        } else {
+          arr = [this.jobSettingInfo.shardingItemParameters];
+        }
+        if (this.jobSettingInfo.shardingTotalCount > arr.length) {
+          flag = false;
+        } else {
+          flag = true;
         }
       }
       return flag;
