@@ -296,7 +296,7 @@ export default {
               case 'ONLINE':
                 rObj.executorDes = `${rObj.executorName}(在线)`;
                 break;
-              case 'DELETE':
+              case 'DELETED':
                 rObj.executorDes = `${rObj.executorName}(已删除)`;
                 break;
               default:
