@@ -32,7 +32,7 @@ const routermapperlist = [
 export default {
   GetPath(name) {
     const items = routermapperlist.filter(x => x.name === name);
-    if (items !== undefined) {
+    if (items.length > 0) {
       return items[0].path;
     }
     throw new Error('can not find route path ');
