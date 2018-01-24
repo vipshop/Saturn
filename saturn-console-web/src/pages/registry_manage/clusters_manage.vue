@@ -75,7 +75,7 @@ export default {
     clusterInfoSuccess() {
       this.isClusterVisible = false;
       this.getAllClusters();
-      this.$message.successNotify('保存ZK集群操作成功');
+      this.$message.successNotify('保存ZK集群操作成功,若列表未更新,请稍后手动刷新页面');
     },
     getAllClusters() {
       this.loading = true;
