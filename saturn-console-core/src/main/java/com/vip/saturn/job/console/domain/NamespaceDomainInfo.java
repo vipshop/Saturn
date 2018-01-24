@@ -1,7 +1,5 @@
 package com.vip.saturn.job.console.domain;
 
-import java.util.Objects;
-
 public class NamespaceDomainInfo {
 
     private String namespace;
@@ -36,16 +34,29 @@ public class NamespaceDomainInfo {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         NamespaceDomainInfo that = (NamespaceDomainInfo) o;
-        return Objects.equals(namespace, that.namespace) &&
-                Objects.equals(content, that.content) &&
-                Objects.equals(zkCluster, that.zkCluster);
+
+        if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) {
+            return false;
+        }
+        if (content != null ? !content.equals(that.content) : that.content != null) {
+            return false;
+        }
+        return zkCluster != null ? zkCluster.equals(that.zkCluster) : that.zkCluster == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(namespace, content, zkCluster);
+        int result = namespace != null ? namespace.hashCode() : 0;
+        result = 31 * result + (content != null ? content.hashCode() : 0);
+        result = 31 * result + (zkCluster != null ? zkCluster.hashCode() : 0);
+        return result;
     }
 }
