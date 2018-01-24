@@ -53,8 +53,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			, AbnormalShardingState /** abnormal sharding state */
 			> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
-	private static final String HEADER_VALUE_PREFIX = "Bearer ";
-
 	private static final int CONNECT_TIMEOUT_MS = 10000;
 
 	private static final int SO_TIMEOUT_MS = 180000;
@@ -298,6 +296,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			statisticsModel.analyzeExecutor(curatorFrameworkOp, config);
 			List<String> jobs = jobService.getUnSystemJobNames(config.getNamespace());
 			for (String job : jobs) {
+				if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {
+					continue;
+				}
+
 				try {
 					Boolean localMode = Boolean
 							.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "localMode")));
