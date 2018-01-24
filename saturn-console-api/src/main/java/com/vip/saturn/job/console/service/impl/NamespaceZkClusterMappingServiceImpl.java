@@ -178,11 +178,9 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			} else {
 				String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 				if (zkClusterKey != null && zkClusterKey.equals(zkClusterKeyNew)) {
+					// see moveNamespaceBatchTo before modify
 					throw new SaturnJobConsoleException(
-							"The namespace(" + namespace + ") is in " + zkClusterKey); // see
-					// moveNamespaceBatchTo
-					// before
-					// modify
+							"The namespace(" + namespace + ") is in " + zkClusterKey);
 				}
 				ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKeyNew);
 				if (zkCluster == null) {
@@ -280,6 +278,13 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 						}
 					}
 				} finally {
+					if (moveNamespaceBatchStatus.getSuccessCount() > 0) {
+						try {
+							registryCenterService.notifyRefreshRegCenter();
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					}
 					moveNamespaceBatchStatus.setFinished(true);
 					temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
 							gson.toJson(moveNamespaceBatchStatus));
