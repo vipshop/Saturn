@@ -1,5 +1,5 @@
 <template>
-    <div class="page-content">
+    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <div>
             <el-row :gutter="10">
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
@@ -31,6 +31,7 @@
 export default {
   data() {
     return {
+      loading: false,
       zkCluster: this.$route.query.zkCluster,
       top10FailExecutorOption: {},
       top10LoadExecutorOption: {},
@@ -39,7 +40,7 @@ export default {
   },
   methods: {
     getTop10FailExecutor() {
-      this.$http.get('/console/dashboard/top10FailExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10FailExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const executors = [];
         const dataArr = [];
@@ -66,7 +67,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10 Executor请求失败！'); });
     },
     getTop10LoadExecutor() {
-      this.$http.get('/console/dashboard/top10LoadExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10LoadExecutor', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const executors = [];
         const dataArr = [];
@@ -93,17 +94,22 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取负荷最重的Top10 Executor请求失败！'); });
     },
     getExecutorVersionNumber() {
-      this.$http.get('/console/dashboard/executorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/executorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
         const seriesData = [{ name: '该版本Executor数量', data: Object.entries(data) }];
         this.$set(this.executorVersionNumberOption, 'seriesData', seriesData);
       })
       .catch(() => { this.$http.buildErrorHandler('获取Executor版本分布请求失败！'); });
     },
+    init() {
+      this.loading = true;
+      Promise.all([this.getTop10FailExecutor(),
+        this.getTop10LoadExecutor(), this.getExecutorVersionNumber()]).then(() => {
+          this.loading = false;
+        });
+    },
   },
   created() {
-    this.getTop10FailExecutor();
-    this.getTop10LoadExecutor();
-    this.getExecutorVersionNumber();
+    this.init();
   },
 };
 </script>

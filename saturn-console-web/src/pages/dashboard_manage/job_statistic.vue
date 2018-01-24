@@ -1,5 +1,5 @@
 <template>
-    <div class="page-content">
+    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <div>
             <el-row :gutter="10">
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
@@ -31,6 +31,7 @@
 export default {
   data() {
     return {
+      loading: false,
       zkCluster: this.$route.query.zkCluster,
       top10FailJobOption: {},
       top10ActiveJobOption: {},
@@ -39,7 +40,7 @@ export default {
   },
   methods: {
     getTop10FailJob() {
-      this.$http.get('/console/dashboard/top10FailJob', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10FailJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -67,7 +68,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10作业请求失败！'); });
     },
     getTop10ActiveJob() {
-      this.$http.get('/console/dashboard/top10ActiveJob', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10ActiveJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -95,7 +96,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取最活跃的Top10作业请求失败！'); });
     },
     getTop10LoadJob() {
-      this.$http.get('/console/dashboard/top10LoadJob', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10LoadJob', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -121,11 +122,16 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取负荷最重的Top10作业请求失败！'); });
     },
+    init() {
+      this.loading = true;
+      Promise.all([this.getTop10FailJob(),
+        this.getTop10ActiveJob(), this.getTop10LoadJob()]).then(() => {
+          this.loading = false;
+        });
+    },
   },
   created() {
-    this.getTop10FailJob();
-    this.getTop10ActiveJob();
-    this.getTop10LoadJob();
+    this.init();
   },
 };
 </script>

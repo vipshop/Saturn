@@ -5,7 +5,7 @@
                 <span style="font-size: 23px;"><i class="fa fa-pie-chart"></i>dashboard</span>
                 <el-select size="small" class="pull-right" v-model="clusterKey" @change="clusterChange">
                     <el-option label="全部集群" value=""></el-option>
-                    <el-option v-for="item in clusterKeys" :label="item" :value="item" :key="item"></el-option>
+                    <el-option v-for="item in onlineClusterkeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
                 </el-select>
             </div>
             <div>
@@ -51,7 +51,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取dashboard统计请求失败！'); });
     },
     getZkClusters() {
-      this.$http.get('/console/utils/zkClusterKeys').then((data) => {
+      this.$http.get('/console/zkClusters').then((data) => {
         this.clusterKeys = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取所有zk集群请求失败！'); });
@@ -60,6 +60,15 @@ export default {
   computed: {
     executorCount() {
       return `${this.executorNotInDockerCount}+${this.executorInDockerCount}`;
+    },
+    onlineClusterkeys() {
+      const arr = [];
+      this.clusterKeys.forEach((ele) => {
+        if (!ele.offline) {
+          arr.push(ele);
+        }
+      });
+      return arr;
     },
   },
   created() {

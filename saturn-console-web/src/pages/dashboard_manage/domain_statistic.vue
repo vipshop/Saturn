@@ -1,5 +1,5 @@
 <template>
-    <div class="page-content">
+    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <div>
             <el-row :gutter="10">
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
@@ -38,6 +38,7 @@
 export default {
   data() {
     return {
+      loading: false,
       zkCluster: this.$route.query.zkCluster,
       domainProcessCountOption: {},
       domainExecutorVersionOption: {},
@@ -47,7 +48,7 @@ export default {
   },
   methods: {
     getDomainProcessCount() {
-      this.$http.get('/console/dashboard/domainProcessCount', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/domainProcessCount', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const error = resultData.error;
         const count = resultData.count;
@@ -58,7 +59,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取全域当天执行数据请求失败！'); });
     },
     getTop10FailDomain() {
-      this.$http.get('/console/dashboard/top10FailDomain', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10FailDomain', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -86,7 +87,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10域请求失败！'); });
     },
     getTop10UnstableDomain() {
-      this.$http.get('/console/dashboard/top10UnstableDomain', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/top10UnstableDomain', { zkClusterKey: this.zkCluster }).then((data) => {
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -112,7 +113,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取稳定性最差的Top10域请求失败！'); });
     },
     getDomainExecutorVersionNumber() {
-      this.$http.get('/console/dashboard/domainExecutorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
+      return this.$http.get('/console/dashboard/domainExecutorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
         const arr = [];
         Object.entries(data).forEach((ele) => {
           if (ele[0] === '-1') {
@@ -127,12 +128,17 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取域版本分布请求失败！'); });
     },
+    init() {
+      this.loading = true;
+      Promise.all(
+        [this.getDomainProcessCount(), this.getTop10FailDomain(),
+          this.getTop10UnstableDomain(), this.getDomainExecutorVersionNumber()]).then(() => {
+            this.loading = false;
+          });
+    },
   },
   created() {
-    this.getDomainProcessCount();
-    this.getTop10FailDomain();
-    this.getTop10UnstableDomain();
-    this.getDomainExecutorVersionNumber();
+    this.init();
   },
 };
 </script>
