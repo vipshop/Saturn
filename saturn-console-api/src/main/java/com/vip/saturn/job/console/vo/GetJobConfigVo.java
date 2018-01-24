@@ -62,14 +62,13 @@ public class GetJobConfigVo {
 	}
 
 	private List<String> toList(String str) {
-		if (str == null) {
-			return null;
-		}
 		List<String> list = new ArrayList<>();
-		String[] split = str.split(",");
-		for (String temp : split) {
-			if (StringUtils.isNotBlank(temp)) {
-				list.add(temp);
+		if (str != null) {
+			String[] split = str.split(",");
+			for (String temp : split) {
+				if (StringUtils.isNotBlank(temp)) {
+					list.add(temp);
+				}
 			}
 		}
 		return list;

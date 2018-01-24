@@ -1483,6 +1483,7 @@ public class JobServiceImpl implements JobService {
 		GetJobConfigVo getJobConfigVo = new GetJobConfigVo();
 		JobConfig jobConfig = new JobConfig();
 		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
+		jobConfig.setDefaultValues();
 		getJobConfigVo.copyFrom(jobConfig);
 
 		getJobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
