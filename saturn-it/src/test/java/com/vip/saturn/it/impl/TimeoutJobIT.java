@@ -55,7 +55,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 	@Test
 	public void test_A_JavaJob() throws InterruptedException {
 		final int shardCount = 3;
-		final String jobName = "timeoutITJobJava";
+		final String jobName = "test_A_JavaJob";
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			LongtimeJavaJob.JobStatus status = new LongtimeJavaJob.JobStatus();
@@ -143,7 +143,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 			return;
 		}
 		final int shardCount = 3;
-		final String jobName = "timeoutITJobsh";
+		final String jobName = "test_B_shJob";
 
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("* * 1 * * ?");
@@ -158,6 +158,9 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 		enableJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
 		runAtOnce(jobName);
+
+		// wait executor receive the runAtOnce event
+		Thread.sleep(500L);
 
 		try {
 			waitForFinish(new FinishCheck() {
@@ -190,7 +193,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 				@Override
 				public boolean docheck() {
 
-					for (int j = 0; j < 3; j++) {
+					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
 								.isExisted(JobNodePath.getNodeFullPath(jobName, ExecutionNode.getCompletedNode(j)))) {
 							return false;
