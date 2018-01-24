@@ -37,11 +37,11 @@ import org.slf4j.LoggerFactory;
  */
 public class NamespaceShardingService {
 
+	public static boolean CONTAINER_ALIGN_WITH_PHYSICAL;
+
 	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingService.class);
 
 	private static final String NAME_IS_CONTAINER_ALIGN_WITH_PHYSICAL = "VIP_SATURN_CONTAINER_ALIGN_WITH_PHYSICAL";
-
-	public static boolean CONTAINER_ALIGN_WITH_PHYSICAL;
 
 	private String namespace;
 
