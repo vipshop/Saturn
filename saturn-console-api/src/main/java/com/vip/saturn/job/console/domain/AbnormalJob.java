@@ -6,25 +6,9 @@ package com.vip.saturn.job.console.domain;
 /**
  * @author chembo.huang
  */
-public class AbnormalJob {
-
-	private static final long serialVersionUID = 1L;
+public class AbnormalJob extends AbstractAlarmJob {
 
 	private String uuid;
-
-	private String jobName;
-
-	private String domainName;
-
-	/**
-	 * name and namespace
-	 */
-	private String nns;
-
-	/**
-	 * degree of the domain
-	 */
-	private String degree;
 
 	private String jobDegree;
 
@@ -40,15 +24,8 @@ public class AbnormalJob {
 
 	private transient long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 
-	public AbnormalJob() {
-
-	}
-
 	public AbnormalJob(String jobName, String domainName, String nns, String degree) {
-		this.jobName = jobName;
-		this.domainName = domainName;
-		this.nns = nns;
-		this.degree = degree;
+		super(jobName, domainName, nns, degree);
 	}
 
 	public String getUuid() {
@@ -97,38 +74,6 @@ public class AbnormalJob {
 
 	public void setCause(String cause) {
 		this.cause = cause;
-	}
-
-	public String getJobName() {
-		return jobName;
-	}
-
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
-	}
-
-	public String getDomainName() {
-		return domainName;
-	}
-
-	public void setDomainName(String domainName) {
-		this.domainName = domainName;
-	}
-
-	public String getNns() {
-		return nns;
-	}
-
-	public void setNns(String nns) {
-		this.nns = nns;
-	}
-
-	public String getDegree() {
-		return degree;
-	}
-
-	public void setDegree(String degree) {
-		this.degree = degree;
 	}
 
 	public long getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() {
