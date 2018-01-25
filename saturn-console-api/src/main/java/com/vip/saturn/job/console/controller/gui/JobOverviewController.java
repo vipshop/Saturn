@@ -37,8 +37,6 @@ import java.util.*;
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 
-	private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
-
 	@Resource
 	private JobService jobService;
 
