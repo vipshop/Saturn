@@ -6,6 +6,7 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ import java.util.List;
  */
 public class ExecutorCleanService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorCleanService.class);
+	private static final Logger log = LoggerFactory.getLogger(ExecutorCleanService.class);
 
 	private CuratorFramework curatorFramework;
 
@@ -47,7 +48,7 @@ public class ExecutorCleanService {
 					if (Boolean.parseBoolean(cleanNodeData)) {
 						if (curatorFramework.checkExists()
 								.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) == null) {
-							LOGGER.info("Clean the executor {}", executorName);
+							log.info("Clean the executor {}", executorName);
 							// delete $SaturnExecutors/executors/xxx
 							deleteExecutor(executorName);
 							List<String> jobs = getJobList();
@@ -64,7 +65,7 @@ public class ExecutorCleanService {
 								}
 							}
 						} else {
-							LOGGER.info("The executor {} is online now, no necessary to clean", executorName);
+							log.info("The executor {} is online now, no necessary to clean", executorName);
 						}
 					}
 				}
@@ -72,7 +73,7 @@ public class ExecutorCleanService {
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
 		} catch (Exception e) {
-			LOGGER.error("Clean the executor " + executorName + " error", e);
+			log.error("Clean the executor " + executorName + " error", e);
 		} finally {
 			updatePreferListQuietly(jobConfigInfos);
 		}
@@ -84,7 +85,7 @@ public class ExecutorCleanService {
 				updateJobConfigService.batchUpdatePreferList(jobConfigInfos);
 			}
 		} catch (Exception e) {
-			LOGGER.warn("batchUpdatePreferList  error", e); // just log a warn.
+			log.warn("batchUpdatePreferList  error", e); // just log a warn.
 		}
 	}
 
@@ -105,7 +106,7 @@ public class ExecutorCleanService {
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
-			LOGGER.error("Clean the executor, getJobList error", e);
+			log.error("Clean the executor, getJobList error", e);
 		}
 		return jobList;
 	}
@@ -123,7 +124,7 @@ public class ExecutorCleanService {
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
-			LOGGER.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
+			log.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
 		}
 	}
 
@@ -141,7 +142,7 @@ public class ExecutorCleanService {
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
-			LOGGER.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
+			log.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
 		}
 	}
 
@@ -179,14 +180,14 @@ public class ExecutorCleanService {
 			}
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
-		} catch (KeeperException.BadVersionException e) { // NOSONAR
+		} catch (BadVersionException e) { // NOSONAR
 			// ignore
 		} catch (KeeperException.ConnectionLossException e) {
 			throw e;
 		} catch (InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
-			LOGGER.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", "
+			log.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", "
 					+ executorName + ") error", e);
 		}
 		return null;
