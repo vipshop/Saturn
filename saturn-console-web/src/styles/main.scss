@@ -120,6 +120,24 @@ form {
     }
 }
 
+.page-detail-header {
+    padding: 10px;
+    border-bottom: 1px solid #d0d0d0;
+    height: 30px;
+    .page-detail-title {
+        height: 30px;
+        line-height: 30px;
+        .page-detail-span {
+            font-weight: bold;
+            font-size: 16px;
+            color: #777;
+        }
+    }
+    >* {
+        display: inline-block;
+    }
+}
+
 /* header */
 .el-header {
     padding: 0;

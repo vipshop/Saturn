@@ -32,6 +32,7 @@ export default {
   data() {
     return {
       loading: false,
+      interval: 0,
       zkCluster: this.$route.query.zkCluster,
       top10FailJobOption: {},
       top10ActiveJobOption: {},
@@ -129,9 +130,18 @@ export default {
           this.loading = false;
         });
     },
+    refreshPage() {
+      this.interval = setInterval(() => {
+        this.init();
+      }, 5000);
+    },
   },
   created() {
     this.init();
+    this.refreshPage();
+  },
+  destroyed() {
+    clearInterval(this.interval);
   },
 };
 </script>

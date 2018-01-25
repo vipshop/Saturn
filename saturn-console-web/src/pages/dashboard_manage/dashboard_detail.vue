@@ -1,6 +1,14 @@
 <template>
     <div>
         <Aside :sidebar-menus="sidebarMenus" headerHeight="50">
+            <div class="page-detail-header">
+                <div class="pull-left page-detail-title">
+                  <span class="page-detail-span">
+                      <i class="fa fa-sitemap"></i>
+                      当前ZK集群 : {{zkCluster || '全部ZK集群'}}
+                  </span>
+                </div>
+            </div>
             <router-view></router-view>
         </Aside>
     </div>
