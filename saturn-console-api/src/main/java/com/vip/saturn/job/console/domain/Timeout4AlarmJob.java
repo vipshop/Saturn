@@ -18,6 +18,9 @@ public class Timeout4AlarmJob extends AbstractAlarmJob {
 
 	private List<Integer> timeoutItems = new ArrayList<>();
 
+	public Timeout4AlarmJob() {
+	}
+
 	public Timeout4AlarmJob(String jobName, String domainName, String nns, String degree) {
 		super(jobName, domainName, nns, degree);
 	}

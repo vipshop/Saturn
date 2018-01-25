@@ -24,6 +24,9 @@ public class AbnormalJob extends AbstractAlarmJob {
 
 	private transient long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 
+	public AbnormalJob() {
+	}
+
 	public AbnormalJob(String jobName, String domainName, String nns, String degree) {
 		super(jobName, domainName, nns, degree);
 	}

@@ -16,6 +16,9 @@ public class AbstractAlarmJob {
 	 */
 	protected String degree;
 
+	public AbstractAlarmJob() {
+	}
+
 	public AbstractAlarmJob(String jobName, String domainName, String nns, String degree) {
 		this.jobName = jobName;
 		this.domainName = domainName;
