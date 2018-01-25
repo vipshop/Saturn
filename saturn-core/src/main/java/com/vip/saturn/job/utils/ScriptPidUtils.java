@@ -6,15 +6,6 @@ import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,10 +18,18 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 用于处理Shell的相关pid功能
- * 
+ *
  * @author linzhaoming
  *
  */
@@ -334,8 +333,8 @@ public class ScriptPidUtils {
 		executor.setExitValue(0);
 		try {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-			PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorStream, input);
+			SaturnLogOutputStream errorOS = new SaturnLogOutputStream(log, SaturnLogOutputStream.LEVEL_ERROR);
+			PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorOS, input);
 			executor.setStreamHandler(streamHandler);
 			int value = executor.execute(cmdLine, env);
 			if (value == 0) {

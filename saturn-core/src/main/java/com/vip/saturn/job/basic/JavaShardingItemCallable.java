@@ -1,16 +1,14 @@
 package com.vip.saturn.job.basic;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.SaturnJobExecutionContext;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.java.SaturnJavaJob;
-import com.vip.saturn.job.utils.SaturnLogOutputStream;
+import com.vip.saturn.job.utils.SaturnSystemOutputStream;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xiaopeng.he
@@ -28,7 +26,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 获取执行作业分片的线程
-	 * @return
 	 */
 	public Thread getCurrentThread() {
 		return currentThread;
@@ -36,7 +33,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 设置执行作业分片的线程
-	 * @param currentThread
 	 */
 	public void setCurrentThread(Thread currentThread) {
 		this.currentThread = currentThread;
@@ -55,10 +51,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 复制对象
-	 * @param source
-	 * @param classLoader
-	 * @return
-	 * @throws Exception
 	 */
 	public static Object cloneObject(Object source, ClassLoader classLoader) throws Exception {
 		if (source == null) {
@@ -72,9 +64,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 生成分片上下文对象
-	 * @param jobClassLoader
-	 * @return
-	 * @throws Exception
 	 */
 	public Object getContextForJob(ClassLoader jobClassLoader) throws Exception {
 		if (contextForJob == null) {
@@ -104,7 +93,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 该分片执行是否TIMEOUT
-	 * @return
 	 */
 	public boolean isTimeout() {
 		return status.get() == TIMEOUT;
@@ -112,7 +100,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 设置该分片的状态为FORCE_STOP
-	 * @return
 	 */
 	public boolean forceStop() {
 		return status.compareAndSet(INIT, FORCE_STOP);
@@ -120,7 +107,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 作业执行是否被中止
-	 * @return
 	 */
 	public boolean isBreakForceStop() {
 		return breakForceStop;
@@ -128,7 +114,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 该分片是否FORCE_STOP状态
-	 * @return
 	 */
 	public boolean isForceStop() {
 		return status.get() == FORCE_STOP;
@@ -165,7 +150,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 	public SaturnJobReturn call() {
 		reset();
 
-		SaturnLogOutputStream.initLogger();
+		SaturnSystemOutputStream.initLogger();
 		currentThread = Thread.currentThread();
 		SaturnJobReturn temp = null;
 		try {
@@ -192,7 +177,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 				saturnJobReturn = temp;
 			}
 
-			String jobLog = SaturnLogOutputStream.clearAndGetLog();
+			String jobLog = SaturnSystemOutputStream.clearAndGetLog();
 
 			if (saturnJob != null && saturnJob.getConfigService().showNormalLog()) {
 				this.shardingContext.putJobLog(this.item, jobLog);

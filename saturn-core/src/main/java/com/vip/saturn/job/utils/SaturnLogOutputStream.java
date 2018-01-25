@@ -1,61 +1,29 @@
 package com.vip.saturn.job.utils;
 
-import java.io.PrintStream;
-
 import org.apache.commons.exec.LogOutputStream;
+import org.slf4j.Logger;
 
 /**
- * 捕获System.out输出
- * @author dylan.xue
- *
+ * @author hebelala
  */
 public class SaturnLogOutputStream extends LogOutputStream {
-	private static final int MAX_LINE = 100;
 
-	private static ThreadLocal<LRUList<String>> lists = new InheritableThreadLocal<LRUList<String>>() {
-		@Override
-		protected LRUList<String> initialValue() {
-			return new LRUList<String>(MAX_LINE);
-		}
-	};
-	private static PrintStream catchedOut = new PrintStream(new SaturnLogOutputStream(1));
-	private static PrintStream out = System.out; // NOSONAR
+	public static final int LEVEL_INFO = 1;
+	public static final int LEVEL_ERROR = 2;
 
-	static {
-		System.setOut(catchedOut);
-	}
+	private Logger log;
 
-	private SaturnLogOutputStream(int level) {
+	public SaturnLogOutputStream(Logger log, int level) {
 		super(level);
+		this.log = log;
 	}
 
-	protected void processLine(String line, int level) {
-		LRUList<String> lruList = (LRUList<String>) lists.get();
-		lruList.put(line);
-		out.println(line);
-	}
-
-	public static void initLogger() {
-		lists.get().clear();
-	}
-
-	private static void clearCache() {
-		lists.remove();
-	}
-
-	public static String clearAndGetLog() {
-		try {
-			StringBuilder sb = new StringBuilder();
-			LRUList<String> lruList = (LRUList<String>) lists.get();
-			for (String line : lruList) {
-				sb.append(line).append(System.lineSeparator());
-			}
-			lruList.clear();
-			clearCache();
-			return sb.toString();
-		} catch (Exception e) {// NOSONAR
-			return "";
+	@Override
+	protected void processLine(String line, int logLevel) {
+		if (logLevel == LEVEL_INFO) {
+			log.info(line);
+		} else if (logLevel == LEVEL_ERROR) {
+			log.error(line);
 		}
 	}
-
 }
