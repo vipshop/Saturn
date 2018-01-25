@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.domain;
 /**
  * @author hebelala
  */
-public class MoveNamespaceBatchStatus {
+public class NamespaceMigrationOverallStatus {
 
 	private boolean finished;
 	private int successCount;
@@ -13,11 +13,11 @@ public class MoveNamespaceBatchStatus {
 	private int totalCount;
 	private String moving = "";
 
-	public MoveNamespaceBatchStatus() {
+	public NamespaceMigrationOverallStatus() {
 
 	}
 
-	public MoveNamespaceBatchStatus(int size) {
+	public NamespaceMigrationOverallStatus(int size) {
 		this.unDoCount = size;
 		this.totalCount = size;
 	}

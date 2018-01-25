@@ -1,7 +1,7 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.gson.Gson;
-import com.vip.saturn.job.console.domain.MoveNamespaceBatchStatus;
+import com.vip.saturn.job.console.domain.NamespaceMigrationOverallStatus;
 import com.vip.saturn.job.console.domain.NamespaceZkClusterMappingVo;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -169,7 +169,8 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 
 	@Transactional(rollbackFor = {SaturnJobConsoleException.class})
 	@Override
-	public void moveNamespaceTo(String namespace, String zkClusterKeyNew, String lastUpdatedBy, boolean updateDBOnly)
+	public void migrateNamespaceToNewZk(String namespace, String zkClusterKeyNew, String lastUpdatedBy,
+			boolean updateDBOnly)
 			throws SaturnJobConsoleException {
 		try {
 			log.info("start move {} to {}", namespace, zkClusterKeyNew);
@@ -178,7 +179,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			} else {
 				String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 				if (zkClusterKey != null && zkClusterKey.equals(zkClusterKeyNew)) {
-					// see moveNamespaceBatchTo before modify
+					// see migrateNamespaceListToNewZk before modify
 					throw new SaturnJobConsoleException(
 							"The namespace(" + namespace + ") is in " + zkClusterKey);
 				}
@@ -190,53 +191,51 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
 				String zkAddr = zkCluster.getZkAddr();
-				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService.connectOnly(zkAddr,
+				CuratorRepository.CuratorFrameworkOp targetCuratorFrameworkOp = registryCenterService
+						.connectOnly(zkAddr,
 						null);
-				if (curatorFrameworkOp == null) {
+				if (targetCuratorFrameworkOp == null) {
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
-				CuratorFramework curatorFramework = curatorFrameworkOp.getCuratorFramework();
-				CuratorRepository.CuratorFrameworkOp curatorFrameworkOpByNamespace = registryCenterService
-						.connectOnly(zkAddr, namespace);
-				CuratorFramework curatorFrameworkByNamespace = curatorFrameworkOpByNamespace.getCuratorFramework();
+				CuratorFramework targetCuratorFramework = targetCuratorFrameworkOp.getCuratorFramework();
 				try {
 					String namespaceNodePath = "/" + namespace;
-					if (curatorFramework.checkExists().forPath(namespaceNodePath) != null) {
-						curatorFramework.delete().deletingChildrenIfNeeded().forPath(namespaceNodePath);
+					if (targetCuratorFramework.checkExists().forPath(namespaceNodePath) != null) {
+						targetCuratorFramework.delete().deletingChildrenIfNeeded().forPath(namespaceNodePath);
 					}
 					String jobsNodePath = namespaceNodePath + JobNodePath.get$JobsNodePath();
-					curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
+					targetCuratorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
 							.forPath(jobsNodePath);
 
 					List<JobConfig4DB> configs = currentJobConfigService.findConfigsByNamespace(namespace);
-					log.info("get configs success, {}", namespace);
+					log.info("get job config list successfully, {}", namespace);
 					if (configs != null) {
 						for (JobConfig4DB jobConfig : configs) {
-							jobService.persistJobFromDB(namespace, jobConfig);
-							log.info("move {}-{} to zk success", namespace, jobConfig.getJobName());
+							jobService.persistJobFromDB(jobConfig, targetCuratorFrameworkOp);
+							log.info("move {}-{} to new zk successfully", namespace, jobConfig.getJobName());
 						}
 					}
 				} finally {
-					curatorFramework.close();
-					curatorFrameworkByNamespace.close();
+					targetCuratorFramework.close();
 				}
-				log.info("move {} to zk {} success", namespace, zkClusterKeyNew);
+				log.info("move {} to zk {} successfully", namespace, zkClusterKeyNew);
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
-				log.info("update mapping table success, {}-{}", namespace, zkClusterKeyNew);
+				log.info("update mapping table successfully, {}-{}", namespace, zkClusterKeyNew);
 			}
 		} catch (SaturnJobConsoleException e) {
 			log.error(e.getMessage(), e);
 			throw e;
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new SaturnJobConsoleException(e);
+			log.error("unexpected exception during move namespace to new zk cluster:" + e.getMessage(), e);
+			throw new SaturnJobConsoleException(e.getMessage(), e);
 		} finally {
 			log.info("end move {} to {}", namespace, zkClusterKeyNew);
 		}
 	}
 
 	@Override
-	public void moveNamespaceBatchTo(final String namespaces, final String zkClusterKeyNew, final String lastUpdatedBy,
+	public void migrateNamespaceListToNewZk(final String namespaces, final String zkClusterKeyNew,
+			final String lastUpdatedBy,
 			final boolean updateDBOnly) throws SaturnJobConsoleException {
 		final List<String> namespaceList = new ArrayList<>();
 		String[] split = namespaces.split(",");
@@ -249,62 +248,62 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			}
 		}
 		int size = namespaceList.size();
-		final MoveNamespaceBatchStatus moveNamespaceBatchStatus = new MoveNamespaceBatchStatus(size);
+		final NamespaceMigrationOverallStatus migrationStatus = new NamespaceMigrationOverallStatus(size);
 		temporarySharedStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
 		temporarySharedStatusService.create(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
-				gson.toJson(moveNamespaceBatchStatus));
+				gson.toJson(migrationStatus));
 		moveNamespaceBatchThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					for (String namespace : namespaceList) {
 						try {
-							moveNamespaceBatchStatus.setMoving(namespace);
+							migrationStatus.setMoving(namespace);
 							temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
-									gson.toJson(moveNamespaceBatchStatus));
-							moveNamespaceTo(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
-							moveNamespaceBatchStatus.incrementSuccessCount();
+									gson.toJson(migrationStatus));
+							migrateNamespaceToNewZk(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
+							migrationStatus.incrementSuccessCount();
 						} catch (SaturnJobConsoleException e) {
 							if (("The namespace(" + namespace + ") is in " + zkClusterKeyNew).equals(e.getMessage())) {
-								moveNamespaceBatchStatus.incrementIgnoreCount();
+								migrationStatus.incrementIgnoreCount();
 							} else {
-								moveNamespaceBatchStatus.incrementFailCount();
+								migrationStatus.incrementFailCount();
 							}
 						} finally {
-							moveNamespaceBatchStatus.setMoving("");
-							moveNamespaceBatchStatus.decrementUnDoCount();
+							migrationStatus.setMoving("");
+							migrationStatus.decrementUnDoCount();
 							temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
-									gson.toJson(moveNamespaceBatchStatus));
+									gson.toJson(migrationStatus));
 						}
 					}
 				} finally {
-					if (moveNamespaceBatchStatus.getSuccessCount() > 0) {
+					if (migrationStatus.getSuccessCount() > 0) {
 						try {
 							registryCenterService.notifyRefreshRegCenter();
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
 					}
-					moveNamespaceBatchStatus.setFinished(true);
+					migrationStatus.setFinished(true);
 					temporarySharedStatusService.update(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS,
-							gson.toJson(moveNamespaceBatchStatus));
+							gson.toJson(migrationStatus));
 				}
 			}
 		});
 	}
 
 	@Override
-	public MoveNamespaceBatchStatus getMoveNamespaceBatchStatus() {
+	public NamespaceMigrationOverallStatus getNamespaceMigrationOverallStatus() {
 		TemporarySharedStatus temporarySharedStatus = temporarySharedStatusService
 				.get(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
 		if (temporarySharedStatus != null) {
-			return gson.fromJson(temporarySharedStatus.getStatusValue(), MoveNamespaceBatchStatus.class);
+			return gson.fromJson(temporarySharedStatus.getStatusValue(), NamespaceMigrationOverallStatus.class);
 		}
 		return null;
 	}
 
 	@Override
-	public void clearMoveNamespaceBatchStatus() {
+	public void clearNamespaceMigrationOverallStatus() {
 		temporarySharedStatusService.delete(ShareStatusModuleNames.MOVE_NAMESPACE_BATCH_STATUS);
 	}
 

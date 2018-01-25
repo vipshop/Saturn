@@ -1,32 +1,17 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
-import com.vip.saturn.job.console.utils.SaturnConstants;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
-import jxl.Workbook;
-import jxl.write.Label;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +141,8 @@ public class RegistryCenterController extends AbstractGUIController {
 			@AuditParam("zkClusterNew") @RequestParam String zkClusterKeyNew,
 			@RequestParam(required = false, defaultValue = "false") boolean updateDBOnly)
 			throws SaturnJobConsoleException {
-		namespaceZkClusterMappingService.moveNamespaceBatchTo(namespaces, zkClusterKeyNew, getUserNameInSession(),
+		namespaceZkClusterMappingService
+				.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew, getUserNameInSession(),
 				updateDBOnly);
 		return new SuccessResponseEntity();
 	}
@@ -165,12 +151,12 @@ public class RegistryCenterController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/namespaces/zkCluster/migrationStatus")
 	public SuccessResponseEntity getZkClusterMigrationStatus() throws SaturnJobConsoleException {
-		MoveNamespaceBatchStatus moveNamespaceBatchStatus = namespaceZkClusterMappingService
-				.getMoveNamespaceBatchStatus();
-		if (moveNamespaceBatchStatus == null) {
+		NamespaceMigrationOverallStatus namespaceMigrationOverallStatus = namespaceZkClusterMappingService
+				.getNamespaceMigrationOverallStatus();
+		if (namespaceMigrationOverallStatus == null) {
 			throw new SaturnJobConsoleException("The namespace migration status is not existed in db");
 		}
-		return new SuccessResponseEntity(moveNamespaceBatchStatus);
+		return new SuccessResponseEntity(namespaceMigrationOverallStatus);
 	}
 
 }

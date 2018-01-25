@@ -2,6 +2,8 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,7 +50,15 @@ public interface JobService {
 
 	List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException;
 
+	/**
+	 * 持久化作业到指定namespace
+	 */
 	void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	/**
+	 * 持久化作业到特定zk上面
+	 */
+	void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
 	List<ImportJobResult> importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
 

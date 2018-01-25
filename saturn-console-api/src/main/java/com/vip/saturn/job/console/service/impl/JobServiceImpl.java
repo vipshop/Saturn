@@ -772,6 +772,12 @@ public class JobServiceImpl implements JobService {
 		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
 	}
 
+	@Override
+	public void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) {
+		jobConfig.setDefaultValues();
+		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
+	}
+
 	/**
 	 * 对作业配置的一些属性进行矫正
 	 */
