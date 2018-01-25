@@ -57,6 +57,15 @@ export default {
   },
   methods: {
     handleOperate(operation) {
+      if (operation === 'stopAtOnce') {
+        this.$message.confirmMessage(`确认立即终止作业 ${this.jobName} 吗?`, () => {
+          this.operateRequest(operation);
+        });
+      } else {
+        this.operateRequest(operation);
+      }
+    },
+    operateRequest(operation) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config/${operation}`, '').then(() => {
         this.$message.successNotify('操作成功');
         this.getJobInfo();
