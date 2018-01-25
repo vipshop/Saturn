@@ -7,8 +7,6 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
  */
 public interface StatisticsRefreshService {
 
-	void refreshBySameIdcConsole(String zkClusterKey) throws SaturnJobConsoleException;
-
-	void refreshDirectly(String zkClusterKey) throws SaturnJobConsoleException;
+	void refresh(String zkClusterKey, boolean isForce) throws SaturnJobConsoleException;
 
 }

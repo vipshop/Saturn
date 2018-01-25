@@ -201,50 +201,23 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 
 	@Override
 	public String getAbnormalJobsByNamespace(String namespace) throws SaturnJobConsoleException {
-		List<AbnormalJob> jobsByNamespace = new ArrayList<>();
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getAbnormalJobs(conf.getZkClusterKey());
-		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-		if (jobs != null) {
-			for (AbnormalJob job : jobs) {
-				if (namespace.equals(job.getDomainName())) {
-					jobsByNamespace.add(job);
-				}
-			}
-		}
-		return JSON.toJSONString(jobsByNamespace);
+		return getAlarmJobsOfNamespace(namespace, result, AbnormalJob.class);
 	}
 
 	@Override
 	public String getUnableFailoverJobsByNamespace(String namespace) throws SaturnJobConsoleException {
-		List<AbnormalJob> jobsByNamespace = new ArrayList<>();
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getUnableFailoverJobs(conf.getZkClusterKey());
-		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-		if (jobs != null) {
-			for (AbnormalJob job : jobs) {
-				if (namespace.equals(job.getDomainName())) {
-					jobsByNamespace.add(job);
-				}
-			}
-		}
-		return JSON.toJSONString(jobsByNamespace);
+		return getAlarmJobsOfNamespace(namespace, result, AbnormalJob.class);
 	}
 
 	@Override
 	public String getTimeout4AlarmJobsByNamespace(String namespace) throws SaturnJobConsoleException {
-		List<Timeout4AlarmJob> jobsByNamespace = new ArrayList<>();
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getTimeout4AlarmJobs(conf.getZkClusterKey());
-		List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
-		if (jobs != null) {
-			for (Timeout4AlarmJob job : jobs) {
-				if (namespace.equals(job.getDomainName())) {
-					jobsByNamespace.add(job);
-				}
-			}
-		}
-		return JSON.toJSONString(jobsByNamespace);
+		return getAlarmJobsOfNamespace(namespace, result, Timeout4AlarmJob.class);
 	}
 
 	@Override
@@ -267,39 +240,40 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	public AbnormalJob isAbnormalJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getAbnormalJobs(conf.getZkClusterKey());
-		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-		if (jobs != null) {
-			for (AbnormalJob job : jobs) {
-				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
-					return job;
-				}
-			}
-		}
-		return null;
+		return getAlarmJob(namespace, jobName, result, AbnormalJob.class);
 	}
 
 	@Override
 	public AbnormalJob isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getUnableFailoverJobs(conf.getZkClusterKey());
-		List<AbnormalJob> jobs = JSON.parseArray(result, AbnormalJob.class);
-		if (jobs != null) {
-			for (AbnormalJob job : jobs) {
-				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
-					return job;
-				}
-			}
-		}
-		return null;
+		return getAlarmJob(namespace, jobName, result, AbnormalJob.class);
 	}
 
 	@Override
 	public Timeout4AlarmJob isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getTimeout4AlarmJobs(conf.getZkClusterKey());
-		List<Timeout4AlarmJob> jobs = JSON.parseArray(result, Timeout4AlarmJob.class);
+		return getAlarmJob(namespace, jobName, result, Timeout4AlarmJob.class);
+	}
+
+	private <T extends AbstractAlarmJob> String getAlarmJobsOfNamespace(String namespace, String result, Class<T> t) {
+		List<T> jobsByNamespace = new ArrayList<>();
+		List<T> jobs = JSON.parseArray(result, t);
 		if (jobs != null) {
-			for (Timeout4AlarmJob job : jobs) {
+			for (T job : jobs) {
+				if (namespace.equals(job.getDomainName())) {
+					jobsByNamespace.add(job);
+				}
+			}
+		}
+		return JSON.toJSONString(jobsByNamespace);
+	}
+
+	private <T extends AbstractAlarmJob> T getAlarmJob(String namespace, String jobName, String result, Class<T> t) {
+		List<T> jobs = JSON.parseArray(result, t);
+		if (jobs != null) {
+			for (T job : jobs) {
 				if (namespace.equals(job.getDomainName()) && jobName.equals(job.getJobName())) {
 					return job;
 				}

@@ -49,10 +49,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private static final Logger log = LoggerFactory.getLogger(StatisticsRefreshServiceImpl.class);
 
-	private Map<String/** domainName_jobName_shardingItemStr **/
-			, AbnormalShardingState /** abnormal sharding state */
-			> abnormalShardingStateCache = new ConcurrentHashMap<>();
-
 	private static final int CONNECT_TIMEOUT_MS = 10000;
 
 	private static final int SO_TIMEOUT_MS = 180000;
@@ -62,6 +58,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	private Timer refreshStatisticsTimer;
 
 	private Timer cleanAbnormalShardingCacheTimer;
+
+	private Map<String/** domainName_jobName_shardingItemStr **/
+			, AbnormalShardingState /** abnormal sharding state */
+			> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
 	@Resource
 	private SaturnStatisticsService saturnStatisticsService;
@@ -165,25 +165,28 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	}
 
 	@Override
-	public void refreshBySameIdcConsole(String zkClusterKey) throws SaturnJobConsoleException {
+	public void refresh(String zkClusterKey, boolean isForce) throws SaturnJobConsoleException {
+		if (isForce) {
+			refresh(zkClusterKey);
+			return;
+		}
+
 		boolean isSameIdc = ZkClusterMappingUtils.isCurrentConsoleInTheSameIdc(systemConfigService, zkClusterKey);
 		if (isSameIdc) {
 			log.info("the zk and the console are in the same IDC, refreshStatistics in the current Console");
-			refreshDirectly(zkClusterKey);
+			refresh(zkClusterKey);
 		} else {
 			log.info("the zk and the console are in different IDC, forward the refresh request to remote console");
 			try {
 				forwardDashboardRefreshToRemote(zkClusterKey);
 			} catch (SaturnJobConsoleException e) {
-				log.error(e.getMessage(), e);
-				log.info("remote refresh request error, so refreshStatistics in the current Console");
-				refreshDirectly(zkClusterKey);
+				log.warn("remote refresh request error, so refreshStatistics in the current Console");
+				refresh(zkClusterKey);
 			}
 		}
 	}
 
-	@Override
-	public void refreshDirectly(String zkClusterKey) throws SaturnJobConsoleException {
+	private void refresh(String zkClusterKey) throws SaturnJobConsoleException {
 		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
 		if (zkCluster != null) {
 			refreshStatistics2DB(zkCluster);

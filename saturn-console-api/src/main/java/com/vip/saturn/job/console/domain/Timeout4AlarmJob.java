@@ -6,25 +6,11 @@ import java.util.List;
 /**
  * @author hebelala
  */
-public class Timeout4AlarmJob {
+public class Timeout4AlarmJob extends AbstractAlarmJob {
 
 	private String uuid;
 
 	private boolean read;
-
-	private String jobName;
-
-	private String domainName;
-
-	/**
-	 * name and namespace
-	 */
-	private String nns;
-
-	/**
-	 * degree of the domain
-	 */
-	private String degree;
 
 	private String jobDegree;
 
@@ -32,14 +18,8 @@ public class Timeout4AlarmJob {
 
 	private List<Integer> timeoutItems = new ArrayList<>();
 
-	public Timeout4AlarmJob() {
-	}
-
 	public Timeout4AlarmJob(String jobName, String domainName, String nns, String degree) {
-		this.jobName = jobName;
-		this.domainName = domainName;
-		this.nns = nns;
-		this.degree = degree;
+		super(jobName, domainName, nns, degree);
 	}
 
 	public String getUuid() {
@@ -56,38 +36,6 @@ public class Timeout4AlarmJob {
 
 	public void setRead(boolean read) {
 		this.read = read;
-	}
-
-	public String getJobName() {
-		return jobName;
-	}
-
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
-	}
-
-	public String getDomainName() {
-		return domainName;
-	}
-
-	public void setDomainName(String domainName) {
-		this.domainName = domainName;
-	}
-
-	public String getNns() {
-		return nns;
-	}
-
-	public void setNns(String nns) {
-		this.nns = nns;
-	}
-
-	public String getDegree() {
-		return degree;
-	}
-
-	public void setDegree(String degree) {
-		this.degree = degree;
 	}
 
 	public String getJobDegree() {
