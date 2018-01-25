@@ -400,7 +400,7 @@ public class DashboardServiceImpl implements DashboardService {
 				try {
 					RegistryCenterConfiguration conf = registryCenterService.findConfigByNamespace(namespace);
 					if (conf != null) {
-						statisticsRefreshService.refreshBySameIdcConsole(conf.getZkClusterKey());
+						statisticsRefreshService.refresh(conf.getZkClusterKey(), false);
 					}
 				} catch (Throwable t) {
 					log.error("async refresh statistics error", t);

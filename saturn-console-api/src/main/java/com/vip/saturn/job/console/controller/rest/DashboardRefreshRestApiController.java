@@ -39,7 +39,7 @@ public class DashboardRefreshRestApiController extends AbstractController {
 		try {
 			checkMissingParameter("zkClusterKey", zkClusterKey);
 			long beforeRefresh = System.currentTimeMillis();
-			statisticsRefreshService.refreshDirectly(zkClusterKey);
+			statisticsRefreshService.refresh(zkClusterKey, true);
 			long afterRefresh = System.currentTimeMillis();
 			long takeTime = afterRefresh - beforeRefresh;
 			return new ResponseEntity<Object>(takeTime, HttpStatus.OK);
