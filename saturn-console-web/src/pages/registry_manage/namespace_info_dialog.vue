@@ -44,7 +44,11 @@ export default {
     },
     namespaceInfoRequest(url) {
       this.$http.post(url, this.namespaceInfo).then(() => {
-        this.$emit('namespace-info-success');
+        this.loading = true;
+        setTimeout(() => {
+          this.loading = false;
+          this.$emit('namespace-info-success');
+        }, 3000);
       })
       .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
     },
