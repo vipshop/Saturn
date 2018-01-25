@@ -281,7 +281,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 						try {
 							registryCenterService.notifyRefreshRegCenter();
 						} catch (Exception e) {
-							log.error(e.getMessage(), e);
+							log.error("Fail to refresh registry center.", e);
 						}
 					}
 					migrationStatus.setFinished(true);
