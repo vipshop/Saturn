@@ -237,6 +237,8 @@ export default {
           if (first >= 3) {
             flag = true;
           }
+        } else {
+          flag = true;
         }
       }
       return flag;
