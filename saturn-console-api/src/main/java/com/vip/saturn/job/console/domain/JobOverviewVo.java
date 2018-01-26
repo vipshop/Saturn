@@ -8,16 +8,16 @@ import java.util.List;
  */
 public class JobOverviewVo {
 
-	private List<JobListElementVo> jobs = new ArrayList<>();
+	private List<JobOverviewJobVo> jobs = new ArrayList<>();
 	private int enabledNumber;
 	private int totalNumber;
 	private int abnormalNumber;
 
-	public List<JobListElementVo> getJobs() {
+	public List<JobOverviewJobVo> getJobs() {
 		return jobs;
 	}
 
-	public void setJobs(List<JobListElementVo> jobs) {
+	public void setJobs(List<JobOverviewJobVo> jobs) {
 		this.jobs = jobs;
 	}
 

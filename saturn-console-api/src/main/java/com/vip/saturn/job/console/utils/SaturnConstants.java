@@ -34,4 +34,6 @@ public class SaturnConstants {
 	public static final String CACHES_FILE_PATH = System.getProperty("user.home") + FILE_SEPARATOR + ".saturn"
 			+ FILE_SEPARATOR + "saturn_console" + FILE_SEPARATOR + "caches";
 
+	public static final String NO_GROUPS_LABEL = "未分组";
+
 }

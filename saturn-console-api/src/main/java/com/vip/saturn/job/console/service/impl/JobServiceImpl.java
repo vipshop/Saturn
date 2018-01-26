@@ -4,8 +4,22 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.AbnormalJob;
+import com.vip.saturn.job.console.domain.DependencyJob;
+import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
+import com.vip.saturn.job.console.domain.ExecutorProvided;
+import com.vip.saturn.job.console.domain.ExecutorProvidedStatus;
+import com.vip.saturn.job.console.domain.ExecutorProvidedType;
+import com.vip.saturn.job.console.domain.ImportJobResult;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobMode;
+import com.vip.saturn.job.console.domain.JobOverviewJobVo;
+import com.vip.saturn.job.console.domain.JobOverviewVo;
+import com.vip.saturn.job.console.domain.JobServer;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.JobType;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
@@ -17,15 +31,39 @@ import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
-import com.vip.saturn.job.console.utils.*;
+import com.vip.saturn.job.console.utils.BooleanWrapper;
+import com.vip.saturn.job.console.utils.ContainerNodePath;
+import com.vip.saturn.job.console.utils.CronExpression;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.utils.JsonUtils;
+import com.vip.saturn.job.console.utils.SaturnBeanUtils;
+import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.io.File;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TimeZone;
+import javax.annotation.Resource;
 import jxl.Cell;
 import jxl.CellType;
 import jxl.Sheet;
 import jxl.Workbook;
-import jxl.write.*;
+import jxl.write.Label;
+import jxl.write.WritableCell;
+import jxl.write.WritableCellFeatures;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
@@ -39,12 +77,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.annotation.Resource;
-import java.io.File;
-import java.lang.Boolean;
-import java.text.ParseException;
-import java.util.*;
 
 /**
  * @author hebelala
@@ -81,7 +113,7 @@ public class JobServiceImpl implements JobService {
 	public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
 		JobOverviewVo jobOverviewVo = new JobOverviewVo();
 		try {
-			List<JobListElementVo> jobList = new ArrayList<>();
+			List<JobOverviewJobVo> jobList = new ArrayList<>();
 			int enabledNumber = 0;
 			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 			if (unSystemJobs != null) {
@@ -89,30 +121,34 @@ public class JobServiceImpl implements JobService {
 						.getCuratorFrameworkOp(namespace);
 				for (JobConfig jobConfig : unSystemJobs) {
 					try {
-						JobListElementVo jobListElementVo = new JobListElementVo();
-						SaturnBeanUtils.copyProperties(jobConfig, jobListElementVo);
+						jobConfig.setDefaultValues();
 
-						jobListElementVo.setDefaultValues();
+						JobOverviewJobVo jobOverviewJobVo = new JobOverviewJobVo();
+						SaturnBeanUtils.copyProperties(jobConfig, jobOverviewJobVo);
 
 						JobType jobType = JobType.getJobType(jobConfig.getJobType());
 						if (JobType.UNKOWN_JOB.equals(jobType)) {
-							if (jobListElementVo.getJobClass() != null
-									&& jobListElementVo.getJobClass().indexOf("SaturnScriptJob") != -1) {
-								jobListElementVo.setJobType(JobType.SHELL_JOB.name());
+							if (jobOverviewJobVo.getJobClass() != null
+									&& jobOverviewJobVo.getJobClass().indexOf("SaturnScriptJob") != -1) {
+								jobOverviewJobVo.setJobType(JobType.SHELL_JOB.name());
 							} else {
-								jobListElementVo.setJobType(JobType.JAVA_JOB.name());
+								jobOverviewJobVo.setJobType(JobType.JAVA_JOB.name());
 							}
 						}
 
-						jobListElementVo.setStatus(
+						if (StringUtils.isBlank(jobOverviewJobVo.getGroups())) {
+							jobOverviewJobVo.setGroups(SaturnConstants.NO_GROUPS_LABEL);
+						}
+
+						jobOverviewJobVo.setStatus(
 								getJobStatus(jobConfig.getJobName(), curatorFrameworkOp, jobConfig.getEnabled()));
 
-						updateJobInfoShardingList(curatorFrameworkOp, jobConfig.getJobName(), jobListElementVo);
+						updateJobInfoShardingList(curatorFrameworkOp, jobConfig.getJobName(), jobOverviewJobVo);
 
-						if (jobListElementVo.getEnabled()) {
+						if (jobOverviewJobVo.getEnabled()) {
 							enabledNumber++;
 						}
-						jobList.add(jobListElementVo);
+						jobList.add(jobOverviewJobVo);
 					} catch (Exception e) {
 						log.error("list job " + jobConfig.getJobName() + " error", e);
 					}
@@ -203,7 +239,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void updateJobInfoShardingList(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName,
-			JobListElementVo jobListElementVo) {
+			JobOverviewJobVo jobListElementVo) {
 		if (JobStatus.STOPPED.equals(jobListElementVo.getStatus())) {// 作业如果是STOPPED状态，不需要显示已分配的executor
 			return;
 		}
@@ -231,7 +267,10 @@ public class JobServiceImpl implements JobService {
 		if (unSystemJobs != null) {
 			for (JobConfig jobConfig : unSystemJobs) {
 				String jobGroups = jobConfig.getGroups();
-				if (jobGroups != null && !groups.contains(jobGroups)) {
+				if (StringUtils.isBlank(jobGroups)) {
+					jobGroups = SaturnConstants.NO_GROUPS_LABEL;
+				}
+				if (!groups.contains(jobGroups)) {
 					groups.add(jobGroups);
 				}
 			}
@@ -488,13 +527,13 @@ public class JobServiceImpl implements JobService {
 						} else {
 							String executorName = preferExecutor.substring(1);
 							boolean include = false;
-							for(ExecutorProvided executorProvided : dockerExecutorProvided) {
-								if(executorProvided.getExecutorName().equals(executorName)) {
+							for (ExecutorProvided executorProvided : dockerExecutorProvided) {
+								if (executorProvided.getExecutorName().equals(executorName)) {
 									include = true;
 									break;
 								}
 							}
-							if(!include) {
+							if (!include) {
 								ExecutorProvided executorProvided = new ExecutorProvided();
 								executorProvided.setExecutorName(executorName);
 								executorProvided.setType(ExecutorProvidedType.DOCKER);
