@@ -51,7 +51,11 @@ export default {
     },
     clusterInfoRequest(url) {
       this.$http.post(url, this.clusterInfo).then(() => {
-        this.$emit('cluster-info-success');
+        this.loading = true;
+        setTimeout(() => {
+          this.loading = false;
+          this.$emit('cluster-info-success');
+        }, 3000);
       })
       .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
     },

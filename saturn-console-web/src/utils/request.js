@@ -1,6 +1,8 @@
 import axios from 'axios';
 import message from './message';
 
+let showError = false;
+
 export default {
   get(url, data) {
     return this.request(url, data, 'GET');
@@ -19,7 +21,10 @@ export default {
   },
 
   buildErrorHandler(msg, callback) {
-    message.errorMessage(msg);
+    if (!showError) {
+      message.errorMessage(msg);
+      showError = false;
+    }
     if (callback) {
       callback();
     }
@@ -51,12 +56,16 @@ export default {
       }
       axios.request(config).then((response) => {
         if (response.data.success) {
+          showError = false;
           resolve(response.data.obj);
         } else {
           message.errorMessage(response.data.message);
+          showError = true;
+          reject();
         }
       })
       .catch((err) => {
+        showError = false;
         reject(err);
       });
     });

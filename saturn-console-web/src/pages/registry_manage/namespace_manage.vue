@@ -163,7 +163,7 @@ export default {
     },
     namespaceInfoSuccess() {
       this.isNamespaceVisible = false;
-      this.$message.successNotify('保存域名操作成功');
+      this.$message.successNotify('添加域操作成功,若列表未更新,请稍后手动刷新页面');
       this.getAllNamespace();
     },
     getAllNamespace() {

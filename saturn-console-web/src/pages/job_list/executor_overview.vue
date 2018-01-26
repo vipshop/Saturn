@@ -71,7 +71,7 @@
                                     <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE' && isAbledDump(scope.row.version)">
                                         <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
@@ -228,6 +228,18 @@ export default {
       .finally(() => {
         this.loading = false;
       });
+    },
+    isAbledDump(str) {
+      let flag = false;
+      if (str) {
+        const first = Number(str[0]);
+        if (Number.isInteger(first)) {
+          if (first >= 3) {
+            flag = true;
+          }
+        }
+      }
+      return flag;
     },
   },
   computed: {

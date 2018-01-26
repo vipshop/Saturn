@@ -115,10 +115,18 @@ export default {
     handleSubmit() {
       this.$refs.jobInfo.validate((valid) => {
         if (valid) {
-          if (this.jobInfoOperation === 'add') {
-            this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/jobs`);
-          } else if (this.jobInfoOperation === 'copy') {
-            this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/${this.jobInfo.jobNameCopied}/copy`);
+          if (this.validateShardingParamsNumber()) {
+            if (this.validateShardingParam()) {
+              if (this.jobInfoOperation === 'add') {
+                this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/jobs`);
+              } else if (this.jobInfoOperation === 'copy') {
+                this.jobInfoRequest(`/console/namespaces/${this.domainName}/jobs/${this.jobInfo.jobNameCopied}/copy`);
+              }
+            } else {
+              this.$message.errorMessage('请正确输入分片参数!');
+            }
+          } else {
+            this.$message.errorMessage('分片参数不能小于作业分片总数!');
           }
         }
       });
@@ -141,6 +149,42 @@ export default {
         this.timeZonesArray = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取时区请求失败！'); });
+    },
+    validateShardingParamsNumber() {
+      let flag = false;
+      let arr = [];
+      if (this.jobInfo.shardingItemParameters.indexOf(',') > 0) {
+        arr = this.jobInfo.shardingItemParameters.split(',');
+      } else {
+        arr = [this.jobInfo.shardingItemParameters];
+      }
+      if (this.jobInfo.shardingTotalCount > arr.length) {
+        flag = false;
+      } else {
+        flag = true;
+      }
+      return flag;
+    },
+    validateShardingParam() {
+      let flag = false;
+      let arr = [];
+      if (this.jobInfo.shardingItemParameters.indexOf(',') > 0) {
+        arr = this.jobInfo.shardingItemParameters.split(',');
+      } else {
+        arr = [this.jobInfo.shardingItemParameters];
+      }
+      arr.forEach((ele) => {
+        if (ele.includes('=')) {
+          if (ele.split('=')[0] === '' || ele.split('=')[1] === '') {
+            flag = false;
+          } else {
+            flag = true;
+          }
+        } else {
+          flag = false;
+        }
+      });
+      return flag;
     },
   },
   computed: {
