@@ -173,7 +173,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			boolean updateDBOnly)
 			throws SaturnJobConsoleException {
 		try {
-			log.info("start move {} to {}", namespace, zkClusterKeyNew);
+			log.info("Start to migrate namespace: [{}] to zk cluster:[{}]", namespace, zkClusterKeyNew);
 			if (updateDBOnly) {
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
 			} else {
@@ -192,8 +192,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 				}
 				String zkAddr = zkCluster.getZkAddr();
 				CuratorRepository.CuratorFrameworkOp targetCuratorFrameworkOp = registryCenterService
-						.connectOnly(zkAddr,
-						null);
+						.connectOnly(zkAddr, namespace);
 				if (targetCuratorFrameworkOp == null) {
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
@@ -208,28 +207,31 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							.forPath(jobsNodePath);
 
 					List<JobConfig4DB> configs = currentJobConfigService.findConfigsByNamespace(namespace);
-					log.info("get job config list successfully, {}", namespace);
+					log.debug("Obtain job config list of namespace:[{}] successfully", namespace);
 					if (configs != null) {
 						for (JobConfig4DB jobConfig : configs) {
 							jobService.persistJobFromDB(jobConfig, targetCuratorFrameworkOp);
-							log.info("move {}-{} to new zk successfully", namespace, jobConfig.getJobName());
+							log.info("Migrate job:[{}] of namespace:[{}] to new zk (DB+ZK) successfully",
+									jobConfig.getJobName(), namespace);
 						}
 					}
 				} finally {
 					targetCuratorFramework.close();
 				}
-				log.info("move {} to zk {} successfully", namespace, zkClusterKeyNew);
+
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
-				log.info("update mapping table successfully, {}-{}", namespace, zkClusterKeyNew);
+				log.info("Update zkcluster mapping between ns:[{}] and zk:[{}] in DB successfully", namespace,
+						zkClusterKeyNew);
 			}
 		} catch (SaturnJobConsoleException e) {
-			log.error(e.getMessage(), e);
+			log.error("Fail to migrate namespace:[" + namespace + "] to zk [" + zkClusterKeyNew + "]", e);
 			throw e;
 		} catch (Exception e) {
-			log.error("unexpected exception during move namespace to new zk cluster:" + e.getMessage(), e);
+			log.error("Fail to migrate namespace:[" + namespace + "] to zk [" + zkClusterKeyNew
+					+ "] with unexpected exception", e);
 			throw new SaturnJobConsoleException(e.getMessage(), e);
 		} finally {
-			log.info("end move {} to {}", namespace, zkClusterKeyNew);
+			log.info("Finish migrate namespace:[{}] to zk zkcluster:[{}]", namespace, zkClusterKeyNew);
 		}
 	}
 
