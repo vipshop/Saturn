@@ -5,21 +5,21 @@
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="失败率最高的Top10作业">
                         <div slot="chart">
-                            <Column id="top10FailJob" v-if="top10FailJobOption.optionInfo" :option-info="top10FailJobOption.optionInfo"></Column>
+                            <Column id="top10FailJob" :option-info="top10FailJobOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)">
                         <div slot="chart">
-                            <Column id="top10ActiveJob" v-if="top10ActiveJobOption.optionInfo" :option-info="top10ActiveJobOption.optionInfo"></Column>
+                            <Column id="top10ActiveJob" :option-info="top10ActiveJobOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="负荷最重的Top10作业">
                         <div slot="chart">
-                            <Column id="top10LoadJob" v-if="top10LoadJobOption.optionInfo" :option-info="top10LoadJobOption.optionInfo"></Column>
+                            <Column id="top10LoadJob" :option-info="top10LoadJobOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
@@ -32,11 +32,16 @@ export default {
   data() {
     return {
       loading: false,
-      interval: 0,
       zkCluster: this.$route.query.zkCluster,
-      top10FailJobOption: {},
-      top10ActiveJobOption: {},
-      top10LoadJobOption: {},
+      top10FailJobOption: {
+        optionInfo: {},
+      },
+      top10ActiveJobOption: {
+        optionInfo: {},
+      },
+      top10LoadJobOption: {
+        optionInfo: {},
+      },
     };
   },
   methods: {
@@ -130,18 +135,9 @@ export default {
           this.loading = false;
         });
     },
-    refreshPage() {
-      this.interval = setInterval(() => {
-        this.init();
-      }, 5000);
-    },
   },
   created() {
     this.init();
-    this.refreshPage();
-  },
-  destroyed() {
-    clearInterval(this.interval);
   },
 };
 </script>

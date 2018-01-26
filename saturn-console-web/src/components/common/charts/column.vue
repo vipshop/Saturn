@@ -80,8 +80,19 @@ export default {
       },
     };
   },
-  mounted() {
-    Highcharts.chart(this.id, this.options);
+  watch: {
+    optionInfo: 'buildPage',
+  },
+  methods: {
+    buildPage() {
+      if (this.optionInfo) {
+        this.options.xAxis.categories = this.optionInfo.xCategories;
+        this.options.series = this.optionInfo.seriesData;
+        this.options.yAxis.text = this.optionInfo.yTitle;
+        this.options.tooltip.formatter = this.optionInfo.tooltip;
+        Highcharts.chart(this.id, this.options);
+      }
+    },
   },
 };
 </script>

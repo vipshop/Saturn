@@ -5,14 +5,14 @@
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="失败率最高的Top10 Executor(当天)">
                         <div slot="chart">
-                            <Column id="top10FailExecutor" v-if="top10FailExecutorOption.optionInfo" :option-info="top10FailExecutorOption.optionInfo"></Column>
+                            <Column id="top10FailExecutor" :option-info="top10FailExecutorOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="负荷最重的Top10 Executor">
                         <div slot="chart">
-                            <Column id="top10LoadExecutor" v-if="top10LoadExecutorOption.optionInfo" :option-info="top10LoadExecutorOption.optionInfo"></Column>
+                            <Column id="top10LoadExecutor" :option-info="top10LoadExecutorOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
@@ -32,10 +32,13 @@ export default {
   data() {
     return {
       loading: false,
-      interval: 0,
       zkCluster: this.$route.query.zkCluster,
-      top10FailExecutorOption: {},
-      top10LoadExecutorOption: {},
+      top10FailExecutorOption: {
+        optionInfo: {},
+      },
+      top10LoadExecutorOption: {
+        optionInfo: {},
+      },
       executorVersionNumberOption: {},
     };
   },
@@ -108,18 +111,9 @@ export default {
           this.loading = false;
         });
     },
-    refreshPage() {
-      this.interval = setInterval(() => {
-        this.init();
-      }, 5000);
-    },
   },
   created() {
     this.init();
-    this.refreshPage();
-  },
-  destroyed() {
-    clearInterval(this.interval);
   },
 };
 </script>

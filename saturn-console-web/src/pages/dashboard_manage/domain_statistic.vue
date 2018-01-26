@@ -12,14 +12,14 @@
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="失败率最高的Top10域">
                         <div slot="chart">
-                            <Column id="top10FailDomain" v-if="top10FailDomainOption.optionInfo" :option-info="top10FailDomainOption.optionInfo"></Column>
+                            <Column id="top10FailDomain" :option-info="top10FailDomainOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
                 <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                     <Chart-container title="稳定性最差的的Top10域">
                         <div slot="chart">
-                            <Column id="top10UnstableDomain" v-if="top10UnstableDomainOption.optionInfo" :option-info="top10UnstableDomainOption.optionInfo"></Column>
+                            <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOption.optionInfo"></Column>
                         </div>
                     </Chart-container>
                 </el-col>
@@ -39,12 +39,15 @@ export default {
   data() {
     return {
       loading: false,
-      interval: 0,
       zkCluster: this.$route.query.zkCluster,
       domainProcessCountOption: {},
       domainExecutorVersionOption: {},
-      top10FailDomainOption: {},
-      top10UnstableDomainOption: {},
+      top10FailDomainOption: {
+        optionInfo: {},
+      },
+      top10UnstableDomainOption: {
+        optionInfo: {},
+      },
     };
   },
   methods: {
@@ -137,18 +140,9 @@ export default {
             this.loading = false;
           });
     },
-    refreshPage() {
-      this.interval = setInterval(() => {
-        this.init();
-      }, 5000);
-    },
   },
   created() {
     this.init();
-    this.refreshPage();
-  },
-  destroyed() {
-    clearInterval(this.interval);
   },
 };
 </script>
