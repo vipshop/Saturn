@@ -336,6 +336,7 @@ public class ScriptPidUtils {
 			SaturnLogOutputStream errorOS = new SaturnLogOutputStream(log, SaturnLogOutputStream.LEVEL_ERROR);
 			PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorOS, input);
 			executor.setStreamHandler(streamHandler);
+			log.info("msg=exec command: {}", cmdLine);
 			int value = executor.execute(cmdLine, env);
 			if (value == 0) {
 				String out = outputStream.toString();
