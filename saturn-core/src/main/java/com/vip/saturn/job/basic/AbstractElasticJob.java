@@ -170,7 +170,7 @@ public abstract class AbstractElasticJob implements Stopable {
 			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(getJobScheduler().getCurrentConf());
 			for (int item : shardingContext.getShardingItems()) {
 				if (isEnabledReport && !checkIfZkLostAfterExecution(item)) {
-					continue;// NOSONAR
+					continue;
 				}
 				if (!aborted) {
 					if (!updateServerStatus) {
@@ -213,7 +213,7 @@ public abstract class AbstractElasticJob implements Stopable {
 					return true;
 				}
 			}
-			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false;
+			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false
 			log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
 			return false;
 		} catch (Exception e) {

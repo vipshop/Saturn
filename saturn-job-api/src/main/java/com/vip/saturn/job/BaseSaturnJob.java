@@ -24,7 +24,7 @@ public abstract class BaseSaturnJob {
 	 *
 	 * @return version of the job
 	 */
-	public String getJobVersion() { // NOSONAR
+	public String getJobVersion() {
 		return EMPTY_VERSION;
 	}
 
