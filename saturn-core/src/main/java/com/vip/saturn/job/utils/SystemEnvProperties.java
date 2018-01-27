@@ -10,15 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SystemEnvProperties {
-	static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
 
-	private static String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";
+	private static Logger log = LoggerFactory.getLogger(SystemEnvProperties.class);
+
+	private static final String NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS = "VIP_SATURN_MAX_NUMBER_OF_JOBS";
 	/**
 	 * 每个域最大作业数量
 	 */
 	public static int VIP_SATURN_MAX_NUMBER_OF_JOBS = 500;
 
-	private static String NAME_VIP_SATURN_EXECUTOR_CLEAN = "VIP_SATURN_EXECUTOR_CLEAN";
+	private static final String NAME_VIP_SATURN_EXECUTOR_CLEAN = "VIP_SATURN_EXECUTOR_CLEAN";
 	/**
 	 * Executor离线时，其zk节点信息是否被清理
 	 */
@@ -36,11 +37,11 @@ public class SystemEnvProperties {
 	 *  }
 	 * </pre>
 	 */
-	public static String NAME_VIP_SATURN_OUTPUT_PATH = "VIP_SATURN_OUTPUT_PATH";
+	public static final String NAME_VIP_SATURN_OUTPUT_PATH = "VIP_SATURN_OUTPUT_PATH";
 
-	private static String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
-	private static String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_SATURN_K8S_DEPLOYMENT";
-	public static String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
+	private static final String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
+	private static final String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_SATURN_K8S_DEPLOYMENT";
+	public static final String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 
 	/**
 	 * Executor优雅退出的全局默认超时时间（单位：精确到秒，默认1分钟）
@@ -51,39 +52,39 @@ public class SystemEnvProperties {
 	/**
 	 * Saturn Console URI.
 	 */
-	public static String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
+	public static final String NAME_VIP_SATURN_CONSOLE_URI = "VIP_SATURN_CONSOLE_URI";
 	public static String VIP_SATURN_CONSOLE_URI = trim(
 			System.getProperty(NAME_VIP_SATURN_CONSOLE_URI, System.getenv(NAME_VIP_SATURN_CONSOLE_URI)));
 	public static List<String> VIP_SATURN_CONSOLE_URI_LIST = new ArrayList<>();
 
-	private static String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
+	private static final String NAME_VIP_SATURN_SHUTDOWN_TIMEOUT = "VIP_SATURN_SHUTDOWN_TIMEOUT";
 
 	/**
 	 * Executor ZK Client session timeout
 	 */
-	public static String NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT";
+	public static final String NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT";
 	public static int VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1;
 
 	/**
 	 * Executor ZK Client connection timeout
 	 */
-	public static String NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT";
+	public static final String NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT";
 	public static int VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1;
 
 	// For restart and dump
 	public static boolean VIP_SATURN_ENABLE_EXEC_SCRIPT = Boolean.getBoolean("VIP_SATURN_ENABLE_EXEC_SCRIPT");
-	public static String NAME_VIP_SATURN_PRG = "VIP_SATURN_PRG";
+	public static final String NAME_VIP_SATURN_PRG = "VIP_SATURN_PRG";
 	public static String VIP_SATURN_PRG = System.getProperty(NAME_VIP_SATURN_PRG);
-	public static String NAME_VIP_SATURN_LOG_OUTFILE = "VIP_SATURN_LOG_OUTFILE";
+	public static final String NAME_VIP_SATURN_LOG_OUTFILE = "VIP_SATURN_LOG_OUTFILE";
 	public static String VIP_SATURN_LOG_OUTFILE = System.getProperty(NAME_VIP_SATURN_LOG_OUTFILE);
 
 	// nohup file size checking by default is 600 seconds
 	public static int VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = 600;
-	private static String NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = "VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL";
+	private static final String NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = "VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL";
 
 	// nohup max file size by default is 500 MB
 	public static long VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = 500 * 1024 * 1024L;
-	private static String NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = "VIP_SATURN_NOHUPOUT_SIZE_LIMIT";
+	private static final String NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = "VIP_SATURN_NOHUPOUT_SIZE_LIMIT";
 
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,

@@ -18,7 +18,8 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
  *
  */
 public class TimeoutSchedulerExecutor {
-	static Logger log = LoggerFactory.getLogger(TimeoutSchedulerExecutor.class);
+
+	private static Logger log = LoggerFactory.getLogger(TimeoutSchedulerExecutor.class);
 
 	private static ConcurrentHashMap<String, ScheduledThreadPoolExecutor> scheduledThreadPoolExecutorMap = new ConcurrentHashMap<>();
 
@@ -68,21 +69,17 @@ public class TimeoutSchedulerExecutor {
 
 		@Override
 		public void run() {
-			try {
-				if (!shardingItemFutureTask.isDone()) {
-					if (shardingItemFutureTask.getCallable().setTimeout()) {
-						try {
-							shardingItemFutureTask.getCallable().beforeTimeout();
-							ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
-						} catch (Throwable t) {// NOSONAR
-						}
-					}
+			if (!shardingItemFutureTask.isDone() && shardingItemFutureTask.getCallable().setTimeout()) {
+				try {
+					// 调用beforeTimeout毁掉函数
+					shardingItemFutureTask.getCallable().beforeTimeout();
+					// 强杀
+					ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
+				} catch (Throwable t) {
+					log.warn("Fail to force stop timeout job:{} with reason:{}",
+							shardingItemFutureTask.getCallable().getJobName(), t.getMessage());
 				}
-			} catch (Throwable e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT,
-						shardingItemFutureTask.getCallable().getJobName(), e.getMessage()), e);
 			}
-
 		}
 
 	}

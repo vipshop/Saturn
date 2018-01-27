@@ -138,11 +138,8 @@ public class ServerService extends AbstractSaturnService {
 	 */
 	public boolean isServerReady() {
 		String statusNode = ServerNode.getStatusNode(executorName);
-		if (getJobNodeStorage().isJobNodeExisted(statusNode)
-				&& ServerStatus.READY.name().equals(getJobNodeStorage().getJobNodeData(statusNode))) {
-			return true;
-		}
-		return false;
+		return getJobNodeStorage().isJobNodeExisted(statusNode) && ServerStatus.READY.name()
+				.equals(getJobNodeStorage().getJobNodeData(statusNode));
 	}
 
 	/**

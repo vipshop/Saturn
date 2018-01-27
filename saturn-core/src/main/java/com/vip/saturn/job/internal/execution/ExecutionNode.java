@@ -123,7 +123,7 @@ public final class ExecutionNode {
 		if (!isRunningItemPath(path)) {
 			return null;
 		}
-		return Integer.parseInt(path.substring(JobNodePath.getNodeFullPath(jobName, ROOT).length() + 1,
+		return Integer.valueOf(path.substring(JobNodePath.getNodeFullPath(jobName, ROOT).length() + 1,
 				path.lastIndexOf(RUNNING_APPENDIX) - 1));
 	}
 

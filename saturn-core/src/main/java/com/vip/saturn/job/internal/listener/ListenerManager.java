@@ -29,7 +29,7 @@ import com.vip.saturn.job.internal.sharding.ShardingListenerManager;
  * 
  * 
  */
-public class ListenerManager extends AbstractListenerManager implements Shutdownable {
+public class ListenerManager extends AbstractListenerManager {
 
 	private ElectionListenerManager electionListenerManager;
 

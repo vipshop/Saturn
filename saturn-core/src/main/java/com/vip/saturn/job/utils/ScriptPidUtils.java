@@ -365,7 +365,7 @@ public class ScriptPidUtils {
 
 	public static void forceStopRunningShellJob(final String executorName, final String jobName) {
 		String[] itemPaths = ScriptPidUtils.getItemsPaths(executorName, jobName);
-		if (itemPaths == null || itemPaths.length == 0) {
+		if (itemPaths.length == 0) {
 			log.info("[{}] msg={} no pids to kill", jobName, jobName);
 			return;
 		}
@@ -392,7 +392,7 @@ public class ScriptPidUtils {
 		final String executorName = regCenter.getExecutorName();
 
 		String[] itemPaths = ScriptPidUtils.getItemsPaths(executorName, jobName);
-		if (itemPaths == null || itemPaths.length == 0) {
+		if (itemPaths.length == 0) {
 			return;
 		}
 		String jobTypePath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_TYPE);
@@ -425,7 +425,7 @@ public class ScriptPidUtils {
 							"" + Integer.toString(jobItem));
 					if (pid > 0 && ScriptPidUtils.isPidRunning("" + Long.toString(pid))) {
 						String runningPath = JobNodePath.getNodeFullPath(jobName,
-								String.format(ExecutionNode.RUNNING, Integer.parseInt(itemStr)));
+								String.format(ExecutionNode.RUNNING, Integer.valueOf(itemStr)));
 						regCenter.persistEphemeral(runningPath, "");
 						log.info("[{}] msg={}-{} restores running status, path={}", jobName, jobName, path,
 								runningPath);

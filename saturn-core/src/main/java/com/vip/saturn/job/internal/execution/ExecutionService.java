@@ -279,7 +279,7 @@ public class ExecutionService extends AbstractSaturnService {
 
 					@Override
 					public Integer apply(final String input) {
-						return Integer.parseInt(input);
+						return Integer.valueOf(input);
 					}
 				});
 	}

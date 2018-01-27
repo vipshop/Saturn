@@ -65,7 +65,7 @@ public final class FailoverNode {
 		if (!isFailoverPath(path)) {
 			return null;
 		}
-		return Integer.parseInt(path.substring(JobNodePath.getNodeFullPath(jobName, ExecutionNode.ROOT).length() + 1,
+		return Integer.valueOf(path.substring(JobNodePath.getNodeFullPath(jobName, ExecutionNode.ROOT).length() + 1,
 				path.lastIndexOf(FailoverNode.FAILOVER) - 1));
 	}
 
