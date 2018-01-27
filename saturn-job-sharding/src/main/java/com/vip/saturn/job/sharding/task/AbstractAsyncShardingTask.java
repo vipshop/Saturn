@@ -297,7 +297,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					}
 					List<Integer> shards = next.getValue();
 					List<Integer> oldShard = oldShardingItems.get(executorName);
-					if (shards == null && oldShard != null || shards != null && oldShard == null) {
+					if ((shards == null && oldShard != null) || (shards != null && oldShard == null)) {
 						isChanged = true;
 						break;
 					}
@@ -601,14 +601,14 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				!= null) {
 			byte[] useDispreferListData = curatorFramework.getData()
 					.forPath(jobConfigUseDispreferListNodePath);
-			if (useDispreferListData != null && !Boolean.valueOf(new String(useDispreferListData, "UTF-8"))) {
+			if (useDispreferListData != null && !Boolean.parseBoolean(new String(useDispreferListData, "UTF-8"))) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
+	private static Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
 		Executor minLoadLevelExecutor = null;
 		for (int i = 0; i < executorList.size(); i++) {
 			Executor executor = executorList.get(i);
