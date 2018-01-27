@@ -4,6 +4,8 @@ import org.apache.commons.exec.LogOutputStream;
 import org.slf4j.Logger;
 
 /**
+ * 捕获Shell作业的输出流。
+ *
  * @author hebelala
  */
 public class SaturnLogOutputStream extends LogOutputStream {

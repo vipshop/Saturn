@@ -15,7 +15,7 @@ public class SaturnSystemOutputStream extends LogOutputStream {
 	private static ThreadLocal<LRUList<String>> lists = new InheritableThreadLocal<LRUList<String>>() {
 		@Override
 		protected LRUList<String> initialValue() {
-			return new LRUList<String>(MAX_LINE);
+			return new LRUList<>(MAX_LINE);
 		}
 	};
 	private static PrintStream catchedOut = new PrintStream(new SaturnSystemOutputStream(1));
@@ -30,7 +30,7 @@ public class SaturnSystemOutputStream extends LogOutputStream {
 	}
 
 	protected void processLine(String line, int level) {
-		LRUList<String> lruList = (LRUList<String>) lists.get();
+		LRUList<String> lruList = lists.get();
 		lruList.put(line);
 		out.println(line);
 	}
@@ -46,7 +46,7 @@ public class SaturnSystemOutputStream extends LogOutputStream {
 	public static String clearAndGetLog() {
 		try {
 			StringBuilder sb = new StringBuilder();
-			LRUList<String> lruList = (LRUList<String>) lists.get();
+			LRUList<String> lruList = lists.get();
 			for (String line : lruList) {
 				sb.append(line).append(System.lineSeparator());
 			}
