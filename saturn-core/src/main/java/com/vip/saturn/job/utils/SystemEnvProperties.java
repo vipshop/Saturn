@@ -82,7 +82,7 @@ public class SystemEnvProperties {
 	private static String NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = "VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL";
 
 	// nohup max file size by default is 500 MB
-	public static long VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = 500 * 1024 * 1024;
+	public static long VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = 500 * 1024 * 1024L;
 	private static String NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = "VIP_SATURN_NOHUPOUT_SIZE_LIMIT";
 
 	static {
@@ -90,7 +90,7 @@ public class SystemEnvProperties {
 				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
 		if (!Strings.isNullOrEmpty(maxNumberOfJobs)) {
 			try {
-				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.valueOf(maxNumberOfJobs);
+				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.parseInt(maxNumberOfJobs);
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}
@@ -100,7 +100,7 @@ public class SystemEnvProperties {
 				System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
 		if (!Strings.isNullOrEmpty(shutdownTimeout)) {
 			try {
-				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.valueOf(shutdownTimeout);
+				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.parseInt(shutdownTimeout);
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}
