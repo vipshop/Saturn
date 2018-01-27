@@ -3,11 +3,15 @@ package com.vip.saturn.job.sharding.utils;
 import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author hebelala
  */
 public class CuratorUtils {
+
+	private static final Logger log = LoggerFactory.getLogger(CuratorUtils.class);
 
 	private CuratorUtils() {
 	}
@@ -21,6 +25,7 @@ public class CuratorUtils {
 		try {
 			children = curatorFramework.getChildren().forPath(path);
 		} catch (KeeperException.NoNodeException e) {
+			log.debug("no node exception throws during get children of path:{}", path);
 			return;
 		}
 
@@ -33,9 +38,11 @@ public class CuratorUtils {
 		try {
 			curatorFramework.delete().guaranteed().forPath(path);
 		} catch (KeeperException.NotEmptyException e) {
+			log.debug("try to delete path:{} but fail for NotEmptyException", path);
 			deletingChildrenIfNeeded(curatorFramework, path);
 		} catch (KeeperException.NoNodeException e) {
 			// When multi-client delete the children concurrently, then will throw such exception. So just do nothing.
+			log.debug("try to delete path:{} but fail for NoNodeException", path);
 		}
 	}
 

@@ -44,33 +44,37 @@ public class ExecuteAllShardingTask extends AbstractAsyncShardingTask {
 
 	@Override
 	protected List<Executor> customLastOnlineExecutorList() throws Exception {
+		if (!isNodeExisted(SaturnExecutorsNode.getExecutorsNodePath())) {
+			return new ArrayList<>();
+		}
 		// 从$SaturnExecutors节点下，获取所有正在运行的Executor
+		List<String> zkExecutors = curatorFramework.getChildren().forPath(SaturnExecutorsNode.getExecutorsNodePath());
+		if (zkExecutors == null) {
+			return new ArrayList<>();
+		}
+
 		List<Executor> lastOnlineExecutorList = new ArrayList<>();
-		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorsNodePath())
-				!= null) {
-			List<String> zkExecutors = curatorFramework.getChildren()
-					.forPath(SaturnExecutorsNode.getExecutorsNodePath());
-			if (zkExecutors != null) {
-				for (int i = 0; i < zkExecutors.size(); i++) {
-					String zkExecutor = zkExecutors.get(i);
-					if (curatorFramework.checkExists()
-							.forPath(SaturnExecutorsNode.getExecutorIpNodePath(zkExecutor)) != null) {
-						byte[] ipData = curatorFramework.getData()
-								.forPath(SaturnExecutorsNode.getExecutorIpNodePath(zkExecutor));
-						if (ipData != null) {
-							Executor executor = new Executor();
-							executor.setExecutorName(zkExecutor);
-							executor.setIp(new String(ipData, "UTF-8"));
-							executor.setNoTraffic(getExecutorNoTraffic(zkExecutor));
-							executor.setShardList(new ArrayList<Shard>());
-							executor.setJobNameList(new ArrayList<String>());
-							lastOnlineExecutorList.add(executor);
-						}
-					}
+		for (int i = 0; i < zkExecutors.size(); i++) {
+			String zkExecutor = zkExecutors.get(i);
+			if (isNodeExisted(SaturnExecutorsNode.getExecutorIpNodePath(zkExecutor))) {
+				byte[] ipData = curatorFramework.getData()
+						.forPath(SaturnExecutorsNode.getExecutorIpNodePath(zkExecutor));
+				if (ipData != null) {
+					Executor executor = new Executor();
+					executor.setExecutorName(zkExecutor);
+					executor.setIp(new String(ipData, "UTF-8"));
+					executor.setNoTraffic(getExecutorNoTraffic(zkExecutor));
+					executor.setShardList(new ArrayList<Shard>());
+					executor.setJobNameList(new ArrayList<String>());
+					lastOnlineExecutorList.add(executor);
 				}
 			}
 		}
 		return lastOnlineExecutorList;
+	}
+
+	private boolean isNodeExisted(String executorsNodePath) throws Exception {
+		return curatorFramework.checkExists().forPath(executorsNodePath) != null;
 	}
 
 }
