@@ -26,7 +26,7 @@ public class AddOrRemoveJobListener extends AbstractTreeCacheListener {
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
 		try {
 			String job = StringUtils.substringAfterLast(path, "/");
-			if (!SaturnExecutorsNode.$JOBS.equals(job)) {
+			if (!SaturnExecutorsNode.JOBS_NODE.equals(job)) {
 				if (isAddJob(type)) {
 					LOGGER.info("job: {} created", job);
 					addJobListenersService.addJobPathListener(job);

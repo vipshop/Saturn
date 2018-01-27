@@ -1,6 +1,5 @@
 package com.vip.saturn.job.reg.zookeeper;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -17,12 +16,10 @@ import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 
 /**
  * @author chembo.huang
- *
  */
 public class ZkCacheManager {
 

@@ -43,7 +43,10 @@ import com.vip.saturn.job.utils.BlockUtils;
  * 
  */
 public class JobNodeStorage {
-	static Logger log = LoggerFactory.getLogger(JobNodeStorage.class);
+
+	private static Logger log = LoggerFactory.getLogger(JobNodeStorage.class);
+
+	private static final int MAX_DELETE_RETRY_TIMES = 10;
 
 	private final CoordinatorRegistryCenter coordinatorRegistryCenter;
 
@@ -312,16 +315,13 @@ public class JobNodeStorage {
 		newZk.init();
 		try {
 			newZk.remove(ServerNode.getServerNode(jobName, executorName));
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < MAX_DELETE_RETRY_TIMES; i++) {
 				String fullPath = JobNodePath.getJobNameFullPath(jobConfiguration.getJobName());
 				if (newZk.isExisted(fullPath)) {
 					List<String> servers = newZk.getChildrenKeys(ServerNode.getServerRoot(jobName));
 					if (servers == null || servers.isEmpty()) {
-						try {
-							newZk.remove(fullPath);
+						if (tryToRemoveNode(newZk, fullPath)) {
 							return;
-						} catch (Exception e) {
-							log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
 						}
 					}
 					BlockUtils.waitingShortTime();
@@ -332,6 +332,16 @@ public class JobNodeStorage {
 		} finally {
 			newZk.close();
 		}
+	}
+
+	private boolean tryToRemoveNode(ZookeeperRegistryCenter newZk, String fullPath) {
+		try {
+			newZk.remove(fullPath);
+			return true;
+		} catch (Exception e) {
+			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+		}
+		return false;
 	}
 
 	public boolean isConnected() {

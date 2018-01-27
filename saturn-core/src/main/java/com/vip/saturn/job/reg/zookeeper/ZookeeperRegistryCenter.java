@@ -49,22 +49,17 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	/**
 	 * 最小连接超时时间
 	 */
-	private static int MIN_CONNECTION_TIMEOUT = 20 * 1000;
+	private static final int MIN_CONNECTION_TIMEOUT = 20 * 1000;
 
 	/**
 	 * 最小会话超时时间
 	 */
-	private static int MIN_SESSION_TIMEOUT = 20 * 1000;
+	private static final int MIN_SESSION_TIMEOUT = 20 * 1000;
 
 	/**
 	 * 会话超时时间
 	 */
 	private int sessionTimeout;
-
-	/**
-	 * 连接超时时间
-	 */
-	private int connectionTimeout;
 
 	private String executorName;
 
@@ -125,6 +120,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		}
 		builder.sessionTimeoutMs(sessionTimeout);
 
+		int connectionTimeout;
 		if (0 != zkConfig.getConnectionTimeoutMilliseconds()) {
 			connectionTimeout = zkConfig.getConnectionTimeoutMilliseconds();
 		} else {
@@ -154,7 +150,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		return builder.build();
 	}
 
-	private int calculateConnectionTimeout() {
+	private static int calculateConnectionTimeout() {
 		// default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1
 		int connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS
 				* 1000;
@@ -166,7 +162,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		return connectionTimeoutInMillSeconds;
 	}
 
-	private int calculateSessionTimeout() {
+	private static int calculateSessionTimeout() {
 		// default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1
 		int sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
 

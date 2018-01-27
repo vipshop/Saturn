@@ -295,22 +295,22 @@ public class ConfigurationService extends AbstractSaturnService {
 	public boolean isInPausePeriod(Date date) {
 		Calendar calendar = Calendar.getInstance(getTimeZone());
 		calendar.setTime(date);
-		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
-		int d = calendar.get(Calendar.DAY_OF_MONTH);
-		int h = calendar.get(Calendar.HOUR_OF_DAY);
-		int m = calendar.get(Calendar.MINUTE);
+		int month = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
+		int day = calendar.get(Calendar.DAY_OF_MONTH);
+		int hour = calendar.get(Calendar.HOUR_OF_DAY);
+		int minute = calendar.get(Calendar.MINUTE);
 
 		boolean dateIn = false;
 		String pausePeriodDate = jobConfiguration.getPausePeriodDate();
 		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
 		if (!pausePeriodDateIsEmpty) {
-			dateIn = checkIsInPausePeriodDateOrTime(M, d, "/", pausePeriodDate);
+			dateIn = checkIsInPausePeriodDateOrTime(month, day, "/", pausePeriodDate);
 		}
 		boolean timeIn = false;
 		String pausePeriodTime = jobConfiguration.getPausePeriodTime();
 		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
 		if (!pausePeriodTimeIsEmpty) {
-			timeIn = checkIsInPausePeriodDateOrTime(h, m, ":", pausePeriodTime);
+			timeIn = checkIsInPausePeriodDateOrTime(hour, minute, ":", pausePeriodTime);
 		}
 
 		if (pausePeriodDateIsEmpty) {
@@ -330,9 +330,6 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	private boolean checkIsInPausePeriodDateOrTime(int h, int m, String splitChar, String pausePeriodDateOrTime) {
 		String[] periods = pausePeriodDateOrTime.split(",");
-		if (periods == null) {
-			return false;
-		}
 
 		boolean result = false;
 		for (String period : periods) {
@@ -495,17 +492,20 @@ public class ConfigurationService extends AbstractSaturnService {
 				preferList.add(prefer);
 			}
 		} else { // docker server, get the real executorList by task
-			String task = prefer.substring(1);
-			for (int i = 0; i < allExistsExecutors.size(); i++) {
-				String executor = allExistsExecutors.get(i);
-				if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
-					String taskData = coordinatorRegistryCenter
-							.get(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
-					if (taskData != null && task.equals(taskData)) {
-						if (!preferList.contains(executor)) {
-							preferList.add(executor);
-						}
-					}
+			fillRealPreferListOfContainer(preferList, prefer, allExistsExecutors);
+		}
+	}
+
+	private void fillRealPreferListOfContainer(List<String> preferList, String prefer,
+			List<String> allExistsExecutors) {
+		String task = prefer.substring(1);
+		for (int i = 0; i < allExistsExecutors.size(); i++) {
+			String executor = allExistsExecutors.get(i);
+			if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
+				String taskData = coordinatorRegistryCenter
+						.get(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
+				if (taskData != null && task.equals(taskData) && !preferList.contains(executor)) {
+					preferList.add(executor);
 				}
 			}
 		}

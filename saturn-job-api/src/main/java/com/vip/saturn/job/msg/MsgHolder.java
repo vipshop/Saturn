@@ -104,7 +104,7 @@ public class MsgHolder implements Serializable {
 			Iterator<Entry<String, Object>> iterator = prop.iterator();
 			while (iterator.hasNext()) {
 				Entry<String, Object> next = iterator.next();
-				if (key != null && key.equals(next.getKey()) || key == null && next.getKey() == null) {
+				if ((key != null && key.equals(next.getKey())) || (key == null && next.getKey() == null)) {
 					return next.getValue();
 				}
 			}

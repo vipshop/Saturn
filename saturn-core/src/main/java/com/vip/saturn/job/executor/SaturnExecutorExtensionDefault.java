@@ -15,7 +15,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
-	private static Logger LOGGER;
+	private static Logger log;
+
 	private static final String NAME_VIP_SATURN_LOG_DIR = "VIP_SATURN_LOG_DIR";
 
 	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader,
@@ -25,14 +26,14 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void initBefore() {
-
+		// 默认没有逻辑，子类实现其逻辑
 	}
 
 	@Override
 	public void initLogDirEnv() {
-		String SATURN_LOG_DIR = System.getProperty(NAME_VIP_SATURN_LOG_DIR,
+		String saturnLogDir = System.getProperty(NAME_VIP_SATURN_LOG_DIR,
 				getEnv(NAME_VIP_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
-		System.setProperty("saturn.log.dir", SATURN_LOG_DIR); // for logback.xml
+		System.setProperty("saturn.log.dir", saturnLogDir); // for logback.xml
 	}
 
 	private static String getEnv(String key, String defaultValue) {
@@ -50,8 +51,12 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void initLog() {
-		if (LOGGER == null) {
-			LOGGER = LoggerFactory.getLogger(SaturnExecutorExtensionDefault.class);
+		setLogger();
+	}
+
+	private static void setLogger() {
+		if (log == null) {
+			log = LoggerFactory.getLogger(SaturnExecutorExtensionDefault.class);
 		}
 	}
 
@@ -68,7 +73,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void validateNamespaceExisting(String connectString) throws Exception {
-
+		// 默认没有逻辑，子类实现其逻辑
 	}
 
 	@Override

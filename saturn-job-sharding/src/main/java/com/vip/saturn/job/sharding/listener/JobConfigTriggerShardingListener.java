@@ -28,7 +28,7 @@ public class JobConfigTriggerShardingListener extends AbstractTreeCacheListener 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
 		if (isJobEnabledPath(type, path)) {
-			if (Boolean.valueOf(nodeData)) {
+			if (Boolean.parseBoolean(nodeData)) {
 				namespaceShardingService.asyncShardingWhenJobEnable(jobName);
 			} else {
 				namespaceShardingService.asyncShardingWhenJobDisable(jobName);

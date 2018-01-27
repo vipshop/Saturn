@@ -211,6 +211,6 @@ public final class ConfigurationNode {
 	 * @return 获取超时时间
 	 */
 	public static int getTimeoutSeconds(final String jobName) {
-		return Integer.valueOf(JobNodePath.getNodeFullPath(jobName, TIMEOUTSECONDS));
+		return Integer.parseInt(JobNodePath.getNodeFullPath(jobName, TIMEOUTSECONDS));
 	}
 }

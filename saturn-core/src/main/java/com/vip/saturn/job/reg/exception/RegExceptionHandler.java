@@ -26,7 +26,8 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public final class RegExceptionHandler {
-	static Logger log = LoggerFactory.getLogger(RegExceptionHandler.class);
+
+	private static Logger log = LoggerFactory.getLogger(RegExceptionHandler.class);
 
 	private RegExceptionHandler() {
 	}
@@ -37,7 +38,7 @@ public final class RegExceptionHandler {
 	 * @param cause 待处理的异常.
 	 */
 	public static void handleException(final Exception cause) {
-		if (isIgnoredException(cause) || isIgnoredException(cause.getCause())) {
+		if (isIgnoredException(cause) || (cause.getCause() != null && isIgnoredException(cause.getCause()))) {
 			log.debug("Elastic job: ignored exception for: {}", cause.getMessage());
 		} else if (cause instanceof InterruptedException) {
 			Thread.currentThread().interrupt();

@@ -25,28 +25,28 @@ package com.vip.saturn.job.internal.storage;
  */
 public final class JobNodePath {
 
-	public static final String $JOBS_NODE_NAME = "$Jobs";
+	public static final String JOBS_NODE_NAME = "$Jobs";
 
-	public static final String ROOT = "/" + $JOBS_NODE_NAME;
+	public static final String ROOT = "/" + JOBS_NODE_NAME;
 
 	/**
 	 * 获取作业节点全路径
 	 * @return 作业节点全路径
 	 */
 	public static String getJobNameFullPath(String jn) {
-		return String.format("/%s/%s", $JOBS_NODE_NAME, jn);
+		return String.format("/%s/%s", JOBS_NODE_NAME, jn);
 	}
 
 	public static String getNodeFullPath(final String jobName, final String node) {
-		return String.format("/%s/%s/%s", $JOBS_NODE_NAME, jobName, node);
+		return String.format("/%s/%s/%s", JOBS_NODE_NAME, jobName, node);
 	}
 
 	public static String getConfigNodePath(final String jobName, final String nodeName) {
-		return String.format("/%s/%s/config/%s", $JOBS_NODE_NAME, jobName, nodeName);
+		return String.format("/%s/%s/config/%s", JOBS_NODE_NAME, jobName, nodeName);
 	}
 
 	public static String getServerNodePath(final String jobName, final String executorName) {
-		return String.format("/%s/%s/servers/%s", $JOBS_NODE_NAME, jobName, executorName);
+		return String.format("/%s/%s/servers/%s", JOBS_NODE_NAME, jobName, executorName);
 	}
 
 }

@@ -110,10 +110,9 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			}
 		}
 
-	}
-
-	private boolean isJobNotNull() {
-		return jobScheduler != null && jobScheduler.getJob() != null;
+		private boolean isJobNotNull() {
+			return jobScheduler != null && jobScheduler.getJob() != null;
+		}
 	}
 
 	/**

@@ -218,7 +218,7 @@ public class SaturnExecutorService {
 		}
 	}
 
-	private void close$JobsTreeCache() {
+	private void closeJobsTreeCache() {
 		try {
 			if (jobsTreeCache != null) {
 				jobsTreeCache.close();
@@ -232,7 +232,7 @@ public class SaturnExecutorService {
 	public void shutdown() {
 		stopRestartExecutorService();
 		removeIpNode();
-		close$JobsTreeCache();
+		closeJobsTreeCache();
 	}
 
 	public CoordinatorRegistryCenter getCoordinatorRegistryCenter() {

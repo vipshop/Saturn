@@ -66,10 +66,6 @@ public class SaturnExecutor {
 
 	private ClassLoader jobClassLoader;
 
-	private Runnable shutdownHandler;
-
-	private ZookeeperConfiguration zkConfig;
-
 	private SaturnExecutorService saturnExecutorService;
 
 	private ResetCountService resetCountService;
@@ -134,7 +130,7 @@ public class SaturnExecutor {
 	 * 注册退出时资源清理回调
 	 */
 	private void registerShutdownHandler() {
-		shutdownHandler = new Runnable() {
+		Runnable shutdownHandler = new Runnable() {
 			@Override
 			public void run() {
 				if (isShutdown) {
@@ -329,7 +325,7 @@ public class SaturnExecutor {
 					// 验证namespace是否存在
 					saturnExecutorExtension.validateNamespaceExisting(serverLists);
 
-					zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
+					ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
 					regCenter = new ZookeeperRegistryCenter(zkConfig);
 					saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
 					saturnExecutorService.setJobClassLoader(jobClassLoader);
