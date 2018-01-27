@@ -9,7 +9,6 @@ package com.vip.saturn.job.console.utils;
  * @version 1.0
  * @since JDK 1.7.0_05 文件名称：ContainerNodePath.java 类说明：
  */
-@Deprecated
 public class ContainerNodePath {
 
 	public static final String $CONTAINERS_NODE_NAME = "$DCOS";
