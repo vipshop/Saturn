@@ -146,7 +146,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			executeJobInternal(shardingContext);
 
-			if (isFailoverSupported() && configService.isFailover() && !stopped && !forceStopped && !aborted) {// NOSONAR
+			if (isFailoverSupported() && configService.isFailover() && !stopped && !forceStopped && !aborted) {
 				failoverService.failoverIfNecessary();
 			}
 

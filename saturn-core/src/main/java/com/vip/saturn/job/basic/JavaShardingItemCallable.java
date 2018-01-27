@@ -15,13 +15,33 @@ import org.slf4j.LoggerFactory;
  */
 public class JavaShardingItemCallable extends ShardingItemCallable {
 
+	protected static final int INIT = 0;
+	protected static final int TIMEOUT = 1;
+	protected static final int SUCCESS = 2;
+	protected static final int FORCE_STOP = 3;
+	protected static final int STOPPED = 4;
 	private static Logger log = LoggerFactory.getLogger(JavaShardingItemCallable.class);
-
 	protected Thread currentThread;
+	protected AtomicInteger status = new AtomicInteger(0);
+	protected boolean breakForceStop = false;
+	protected Object contextForJob;
 
 	public JavaShardingItemCallable(String jobName, Integer item, String itemValue, int timeoutSeconds,
 			SaturnExecutionContext shardingContext, AbstractSaturnJob saturnJob) {
 		super(jobName, item, itemValue, timeoutSeconds, shardingContext, saturnJob);
+	}
+
+	/**
+	 * 复制对象
+	 */
+	public static Object cloneObject(Object source, ClassLoader classLoader) throws Exception {
+		if (source == null) {
+			return null;
+		}
+		Class<?> clazz = classLoader.loadClass(source.getClass().getCanonicalName());
+		Object target = clazz.newInstance();
+		clazz.getMethod("copyFrom", Object.class).invoke(target, source);
+		return target;
 	}
 
 	/**
@@ -36,30 +56,6 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 	 */
 	public void setCurrentThread(Thread currentThread) {
 		this.currentThread = currentThread;
-	}
-
-	protected AtomicInteger status = new AtomicInteger(0);
-	protected static final int INIT = 0;
-	protected static final int TIMEOUT = 1;
-	protected static final int SUCCESS = 2;
-	protected static final int FORCE_STOP = 3;
-	protected static final int STOPPED = 4;
-
-	protected boolean breakForceStop = false;
-
-	protected Object contextForJob;
-
-	/**
-	 * 复制对象
-	 */
-	public static Object cloneObject(Object source, ClassLoader classLoader) throws Exception {
-		if (source == null) {
-			return null;
-		}
-		Class<?> clazz = classLoader.loadClass(source.getClass().getCanonicalName());
-		Object target = clazz.newInstance();
-		clazz.getMethod("copyFrom", Object.class).invoke(target, source);
-		return target;
 	}
 
 	/**
@@ -85,6 +81,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 设置该分片的状态为TIMEOUT
+	 *
 	 * @return Mark timeout success or fail
 	 */
 	public boolean setTimeout() {
@@ -145,6 +142,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	/**
 	 * 真正执行作业分片逻辑
+	 *
 	 * @return 执行结果
 	 */
 	public SaturnJobReturn call() {
@@ -189,20 +187,20 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 	protected void checkAndSetSaturnJobReturn() {
 		switch (status.get()) {
-		case TIMEOUT:
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-					"execute job timeout(" + timeoutSeconds * 1000 + "ms)", SaturnSystemErrorGroup.TIMEOUT);
-			break;
-		case FORCE_STOP:
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "the job was forced to stop",
-					SaturnSystemErrorGroup.FAIL);
-			break;
-		case STOPPED:
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-					"the job was stopped, will not run the business code", SaturnSystemErrorGroup.FAIL);
-			break;
-		default:
-			break;
+			case TIMEOUT:
+				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+						"execute job timeout(" + timeoutSeconds * 1000 + "ms)", SaturnSystemErrorGroup.TIMEOUT);
+				break;
+			case FORCE_STOP:
+				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "the job was forced to stop",
+						SaturnSystemErrorGroup.FAIL);
+				break;
+			case STOPPED:
+				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+						"the job was stopped, will not run the business code", SaturnSystemErrorGroup.FAIL);
+				break;
+			default:
+				break;
 		}
 		if (saturnJobReturn == null) {
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL,

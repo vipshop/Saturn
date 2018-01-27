@@ -68,7 +68,7 @@ public class ShutdownHandler implements SignalHandler {
 	public void handle(Signal sn) {
 		if (isHandling.compareAndSet(false, true)) {
 			try {
-				doHandle(sn);
+				doHandle();
 			} finally {
 				isHandling.set(false);
 			}
@@ -77,7 +77,7 @@ public class ShutdownHandler implements SignalHandler {
 		}
 	}
 
-	private void doHandle(Signal sn) {
+	private void doHandle() {
 		log.info("msg=Received the kill command");
 		callExecutorListeners();
 		callGlobalListeners();
@@ -87,7 +87,7 @@ public class ShutdownHandler implements SignalHandler {
 		}
 	}
 
-	private void callExecutorListeners() {
+	private static void callExecutorListeners() {
 		Iterator<Entry<String, List<Runnable>>> iterator = executorListeners.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, List<Runnable>> next = iterator.next();
@@ -105,7 +105,7 @@ public class ShutdownHandler implements SignalHandler {
 		executorListeners.clear();
 	}
 
-	private void callGlobalListeners() {
+	private static void callGlobalListeners() {
 		for (Runnable runnable : globalListeners) {
 			try {
 				if (runnable != null) {

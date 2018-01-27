@@ -79,7 +79,7 @@ public abstract class BaseSaturnJob {
 		}
 	}
 
-	private Map<String, Object> constructMap(String jobName, Integer shardItem, AlarmInfo alarmInfo) {
+	private static Map<String, Object> constructMap(String jobName, Integer shardItem, AlarmInfo alarmInfo) {
 		Map<String, Object> ret = new HashMap<>();
 
 		ret.put("jobName", jobName);

@@ -22,13 +22,14 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		boolean shouldReschedule = false;
 		String timeZoneFromZk = configService.getTimeZoneStr();
 		String timeZone = jobScheduler.getPreviousConf().getTimeZone();
-		if (timeZoneFromZk != null && !timeZoneFromZk.equals(timeZone) || timeZoneFromZk == null && timeZone != null) {
+		// timeZoneFromZk is non null
+		if (!timeZoneFromZk.equals(timeZone)) {
 			shouldReschedule = true;
 			jobScheduler.getPreviousConf().setTimeZone(timeZoneFromZk);
 		}
 		String cronFromZk = configService.getCron();
 		String cron = jobScheduler.getPreviousConf().getCron();
-		if (cronFromZk != null && !cronFromZk.equals(cron) || cronFromZk == null && cron != null) {
+		if ((cronFromZk != null && !cronFromZk.equals(cron)) || (cronFromZk == null && cron != null)) {
 			shouldReschedule = true;
 			jobScheduler.getPreviousConf().setCron(cronFromZk);
 		}
@@ -45,7 +46,7 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		boolean shouldSetPausePeriodDate = shouldSetPausePeriodDate(prePauseDate, pauseDate);
 		boolean shouldSetPausePeriodTime = shouldSetPausePeriodTime(prePauseTime, pauseTime);
 
-		if (shouldReschedule || shouldSetPausePeriodDate || shouldSetPausePeriodTime) { // NOSONAR
+		if (shouldReschedule || shouldSetPausePeriodDate || shouldSetPausePeriodTime) {
 			executionService.updateNextFireTime(executionContextService.getShardingItems());
 		}
 		if (shouldSetPausePeriodDate) {
@@ -62,14 +63,14 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		}
 	}
 
-	private boolean shouldSetPausePeriodDate(String prePauseDate, String pauseDate) {
+	private static boolean shouldSetPausePeriodDate(String prePauseDate, String pauseDate) {
 		boolean updatePauseConditionFirst = (prePauseDate != null && !prePauseDate.equals(pauseDate));
 		boolean updatePauseConditionSecond = (prePauseDate == null && pauseDate != null);
 
 		return updatePauseConditionFirst || updatePauseConditionSecond;
 	}
 
-	private boolean shouldSetPausePeriodTime(String prePauseTime, String pauseTime) {
+	private static boolean shouldSetPausePeriodTime(String prePauseTime, String pauseTime) {
 		boolean updatePauseConditionThird = (prePauseTime != null && !prePauseTime.equals(pauseTime));
 		boolean updatePauseConditionFourth = (prePauseTime == null && pauseTime != null);
 

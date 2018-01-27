@@ -6,23 +6,23 @@ import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.JobException;
-import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.PropertyPlaceholderHelper;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.PropertyPlaceholderHelper;
 
 /**
  * Saturn抽象父类
+ *
  * @author linzhaoming
  */
 public abstract class AbstractSaturnJob extends AbstractElasticJob {
+
 	private static final Logger log = LoggerFactory.getLogger(AbstractSaturnJob.class);
 
 	protected static PropertyPlaceholderHelper placeHolderHelper = new PropertyPlaceholderHelper("{", "}");
@@ -144,6 +144,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 
 	/**
 	 * 获取替换后的作业分片执行值
+	 *
 	 * @param jobParameter 作业参数
 	 * @param jobValue 作业value
 	 * @return 替换后的值
@@ -180,6 +181,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 
 	/**
 	 * 实际处理逻辑
+	 *
 	 * @param shardingContext 上下文
 	 * @return 每个分片返回一个SaturnJobReturn. 若为null，表示执行失败
 	 */
@@ -188,7 +190,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 	public abstract SaturnJobReturn doExecution(String jobName, Integer key, String value,
 			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable;
 
-	protected static abstract class JobBusinessClassMethodCaller {
+	protected abstract static class JobBusinessClassMethodCaller {
 
 		public Object call(Object jobBusinessInstance, SaturnExecutorService saturnExecutorService) throws Exception {
 			if (jobBusinessInstance == null) {

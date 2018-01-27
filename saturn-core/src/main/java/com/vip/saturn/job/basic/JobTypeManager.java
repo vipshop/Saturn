@@ -4,15 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JobTypeManager {
+
 	private static JobTypeManager instance = new JobTypeManager();
-
-	public static JobTypeManager getInstance() {
-		return instance;
-	}
-
+	
 	private Map<String, Class<? extends AbstractElasticJob>> handlerMap = new HashMap<String, Class<? extends AbstractElasticJob>>();
 
 	private JobTypeManager() {
+	}
+
+	public static JobTypeManager getInstance() {
+		return instance;
 	}
 
 	public void registerHandler(String jobType, Class<? extends AbstractElasticJob> jobClazz) {

@@ -23,13 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JobRegistry {
 
-	private static Map<String, ConcurrentHashMap<String, JobScheduler>> SCHEDULER_MAP = new ConcurrentHashMap<>();
+	private static Map<String, ConcurrentHashMap<String, JobScheduler>> schedulerMap = new ConcurrentHashMap<>();
 
 	private JobRegistry() {
 	}
 
 	public static Map<String, ConcurrentHashMap<String, JobScheduler>> getSchedulerMap() {
-		return SCHEDULER_MAP;
+		return schedulerMap;
 	}
 
 	/**
@@ -38,21 +38,21 @@ public class JobRegistry {
 	 */
 	public static void addJobScheduler(final String executorName, final String jobName,
 			final JobScheduler jobScheduler) {
-		if (SCHEDULER_MAP.containsKey(executorName)) {
-			SCHEDULER_MAP.get(executorName).put(jobName, jobScheduler);
+		if (schedulerMap.containsKey(executorName)) {
+			schedulerMap.get(executorName).put(jobName, jobScheduler);
 		} else {
 			ConcurrentHashMap<String, JobScheduler> schedMap = new ConcurrentHashMap<>();
 			schedMap.put(jobName, jobScheduler);
-			SCHEDULER_MAP.put(executorName, schedMap);
+			schedulerMap.put(executorName, schedMap);
 		}
 	}
 
 	public static void clearExecutor(String executorName) {
-		SCHEDULER_MAP.remove(executorName);
+		schedulerMap.remove(executorName);
 	}
 
 	public static void clearJob(String executorName, String jobName) {
-		Map<String, JobScheduler> scedMap = SCHEDULER_MAP.get(executorName);
+		Map<String, JobScheduler> scedMap = schedulerMap.get(executorName);
 		if (scedMap != null) {
 			JobScheduler jobScheduler = scedMap.remove(jobName);
 			if (jobScheduler != null && jobScheduler.getJob() != null) {

@@ -215,8 +215,9 @@ public class JobScheduler {
 	public void reCreateExecutorService() {
 		synchronized (isShutdownFlag) {
 			if (isShutdownFlag.get()) {
-				log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
-						"the jobScheduler was shutdown, cannot re-create business thread pool"));
+				String msg = String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
+						"the jobScheduler was shutdown, cannot re-create business thread pool");
+				log.warn(msg);
 				return;
 			}
 			executionService.shutdown();
@@ -262,18 +263,6 @@ public class JobScheduler {
 			job.stop();
 		}
 	}
-
-	/**
-	 * 恢复因服务器崩溃而停止的作业.
-	 * 
-	 * <p>
-	 * 不会恢复手工设置停止运行的作业.
-	 * </p>
-	 */
-	/*
-	 * public void resumeCrashedJob() { serverService.persistServerOnline();
-	 * executionService.clearRunningInfo(shardingService.getLocalHostShardingItems()); job.resume(); }
-	 */
 
 	/**
 	 * 立刻启动作业.
