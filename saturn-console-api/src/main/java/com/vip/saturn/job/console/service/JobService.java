@@ -17,8 +17,6 @@ import java.util.Map;
  */
 public interface JobService {
 
-	JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException;
-
 	List<String> getGroups(String namespace) throws SaturnJobConsoleException;
 
 	List<DependencyJob> getDependingJobs(String namespace, String jobName) throws SaturnJobConsoleException;
@@ -69,6 +67,8 @@ public interface JobService {
 	JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	List<String> getJobShardingAllocatedExecutorList(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 

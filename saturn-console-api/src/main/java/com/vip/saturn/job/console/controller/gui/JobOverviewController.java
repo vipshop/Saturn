@@ -1,16 +1,25 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
+import com.vip.saturn.job.console.domain.AbnormalJob;
 import com.vip.saturn.job.console.domain.DependencyJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobOverviewJobVo;
+import com.vip.saturn.job.console.domain.JobOverviewVo;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
+import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
+import com.vip.saturn.job.console.utils.SaturnBeanUtils;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.File;
@@ -23,6 +32,9 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,14 +53,116 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 
+	private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
+
 	@Resource
 	private JobService jobService;
+
+	@Resource
+	private AlarmStatisticsService alarmStatisticsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping
 	public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace)
 			throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(jobService.getJobOverviewVo(namespace));
+		return new SuccessResponseEntity(getJobOverviewVo(namespace));
+	}
+
+	public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
+		JobOverviewVo jobOverviewVo = new JobOverviewVo();
+		try {
+			List<JobOverviewJobVo> jobList = new ArrayList<>();
+			int enabledNumber = 0;
+			List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
+			if (unSystemJobs != null) {
+				enabledNumber = updateJobOverviewDetail(namespace, jobList, enabledNumber, unSystemJobs);
+			}
+			jobOverviewVo.setJobs(jobList);
+			jobOverviewVo.setEnabledNumber(enabledNumber);
+			jobOverviewVo.setTotalNumber(jobList.size());
+
+			// 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
+			updateAbnormalJobSizeInOverview(namespace, jobOverviewVo);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+
+		return jobOverviewVo;
+	}
+
+	private void updateAbnormalJobSizeInOverview(String namespace, JobOverviewVo jobOverviewVo) {
+		try {
+			String result = alarmStatisticsService.getAbnormalJobsByNamespace(namespace);
+			if (result != null) {
+				List<AbnormalJob> abnormalJobs = JSON.parseArray(result, AbnormalJob.class);
+				if (abnormalJobs != null) {
+					jobOverviewVo.setAbnormalNumber(abnormalJobs.size());
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private int updateJobOverviewDetail(String namespace, List<JobOverviewJobVo> jobList, int enabledNumber,
+			List<JobConfig> unSystemJobs) {
+		for (JobConfig jobConfig : unSystemJobs) {
+			try {
+				jobConfig.setDefaultValues();
+
+				JobOverviewJobVo jobOverviewJobVo = new JobOverviewJobVo();
+				SaturnBeanUtils.copyProperties(jobConfig, jobOverviewJobVo);
+
+				updateJobTypesInOverview(jobConfig, jobOverviewJobVo);
+
+				if (StringUtils.isBlank(jobOverviewJobVo.getGroups())) {
+					jobOverviewJobVo.setGroups(SaturnConstants.NO_GROUPS_LABEL);
+				}
+
+				JobStatus jobStatus = jobService.getJobStatus(namespace, jobConfig.getJobName());
+				jobOverviewJobVo.setStatus(jobStatus);
+
+				if (!JobStatus.STOPPED.equals(jobStatus)) {// 作业如果是STOPPED状态，不需要显示已分配的executor
+					updateShardingListInOverview(namespace, jobConfig, jobOverviewJobVo);
+				}
+
+				if (jobOverviewJobVo.getEnabled()) {
+					enabledNumber++;
+				}
+				jobList.add(jobOverviewJobVo);
+			} catch (Exception e) {
+				log.error("list job " + jobConfig.getJobName() + " error", e);
+			}
+		}
+		return enabledNumber;
+	}
+
+	private void updateJobTypesInOverview(JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo) {
+		JobType jobType = JobType.getJobType(jobConfig.getJobType());
+		if (JobType.UNKOWN_JOB.equals(jobType)) {
+			if (jobOverviewJobVo.getJobClass() != null
+					&& jobOverviewJobVo.getJobClass().indexOf("SaturnScriptJob") != -1) {
+				jobOverviewJobVo.setJobType(JobType.SHELL_JOB.name());
+			} else {
+				jobOverviewJobVo.setJobType(JobType.JAVA_JOB.name());
+			}
+		}
+	}
+
+	private void updateShardingListInOverview(String namespace, JobConfig jobConfig,
+			JobOverviewJobVo jobOverviewJobVo) throws SaturnJobConsoleException {
+		List<String> jobShardingAllocatedExecutorList = jobService
+				.getJobShardingAllocatedExecutorList(namespace, jobConfig.getJobName());
+
+		StringBuilder shardingListSb = new StringBuilder();
+		for (String executor : jobShardingAllocatedExecutorList) {
+			shardingListSb.append(executor).append(",");
+		}
+		if (shardingListSb.length() > 0) {
+			jobOverviewJobVo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
+		}
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
