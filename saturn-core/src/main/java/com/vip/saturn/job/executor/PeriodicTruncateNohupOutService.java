@@ -26,7 +26,8 @@ public class PeriodicTruncateNohupOutService {
 	private ScheduledExecutorService truncateLogService;
 
 	public PeriodicTruncateNohupOutService(String executorName) {
-		truncateLogService = Executors.newScheduledThreadPool(1, new SaturnThreadFactory(executorName + "-truncate-nohup-out-thread", false));
+		truncateLogService = Executors
+				.newScheduledThreadPool(1, new SaturnThreadFactory(executorName + "-truncate-nohup-out-thread", false));
 	}
 
 	public void start() {
@@ -37,7 +38,8 @@ public class PeriodicTruncateNohupOutService {
 		}
 
 		truncateLogService.scheduleAtFixedRate(new TruncateLogRunnable(),
-				new Random().nextInt(10), SystemEnvProperties.VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC, TimeUnit.SECONDS);
+				new Random().nextInt(10), SystemEnvProperties.VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC,
+				TimeUnit.SECONDS);
 	}
 
 	public void shutdown() {
@@ -51,10 +53,11 @@ public class PeriodicTruncateNohupOutService {
 
 		@Override
 		public void run() {
-			try (RandomAccessFile file = new RandomAccessFile(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, "rw");
-				 FileChannel fc = file.getChannel();) {
+			try (RandomAccessFile file = new RandomAccessFile(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE,
+					"rw"); FileChannel fc = file.getChannel()) {
 				if (fc.size() > SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES) {
-					log.info("truncate {} as size over {} bytes", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES);
+					log.info("truncate {} as size over {} bytes", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE,
+							SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES);
 					fc.truncate(TRUNCATE_SIZE);
 				}
 			} catch (FileNotFoundException e) {

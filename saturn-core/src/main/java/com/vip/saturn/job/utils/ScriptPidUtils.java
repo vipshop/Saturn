@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class ScriptPidUtils {
 	private static final Logger log = LoggerFactory.getLogger(ScriptPidUtils.class);
 
-	public static long UNKNOWN_PID = -1;
+	public static final long UNKNOWN_PID = -1;
 
 	/** 系统分隔符 */
 	protected static final String FILESEPARATOR = System.getProperty("file.separator");
@@ -190,7 +190,7 @@ public class ScriptPidUtils {
 
 		for (File file : files) {
 			try {
-				pids.add(Long.parseLong(file.getName()));
+				pids.add(Long.valueOf(file.getName()));
 			} catch (Exception e) {
 				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Parsing the pid file error"), e);
 			}
@@ -442,7 +442,7 @@ public class ScriptPidUtils {
 				if (shardItems.isEmpty()) {
 					return;
 				}
-				
+
 				asyncCheckShellProcessIsDone(regCenter, jobName, executorName, shardItems);
 			}
 		}

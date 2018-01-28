@@ -328,7 +328,8 @@ public class ConfigurationService extends AbstractSaturnService {
 		}
 	}
 
-	private boolean checkIsInPausePeriodDateOrTime(int h, int m, String splitChar, String pausePeriodDateOrTime) {
+	private static boolean checkIsInPausePeriodDateOrTime(int h, int m, String splitChar,
+			String pausePeriodDateOrTime) {
 		String[] periods = pausePeriodDateOrTime.split(",");
 
 		boolean result = false;

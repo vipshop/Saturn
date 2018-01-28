@@ -41,16 +41,16 @@ public final class ExecutionInfo implements Serializable {
 		this.lastBeginTime = lastBeginTime;
 	}
 
+	public ExecutionInfo(int item) {
+		this.item = item;
+	}
+
 	public String getJobLog() {
 		return jobLog;
 	}
 
 	public void setJobLog(String jobLog) {
 		this.jobLog = jobLog;
-	}
-
-	public ExecutionInfo(int item) {
-		this.item = item;
 	}
 
 	public int getItem() {

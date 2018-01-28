@@ -217,11 +217,12 @@ public class SaturnExecutor {
 	}
 
 	private String discoverZK() throws Exception {
-		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
-		if (size == 0) {
+		if (SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.isEmpty()) {
 			throw new Exception("Please configure the parameter " + SystemEnvProperties.NAME_VIP_SATURN_CONSOLE_URI
 					+ " with env or -D");
 		}
+
+		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
 		for (int i = 0; i < size; i++) {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String url = consoleUri + "/rest/v1/discoverZk?namespace=" + namespace;
@@ -321,33 +322,7 @@ public class SaturnExecutor {
 
 				serverLists = serverLists.trim();
 
-				try {
-					// 验证namespace是否存在
-					saturnExecutorExtension.validateNamespaceExisting(serverLists);
-
-					ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
-					regCenter = new ZookeeperRegistryCenter(zkConfig);
-					saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
-					saturnExecutorService.setJobClassLoader(jobClassLoader);
-					saturnExecutorService.setExecutorClassLoader(executorClassLoader);
-
-					// 初始化注册中心
-					log.info("start to init reg center.");
-					regCenter.init();
-					connectionLostListener = new EnhancedConnectionStateListener(executorName) {
-						@Override
-						public void onLost() {
-							needRestart = true;
-							raiseAlarm();
-						}
-					};
-					regCenter.addConnectionStateListener(connectionLostListener);
-
-					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.ZK);
-				} catch (Exception e) {
-					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.ZK);
-					throw e;
-				}
+				initRegistryCenter(serverLists);
 
 				// 检测是否存在仍然有正在运行的SHELL作业
 				log.info("start to check all exist jobs.");
@@ -394,6 +369,36 @@ public class SaturnExecutor {
 			}
 		} finally {
 			shutdownLock.unlock();
+		}
+	}
+
+	private void initRegistryCenter(String serverLists) throws Exception {
+		try {
+			// 验证namespace是否存在
+			saturnExecutorExtension.validateNamespaceExisting(serverLists);
+
+			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
+			regCenter = new ZookeeperRegistryCenter(zkConfig);
+			saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
+			saturnExecutorService.setJobClassLoader(jobClassLoader);
+			saturnExecutorService.setExecutorClassLoader(executorClassLoader);
+
+			// 初始化注册中心
+			log.info("start to init reg center.");
+			regCenter.init();
+			connectionLostListener = new EnhancedConnectionStateListener(executorName) {
+				@Override
+				public void onLost() {
+					needRestart = true;
+					raiseAlarm();
+				}
+			};
+			regCenter.addConnectionStateListener(connectionLostListener);
+
+			StartCheckUtil.setOk(StartCheckItem.ZK);
+		} catch (Exception e) {
+			StartCheckUtil.setError(StartCheckItem.ZK);
+			throw e;
 		}
 	}
 

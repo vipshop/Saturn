@@ -76,8 +76,8 @@ public class TimeoutSchedulerExecutor {
 					// 强杀
 					ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 				} catch (Throwable t) {
-					log.warn("Fail to force stop timeout job:{} with reason:{}",
-							shardingItemFutureTask.getCallable().getJobName(), t.getMessage());
+					log.warn("Fail to force stop timeout job:" + shardingItemFutureTask.getCallable().getJobName()
+							+ " with reason:" + t.getMessage(), t);
 				}
 			}
 		}
