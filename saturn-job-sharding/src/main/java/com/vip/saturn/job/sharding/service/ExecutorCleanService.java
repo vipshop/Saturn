@@ -92,7 +92,7 @@ public class ExecutorCleanService {
 	private List<String> getJobList() throws KeeperException.ConnectionLossException, InterruptedException {
 		List<String> jobList = new ArrayList<>();
 		try {
-			String jobsNodePath = SaturnExecutorsNode.$JOBSNODE_PATH;
+			String jobsNodePath = SaturnExecutorsNode.JOBSNODE_PATH;
 			if (curatorFramework.checkExists().forPath(jobsNodePath) != null) {
 				List<String> tmp = curatorFramework.getChildren().forPath(jobsNodePath);
 				if (tmp != null && !tmp.isEmpty()) {

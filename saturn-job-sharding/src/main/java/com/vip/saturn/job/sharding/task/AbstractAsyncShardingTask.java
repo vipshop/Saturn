@@ -6,6 +6,7 @@ import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -64,7 +65,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			}
 
 			// 如果需要全量分片，且当前线程不是全量分片线程，则直接返回，没必要做分片
-			if (namespaceShardingService.getNeedAllSharding() && !isAllShardingTask) {
+			if (namespaceShardingService.isNeedAllSharding() && !isAllShardingTask) {
 				log.info("the {} will be ignored, because there will be {}", this.getClass().getSimpleName(),
 						ExecuteAllShardingTask.class.getSimpleName());
 				return;
@@ -210,24 +211,24 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	}
 
 	private void increaseShardingCount() throws Exception {
-		Integer _shardingCount = 1;
+		Integer shardingCount = 1;
 		if (null != curatorFramework.checkExists()
 				.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH)) {
 			byte[] shardingCountData = curatorFramework.getData()
 					.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH);
 			if (shardingCountData != null) {
 				try {
-					_shardingCount = Integer.parseInt(new String(shardingCountData, "UTF-8")) + 1;
+					shardingCount = Integer.parseInt(new String(shardingCountData, StandardCharsets.UTF_8.name())) + 1;
 				} catch (NumberFormatException e) {
 					log.error("parse shardingCount error", e);
 				}
 			}
 			curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
-					_shardingCount.toString().getBytes("UTF-8"));
+					shardingCount.toString().getBytes(StandardCharsets.UTF_8.name()));
 		} else {
 			curatorFramework.create().creatingParentsIfNeeded()
 					.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
-							_shardingCount.toString().getBytes("UTF-8"));
+							shardingCount.toString().getBytes(StandardCharsets.UTF_8.name()));
 		}
 	}
 
@@ -323,7 +324,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		if (curatorFramework.checkExists().forPath(localNodePath) != null) {
 			byte[] data = curatorFramework.getData().forPath(localNodePath);
 			if (data != null) {
-				return Boolean.valueOf(new String(data, "UTF-8"));
+				return Boolean.valueOf(new String(data, StandardCharsets.UTF_8.name()));
 			}
 		}
 		return false;
@@ -339,7 +340,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(jobConfigShardingTotalCountNodePath);
 			if (shardingTotalCountData != null) {
 				try {
-					shardingTotalCount = Integer.parseInt(new String(shardingTotalCountData, "UTF-8"));
+					shardingTotalCount = Integer
+							.parseInt(new String(shardingTotalCountData, StandardCharsets.UTF_8.name()));
 				} catch (NumberFormatException e) {
 					log.error("parse shardingTotalCount error, will use the default value", e);
 				}
@@ -356,7 +358,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(jobConfigLoadLevelNodePath);
 			try {
 				if (loadLevelData != null) {
-					loadLevel = Integer.parseInt(new String(loadLevelData, "UTF-8"));
+					loadLevel = Integer.parseInt(new String(loadLevelData, StandardCharsets.UTF_8.name()));
 				}
 			} catch (NumberFormatException e) {
 				log.error("parse loadLevel error, will use the default value", e);
@@ -601,7 +603,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				!= null) {
 			byte[] useDispreferListData = curatorFramework.getData()
 					.forPath(jobConfigUseDispreferListNodePath);
-			if (useDispreferListData != null && !Boolean.parseBoolean(new String(useDispreferListData, "UTF-8"))) {
+			if (useDispreferListData != null && !Boolean
+					.parseBoolean(new String(useDispreferListData, StandardCharsets.UTF_8.name()))) {
 				return false;
 			}
 		}
@@ -660,13 +663,13 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 */
 	private List<String> getAllJobs() throws Exception {
 		List<String> allJob = new ArrayList<>();
-		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH)
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH)
 				== null) {
 			curatorFramework.create().creatingParentsIfNeeded()
-					.forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+					.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 		}
 		List<String> tmp = curatorFramework.getChildren()
-				.forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+				.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 		if (tmp != null) {
 			allJob.addAll(tmp);
 		}
@@ -684,7 +687,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job)) != null) {
 				byte[] enableData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job));
-				if (enableData != null && Boolean.valueOf(new String(enableData, "UTF-8"))) {
+				if (enableData != null && Boolean.valueOf(new String(enableData, StandardCharsets.UTF_8.name()))) {
 					allEnableJob.add(job);
 				}
 			}
@@ -708,7 +711,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			byte[] preferListData = curatorFramework.getData()
 					.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName));
 			if (preferListData != null) {
-				return new String(preferListData, "UTF-8").trim().length() > 0;
+				return new String(preferListData, StandardCharsets.UTF_8.name()).trim().length() > 0;
 			}
 		}
 		return false;
@@ -725,7 +728,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName));
 			if (preferListData != null) {
 				List<String> allExistsExecutors = getAllExistingExecutors();
-				String[] split = new String(preferListData, "UTF-8").split(",");
+				String[] split = new String(preferListData, StandardCharsets.UTF_8.name()).split(",");
 				for (String tmp : split) {
 					String tmpTrim = tmp.trim();
 					if (!"".equals(tmpTrim)) {
@@ -769,7 +772,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 						.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
 					byte[] taskData = curatorFramework.getData()
 							.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
-					if (taskData != null && task.equals(new String(taskData, "UTF-8"))) {
+					if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name()))) {
 						if (!preferList.contains(executor)) {
 							preferList.add(executor);
 						}

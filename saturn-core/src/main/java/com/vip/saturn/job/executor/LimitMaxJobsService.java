@@ -28,7 +28,7 @@ public class LimitMaxJobsService extends AbstractSaturnService {
 	 * @return 是否超出
 	 */
 	public boolean check(String jobName) {
-		List<String> childrenKeys = coordinatorRegistryCenter.getChildrenKeys(SaturnExecutorsNode.$JOBSNODE_PATH);
+		List<String> childrenKeys = coordinatorRegistryCenter.getChildrenKeys(SaturnExecutorsNode.JOBSNODE_PATH);
 		if (childrenKeys != null && !childrenKeys.isEmpty() && !childrenKeys.contains(jobName)
 				&& childrenKeys.size() >= SystemEnvProperties.VIP_SATURN_MAX_NUMBER_OF_JOBS) {
 			log.warn("The jobs that are under the namespace exceed {}",

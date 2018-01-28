@@ -32,8 +32,8 @@ public class AddJobListenersService {
 	}
 
 	public void addExistJobPathListener() throws Exception {
-		if (null != curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH)) {
-			List<String> jobs = curatorFramework.getChildren().forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+		if (null != curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH)) {
+			List<String> jobs = curatorFramework.getChildren().forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 			log.info("addExistJobPathListener, jobs = {}", jobs);
 			if (jobs != null) {
 				for (String job : jobs) {
@@ -55,13 +55,13 @@ public class AddJobListenersService {
 	}
 
 	private void removeJobConfigPathTreeCache(String jobName) throws ShardingException {
-		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/config";
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/config";
 		int depth = 1;
 		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
 
 	private void removeJobServersPathTreeCache(String jobName) throws ShardingException {
-		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/servers";
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
 		int depth = 2;
 		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
@@ -71,7 +71,7 @@ public class AddJobListenersService {
 	 * @return false, if the job/config path is not existing
 	 */
 	private boolean addJobConfigPathListener(String jobName) throws Exception {
-		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/config";
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/config";
 		String fullPath = namespace + path;
 
 		int waitConfigPathCreatedCounts = 50;
@@ -95,7 +95,7 @@ public class AddJobListenersService {
 	}
 
 	private void addJobServersPathListener(String jobName) throws Exception {
-		String path = SaturnExecutorsNode.$JOBSNODE_PATH + "/" + jobName + "/servers";
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
 		if (curatorFramework.checkExists().forPath(path) == null) {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);

@@ -242,9 +242,9 @@ public class NamespaceShardingService {
 						executorService = newSingleThreadExecutor();
 
 						// 持久化$Jobs节点
-						if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.$JOBSNODE_PATH) == null) {
+						if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH) == null) {
 							curatorFramework.create().creatingParentsIfNeeded()
-									.forPath(SaturnExecutorsNode.$JOBSNODE_PATH);
+									.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 						}
 						// 持久化LeaderValue
 						curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
@@ -363,7 +363,7 @@ public class NamespaceShardingService {
 		return shardingCount.decrementAndGet();
 	}
 
-	public boolean getNeedAllSharding() {
+	public boolean isNeedAllSharding() {
 		return needAllSharding.get();
 	}
 

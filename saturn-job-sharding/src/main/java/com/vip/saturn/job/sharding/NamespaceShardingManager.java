@@ -93,7 +93,7 @@ public class NamespaceShardingManager {
 	 * watch 1-level-depth of the children of /$Jobs
 	 */
 	private void addNewOrRemoveJobListener() throws Exception {
-		String path = SaturnExecutorsNode.$JOBSNODE_PATH;
+		String path = SaturnExecutorsNode.JOBSNODE_PATH;
 		int depth = 1;
 		createNodePathIfNotExists(path);
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);

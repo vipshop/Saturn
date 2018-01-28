@@ -34,8 +34,8 @@ public class SaturnExecutorsNode {
 					+ "/" + NO_TRAFFIC;
 	public static final String CONFIG_VERSION_PATH = "/" + SATURN_EXECUTORS_NODE + "/config/version";
 
-	public static final String $JOBSNODE_PATH = "/" + JOBS_NODE;
-	public static final String $SATURNEXECUTORS_PATH = "/" + SATURN_EXECUTORS_NODE;
+	public static final String JOBSNODE_PATH = "/" + JOBS_NODE;
+	public static final String SATURNEXECUTORS_PATH = "/" + SATURN_EXECUTORS_NODE;
 
 	/**
 	 * 获取$SaturnExecutors结点完整路径
