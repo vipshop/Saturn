@@ -324,7 +324,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		if (curatorFramework.checkExists().forPath(localNodePath) != null) {
 			byte[] data = curatorFramework.getData().forPath(localNodePath);
 			if (data != null) {
-				return Boolean.valueOf(new String(data, StandardCharsets.UTF_8.name()));
+				return Boolean.parseBoolean(new String(data, StandardCharsets.UTF_8.name()));
 			}
 		}
 		return false;
@@ -687,7 +687,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job)) != null) {
 				byte[] enableData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job));
-				if (enableData != null && Boolean.valueOf(new String(enableData, StandardCharsets.UTF_8.name()))) {
+				if (enableData != null && Boolean.parseBoolean(new String(enableData, StandardCharsets.UTF_8.name()))) {
 					allEnableJob.add(job);
 				}
 			}

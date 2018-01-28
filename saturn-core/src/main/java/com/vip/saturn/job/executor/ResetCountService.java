@@ -40,7 +40,7 @@ public class ResetCountService {
 			startDT.add(Calendar.DAY_OF_MONTH, 1);
 			date = startDT.getTime();
 		}
-		countResetTimer.schedule(countResetTask, date, 24 * 60 * 60 * 1000); // 时间间隔(一天)
+		countResetTimer.schedule(countResetTask, date, 24 * 60 * 60 * 1000L); // 时间间隔(一天)
 		log.info("msg=start the task of resetting statistics data");
 	}
 

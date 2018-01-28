@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class FailoverService extends AbstractSaturnService {
 
-	static Logger log = LoggerFactory.getLogger(FailoverService.class);
+	private static Logger log = LoggerFactory.getLogger(FailoverService.class);
 
 	public FailoverService(final JobScheduler jobScheduler) {
 		super(jobScheduler);
@@ -86,7 +86,7 @@ public class FailoverService extends AbstractSaturnService {
 		return getJobNodeStorage().isJobNodeExisted(FailoverNode.ITEMS_ROOT)
 				&& !getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).isEmpty()
 				&& getJobNodeStorage().isJobNodeExisted(ConfigurationNode.ENABLED)
-				&& Boolean.valueOf(getJobNodeStorage().getJobNodeData(ConfigurationNode.ENABLED));
+				&& Boolean.parseBoolean(getJobNodeStorage().getJobNodeData(ConfigurationNode.ENABLED));
 	}
 
 	/**

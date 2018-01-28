@@ -133,7 +133,7 @@ public class ScriptJobRunner {
 			saturnJobReturn = execute(timeoutSeconds);
 		} catch (Throwable t) {
 			log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} Exception", t);
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t.toString(),
+			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t,
 					SaturnSystemErrorGroup.FAIL);
 		} finally {
 			FileUtils.deleteQuietly(saturnOutputFile.getParentFile());

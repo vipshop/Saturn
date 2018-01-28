@@ -227,7 +227,7 @@ public class JobConfiguration {
 
 		valStr = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOAD_LEVEL));
 		if (!Strings.isNullOrEmpty(valStr)) {
-			loadLevel = Integer.parseInt(valStr);
+			loadLevel = Integer.valueOf(valStr);
 		}
 
 		preferList = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.PREFER_LIST));

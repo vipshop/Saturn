@@ -489,7 +489,7 @@ public class ScriptPidUtils {
 
 	private static void killRunningShellProcess(String executorName, String jobName, String[] itemPaths) {
 		for (String path : itemPaths) {
-			Integer item = Integer.parseInt(StringUtils.substringAfterLast(path, File.separator));
+			Integer item = Integer.valueOf(StringUtils.substringAfterLast(path, File.separator));
 			long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, "" + item);
 			System.out.println("pid found for jobName:" + jobName + " executorName:" + executorName + ", kill -9 " + pid);// NOSONAR
 			try {
@@ -550,11 +550,9 @@ public class ScriptPidUtils {
 			} else if (kvs.length > 2) {
 				map.put(kvs[0], oneLine.replace(kvs[0] + "=", ""));
 				lastKey = kvs[0];
-			} else if (kvs.length == 1) {
-				if (StringUtils.isNotBlank(lastKey)) {
-					String lastValue = map.get(lastKey);
-					map.put(lastKey, lastValue + kvs[0]);
-				}
+			} else if (kvs.length == 1 && StringUtils.isNotBlank(lastKey)) {
+				String lastValue = map.get(lastKey);
+				map.put(lastKey, lastValue + kvs[0]);
 			}
 		}
 		return map;
