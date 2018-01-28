@@ -78,7 +78,8 @@ public class ScriptJobRunner {
 		StringBuilder envStringBuilder = new StringBuilder();
 		if (envMap != null && !envMap.isEmpty()) {
 			for (Entry<String, String> envEntrySet : envMap.entrySet()) {
-				envStringBuilder.append("export " + envEntrySet.getKey() + "=" + envEntrySet.getValue()).append(";");
+				envStringBuilder.append("export ").append(envEntrySet.getKey()).append("=")
+						.append(envEntrySet.getValue()).append(";");
 			}
 		}
 		String execParameter = envStringBuilder.toString() + PREFIX_COMAND
@@ -100,7 +101,7 @@ public class ScriptJobRunner {
 			} catch (Throwable t) {
 				log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} read SaturnJobReturn from {"
 						+ saturnOutputFile.getAbsolutePath() + "} error", t);
-				tmp = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + t.toString(),
+				tmp = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + t,
 						SaturnSystemErrorGroup.FAIL);
 			}
 		}

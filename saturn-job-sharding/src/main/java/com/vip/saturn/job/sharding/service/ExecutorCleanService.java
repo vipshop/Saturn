@@ -101,9 +101,7 @@ public class ExecutorCleanService {
 			}
 		} catch (NoNodeException e) { // NOSONAR
 			// ignore
-		} catch (KeeperException.ConnectionLossException e) {
-			throw e;
-		} catch (InterruptedException e) {
+		} catch (KeeperException.ConnectionLossException | InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("Clean the executor, getJobList error", e);
@@ -119,9 +117,7 @@ public class ExecutorCleanService {
 		try {
 			String executorNodePath = SaturnExecutorsNode.getExecutorNodePath(executorName);
 			CuratorUtils.deletingChildrenIfNeeded(curatorFramework, executorNodePath);
-		} catch (KeeperException.ConnectionLossException e) {
-			throw e;
-		} catch (InterruptedException e) {
+		} catch (KeeperException.ConnectionLossException | InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("Clean the executor, deleteExecutor(" + executorName + ") error", e);
@@ -137,9 +133,7 @@ public class ExecutorCleanService {
 			String jobServersExecutorNodePath = SaturnExecutorsNode.getJobServersExecutorNodePath(jobName,
 					executorName);
 			CuratorUtils.deletingChildrenIfNeeded(curatorFramework, jobServersExecutorNodePath);
-		} catch (KeeperException.ConnectionLossException e) {
-			throw e;
-		} catch (InterruptedException e) {
+		} catch (KeeperException.ConnectionLossException | InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("Clean the executor, deleteJobServerExecutor(" + jobName + ", " + executorName + ") error", e);
@@ -178,13 +172,9 @@ public class ExecutorCleanService {
 					return found ? sb.toString() : null;
 				}
 			}
-		} catch (NoNodeException e) { // NOSONAR
+		} catch (NoNodeException | BadVersionException e) { // NOSONAR
 			// ignore
-		} catch (BadVersionException e) { // NOSONAR
-			// ignore
-		} catch (KeeperException.ConnectionLossException e) {
-			throw e;
-		} catch (InterruptedException e) {
+		} catch (KeeperException.ConnectionLossException | InterruptedException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("Clean the executor, updateJobConfigPreferListContentToRemoveDeletedExecutor(" + jobName + ", "

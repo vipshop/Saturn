@@ -397,6 +397,7 @@ public class ScriptPidUtils {
 		}
 		String jobTypePath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_TYPE);
 		String jobType = regCenter.get(jobTypePath);
+		// 只检查Shell作业
 		if (!"SHELL_JOB".equals(jobType)) {
 			log.info("{} is not shell job ,igore checking ", jobName);
 			return;
@@ -410,7 +411,7 @@ public class ScriptPidUtils {
 		if ("true".equals(isEnabledStr) || isEnabledStr == null) {
 			killRunningShellProcess(executorName, jobName, itemPaths);
 		} else {
-			// if there are other executors, failover will occure. This executor only has to kill the pids.
+			// if there are other executors, failover will occur. This executor only has to kill the pids.
 			if (areThereOtherExecutorsRunningTheShards(regCenter, jobName)) {
 				killRunningShellProcess(executorName, jobName, itemPaths);
 			} else {
@@ -441,50 +442,55 @@ public class ScriptPidUtils {
 				if (shardItems.isEmpty()) {
 					return;
 				}
-
-				// start a thread to check if shell process is done, if yes, remove pid file -> add completed -> clear
-				// running
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						while (!Thread.interrupted()) {
-							try {
-								TimeUnit.MILLISECONDS.sleep(500);
-							} catch (InterruptedException e) {
-							}
-
-							boolean finished = true;
-							for (String shardItem : shardItems) {
-								long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, shardItem);
-								if (pid > 0 && ScriptPidUtils.isPidRunning("" + Long.toString(pid))) {
-									finished = false;
-									continue;
-								} else {
-									// remove pid file -> add completed -> clear running
-									// make sure u have added completed node before remove running node. otherwise
-									// failover will triggered.
-									ScriptPidUtils.removeAllPidFile(executorName, jobName, shardItem);
-									String completedPath = JobNodePath.getNodeFullPath(jobName,
-											String.format(ExecutionNode.COMPLETED, shardItem));
-									regCenter.persist(completedPath, "");
-									String runningPath = JobNodePath.getNodeFullPath(jobName,
-											String.format(ExecutionNode.RUNNING, shardItem));
-									regCenter.remove(runningPath);
-									log.info("[{}] msg={} - {} is done, write complete node path {}", jobName, jobName,
-											shardItem, completedPath);
-									System.out.println(jobName + "-" + shardItem + " is done.");// NOSONAR
-								}
-							}
-							if (finished) {
-								log.info("[{}] msg=all running shell processes are done. now quit the thread.");
-								System.out.println("all running shell processes are done. now quit the thread.");// NOSONAR
-								break;
-							}
-						}
-					}
-				}, String.format(CHECK_RUNNING_JOB_THREAD_NAME, jobName)).start();
+				
+				asyncCheckShellProcessIsDone(regCenter, jobName, executorName, shardItems);
 			}
 		}
+	}
+
+	private static void asyncCheckShellProcessIsDone(final CoordinatorRegistryCenter regCenter, final String jobName,
+			final String executorName, final List<String> shardItems) {
+		// start a thread to check if shell process is done, if yes, remove pid file -> add completed -> clear
+		// running
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (!Thread.interrupted()) {
+					try {
+						TimeUnit.MILLISECONDS.sleep(500);
+					} catch (InterruptedException e) {
+					}
+
+					boolean finished = true;
+					for (String shardItem : shardItems) {
+						long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, shardItem);
+						if (pid > 0 && ScriptPidUtils.isPidRunning("" + Long.toString(pid))) {
+							finished = false;
+							continue;
+						} else {
+							// remove pid file -> add completed -> clear running
+							// make sure u have added completed node before remove running node. otherwise
+							// failover will triggered.
+							ScriptPidUtils.removeAllPidFile(executorName, jobName, shardItem);
+							String completedPath = JobNodePath.getNodeFullPath(jobName,
+									String.format(ExecutionNode.COMPLETED, shardItem));
+							regCenter.persist(completedPath, "");
+							String runningPath = JobNodePath.getNodeFullPath(jobName,
+									String.format(ExecutionNode.RUNNING, shardItem));
+							regCenter.remove(runningPath);
+							log.info("[{}] msg={} - {} is done, write complete node path {}", jobName, jobName,
+									shardItem, completedPath);
+							System.out.println(jobName + "-" + shardItem + " is done.");// NOSONAR
+						}
+					}
+					if (finished) {
+						log.info("[{}] msg=all running shell processes are done. now quit the thread.");
+						System.out.println("all running shell processes are done. now quit the thread.");// NOSONAR
+						break;
+					}
+				}
+			}
+		}, String.format(CHECK_RUNNING_JOB_THREAD_NAME, jobName)).start();
 	}
 
 	private static void killRunningShellProcess(String executorName, String jobName, String[] itemPaths) {

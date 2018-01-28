@@ -25,7 +25,7 @@ public class CuratorUtils {
 		try {
 			children = curatorFramework.getChildren().forPath(path);
 		} catch (KeeperException.NoNodeException e) {
-			log.debug("no node exception throws during get children of path:{}", path);
+			log.debug("no node exception throws during get children of path:" + path, e);
 			return;
 		}
 
@@ -38,11 +38,11 @@ public class CuratorUtils {
 		try {
 			curatorFramework.delete().guaranteed().forPath(path);
 		} catch (KeeperException.NotEmptyException e) {
-			log.debug("try to delete path:{} but fail for NotEmptyException", path);
+			log.debug("try to delete path:" + path + " but fail for NotEmptyException", e);
 			deletingChildrenIfNeeded(curatorFramework, path);
 		} catch (KeeperException.NoNodeException e) {
 			// When multi-client delete the children concurrently, then will throw such exception. So just do nothing.
-			log.debug("try to delete path:{} but fail for NoNodeException", path);
+			log.debug("try to delete path:" + path + " but fail for NoNodeException", e);
 		}
 	}
 
