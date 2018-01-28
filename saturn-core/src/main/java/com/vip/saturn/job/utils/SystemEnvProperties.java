@@ -41,7 +41,7 @@ public class SystemEnvProperties {
 
 	private static final String NAME_VIP_SATURN_DCOS_TASK = "VIP_SATURN_DCOS_TASK";
 	private static final String NAME_VIP_SATURN_K8S_DEPLOYMENT = "VIP_SATURN_K8S_DEPLOYMENT";
-	public static final String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
+	public static String VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 
 	/**
 	 * Executor优雅退出的全局默认超时时间（单位：精确到秒，默认1分钟）
