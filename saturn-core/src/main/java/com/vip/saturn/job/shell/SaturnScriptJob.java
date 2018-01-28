@@ -119,11 +119,6 @@ public class SaturnScriptJob extends CrondJob {
 					SaturnSystemErrorGroup.FAIL);
 		}
 
-		if (saturnJobReturn == null) {
-			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL,
-					"The returned SaturnJobReturn can not be null", SaturnSystemErrorGroup.FAIL);
-		}
-
 		callable.setSaturnJobReturn(saturnJobReturn);
 		afterExecution(callable);
 

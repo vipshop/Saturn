@@ -351,13 +351,7 @@ public class SaturnExecutor {
 
 				// 检测是否存在仍然有正在运行的SHELL作业
 				log.info("start to check all exist jobs.");
-				try {
-					ScriptPidUtils.checkAllExistJobs(regCenter);
-					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.JOBKILL);
-				} catch (IllegalStateException e) {
-					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.JOBKILL);
-					throw e;
-				}
+				checkAndKillExistedShellJobs();
 
 				// 初始化timeout scheduler
 				log.info("start to create timeout scheduler.");
@@ -365,14 +359,7 @@ public class SaturnExecutor {
 
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
 				// 注册Executor
-				try {
-					log.info("start to register executor.");
-					saturnExecutorService.registerExecutor();
-					StartCheckUtil.setOk(StartCheckUtil.StartCheckItem.UNIQUE);
-				} catch (Exception e) {
-					StartCheckUtil.setError(StartCheckUtil.StartCheckItem.UNIQUE);
-					throw e;
-				}
+				registerExecutor();
 
 				// 启动定时清空nohup文件的线程
 				log.info("start to register periodic truncate nohup out service.");
@@ -407,6 +394,27 @@ public class SaturnExecutor {
 			}
 		} finally {
 			shutdownLock.unlock();
+		}
+	}
+
+	private void registerExecutor() throws Exception {
+		try {
+			log.info("start to register executor.");
+			saturnExecutorService.registerExecutor();
+			StartCheckUtil.setOk(StartCheckItem.UNIQUE);
+		} catch (Exception e) {
+			StartCheckUtil.setError(StartCheckItem.UNIQUE);
+			throw e;
+		}
+	}
+
+	private void checkAndKillExistedShellJobs() {
+		try {
+			ScriptPidUtils.checkAllExistJobs(regCenter);
+			StartCheckUtil.setOk(StartCheckItem.JOBKILL);
+		} catch (IllegalStateException e) {
+			StartCheckUtil.setError(StartCheckItem.JOBKILL);
+			throw e;
 		}
 	}
 

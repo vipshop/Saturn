@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -139,7 +138,8 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC, System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
+		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC,
+				System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
 		if (!Strings.isNullOrEmpty(checkNohupOutSizeInterval)) {
 			try {
 				int interval_in_sec = Integer.parseInt(checkNohupOutSizeInterval);
@@ -151,7 +151,8 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String noHupOutSizeLimit = System.getProperty(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES, System.getenv(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES));
+		String noHupOutSizeLimit = System.getProperty(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES,
+				System.getenv(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES));
 		if (!Strings.isNullOrEmpty(noHupOutSizeLimit)) {
 			try {
 				long sizeLimit = Long.parseLong(noHupOutSizeLimit);
