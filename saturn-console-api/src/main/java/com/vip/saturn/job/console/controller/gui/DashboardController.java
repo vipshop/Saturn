@@ -10,6 +10,7 @@ package com.vip.saturn.job.console.controller.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
@@ -19,13 +20,16 @@ import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collection;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Collection;
-import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/console/dashboard")
@@ -219,6 +223,7 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/shardingCount/clean")
 	public SuccessResponseEntity cleanShardingCount(@PathVariable String namespace) throws SaturnJobConsoleException {
 		dashboardService.cleanShardingCount(namespace);
@@ -226,6 +231,7 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobAnalyse(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
@@ -234,6 +240,7 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobsAnalyse(@PathVariable String namespace) throws SaturnJobConsoleException {
 		dashboardService.cleanAllJobAnalyse(namespace);
@@ -241,6 +248,7 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
 	public SuccessResponseEntity cleanJobExecutorCount(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {

@@ -2,7 +2,12 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.DomainStatistics;
+import com.vip.saturn.job.console.domain.ExecutorStatistics;
+import com.vip.saturn.job.console.domain.JobStatistics;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
+import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
@@ -17,19 +22,23 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ResetCountType;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * @author chembo.huang
@@ -258,11 +267,6 @@ public class DashboardServiceImpl implements DashboardService {
 		List<DomainStatistics> domainStatisticsList = new ArrayList<>();
 		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
-			//只显示在线的zk集群
-			if (zkCluster.isOffline()) {
-				continue;
-			}
-
 			SaturnStatistics saturnStatistics = top10UnstableDomain(zkCluster.getZkAddr());
 			if (saturnStatistics != null) {
 				String result = saturnStatistics.getResult();
@@ -415,7 +419,7 @@ public class DashboardServiceImpl implements DashboardService {
 		Map<String, Integer> domainMap = new HashMap<>();
 		if (zkClusterKey != null) {
 			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-			if (zkCluster != null) {
+			if (zkCluster != null && !zkCluster.isOffline()) {
 				for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()) {
 					Integer count = domainMap.get(config.getDegree());
 					if (null != config.getDegree()) {
