@@ -20,9 +20,9 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 	protected static final int SUCCESS = 2;
 	protected static final int FORCE_STOP = 3;
 	protected static final int STOPPED = 4;
-	private static Logger log = LoggerFactory.getLogger(JavaShardingItemCallable.class);
+	private static final Logger log = LoggerFactory.getLogger(JavaShardingItemCallable.class);
 	protected Thread currentThread;
-	protected AtomicInteger status = new AtomicInteger(0);
+	protected AtomicInteger status = new AtomicInteger(INIT);
 	protected boolean breakForceStop = false;
 	protected Object contextForJob;
 

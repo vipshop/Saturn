@@ -1,21 +1,15 @@
-/**
- * 
- */
 package com.vip.saturn.job.basic;
 
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.threads.SaturnThreadFactory;
-
 /**
  * @author chembo.huang
- *
  */
 public class TimeoutSchedulerExecutor {
 
@@ -69,16 +63,17 @@ public class TimeoutSchedulerExecutor {
 
 		@Override
 		public void run() {
-			if (!shardingItemFutureTask.isDone() && shardingItemFutureTask.getCallable().setTimeout()) {
-				try {
+			try {
+				if (!shardingItemFutureTask.isDone() && shardingItemFutureTask.getCallable().setTimeout()) {
+
 					// 调用beforeTimeout毁掉函数
 					shardingItemFutureTask.getCallable().beforeTimeout();
 					// 强杀
 					ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
-				} catch (Throwable t) {
-					log.warn("Fail to force stop timeout job:" + shardingItemFutureTask.getCallable().getJobName()
-							+ " with reason:" + t.getMessage(), t);
 				}
+			} catch (Throwable t) {
+				log.warn("Fail to force stop timeout job:" + shardingItemFutureTask.getCallable().getJobName()
+						+ " with reason:" + t.getMessage(), t);
 			}
 		}
 

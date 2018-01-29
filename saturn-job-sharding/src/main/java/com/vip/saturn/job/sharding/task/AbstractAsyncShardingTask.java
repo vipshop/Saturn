@@ -611,7 +611,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		return true;
 	}
 
-	private static Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
+	private Executor getExecutorWithMinLoadLevel(List<Executor> executorList) {
 		Executor minLoadLevelExecutor = null;
 		for (int i = 0; i < executorList.size(); i++) {
 			Executor executor = executorList.get(i);

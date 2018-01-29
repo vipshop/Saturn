@@ -1429,7 +1429,7 @@ public class JobServiceImpl implements JobService {
 				JobServiceImpl.CONFIG_ITEM_SHOW_NORMAL_LOG)) == false) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG));
 		}
-		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "enabledReport"));
+		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED_REPORT));
 		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
 		if (Strings.isNullOrEmpty(enabledReport)) {
 			enabledReportValue = true;
@@ -1463,6 +1463,7 @@ public class JobServiceImpl implements JobService {
 		return getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
 	}
 
+	@Override
 	public List<String> getJobShardingAllocatedExecutorList(String namespace, String jobName)
 			throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -1530,7 +1531,7 @@ public class JobServiceImpl implements JobService {
 		CuratorRepository.CuratorFrameworkOp.CuratorTransactionOp curatorTransactionOp = null;
 		try {
 			curatorTransactionOp = curatorFrameworkOp.inTransaction()
-					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "jobMode"),
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_JOB_MODE),
 							jobConfig.getJobMode(), bw)
 					.replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_SHARDING_TOTAL_COUNT),
@@ -1539,7 +1540,7 @@ public class JobServiceImpl implements JobService {
 							jobConfig.getLoadLevel(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_JOB_DEGREE),
 							jobConfig.getJobDegree(), bw)
-					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), "enabledReport"),
+					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_ENABLED_REPORT),
 							jobConfig.getEnabledReport(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_TIME_ZONE),
 							StringUtils.trim(jobConfig.getTimeZone()), bw)

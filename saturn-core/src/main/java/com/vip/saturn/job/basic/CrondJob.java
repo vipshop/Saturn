@@ -63,14 +63,14 @@ public abstract class CrondJob extends AbstractSaturnJob {
 		}
 	}
 
-	private static boolean shouldSetPausePeriodDate(String prePauseDate, String pauseDate) {
+	private boolean shouldSetPausePeriodDate(String prePauseDate, String pauseDate) {
 		boolean updatePauseConditionFirst = (prePauseDate != null && !prePauseDate.equals(pauseDate));
 		boolean updatePauseConditionSecond = (prePauseDate == null && pauseDate != null);
 
 		return updatePauseConditionFirst || updatePauseConditionSecond;
 	}
 
-	private static boolean shouldSetPausePeriodTime(String prePauseTime, String pauseTime) {
+	private boolean shouldSetPausePeriodTime(String prePauseTime, String pauseTime) {
 		boolean updatePauseConditionThird = (prePauseTime != null && !prePauseTime.equals(pauseTime));
 		boolean updatePauseConditionFourth = (prePauseTime == null && pauseTime != null);
 
