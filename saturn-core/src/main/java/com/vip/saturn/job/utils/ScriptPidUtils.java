@@ -273,7 +273,7 @@ public class ScriptPidUtils {
 	 * This method will kill all the child/grandchild/... processes.
 	 * @param pid pid to kill.
 	 */
-	public static void killAllChildrenByPid(long pid, boolean force) throws InterruptedException {
+	public static void killAllChildrenByPid(long pid, boolean force) {
 		if (pid <= UNKNOWN_PID) {
 			return;
 		}
@@ -283,7 +283,7 @@ public class ScriptPidUtils {
 		while (null != (pidStr = exeCmdWithoutPipe(CommandLine.parse("pgrep -P " + pidStr), null, null))) {
 			String[] pids = pidStr.split(System.getProperty("line.separator"));
 			for (int i = 0; i < pids.length; i++) {
-				pidList.add(pids[i]);// NOSONAR
+				pidList.add(pids[i]);
 			}
 			pidStr = StringUtils.join(pids, ",");
 		}
@@ -376,11 +376,7 @@ public class ScriptPidUtils {
 			List<Long> pids = ScriptPidUtils.getPidsFromFile(executorName, jobName, "" + Integer.toString(jobItem));
 			for (Long pid : pids) {
 				if (pid > 0 && ScriptPidUtils.isPidRunning("" + pid)) {
-					try {
-						ScriptPidUtils.killAllChildrenByPid(pid, true);
-					} catch (InterruptedException e) {
-						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
-					}
+					ScriptPidUtils.killAllChildrenByPid(pid, true);
 				}
 			}
 
@@ -498,13 +494,7 @@ public class ScriptPidUtils {
 			Integer item = Integer.valueOf(StringUtils.substringAfterLast(path, File.separator));
 			long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, "" + item);
 			System.out.println("pid found for jobName:" + jobName + " executorName:" + executorName + ", kill -9 " + pid);// NOSONAR
-			try {
-				killAllChildrenByPid(pid, true);
-			} catch (InterruptedException e) {
-				log.error(
-						String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "killRunningShellProcess interrupted:"),
-						e);
-			}
+			killAllChildrenByPid(pid, true);
 			ScriptPidUtils.removeAllPidFile(executorName, jobName, item);
 		}
 

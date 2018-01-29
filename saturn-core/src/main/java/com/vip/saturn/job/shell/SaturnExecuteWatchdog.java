@@ -18,13 +18,15 @@ import org.slf4j.LoggerFactory;
  */
 public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
+	private static final Logger log = LoggerFactory.getLogger(SaturnExecuteWatchdog.class);
+
 	private static final int INIT = 0;
 
 	private static final int TIMEOUT = 1;
 
 	private static final int FORCE_STOP = 2;
 
-	private static final Logger log = LoggerFactory.getLogger(SaturnExecuteWatchdog.class);
+	private static final int INVALID_PID = -1;
 
 	private String jobName;
 
@@ -86,7 +88,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
 		// get and save pid to file
 		pid = getPidByProcess(monitoringProcess);
-		if (pid != -1) {
+		if (hasValidPid()) {
 			ScriptPidUtils.writePidToFile(executorName, jobName, jobItem, pid);
 		}
 	}
@@ -102,23 +104,20 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 
 	@Override
 	public synchronized void timeoutOccured(final Watchdog w) {
+		status.compareAndSet(INIT, TIMEOUT);
 		try {
-			status.compareAndSet(INIT, TIMEOUT);
-			try {
-				if (monitoringProcess != null) {
-					monitoringProcess.exitValue();
-				}
-			} catch (final IllegalThreadStateException itse) {
-				if (isWatching()) {
-					hasKilledProcess = true;
-					// not use process.destroy(), should kill children firstly, then kill the process
-					if (pid != -1) {
-						try {
-							ScriptPidUtils.killAllChildrenByPid(pid, false);
-						} catch (InterruptedException e) {
-							log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
-						}
-					}
+			// We must check if the process was not stopped
+			// before being here
+			if (monitoringProcess != null) {
+				monitoringProcess.exitValue();
+			}
+		} catch (final IllegalThreadStateException itse) { // NOSONAR
+			log.debug("the monitoring process is not stopped");
+			if (isWatching()) {
+				hasKilledProcess = true;
+				// not use process.destroy(), should kill children firstly, then kill the process
+				if (hasValidPid()) {
+					ScriptPidUtils.killAllChildrenByPid(pid, false);
 				}
 			}
 		} catch (final Exception e) {
@@ -140,8 +139,9 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 	}
 
 	public static long getPidByProcess(Process p) {
+		// linux, unix, macos should return true while calling OS.isFamilyUnix()
 		if (!OS.isFamilyUnix()) {
-			return -1;
+			return INVALID_PID;
 		}
 
 		try {
@@ -154,7 +154,11 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 			return Long.parseLong(pid.toString());
 		} catch (Exception e) {
 			log.error("msg=Getting pid error: {}", e.getMessage(), e);
-			return -1;
+			return INVALID_PID;
 		}
+	}
+
+	private boolean hasValidPid() {
+		return pid != INVALID_PID;
 	}
 }

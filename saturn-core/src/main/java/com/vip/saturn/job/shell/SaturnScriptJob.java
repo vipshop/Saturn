@@ -176,11 +176,7 @@ public class SaturnScriptJob extends CrondJob {
 				long pid = ScriptPidUtils.getFirstPidFromFile(serverService.getExecutorName(), watchDog.getJobName(),
 						"" + Integer.toString(jobItem));
 				if (pid > 0 && ScriptPidUtils.isPidRunning(pid)) {
-					try {
-						ScriptPidUtils.killAllChildrenByPid(pid, true);
-					} catch (InterruptedException e) {
-						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
-					}
+					ScriptPidUtils.killAllChildrenByPid(pid, true);
 				}
 
 				// remove pid files
