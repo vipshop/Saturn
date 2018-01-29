@@ -1,7 +1,7 @@
 package com.vip.saturn.job.console.utils;
 
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -54,17 +54,15 @@ public class SaturnConsoleUtils {
 		String enabledReportNodePath = JobNodePath.getEnabledReportNodePath(jobName);
 
 		if (curatorFrameworkOp.checkExists(enabledReportNodePath)) {
-			return Boolean.valueOf(curatorFrameworkOp.getData(enabledReportNodePath));
+			return Boolean.parseBoolean(curatorFrameworkOp.getData(enabledReportNodePath));
 		}
 
 		String jobTypeNodePath = JobNodePath.getConfigNodePath(jobName, "jobType");
 
 		// if enabledReportNodePath不存在, 如果作业类型是JAVA或者Shell，默认上报
-		if ("JAVA_JOB".equals(jobTypeNodePath) || "SHELL_JOB".equals(jobTypeNodePath)) {
-			return true;
-		}
+		JobType jobType = JobType.getJobType(curatorFrameworkOp.getData(jobTypeNodePath));
 
-		return false;
+		return jobType == JobType.JAVA_JOB || jobType == JobType.SHELL_JOB;
 	}
 
 	public static File createTmpFile() throws SaturnJobConsoleException, IOException {
