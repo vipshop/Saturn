@@ -14,6 +14,7 @@ import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlS
 import com.vip.saturn.job.console.mybatis.service.TemporarySharedStatusService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -129,25 +130,30 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 						curatorFramework = curatorFrameworkOp.getCuratorFramework();
 					}
 					if (curatorFramework != null) { // not offline
-						try {
-							List<String> namespaces = curatorFramework.getChildren().forPath("/");
-							if (namespaces != null) {
-								for (String namespace : namespaces) {
-									if (registryCenterService.namespaceIsCorrect(namespace, curatorFramework)) {
-										namespaceZkclusterMapping4SqlService.insert(namespace, "", zkClusterKey,
-												createdBy);
-									}
-								}
-							}
-						} finally {
-							curatorFramework.close();
-						}
+						updateNamepsaceAndZKClusterMapping(createdBy, zkClusterKey, curatorFramework);
 					}
 				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private void updateNamepsaceAndZKClusterMapping(String createdBy, String zkClusterKey,
+			CuratorFramework curatorFramework) throws Exception {
+		try {
+			List<String> namespaces = curatorFramework.getChildren().forPath("/");
+			if (namespaces != null) {
+				for (String namespace : namespaces) {
+					if (registryCenterService.namespaceIsCorrect(namespace, curatorFramework)) {
+						namespaceZkclusterMapping4SqlService.insert(namespace, "", zkClusterKey,
+								createdBy);
+					}
+				}
+			}
+		} finally {
+			curatorFramework.close();
 		}
 	}
 
@@ -191,32 +197,31 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
 				String zkAddr = zkCluster.getZkAddr();
-				CuratorRepository.CuratorFrameworkOp targetCuratorFrameworkOp = registryCenterService
-						.connectOnly(zkAddr, namespace);
-				if (targetCuratorFrameworkOp == null) {
+				CuratorRepository.CuratorFrameworkOp targetCuratorFrameworkOpByRoot = registryCenterService
+						.connectOnly(zkAddr, null);
+				if (targetCuratorFrameworkOpByRoot == null) {
 					throw new SaturnJobConsoleException("The " + zkClusterKeyNew + " zkCluster is offline");
 				}
-				CuratorFramework targetCuratorFramework = targetCuratorFrameworkOp.getCuratorFramework();
+				CuratorFramework targetCuratorFrameworkByRoot = targetCuratorFrameworkOpByRoot
+						.getCuratorFramework();
+
+				CuratorRepository.CuratorFrameworkOp targetCuratorFrameworkOpByNamespace = registryCenterService
+						.connectOnly(zkAddr, namespace);
+				CuratorFramework targetCuratorFrameworkByNamespace = targetCuratorFrameworkOpByNamespace
+						.getCuratorFramework();
 				try {
 					String namespaceNodePath = "/" + namespace;
-					if (targetCuratorFramework.checkExists().forPath(namespaceNodePath) != null) {
-						targetCuratorFramework.delete().deletingChildrenIfNeeded().forPath(namespaceNodePath);
+					if (targetCuratorFrameworkByRoot.checkExists().forPath(namespaceNodePath) != null) {
+						targetCuratorFrameworkByRoot.delete().deletingChildrenIfNeeded().forPath(namespaceNodePath);
 					}
 					String jobsNodePath = namespaceNodePath + JobNodePath.get$JobsNodePath();
-					targetCuratorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
+					targetCuratorFrameworkByRoot.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
 							.forPath(jobsNodePath);
 
-					List<JobConfig4DB> configs = currentJobConfigService.findConfigsByNamespace(namespace);
-					log.debug("Obtain job config list of namespace:[{}] successfully", namespace);
-					if (configs != null) {
-						for (JobConfig4DB jobConfig : configs) {
-							jobService.persistJobFromDB(jobConfig, targetCuratorFrameworkOp);
-							log.info("Migrate job:[{}] of namespace:[{}] to new zk (DB+ZK) successfully",
-									jobConfig.getJobName(), namespace);
-						}
-					}
+					persistJobsToTargetZkCluster(namespace, targetCuratorFrameworkOpByNamespace);
 				} finally {
-					targetCuratorFramework.close();
+					targetCuratorFrameworkByRoot.close();
+					targetCuratorFrameworkByNamespace.close();
 				}
 
 				namespaceZkclusterMapping4SqlService.update(namespace, null, zkClusterKeyNew, lastUpdatedBy);
@@ -232,6 +237,19 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 			throw new SaturnJobConsoleException(e.getMessage(), e);
 		} finally {
 			log.info("Finish migrate namespace:[{}] to zk zkcluster:[{}]", namespace, zkClusterKeyNew);
+		}
+	}
+
+	private void persistJobsToTargetZkCluster(String namespace, CuratorFrameworkOp targetCuratorFrameworkOpByNamespace)
+			throws SaturnJobConsoleException {
+		List<JobConfig4DB> configs = currentJobConfigService.findConfigsByNamespace(namespace);
+		log.debug("Obtain job config list of namespace:[{}] successfully", namespace);
+		if (configs != null) {
+			for (JobConfig4DB jobConfig : configs) {
+				jobService.persistJobFromDB(jobConfig, targetCuratorFrameworkOpByNamespace);
+				log.info("Migrate job:[{}] of namespace:[{}] to new zk (DB+ZK) successfully",
+						jobConfig.getJobName(), namespace);
+			}
 		}
 	}
 
@@ -266,6 +284,7 @@ public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterM
 							migrateNamespaceToNewZk(namespace, zkClusterKeyNew, lastUpdatedBy, updateDBOnly);
 							migrationStatus.incrementSuccessCount();
 						} catch (SaturnJobConsoleException e) {
+							log.info("Unable to migrate to new zk for some reason.", e);
 							if (("The namespace(" + namespace + ") is in " + zkClusterKeyNew).equals(e.getMessage())) {
 								migrationStatus.incrementIgnoreCount();
 							} else {
