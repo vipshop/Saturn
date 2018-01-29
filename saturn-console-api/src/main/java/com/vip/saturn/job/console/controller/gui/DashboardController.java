@@ -54,6 +54,11 @@ public class DashboardController extends AbstractGUIController {
 		}
 
 		for (ZkCluster zkCluster : zkClusters) {
+			// 不统计离线的zkcluster
+			if (zkCluster.isOffline()) {
+				continue;
+			}
+
 			String zkAddr = zkCluster.getZkAddr();
 			if (zkAddr != null) {
 				executorInDockerCount += dashboardService.executorInDockerCount(zkAddr);

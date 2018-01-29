@@ -124,12 +124,19 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 					Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 					if (zkClusterList != null) {
 						for (ZkCluster zkCluster : zkClusterList) {
+							if (zkCluster.isOffline()) {
+								log.info("zkcluster:{} is offline, skip statistics refresh.",
+										zkCluster.getZkClusterKey());
+								continue;
+							}
+
 							if (registryCenterService.isDashboardLeader(zkCluster.getZkClusterKey())) {
 								refreshStatistics2DB(zkCluster);
 							}
 						}
 					}
-					log.info("end refresh statistics on timer, takes {}", new Date().getTime() - start.getTime());
+					log.info("end refresh statistics on timer which takes {}ms",
+							new Date().getTime() - start.getTime());
 				} catch (Throwable t) {
 					log.error(t.getMessage(), t);
 				}
@@ -255,14 +262,14 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		Date start = new Date();
 		StatisticsModel statisticsModel = initStatisticsModel();
 		List<Callable<Boolean>> callableList = getStatCallableList(zkCluster, statisticsModel);
-		if (callableList != null && !callableList.isEmpty()) {
-			try {
+		try {
+			if (callableList != null && !callableList.isEmpty()) {
 				statExecutorService.invokeAll(callableList);
-				statisticsPersistence.persist(statisticsModel, zkCluster);
-			} catch (InterruptedException e) {
-				log.warn("the refreshStatistics2DB thread is interrupted", e);
-				Thread.currentThread().interrupt();
 			}
+			statisticsPersistence.persist(statisticsModel, zkCluster);
+		} catch (InterruptedException e) {
+			log.warn("the refreshStatistics2DB thread is interrupted", e);
+			Thread.currentThread().interrupt();
 		}
 		log.info("end refresh statistics by zkClusterKey:{}, takes {}", zkCluster.getZkClusterKey(),
 				new Date().getTime() - start.getTime());
