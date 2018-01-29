@@ -1429,7 +1429,8 @@ public class JobServiceImpl implements JobService {
 				JobServiceImpl.CONFIG_ITEM_SHOW_NORMAL_LOG)) == false) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG));
 		}
-		String enabledReport = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED_REPORT));
+		String enabledReport = curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED_REPORT));
 		Boolean enabledReportValue = Boolean.valueOf(enabledReport);
 		if (Strings.isNullOrEmpty(enabledReport)) {
 			enabledReportValue = true;
@@ -1760,9 +1761,9 @@ public class JobServiceImpl implements JobService {
 		if (curatorFrameworkOp.checkExists(serverNodePath)) {
 			executors = curatorFrameworkOp.getChildren(serverNodePath);
 		}
-		String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
 		List<JobServer> result = new ArrayList<>();
-		if (executors != null) {
+		if (executors != null && !executors.isEmpty()) {
+			String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
 			for (String each : executors) {
 				result.add(getJobServer(namespace, jobName, leaderIp, each, curatorFrameworkOp));
 			}
