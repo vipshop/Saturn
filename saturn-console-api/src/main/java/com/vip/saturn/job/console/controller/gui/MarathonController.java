@@ -147,7 +147,7 @@ public class MarathonController extends AbstractGUIController {
 	}
 
 	@GetMapping(value = "/timeZoneIds")
-	public SuccessResponseEntity getTimeZoneIds(@PathVariable String namespace) throws SaturnJobConsoleException {
+	public SuccessResponseEntity getTimeZoneIds(@PathVariable String namespace) {
 		return new SuccessResponseEntity(SaturnConstants.TIME_ZONE_IDS);
 	}
 

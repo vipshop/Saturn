@@ -13,8 +13,6 @@ import io.swagger.annotations.ApiResponses;
 import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,8 +26,6 @@ import java.util.List;
 @Controller
 @RequestMapping("/console")
 public class RegistryCenterController extends AbstractGUIController {
-
-	private static final Logger log = LoggerFactory.getLogger(RegistryCenterController.class);
 
 	private static final String EXPORT_FILE_NAME = "namespace_info.xls";
 

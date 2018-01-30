@@ -43,7 +43,7 @@ public class UtilsController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/zkClusterKeys")
-	public SuccessResponseEntity getZkClusterKeys() throws SaturnJobConsoleException {
+	public SuccessResponseEntity getZkClusterKeys() {
 		Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
 		List<String> zkClusterKeys = Lists.newArrayList();
 		for (ZkCluster zkCluster : zkClusters) {

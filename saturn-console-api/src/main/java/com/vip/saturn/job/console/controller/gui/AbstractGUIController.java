@@ -1,10 +1,7 @@
 package com.vip.saturn.job.console.controller.gui;
 
-import com.google.common.base.Strings;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RequestResult;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;

@@ -15,8 +15,9 @@ import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DELETE;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/console/namespaces/{namespace:.+}/executors")
 public class ExecutorOverviewController extends AbstractGUIController {
 
+	private static final Logger log = LoggerFactory.getLogger(ExecutorOverviewController.class);
+
 	private static final String TRAFFIC_OPERATION_EXTRACT = "extract";
 
 	private static final String TRAFFIC_OPERATION_RECOVER = "recover";
@@ -49,7 +52,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
 			@PathVariable String namespace, @RequestParam(required = false) String status)
 			throws SaturnJobConsoleException {
-		if (StringUtils.isNotBlank(status) && "online".equals(status.toLowerCase())) {
+		if (StringUtils.isNotBlank(status) && "online".equalsIgnoreCase(status)) {
 			return new SuccessResponseEntity(executorService.getExecutors(namespace, ServerStatus.ONLINE));
 		}
 
@@ -117,6 +120,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 				extractOrRecoverTraffic(namespace, executorName, operation);
 				success2ExtractOrRecoverTrafficExecutors.add(executorName);
 			} catch (Exception e) {
+				log.warn("exception happens during extract or recover traffic of executor:" + executorName, e);
 				fail2ExtractOrRecoverTrafficExecutors.add(executorName);
 			}
 		}
@@ -178,6 +182,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 				executorService.removeExecutor(namespace, executorName);
 				success2RemoveExecutors.add(executorName);
 			} catch (Exception e) {
+				log.warn("exception happens during remove executor:" + executorName, e);
 				fail2RemoveExecutors.add(executorName);
 			}
 		}
