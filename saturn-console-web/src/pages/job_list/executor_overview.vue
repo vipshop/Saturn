@@ -65,10 +65,10 @@
                             <el-table-column prop="lastBeginTime" label="最近启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic && scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic && scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE' && isAbledDump(scope.row.version)">

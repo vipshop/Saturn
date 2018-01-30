@@ -337,18 +337,34 @@ export default {
           rObj.type = obj.type;
           rObj.status = obj.status;
           if (rObj.type === 'PHYSICAL') {
-            switch (rObj.status) {
-              case 'OFFLINE':
-                rObj.executorDes = `${rObj.executorName}(离线)`;
-                break;
-              case 'ONLINE':
-                rObj.executorDes = `${rObj.executorName}(在线)`;
-                break;
-              case 'DELETED':
-                rObj.executorDes = `${rObj.executorName}(已删除)`;
-                break;
-              default:
-                break;
+            if (rObj.noTraffic) {
+              switch (rObj.status) {
+                case 'OFFLINE':
+                  rObj.executorDes = `${rObj.executorName}(离线无流量)`;
+                  break;
+                case 'ONLINE':
+                  rObj.executorDes = `${rObj.executorName}(在线无流量)`;
+                  break;
+                case 'DELETED':
+                  rObj.executorDes = `${rObj.executorName}(已删除)`;
+                  break;
+                default:
+                  break;
+              }
+            } else {
+              switch (rObj.status) {
+                case 'OFFLINE':
+                  rObj.executorDes = `${rObj.executorName}(离线)`;
+                  break;
+                case 'ONLINE':
+                  rObj.executorDes = `${rObj.executorName}(在线)`;
+                  break;
+                case 'DELETED':
+                  rObj.executorDes = `${rObj.executorName}(已删除)`;
+                  break;
+                default:
+                  break;
+              }
             }
           } else {
             switch (rObj.status) {
