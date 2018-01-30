@@ -52,4 +52,10 @@ public class UtilsController extends AbstractGUIController {
 		return new SuccessResponseEntity(zkClusterKeys);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/version")
+	public SuccessResponseEntity getVersion() {
+		return new SuccessResponseEntity(version);
+	}
+
 }
