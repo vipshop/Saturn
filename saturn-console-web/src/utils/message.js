@@ -1,6 +1,12 @@
 import { MessageBox, Loading, Notification } from 'element-ui';
 
 export default {
+  openMessage(text) {
+    MessageBox.alert(text, '关于', {
+      confirmButtonText: '确定',
+      dangerouslyUseHTMLString: true,
+    });
+  },
   errorMessage(text) {
     MessageBox.alert(text, '错误信息', {
       type: 'error',
