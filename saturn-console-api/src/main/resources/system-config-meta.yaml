@@ -11,7 +11,7 @@ executor_configs:
 
 cluster_configs:
     - name: CONSOLE_ZK_CLUSTER_MAPPING
-      desc_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和NamespaceSharding。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3;default:/zk;
+      desc_zh: Console与ZK集群映射关系，用于Console接管其映射ZK集群的Dashboard和域分片。其中Console和ZK集群之间是一对多的关系，一个Console可以接管多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：CONSOLE-GD:/zk1,/zk2;CONSOLE-BJ:/zk3;default:/zk;注意，修改此值后，可能需要等待几分钟才能生效(具体等待时间跟Dashboad刷新时间相关)
     - name: IDC_ZK_CLUSTER_MAPPING
       desc_zh: IDC机房标识与ZK集群映射关系，用于识别某个ZK集群所处的机房。其中IDC机房和ZK集群之间是一对多的关系，一个IDC下面包含多个ZK集群，ZK集群之间用逗号隔开。参考配置格式：gd:/zk1,/zk2;bj:/test,/zk;
     - name: IDC_CONSOLE_ID_MAPPING
