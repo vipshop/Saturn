@@ -1874,6 +1874,22 @@ public class JobServiceImpl implements JobService {
 			result.add(buildExecutionInfo(jobName, shardItem, itemExecutorMap.get(shardItem),
 					curatorFrameworkOp));
 		}
+
+		// 之前有分片的机器都已经被删除，但是仍然有机器正在运行，比如存在其他机器接管了failover分片
+		if (result.isEmpty()) {
+			String executionNodePath = JobNodePath.getExecutionNodePath(jobName);
+			List<String> items = curatorFrameworkOp.getChildren(executionNodePath);
+			if (items != null && !items.isEmpty()) {
+				for (String item : items) {
+					String runningNodePath = JobNodePath.getExecutionNodePath(jobName, item, "running");
+					boolean running = curatorFrameworkOp.checkExists(runningNodePath);
+					if (running) {
+						result.add(buildExecutionInfo(jobName, item, null, curatorFrameworkOp));
+					}
+				}
+			}
+		}
+
 		Collections.sort(result);
 
 		return result;
