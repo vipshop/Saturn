@@ -1879,7 +1879,7 @@ public class JobServiceImpl implements JobService {
 		if (result.isEmpty()) {
 			String executionNodePath = JobNodePath.getExecutionNodePath(jobName);
 			List<String> items = curatorFrameworkOp.getChildren(executionNodePath);
-			if (items != null && !items.isEmpty()) {
+			if (items != null) {
 				for (String item : items) {
 					String runningNodePath = JobNodePath.getExecutionNodePath(jobName, item, "running");
 					boolean running = curatorFrameworkOp.checkExists(runningNodePath);
