@@ -11,6 +11,7 @@ package com.vip.saturn.job.console.controller.gui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
@@ -238,7 +239,8 @@ public class DashboardController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
-	public SuccessResponseEntity cleanJobAnalyse(@PathVariable String namespace, @PathVariable String jobName)
+	public SuccessResponseEntity cleanJobAnalyse(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName)
 			throws SaturnJobConsoleException {
 		dashboardService.cleanOneJobAnalyse(namespace, jobName);
 		return new SuccessResponseEntity();
@@ -247,7 +249,8 @@ public class DashboardController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobAnalyse/clean")
-	public SuccessResponseEntity cleanJobsAnalyse(@PathVariable String namespace) throws SaturnJobConsoleException {
+	public SuccessResponseEntity cleanJobsAnalyse(@AuditParam("namespace") @PathVariable String namespace)
+			throws SaturnJobConsoleException {
 		dashboardService.cleanAllJobAnalyse(namespace);
 		return new SuccessResponseEntity();
 	}
@@ -255,7 +258,8 @@ public class DashboardController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
-	public SuccessResponseEntity cleanJobExecutorCount(@PathVariable String namespace, @PathVariable String jobName)
+	public SuccessResponseEntity cleanJobExecutorCount(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobName") @PathVariable String jobName)
 			throws SaturnJobConsoleException {
 		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
