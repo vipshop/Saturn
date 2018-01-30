@@ -1627,17 +1627,15 @@ public class JobServiceImpl implements JobService {
 				.getCuratorFrameworkOp(namespace);
 		List<String> allJobs = new ArrayList<>();
 		String jobsNodePath = JobNodePath.get$JobsNodePath();
-		if (curatorFrameworkOp.checkExists(jobsNodePath)) {
-			List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
-			if (jobs == null) {
-				return Lists.newArrayList();
-			}
+		List<String> jobs = curatorFrameworkOp.getChildren(jobsNodePath);
+		if (jobs == null) {
+			return Lists.newArrayList();
+		}
 
-			for (String job : jobs) {
-				// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
-				if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {
-					allJobs.add(job);
-				}
+		for (String job : jobs) {
+			// 如果config节点存在才视为正常作业，其他异常作业在其他功能操作时也忽略
+			if (curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {
+				allJobs.add(job);
 			}
 		}
 		Collections.sort(allJobs);

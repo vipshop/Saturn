@@ -30,8 +30,6 @@ public final class ServerBriefInfo implements Serializable {
 
 	private String sharding;
 
-	private Boolean hasSharding;
-
 	private String lastBeginTime;
 
 	private ServerStatus status;
@@ -74,14 +72,6 @@ public final class ServerBriefInfo implements Serializable {
 
 	public void setSharding(String sharding) {
 		this.sharding = sharding;
-	}
-
-	public Boolean getHasSharding() {
-		return this.hasSharding;
-	}
-
-	public void setHasSharding(Boolean hasSharding) {
-		this.hasSharding = hasSharding;
 	}
 
 	public String getLastBeginTime() {

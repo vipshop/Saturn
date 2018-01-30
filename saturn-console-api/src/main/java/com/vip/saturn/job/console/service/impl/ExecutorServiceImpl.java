@@ -61,7 +61,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		List<ServerBriefInfo> executorInfoList = Lists.newArrayList();
 		for (String executor : executors) {
 			ServerBriefInfo executorInfo = getServerBriefInfo(executor, curatorFrameworkOp);
-			if (expectedServerStatus == null || executorInfo.getStatus().equals(expectedServerStatus)) {
+			if (executorInfo.getStatus() == expectedServerStatus) {
 				executorInfoList.add(executorInfo);
 			}
 		}
@@ -189,7 +189,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public void shardAll(String namespace) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
-		// TODO： shardAllAtOnce有子节点吗？
 		String shardAllAtOnceNodePath = ExecutorNodePath.getExecutorShardingNodePath("shardAllAtOnce");
 		curatorFrameworkOp.deleteRecursive(shardAllAtOnceNodePath);
 		curatorFrameworkOp.create(shardAllAtOnceNodePath);

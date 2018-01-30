@@ -15,7 +15,6 @@ import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -52,7 +51,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
 			@PathVariable String namespace, @RequestParam(required = false) String status)
 			throws SaturnJobConsoleException {
-		if (StringUtils.isNotBlank(status) && "online".equalsIgnoreCase(status)) {
+		if ("online".equalsIgnoreCase(status)) {
 			return new SuccessResponseEntity(executorService.getExecutors(namespace, ServerStatus.ONLINE));
 		}
 
@@ -83,7 +82,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	}
 
 	/*
-	 *	摘流量与流量恢复，其中executor必须online
+	 *	摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
@@ -93,15 +92,12 @@ public class ExecutorOverviewController extends AbstractGUIController {
 			@AuditParam("executorName") @PathVariable String executorName,
 			@AuditParam("operation") @RequestParam String operation)
 			throws SaturnJobConsoleException {
-		// check executor is existed and online.
-		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor不在线，不能摘取流量");
 		extractOrRecoverTraffic(namespace, executorName, operation);
-
 		return new SuccessResponseEntity();
 	}
 
 	/*
-	 *	批量摘流量与流量恢复，其中executor必须online
+	 *	批量摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
@@ -111,12 +107,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 			@AuditParam("executorNames") @RequestParam List<String> executorNames,
 			@AuditParam("operation") @RequestParam String operation)
 			throws SaturnJobConsoleException {
-		// check executor is existed and online.
 		List<String> success2ExtractOrRecoverTrafficExecutors = Lists.newArrayList();
 		List<String> fail2ExtractOrRecoverTrafficExecutors = Lists.newArrayList();
 		for (String executorName : executorNames) {
 			try {
-				checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor不在线，不能摘取流量");
 				extractOrRecoverTraffic(namespace, executorName, operation);
 				success2ExtractOrRecoverTrafficExecutors.add(executorName);
 			} catch (Exception e) {
