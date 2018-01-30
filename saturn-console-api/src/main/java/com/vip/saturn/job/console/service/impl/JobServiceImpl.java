@@ -1755,10 +1755,7 @@ public class JobServiceImpl implements JobService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
-		List<String> executors = new ArrayList<>();
-		if (curatorFrameworkOp.checkExists(serverNodePath)) {
-			executors = curatorFrameworkOp.getChildren(serverNodePath);
-		}
+		List<String> executors = curatorFrameworkOp.getChildren(serverNodePath);
 		List<JobServer> result = new ArrayList<>();
 		if (executors != null && !executors.isEmpty()) {
 			String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
