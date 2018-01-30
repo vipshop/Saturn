@@ -278,6 +278,8 @@ export default {
         } else {
           flag = true;
         }
+      } else {
+        flag = true;
       }
       return flag;
     },
