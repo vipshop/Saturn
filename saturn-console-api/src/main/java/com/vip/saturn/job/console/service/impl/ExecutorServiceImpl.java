@@ -61,7 +61,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		List<ServerBriefInfo> executorInfoList = Lists.newArrayList();
 		for (String executor : executors) {
 			ServerBriefInfo executorInfo = getServerBriefInfo(executor, curatorFrameworkOp);
-			if (executorInfo.getStatus() == expectedServerStatus) {
+			if (expectedServerStatus == null || executorInfo.getStatus() == expectedServerStatus) {
 				executorInfoList.add(executorInfo);
 			}
 		}
