@@ -1859,7 +1859,9 @@ public class JobServiceImpl implements JobService {
 		// update report node and sleep for 500ms
 		updateReportNodeAndWait(jobName, curatorFrameworkOp, 500L);
 		// 如果execution节点不存在则返回空List
-		if (!curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName))) {
+		String executionNodePath = JobNodePath.getExecutionNodePath(jobName);
+		List<String> shardItems = curatorFrameworkOp.getChildren(executionNodePath);
+		if (shardItems == null || shardItems.isEmpty()) {
 			return Lists.newArrayList();
 		}
 
@@ -1870,17 +1872,16 @@ public class JobServiceImpl implements JobService {
 					curatorFrameworkOp));
 		}
 
-		// 之前有分片的机器都已经被删除，但是仍然有机器正在运行，比如存在其他机器接管了failover分片
-		if (result.isEmpty()) {
-			String executionNodePath = JobNodePath.getExecutionNodePath(jobName);
-			List<String> items = curatorFrameworkOp.getChildren(executionNodePath);
-			if (items != null) {
-				for (String item : items) {
-					String runningNodePath = JobNodePath.getExecutionNodePath(jobName, item, "running");
-					boolean running = curatorFrameworkOp.checkExists(runningNodePath);
-					if (running) {
-						result.add(buildExecutionInfo(jobName, item, null, curatorFrameworkOp));
-					}
+		// 可能有漏掉的running分片，比如新的机器接管了failover分片
+		if (shardItems != null) {
+			for (String shardItem : shardItems) {
+				if (itemExecutorMap.containsKey(shardItem)) {
+					continue;
+				}
+				String runningNodePath = JobNodePath.getExecutionNodePath(jobName, shardItem, "running");
+				boolean running = curatorFrameworkOp.checkExists(runningNodePath);
+				if (running) {
+					result.add(buildExecutionInfo(jobName, shardItem, null, curatorFrameworkOp));
 				}
 			}
 		}
