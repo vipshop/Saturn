@@ -1873,16 +1873,15 @@ public class JobServiceImpl implements JobService {
 		}
 
 		// 可能有漏掉的running分片，比如新的机器接管了failover分片
-		if (shardItems != null) {
-			for (String shardItem : shardItems) {
-				if (itemExecutorMap.containsKey(shardItem)) {
-					continue;
-				}
-				String runningNodePath = JobNodePath.getExecutionNodePath(jobName, shardItem, "running");
-				boolean running = curatorFrameworkOp.checkExists(runningNodePath);
-				if (running) {
-					result.add(buildExecutionInfo(jobName, shardItem, null, curatorFrameworkOp));
-				}
+		for (String shardItem : shardItems) {
+			if (itemExecutorMap.containsKey(shardItem)) {
+				//已经在之前的步骤计算了
+				continue;
+			}
+			String runningNodePath = JobNodePath.getExecutionNodePath(jobName, shardItem, "running");
+			boolean running = curatorFrameworkOp.checkExists(runningNodePath);
+			if (running) {
+				result.add(buildExecutionInfo(jobName, shardItem, null, curatorFrameworkOp));
 			}
 		}
 
