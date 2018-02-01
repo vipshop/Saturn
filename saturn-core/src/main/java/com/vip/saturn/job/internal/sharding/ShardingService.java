@@ -174,21 +174,21 @@ public class ShardingService extends AbstractSaturnService {
 							.and();
 					curatorTransactionFinal.commit();
 				} catch (BadVersionException e) {
-					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "zookeeper bad version exception happens."), e);
+					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "zookeeper bad version exception happens."), e);
 					needRetry = true;
 					retryCount--;
 				} catch (Exception e) {
-					log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Commit shards failed"), e);
+					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
 				}
 				if (needRetry) {
 					if (retryCount >= 0) {
-						log.info(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
-								"Bad version because of concurrency, will retry to get shards later"));
+						log.info(SaturnConstant.LOG_FORMAT, jobName,
+								"Bad version because of concurrency, will retry to get shards later");
 						Thread.sleep(200L); // NOSONAR
 						getDataStat = getNecessaryDataStat();
 					} else {
-						log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
-								"Bad version because of concurrency, give up to retry"));
+						log.warn(SaturnConstant.LOG_FORMAT, jobName,
+								"Bad version because of concurrency, give up to retry");
 						break;
 					}
 				} else {
@@ -196,7 +196,7 @@ public class ShardingService extends AbstractSaturnService {
 				}
 			}
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		} finally {
 			getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.PROCESSING);
 		}

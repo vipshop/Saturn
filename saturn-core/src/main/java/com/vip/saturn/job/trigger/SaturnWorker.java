@@ -155,7 +155,7 @@ public class SaturnWorker implements Runnable {
 				}
 
 			} catch (RuntimeException e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, job.getJobName(), e.getMessage()), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, job.getJobName(), e.getMessage()), e);
 			}
 		}
 

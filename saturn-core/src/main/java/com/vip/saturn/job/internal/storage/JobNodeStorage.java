@@ -259,7 +259,7 @@ public class JobNodeStorage {
 			callback.execute();
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -283,7 +283,7 @@ public class JobNodeStorage {
 			}
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -339,7 +339,7 @@ public class JobNodeStorage {
 			newZk.remove(fullPath);
 			return true;
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		}
 		return false;
 	}

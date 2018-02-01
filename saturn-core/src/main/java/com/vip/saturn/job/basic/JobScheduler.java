@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -156,7 +156,7 @@ public class JobScheduler {
 			}
 			return true;
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 			shutdown(false);
 			return false;
 		}
@@ -189,7 +189,7 @@ public class JobScheduler {
 		try {
 			job = (AbstractElasticJob) jobClass.newInstance();
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "createJobException:"), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "createJobException:"), e);
 			throw new RuntimeException("can not create job with job type " + currentConf.getJobType());
 		}
 		job.setJobScheduler(this);
@@ -215,9 +215,8 @@ public class JobScheduler {
 	public void reCreateExecutorService() {
 		synchronized (isShutdownFlag) {
 			if (isShutdownFlag.get()) {
-				String msg = String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
+				log.warn(SaturnConstant.LOG_FORMAT, jobName,
 						"the jobScheduler was shutdown, cannot re-create business thread pool");
-				log.warn(msg);
 				return;
 			}
 			executionService.shutdown();
@@ -227,7 +226,7 @@ public class JobScheduler {
 
 	/**
 	 * 获取下次作业触发时间.可能被暂停时间段所影响。
-	 * 
+	 *
 	 * @return 下次作业触发时间
 	 */
 	public Date getNextFireTimePausePeriodEffected() {
@@ -293,7 +292,7 @@ public class JobScheduler {
 					Thread.sleep(500);// NOSONAR
 				}
 			} catch (final Exception e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			}
 
 			listenerManager.shutdown();
@@ -327,7 +326,7 @@ public class JobScheduler {
 
 	/**
 	 * 重新调度作业.
-	 * 
+	 *
 	 * @param cronExpression crom表达式
 	 */
 	public void rescheduleJob(final String cronExpression) {

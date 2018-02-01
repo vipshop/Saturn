@@ -169,10 +169,10 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 			Throwable cause = e.getCause();
 			if (cause != null) {
 				message = cause.getMessage();
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, message), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, message), e);
 			}
 		}
-		log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+		log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		if (message == null) {
 			message = e.getMessage();
 		}

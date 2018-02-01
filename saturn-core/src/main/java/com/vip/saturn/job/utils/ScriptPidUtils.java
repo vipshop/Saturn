@@ -120,7 +120,7 @@ public class ScriptPidUtils {
 			File itemFile = new File(path);
 			FileUtils.writeStringToFile(itemFile, String.valueOf(pid));
 		} catch (IOException e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Writing the pid file error"), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Writing the pid file error"), e);
 		}
 	}
 
@@ -144,11 +144,11 @@ public class ScriptPidUtils {
 			try {
 				return Long.parseLong(pid);
 			} catch (NumberFormatException e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Parsing the pid file error"), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
 				return UNKNOWN_PID;
 			}
 		} catch (IOException e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Reading the pid file error"), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Reading the pid file error"), e);
 			return UNKNOWN_PID;
 		}
 	}
@@ -192,7 +192,7 @@ public class ScriptPidUtils {
 			try {
 				pids.add(Long.valueOf(file.getName()));
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "Parsing the pid file error"), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
 			}
 		}
 

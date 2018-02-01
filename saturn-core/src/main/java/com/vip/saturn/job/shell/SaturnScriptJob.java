@@ -66,7 +66,7 @@ public class SaturnScriptJob extends CrondJob {
 					try {
 						jobReturn = innerHandleWithListener(jobName, key, execParameter, shardingContext);
 					} catch (Throwable e) {
-						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+						log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 						jobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Error: " + e.getMessage(),
 								SaturnSystemErrorGroup.FAIL);
 					} finally {
@@ -114,7 +114,7 @@ public class SaturnScriptJob extends CrondJob {
 		try {
 			saturnJobReturn = innerHandle(callable);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, t.getMessage(),
 					SaturnSystemErrorGroup.FAIL);
 		}
@@ -145,7 +145,7 @@ public class SaturnScriptJob extends CrondJob {
 			}
 			callable.setBusinessReturned(scriptJobRunner.isBusinessReturned());
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, t.getMessage(),
 					SaturnSystemErrorGroup.FAIL);
 		}

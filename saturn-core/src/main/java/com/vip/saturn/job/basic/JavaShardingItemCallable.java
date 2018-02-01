@@ -165,7 +165,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 			// 不是超时，不是强制停止。 打印错误日志，设置SaturnJobReturn。
 			if (status.get() != TIMEOUT && status.get() != FORCE_STOP) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 				temp = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
 						SaturnSystemErrorGroup.FAIL);
 			}
@@ -212,7 +212,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).beforeTimeout(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 		}
 	}
 
@@ -220,7 +220,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).postTimeout(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 		}
 	}
 
@@ -228,7 +228,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).postForceStop(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 		}
 	}
 

@@ -45,7 +45,7 @@ public class SaturnJavaJob extends CrondJob {
 				setJobVersion(version);
 			} catch (Throwable t) {
 				log.error(
-						String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, "error throws during get job version"),
+						String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "error throws during get job version"),
 						t);
 				throw new SchedulerException(t);
 			} finally {
@@ -70,7 +70,7 @@ public class SaturnJavaJob extends CrondJob {
 							try {
 								jobBusinessInstance = getObject.invoke(null);
 							} catch (Throwable t) {
-								log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
+								log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
 										jobClassStr + " getObject error"), t);
 							}
 						}
@@ -84,7 +84,7 @@ public class SaturnJavaJob extends CrondJob {
 					SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 				} catch (Throwable t) {
-					log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName,
+					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
 							"create job business instance error"), t);
 					throw new SchedulerException(t);
 				} finally {
@@ -130,7 +130,7 @@ public class SaturnJavaJob extends CrondJob {
 				shardingItemFutureTask.setCallFuture(callFuture);
 				futureTaskMap.put(key, shardingItemFutureTask);
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 				retMap.put(key, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
 						SaturnSystemErrorGroup.FAIL));
 			}
@@ -142,7 +142,7 @@ public class SaturnJavaJob extends CrondJob {
 			try {
 				futureTask.getCallFuture().get();
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 				retMap.put(item, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, e.getMessage(),
 						SaturnSystemErrorGroup.FAIL));
 				continue;
@@ -175,7 +175,7 @@ public class SaturnJavaJob extends CrondJob {
 							ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 						}
 					} catch (Throwable t) {
-						log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, t.getMessage()), t);
+						log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 					}
 				}
 			}

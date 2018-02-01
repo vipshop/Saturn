@@ -121,7 +121,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 				}
 			}
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		} finally {
 			cleanUp();
 		}

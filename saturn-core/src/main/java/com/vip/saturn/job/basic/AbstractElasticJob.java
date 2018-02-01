@@ -152,7 +152,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			log.trace("Saturn finish to execute job [{}], sharding context:{}.", jobName, shardingContext);
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		} finally {
 			running = false;
 		}
@@ -217,7 +217,7 @@ public abstract class AbstractElasticJob implements Stopable {
 			log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
 			return false;
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, jobName, e.getMessage()), e);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			return false;
 		}
 	}

@@ -116,8 +116,6 @@
 
 		<jxl.version>2.6.12</jxl.version>
 
-		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
-
 		<httpclient.version>4.5.2</httpclient.version>
 		<httpcore.version>4.4.4</httpcore.version>
 		<ma.glasnost.version>1.4.5</ma.glasnost.version>

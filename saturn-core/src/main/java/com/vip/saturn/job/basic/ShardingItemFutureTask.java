@@ -73,13 +73,13 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
 				if (e instanceof IllegalMonitorStateException || e instanceof ThreadDeath) {
-					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(),
+					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(),
 							"business thread pool maybe crashed"), e);
 					if (callFuture != null) {
 						callFuture.cancel(false);
 					}
-					log.warn(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(),
-							"close the old business thread pool, and re-create new one"));
+					log.warn(SaturnConstant.LOG_FORMAT, callable.getJobName(),
+							"close the old business thread pool, and re-create new one");
 					callable.getSaturnJob().getJobScheduler().reCreateExecutorService();
 				}
 			}
@@ -110,7 +110,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.onTimeout();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(), t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()), t);
 			}
 
 			try {
@@ -118,7 +118,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.postForceStop();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(), t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()), t);
 			}
 
 			callable.checkAndSetSaturnJobReturn();
@@ -131,7 +131,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					doneFinallyCallback.call();
 				}
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.ERROR_LOG_FORMAT, callable.getJobName(), e.getMessage()), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), e.getMessage()), e);
 			}
 		}
 	}
