@@ -44,7 +44,8 @@ public class JobServiceImplTest {
 
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 
-		when(curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName))).thenReturn(true);
+		List<String> shardItems = Lists.newArrayList("0", "1", "2", "3", "4");
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName))).thenReturn(shardItems);
 
 		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
 				.thenReturn(Lists.newArrayList(executorName));
@@ -96,7 +97,7 @@ public class JobServiceImplTest {
 
 		List<ExecutionInfo> result = jobService.getExecutionStatus(namespace, jobName);
 
-		assertEquals("size should be 1", 5, result.size());
+		assertEquals("size should be 5", 5, result.size());
 		// verify 0号分片
 		ExecutionInfo executionInfo = result.get(0);
 
