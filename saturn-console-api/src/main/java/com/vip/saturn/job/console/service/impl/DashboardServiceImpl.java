@@ -66,7 +66,7 @@ public class DashboardServiceImpl implements DashboardService {
 	private ExecutorService updateStatisticsThreadPool;
 
 	@PostConstruct
-	public void init() throws Exception {
+	public void init() {
 		initUpdateStatisticsThreadPool();
 	}
 
