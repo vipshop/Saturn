@@ -7,6 +7,8 @@ import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
 import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
+import com.vip.saturn.job.exception.SaturnExecutorException;
+import com.vip.saturn.job.exception.SaturnExecutorExceptionType;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
@@ -248,17 +250,12 @@ public class SaturnExecutor {
 							connectionString);
 					return connectionString;
 				} else {
-					if (responseBody != null && !responseBody.trim().isEmpty()) {
-						JSONObject parseObject = JSONObject.parseObject(responseBody);
-						String errMsg = parseObject.getString("message");
-						log.warn(
-								"Fail to discover zk connection string. Url: {}, response statusCode: {}, response message: {}",
-								url, statusCode, errMsg);
-					} else {
-						log.warn(
-								"Fail to discover zk connection string. Url: {}, response statusCode: {}, response no content",
-								url, statusCode);
-					}
+					handleDiscoverException(responseBody, statusCode);
+				}
+			} catch (SaturnExecutorException e1) {
+				log.error(e1.getMessage());
+				if (SaturnExecutorExceptionType.NAMESPACE_NOT_EXIST == e1.getCode()) {
+					throw e1;
 				}
 			} catch (Exception e) {
 				log.error("Fail to discover zk connection. Url: " + url, e);
@@ -275,6 +272,29 @@ public class SaturnExecutor {
 
 		throw new Exception(
 				"Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
+	}
+
+	private void handleDiscoverException(String responseBody, Integer statusCode) {
+		String errMsgInResponse = obtainErrorResponseMsg(responseBody);
+
+		StringBuilder sb = new StringBuilder("Fail to discover zk connection string. ");
+		String exceptionMsg =
+				StringUtils.isBlank(errMsgInResponse) ? sb.toString() : sb.append(errMsgInResponse).toString();
+		if (HttpStatus.SC_NOT_FOUND == statusCode) {
+			throw new SaturnExecutorException(SaturnExecutorExceptionType.NAMESPACE_NOT_EXIST, exceptionMsg);
+		} else {
+			throw new SaturnExecutorException(exceptionMsg);
+		}
+
+	}
+
+	private String obtainErrorResponseMsg(String responseBody) {
+		if (responseBody != null && !responseBody.trim().isEmpty()) {
+			JSONObject parseObject = JSONObject.parseObject(responseBody);
+			return parseObject.getString("message");
+		}
+
+		return "";
 	}
 
 	private boolean scheduleJob(String jobName) {
