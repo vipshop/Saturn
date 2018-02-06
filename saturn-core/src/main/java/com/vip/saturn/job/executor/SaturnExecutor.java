@@ -254,7 +254,7 @@ public class SaturnExecutor {
 				}
 			} catch (SaturnExecutorException e1) {
 				log.error(e1.getMessage());
-				if (SaturnExecutorExceptionType.NAMESPACE_NOT_EXIST == e1.getCode()) {
+				if (SaturnExecutorExceptionType.UNEXPECTED_EXCEPTION != e1.getCode()) {
 					throw e1;
 				}
 			} catch (Exception e) {
@@ -282,10 +282,13 @@ public class SaturnExecutor {
 				StringUtils.isBlank(errMsgInResponse) ? sb.toString() : sb.append(errMsgInResponse).toString();
 		if (HttpStatus.SC_NOT_FOUND == statusCode) {
 			throw new SaturnExecutorException(SaturnExecutorExceptionType.NAMESPACE_NOT_EXIST, exceptionMsg);
-		} else {
-			throw new SaturnExecutorException(exceptionMsg);
 		}
 
+		if (HttpStatus.SC_BAD_REQUEST == statusCode) {
+			throw new SaturnExecutorException(SaturnExecutorExceptionType.BAD_REQUEST, exceptionMsg);
+		}
+
+		throw new SaturnExecutorException(SaturnExecutorExceptionType.UNEXPECTED_EXCEPTION, exceptionMsg);
 	}
 
 	private String obtainErrorResponseMsg(String responseBody) {
