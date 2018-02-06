@@ -31,43 +31,37 @@ import org.slf4j.LoggerFactory;
  * 用于处理Shell的相关pid功能
  *
  * @author linzhaoming
- *
  */
 public class ScriptPidUtils {
+
 	private static final Logger log = LoggerFactory.getLogger(ScriptPidUtils.class);
 
 	public static final long UNKNOWN_PID = -1;
 
-	/** 系统分隔符 */
+	/**
+	 * 系统分隔符
+	 */
 	protected static final String FILESEPARATOR = System.getProperty("file.separator");
 
 	/**
-	 * Saturn的运行目录
-	 * <p>
-	 * ${HOME}/.saturn/executing
+	 * Saturn的运行目录 <p> ${HOME}/.saturn/executing
 	 */
 	public static final String EXECUTINGPATH = System.getProperty("user.home") + FILESEPARATOR + ".saturn"
 			+ FILESEPARATOR + "executing";
 
 	/**
-	 * Saturn的运行目录
-	 * <p>
-	 * ${HOME}/.saturn/output
+	 * Saturn的运行目录 <p> ${HOME}/.saturn/output
 	 */
 	public static final String OUTPUT_PATH = System.getProperty("user.home") + FILESEPARATOR + ".saturn" + FILESEPARATOR
 			+ "output";
 
 	/**
-	 * 作业执行的运行目录
-	 * <p>
-	 * 目录: ${HOME}/.saturn/executing/[executorName]/[jobName]
+	 * 作业执行的运行目录 <p> 目录: ${HOME}/.saturn/executing/[executorName]/[jobName]
 	 */
 	public static final String EXECUTINGJOBPATH = EXECUTINGPATH + FILESEPARATOR + "%s" + FILESEPARATOR + "%s";
 
 	/**
-	 * 作业执行的Pid文件
-	 * <p>
-	 * 目录: ${HOME}/.saturn/executing/[executorName]/[jobName]/[jobItem]/PID
+	 * 作业执行的Pid文件 <p> 目录: ${HOME}/.saturn/executing/[executorName]/[jobName]/[jobItem]/PID
 	 */
 	public static final String JOBITEMPIDSPATH = EXECUTINGJOBPATH + FILESEPARATOR + "%s" + FILESEPARATOR + "PIDS";
 	public static final String JOBITEMPATH = EXECUTINGJOBPATH + FILESEPARATOR + "%s";
@@ -76,9 +70,7 @@ public class ScriptPidUtils {
 			+ FILESEPARATOR + "%s";
 
 	/**
-	 * Shell作业执行的回写结果路径文件
-	 * <p>
-	 * 目录: ${HOME}/.saturn/output/[executorName]/[jobName]/[jobItem]/[randomId/messageId]/[timestamp]
+	 * Shell作业执行的回写结果路径文件 <p> 目录: ${HOME}/.saturn/output/[executorName]/[jobName]/[jobItem]/[randomId/messageId]/[timestamp]
 	 */
 	public static final String JOBITEMOUTPUTPATH = OUTPUT_PATH + FILESEPARATOR + "%s" + FILESEPARATOR + "%s"
 			+ FILESEPARATOR + "%s" + FILESEPARATOR + "%s" + FILESEPARATOR + "%s";
@@ -87,6 +79,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * 获取当前Saturn的执行目录(executing)
+	 *
 	 * @return Saturn的执行目录
 	 */
 	public static File getSaturnExecutingHome() {
@@ -107,6 +100,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * 写入对应的作业分片的pid文件
+	 *
 	 * @param executorName Executor name
 	 * @param jobName 作业名字
 	 * @param jobItem 作业分片
@@ -126,10 +120,6 @@ public class ScriptPidUtils {
 
 	/**
 	 * 仅用于兼容旧版，获取 PID
-	 * @param executorName
-	 * @param jobName
-	 * @param jobItem
-	 * @return
 	 */
 	@Deprecated
 	public static long _getPidFromFile(String executorName, String jobName, String jobItem) {
@@ -144,7 +134,8 @@ public class ScriptPidUtils {
 			try {
 				return Long.parseLong(pid);
 			} catch (NumberFormatException e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"),
+						e);
 				return UNKNOWN_PID;
 			}
 		} catch (IOException e) {
@@ -163,6 +154,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * 获取对应作业分片的pid, -1表示不存在或读取出错
+	 *
 	 * @param executorName Executor Name
 	 * @param jobName 作业名
 	 * @param jobItem 作业分片
@@ -192,7 +184,8 @@ public class ScriptPidUtils {
 			try {
 				pids.add(Long.valueOf(file.getName()));
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"),
+						e);
 			}
 		}
 
@@ -201,6 +194,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * 获取对应作业的分片pid文件列表
+	 *
 	 * @param executorName Executor Name
 	 * @param jobName 作业名
 	 * @return pid文件列表
@@ -215,7 +209,7 @@ public class ScriptPidUtils {
 		File[] files = jobNameFile.listFiles();
 
 		if (files == null || files.length == 0) {
-			return new String[] {};
+			return new String[]{};
 		}
 
 		String[] filePaths = new String[files.length];
@@ -230,6 +224,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * 删除作业分片的全部pid文件
+	 *
 	 * @param executorName Executor Name
 	 * @param jobName 作业名
 	 * @param jobItem 作业分片
@@ -271,6 +266,7 @@ public class ScriptPidUtils {
 
 	/**
 	 * This method will kill all the child/grandchild/... processes.
+	 *
 	 * @param pid pid to kill.
 	 */
 	public static void killAllChildrenByPid(long pid, boolean force) {
@@ -558,7 +554,7 @@ public class ScriptPidUtils {
 		Map<String, String> env = new HashMap<>();
 		try {
 			final CommandLine cmdLine = new CommandLine("/bin/sh");
-			cmdLine.addArguments(new String[] { "-c", "source /etc/profile && env" }, false);
+			cmdLine.addArguments(new String[]{"-c", "source /etc/profile && env"}, false);
 			String output = exeCmdWithoutPipe(cmdLine, null, null);
 			if (output == null) {
 				return env;
@@ -574,7 +570,7 @@ public class ScriptPidUtils {
 		String patternString = "\\$\\{?(" + StringUtils.join(env.keySet(), "|") + ")\\}?";
 		Pattern pattern = Pattern.compile(patternString);
 		Matcher matcher = pattern.matcher(cmd);
-		StringBuffer sb = new StringBuffer();// NOSONAR
+		StringBuffer sb = new StringBuffer();
 		while (matcher.find()) {
 			matcher.appendReplacement(sb, env.get(matcher.group(1)));
 		}
