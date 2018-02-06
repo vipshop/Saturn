@@ -1,6 +1,7 @@
 package com.vip.saturn.job.executor;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,44 +26,44 @@ public class Main {
 	protected void parseArgs(String[] inArgs) throws Exception {
 		String[] args = inArgs.clone();
 
-		for (int i = 0; i < args.length; i++) {
+		for (int i = 0; i < args.length; i = i + 2) {
 			String param = args[i].trim();
+			String value = args[i + 1];
 
-			if ("-namespace".equals(param)) {
-				try {
-					this.namespace = args[++i].trim();// NOSONAR
-					System.setProperty("app.instance.name", this.namespace); // For logback.
-					System.setProperty("namespace", this.namespace); // For logback.
-				} catch (Exception e) {
-					throw new Exception("Please set namespace value, exception message: " + e.getMessage(), e);
-				}
-			} else if ("-executorName".equals(param)) {
-				try {
-					executorName = args[++i].trim();// NOSONAR
-				} catch (Exception e) {
-					throw new Exception("Please set executorName value, exception message: " + e.getMessage(), e);
-				}
-			} else if ("-saturnLibDir".equals(param)) {
-				try {
-					saturnLibDir = args[++i].trim();// NOSONAR
-				} catch (Exception e) {
-					throw new Exception("Please set saturnLibDir value, exception message: " + e.getMessage(), e);
-				}
-			} else if ("-appLibDir".equals(param)) {
-				try {
-					appLibDir = args[++i].trim();// NOSONAR
-				} catch (Exception e) {
-					throw new Exception("Please set appLibDir value, exception message: " + e.getMessage(), e);
-				}
+			switch (param) {
+				case "-namespace":
+					this.namespace = obtainParam(value, "namespace");
+					System.setProperty("app.instance.name", this.namespace);
+					System.setProperty("namespace", this.namespace);
+					break;
+				case "-executorName":
+					this.executorName = obtainParam(value, "executorName");
+					break;
+				case "-saturnLibDir":
+					this.saturnLibDir = obtainParam(value, "saturnLibDir");
+					break;
+				case "-appLibDir":
+					this.appLibDir = obtainParam(value, "appLibDir");
+					break;
+				default:
+					break;
 			}
 		}
 
-		validateParameters();
+		validateMandatoryParameters();
 	}
 
-	private void validateParameters() {
-		if (namespace == null) {
-			throw new RuntimeException("Please add the namespace parameter");
+	private String obtainParam(String arg, String paramName) {
+		if (arg == null || arg.isEmpty()) {
+			throw new RuntimeException("Please set the value of parameter:" + paramName);
+		}
+
+		return arg.trim();
+	}
+
+	private void validateMandatoryParameters() {
+		if (namespace == null || namespace.isEmpty()) {
+			throw new RuntimeException("Please set the namespace parameter");
 		}
 	}
 
@@ -169,10 +170,18 @@ public class Main {
 			main.parseArgs(args);
 			main.initClassLoader();
 			main.startExecutor();
+		} catch (InvocationTargetException ite) {// NOSONAR
+			printThrowableAndExit(ite.getCause());
 		} catch (Throwable t) {// NOSONAR
-			t.printStackTrace(); // NOSONAR
-			System.exit(1);
+			printThrowableAndExit(t);
 		}
+	}
+
+	private static void printThrowableAndExit(Throwable t) {
+		if (t != null) {
+			t.printStackTrace(); // NOSONAR
+		}
+		System.exit(1);
 	}
 
 	public Object getSaturnExecutor() {
