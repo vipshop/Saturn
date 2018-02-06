@@ -45,12 +45,12 @@ public class ZkDiscoveryRestApiController extends AbstractController {
 
 			if (zkClusterKey == null) {
 				throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
-						"The NamespaceZkClusterMapping is not configured in db for " + namespace);
+						"The namespace：[" + namespace + "] is not registered in Saturn.");
 			}
 			ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 			if (zkClusterInfo == null) {
-				throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
-						"The clusterKey(" + zkClusterKey + ") is not configured in db for " + namespace);
+				throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+						"The clusterKey: [" + zkClusterKey + "] is not configured in db for " + namespace);
 			}
 			return new ResponseEntity<Object>(zkClusterInfo.getConnectString(), headers, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
