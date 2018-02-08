@@ -273,22 +273,24 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				}
 				List<Integer> shards = next.getValue();
 				List<Integer> newShard = lastShardingItems.get(executorName);
-				if (shards == null && newShard != null || shards != null && newShard == null) {
+				if ((shards == null && newShard != null) || (shards != null && newShard == null)) {
 					isChanged = true;
 					break;
 				}
-				if (shards != null && newShard != null) {
-					for (Integer shard : shards) {
-						if (!newShard.contains(shard)) {
-							isChanged = true;
-							break wl_loop;
-						}
+
+				if (shards == null || newShard == null) {
+					continue;
+				}
+
+				for (Integer shard : shards) {
+					if (!newShard.contains(shard)) {
+						isChanged = true;
+						break wl_loop;
 					}
 				}
 			}
 			if (!isChanged) {
 				Iterator<Entry<String, List<Integer>>> newIterator = lastShardingItems.entrySet().iterator();
-				wl_loop2:
 				while (newIterator.hasNext()) {
 					Entry<String, List<Integer>> next = newIterator.next();
 					String executorName = next.getKey();
@@ -302,21 +304,32 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 						isChanged = true;
 						break;
 					}
-					if (shards != null && oldShard != null) {
-						for (Integer shard : shards) {
-							if (!oldShard.contains(shard)) {
-								isChanged = true;
-								break wl_loop2;
-							}
-						}
+
+					if (shards == null || oldShard == null) {
+						continue;
+					}
+
+					if (hasShardChanged(shards, oldShard)) {
+						isChanged = true;
+						break;
 					}
 				}
 			}
+
 			if (isChanged) {
 				jobShardContent.put(enableJob, lastShardingItems);
 			}
 		}
 		return jobShardContent;
+	}
+
+	private boolean hasShardChanged(List<Integer> shards, List<Integer> oldShard) {
+		for (Integer shard : shards) {
+			if (!oldShard.contains(shard)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected boolean isLocalMode(String jobName) throws Exception {
@@ -527,15 +540,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			if (preferListIsConfiguredMap.get(jobName)) { // fix,
 				// preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
 				List<String> preferList = preferListConfiguredMap.get(jobName);
-				List<Executor> preferExecutorList = new ArrayList<>();
-				List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
-						.get(jobName);
-				for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
-					Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
-					if (preferList.contains(executor.getExecutorName())) {
-						preferExecutorList.add(executor);
-					}
-				}
+				List<Executor> preferExecutorList = getPreferExecutors(
+						lastOnlineTrafficExecutorListMapByJob, jobName, preferList);
 				// 如果preferList的Executor都offline，则放回到全部online的Executor中某一个。如果是这种情况，则后续再操作，避免不均衡的情况
 				// 如果存在preferExecutor，择优放回
 				if (!preferExecutorList.isEmpty()) {
@@ -560,34 +566,43 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		while (iterator.hasNext()) {
 			Shard shard = iterator.next();
 			String jobName = shard.getJobName();
-			if (localModeMap.get(jobName)) {
-				if (preferListIsConfiguredMap.get(jobName)) {
-					List<String> preferListConfigured = preferListConfiguredMap.get(jobName);
-					if (!preferListConfigured.isEmpty()) {
-						List<Executor> preferExecutorList = new ArrayList<>();
-						List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
-								.get(jobName);
-						for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
-							Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
-							if (preferListConfigured.contains(executor.getExecutorName())) {
-								preferExecutorList.add(executor);
-							}
-						}
-						if (!preferExecutorList.isEmpty()) {
-							Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList,
-									jobName);
-							putShardIntoExecutor(shard, executor);
-						}
+			if (!localModeMap.get(jobName)) {
+				continue;
+			}
+
+			if (preferListIsConfiguredMap.get(jobName)) {
+				List<String> preferListConfigured = preferListConfiguredMap.get(jobName);
+				if (!preferListConfigured.isEmpty()) {
+					List<Executor> preferExecutorList = getPreferExecutors(lastOnlineTrafficExecutorListMapByJob,
+							jobName, preferListConfigured);
+					if (!preferExecutorList.isEmpty()) {
+						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList,
+								jobName);
+						putShardIntoExecutor(shard, executor);
 					}
-				} else {
-					Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(
-							noDockerTrafficExecutorsMapByJob.get(jobName),
-							jobName);
-					putShardIntoExecutor(shard, executor);
 				}
-				iterator.remove();
+			} else {
+				Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(
+						noDockerTrafficExecutorsMapByJob.get(jobName),
+						jobName);
+				putShardIntoExecutor(shard, executor);
+			}
+			iterator.remove();
+		}
+	}
+
+	private List<Executor> getPreferExecutors(Map<String, List<Executor>> lastOnlineTrafficExecutorListMapByJob,
+			String jobName, List<String> preferListConfigured) {
+		List<Executor> preferExecutorList = new ArrayList<>();
+		List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
+				.get(jobName);
+		for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
+			Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
+			if (preferListConfigured.contains(executor.getExecutorName())) {
+				preferExecutorList.add(executor);
 			}
 		}
+		return preferExecutorList;
 	}
 
 
@@ -764,18 +779,19 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			if (!preferList.contains(prefer)) {
 				preferList.add(prefer);
 			}
-		} else { // docker server, get the real executorList by task
-			String task = prefer.substring(1);
-			for (int i = 0; i < allExistsExecutors.size(); i++) {
-				String executor = allExistsExecutors.get(i);
-				if (curatorFramework.checkExists()
-						.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
-					byte[] taskData = curatorFramework.getData()
-							.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
-					if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name()))) {
-						if (!preferList.contains(executor)) {
-							preferList.add(executor);
-						}
+			return;
+		}
+
+		String task = prefer.substring(1);
+		for (int i = 0; i < allExistsExecutors.size(); i++) {
+			String executor = allExistsExecutors.get(i);
+			if (curatorFramework.checkExists()
+					.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
+				byte[] taskData = curatorFramework.getData()
+						.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
+				if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name()))) {
+					if (!preferList.contains(executor)) {
+						preferList.add(executor);
 					}
 				}
 			}

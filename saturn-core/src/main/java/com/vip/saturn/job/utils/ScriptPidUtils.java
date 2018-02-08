@@ -119,7 +119,7 @@ public class ScriptPidUtils {
 	}
 
 	/**
-	 * 仅用于兼容旧版，获取 PID
+	 * @deprecated 仅用于兼容旧版，获取 PID
 	 */
 	@Deprecated
 	public static long _getPidFromFile(String executorName, String jobName, String jobItem) {
@@ -351,7 +351,7 @@ public class ScriptPidUtils {
 	 */
 	public static void checkAllExistJobs(final CoordinatorRegistryCenter regCenter) {
 		List<String> zkJobNames = regCenter.getChildrenKeys(JobNodePath.ROOT);
-		if (zkJobNames == null || zkJobNames.size() == 0) {
+		if (zkJobNames == null || zkJobNames.isEmpty()) {
 			return;
 		}
 		for (final String jobName : zkJobNames) {
