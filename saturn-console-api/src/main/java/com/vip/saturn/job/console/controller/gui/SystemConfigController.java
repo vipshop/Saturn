@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author kfchu
  */
-@Controller
 @RequestMapping("/console/configs")
 public class SystemConfigController extends AbstractGUIController {
 

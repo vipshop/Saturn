@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 /**
  * @author hebelala
  */
-@Service
 public class ReportAlarmServiceImpl implements ReportAlarmService {
 
 	private static final Logger log = LoggerFactory.getLogger(ReportAlarmServiceImpl.class);

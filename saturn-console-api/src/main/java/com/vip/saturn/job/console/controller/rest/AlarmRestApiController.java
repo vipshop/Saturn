@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  * RESTful APIs of alarm handling. <p> Created by kfchu on 10/05/2017.
  */
-@Controller
 @RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController extends AbstractController {
 

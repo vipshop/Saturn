@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
  *
  * @author kfchu
  */
-@Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs/{jobName}/sharding")
 public class JobShardingController extends AbstractGUIController {
 

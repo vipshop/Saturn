@@ -42,7 +42,6 @@ import java.util.concurrent.Executors;
 /**
  * @author hebelala
  */
-@Service
 public class NamespaceZkClusterMappingServiceImpl implements NamespaceZkClusterMappingService {
 
 	private static final Logger log = LoggerFactory.getLogger(NamespaceZkClusterMappingServiceImpl.class);

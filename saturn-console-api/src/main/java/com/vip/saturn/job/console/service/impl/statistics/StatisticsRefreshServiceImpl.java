@@ -44,7 +44,6 @@ import java.util.concurrent.*;
 /**
  * @author timmy.hu
  */
-@Service
 public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private static final Logger log = LoggerFactory.getLogger(StatisticsRefreshServiceImpl.class);

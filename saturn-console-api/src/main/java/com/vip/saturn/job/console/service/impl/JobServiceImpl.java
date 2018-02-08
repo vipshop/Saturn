@@ -76,7 +76,6 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * @author hebelala
  */
-@Service
 public class JobServiceImpl implements JobService {
 
 	public static final String CONFIG_ITEM_LOAD_LEVEL = "loadLevel";

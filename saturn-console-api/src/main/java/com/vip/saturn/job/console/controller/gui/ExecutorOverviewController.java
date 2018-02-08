@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author kfchu
  */
-@Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/executors")
 public class ExecutorOverviewController extends AbstractGUIController {
 

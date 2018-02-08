@@ -19,7 +19,6 @@ import java.util.Map;
 /**
  * @author timmy.hu
  */
-@Service
 public class StatisticsPersistence {
 
 	private static final Logger log = LoggerFactory.getLogger(StatisticsPersistence.class);

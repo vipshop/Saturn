@@ -21,7 +21,6 @@ import javax.annotation.Resource;
 /**
  * @author hebelala
  */
-@Controller
 @RequestMapping("/console/utils")
 public class UtilsController extends AbstractGUIController {
 

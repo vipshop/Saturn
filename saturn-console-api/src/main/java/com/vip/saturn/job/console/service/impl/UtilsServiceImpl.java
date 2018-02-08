@@ -19,7 +19,6 @@ import java.util.TimeZone;
 /**
  * @author hebelala
  */
-@Service
 public class UtilsServiceImpl implements UtilsService {
 
 	@Override

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
  *
  * @author kfchu
  */
-@Controller
 @RequestMapping("/console/static")
 public class StaticResourceController extends AbstractGUIController {
 

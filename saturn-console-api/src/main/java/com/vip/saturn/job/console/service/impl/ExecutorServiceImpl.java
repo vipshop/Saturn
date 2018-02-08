@@ -29,7 +29,6 @@ import org.springframework.util.CollectionUtils;
  * @author xiaopeng.he
  * @author kfchu
  */
-@Service
 public class ExecutorServiceImpl implements ExecutorService {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);

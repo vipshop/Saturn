@@ -32,7 +32,6 @@ import java.util.Map;
 /**
  * @author hebelala
  */
-@Service
 public class RestApiServiceImpl implements RestApiService {
 
 	private static final Logger log = LoggerFactory.getLogger(RestApiServiceImpl.class);

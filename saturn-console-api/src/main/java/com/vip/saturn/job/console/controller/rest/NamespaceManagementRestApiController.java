@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *
  * @author kfchu
  */
-@Controller
 @RequestMapping("/rest/v1")
 public class NamespaceManagementRestApiController extends AbstractController {
 

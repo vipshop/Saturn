@@ -21,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author timmy.hu
  */
-@Controller
 @RequestMapping("/rest/v1")
 public class DashboardRefreshRestApiController extends AbstractController {
 

@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *
  * @author hebelala
  */
-@Controller
 @RequestMapping("/rest/v1")
 public class JobOperationRestApiController extends AbstractController {
 

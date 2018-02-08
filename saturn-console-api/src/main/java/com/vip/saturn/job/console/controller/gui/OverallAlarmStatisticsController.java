@@ -22,7 +22,6 @@ import javax.annotation.Resource;
  *
  * @author hebelala
  */
-@Controller
 @RequestMapping("/console/alarmStatistics")
 public class OverallAlarmStatisticsController extends AbstractGUIController {
 

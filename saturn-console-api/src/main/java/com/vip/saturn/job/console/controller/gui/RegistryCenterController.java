@@ -23,7 +23,6 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 
-@Controller
 @RequestMapping("/console")
 public class RegistryCenterController extends AbstractGUIController {
 

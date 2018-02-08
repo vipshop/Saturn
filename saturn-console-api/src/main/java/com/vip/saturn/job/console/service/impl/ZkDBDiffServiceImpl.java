@@ -31,7 +31,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-@Service
 public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
 	private static final Logger log = LoggerFactory.getLogger(ZkDBDiffServiceImpl.class);
@@ -207,7 +206,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 	 *
 	 * @param dbJobConfig db里面的配置。
 	 * @param zkJobConfig zk里面的配置
-	 * @param needDetail  是否需要细节；true，则需要，false，为不需要；
+	 * @param needDetail 是否需要细节；true，则需要，false，为不需要；
 	 */
 	private JobDiffInfo diff(String namespace, JobConfig dbJobConfig, JobConfig zkJobConfig, boolean needDetail) {
 		String jobName = dbJobConfig.getJobName();

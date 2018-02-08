@@ -49,7 +49,6 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * @author hebelala
  */
-@Controller
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 

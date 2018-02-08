@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
  *
  * @author hebelala
  */
-@Controller
 @RequestMapping("/console/namespaces")
 public class HomeController extends AbstractGUIController {
 

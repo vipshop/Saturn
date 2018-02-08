@@ -16,7 +16,6 @@ import java.util.List;
 /**
  * @author timmy.hu
  */
-@Service
 public class UpdateJobConfigServiceImpl implements UpdateJobConfigService {
 
 	@Autowired

@@ -23,7 +23,6 @@ import java.util.HashMap;
  *
  * @author hebelala
  */
-@RestController
 @RequestMapping("/console/{namespace:.+}/marathon")
 public class MarathonController extends AbstractGUIController {
 

@@ -14,9 +14,39 @@
 						http://www.springframework.org/schema/aop
 						http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
                         ">
-    <context:component-scan base-package="com.vip.saturn.job.console">
-        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
-    </context:component-scan>
+	<context:component-scan base-package="com.vip.saturn.job.console"/>
+
+	<!-- Service Beans Begin -->
+	<bean id="systemConfigService"
+		class="com.vip.saturn.job.console.service.impl.SystemConfigServiceImpl"/>
+	<bean id="alarmStatisticsService"
+		class="com.vip.saturn.job.console.service.impl.AlarmStatisticsServiceImpl"/>
+	<bean id="dashboardService"
+		class="com.vip.saturn.job.console.service.impl.DashboardServiceImpl"/>
+	<bean id="executorService"
+		class="com.vip.saturn.job.console.service.impl.ExecutorServiceImpl"/>
+	<bean id="jobService"
+		class="com.vip.saturn.job.console.service.impl.JobServiceImpl"/>
+	<bean id="namespaceZkClusterMappingService"
+		class="com.vip.saturn.job.console.service.impl.NamespaceZkClusterMappingServiceImpl"/>
+	<bean id="reportAlarmService"
+		class="com.vip.saturn.job.console.service.impl.ReportAlarmServiceImpl"/>
+	<bean id="utilsService"
+		class="com.vip.saturn.job.console.service.impl.UtilsServiceImpl"/>
+	<bean id="zkDBDiffService"
+		class="com.vip.saturn.job.console.service.impl.ZkDBDiffServiceImpl"/>
+	<bean id="zkTreeService"
+		class="com.vip.saturn.job.console.service.impl.ZkTreeServiceImpl"/>
+	<bean id="updateJobConfigService"
+		class="com.vip.saturn.job.console.service.impl.UpdateJobConfigServiceImpl"/>
+	<bean id="restApiService" class="com.vip.saturn.job.console.service.impl.RestApiServiceImpl"/>
+	<bean id="statisticPersistence"
+		class="com.vip.saturn.job.console.service.impl.statistics.StatisticsPersistence"/>
+	<bean id="statisticRefreshService"
+		class="com.vip.saturn.job.console.service.impl.statistics.StatisticsRefreshServiceImpl"/>
+	<bean id="registryCenterService"
+		class="com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl"/>
+	<!-- Service Beans End -->
 
 	<aop:aspectj-autoproxy/>
 				  

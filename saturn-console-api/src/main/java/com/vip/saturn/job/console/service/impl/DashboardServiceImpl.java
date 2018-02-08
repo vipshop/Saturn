@@ -43,7 +43,6 @@ import org.springframework.stereotype.Service;
 /**
  * @author chembo.huang
  */
-@Service
 public class DashboardServiceImpl implements DashboardService {
 
 	private static final Logger log = LoggerFactory.getLogger(DashboardServiceImpl.class);

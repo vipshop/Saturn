@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 /**
  * @author hebelala
  */
-@Service
 public class ZkTreeServiceImpl implements ZkTreeService {
 
 	private Gson gson = new Gson();

@@ -20,7 +20,6 @@ import java.util.List;
 /**
  * @author hebelala
  */
-@Service
 public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 
 	@Resource

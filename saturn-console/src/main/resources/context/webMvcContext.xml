@@ -14,7 +14,54 @@
     <context:property-placeholder
 		ignore-resource-not-found="true"
 		location="classpath:application.properties" />
-    <context:component-scan base-package="com.vip.saturn.job.console.**.controller" />
+
+    <!-- GUI Controller Begin -->
+    <bean id="dashboardController"
+      class="com.vip.saturn.job.console.controller.gui.DashboardController"/>
+    <bean id="executorOverviewController"
+      class="com.vip.saturn.job.console.controller.gui.ExecutorOverviewController"/>
+    <bean id="homeController"
+      class="com.vip.saturn.job.console.controller.gui.HomeController"/>
+    <bean id="jobAlarmStatController"
+      class="com.vip.saturn.job.console.controller.gui.JobAlarmStatisticsController"/>
+    <bean id="jobConfigController"
+      class="com.vip.saturn.job.console.controller.gui.JobConfigController"/>
+    <bean id="jobExecutionController"
+      class="com.vip.saturn.job.console.controller.gui.JobExecutionController"/>
+    <bean id="jobOverviewController"
+      class="com.vip.saturn.job.console.controller.gui.JobOverviewController"/>
+    <bean id="jobShardingController"
+      class="com.vip.saturn.job.console.controller.gui.JobShardingController"/>
+    <bean id="marathonController"
+      class="com.vip.saturn.job.console.controller.gui.MarathonController"/>
+    <bean id="namespaceAlramStatController"
+      class="com.vip.saturn.job.console.controller.gui.NamespaceAlarmStatisticsController"/>
+    <bean id="overallAlramStatController"
+      class="com.vip.saturn.job.console.controller.gui.OverallAlarmStatisticsController"/>
+    <bean id="registryCenterController"
+      class="com.vip.saturn.job.console.controller.gui.RegistryCenterController"/>
+    <bean id="staticResourceController"
+      class="com.vip.saturn.job.console.controller.gui.StaticResourceController"/>
+    <bean id="systemConfigController"
+      class="com.vip.saturn.job.console.controller.gui.SystemConfigController"/>
+    <bean id="utilsController"
+      class="com.vip.saturn.job.console.controller.gui.UtilsController"/>
+    <!-- GUI Controller End -->
+
+    <!-- Rest API Controller Begin -->
+    <bean id="alarmRestApiController"
+      class="com.vip.saturn.job.console.controller.rest.AlarmRestApiController"/>
+    <bean id="dashboardRefreshApiController"
+      class="com.vip.saturn.job.console.controller.rest.DashboardRefreshRestApiController"/>
+    <bean id="jobOperationRestApiController"
+      class="com.vip.saturn.job.console.controller.rest.JobOperationRestApiController"/>
+    <bean id="namespaceMgmtRestApiController"
+      class="com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController"/>
+    <bean id="zkDbDiffRestApiController"
+      class="com.vip.saturn.job.console.controller.rest.ZkDbDiffRestApiController"/>
+    <bean id="zkDiscoveryRestApiController"
+      class="com.vip.saturn.job.console.controller.rest.ZkDiscoveryRestApiController"/>
+    <!-- Rest API Controller End -->
 
     <mvc:annotation-driven>
         <mvc:message-converters>

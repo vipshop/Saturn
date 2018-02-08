@@ -66,7 +66,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	protected static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
