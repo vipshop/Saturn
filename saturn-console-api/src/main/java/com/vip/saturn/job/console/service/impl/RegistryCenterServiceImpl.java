@@ -37,6 +37,7 @@ import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -68,17 +69,17 @@ import java.util.concurrent.Executors;
 @Service
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
+	protected static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
+
+	protected static final String NAMESPACE_CREATOR_NAME = "REST_API";
+
+	protected static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new namespace {%s} for reason {%s}";
+
+	protected static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
+
+	protected static final String ERR_MSG_NS_ALREADY_EXIST = "Invalid request. Namespace: {%s} already existed";
+
 	private static final Logger log = LoggerFactory.getLogger(RegistryCenterServiceImpl.class);
-
-	private static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
-
-	private static final String NAMESPACE_CREATOR_NAME = "REST_API";
-
-	private static final String ERR_MSG_TEMPLATE_FAIL_TO_CREATE = "Fail to create new namespace {%s} for reason {%s}";
-
-	private static final String ERR_MSG_NS_NOT_FOUND = "The namespace does not exists.";
-
-	private static final String ERR_MSG_NS_ALREADY_EXIST = "Invalid request. Namespace: {%s} already existed";
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -1097,6 +1098,54 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		namespaceDomainInfo.setZkCluster(zkClusterKey);
 
 		return namespaceDomainInfo;
+	}
+
+	@Transactional(rollbackFor = {Exception.class})
+	@Override
+	public void bindNamespaceAndZkCluster(String namespace, String zkClusterKey) throws SaturnJobConsoleException {
+		ZkCluster currentCluster = getZkCluster(zkClusterKey);
+
+		if (currentCluster == null) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "not found zkcluster" + zkClusterKey));
+		}
+
+		if (!checkNamespaceExists(namespace)) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), ERR_MSG_NS_NOT_FOUND);
+		}
+
+		try {
+			// 判断其它集群是否有该域
+			String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
+			if (zkClusterKeyOther != null) {
+				ZkCluster zkClusterOther = getZkCluster(zkClusterKeyOther);
+				if (zkClusterOther != null) {
+					throw new SaturnJobConsoleException(
+							namespace + "在zk=" + zkClusterOther.getZkAddr() + " 存在， 不能重复添加");
+				}
+			}
+			if (zkClusterKeyOther == null) {
+				//TODO: 一旦用户功能完成，补全username
+				namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, "");
+			} else {
+				//TODO: 一旦用户功能完成，补全username
+				namespaceZkClusterMapping4SqlService.update(namespace, "", zkClusterKey, "");
+			}
+
+			postBindNamespaceAndZkCluster(namespace, currentCluster);
+
+			// refresh
+			notifyRefreshRegCenter();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			//TODO: 一旦用户功能完成，补全username
+			namespaceZkClusterMapping4SqlService.remove(namespace, "");
+			throw new SaturnJobConsoleException(e.getMessage());
+		}
+	}
+
+	protected void postBindNamespaceAndZkCluster(String namespace, ZkCluster currentCluster) throws Exception {
+		// for subclass implement
 	}
 
 	private boolean checkNamespaceExists(String namespace) {

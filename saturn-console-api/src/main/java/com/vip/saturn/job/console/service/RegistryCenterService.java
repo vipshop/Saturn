@@ -13,6 +13,7 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import java.io.File;
 import org.apache.curator.framework.CuratorFramework;
@@ -71,6 +72,10 @@ public interface RegistryCenterService {
 	 */
 	NamespaceDomainInfo getNamespace(String namespace) throws SaturnJobConsoleException;
 
+	/**
+	 * Bind the namespace and zkCluster. Namespace should be ensured existed.
+	 */
+	void bindNamespaceAndZkCluster(String namespace, String zkClusterKey) throws SaturnJobConsoleException;
 
 	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
 
