@@ -1,0 +1,22 @@
+{
+  "name": "saturn",
+  "version": "1.0.0",
+  "description": "[![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)\r [![Read the Docs](https://img.shields.io/readthedocs/pip.svg)](https://vipshop.github.io/Saturn/)\r [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "postinstall": "mkdir Saturn; cd Saturn; git init; git remote add -f origin https://github.com/vipshop/Saturn.git; git config core.sparseCheckout true; echo \"saturn-console-web\" >> .git/info/sparse-checkout; git pull --depth=1 origin develop; cd ..; npm i ./Saturn/saturn-console-web/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vipshop/Saturn.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vipshop/Saturn/issues"
+  },
+  "homepage": "https://github.com/vipshop/Saturn#readme"
+}
