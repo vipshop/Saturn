@@ -1,8 +1,13 @@
 package com.vip.saturn.job.executor;
 
+import static com.vip.saturn.job.internal.config.JobType.JAVA_JOB;
+import static com.vip.saturn.job.internal.config.JobType.MSG_JOB;
+import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
@@ -10,6 +15,7 @@ import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
 import com.vip.saturn.job.exception.SaturnExecutorException;
 import com.vip.saturn.job.exception.SaturnExecutorExceptionType;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
@@ -83,6 +89,8 @@ public class SaturnExecutor {
 	private Thread restartThread;
 
 	private ExecutorService raiseAlarmExecutorService;
+
+	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = Sets.newHashSet(JAVA_JOB, SHELL_JOB, MSG_JOB);
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
@@ -601,21 +609,12 @@ public class SaturnExecutor {
 			}
 			for (Entry<String, JobScheduler> entry : entries) {
 				JobScheduler jobScheduler = entry.getValue();
-				if ("JAVA_JOB".equals(jobScheduler.getCurrentConf().getJobType())) {
+				if (isAllowedToBeGracefulShutdown(jobScheduler.getCurrentConf())) {
 					if (jobScheduler.getJob().isRunning()) {
 						hasRunning = true;
 						break;
 					} else {
 						hasRunning = false;
-					}
-				} else if ("SHELL_JOB".equals(jobScheduler.getCurrentConf().getJobType())) {
-					if (jobScheduler.getCurrentConf().isEnabled()) {
-						if (jobScheduler.getJob().isRunning()) {
-							hasRunning = true;
-							break;
-						} else {
-							hasRunning = false;
-						}
 					}
 				} else {
 					jobScheduler.stopJob(false);
@@ -624,6 +623,17 @@ public class SaturnExecutor {
 		} while (hasRunning
 				&& System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
 
+	}
+
+	protected boolean isAllowedToBeGracefulShutdown(JobConfiguration currentConf) {
+		String jobTypeValue = currentConf.getJobType();
+		try {
+			JobType jobType = JobType.valueOf(jobTypeValue);
+			return ALLOWED_GRACEFUL_SHUTDOWN_TYPES.contains(jobType);
+		} catch (Exception e) {
+			log.warn("no such job type:" + jobTypeValue, e);
+			return false;
+		}
 	}
 
 	public void shutdown() throws Exception {
