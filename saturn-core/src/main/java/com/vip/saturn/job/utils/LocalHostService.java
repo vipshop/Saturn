@@ -51,33 +51,7 @@ public class LocalHostService {
 		cachedHostName = System.getProperty("VIP_SATURN_RUNNING_HOSTNAME",
 				System.getenv("VIP_SATURN_RUNNING_HOSTNAME"));
 		if (StringUtils.isEmpty(cachedIpAddress)) {
-			try {
-				InetAddress inetAddress = InetAddress.getLocalHost();
-				if (inetAddress.getHostAddress() == null || "127.0.0.1".equals(inetAddress.getHostAddress())) {
-					NetworkInterface ni = NetworkInterface.getByName("bond0");
-					if (ni == null) {
-						ni = NetworkInterface.getByName("eth0");
-					}
-					if (ni == null) {
-						throw new Exception(
-								"wrong with get ip cause by could not read any info from local host, bond0 and eth0");
-					}
-
-					Enumeration<InetAddress> ips = ni.getInetAddresses();
-					while (ips.hasMoreElements()) {
-						InetAddress nextElement = ips.nextElement();
-						if (!"127.0.0.1".equals(nextElement.getHostAddress()) && !(nextElement instanceof Inet6Address)
-								&& !nextElement.getHostAddress().contains(":")) {
-							inetAddress = nextElement;
-							break;
-						}
-					}
-				}
-				cachedIpAddress = inetAddress.getHostAddress();
-			} catch (Throwable e) {// NOSONAR
-				System.err.println("getCachedAddressException:" + e.toString());// NOSONAR
-				System.exit(-1);
-			}
+			obtainCacheIpAddress();
 		} else {
 			if (!isIpv4(cachedIpAddress)) {
 				System.err.println("IP address " + cachedIpAddress + " is illegal. System is shutting down.");// NOSONAR
@@ -85,6 +59,36 @@ public class LocalHostService {
 			}
 		}
 		System.out.println("Done initial localhostip: " + cachedIpAddress);// NOSONAR
+	}
+
+	private static void obtainCacheIpAddress() {
+		try {
+			InetAddress inetAddress = InetAddress.getLocalHost();
+			if (inetAddress.getHostAddress() == null || "127.0.0.1".equals(inetAddress.getHostAddress())) {
+				NetworkInterface ni = NetworkInterface.getByName("bond0");
+				if (ni == null) {
+					ni = NetworkInterface.getByName("eth0");
+				}
+				if (ni == null) {
+					throw new Exception(
+							"wrong with get ip cause by could not read any info from local host, bond0 and eth0");
+				}
+
+				Enumeration<InetAddress> ips = ni.getInetAddresses();
+				while (ips.hasMoreElements()) {
+					InetAddress nextElement = ips.nextElement();
+					if (!"127.0.0.1".equals(nextElement.getHostAddress()) && !(nextElement instanceof Inet6Address)
+							&& !nextElement.getHostAddress().contains(":")) {
+						inetAddress = nextElement;
+						break;
+					}
+				}
+			}
+			cachedIpAddress = inetAddress.getHostAddress();
+		} catch (Throwable e) {// NOSONAR
+			System.err.println("getCachedAddressException:" + e.toString());// NOSONAR
+			System.exit(-1);
+		}
 	}
 
 	/**
@@ -104,18 +108,6 @@ public class LocalHostService {
 			}
 			return cachedHostName;
 		}
-	}
-
-	// for test only!
-	@Deprecated
-	public static void setCachedIpAddress(String ip) {
-		cachedIpAddress = ip;
-	}
-
-	// for test only!
-	@Deprecated
-	public static void setCachedHostName(String hostName) {
-		cachedHostName = hostName;
 	}
 
 	private static boolean isIpv4(String ipAddress) {
