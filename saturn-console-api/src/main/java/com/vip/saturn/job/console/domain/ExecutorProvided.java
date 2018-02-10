@@ -9,6 +9,7 @@ public class ExecutorProvided {
 	private ExecutorProvidedType type;
 	private ExecutorProvidedStatus status;
 	private Boolean noTraffic;
+	private String ip;
 
 	public String getExecutorName() {
 		return executorName;
@@ -40,5 +41,13 @@ public class ExecutorProvided {
 
 	public void setNoTraffic(Boolean noTraffic) {
 		this.noTraffic = noTraffic;
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 }

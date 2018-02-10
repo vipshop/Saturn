@@ -405,6 +405,7 @@ public class JobServiceImpl implements JobService {
 				String ip = curatorFrameworkOp.getData(SaturnExecutorsNode.getExecutorIpNodePath(executor));
 				if (StringUtils.isNotBlank(ip)) {
 					executorProvided.setStatus(ExecutorProvidedStatus.ONLINE);
+					executorProvided.setIp(ip);
 				} else {
 					executorProvided.setStatus(ExecutorProvidedStatus.OFFLINE);
 				}
