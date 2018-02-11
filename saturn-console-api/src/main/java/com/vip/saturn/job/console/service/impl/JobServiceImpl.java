@@ -9,7 +9,7 @@ import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.domain.ExecutorProvidedStatus;
 import com.vip.saturn.job.console.domain.ExecutorProvidedType;
-import com.vip.saturn.job.console.domain.ImportJob`Result;
+import com.vip.saturn.job.console.domain.ImportJobResult;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.JobServer;
