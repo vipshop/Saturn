@@ -9,7 +9,7 @@ import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
 import com.vip.saturn.job.console.domain.ExecutorProvided;
 import com.vip.saturn.job.console.domain.ExecutorProvidedStatus;
 import com.vip.saturn.job.console.domain.ExecutorProvidedType;
-import com.vip.saturn.job.console.domain.ImportJobResult;
+import com.vip.saturn.job.console.domain.ImportJob`Result;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobMode;
 import com.vip.saturn.job.console.domain.JobServer;
@@ -59,6 +59,7 @@ import jxl.write.WritableCell;
 import jxl.write.WritableCellFeatures;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
@@ -68,7 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -270,6 +270,8 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setEnabled(true);
 		jobConfig.setLastUpdateTime(new Date());
+		//FIXME:hebelala, ISSUE-359 完成后，username需要更新
+		jobConfig.setLastUpdateBy(null);
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
@@ -290,6 +292,8 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setEnabled(false);
 		jobConfig.setLastUpdateTime(new Date());
+		//FIXME:hebelala, ISSUE-359 完成后，username需要更新
+		jobConfig.setLastUpdateBy(null);
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
@@ -460,7 +464,7 @@ public class JobServiceImpl implements JobService {
 	/**
 	 * 先获取DCOS节点下的taskID节点；如果没有此节点，则尝试从executor节点下获取; <p> 不存在既有DCOS容器，又有K8S容器的模式。
 	 */
-	private List<ExecutorProvided> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	protected List<ExecutorProvided> getContainerTaskIds(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 
 		List<String> containerTaskIds = getDCOSContainerTaskIds(curatorFrameworkOp);
@@ -521,6 +525,7 @@ public class JobServiceImpl implements JobService {
 		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
 		newJobConfig.setPreferList(preferList);
 		try {
+			//FIXME:hebelala, ISSUE-359 完成后，username需要更新
 			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change preferList in db", e);
@@ -798,6 +803,9 @@ public class JobServiceImpl implements JobService {
 		SaturnBeanUtils.copyProperties(jobConfig, currentJobConfig);
 		currentJobConfig.setCreateTime(new Date());
 		currentJobConfig.setLastUpdateTime(new Date());
+		//FIXME:hebelala, ISSUE-359 完成后，username需要更新
+		currentJobConfig.setCreateBy(null);
+		currentJobConfig.setLastUpdateBy(null);
 		currentJobConfig.setNamespace(namespace);
 		try {
 			currentJobConfigService.create(currentJobConfig);
@@ -1167,159 +1175,9 @@ public class JobServiceImpl implements JobService {
 			}
 			WritableWorkbook writableWorkbook = Workbook.createWorkbook(tmp);
 			WritableSheet sheet1 = writableWorkbook.createSheet("Sheet1", 0);
-			sheet1.addCell(new Label(0, 0, "作业名称"));
-			sheet1.addCell(new Label(1, 0, "作业类型"));
-			sheet1.addCell(new Label(2, 0, "作业实现类"));
-			sheet1.addCell(new Label(3, 0, "cron表达式"));
-			sheet1.addCell(new Label(4, 0, "作业描述"));
-
-			Label localModeLabel = new Label(5, 0, "本地模式");
-			setCellComment(localModeLabel, "对于非本地模式，默认为false；对于本地模式，该配置无效，固定为true");
-			sheet1.addCell(localModeLabel);
-
-			Label shardingTotalCountLabel = new Label(6, 0, "分片数");
-			setCellComment(shardingTotalCountLabel, "对本地作业无效");
-			sheet1.addCell(shardingTotalCountLabel);
-
-			Label timeoutSecondsLabel = new Label(7, 0, "超时（Kill线程/进程）时间");
-			setCellComment(timeoutSecondsLabel, "0表示无超时");
-			sheet1.addCell(timeoutSecondsLabel);
-
-			sheet1.addCell(new Label(8, 0, "自定义参数"));
-			sheet1.addCell(new Label(9, 0, "分片序列号/参数对照表"));
-			sheet1.addCell(new Label(10, 0, "Queue名"));
-			sheet1.addCell(new Label(11, 0, "执行结果发送的Channel"));
-
-			Label preferListLabel = new Label(12, 0, "优先Executor");
-			setCellComment(preferListLabel, "可填executorName，多个元素使用英文逗号隔开");
-			sheet1.addCell(preferListLabel);
-
-			Label usePreferListOnlyLabel = new Label(13, 0, "只使用优先Executor");
-			setCellComment(usePreferListOnlyLabel, "默认为false");
-			sheet1.addCell(usePreferListOnlyLabel);
-
-			sheet1.addCell(new Label(14, 0, "统计处理数据量的间隔秒数"));
-			sheet1.addCell(new Label(15, 0, "负荷"));
-			sheet1.addCell(new Label(16, 0, "显示控制台输出日志"));
-			sheet1.addCell(new Label(17, 0, "暂停日期段"));
-			sheet1.addCell(new Label(18, 0, "暂停时间段"));
-
-			Label useSerialLabel = new Label(19, 0, "串行消费");
-			setCellComment(useSerialLabel, "默认为false");
-			sheet1.addCell(useSerialLabel);
-
-			Label jobDegreeLabel = new Label(20, 0, "作业重要等级");
-			setCellComment(jobDegreeLabel, "0:没有定义,1:非线上业务,2:简单业务,3:一般业务,4:重要业务,5:核心业务");
-			sheet1.addCell(jobDegreeLabel);
-
-			Label enabledReportLabel = new Label(21, 0, "上报运行状态");
-			setCellComment(enabledReportLabel, "对于定时作业，默认为true；对于消息作业，默认为false");
-			sheet1.addCell(enabledReportLabel);
-
-			Label jobModeLabel = new Label(22, 0, "作业模式");
-			setCellComment(jobModeLabel, "用户不能添加系统作业");
-			sheet1.addCell(jobModeLabel);
-
-			Label dependenciesLabel = new Label(23, 0, "依赖的作业");
-			setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
-			sheet1.addCell(dependenciesLabel);
-
-			Label groupsLabel = new Label(24, 0, "所属分组");
-			setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
-			sheet1.addCell(groupsLabel);
-
-			Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
-			setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
-			sheet1.addCell(timeout4AlarmSecondsLabel);
-
-			Label timeZoneLabel = new Label(26, 0, "时区");
-			setCellComment(timeZoneLabel, "作业运行时区");
-			sheet1.addCell(timeZoneLabel);
-
+			setExcelHeader(sheet1);
 			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
-			if (unSystemJobs != null && !unSystemJobs.isEmpty()) {
-				CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
-						.getCuratorFrameworkOp(namespace);
-				for (int i = 0; i < unSystemJobs.size(); i++) {
-					String jobName = unSystemJobs.get(i).getJobName();
-					sheet1.addCell(new Label(0, i + 1, jobName));
-					sheet1.addCell(new Label(1, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE))));
-					sheet1.addCell(new Label(2, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS))));
-					sheet1.addCell(new Label(3, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON))));
-					sheet1.addCell(new Label(4, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DESCRIPTION))));
-					sheet1.addCell(new Label(5, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
-					sheet1.addCell(new Label(6, i + 1,
-							curatorFrameworkOp
-									.getData(
-											JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT))));
-					sheet1.addCell(new Label(7, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS))));
-					sheet1.addCell(new Label(8, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_PARAMETER))));
-					sheet1.addCell(new Label(9, i + 1, curatorFrameworkOp
-							.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS))));
-					sheet1.addCell(new Label(10, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME))));
-					sheet1.addCell(new Label(11, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CHANNEL_NAME))));
-					sheet1.addCell(new Label(12, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PREFER_LIST))));
-					String useDispreferList = curatorFrameworkOp
-							.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_USE_DISPREFER_LIST));
-					if (useDispreferList != null) {
-						useDispreferList = String.valueOf(!Boolean.valueOf(useDispreferList));
-					}
-					sheet1.addCell(new Label(13, i + 1, useDispreferList));
-					sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp
-							.getData(JobNodePath
-									.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS))));
-					sheet1.addCell(new Label(15, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL))));
-					sheet1.addCell(new Label(16, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG))));
-					sheet1.addCell(new Label(17, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE))));
-					sheet1.addCell(new Label(18, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_TIME))));
-					sheet1.addCell(new Label(19, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName,
-									JobServiceImpl.CONFIG_ITEM_USE_SERIAL))));
-					sheet1.addCell(new Label(20, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_DEGREE))));
-					sheet1.addCell(new Label(21, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED_REPORT))));
-					sheet1.addCell(new Label(22, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE))));
-					sheet1.addCell(new Label(23, i + 1,
-							curatorFrameworkOp
-									.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES))));
-					sheet1.addCell(new Label(24, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS))));
-					sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp
-							.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS))));
-					sheet1.addCell(new Label(26, i + 1,
-							curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE))));
-				}
-			}
+			setExcelContent(namespace, sheet1, unSystemJobs);
 
 			writableWorkbook.write();
 			writableWorkbook.close();
@@ -1330,7 +1188,165 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	private void setCellComment(WritableCell cell, String comment) {
+	protected void setExcelContent(String namespace, WritableSheet sheet1, List<JobConfig> unSystemJobs)
+			throws SaturnJobConsoleException, WriteException {
+		if (unSystemJobs != null && !unSystemJobs.isEmpty()) {
+			CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+					.getCuratorFrameworkOp(namespace);
+			for (int i = 0; i < unSystemJobs.size(); i++) {
+				String jobName = unSystemJobs.get(i).getJobName();
+				sheet1.addCell(new Label(0, i + 1, jobName));
+				sheet1.addCell(new Label(1, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE))));
+				sheet1.addCell(new Label(2, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS))));
+				sheet1.addCell(new Label(3, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON))));
+				sheet1.addCell(new Label(4, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DESCRIPTION))));
+				sheet1.addCell(new Label(5, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
+				sheet1.addCell(new Label(6, i + 1,
+						curatorFrameworkOp
+								.getData(
+										JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT))));
+				sheet1.addCell(new Label(7, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS))));
+				sheet1.addCell(new Label(8, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_PARAMETER))));
+				sheet1.addCell(new Label(9, i + 1, curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS))));
+				sheet1.addCell(new Label(10, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME))));
+				sheet1.addCell(new Label(11, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CHANNEL_NAME))));
+				sheet1.addCell(new Label(12, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PREFER_LIST))));
+				String useDispreferList = curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_USE_DISPREFER_LIST));
+				if (useDispreferList != null) {
+					useDispreferList = String.valueOf(!Boolean.valueOf(useDispreferList));
+				}
+				sheet1.addCell(new Label(13, i + 1, useDispreferList));
+				sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp
+						.getData(JobNodePath
+								.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS))));
+				sheet1.addCell(new Label(15, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL))));
+				sheet1.addCell(new Label(16, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG))));
+				sheet1.addCell(new Label(17, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE))));
+				sheet1.addCell(new Label(18, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_TIME))));
+				sheet1.addCell(new Label(19, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName,
+								JobServiceImpl.CONFIG_ITEM_USE_SERIAL))));
+				sheet1.addCell(new Label(20, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_DEGREE))));
+				sheet1.addCell(new Label(21, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED_REPORT))));
+				sheet1.addCell(new Label(22, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE))));
+				sheet1.addCell(new Label(23, i + 1,
+						curatorFrameworkOp
+								.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES))));
+				sheet1.addCell(new Label(24, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS))));
+				sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp
+						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS))));
+				sheet1.addCell(new Label(26, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE))));
+			}
+		}
+	}
+
+	protected void setExcelHeader(WritableSheet sheet1) throws WriteException {
+		sheet1.addCell(new Label(0, 0, "作业名称"));
+		sheet1.addCell(new Label(1, 0, "作业类型"));
+		sheet1.addCell(new Label(2, 0, "作业实现类"));
+		sheet1.addCell(new Label(3, 0, "cron表达式"));
+		sheet1.addCell(new Label(4, 0, "作业描述"));
+
+		Label localModeLabel = new Label(5, 0, "本地模式");
+		setCellComment(localModeLabel, "对于非本地模式，默认为false；对于本地模式，该配置无效，固定为true");
+		sheet1.addCell(localModeLabel);
+
+		Label shardingTotalCountLabel = new Label(6, 0, "分片数");
+		setCellComment(shardingTotalCountLabel, "对本地作业无效");
+		sheet1.addCell(shardingTotalCountLabel);
+
+		Label timeoutSecondsLabel = new Label(7, 0, "超时（Kill线程/进程）时间");
+		setCellComment(timeoutSecondsLabel, "0表示无超时");
+		sheet1.addCell(timeoutSecondsLabel);
+
+		sheet1.addCell(new Label(8, 0, "自定义参数"));
+		sheet1.addCell(new Label(9, 0, "分片序列号/参数对照表"));
+		sheet1.addCell(new Label(10, 0, "Queue名"));
+		sheet1.addCell(new Label(11, 0, "执行结果发送的Channel"));
+
+		Label preferListLabel = new Label(12, 0, "优先Executor");
+		setCellComment(preferListLabel, "可填executorName，多个元素使用英文逗号隔开");
+		sheet1.addCell(preferListLabel);
+
+		Label usePreferListOnlyLabel = new Label(13, 0, "只使用优先Executor");
+		setCellComment(usePreferListOnlyLabel, "默认为false");
+		sheet1.addCell(usePreferListOnlyLabel);
+
+		sheet1.addCell(new Label(14, 0, "统计处理数据量的间隔秒数"));
+		sheet1.addCell(new Label(15, 0, "负荷"));
+		sheet1.addCell(new Label(16, 0, "显示控制台输出日志"));
+		sheet1.addCell(new Label(17, 0, "暂停日期段"));
+		sheet1.addCell(new Label(18, 0, "暂停时间段"));
+
+		Label useSerialLabel = new Label(19, 0, "串行消费");
+		setCellComment(useSerialLabel, "默认为false");
+		sheet1.addCell(useSerialLabel);
+
+		Label jobDegreeLabel = new Label(20, 0, "作业重要等级");
+		setCellComment(jobDegreeLabel, "0:没有定义,1:非线上业务,2:简单业务,3:一般业务,4:重要业务,5:核心业务");
+		sheet1.addCell(jobDegreeLabel);
+
+		Label enabledReportLabel = new Label(21, 0, "上报运行状态");
+		setCellComment(enabledReportLabel, "对于定时作业，默认为true；对于消息作业，默认为false");
+		sheet1.addCell(enabledReportLabel);
+
+		Label jobModeLabel = new Label(22, 0, "作业模式");
+		setCellComment(jobModeLabel, "用户不能添加系统作业");
+		sheet1.addCell(jobModeLabel);
+
+		Label dependenciesLabel = new Label(23, 0, "依赖的作业");
+		setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
+		sheet1.addCell(dependenciesLabel);
+
+		Label groupsLabel = new Label(24, 0, "所属分组");
+		setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
+		sheet1.addCell(groupsLabel);
+
+		Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
+		setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
+		sheet1.addCell(timeout4AlarmSecondsLabel);
+
+		Label timeZoneLabel = new Label(26, 0, "时区");
+		setCellComment(timeZoneLabel, "作业运行时区");
+		sheet1.addCell(timeZoneLabel);
+	}
+
+	protected void setCellComment(WritableCell cell, String comment) {
 		WritableCellFeatures cellFeatures = new WritableCellFeatures();
 		cellFeatures.setComment(comment);
 		cell.setCellFeatures(cellFeatures);
@@ -1610,6 +1626,7 @@ public class JobServiceImpl implements JobService {
 				JobConfig4DB newJobConfig4DB = new JobConfig4DB();
 				SaturnBeanUtils.copyProperties(jobConfig4DB, newJobConfig4DB);
 				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
+				//FIXME:hebelala, ISSUE-359 完成后，username需要更新
 				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
 			}
 			if (curatorTransactionOp != null) {
@@ -1712,6 +1729,7 @@ public class JobServiceImpl implements JobService {
 		}
 
 		try {
+			//FIXME:hebelala, ISSUE-359 完成后，username需要更新
 			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
 		} catch (Exception e) {
 			log.error("exception is thrown during change job state in db", e);
@@ -2052,21 +2070,26 @@ public class JobServiceImpl implements JobService {
 
 		Map<String, String> resultMap = new HashMap<>();
 		for (String server : servers) {
-			String shardingData = curatorFrameworkOp.getData(JobNodePath.getServerSharding(jobName, server));
-			if (StringUtils.isBlank(shardingData)) {
+			resolveShardingData(jobName, curatorFrameworkOp, resultMap, server);
+		}
+		return resultMap;
+	}
+
+	private void resolveShardingData(String jobName, CuratorFrameworkOp curatorFrameworkOp,
+			Map<String, String> resultMap, String server) {
+		String shardingData = curatorFrameworkOp.getData(JobNodePath.getServerSharding(jobName, server));
+		if (StringUtils.isBlank(shardingData)) {
+			return;
+		}
+
+		String[] shardingValues = shardingData.split(",");
+		for (String value : shardingValues) {
+			if (StringUtils.isBlank(value)) {
 				continue;
 			}
 
-			String[] shardingValues = shardingData.split(",");
-			for (String value : shardingValues) {
-				if (StringUtils.isBlank(value)) {
-					continue;
-				}
-
-				resultMap.put(value.trim(), server);
-			}
+			resultMap.put(value.trim(), server);
 		}
-		return resultMap;
 	}
 
 }

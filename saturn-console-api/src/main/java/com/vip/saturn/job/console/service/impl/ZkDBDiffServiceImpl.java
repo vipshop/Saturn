@@ -208,7 +208,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 	 * @param zkJobConfig zk里面的配置
 	 * @param needDetail 是否需要细节；true，则需要，false，为不需要；
 	 */
-	private JobDiffInfo diff(String namespace, JobConfig dbJobConfig, JobConfig zkJobConfig, boolean needDetail) {
+	protected JobDiffInfo diff(String namespace, JobConfig dbJobConfig, JobConfig zkJobConfig, boolean needDetail) {
 		String jobName = dbJobConfig.getJobName();
 
 		List<JobDiffInfo.ConfigDiffInfo> configDiffInfos = Lists.newArrayList();
@@ -288,7 +288,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 		return null;
 	}
 
-	private void diff(String key, Object valueInDb, Object valueInZk,
+	protected void diff(String key, Object valueInDb, Object valueInZk,
 			List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
 		if (valueInDb == null && valueInZk == null) {
 			return;
