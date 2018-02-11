@@ -71,7 +71,7 @@ public class NamespaceShardingContentService {
 
 	public Map<String, List<Integer>> getShardingItems(List<Executor> executorList, String jobName) throws Exception {
 		Map<String, List<Integer>> shardingItems = new HashMap<>();
-		if (executorList != null && executorList.size() > 0) {
+		if (executorList != null && !executorList.isEmpty()) {
 			for (Executor tmp : executorList) {
 				if (tmp.getJobNameList() != null && tmp.getJobNameList().contains(jobName)) {
 					List<Integer> items = new ArrayList<>();
@@ -108,8 +108,8 @@ public class NamespaceShardingContentService {
 			Collections.sort(elementNodes, new Comparator<String>() {
 				@Override
 				public int compare(String arg0, String arg1) {
-					Integer a = Integer.parseInt(arg0);
-					Integer b = Integer.parseInt(arg1);
+					Integer a = Integer.valueOf(arg0);
+					Integer b = Integer.valueOf(arg1);
 					return a.compareTo(b);
 				}
 			});
