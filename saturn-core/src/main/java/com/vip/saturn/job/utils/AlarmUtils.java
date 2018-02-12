@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class AlarmUtils {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(AlarmUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(AlarmUtils.class);
 
 	/**
 	 * Send alarm request to Alarm API in Console.
@@ -35,9 +35,9 @@ public class AlarmUtils {
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
 			if (i > 0) {
-				LOGGER.info("Fail to raise alarm. Try again.");
+				log.info("Fail to raise alarm. Try again.");
 			}
-			LOGGER.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
+			log.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
 
 			CloseableHttpClient httpClient = null;
 			try {
@@ -59,15 +59,15 @@ public class AlarmUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				LOGGER.error("SaturnJobException throws: {}", se);
+				log.error("SaturnJobException throws: {}", se);
 				throw se;
 			} catch (ConnectException e) {
-				LOGGER.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
+				log.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				LOGGER.error("Other exception throws: {}", e);
+				log.error("Other exception throws: {}", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuitetly(httpClient);

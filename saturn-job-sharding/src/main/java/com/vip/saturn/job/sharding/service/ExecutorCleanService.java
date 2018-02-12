@@ -41,37 +41,39 @@ public class ExecutorCleanService {
 		List<JobConfigInfo> jobConfigInfos = new ArrayList<>();
 		try {
 			String cleanNodePath = SaturnExecutorsNode.getExecutorCleanNodePath(executorName);
-			if (curatorFramework.checkExists().forPath(cleanNodePath) != null) {
-				byte[] cleanNodeBytes = curatorFramework.getData().forPath(cleanNodePath);
-				if (cleanNodeBytes != null) {
-					String cleanNodeData = new String(cleanNodeBytes, "UTF-8");
-					if (Boolean.parseBoolean(cleanNodeData)) {
-						if (curatorFramework.checkExists()
-								.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) == null) {
-							log.info("Clean the executor {}", executorName);
-							// delete $SaturnExecutors/executors/xxx
-							deleteExecutor(executorName);
-							List<String> jobs = getJobList();
-							for (String jobName : jobs) {
-								// delete $Jobs/job/servers/xxx
-								deleteJobServerExecutor(jobName, executorName);
-								// delete $Jobs/job/config/preferList content about xxx
-								String preferList = updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName,
-										executorName);
-								if (preferList != null) {
-									JobConfigInfo jobConfigInfo = new JobConfigInfo(curatorFramework.getNamespace(),
-											jobName, preferList);
-									jobConfigInfos.add(jobConfigInfo);
-								}
-							}
-						} else {
-							log.info("The executor {} is online now, no necessary to clean", executorName);
-						}
+			byte[] cleanNodeBytes = curatorFramework.getData().forPath(cleanNodePath);
+			if (cleanNodeBytes == null || cleanNodeBytes.length == 0) {
+				return;
+			}
+
+			String cleanNodeData = new String(cleanNodeBytes, "UTF-8");
+			if (!Boolean.parseBoolean(cleanNodeData)) {
+				return;
+			}
+
+			if (curatorFramework.checkExists()
+					.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) == null) {
+				log.info("Clean the executor {}", executorName);
+				// delete $SaturnExecutors/executors/xxx
+				deleteExecutor(executorName);
+				List<String> jobs = getJobList();
+				for (String jobName : jobs) {
+					// delete $Jobs/job/servers/xxx
+					deleteJobServerExecutor(jobName, executorName);
+					// delete $Jobs/job/config/preferList content about xxx
+					String preferList = updateJobConfigPreferListContentToRemoveDeletedExecutor(jobName,
+							executorName);
+					if (preferList != null) {
+						JobConfigInfo jobConfigInfo = new JobConfigInfo(curatorFramework.getNamespace(),
+								jobName, preferList);
+						jobConfigInfos.add(jobConfigInfo);
 					}
 				}
+			} else {
+				log.info("The executor {} is online now, no necessary to clean", executorName);
 			}
-		} catch (NoNodeException e) { // NOSONAR
-			// ignore
+		} catch (NoNodeException e) {
+			log.debug("No clean node found for executor:" + executorName, e);
 		} catch (Exception e) {
 			log.error("Clean the executor " + executorName + " error", e);
 		} finally {
@@ -147,31 +149,32 @@ public class ExecutorCleanService {
 			throws KeeperException.ConnectionLossException, InterruptedException {
 		try {
 			String jobConfigPreferListNodePath = SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName);
-			if (curatorFramework.checkExists().forPath(jobConfigPreferListNodePath) != null) {
-				Stat stat = new Stat();
-				byte[] jobConfigPreferListNodeBytes = curatorFramework.getData().storingStatIn(stat)
-						.forPath(jobConfigPreferListNodePath);
-				if (jobConfigPreferListNodeBytes != null) {
-					// build the new prefer list string
-					StringBuilder sb = new StringBuilder();
-					String[] split = new String(jobConfigPreferListNodeBytes, "UTF-8").split(",");
-					boolean found = false;
-					for (String tmp : split) {
-						String tmpTrim = tmp.trim();
-						if (!tmpTrim.equals(executorName)) {
-							if (sb.length() > 0) {
-								sb.append(',');
-							}
-							sb.append(tmpTrim);
-						} else {
-							found = true;
-						}
+			Stat stat = new Stat();
+			byte[] jobConfigPreferListNodeBytes = curatorFramework.getData().storingStatIn(stat)
+					.forPath(jobConfigPreferListNodePath);
+
+			if (jobConfigPreferListNodeBytes == null || jobConfigPreferListNodeBytes.length == 0) {
+				return null;
+			}
+
+			// build the new prefer list string
+			StringBuilder sb = new StringBuilder();
+			String[] split = new String(jobConfigPreferListNodeBytes, "UTF-8").split(",");
+			boolean found = false;
+			for (String tmp : split) {
+				String tmpTrim = tmp.trim();
+				if (!tmpTrim.equals(executorName)) {
+					if (sb.length() > 0) {
+						sb.append(',');
 					}
-					curatorFramework.setData().withVersion(stat.getVersion()).forPath(jobConfigPreferListNodePath,
-							sb.toString().getBytes("UTF-8"));
-					return found ? sb.toString() : null;
+					sb.append(tmpTrim);
+				} else {
+					found = true;
 				}
 			}
+			curatorFramework.setData().withVersion(stat.getVersion()).forPath(jobConfigPreferListNodePath,
+					sb.toString().getBytes("UTF-8"));
+			return found ? sb.toString() : null;
 		} catch (NoNodeException | BadVersionException e) { // NOSONAR
 			// ignore
 		} catch (KeeperException.ConnectionLossException | InterruptedException e) {

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UpdateJobCronUtils {
 
-	private final static Logger logger = LoggerFactory.getLogger(UpdateJobCronUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(UpdateJobCronUtils.class);
 
 	/**
 	 * Send update job cron request to UpdateJobCron API in Console.
@@ -34,9 +34,9 @@ public class UpdateJobCronUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
 			if (i > 0) {
-				logger.info("Fail to raise alarm. Try again.");
+				log.info("Fail to raise alarm. Try again.");
 			}
-			logger.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
+			log.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
 
 			CloseableHttpClient httpClient = null;
 			try {
@@ -61,15 +61,15 @@ public class UpdateJobCronUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				logger.error("SaturnJobException throws: {}", se);
+				log.error("SaturnJobException throws: {}", se);
 				throw se;
 			} catch (ConnectException e) {
-				logger.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
+				log.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				logger.error("Other exception throws: {}", e);
+				log.error("Other exception throws: {}", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuitetly(httpClient);
