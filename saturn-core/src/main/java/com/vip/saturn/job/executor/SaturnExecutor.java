@@ -7,7 +7,6 @@ import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
@@ -28,6 +27,7 @@ import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.StartCheckUtil;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import java.util.EnumSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -90,7 +90,7 @@ public class SaturnExecutor {
 
 	private ExecutorService raiseAlarmExecutorService;
 
-	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = Sets.newHashSet(JAVA_JOB, SHELL_JOB, MSG_JOB);
+	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
@@ -149,7 +149,7 @@ public class SaturnExecutor {
 				try {
 					shutdownLock.lockInterruptibly();
 					try {
-						if(isShutdown) { // NOSONAR
+						if (isShutdown) {
 							return;
 						}
 						shutdownGracefully0();
@@ -218,7 +218,7 @@ public class SaturnExecutor {
 		initSaturnExecutorExtension(executorName, namespace, executorClassLoader, jobClassLoader);
 	}
 
-	private synchronized static void initSaturnExecutorExtension(String executorName, String namespace,
+	private static synchronized void initSaturnExecutorExtension(String executorName, String namespace,
 			ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		if (saturnExecutorExtension == null) {
 			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader,
@@ -642,7 +642,7 @@ public class SaturnExecutor {
 		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if (isShutdown) { // NOSONAR
+			if (isShutdown) {
 				return;
 			}
 			shutdown0();
@@ -661,7 +661,7 @@ public class SaturnExecutor {
 		}
 		shutdownLock.lockInterruptibly();
 		try {
-			if (isShutdown) { // NOSONAR
+			if (isShutdown) {
 				return;
 			}
 			shutdownGracefully0();
