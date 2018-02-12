@@ -24,10 +24,6 @@ public class ExecutorInfoAnalyzer {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorInfoAnalyzer.class);
 
-	private static final String NOAH_CONTAINER_REGEX = "^(.*-noah)";
-
-	private static final Pattern NOAH_CONTAINER_PATTERN = Pattern.compile(NOAH_CONTAINER_REGEX);
-
 	private Map<String/** {executorName}-{domain} */
 			, ExecutorStatistics> executorMap = new ConcurrentHashMap<>();
 
@@ -83,16 +79,8 @@ public class ExecutorInfoAnalyzer {
 		addVersionNumber(version, executorNumber);
 	}
 
-	/**
-	 * 首先检查是否符合Noah容器的命名规则，如果不符合，则检查是否有task node.
-	 *
-	 * @return true，是容器executor；false，不是容器executor；
-	 */
-	public static boolean isExecutorInDocker(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+	public boolean isExecutorInDocker(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
 			String executorName) {
-		if (NOAH_CONTAINER_PATTERN.matcher(executorName).matches()) {
-			return true;
-		}
 		return curatorFrameworkOp.checkExists(ExecutorNodePath.get$ExecutorTaskNodePath(executorName));
 	}
 

@@ -1685,6 +1685,9 @@ public class JobServiceImpl implements JobService {
 			if (customContext != null && !customContext.isEmpty()) {
 				oldCustomContextMap.putAll(customContext);
 				newCustomContextStr = toCustomContext(oldCustomContextMap);
+				if (newCustomContextStr.length() > 8000) {
+					throw new SaturnJobConsoleException("The all customContext is out of db limit (Varchar[8000])");
+				}
 				if (newCustomContextStr.getBytes().length > 1024 * 1024) {
 					throw new SaturnJobConsoleException("The all customContext is out of zk limit memory(1M)");
 				}

@@ -198,8 +198,7 @@ public class OutdatedNoRunningJobAnalyzer {
 		abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
 	}
 
-	private boolean executorNotReady(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob)
-			throws Exception {
+	private boolean executorNotReady(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
 		String jobName = abnormalJob.getJobName();
 		String serverNodePath = JobNodePath.getServerNodePath(jobName);
 		if (curatorFrameworkOp.checkExists(serverNodePath)) {

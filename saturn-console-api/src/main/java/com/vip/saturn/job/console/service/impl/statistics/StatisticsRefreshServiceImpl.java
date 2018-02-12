@@ -361,7 +361,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		return oldTimeout4AlarmJobs;
 	}
 
-	private StatisticsModel initStatisticsModel() {
+	protected StatisticsModel initStatisticsModel() {
 		StatisticsModel statisticsModel = new StatisticsModel();
 		ExecutorInfoAnalyzer executorInfoAnalyzer = new ExecutorInfoAnalyzer();
 		statisticsModel.setExecutorInfoAnalyzer(executorInfoAnalyzer);
