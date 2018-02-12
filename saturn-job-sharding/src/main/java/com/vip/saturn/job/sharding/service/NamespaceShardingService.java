@@ -15,7 +15,6 @@ import com.vip.saturn.job.sharding.task.ExecuteJobServerOnlineShardingTask;
 import com.vip.saturn.job.sharding.task.ExecuteOfflineShardingTask;
 import com.vip.saturn.job.sharding.task.ExecuteOnlineShardingTask;
 import com.vip.saturn.job.sharding.task.ExecuteRecoverTrafficShardingTask;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -220,41 +219,19 @@ public class NamespaceShardingService {
 	 */
 	public void leaderElection() throws Exception {
 		lock.lockInterruptibly();
-		try {
+		try (LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH)) {
 			if (hasLeadership()) {
 				return;
 			}
-			log.info("{}-{} leadership election", namespace, hostValue);
-			LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH);
+			log.info("{}-{} leadership election start", namespace, hostValue);
 			try {
 				leaderLatch.start();
 				int timeoutSeconds = 60;
 				if (leaderLatch.await(timeoutSeconds, TimeUnit.SECONDS)) {
 					if (!hasLeadership()) {
-						// 清理、重置变量
-						executorService.shutdownNow();
-						while (!executorService.isTerminated()) { // 等待全部任务已经退出
-							Thread.sleep(100L);
-							executorService.shutdownNow();
-						}
-						needAllSharding.set(false);
-						shardingCount.set(0);
-						executorService = newSingleThreadExecutor();
-
-						// 持久化$Jobs节点
-						if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH) == null) {
-							curatorFramework.create().creatingParentsIfNeeded()
-									.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
-						}
-						// 持久化LeaderValue
-						curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
-								.forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
-
-						// 提交全量分片线程
-						needAllSharding.set(true);
-						shardingCount.incrementAndGet();
-						executorService.submit(new ExecuteAllShardingTask(this));
-						log.info("{}-{} become leadership", namespace, hostValue);
+						becomeLeader();
+					} else {
+						log.info("{}-{} becomes a follower", namespace, hostValue);
 					}
 				} else {
 					log.error("{}-{} leadership election is timeout({}s)", namespace, hostValue, timeoutSeconds);
@@ -265,16 +242,37 @@ public class NamespaceShardingService {
 			} catch (Exception e) {
 				log.error(namespace + "-" + hostValue + " leadership election error", e);
 				throw e;
-			} finally {
-				try {
-					leaderLatch.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
 			}
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	private void becomeLeader() throws Exception {
+		// 清理、重置变量
+		executorService.shutdownNow();
+		while (!executorService.isTerminated()) { // 等待全部任务已经退出
+			Thread.sleep(100L);
+			executorService.shutdownNow();
+		}
+		needAllSharding.set(false);
+		shardingCount.set(0);
+		executorService = newSingleThreadExecutor();
+
+		// 持久化$Jobs节点
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH) == null) {
+			curatorFramework.create().creatingParentsIfNeeded()
+					.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
+		}
+		// 持久化LeaderValue
+		curatorFramework.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
+				.forPath(SaturnExecutorsNode.LEADER_HOSTNODE_PATH, hostValue.getBytes("UTF-8"));
+
+		// 提交全量分片线程
+		needAllSharding.set(true);
+		shardingCount.incrementAndGet();
+		executorService.submit(new ExecuteAllShardingTask(this));
+		log.info("{}-{} become leader", namespace, hostValue);
 	}
 
 	private boolean hasLeadership() throws Exception {

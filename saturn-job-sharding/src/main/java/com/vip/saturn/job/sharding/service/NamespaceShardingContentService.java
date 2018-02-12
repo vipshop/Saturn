@@ -1,5 +1,6 @@
 package com.vip.saturn.job.sharding.service;
 
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,19 +70,21 @@ public class NamespaceShardingContentService {
 		}
 	}
 
-	public Map<String, List<Integer>> getShardingItems(List<Executor> executorList, String jobName) throws Exception {
+	public Map<String, List<Integer>> getShardingItems(List<Executor> executorList, String jobName) {
+		if (executorList == null || executorList.isEmpty()) {
+			return Maps.newHashMap();
+		}
+
 		Map<String, List<Integer>> shardingItems = new HashMap<>();
-		if (executorList != null && !executorList.isEmpty()) {
-			for (Executor tmp : executorList) {
-				if (tmp.getJobNameList() != null && tmp.getJobNameList().contains(jobName)) {
-					List<Integer> items = new ArrayList<>();
-					for (Shard shard : tmp.getShardList()) {
-						if (shard.getJobName().equals(jobName)) {
-							items.add(shard.getItem());
-						}
+		for (Executor tmp : executorList) {
+			if (tmp.getJobNameList() != null && tmp.getJobNameList().contains(jobName)) {
+				List<Integer> items = new ArrayList<>();
+				for (Shard shard : tmp.getShardList()) {
+					if (shard.getJobName().equals(jobName)) {
+						items.add(shard.getItem());
 					}
-					shardingItems.put(tmp.getExecutorName(), items);
 				}
+				shardingItems.put(tmp.getExecutorName(), items);
 			}
 		}
 		return shardingItems;
@@ -118,7 +121,7 @@ public class NamespaceShardingContentService {
 				byte[] elementData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getShardingContentElementNodePath(elementNode));
 				for (int i = 0; i < elementData.length; i++) {
-					dataByteList.add(elementData[i]);// NOSONAR
+					dataByteList.add(elementData[i]);
 				}
 			}
 			byte[] dataArray = new byte[dataByteList.size()];
