@@ -7,7 +7,6 @@ import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.basic.SaturnConstant;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
@@ -26,19 +25,19 @@ public class SaturnWorker implements Runnable {
 	private volatile boolean triggered = false;
 	private AtomicBoolean halted = new AtomicBoolean(false);
 
-	public SaturnWorker(AbstractElasticJob job, Trigger trigger) throws SchedulerException {
+	public SaturnWorker(AbstractElasticJob job, Trigger trigger) {
 		this.job = job;
 		initTrigger(trigger);
 	}
 
-	public void reInitTrigger(Trigger trigger) throws SchedulerException {
+	public void reInitTrigger(Trigger trigger) {
 		initTrigger(trigger);
 		synchronized (sigLock) {
 			sigLock.notifyAll();
 		}
 	}
 
-	private void initTrigger(Trigger trigger) throws SchedulerException {
+	private void initTrigger(Trigger trigger) {
 		if (trigger == null) {
 			return;
 		}

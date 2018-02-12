@@ -5,6 +5,8 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import java.lang.reflect.InvocationTargetException;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,43 +59,54 @@ public class SaturnJavaJob extends CrondJob {
 	private void createJobBusinessInstanceIfNecessary() throws SchedulerException {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
-		if (jobClassStr != null && !jobClassStr.trim().isEmpty()) {
-			if (jobBusinessInstance == null) {
-				ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-				ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
-				Thread.currentThread().setContextClassLoader(jobClassLoader);
-				try {
-					Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
-					try {
-						Method getObject = jobClass.getMethod("getObject");
-						if (getObject != null) {
-							try {
-								jobBusinessInstance = getObject.invoke(null);
-							} catch (Throwable t) {
-								log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-										jobClassStr + " getObject error"), t);
-							}
-						}
-					} catch (Exception ex) {// NOSONAR
-						// log.error("",ex);
-					}
+		if (StringUtils.isBlank(jobClassStr)) {
+			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
+		}
 
-					if (jobBusinessInstance == null) {
-						jobBusinessInstance = jobClass.newInstance();
-					}
-					SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
-					jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
-				} catch (Throwable t) {
-					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-							"create job business instance error"), t);
-					throw new SchedulerException(t);
-				} finally {
-					Thread.currentThread().setContextClassLoader(oldClassLoader);
-				}
+		if (jobBusinessInstance == null) {
+			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
+			Thread.currentThread().setContextClassLoader(jobClassLoader);
+			try {
+				reflectionInvokeInitMethodsOfJobBusinessInstance(currentConf, jobClassStr, jobClassLoader);
+			} catch (Throwable t) {
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
+						"create job business instance error"), t);
+				throw new SchedulerException(t);
+			} finally {
+				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
 		}
 		if (jobBusinessInstance == null) {
 			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
+		}
+	}
+
+	private void reflectionInvokeInitMethodsOfJobBusinessInstance(JobConfiguration currentConf,
+			String jobClassStr, ClassLoader jobClassLoader)
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
+		try {
+			Method getObject = jobClass.getMethod("getObject");
+			if (getObject != null) {
+				reflectionInvokeGetObjectMethod(jobClassStr, getObject);
+			}
+		} catch (Exception ex) {// NOSONAR
+		}
+
+		if (jobBusinessInstance == null) {
+			jobBusinessInstance = jobClass.newInstance();
+		}
+		SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
+		jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
+	}
+
+	private void reflectionInvokeGetObjectMethod(String jobClassStr, Method getObject) {
+		try {
+			jobBusinessInstance = getObject.invoke(null);
+		} catch (Throwable t) {
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
+					jobClassStr + " getObject error"), t);
 		}
 	}
 
@@ -163,20 +176,22 @@ public class SaturnJavaJob extends CrondJob {
 	public void forceStop() {
 		super.forceStop();
 
-		if (futureTaskMap != null) {
-			for (ShardingItemFutureTask shardingItemFutureTask : futureTaskMap.values()) {
-				JavaShardingItemCallable shardingItemCallable = shardingItemFutureTask.getCallable();
-				Thread currentThread = shardingItemCallable.getCurrentThread();
-				if (currentThread != null) {
-					try {
-						log.info("[{}] msg=force stop {} - {}", jobName, shardingItemCallable.getJobName(),
-								shardingItemCallable.getItem());
-						if (shardingItemCallable.forceStop()) {
-							ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
-						}
-					} catch (Throwable t) {
-						log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+		if (futureTaskMap == null) {
+			return;
+		}
+
+		for (ShardingItemFutureTask shardingItemFutureTask : futureTaskMap.values()) {
+			JavaShardingItemCallable shardingItemCallable = shardingItemFutureTask.getCallable();
+			Thread currentThread = shardingItemCallable.getCurrentThread();
+			if (currentThread != null) {
+				try {
+					log.info("[{}] msg=force stop {} - {}", jobName, shardingItemCallable.getJobName(),
+							shardingItemCallable.getItem());
+					if (shardingItemCallable.forceStop()) {
+						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 					}
+				} catch (Throwable t) {
+					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
 				}
 			}
 		}
