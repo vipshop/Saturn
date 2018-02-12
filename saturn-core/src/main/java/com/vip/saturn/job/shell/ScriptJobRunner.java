@@ -69,7 +69,9 @@ public class ScriptJobRunner {
 			saturnOutputFile = new File(saturnOutputPath);
 			if (!saturnOutputFile.exists()) {
 				FileUtils.forceMkdir(saturnOutputFile.getParentFile());
-				saturnOutputFile.createNewFile();// NOSONAR
+				if (!saturnOutputFile.createNewFile()) {
+					log.warn("file {} already exsits.", saturnOutputPath);
+				}
 			}
 		}
 	}

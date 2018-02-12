@@ -26,7 +26,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 
 	private Future<?> callFuture;
 
-	private boolean done = false; // NOSONAR
+	private boolean done = false;
 
 	public Future<?> getCallFuture() {
 		return callFuture;

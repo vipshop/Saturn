@@ -112,10 +112,10 @@ public class Main {
 
 	private void initClassLoader() throws Exception {
 		List<URL> urls = getUrls(new File(saturnLibDir));
-		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());// NOSONAR
+		executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]), Main.class.getClassLoader());
 		if (new File(appLibDir).isDirectory()) {
 			urls = getUrls(new File(appLibDir));
-			jobClassLoader = new JobClassLoader(urls.toArray(new URL[urls.size()]));// NOSONAR
+			jobClassLoader = new JobClassLoader(urls.toArray(new URL[urls.size()]));
 		} else {
 			jobClassLoader = executorClassLoader;
 		}
