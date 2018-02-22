@@ -219,12 +219,13 @@ public class NamespaceShardingService {
 	 */
 	public void leaderElection() throws Exception {
 		lock.lockInterruptibly();
-		try (LeaderLatch leaderLatch = new LeaderLatch(curatorFramework, SaturnExecutorsNode.LEADER_LATCHNODE_PATH)) {
+		try {
 			if (hasLeadership()) {
 				return;
 			}
 			log.info("{}-{} leadership election start", namespace, hostValue);
-			try {
+			try (LeaderLatch leaderLatch = new LeaderLatch(curatorFramework,
+					SaturnExecutorsNode.LEADER_LATCHNODE_PATH)) {
 				leaderLatch.start();
 				int timeoutSeconds = 60;
 				if (leaderLatch.await(timeoutSeconds, TimeUnit.SECONDS)) {
