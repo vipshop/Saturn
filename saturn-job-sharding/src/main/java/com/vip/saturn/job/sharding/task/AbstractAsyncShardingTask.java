@@ -239,7 +239,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 */
 	private Map<String, Map<String, List<Integer>>> getEnabledAndShardsChangedJobShardContent(
 			boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList,
-			List<Executor> lastOnlineExecutorList) throws Exception {
+			List<Executor> lastOnlineExecutorList) {
 		Map<String, Map<String, List<Integer>>> jobShardContent = new HashMap<>();
 		if (isAllShardingTask) {
 			for (String enableJob : allEnableJobs) {
@@ -789,16 +789,15 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
 				byte[] taskData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
-				if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name()))) {
-					if (!preferList.contains(executor)) {
-						preferList.add(executor);
-					}
+				if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name())) && !preferList
+						.contains(executor)) {
+					preferList.add(executor);
 				}
 			}
 		}
 	}
 
-	protected List<Executor> filterExecutorsByJob(List<Executor> executorList, String jobName) throws Exception {
+	protected List<Executor> filterExecutorsByJob(List<Executor> executorList, String jobName) {
 		List<Executor> executorListByJob = new ArrayList<>();
 		for (int i = 0; i < executorList.size(); i++) {
 			Executor executor = executorList.get(i);

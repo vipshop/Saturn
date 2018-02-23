@@ -80,8 +80,8 @@ public class ScriptJobRunner {
 		StringBuilder envStringBuilder = new StringBuilder();
 		if (envMap != null && !envMap.isEmpty()) {
 			for (Entry<String, String> envEntrySet : envMap.entrySet()) {
-				envStringBuilder.append("export ").append(envEntrySet.getKey()).append("=")
-						.append(envEntrySet.getValue()).append(";");
+				envStringBuilder.append("export ").append(envEntrySet.getKey()).append('=')
+						.append(envEntrySet.getValue()).append(';');
 			}
 		}
 		String execParameter = envStringBuilder.toString() + PREFIX_COMAND

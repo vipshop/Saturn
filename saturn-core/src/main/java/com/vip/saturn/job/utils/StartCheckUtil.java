@@ -1,8 +1,8 @@
 package com.vip.saturn.job.utils;
 
-import java.io.File;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
@@ -42,7 +42,7 @@ public class StartCheckUtil {
 		if (OUT_FILE == null) {
 			return;
 		}
-		try (OutputStream fs = Files.newOutputStream((new File(OUT_FILE)).toPath())) {
+		try (OutputStream fs = Files.newOutputStream(Paths.get(OUT_FILE))) {
 			byte[] res = status.toString().getBytes("UTF-8");
 			fs.write(res);
 		} catch (Exception e) {// NOSONAR
