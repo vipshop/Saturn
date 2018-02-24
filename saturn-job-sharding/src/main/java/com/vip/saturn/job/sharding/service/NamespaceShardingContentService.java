@@ -25,7 +25,10 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
  * @author hebelala
  */
 public class NamespaceShardingContentService {
-	static Logger log = LoggerFactory.getLogger(NamespaceShardingContentService.class);
+
+	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingContentService.class);
+
+	private static final int SHARDING_CONTENT_SLICE_LEN = 1024 * 1023;
 
 	private CuratorFramework curatorFramework;
 
@@ -54,13 +57,12 @@ public class NamespaceShardingContentService {
 		String shardingContentStr = toShardingContent(executorList);
 		log.info("Persisit sharding content: {}", shardingContentStr);
 		// 如果内容过大，分开节点存储。不能使用事务提交，因为即使使用事务、写多个节点，但是提交事务时，仍然会报长度过长的错误。
-		int sliceLength = 1024 * 1023; // 每段的最大长度，小于1M。 最大长度见NIOServerCnxn.readLength()
 		byte[] shardingContentBytes = shardingContentStr.getBytes("UTF-8");
 		int length = shardingContentBytes.length;
-		int sliceCount = length / sliceLength + 1;
+		int sliceCount = length / SHARDING_CONTENT_SLICE_LEN + 1;
 		for (int i = 0; i < sliceCount; i++) {
-			int start = sliceLength * i;
-			int end = start + sliceLength;
+			int start = SHARDING_CONTENT_SLICE_LEN * i;
+			int end = start + SHARDING_CONTENT_SLICE_LEN;
 			if (end > length) {
 				end = length;
 			}
@@ -155,6 +157,7 @@ public class NamespaceShardingContentService {
 				Map<String, List<Integer>> shardContent = next.getValue();
 				String shardContentJson = gson.toJson(shardContent);
 				byte[] necessaryContent = shardContentJson.getBytes("UTF-8");
+				// 更新$Jobs/xx/leader/sharding/neccessary 节点的内容为新分配的sharding 内容
 				String jobLeaderShardingNodePath = SaturnExecutorsNode.getJobLeaderShardingNodePath(jobName);
 				String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode
 						.getJobLeaderShardingNecessaryNodePath(jobName);

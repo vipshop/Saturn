@@ -141,7 +141,8 @@ public class RestartAndDumpService {
             int exit = process.waitFor();
             log.info("Executed {} script, the exit value {} is returned", cmd, exit);
         } catch (InterruptedException e) {
-            log.info("{} thread is interrupted", cmd);
+            log.warn("{} thread is interrupted", cmd);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("Execute {} script error", cmd, e);
         }

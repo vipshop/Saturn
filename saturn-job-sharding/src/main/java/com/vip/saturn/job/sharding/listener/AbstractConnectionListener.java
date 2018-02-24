@@ -70,6 +70,7 @@ public abstract class AbstractConnectionListener implements ConnectionStateListe
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
 						}
 						if (isShutdown.get()) {
 							return;

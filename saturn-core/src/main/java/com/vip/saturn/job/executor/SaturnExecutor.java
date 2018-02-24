@@ -129,6 +129,7 @@ public class SaturnExecutor {
 					}
 				} catch (InterruptedException e) {
 					log.info("{} is interrupted", restartThreadName);
+					Thread.currentThread().interrupt();
 				}
 			}
 		}, restartThreadName);
@@ -606,6 +607,7 @@ public class SaturnExecutor {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
 				log.error(e.getMessage(), e);
+				Thread.currentThread().interrupt();
 			}
 			for (Entry<String, JobScheduler> entry : entries) {
 				JobScheduler jobScheduler = entry.getValue();

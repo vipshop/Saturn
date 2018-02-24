@@ -133,7 +133,7 @@ public class ShardingService extends AbstractSaturnService {
 		if (getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)) {
 			getDataStat = getNecessaryDataStat();
 		}
-		// sharding neccessary内容非空，而且不为0，意味着要进行sharding分配
+		// sharding neccessary内容为空，或者内容是"0"则返回，否则，需要进行sharding处理
 		if (getDataStat == null || SHARDING_UN_NECESSARY.equals(getDataStat.getData())) {
 			return;
 		}

@@ -29,7 +29,8 @@ public class AlarmUtils {
 	 * Send alarm request to Alarm API in Console.
 	 */
 	public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
-		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
+		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
+		for (int i = 0; i < size; i++) {
 
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
