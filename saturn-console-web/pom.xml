@@ -23,10 +23,9 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>sh</executable>
+                            <executable>npm</executable>
                             <arguments>
-                                <argument>-c</argument>
-                                <argument>npm install</argument>
+                                <argument>install</argument>
                             </arguments>
                         </configuration>
                     </execution>
