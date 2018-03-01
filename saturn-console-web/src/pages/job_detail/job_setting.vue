@@ -332,6 +332,7 @@ export default {
       if (jobInfoData.preferListProvided) {
         this.preferListProvidedArray = jobInfoData.preferListProvided.map((obj) => {
           const rObj = {};
+          rObj.ip = obj.ip;
           rObj.executorName = obj.executorName;
           rObj.noTraffic = obj.noTraffic;
           rObj.type = obj.type;
@@ -343,7 +344,7 @@ export default {
                   rObj.executorDes = `${rObj.executorName}(离线无流量)`;
                   break;
                 case 'ONLINE':
-                  rObj.executorDes = `${rObj.executorName}(在线无流量)`;
+                  rObj.executorDes = `${rObj.executorName}(在线无流量 ${rObj.ip})`;
                   break;
                 case 'DELETED':
                   rObj.executorDes = `${rObj.executorName}(已删除)`;
@@ -357,7 +358,7 @@ export default {
                   rObj.executorDes = `${rObj.executorName}(离线)`;
                   break;
                 case 'ONLINE':
-                  rObj.executorDes = `${rObj.executorName}(在线)`;
+                  rObj.executorDes = `${rObj.executorName}(在线 ${rObj.ip})`;
                   break;
                 case 'DELETED':
                   rObj.executorDes = `${rObj.executorName}(已删除)`;
