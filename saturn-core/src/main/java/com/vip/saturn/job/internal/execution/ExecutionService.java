@@ -34,7 +34,6 @@ import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
 import com.vip.saturn.job.internal.server.ServerService;
-import com.vip.saturn.job.internal.server.ServerStatus;
 
 /**
  * 执行作业的服务.
@@ -95,10 +94,6 @@ public class ExecutionService extends AbstractSaturnService {
 	public void registerJobBegin(final JobExecutionMultipleShardingContext jobExecutionShardingContext) {
 		List<Integer> shardingItems = jobExecutionShardingContext.getShardingItems();
 		if (!shardingItems.isEmpty()) {
-			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobConfiguration);
-			if (isEnabledReport) {
-				serverService.updateServerStatus(ServerStatus.RUNNING);
-			}
 			reportService.clearInfoMap();
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			Long nextFireTime = nextFireTimePausePeriodEffected == null ? null

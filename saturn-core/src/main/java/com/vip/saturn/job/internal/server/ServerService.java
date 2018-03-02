@@ -94,7 +94,7 @@ public class ServerService extends AbstractSaturnService {
 	}
 
 	private void ephemeralPersistServerReady() {
-		getJobNodeStorage().fillEphemeralJobNode(ServerNode.getStatusNode(executorName), ServerStatus.READY);
+		getJobNodeStorage().fillEphemeralJobNode(ServerNode.getStatusNode(executorName), "");
 	}
 
 	/**
@@ -112,15 +112,6 @@ public class ServerService extends AbstractSaturnService {
 	}
 
 	/**
-	 * 在开始或结束执行作业时更新服务器状态.
-	 * 
-	 * @param status 服务器状态
-	 */
-	public void updateServerStatus(final ServerStatus status) {
-		getJobNodeStorage().updateJobNode(ServerNode.getStatusNode(executorName), status);
-	}
-
-	/**
 	 * 获取该作业的所有服务器列表.
 	 * 
 	 * @return 所有的作业服务器列表
@@ -129,17 +120,6 @@ public class ServerService extends AbstractSaturnService {
 		List<String> result = getJobNodeStorage().getJobNodeChildrenKeys(ServerNode.ROOT);
 		Collections.sort(result);
 		return result;
-	}
-
-	/**
-	 * 判断当前服务器是否是等待执行的状态.
-	 * 
-	 * @return 当前服务器是否是等待执行的状态
-	 */
-	public boolean isServerReady() {
-		String statusNode = ServerNode.getStatusNode(executorName);
-		return getJobNodeStorage().isJobNodeExisted(statusNode) && ServerStatus.READY.name()
-				.equals(getJobNodeStorage().getJobNodeData(statusNode));
 	}
 
 	/**

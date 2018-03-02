@@ -22,7 +22,6 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.execution.ExecutionService;
 import com.vip.saturn.job.internal.failover.FailoverService;
 import com.vip.saturn.job.internal.server.ServerService;
-import com.vip.saturn.job.internal.server.ServerStatus;
 import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
@@ -165,7 +164,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		try {
 			executeJob(shardingContext);
 		} finally {
-			boolean updateServerStatus = false;
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(getJobScheduler().getCurrentConf());
 			for (int item : shardingContext.getShardingItems()) {
@@ -173,12 +171,6 @@ public abstract class AbstractElasticJob implements Stopable {
 					continue;
 				}
 				if (!aborted) {
-					if (!updateServerStatus) {
-						if (isEnabledReport) {
-							serverService.updateServerStatus(ServerStatus.READY);// server状态只需更新一次
-						}
-						updateServerStatus = true;
-					}
 					executionService.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
 				}
 				if (isFailoverSupported() && configService.isFailover()) {
