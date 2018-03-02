@@ -51,23 +51,8 @@ public class AddJobListenersService {
 	}
 
 	public void removeJobPathTreeCache(String jobName) throws ShardingException {
-		removeJobConfigPathTreeCache(jobName);
-		removeJobServersPathTreeCache(jobName);
-	}
-
-	private void removeJobConfigPathTreeCache(String jobName) throws ShardingException {
-		int depth = 0;
-		List<String> configPath2AddTreeCacheList = Lists
-				.newArrayList(SaturnExecutorsNode.getJobConfigEnableNodePath(jobName),
-						SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName));
-		for (String path : configPath2AddTreeCacheList) {
-			shardingTreeCacheService.removeTreeCache(path, depth);
-		}
-	}
-
-	private void removeJobServersPathTreeCache(String jobName) throws ShardingException {
-		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
-		shardingTreeCacheService.removeTreeCache(path, 1);
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName;
+		shardingTreeCacheService.removeTreeCacheWithPrefix(path);
 	}
 
 	/**

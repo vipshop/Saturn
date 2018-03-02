@@ -1,7 +1,6 @@
 package com.vip.saturn.job.sharding.listener;
 
 import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_ADDED;
-import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_REMOVED;
 
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
@@ -14,14 +13,15 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 
 	private static final String NODE_STATUS = "/status";
 
+	private static final String NODE_SERVERS = "/servers";
+
 	private String jobName;
 
 	private ShardingTreeCacheService shardingTreeCacheService;
 
 	private NamespaceShardingService namespaceShardingService;
 
-	public JobServersOnlineOfflineListener(String jobName,
-			ShardingTreeCacheService shardingTreeCacheService,
+	public JobServersOnlineOfflineListener(String jobName, ShardingTreeCacheService shardingTreeCacheService,
 			NamespaceShardingService namespaceShardingService) {
 		this.jobName = jobName;
 		this.shardingTreeCacheService = shardingTreeCacheService;
@@ -30,13 +30,15 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
-		int depth = 0;
-		if (type == NODE_ADDED) {
-			shardingTreeCacheService.addTreeCacheIfAbsent(path + NODE_STATUS, depth);
-			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
+		if (isJobServerAdded(type, path)) {
+			String statusPath = path + NODE_STATUS;
+			shardingTreeCacheService.addTreeCacheIfAbsent(statusPath, 0);
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(statusPath, 0,
 					new JobServersTriggerShardingListener(jobName, namespaceShardingService));
-		} else if (type == NODE_REMOVED) {
-			shardingTreeCacheService.removeTreeCache(path + NODE_STATUS, depth);
 		}
+	}
+
+	private boolean isJobServerAdded(Type type, String path) {
+		return type == NODE_ADDED && !path.endsWith(NODE_SERVERS);
 	}
 }

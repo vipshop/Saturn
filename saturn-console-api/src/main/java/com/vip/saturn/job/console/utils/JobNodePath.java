@@ -42,10 +42,6 @@ public final class JobNodePath {
 		return String.format("/%s/%s", $JOBS_NODE_NAME, jobName);
 	}
 
-	public static String getServerStatusWithNameSpace(final String nameSpace, final String jobName) {
-		return String.format("/%s/%s/%s/servers/status", nameSpace, $JOBS_NODE_NAME, jobName);
-	}
-
 	public static String getConfigNodePath(final String jobName) {
 		return String.format("/%s/%s/config", $JOBS_NODE_NAME, jobName);
 	}

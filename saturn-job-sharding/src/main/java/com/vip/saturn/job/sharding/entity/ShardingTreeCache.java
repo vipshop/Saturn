@@ -1,5 +1,6 @@
 package com.vip.saturn.job.sharding.entity;
 
+import com.google.common.collect.Lists;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.slf4j.Logger;
@@ -25,6 +26,10 @@ public class ShardingTreeCache {
 		synchronized (this) {
 			return treeCacheMap.containsKey(getKey(path, depth));
 		}
+	}
+
+	public List<String> getTreeCachePaths() {
+		return Lists.newArrayList(treeCacheMap.keySet());
 	}
 
 	public void putTreeCache(String path, int depth, TreeCache treeCache) {
@@ -81,14 +86,18 @@ public class ShardingTreeCache {
 	}
 
 	public void removeTreeCache(String path, int depth) {
+		String key = getKey(path, depth);
+		removeTreeCacheByKey(key);
+	}
+
+	public void removeTreeCacheByKey(String key) {
 		synchronized (this) {
-			String key = getKey(path, depth);
 			TreeCache treeCache = treeCacheMap.get(key);
 			if (treeCache != null) {
 				treeCacheListenerMap.remove(treeCache);
 				treeCacheMap.remove(key);
 				treeCache.close();
-				logger.info("remove TreeCache success, path is {}, depth is {}", path, depth);
+				logger.info("remove TreeCache success, path+depth is {}", key);
 			}
 		}
 	}

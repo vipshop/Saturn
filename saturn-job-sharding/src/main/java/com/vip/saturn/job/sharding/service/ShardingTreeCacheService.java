@@ -1,8 +1,12 @@
 package com.vip.saturn.job.sharding.service;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.vip.saturn.job.sharding.TreeCacheThreadFactory;
 import com.vip.saturn.job.sharding.entity.ShardingTreeCache;
 import com.vip.saturn.job.sharding.exception.ShardingException;
+import java.util.List;
+import java.util.Set;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
@@ -35,56 +39,72 @@ public class ShardingTreeCacheService {
 
 	public void addTreeCacheIfAbsent(String path, int depth) throws Exception {
 		synchronized (isShutdownFlag) {
-			if (!isShutdownFlag.get()) {
-				String fullPath = namespace + path;
-				if (!shardingTreeCache.containsTreeCache(path, depth)) {
-					TreeCache treeCache = TreeCache.newBuilder(curatorFramework, path)
-							.setExecutor(new CloseableExecutorService(executorService, false)).setMaxDepth(depth)
-							.build();
-					try {
-						treeCache.start();
-					} catch (Exception e) {
-						treeCache.close();
-						throw e;
-					}
-					TreeCache treeCacheOld = shardingTreeCache.putTreeCacheIfAbsent(path, depth, treeCache);
-					if (treeCacheOld != null) {
-						treeCache.close();
-					} else {
-						LOGGER.info("create TreeCache, full path is {}, depth is {}", fullPath, depth);
-					}
-				}
-			} else {
+			if (isShutdownFlag.get()) {
 				throw new ShardingException("ShardingTreeCacheService has been shutdown");
+			}
+
+			String fullPath = namespace + path;
+			if (!shardingTreeCache.containsTreeCache(path, depth)) {
+				TreeCache treeCache = TreeCache.newBuilder(curatorFramework, path)
+						.setExecutor(new CloseableExecutorService(executorService, false)).setMaxDepth(depth)
+						.build();
+				try {
+					treeCache.start();
+				} catch (Exception e) {
+					treeCache.close();
+					throw e;
+				}
+				TreeCache treeCacheOld = shardingTreeCache.putTreeCacheIfAbsent(path, depth, treeCache);
+				if (treeCacheOld != null) {
+					treeCache.close();
+				} else {
+					LOGGER.info("create TreeCache, full path is {}, depth is {}", fullPath, depth);
+				}
 			}
 		}
 	}
 
 	public void addTreeCacheListenerIfAbsent(String path, int depth, TreeCacheListener treeCacheListener) throws ShardingException {
 		synchronized (isShutdownFlag) {
-			if (!isShutdownFlag.get()) {
-				String fullPath = namespace + path;
-				TreeCacheListener treeCacheListenerOld = shardingTreeCache.addTreeCacheListenerIfAbsent(path, depth,
-						treeCacheListener);
-				if (treeCacheListenerOld == null) {
-					LOGGER.info("add {}, full path is {}, depth is {}", treeCacheListener.getClass().getSimpleName(),
-							fullPath, depth);
-				}
-			} else {
+			if (isShutdownFlag.get()) {
 				throw new ShardingException("ShardingTreeCacheService has been shutdown");
+			}
+
+			String fullPath = namespace + path;
+			TreeCacheListener treeCacheListenerOld = shardingTreeCache.addTreeCacheListenerIfAbsent(path, depth,
+					treeCacheListener);
+			if (treeCacheListenerOld == null) {
+				LOGGER.info("add {}, full path is {}, depth is {}", treeCacheListener.getClass().getSimpleName(),
+						fullPath, depth);
 			}
 		}
 	}
 
 	public void removeTreeCache(String path, int depth) throws ShardingException {
 		synchronized (isShutdownFlag) {
-			if (!isShutdownFlag.get()) {
-				shardingTreeCache.removeTreeCache(path, depth);
-			} else {
+			if (isShutdownFlag.get()) {
 				throw new ShardingException("ShardingTreeCacheService has been shutdown");
+			}
+
+			shardingTreeCache.removeTreeCache(path, depth);
+		}
+	}
+
+	public void removeTreeCacheWithPrefix(String prefix) throws ShardingException {
+		synchronized (isShutdownFlag) {
+			if (isShutdownFlag.get()) {
+				throw new ShardingException("ShardingTreeCacheService has been shutdown");
+			}
+
+			List<String> treeCacheKeys = shardingTreeCache.getTreeCachePaths();
+			for (String key : treeCacheKeys) {
+				if (key.startsWith(prefix)) {
+					shardingTreeCache.removeTreeCacheByKey(key);
+				}
 			}
 		}
 	}
+
 
 	public void start() {
 		synchronized (isShutdownFlag) {

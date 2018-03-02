@@ -3,6 +3,7 @@ package com.vip.saturn.job.sharding.listener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 
 /**
  * @author hebelala
@@ -19,22 +20,19 @@ public class JobServersTriggerShardingListener extends AbstractTreeCacheListener
 
 	@Override
 	public void childEvent(TreeCacheEvent.Type type, String path, String nodeData) throws Exception {
-		if (isJobServerStatus(path)) {
+		if (isJobServerStatusAddedOrRemoved(type, path)) {
 			String executorName = SaturnExecutorsNode.getJobServersExecutorNameByStatusPath(path);
-			switch (type) {
-			case NODE_ADDED:
+			if (type == Type.NODE_ADDED) {
 				namespaceShardingService.asyncShardingWhenJobServerOnline(jobName, executorName);
-				break;
-			case NODE_REMOVED:
+			} else {
 				namespaceShardingService.asyncShardingWhenJobServerOffline(jobName, executorName);
-				break;
-			default:
 			}
 		}
 	}
 
-	private boolean isJobServerStatus(String path) {
-		return path.matches(SaturnExecutorsNode.getJobServersExecutorStatusNodePathRegex(jobName));
+	private boolean isJobServerStatusAddedOrRemoved(TreeCacheEvent.Type type, String path) {
+		return (type == Type.NODE_ADDED || type == Type.NODE_REMOVED) && path
+				.matches(SaturnExecutorsNode.getJobServersExecutorStatusNodePathRegex(jobName));
 	}
 
 }
