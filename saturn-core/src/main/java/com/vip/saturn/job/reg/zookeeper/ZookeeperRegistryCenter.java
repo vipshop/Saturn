@@ -23,6 +23,7 @@ import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 import org.slf4j.Logger;
@@ -293,11 +294,22 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	@Override
 	public void remove(final String key) {
 		try {
-			CuratorUtils.deletingChildrenIfNeeded(client, key);
-			// CHECKSTYLE:OFF
+			client.delete().guaranteed().forPath(key);
+		} catch (KeeperException.NotEmptyException e) {
+			log.debug("try to delete path:" + key + " but fail for NotEmptyException", e);
+			deleteChildrenIfNeeded(key);
+		} catch (KeeperException.NoNodeException e) {
+			log.debug("try to delete path:" + key + " but fail for NoNodeException", e);
 		} catch (final Exception ex) {
-			// CHECKSTYLE:ON
 			RegExceptionHandler.handleException(ex);
+		}
+	}
+
+	private void deleteChildrenIfNeeded(String key) {
+		try {
+			CuratorUtils.deletingChildrenIfNeeded(client, key);
+		} catch (Exception e1) {
+			RegExceptionHandler.handleException(e1);
 		}
 	}
 
@@ -308,9 +320,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			String path = client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
 					.forPath(key);
 			result = client.checkExists().forPath(path).getCtime();
-			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
-			// CHECKSTYLE:ON
 			RegExceptionHandler.handleException(ex);
 		}
 		Preconditions.checkState(0L != result, "Cannot get registry center time.");

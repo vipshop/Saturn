@@ -110,9 +110,7 @@ public class SaturnExecutorService {
 			}
 		} finally {
 			String executorSystemTimePath = executorNode + "/systemTime";
-			if (coordinatorRegistryCenter.isExisted(executorSystemTimePath)) {
-				coordinatorRegistryCenter.remove(executorSystemTimePath);
-			}
+			coordinatorRegistryCenter.remove(executorSystemTimePath);
 		}
 		// 启动时检查Executor是否已启用（ExecutorName为判断的唯一标识）
 		if (coordinatorRegistryCenter.isExisted(executorNode)) {
