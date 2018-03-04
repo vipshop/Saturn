@@ -47,7 +47,7 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
 	 * @throws InterruptedException
 	 */
 	@Test
-	public void test_A_normalTrigger() throws InterruptedException {
+	public void test_C_normalTrigger() throws InterruptedException {
 		final int shardCount = 3;
 		final String jobName = "runAtOnceITJob";
 		for (int i = 0; i < shardCount; i++) {
