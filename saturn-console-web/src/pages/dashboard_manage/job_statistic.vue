@@ -1,29 +1,40 @@
 <template>
-    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
-        <div>
-            <el-row :gutter="10">
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="失败率最高的Top10作业">
-                        <div slot="chart">
-                            <Column id="top10FailJob" :option-info="top10FailJobOption.optionInfo"></Column>
-                        </div>
-                    </Chart-container>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)">
-                        <div slot="chart">
-                            <Column id="top10ActiveJob" :option-info="top10ActiveJobOption.optionInfo"></Column>
-                        </div>
-                    </Chart-container>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="负荷最重的Top10作业">
-                        <div slot="chart">
-                            <Column id="top10LoadJob" :option-info="top10LoadJobOption.optionInfo"></Column>
-                        </div>
-                    </Chart-container>
-                </el-col>
-            </el-row>
+    <div>
+        <div class="page-detail-header">
+            <div class="pull-left page-detail-title">
+              <span class="page-detail-span">
+                  <i class="fa fa-sitemap"></i>
+                  当前ZK集群 : {{zkCluster || '全部ZK集群'}}
+              </span>
+              <el-button style="margin-left:10px;" type="text" @click="init"><i class="fa fa-refresh"></i></el-button>
+            </div>
+        </div>
+        <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
+            <div>
+                <el-row :gutter="10">
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="失败率最高的Top10作业">
+                            <div slot="chart">
+                                <Column id="top10FailJob" :option-info="top10FailJobOption.optionInfo"></Column>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)">
+                            <div slot="chart">
+                                <Column id="top10ActiveJob" :option-info="top10ActiveJobOption.optionInfo"></Column>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="负荷最重的Top10作业">
+                            <div slot="chart">
+                                <Column id="top10LoadJob" :option-info="top10LoadJobOption.optionInfo"></Column>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                </el-row>
+            </div>
         </div>
     </div>
 </template>

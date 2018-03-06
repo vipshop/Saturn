@@ -1,36 +1,47 @@
 <template>
-    <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
-        <div>
-            <el-row :gutter="10">
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="全域当天执行数据">
-                        <div slot="chart">
-                            <Pie id="domainProcessCount" :data-option="domainProcessCountOption"></Pie>
-                        </div>
-                    </Chart-container>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="失败率最高的Top10域">
-                        <div slot="chart">
-                            <Column id="top10FailDomain" :option-info="top10FailDomainOption.optionInfo"></Column>
-                        </div>
-                    </Chart-container>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="稳定性最差的的Top10域">
-                        <div slot="chart">
-                            <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOption.optionInfo"></Column>
-                        </div>
-                    </Chart-container>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="域版本分布">
-                        <div slot="chart">
-                            <Pie id="domainExecutorVersion" :data-option="domainExecutorVersionOption"></Pie>
-                        </div>
-                    </Chart-container>
-                </el-col>
-            </el-row>
+    <div>
+        <div class="page-detail-header">
+            <div class="pull-left page-detail-title">
+              <span class="page-detail-span">
+                  <i class="fa fa-sitemap"></i>
+                  当前ZK集群 : {{zkCluster || '全部ZK集群'}}
+              </span>
+              <el-button style="margin-left:10px;" type="text" @click="init"><i class="fa fa-refresh"></i></el-button>
+            </div>
+        </div>
+        <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
+            <div>
+                <el-row :gutter="10">
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="全域当天执行数据">
+                            <div slot="chart">
+                                <Pie id="domainProcessCount" :data-option="domainProcessCountOption"></Pie>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="失败率最高的Top10域">
+                            <div slot="chart">
+                                <Column id="top10FailDomain" :option-info="top10FailDomainOption.optionInfo"></Column>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="稳定性最差的的Top10域">
+                            <div slot="chart">
+                                <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOption.optionInfo"></Column>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="域版本分布">
+                            <div slot="chart">
+                                <Pie id="domainExecutorVersion" :data-option="domainExecutorVersionOption"></Pie>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                </el-row>
+            </div>
         </div>
     </div>
 </template>
