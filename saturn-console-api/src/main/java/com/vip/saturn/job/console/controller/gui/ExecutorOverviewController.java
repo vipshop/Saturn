@@ -17,7 +17,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -213,6 +212,22 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以dump");
 		executorService.dump(namespace, executorName);
+		return new SuccessResponseEntity();
+	}
+
+	/**
+	 * 一键重启。
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping(value = "/{executorName}/restart")
+	public SuccessResponseEntity restart(final HttpServletRequest request,
+									  @AuditParam("namespace") @PathVariable String namespace,
+									  @AuditParam("executorName") @PathVariable String executorName)
+			throws SaturnJobConsoleException {
+		// check executor is existed and online.
+		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以重启");
+		executorService.restart(namespace, executorName);
 		return new SuccessResponseEntity();
 	}
 }

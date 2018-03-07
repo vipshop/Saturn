@@ -53,7 +53,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
 		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
-		if (executors == null || executors.size() == 0) {
+		if (executors == null || executors.isEmpty()) {
 			return Lists.newArrayList();
 		}
 
@@ -117,10 +117,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
 
 		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
-
-		if (unSystemJobs == null || unSystemJobs.size() == 0) {
-			return serverAllocationInfo;
-		}
 
 		for (JobConfig jobConfig : unSystemJobs) {
 			String jobName = jobConfig.getJobName();
@@ -199,6 +195,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 		String dumpNodePath = ExecutorNodePath.getExecutorDumpNodePath(executorName);
 		curatorFrameworkOp.delete(dumpNodePath);
 		curatorFrameworkOp.create(dumpNodePath);
+	}
+
+	@Override
+	public void restart(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		String restartNodePath = ExecutorNodePath.getExecutorRestartNodePath(executorName);
+		curatorFrameworkOp.delete(restartNodePath);
+		curatorFrameworkOp.create(restartNodePath);
 	}
 
 	private void validateIfExecutorNameExisted(String executorName,
