@@ -65,6 +65,9 @@
                             <el-table-column prop="lastBeginTime" label="最近启动时间" min-width="120px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
+                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE'">
+                                        <el-button type="text" @click="handleRestart(scope.row)"><i class="fa fa-power-off"></i></el-button>
+                                    </el-tooltip>
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
@@ -114,6 +117,15 @@ export default {
     };
   },
   methods: {
+    handleRestart(row) {
+      this.$message.confirmMessage(`确定重启 ${row.executorName} 吗?`, () => {
+        this.$http.post(`/console/namespaces/${this.domainName}/executors/${row.executorName}/restart`, '').then(() => {
+          this.getExecutorList();
+          this.$message.successNotify('重启操作成功');
+        })
+        .catch(() => { this.$http.buildErrorHandler('重启executor请求失败！'); });
+      });
+    },
     getExecutorAllocation(row) {
       this.$http.get(`/console/namespaces/${this.domainName}/executors/${row.executorName}/allocation`).then((data) => {
         this.isExecutorAllocationVisible = true;
