@@ -14,7 +14,7 @@
                         <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType === 'JAVA_JOB'">
+                <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType !== 'SHELL_JOB'">
                     <el-col :span="18">
                         <el-input v-model="jobInfo.jobClass" placeholder="如com.vip.saturn.job.SaturnJavaJob"></el-input>
                     </el-col>
