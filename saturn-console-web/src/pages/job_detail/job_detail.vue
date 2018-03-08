@@ -8,6 +8,7 @@
                     <span class="job-span">
                         <i class="iconfont icon-java" v-if="jobInfo.jobType === 'JAVA_JOB'"></i>
                         <i class="iconfont icon-msnui-logo-linux" v-if="jobInfo.jobType === 'SHELL_JOB'"></i>
+                        <i class="fa fa-envelope-o" v-if="jobInfo.jobType === 'MSG_JOB'"></i>
                         作业 : {{jobName}}
                     </span>
                     <el-tag :type="statusTag[jobInfo.status]" class="status-tag">运行状态: {{translateStatus[jobInfo.status]}}</el-tag>
