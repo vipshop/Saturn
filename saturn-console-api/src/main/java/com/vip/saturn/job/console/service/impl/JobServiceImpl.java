@@ -565,7 +565,8 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException("作业类型未知");
 		}
 		// 如果是JAVA作业
-		if (jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) && (jobConfig.getJobClass() == null || jobConfig
+		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
+				.equals(JobType.MSG_JOB.name())) && (jobConfig.getJobClass() == null || jobConfig
 				.getJobClass().trim().isEmpty())) {
 			// 作业实现类必填
 			throw new SaturnJobConsoleException("对于JAVA作业，作业实现类必填");
@@ -966,7 +967,8 @@ public class JobServiceImpl implements JobService {
 		jobConfig.setJobType(jobType);
 
 		String jobClass = getContents(rowCells, 2);
-		if (jobType.equals(JobType.JAVA_JOB.name()) && (jobClass == null || jobClass.trim().isEmpty())) {
+		if ((jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.MSG_JOB.name())) && (jobClass == null
+				|| jobClass.trim().isEmpty())) {
 			throw new SaturnJobConsoleException(
 					createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA作业，作业实现类必填。"));
 		}
