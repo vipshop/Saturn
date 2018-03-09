@@ -5,7 +5,7 @@
                 <el-form-item label="作业类型" prop="jobType">
                     <el-col :span="18">
                         <el-select v-model="jobInfo.jobType" style="width: 100%" :disabled="!isEditable">
-                            <el-option v-for="item in jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
+                            <el-option v-for="item in $option.jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                         </el-select>
                     </el-col>
                 </el-form-item>
@@ -14,12 +14,12 @@
                         <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType === 'JAVA_JOB'">
+                <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType !== 'SHELL_JOB'">
                     <el-col :span="18">
                         <el-input v-model="jobInfo.jobClass" placeholder="如com.vip.saturn.job.SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="cron表达式" prop="cron">
+                <el-form-item label="cron表达式" prop="cron" v-if="jobInfo.jobType !== 'MSG_JOB'">
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                             <el-input v-model="jobInfo.cron">
@@ -28,7 +28,7 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
-                <el-form-item class="form-annotation">
+                <el-form-item class="form-annotation" v-if="jobInfo.jobType !== 'MSG_JOB'">
                     <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
                     <span>2. 每小时运行一次的表达式：0 * * * * ?</span>
                 </el-form-item>
@@ -57,6 +57,26 @@
                         </el-select>
                     </el-col>
                 </el-form-item>
+                <el-form-item label="Queue名" prop="queueName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                    <el-col :span="18">
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                消息类型job的queue名，2.0.0版本的executor支持为每个分片配置一个queue，格式为0=queue1,1=queue2
+                            </div>
+                            <el-input type="textarea" v-model="jobInfo.queueName"></el-input>
+                        </el-tooltip>
+                    </el-col>
+                </el-form-item>
+                <el-form-item label="Channel名" prop="channelName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                    <el-col :span="18">
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环
+                            </div>
+                            <el-input v-model="jobInfo.channelName"></el-input>
+                        </el-tooltip>
+                    </el-col>
+                </el-form-item>
                 <el-form-item label="描述" prop="description">
                     <el-col :span="18">
                         <el-input type="textarea" v-model="jobInfo.description"></el-input>
@@ -83,13 +103,6 @@ export default {
       isCronPredictVisible: false,
       cronPredictParams: {},
       loading: false,
-      jobTypes: [{
-        value: 'JAVA_JOB',
-        label: 'Java定时作业',
-      }, {
-        value: 'SHELL_JOB',
-        label: 'Shell定时作业',
-      }],
       timeZonesArray: [],
       rules: {
         jobType: [{ required: true, message: '请选择作业类型', trigger: 'change' }],

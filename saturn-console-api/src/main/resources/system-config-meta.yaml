@@ -8,6 +8,8 @@ job_configs:
 executor_configs:
     - name: ALARM_RAISED_ON_EXECUTOR_RESTART
       desc_zh: executor restart是否发送告警
+    - name: MAX_SECONDS_FORCE_KILL_EXECUTOR
+      desc_zh: executor stop时最长等待时间
 
 cluster_configs:
     - name: CONSOLE_ZK_CLUSTER_MAPPING

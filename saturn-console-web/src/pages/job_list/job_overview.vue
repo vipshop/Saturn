@@ -61,6 +61,7 @@
                                         <el-button type="text">
                                           <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB'"></i>
                                           <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
+                                          <i class="fa fa-envelope-o" v-if="scope.row.jobType === 'MSG_JOB'"></i>
                                           {{scope.row.jobName}}
                                         </el-button>
                                     </router-link>
@@ -203,6 +204,8 @@ export default {
         shardingTotalCount: 1,
         shardingItemParameters: '',
         timeZone: 'Asia/Shanghai',
+        queueName: '',
+        channelName: '',
         description: '',
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
@@ -300,6 +303,8 @@ export default {
           shardingTotalCount: data.shardingTotalCount,
           shardingItemParameters: data.shardingItemParameters,
           timeZone: data.timeZone,
+          queueName: data.queueName,
+          channelName: data.channelName,
           description: data.description,
         };
         this.isJobInfoVisible = true;

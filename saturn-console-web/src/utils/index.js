@@ -4,6 +4,7 @@ import message from './message';
 import validate from './validate';
 import routerMapper from './router_mapper';
 import map from './map';
+import option from './option';
 
 const Utils = {
   array,
@@ -11,6 +12,8 @@ const Utils = {
   message,
   validate,
   routerMapper,
+  map,
+  option,
 };
 /* eslint-disable no-param-reassign */
 Utils.install = (Vue) => {
@@ -20,5 +23,6 @@ Utils.install = (Vue) => {
   Vue.prototype.$validate = validate;
   Vue.prototype.$routermapper = routerMapper;
   Vue.prototype.$map = map;
+  Vue.prototype.$option = option;
 };
 export default Utils;

@@ -1,12 +1,9 @@
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ServerAllocationInfo;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import java.io.File;
 import java.util.List;
 
 /**
@@ -89,4 +86,12 @@ public interface ExecutorService {
 	 * @param executorName 目标executor
 	 */
 	void dump(String namespace, String executorName) throws SaturnJobConsoleException;
+
+	/**
+	 * 一键restart。
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 */
+	void restart(String namespace, String executorName) throws SaturnJobConsoleException;
 }

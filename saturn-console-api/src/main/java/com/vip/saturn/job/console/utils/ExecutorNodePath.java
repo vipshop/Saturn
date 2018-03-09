@@ -63,4 +63,8 @@ public class ExecutorNodePath {
 		return getExecutorNodePath(executorName, "dump");
 	}
 
+	public static String getExecutorRestartNodePath(final String executorName) {
+		return getExecutorNodePath(executorName, "restart");
+	}
+
 }

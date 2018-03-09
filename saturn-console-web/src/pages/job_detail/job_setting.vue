@@ -15,7 +15,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="cron" label="Cron">
                                     <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
@@ -42,6 +42,18 @@
                             <el-col :span="11">
                                 <el-form-item prop="localMode" label="本地模式">
                                     <el-switch v-model="jobSettingInfo.localMode"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                            <el-col :span="22">
+                                <el-form-item prop="queueName" label="Queue名">
+                                    <el-tooltip popper-class="form-tooltip" placement="bottom">
+                                        <div slot="content">
+                                            消息类型job的queue名，2.0.0版本的executor支持为每个分片配置一个queue，格式为0=queue1,1=queue2
+                                        </div>
+                                        <el-input type="textarea" v-model="jobSettingInfo.queueName"></el-input>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -132,21 +144,28 @@
                             </el-col>
                         </el-row>
                         <el-row>
-                            <el-col :span="11">
+                            <el-col :span="22">
                                 <el-form-item prop="timeZone" label="时区">
                                     <el-select filterable v-model="jobSettingInfo.timeZone" style="width: 100%;">
                                         <el-option v-for="item in jobSettingInfo.timeZonesProvided" :label="item" :value="item" :key="item"></el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="6">
+                        </el-row>
+                        <el-row :gutter="20">
+                            <el-col :span="7">
                                 <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="6">
-                                <el-form-item prop="enabledReport" label="上报运行状态" label-width="100px">
+                            <el-col :span="7">
+                                <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="7" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                                <el-form-item prop="useSerial" label="串行消费">
+                                    <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -159,7 +178,19 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                            <el-col :span="22">
+                                <el-form-item prop="channelName" label="Channel名">
+                                    <el-tooltip popper-class="form-tooltip" placement="bottom">
+                                        <div slot="content">
+                                            执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环
+                                        </div>
+                                        <el-input v-model="jobSettingInfo.channelName"></el-input>
+                                    </el-tooltip>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodDate" label="暂停日期段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个日期段，逗号隔开。例如03/12-03/15,11/23-12/25。当日期为空，时间段不为空，表示每天那些时间段都暂停" placement="bottom">
@@ -168,7 +199,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodTime" label="暂停时间段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开。例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停" placement="bottom">

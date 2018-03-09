@@ -12,16 +12,18 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
-import java.util.List;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * Default implementation of ExecutorService.
@@ -33,6 +35,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
+	private static final int DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR = 300;
+
 	@Resource
 	private CuratorRepository curatorRepository;
 
@@ -41,6 +45,9 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	@Resource
 	private RegistryCenterService registryCenterService;
+
+	@Resource
+	private SystemConfigService systemConfigService;
 
 	@Override
 	public List<ServerBriefInfo> getExecutors(String namespace) throws SaturnJobConsoleException {
@@ -53,7 +60,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 
 		List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
-		if (executors == null || executors.size() == 0) {
+		if (executors == null || executors.isEmpty()) {
 			return Lists.newArrayList();
 		}
 
@@ -88,6 +95,22 @@ public class ExecutorServiceImpl implements ExecutorService {
 		} else {
 			executorInfo.setStatus(ServerStatus.OFFLINE);
 		}
+
+		String restartNodePath = ExecutorNodePath.getExecutorRestartNodePath(executorName);
+		long restartTriggerTime = curatorFrameworkOp.getCtime(restartNodePath);
+		long now = System.currentTimeMillis();
+
+		long maxRestartInv = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_SECONDS_FORCE_KILL_EXECUTOR,
+				DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR) * 1000L;
+
+		// 如果executor在线并且restart结点存在，restarting结点存在的时间<300s，executor状态列显示RESTARTING；
+		if (0 != restartTriggerTime && now - restartTriggerTime < maxRestartInv
+				&& ServerStatus.ONLINE.equals(executorInfo.getStatus())) {
+			executorInfo.setRestarting(true);
+		} else {
+			executorInfo.setRestarting(false);
+		}
+
 		// 是否已被摘流量
 		executorInfo.setNoTraffic(curatorFrameworkOp
 				.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName)));
@@ -117,10 +140,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 		List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
 
 		ServerAllocationInfo serverAllocationInfo = new ServerAllocationInfo(executorName);
-
-		if (unSystemJobs == null || unSystemJobs.size() == 0) {
-			return serverAllocationInfo;
-		}
 
 		for (JobConfig jobConfig : unSystemJobs) {
 			String jobName = jobConfig.getJobName();
@@ -199,6 +218,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 		String dumpNodePath = ExecutorNodePath.getExecutorDumpNodePath(executorName);
 		curatorFrameworkOp.delete(dumpNodePath);
 		curatorFrameworkOp.create(dumpNodePath);
+	}
+
+	@Override
+	public void restart(String namespace, String executorName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		String restartNodePath = ExecutorNodePath.getExecutorRestartNodePath(executorName);
+		curatorFrameworkOp.delete(restartNodePath);
+		curatorFrameworkOp.create(restartNodePath);
 	}
 
 	private void validateIfExecutorNameExisted(String executorName,
