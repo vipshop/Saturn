@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  *
  * @author kfchu
  */
-@Profile("!dev")
+@Profile("!development")
 @Controller
 public class DisableSwaggerUIController {
 
