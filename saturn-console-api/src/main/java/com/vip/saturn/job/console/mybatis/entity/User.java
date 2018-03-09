@@ -1,26 +1,24 @@
 package com.vip.saturn.job.console.mybatis.entity;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author hebelala
  */
-public class User {
+public class User extends CommonFields {
 
-	private Long id;
 	private String name;
 	private String password;
 	private String realName;
 	private String employeeId;
 	private String email;
-	private Set<Role> roles;
+	private List<UserRole> userRoles;
 
-	public Long getId() {
-		return id;
+	public User() {
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public User(String name) {
+		this.name = name;
 	}
 
 	public String getName() {
@@ -63,11 +61,11 @@ public class User {
 		this.email = email;
 	}
 
-	public Set<Role> getRoles() {
-		return roles;
+	public List<UserRole> getUserRoles() {
+		return userRoles;
 	}
 
-	public void setRoles(Set<Role> roles) {
-		this.roles = roles;
+	public void setUserRoles(List<UserRole> userRoles) {
+		this.userRoles = userRoles;
 	}
 }

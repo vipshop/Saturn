@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.UserRoleRepository">
+
+    <resultMap id="baseResultMap" type="com.vip.saturn.job.console.mybatis.entity.UserRole">
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="role_key" property="roleKey" jdbcType="VARCHAR"/>
+        <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
+        <result column="approval" property="approval" jdbcType="BOOLEAN"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.UserRole">
+        INSERT INTO `user_role`(`user_name`, `role_key`, `namespace`, `approval`, `created_by`, `create_time`,
+        `last_updated_by`, `last_update_time`, `is_deleted`)
+        VALUES(#{userName, jdbcType=VARCHAR}, #{roleKey, jdbcType=VARCHAR}, #{namespace, jdbcType=VARCHAR},
+        #{approval, jdbcType=BOOLEAN},#{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP},
+        #{lastUpdatedBy, jdbcType=VARCHAR}, #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
+    </insert>
+
+    <sql id="selectAllSql">
+        SELECT `user_name`, `role_key`, `namespace`, `approval`, `created_by`, `create_time`, `last_updated_by`,
+        `last_update_time`, `is_deleted` FROM `user_role`
+    </sql>
+
+    <select id="selectAll" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE `is_deleted` = '0'
+    </select>
+
+    <select id="selectByUserName" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE
+        `user_name` = #{userName, jdbcType=VARCHAR} AND
+        `is_deleted` = '0'
+    </select>
+
+    <select id="selectByRoleKey" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        `is_deleted` = '0'
+    </select>
+
+    <select id="select" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE
+        `user_name` = #{userName, jdbcType=VARCHAR} AND
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        `namespace` = #{namespace, jdbcType=VARCHAR} AND
+        `is_deleted` = '0'
+    </select>
+
+    <select id="selectWithNotFilterDeleted" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE
+        `user_name` = #{userName, jdbcType=VARCHAR} AND
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        `namespace` = #{namespace, jdbcType=VARCHAR}
+    </select>
+
+    <update id="delete">
+        UPDATE `user_role` SET
+        `is_deleted` = '1',
+        `last_updated_by` = #{lastUpdatedBy, jdbcType=VARCHAR}
+        WHERE
+        `user_name` = #{userName, jdbcType=VARCHAR} AND
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        `namespace` = #{namespace, jdbcType=VARCHAR}
+    </update>
+
+    <update id="update">
+        UPDATE `user_role` SET
+        `user_name` = #{cur.userName, jdbcType=VARCHAR},
+        `role_key` = #{cur.roleKey, jdbcType=VARCHAR},
+        `namespace` = #{cur.namespace, jdbcType=VARCHAR},
+        `approval` = #{cur.approval, jdbcType=VARCHAR},
+        `last_updated_by` = #{cur.lastUpdatedBy, jdbcType=VARCHAR},
+        `is_deleted` = #{isDeleted, jdbcType=BOOLEAN}
+        WHERE
+        `user_name` = #{pre.userName, jdbcType=VARCHAR} AND
+        `role_key` = #{pre.role_key, jdbcType=VARCHAR} AND
+        `namespace` = #{pre.namespace, jdbcType=VARCHAR}
+    </update>
+
+</mapper>

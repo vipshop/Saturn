@@ -3,20 +3,11 @@ package com.vip.saturn.job.console.mybatis.entity;
 /**
  * @author hebelala
  */
-public class Permission {
+public class Permission extends CommonFields {
 
-	private Long id;
 	private String key;
 	private String name;
 	private String description;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
 
 	public String getKey() {
 		return key;
