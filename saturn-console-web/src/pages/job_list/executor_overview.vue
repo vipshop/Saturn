@@ -42,9 +42,10 @@
                                     {{scope.row.executorName}}
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="status" label="状态" sortable>
+                            <el-table-column prop="status" label="状态" width="80px" sortable>
                                 <template slot-scope="scope"> 
                                     <el-tag :type="scope.row.status === 'ONLINE' ? 'success' : ''" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
+                                    <el-tag type="warning" v-if="scope.row.restarting">重启中</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="serverIp" label="IP" width="120"></el-table-column>
@@ -53,7 +54,7 @@
                                     {{scope.row.groupName || '--'}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="分片分配" header-align="left" align="center">
+                            <el-table-column label="分片分配" header-align="left" width="80px" align="center">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.status === 'OFFLINE'">--</span>
                                     <el-tooltip content="查看" placement="top" v-else>
@@ -62,10 +63,10 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本" sortable></el-table-column>
-                            <el-table-column prop="lastBeginTime" label="最近启动时间" min-width="120px"></el-table-column>
+                            <el-table-column prop="lastBeginTime" label="最近启动时间" width="160px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE' && !scope.row.restarting">
                                         <el-button type="text" @click="handleRestart(scope.row)"><i class="fa fa-power-off"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">

@@ -1,27 +1,16 @@
 package com.vip.saturn.job.console.mybatis.entity;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author hebelala
  */
-public class Role {
+public class Role extends CommonFields {
 
-	private Long id;
 	private String key;
 	private String name;
 	private String description;
-	private String namespace;
-	private Boolean approval;
-	private Set<Permission> permissions;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
+	private List<RolePermission> rolePermissions;
 
 	public String getKey() {
 		return key;
@@ -47,27 +36,11 @@ public class Role {
 		this.description = description;
 	}
 
-	public String getNamespace() {
-		return namespace;
+	public List<RolePermission> getRolePermissions() {
+		return rolePermissions;
 	}
 
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
-	}
-
-	public Boolean getApproval() {
-		return approval;
-	}
-
-	public void setApproval(Boolean approval) {
-		this.approval = approval;
-	}
-
-	public Set<Permission> getPermissions() {
-		return permissions;
-	}
-
-	public void setPermissions(Set<Permission> permissions) {
-		this.permissions = permissions;
+	public void setRolePermissions(List<RolePermission> rolePermissions) {
+		this.rolePermissions = rolePermissions;
 	}
 }

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.RolePermissionRepository">
+
+    <resultMap id="baseResultMap" type="com.vip.saturn.job.console.mybatis.entity.RolePermission">
+        <result column="role_key" property="roleKey" jdbcType="VARCHAR"/>
+        <result column="permission_key" property="permissionKey" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.RolePermission">
+        INSERT INTO `role_permission`(`role_key`, `permission_key`, `created_by`, `create_time`, `last_updated_by`,
+        `last_update_time`, `is_deleted`)
+        VALUES(#{roleKey, jdbcType=VARCHAR}, #{permissionKey, jdbcType=VARCHAR}, #{createdBy, jdbcType=VARCHAR},
+        #{createTime, jdbcType=TIMESTAMP}, #{lastUpdatedBy, jdbcType=VARCHAR}, #{lastUpdateTime, jdbcType=TIMESTAMP},
+        #{isDeleted, jdbcType=BOOLEAN})
+    </insert>
+
+    <sql id="selectAllSql">
+        SELECT `role_key`, `permission_key`, `created_by`, `create_time`, `last_updated_by`, `last_update_time`,
+        `is_deleted` FROM `role_permission`
+    </sql>
+
+    <select id="selectAll" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE `is_deleted` = '0'
+    </select>
+
+    <select id="selectByRoleKey" resultMap="baseResultMap">
+        <include refid="selectAllSql"></include>
+        WHERE
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        `is_deleted` = '0'
+    </select>
+
+</mapper>
