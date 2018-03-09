@@ -19,7 +19,7 @@
                         <el-input v-model="jobInfo.jobClass" placeholder="如com.vip.saturn.job.SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="cron表达式" prop="cron">
+                <el-form-item label="cron表达式" prop="cron" v-if="jobInfo.jobType !== 'MSG_JOB'">
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                             <el-input v-model="jobInfo.cron">
@@ -55,6 +55,26 @@
                         <el-select filterable v-model="jobInfo.timeZone" style="width: 100%">
                             <el-option v-for="item in timeZonesArray" :label="item" :value="item" :key="item"></el-option>
                         </el-select>
+                    </el-col>
+                </el-form-item>
+                <el-form-item label="Queue名" prop="queueName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                    <el-col :span="18">
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                消息类型job的queue名，2.0.0版本的executor支持为每个分片配置一个queue，格式为0=queue1,1=queue2
+                            </div>
+                            <el-input type="textarea" v-model="jobInfo.queueName"></el-input>
+                        </el-tooltip>
+                    </el-col>
+                </el-form-item>
+                <el-form-item label="Channel名" prop="channelName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                    <el-col :span="18">
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环
+                            </div>
+                            <el-input v-model="jobInfo.channelName"></el-input>
+                        </el-tooltip>
                     </el-col>
                 </el-form-item>
                 <el-form-item label="描述" prop="description">

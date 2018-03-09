@@ -204,6 +204,8 @@ export default {
         shardingTotalCount: 1,
         shardingItemParameters: '',
         timeZone: 'Asia/Shanghai',
+        queueName: '',
+        channelName: '',
         description: '',
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
@@ -301,6 +303,8 @@ export default {
           shardingTotalCount: data.shardingTotalCount,
           shardingItemParameters: data.shardingItemParameters,
           timeZone: data.timeZone,
+          queueName: data.queueName,
+          channelName: data.channelName,
           description: data.description,
         };
         this.isJobInfoVisible = true;
