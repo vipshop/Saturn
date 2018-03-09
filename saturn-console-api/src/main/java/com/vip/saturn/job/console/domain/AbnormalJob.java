@@ -8,10 +8,6 @@ package com.vip.saturn.job.console.domain;
  */
 public class AbnormalJob extends AbstractAlarmJob {
 
-	private String uuid;
-
-	private String jobDegree;
-
 	private String timeZone;
 
 	private long nextFireTime;
@@ -20,31 +16,13 @@ public class AbnormalJob extends AbstractAlarmJob {
 
 	private String cause;
 
-	private boolean read = false;
-
-	private transient long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
+	private long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 
 	public AbnormalJob() {
 	}
 
 	public AbnormalJob(String jobName, String domainName, String nns, String degree) {
 		super(jobName, domainName, nns, degree);
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
-	public String getJobDegree() {
-		return jobDegree;
-	}
-
-	public void setJobDegree(String jobDegree) {
-		this.jobDegree = jobDegree;
 	}
 
 	public String getTimeZone() {
@@ -86,14 +64,6 @@ public class AbnormalJob extends AbstractAlarmJob {
 	public void setNextFireTimeAfterEnabledMtimeOrLastCompleteTime(
 			long nextFireTimeAfterEnabledMtimeOrLastCompleteTime) {
 		this.nextFireTimeAfterEnabledMtimeOrLastCompleteTime = nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
-	}
-
-	public boolean isRead() {
-		return read;
-	}
-
-	public void setRead(boolean read) {
-		this.read = read;
 	}
 
 	@Override

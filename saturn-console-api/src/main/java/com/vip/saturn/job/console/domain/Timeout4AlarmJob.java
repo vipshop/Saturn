@@ -8,12 +8,6 @@ import java.util.List;
  */
 public class Timeout4AlarmJob extends AbstractAlarmJob {
 
-	private String uuid;
-
-	private boolean read;
-
-	private String jobDegree;
-
 	private int timeout4AlarmSeconds;
 
 	private List<Integer> timeoutItems = new ArrayList<>();
@@ -23,30 +17,6 @@ public class Timeout4AlarmJob extends AbstractAlarmJob {
 
 	public Timeout4AlarmJob(String jobName, String domainName, String nns, String degree) {
 		super(jobName, domainName, nns, degree);
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
-	public boolean isRead() {
-		return read;
-	}
-
-	public void setRead(boolean read) {
-		this.read = read;
-	}
-
-	public String getJobDegree() {
-		return jobDegree;
-	}
-
-	public void setJobDegree(String jobDegree) {
-		this.jobDegree = jobDegree;
 	}
 
 	public int getTimeout4AlarmSeconds() {

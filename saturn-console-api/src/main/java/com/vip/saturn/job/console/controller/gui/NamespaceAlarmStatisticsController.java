@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,21 +27,28 @@ public class NamespaceAlarmStatisticsController extends AbstractGUIController {
 	@GetMapping(value = "/abnormalJobs")
 	public SuccessResponseEntity getAbnormalJobs(@PathVariable String namespace)
 			throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobsByNamespace(namespace));
+		return new SuccessResponseEntity(alarmStatisticsService.getAbnormalJobsStringByNamespace(namespace));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/unableFailoverJobs")
 	public SuccessResponseEntity getUnableFailoverJobs(@PathVariable String namespace)
 			throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobsByNamespace(namespace));
+		return new SuccessResponseEntity(alarmStatisticsService.getUnableFailoverJobsStringByNamespace(namespace));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/timeout4AlarmJobs")
 	public SuccessResponseEntity getTimeout4AlarmJobs(@PathVariable String namespace)
 			throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobsByNamespace(namespace));
+		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobsStringByNamespace(namespace));
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/countOfAlarmJobs")
+	public SuccessResponseEntity getCountOfAlarmJobs(@PathVariable String namespace)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getCountOfAlarmJobsByNamespace(namespace));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

@@ -18,8 +18,6 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -32,8 +30,6 @@ import java.util.List;
  * @author kfchu
  */
 public class ExecutorServiceImpl implements ExecutorService {
-
-	private static final Logger log = LoggerFactory.getLogger(ExecutorServiceImpl.class);
 
 	private static final int DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR = 300;
 

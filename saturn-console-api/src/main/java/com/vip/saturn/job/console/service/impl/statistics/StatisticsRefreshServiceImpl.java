@@ -31,7 +31,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -50,7 +49,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private static final int CONNECT_TIMEOUT_MS = 10000;
 
-	private static final int SO_TIMEOUT_MS = 180000;
+	private static final int SO_TIMEOUT_MS = 180_000;
 
 	private static final int STAT_THREAD_NUM = 20;
 
@@ -60,7 +59,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private Map<String/** domainName_jobName_shardingItemStr **/
 			, AbnormalShardingState /** abnormal sharding state */
-			> abnormalShardingStateCache = new ConcurrentHashMap<>();
+	> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
 	@Resource
 	private SaturnStatisticsService saturnStatisticsService;
@@ -83,7 +82,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	private ExecutorService statExecutorService;
 
 	@PostConstruct
-	public void init() throws Exception {
+	public void init() {
 		initStatExecutorService();
 		startRefreshStatisticsTimer();
 		startCleanAbnormalShardingCacheTimer();
@@ -142,8 +141,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			}
 		};
 		refreshStatisticsTimer = new Timer("refresh-statistics-to-db-timer", true);
-		refreshStatisticsTimer.scheduleAtFixedRate(timerTask, 1000 * 15,
-				1000 * 60 * DashboardConstants.REFRESH_INTERVAL_IN_MINUTE);
+		refreshStatisticsTimer.scheduleAtFixedRate(timerTask, 1000L * 15,
+				1000L * 60 * DashboardConstants.REFRESH_INTERVAL_IN_MINUTE);
 	}
 
 	private void startCleanAbnormalShardingCacheTimer() {
@@ -186,7 +185,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			try {
 				forwardDashboardRefreshToRemote(zkClusterKey);
 			} catch (SaturnJobConsoleException e) {
-				log.warn("remote refresh request error, so refreshStatistics in the current Console");
+				log.warn("remote refresh request error, so refreshStatistics in the current Console, cause by {}", e);
 				refresh(zkClusterKey);
 			}
 		}
@@ -320,8 +319,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 						statisticsModel.analyzeOutdatedNoRunningJob(curatorFrameworkOp, oldAbnormalJobs, job, jobDegree,
 								config);
 					}
-					statisticsModel.analyzeTimeout4AlarmJob(curatorFrameworkOp, oldTimeout4AlarmJobs, job,
-							jobDegree, config);
+					statisticsModel.analyzeTimeout4AlarmJob(curatorFrameworkOp, oldTimeout4AlarmJobs, job, jobDegree,
+							config);
 					statisticsModel.analyzeUnableFailoverJob(curatorFrameworkOp, job, jobDegree, config);
 				} catch (Exception e) {
 					log.info(String.format("analyzeStatistics namespace(%s) jobName(%s) error", namespace, job), e);

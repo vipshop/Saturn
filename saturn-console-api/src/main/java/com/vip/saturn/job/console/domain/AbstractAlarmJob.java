@@ -16,6 +16,12 @@ public class AbstractAlarmJob {
 	 */
 	protected String degree;
 
+	protected String uuid;
+
+	protected boolean read;
+
+	protected String jobDegree;
+
 	public AbstractAlarmJob() {
 	}
 
@@ -40,5 +46,30 @@ public class AbstractAlarmJob {
 
 	public void setDomainName(String domainName) {
 		this.domainName = domainName;
+	}
+
+	public String getUuid() {
+
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public boolean isRead() {
+		return read;
+	}
+
+	public void setRead(boolean read) {
+		this.read = read;
+	}
+
+	public String getJobDegree() {
+		return jobDegree;
+	}
+
+	public void setJobDegree(String jobDegree) {
+		this.jobDegree = jobDegree;
 	}
 }

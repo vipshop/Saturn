@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.controller.gui;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
@@ -35,7 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -93,13 +91,8 @@ public class JobOverviewController extends AbstractGUIController {
 
 	private void updateAbnormalJobSizeInOverview(String namespace, JobOverviewVo jobOverviewVo) {
 		try {
-			String result = alarmStatisticsService.getAbnormalJobsByNamespace(namespace);
-			if (result != null) {
-				List<AbnormalJob> abnormalJobs = JSON.parseArray(result, AbnormalJob.class);
-				if (abnormalJobs != null) {
-					jobOverviewVo.setAbnormalNumber(abnormalJobs.size());
-				}
-			}
+				List<AbnormalJob> abnormalJobList = alarmStatisticsService.getAbnormalJobListByNamespace(namespace);
+				jobOverviewVo.setAbnormalNumber(abnormalJobList.size());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -291,6 +284,7 @@ public class JobOverviewController extends AbstractGUIController {
 				successJobNames.add(jobName);
 			} catch (Exception e) {
 				failJobNames.add(jobName);
+				log.info("remove job failed, cause of {}", e);
 			}
 		}
 		if (!failJobNames.isEmpty()) {
