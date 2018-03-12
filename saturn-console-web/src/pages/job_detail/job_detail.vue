@@ -141,7 +141,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     getDomainInfo() {
-      this.$http.get(`/console/namespaces/${this.domainName}`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/`).then((data) => {
         this.domainInfo = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); });
