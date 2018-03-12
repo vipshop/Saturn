@@ -1,10 +1,15 @@
 /**
- * Copyright 2016 vip.com. <p> Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at <p>
- * http://www.apache.org/licenses/LICENSE-2.0 <p> Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and limitations under the
- * License. </p>
+ * Copyright 2016 vip.com.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * </p>
  */
 package com.vip.saturn.job.console.service.impl;
 
@@ -17,7 +22,6 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
@@ -37,29 +41,22 @@ import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import com.vip.saturn.job.integrate.service.UpdateJobConfigService;
 import com.vip.saturn.job.sharding.NamespaceShardingManager;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -166,8 +163,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void initLocalRefreshThreadPool() {
-		localRefreshThreadPool = Executors.newSingleThreadExecutor(
-				new ConsoleThreadFactory("refresh-RegCenter-thread", false));
+		localRefreshThreadPool = Executors
+				.newSingleThreadExecutor(new ConsoleThreadFactory("refresh-RegCenter-thread", false));
 	}
 
 	private void startLocalRefreshTimer() {
@@ -191,7 +188,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					log.error(e.getMessage(), e);
 				}
 			}
-		}, 1000 * 60 * 5, 1000 * 60 * 5);
+		}, 1000L * 60 * 5, 1000L * 60 * 5);
 	}
 
 	private void startLocalRefreshIfNecessaryTimer() {
@@ -230,15 +227,15 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private synchronized void localRefresh() {
 		try {
 			log.info("Start refresh RegCenter");
-			long startTime = System.currentTimeMillis();
 			refreshRestrictComputeZkClusters();
-			if (restrictComputeZkClusterKeys.size() == 0) {
+			if (restrictComputeZkClusterKeys.isEmpty()) {
 				log.warn("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
 				return;
 			}
 			refreshRegistryCenter();
 			refreshDashboardLeaderTreeCache();
 			refreshNamespaceShardingListenerManagerMap();
+			long startTime = System.currentTimeMillis();
 			log.info("End refresh RegCenter, cost {}ms", System.currentTimeMillis() - startTime);
 		} catch (Exception e) {
 			log.error("refresh RegCenter error", e);
@@ -274,8 +271,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				String[] zkClusterKeyArray = zkClusterKeyStr.trim().split(",");
 				restrictComputeZkClusterKeys.addAll(Arrays.asList(zkClusterKeyArray));
 				log.info("the current console cluster:{} can do sharding and dashboard to zk clusters:{}",
-						consoleClusterId,
-						restrictComputeZkClusterKeys);
+						consoleClusterId, restrictComputeZkClusterKeys);
 				return;
 			}
 		}
@@ -311,20 +307,21 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			Entry<String, ZkCluster> next = iterator.next();
 			ZkCluster zkCluster = next.getValue();
 			ArrayList<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
-			if (regCenterConfList != null) {
-				for (RegistryCenterConfiguration conf : regCenterConfList) {
-					String nns = conf.getNameAndNamespace();
-					if (!namespaceShardingListenerManagerMap.containsKey(nns)) {
-						if (isZKClusterCanBeComputed(conf.getZkClusterKey())) {
-							createNamespaceShardingManager(conf, nns);
-						}
-					} else {
-						NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap
-								.get(nns);
-						if (!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
-							namespaceShardingManager.stopWithCurator();
-							namespaceShardingListenerManagerMap.remove(nns);
-						}
+			if (regCenterConfList == null) {
+				continue;
+			}
+
+			for (RegistryCenterConfiguration conf : regCenterConfList) {
+				String nns = conf.getNameAndNamespace();
+				if (!namespaceShardingListenerManagerMap.containsKey(nns)) {
+					if (isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+						createNamespaceShardingManager(conf, nns);
+					}
+				} else {
+					NamespaceShardingManager namespaceShardingManager = namespaceShardingListenerManagerMap.get(nns);
+					if (!isZKClusterCanBeComputed(conf.getZkClusterKey())) {
+						namespaceShardingManager.stopWithCurator();
+						namespaceShardingListenerManagerMap.remove(nns);
 					}
 				}
 			}
@@ -349,7 +346,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						generateShardingLeadershipHostValue(), reportAlarmService, updateJobConfigService);
 				namespaceShardingManager.start();
 				if (namespaceShardingListenerManagerMap.putIfAbsent(nns, namespaceShardingManager) != null) {
-					//已经存在，则关闭当前的client
+					// 已经存在，则关闭当前的client
 					try {
 						namespaceShardingManager.stopWithCurator();
 					} catch (Exception e) {
@@ -406,49 +403,52 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	private void initMoveInNamespace(List<String> allOnlineNamespacesTemp, String zkClusterKey, ZkCluster zkCluster,
 			List<NamespaceZkClusterMapping> nsZkClusterMappingList,
 			List<RegistryCenterConfiguration> regCenterConfList) {
-		if (nsZkClusterMappingList != null && !zkCluster.isOffline()) {
-			for (NamespaceZkClusterMapping mapping : nsZkClusterMappingList) {
-				String namespace = mapping.getNamespace();
-				String name = StringUtils.deleteWhitespace(mapping.getName());
-				if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
-					log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
-					continue;
-				}
-				boolean include = false;
-				if (regCenterConfList != null) {
-					for (RegistryCenterConfiguration conf : regCenterConfList) {
-						if (namespace.equals(conf.getNamespace())) {
-							include = true;
-							String nnsOld = conf.getNameAndNamespace();
-							// update name
-							conf.setName(name);
-							conf.initNameAndNamespace();
-							String nnsNew = conf.getNameAndNamespace();
-							if (!nnsOld.equals(nnsNew)) {
-								synchronized (getNnsLock(nnsOld)) {
-									closeNamespace(nnsOld);
-									log.info(
-											"closed the namespace info because it's nns is changed, namespace is {}",
-											namespace);
-								}
-							}
-							break;
+		if (nsZkClusterMappingList == null || zkCluster.isOffline()) {
+			return;
+		}
+
+		for (NamespaceZkClusterMapping mapping : nsZkClusterMappingList) {
+			String namespace = mapping.getNamespace();
+			String name = StringUtils.deleteWhitespace(mapping.getName());
+			if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+				log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
+				continue;
+			}
+			boolean include = false;
+			if (regCenterConfList != null) {
+				for (RegistryCenterConfiguration conf : regCenterConfList) {
+					if (!namespace.equals(conf.getNamespace())) {
+						continue;
+					}
+
+					include = true;
+					String nnsOld = conf.getNameAndNamespace();
+					// update name
+					conf.setName(name);
+					conf.initNameAndNamespace();
+					String nnsNew = conf.getNameAndNamespace();
+					if (!nnsOld.equals(nnsNew)) {
+						synchronized (getNnsLock(nnsOld)) {
+							closeNamespace(nnsOld);
+							log.info("closed the namespace info because it's nns is changed, namespace is {}",
+									namespace);
 						}
 					}
+					break;
 				}
-				if (!include) {
-					CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
-					initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-					RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace,
-							zkCluster.getZkAddr());
-					conf.setZkClusterKey(zkClusterKey);
-					conf.setVersion(getVersion(namespace, curatorFramework));
-					conf.setZkAlias(zkCluster.getZkAlias());
-					zkCluster.getRegCenterConfList().add(conf);
-				}
-				if (!allOnlineNamespacesTemp.contains(namespace)) {
-					allOnlineNamespacesTemp.add(namespace);
-				}
+			}
+			if (!include) {
+				CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
+				initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
+				RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace,
+						zkCluster.getZkAddr());
+				conf.setZkClusterKey(zkClusterKey);
+				conf.setVersion(getVersion(namespace, curatorFramework));
+				conf.setZkAlias(zkCluster.getZkAlias());
+				zkCluster.getRegCenterConfList().add(conf);
+			}
+			if (!allOnlineNamespacesTemp.contains(namespace)) {
+				allOnlineNamespacesTemp.add(namespace);
 			}
 		}
 	}
@@ -477,8 +477,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				synchronized (getNnsLock(nns)) {
 					regIter.remove();
 					closeNamespace(nns);
-					log.info("closed the moved namespace info, namespace is {}, old zkClusterKey is {}",
-							namespace, zkClusterKey);
+					log.info("closed the moved namespace info, namespace is {}, old zkClusterKey is {}", namespace,
+							zkClusterKey);
 				}
 			}
 		}
@@ -712,40 +712,55 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		try {
 			List<String> versionList = new ArrayList<>();
 			String executorsPath = "/" + namespace + ExecutorNodePath.getExecutorNodePath();
-			if (curatorFramework.checkExists().forPath(executorsPath) != null) {
-				List<String> executors = curatorFramework.getChildren().forPath(executorsPath);
-				if (executors != null && !executors.isEmpty()) {
-					for (String exe : executors) {
-						String versionPath = executorsPath + "/" + exe + "/version";
-						if (curatorFramework.checkExists().forPath(versionPath) != null) {
-							byte[] bs = curatorFramework.getData().forPath(versionPath);
-							if (bs != null) {
-								String version = new String(bs, "UTF-8");
-								if (version != null && !version.trim().isEmpty()) {
-									String tmp = version.trim();
-									if (!versionList.contains(tmp)) {
-										versionList.add(tmp);
-									}
-								}
-							}
-						}
+
+			if (curatorFramework.checkExists().forPath(executorsPath) == null) {
+				return getVersionStrFromList(versionList);
+			}
+
+			List<String> executors = curatorFramework.getChildren().forPath(executorsPath);
+			if (executors == null || executors.isEmpty()) {
+				return getVersionStrFromList(versionList);
+			}
+
+			for (String exe : executors) {
+				String versionPath = executorsPath + "/" + exe + "/version";
+				if (curatorFramework.checkExists().forPath(versionPath) == null) {
+					continue;
+				}
+
+				byte[] bs = curatorFramework.getData().forPath(versionPath);
+				if (bs == null) {
+					continue;
+				}
+
+				String version = new String(bs, "UTF-8");
+				if (version != null && !version.trim().isEmpty()) {
+					String tmp = version.trim();
+					if (!versionList.contains(tmp)) {
+						versionList.add(tmp);
 					}
 				}
 			}
-			Collections.sort(versionList);
-			String versionStr = "";
-			for (int i = 0; i < versionList.size(); i++) {
-				String version = versionList.get(i);
-				versionStr = versionStr + version;
-				if (i < versionList.size() - 1) {
-					versionStr = versionStr + ", ";
-				}
-			}
-			return versionStr;
+
+			return getVersionStrFromList(versionList);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return "";
 		}
+	}
+
+	private String getVersionStrFromList(List<String> versionList) {
+		Collections.sort(versionList);
+		StringBuilder versionSb = new StringBuilder();
+		versionSb.append("");
+		for (int i = 0; i < versionList.size(); i++) {
+			versionSb.append(versionList.get(i));
+			if (i < versionList.size() - 1) {
+				versionSb.append(", ");
+			}
+		}
+		return versionSb.toString();
 	}
 
 	@Override
@@ -960,10 +975,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				return true;
 			}
 			String jobsPath = "/" + namespace + JobNodePath.get$JobsNodePath();
-			if (curatorFramework.checkExists().forPath(jobsPath) != null) {
-				return true;
-			}
-			return false;
+			return curatorFramework.checkExists().forPath(jobsPath) != null ? true : false;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return false;
@@ -1029,7 +1041,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	@Transactional(rollbackFor = {Exception.class})
+	@Transactional(rollbackFor = { Exception.class })
 	@Override
 	public void createNamespace(NamespaceDomainInfo namespaceDomainInfo) throws SaturnJobConsoleException {
 		String namespace = namespaceDomainInfo.getNamespace();
@@ -1066,8 +1078,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		String namespace = namespaceDomainInfo.getNamespace();
 
 		if (!checkNamespaceExists(namespace)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					ERR_MSG_NS_NOT_FOUND);
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), ERR_MSG_NS_NOT_FOUND);
 		}
 
 		try {
@@ -1099,7 +1110,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return namespaceDomainInfo;
 	}
 
-	@Transactional(rollbackFor = {Exception.class})
+	@Transactional(rollbackFor = { Exception.class })
 	@Override
 	public void bindNamespaceAndZkCluster(String namespace, String zkClusterKey) throws SaturnJobConsoleException {
 		ZkCluster currentCluster = getZkCluster(zkClusterKey);
@@ -1124,10 +1135,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 			}
 			if (zkClusterKeyOther == null) {
-				//TODO: 一旦用户功能完成，补全username
+				// TODO: 一旦用户功能完成，补全username
 				namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, "");
 			} else {
-				//TODO: 一旦用户功能完成，补全username
+				// TODO: 一旦用户功能完成，补全username
 				namespaceZkClusterMapping4SqlService.update(namespace, "", zkClusterKey, "");
 			}
 
@@ -1137,7 +1148,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			notifyRefreshRegCenter();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			//TODO: 一旦用户功能完成，补全username
+			// TODO: 一旦用户功能完成，补全username
 			namespaceZkClusterMapping4SqlService.remove(namespace, "");
 			throw new SaturnJobConsoleException(e.getMessage());
 		}
@@ -1154,11 +1165,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 		// 判断其它集群是否有该域
 		String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
-		if (zkClusterKeyOther != null) {
-			return true;
-		}
-
-		return false;
+		return zkClusterKeyOther != null ? true : false;
 	}
 
 	private NamespaceInfo constructNamespaceInfo(NamespaceDomainInfo namespaceDomainInfo) {
@@ -1180,42 +1187,43 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = null;
 		try {
 			RegistryCenterConfiguration registryCenterConfiguration = findConfigByNamespace(namespace);
-			if (registryCenterConfiguration != null) {
-				String nns = registryCenterConfiguration.getNameAndNamespace();
-				if (nns != null) {
-					String zkAddressList = registryCenterConfiguration.getZkAddressList();
-					String digest = registryCenterConfiguration.getDigest();
-					synchronized (getNnsLock(nns)) {
-						if (!registryCenterClientMap.containsKey(nns)) {
-							final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
-							registryCenterClient.setNameAndNamespace(nns);
-							registryCenterClient.setZkAddr(zkAddressList);
-							CuratorFramework curatorFramework = curatorRepository
-									.connect(zkAddressList, namespace, digest);
-							if (curatorFramework != null) {
-								registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
-								registryCenterClient.setCuratorClient(curatorFramework);
-								registryCenterClientMap.put(nns, registryCenterClient);
-								curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
-							}
-						} else {
-							RegistryCenterClient registryCenterClient = registryCenterClientMap.get(nns);
-							if (registryCenterClient != null) {
-								CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
-								if (curatorFramework != null) {
-									registryCenterClient
-											.setConnected(curatorFramework.getZookeeperClient().isConnected());
-									curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
-								}
-							}
+			if (registryCenterConfiguration == null) {
+				throw new SaturnJobConsoleException("Connect zookeeper failed");
+			}
+
+			String nns = registryCenterConfiguration.getNameAndNamespace();
+			if (nns == null) {
+				throw new SaturnJobConsoleException("Connect zookeeper failed");
+			}
+
+			String zkAddressList = registryCenterConfiguration.getZkAddressList();
+			String digest = registryCenterConfiguration.getDigest();
+			synchronized (getNnsLock(nns)) {
+				if (!registryCenterClientMap.containsKey(nns)) {
+					final RegistryCenterClient registryCenterClient = new RegistryCenterClient();
+					registryCenterClient.setNameAndNamespace(nns);
+					registryCenterClient.setZkAddr(zkAddressList);
+					CuratorFramework curatorFramework = curatorRepository.connect(zkAddressList, namespace, digest);
+					if (curatorFramework != null) {
+						registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
+						registryCenterClient.setCuratorClient(curatorFramework);
+						registryCenterClientMap.put(nns, registryCenterClient);
+						curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
+					}
+				} else {
+					RegistryCenterClient registryCenterClient = registryCenterClientMap.get(nns);
+					if (registryCenterClient != null) {
+						CuratorFramework curatorFramework = registryCenterClient.getCuratorClient();
+						if (curatorFramework != null) {
+							registryCenterClient.setConnected(curatorFramework.getZookeeperClient().isConnected());
+							curatorFrameworkOp = curatorRepository.newCuratorFrameworkOp(curatorFramework);
 						}
 					}
 				}
 			}
+		} catch (SaturnJobConsoleException e) {
+			throw e;
 		} catch (Exception e) {
-			if (e instanceof SaturnJobConsoleException) {
-				throw e;
-			}
 			throw new SaturnJobConsoleException(e);
 		}
 		if (curatorFrameworkOp == null) {
