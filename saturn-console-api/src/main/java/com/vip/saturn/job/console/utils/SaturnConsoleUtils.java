@@ -111,30 +111,12 @@ public class SaturnConsoleUtils {
 			response.setHeader("Content-disposition",
 					"attachment; filename=" + new String(exportFileName.getBytes("UTF-8"), "ISO8859-1"));
 
-			BufferedInputStream bis = null;
-			BufferedOutputStream bos = null;
-			try {
-				bis = new BufferedInputStream(inputStream);
-				bos = new BufferedOutputStream(response.getOutputStream());
+			try (BufferedInputStream bis = new BufferedInputStream(inputStream);
+				 BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream())) {
 				byte[] buff = new byte[2048];
 				int bytesRead;
 				while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
 					bos.write(buff, 0, bytesRead);
-				}
-			} finally {
-				if (bis != null) {
-					try {
-						bis.close();
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
-					}
-				}
-				if (bos != null) {
-					try {
-						bos.close();
-					} catch (IOException e) {
-						log.error(e.getMessage(), e);
-					}
 				}
 			}
 		} catch (Exception e) {

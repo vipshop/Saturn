@@ -9,7 +9,6 @@ import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
