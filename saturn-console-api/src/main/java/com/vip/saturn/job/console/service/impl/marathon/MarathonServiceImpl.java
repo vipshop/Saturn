@@ -214,7 +214,7 @@ public class MarathonServiceImpl implements MarathonService {
 		List<String> tasks = getTasks(curatorFrameworkOp);
 		Map<String, List<ContainerExecutorVo>> containerExecutors = getContainerExecutors(curatorFrameworkOp,
 				allUnSystemJobs);
-		if (tasks != null && !tasks.isEmpty()) {
+		if (!tasks.isEmpty()) {
 			for (String task : tasks) {
 				ContainerVo containerVo = new ContainerVo();
 				containerVo.setTaskId(task);
@@ -241,20 +241,22 @@ public class MarathonServiceImpl implements MarathonService {
 			String preferListNodePath = JobNodePath.getConfigNodePath(job, "preferList");
 			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
 				String data = curatorFrameworkOp.getData(preferListNodePath);
-				if (data != null) {
-					String[] split = data.split(",");
-					for (int i = 0; i < split.length; i++) {
-						String tmp = split[i].trim();
-						if (tmp.startsWith("@")) {
-							String taskId = tmp.substring(1);
-							if (!map.containsKey(taskId)) {
-								map.put(taskId, new ArrayList<String>());
-							}
-							List<String> taskJobs = map.get(taskId);
-							if (!taskJobs.contains(job)) {
-								taskJobs.add(job);
-							}
-						}
+				if (null == data) {
+					continue;
+				}
+				String[] split = data.split(",");
+				for (int i = 0; i < split.length; i++) {
+					String tmp = split[i].trim();
+					if (!tmp.startsWith("@")) {
+						continue;
+					}
+					String taskId = tmp.substring(1);
+					if (!map.containsKey(taskId)) {
+						map.put(taskId, new ArrayList<String>());
+					}
+					List<String> taskJobs = map.get(taskId);
+					if (!taskJobs.contains(job)) {
+						taskJobs.add(job);
 					}
 				}
 			}
@@ -262,76 +264,93 @@ public class MarathonServiceImpl implements MarathonService {
 		return map;
 	}
 
-	private Map<String, List<ContainerExecutorVo>> getContainerExecutors(
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, List<String> allUnSystemJobs) {
-		Map<String, List<ContainerExecutorVo>> containerExecutors = new HashMap<>();
+	private void handleContainerExecutorsFromZK(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			Map<String, List<ContainerExecutorVo>> containerExecutors) {
 		if (curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath())) {
 			List<String> executors = curatorFrameworkOp.getChildren(ExecutorNodePath.getExecutorNodePath());
 			if (executors != null) {
 				for (String executor : executors) {
 					String executorTaskNodePath = ExecutorNodePath.getExecutorTaskNodePath(executor);
-					if (curatorFrameworkOp.checkExists(executorTaskNodePath)) {
-						String task = curatorFrameworkOp.getData(executorTaskNodePath);
-						if (task != null) {
-							if (!containerExecutors.containsKey(task)) {
-								containerExecutors.put(task, new ArrayList<ContainerExecutorVo>());
-							}
-							ContainerExecutorVo containerExecutorVo = new ContainerExecutorVo();
-							containerExecutorVo.setExecutorName(executor);
-							String executorIpNodePath = ExecutorNodePath.getExecutorIpNodePath(executor);
-							if (curatorFrameworkOp.checkExists(executorIpNodePath)) {
-								String executorIp = curatorFrameworkOp.getData(executorIpNodePath);
-								containerExecutorVo.setIp(executorIp);
-							}
-							containerExecutors.get(task).add(containerExecutorVo);
-						}
+					if (!curatorFrameworkOp.checkExists(executorTaskNodePath)) {
+						continue;
 					}
+					String task = curatorFrameworkOp.getData(executorTaskNodePath);
+					if (task == null) {
+						continue;
+					}
+					if (!containerExecutors.containsKey(task)) {
+						containerExecutors.put(task, new ArrayList<ContainerExecutorVo>());
+					}
+					ContainerExecutorVo containerExecutorVo = new ContainerExecutorVo();
+					containerExecutorVo.setExecutorName(executor);
+					String executorIpNodePath = ExecutorNodePath.getExecutorIpNodePath(executor);
+					if (curatorFrameworkOp.checkExists(executorIpNodePath)) {
+						String executorIp = curatorFrameworkOp.getData(executorIpNodePath);
+						containerExecutorVo.setIp(executorIp);
+					}
+					containerExecutors.get(task).add(containerExecutorVo);
 				}
 			}
 		}
+	}
+
+	private Map<String, List<ContainerExecutorVo>> getContainerExecutors(
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, List<String> allUnSystemJobs) {
+		Map<String, List<ContainerExecutorVo>> containerExecutors = new HashMap<>();
+		handleContainerExecutorsFromZK(curatorFrameworkOp, containerExecutors);
 		for (String job : allUnSystemJobs) {
 			Collection<List<ContainerExecutorVo>> values = containerExecutors.values();
-			if (values != null) {
-				for (List<ContainerExecutorVo> value : values) {
-					if (value != null) {
-						for (ContainerExecutorVo containerExecutorVo : value) {
-							String jobServerShardingNodePath = JobNodePath.getServerNodePath(job,
-									containerExecutorVo.getExecutorName(), "sharding");
-							if (curatorFrameworkOp.checkExists(jobServerShardingNodePath)) {
-								String sharding = curatorFrameworkOp.getData(jobServerShardingNodePath);
-								if (sharding != null && sharding.trim().length() != 0) {
-									boolean isRunning = false;
-									String[] split = sharding.split(",");
-									for (String tmp : split) {
-										String runningNodePath = JobNodePath.getExecutionNodePath(job, tmp.trim(),
-												"running");
-										if (curatorFrameworkOp.checkExists(runningNodePath)) {
-											isRunning = true;
-											break;
-										}
-									}
-									if (!isRunning) {
-										String enabledNodePath = JobNodePath.getConfigNodePath(job, "enabled");
-										if (Boolean.valueOf(curatorFrameworkOp.getData(enabledNodePath))) {
-											isRunning = true;
-										}
-									}
-									if (isRunning) {
-										String runningJobNames = containerExecutorVo.getRunningJobNames();
-										if (runningJobNames == null) {
-											containerExecutorVo.setRunningJobNames(job);
-										} else {
-											containerExecutorVo.setRunningJobNames(runningJobNames + ",<br/>" + job);
-										}
-									}
-								}
-							}
-						}
+			if (values == null) {
+				continue;
+			}
+			for (List<ContainerExecutorVo> value : values) {
+				if (value == null) {
+					continue;
+				}
+				for (ContainerExecutorVo containerExecutorVo : value) {
+					String jobServerShardingNodePath = JobNodePath.getServerNodePath(job,
+							containerExecutorVo.getExecutorName(), "sharding");
+					if (!curatorFrameworkOp.checkExists(jobServerShardingNodePath)) {
+						continue;
+					}
+					String sharding = curatorFrameworkOp.getData(jobServerShardingNodePath);
+					if (sharding == null || sharding.trim().length() == 0) {
+						continue;
+					}
+					Boolean isRunning = isRunningOrEnabled(curatorFrameworkOp, job, sharding);
+					if (!isRunning) {
+						continue;
+					}
+					String runningJobNames = containerExecutorVo.getRunningJobNames();
+					if (runningJobNames == null) {
+						containerExecutorVo.setRunningJobNames(job);
+					} else {
+						containerExecutorVo.setRunningJobNames(runningJobNames + ",<br/>" + job);
 					}
 				}
 			}
 		}
 		return containerExecutors;
+	}
+
+	private boolean isRunningOrEnabled(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String job,
+			String sharding) {
+		boolean isRunning = false;
+		String[] split = sharding.split(",");
+		for (String tmp : split) {
+			String runningNodePath = JobNodePath.getExecutionNodePath(job, tmp.trim(), "running");
+			if (curatorFrameworkOp.checkExists(runningNodePath)) {
+				isRunning = true;
+				break;
+			}
+		}
+		if (!isRunning) {
+			String enabledNodePath = JobNodePath.getConfigNodePath(job, "enabled");
+			if (Boolean.valueOf(curatorFrameworkOp.getData(enabledNodePath))) {
+				isRunning = true;
+			}
+		}
+		return isRunning;
 	}
 
 	private String changeTypeOfBindingJobNames(List<String> bindingJobNames) {
@@ -352,27 +371,28 @@ public class MarathonServiceImpl implements MarathonService {
 		ContainerStatus containerStatus = null;
 		String errorMessage = "";
 		try {
-			containerStatus = MarathonRestClient
-					.getContainerStatus(containerToken.getUserName(), containerToken.getPassword(), task);
+			containerStatus = MarathonRestClient.getContainerStatus(containerToken.getUserName(),
+					containerToken.getPassword(), task);
 		} catch (SaturnJobConsoleException e) {
+			log.info("get status error, cause of: {}", e);
 			errorMessage = "<font color='red'>get task status error, message is: "
 					+ StringEscapeUtils.escapeHtml4(e.getMessage()) + "</font>";
-		} finally {
-			String total_count = containerStatus == null || containerStatus.getTotalCount() == null ? "-"
-					: String.valueOf(containerStatus.getTotalCount());
-			String healthy_count = containerStatus == null || containerStatus.getHealthyCount() == null ? "-"
-					: String.valueOf(containerStatus.getHealthyCount());
-			String unhealthy_count = containerStatus == null || containerStatus.getUnhealthyCount() == null ? "-"
-					: String.valueOf(containerStatus.getUnhealthyCount());
-			String staged_count = containerStatus == null || containerStatus.getStagedCount() == null ? "-"
-					: String.valueOf(containerStatus.getStagedCount());
-			String running_count = containerStatus == null || containerStatus.getRunningCount() == null ? "-"
-					: String.valueOf(containerStatus.getRunningCount());
-			return String.format(
-					"当前实例总数：%s<br/><br/>" + "健康实例数：%s<br/>" + "非健康实例数：%s<br/><br/>" + "staged实例数：%s<br/>"
-							+ "running实例数：%s<br/>" + "%s",
-					total_count, healthy_count, unhealthy_count, staged_count, running_count, errorMessage);
+
 		}
+		String total_count = containerStatus == null || containerStatus.getTotalCount() == null ? "-"
+				: String.valueOf(containerStatus.getTotalCount());
+		String healthy_count = containerStatus == null || containerStatus.getHealthyCount() == null ? "-"
+				: String.valueOf(containerStatus.getHealthyCount());
+		String unhealthy_count = containerStatus == null || containerStatus.getUnhealthyCount() == null ? "-"
+				: String.valueOf(containerStatus.getUnhealthyCount());
+		String staged_count = containerStatus == null || containerStatus.getStagedCount() == null ? "-"
+				: String.valueOf(containerStatus.getStagedCount());
+		String running_count = containerStatus == null || containerStatus.getRunningCount() == null ? "-"
+				: String.valueOf(containerStatus.getRunningCount());
+		return String.format(
+				"当前实例总数：%s<br/><br/>" + "健康实例数：%s<br/>" + "非健康实例数：%s<br/><br/>" + "staged实例数：%s<br/>"
+						+ "running实例数：%s<br/>" + "%s",
+				total_count, healthy_count, unhealthy_count, staged_count, running_count, errorMessage);
 	}
 
 	private String changeTypeOfContainerConfig(ContainerConfig containerConfig) {
@@ -533,13 +553,13 @@ public class MarathonServiceImpl implements MarathonService {
 			String preferListNodePath = JobNodePath.getConfigNodePath(job, "preferList");
 			if (curatorFrameworkOp.checkExists(preferListNodePath)) {
 				String preferList = curatorFrameworkOp.getData(preferListNodePath);
-				if (preferList != null) {
-					String[] split = preferList.trim().split(",");
-					for (String tmp : split) {
-						if (tmp.trim().equals("@" + taskId)) {
-							throw new SaturnJobConsoleException(
-									"Cannot destroy the container, because it's binding a job");
-						}
+				if (null == preferList) {
+					continue;
+				}
+				String[] split = preferList.trim().split(",");
+				for (String tmp : split) {
+					if (tmp.trim().equals("@" + taskId)) {
+						throw new SaturnJobConsoleException("Cannot destroy the container, because it's binding a job");
 					}
 				}
 			}

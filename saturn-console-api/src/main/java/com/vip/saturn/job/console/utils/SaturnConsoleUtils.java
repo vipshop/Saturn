@@ -7,7 +7,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
@@ -93,10 +92,10 @@ public class SaturnConsoleUtils {
 
 	public static void exportExcelFile(HttpServletResponse response, File srcFile, String exportFileName,
 			boolean deleteTmpFile) throws SaturnJobConsoleException {
-		try {
-			InputStream inputStream = new FileInputStream(srcFile);
+		try (InputStream inputStream = new FileInputStream(srcFile)	){
 			exportExcelFile(response, inputStream, exportFileName);
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+			log.info("exception: {}", e);
 			throw new SaturnJobConsoleException("file not found:" + srcFile.getName());
 		} finally {
 			if (deleteTmpFile && srcFile != null) {

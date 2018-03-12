@@ -31,15 +31,16 @@ public class MarathonRestClient {
 	private static Logger log = LoggerFactory.getLogger(MarathonRestClient.class);
 
 	private static String getEntityContent(HttpEntity entity) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(entity.getContent()));
-		StringBuffer sb = new StringBuffer();
-		int maxLen = 1024;
-		char[] cBuf = new char[maxLen];
-		int readLen = -1;
-		while ((readLen = in.read(cBuf, 0, maxLen)) != -1) {
-			sb.append(cBuf, 0, readLen);
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(entity.getContent()))) {
+			StringBuilder sb = new StringBuilder();
+			int maxLen = 1024;
+			char[] cBuf = new char[maxLen];
+			int readLen = -1;
+			while ((readLen = in.read(cBuf, 0, maxLen)) != -1) {
+				sb.append(cBuf, 0, readLen);
+			}
+			return sb.toString();
 		}
-		return sb.toString();
 	}
 
 	public static void deploy(String userName, String password, ContainerConfig containerConfig)
