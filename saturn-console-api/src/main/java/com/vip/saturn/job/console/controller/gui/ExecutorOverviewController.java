@@ -119,9 +119,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 
 		if (!fail2ExtractOrRecoverTrafficExecutors.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("操作成功的executor:" + success2ExtractOrRecoverTrafficExecutors.toString()).append("，")
+			message.append("操作成功的executor:").append(success2ExtractOrRecoverTrafficExecutors).append("，")
 					.append("操作失败的executor:")
-					.append(fail2ExtractOrRecoverTrafficExecutors.toString());
+					.append(fail2ExtractOrRecoverTrafficExecutors);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 
@@ -180,8 +180,8 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		}
 		if (!fail2RemoveExecutors.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("删除成功的executor:" + success2RemoveExecutors.toString()).append("，").append("删除失败的executor:")
-					.append(fail2RemoveExecutors.toString());
+			message.append("删除成功的executor:").append(success2RemoveExecutors).append("，").append("删除失败的executor:")
+					.append(fail2RemoveExecutors);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 

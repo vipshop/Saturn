@@ -116,9 +116,9 @@ public class ExecutorInfoAnalyzer {
 					String processFailureCountOfThisExeStr = curatorFrameworkOp
 							.getData(JobNodePath.getProcessFailureCount(job, server));
 					int processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
-							: Integer.valueOf(processSuccessCountOfThisExeStr);
+							: Integer.parseInt(processSuccessCountOfThisExeStr);
 					int processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
-							: Integer.valueOf(processFailureCountOfThisExeStr);
+							: Integer.parseInt(processFailureCountOfThisExeStr);
 
 					// executor当天运行成功失败数
 					String executorMapKey = server + "-" + config.getNamespace();
@@ -143,7 +143,7 @@ public class ExecutorInfoAnalyzer {
 				// 2.统计executor的loadLevel;
 				try {
 					// enabled 的作业才需要计算权重
-					if (Boolean.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "enabled")))) {
+					if (Boolean.parseBoolean(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "enabled")))) {
 						String sharding = curatorFrameworkOp.getData(JobNodePath.getServerSharding(job, server));
 						if (StringUtils.isNotEmpty(sharding)) {
 							// 更新job的executorsAndshards

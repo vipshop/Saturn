@@ -262,7 +262,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		for (String singleConsoleMappingStr : singleConsoleMappingArray) {
 			String[] consoleAndClusterKeyArray = singleConsoleMappingStr.split(":");
 			if (consoleAndClusterKeyArray.length != 2) {
-				throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING(" + consoleAndClusterKeyArray
+				throw new SaturnJobConsoleException("the CONSOLE_ZK_CLUSTER_MAPPING(" + Arrays.toString(consoleAndClusterKeyArray)
 						+ ") format is not correct, should be like console_cluster_id:zk_cluster_id");
 			}
 			String tempConsoleClusterId = consoleAndClusterKeyArray[0];

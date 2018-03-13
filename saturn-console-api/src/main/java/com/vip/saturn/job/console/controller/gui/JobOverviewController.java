@@ -289,8 +289,8 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 		if (!failJobNames.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("删除成功的作业:" + successJobNames.toString()).append("，").append("删除失败的作业:")
-					.append(failJobNames.toString());
+			message.append("删除成功的作业:").append(successJobNames).append("，").append("删除失败的作业:")
+					.append(failJobNames);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 		return new SuccessResponseEntity();

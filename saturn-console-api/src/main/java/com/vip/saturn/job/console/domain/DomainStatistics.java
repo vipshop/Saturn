@@ -108,7 +108,7 @@ public class DomainStatistics {
 		if (processCountOfAllTime == 0) {
 			return 0;
 		}
-		float rate = (float) errorCountOfAllTime / processCountOfAllTime;
+		double rate = (double) errorCountOfAllTime / processCountOfAllTime;
 		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 

@@ -63,7 +63,7 @@ public class DomainStatisticsAnalyzer {
 		if (curatorFrameworkOp.checkExists(ExecutorNodePath.SHARDING_COUNT_PATH)) {
 			String countStr = curatorFrameworkOp.getData(ExecutorNodePath.SHARDING_COUNT_PATH);
 			if(StringUtils.isNotBlank(countStr)) {
-				domainStatistics.setShardingCount(Integer.valueOf(countStr));
+				domainStatistics.setShardingCount(Integer.parseInt(countStr));
 			}
 		}
 	}

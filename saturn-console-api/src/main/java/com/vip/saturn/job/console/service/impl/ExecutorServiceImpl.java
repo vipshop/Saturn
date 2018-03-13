@@ -157,7 +157,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 						.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
 				Integer loadLevel = 1;
 				if (StringUtils.isNotBlank(loadLevelNode)) {
-					loadLevel = Integer.parseInt(loadLevelNode);
+					loadLevel = Integer.valueOf(loadLevelNode);
 				}
 
 				int shardingItemNum = sharding.split(",").length;
