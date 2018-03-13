@@ -103,7 +103,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 			return defaultValue;
 		}
 		try {
-			return Integer.parseInt(strValue.trim());
+			return Integer.valueOf(strValue.trim());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return defaultValue;

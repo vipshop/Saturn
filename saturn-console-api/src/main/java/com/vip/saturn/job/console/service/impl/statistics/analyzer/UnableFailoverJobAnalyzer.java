@@ -93,7 +93,7 @@ public class UnableFailoverJobAnalyzer {
 	private boolean onlyUsePreferList(CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String useDispreferListStr = curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, "useDispreferList"));
-		return useDispreferListStr == null ? false : !Boolean.valueOf(useDispreferListStr);
+		return useDispreferListStr == null ? false : !Boolean.parseBoolean(useDispreferListStr);
 	}
 
 	private List<String> toPerferListArr(String preferList) {

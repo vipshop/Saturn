@@ -77,7 +77,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	private static boolean isEnabledPath(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
 			AbnormalJob abnormalJob) {
 		String enabledPath = JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "enabled");
-		return Boolean.valueOf(curatorFrameworkOp.getData(enabledPath));
+		return Boolean.parseBoolean(curatorFrameworkOp.getData(enabledPath));
 	}
 
 	public static boolean isEnabledReport(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {

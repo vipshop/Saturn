@@ -346,7 +346,7 @@ public class MarathonServiceImpl implements MarathonService {
 		}
 		if (!isRunning) {
 			String enabledNodePath = JobNodePath.getConfigNodePath(job, "enabled");
-			if (Boolean.valueOf(curatorFrameworkOp.getData(enabledNodePath))) {
+			if (Boolean.parseBoolean(curatorFrameworkOp.getData(enabledNodePath))) {
 				isRunning = true;
 			}
 		}

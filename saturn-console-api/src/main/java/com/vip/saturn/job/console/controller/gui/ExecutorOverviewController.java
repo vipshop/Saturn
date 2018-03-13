@@ -10,17 +10,19 @@ import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
-import com.vip.saturn.job.console.utils.Permissions;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
-
+import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Executor overview related operations.
@@ -116,8 +118,9 @@ public class ExecutorOverviewController extends AbstractGUIController {
 
 		if (!fail2ExtractOrRecoverTrafficExecutors.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("操作成功的executor:" + success2ExtractOrRecoverTrafficExecutors.toString()).append("，")
-					.append("操作失败的executor:").append(fail2ExtractOrRecoverTrafficExecutors.toString());
+			message.append("操作成功的executor:").append(success2ExtractOrRecoverTrafficExecutors).append("，")
+					.append("操作失败的executor:")
+					.append(fail2ExtractOrRecoverTrafficExecutors);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 
@@ -176,8 +179,8 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		}
 		if (!fail2RemoveExecutors.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("删除成功的executor:" + success2RemoveExecutors.toString()).append("，").append("删除失败的executor:")
-					.append(fail2RemoveExecutors.toString());
+			message.append("删除成功的executor:").append(success2RemoveExecutors).append("，").append("删除失败的executor:")
+					.append(fail2RemoveExecutors);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 

@@ -99,9 +99,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 		long maxRestartInv = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_SECONDS_FORCE_KILL_EXECUTOR,
 				DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR) * 1000L;
 
-		// 如果executor在线并且restart结点存在，restarting结点存在的时间<300s，executor状态列显示RESTARTING；
-		if (0 != restartTriggerTime && now - restartTriggerTime < maxRestartInv
-				&& ServerStatus.ONLINE.equals(executorInfo.getStatus())) {
+		// 如果restart结点存在，restarting结点存在的时间<300s，executor状态列显示RESTARTING；
+		if (0 != restartTriggerTime && now - restartTriggerTime < maxRestartInv) {
 			executorInfo.setRestarting(true);
 		} else {
 			executorInfo.setRestarting(false);
@@ -158,7 +157,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 						.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
 				Integer loadLevel = 1;
 				if (StringUtils.isNotBlank(loadLevelNode)) {
-					loadLevel = Integer.parseInt(loadLevelNode);
+					loadLevel = Integer.valueOf(loadLevelNode);
 				}
 
 				int shardingItemNum = sharding.split(",").length;

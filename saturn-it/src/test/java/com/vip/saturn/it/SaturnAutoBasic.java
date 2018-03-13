@@ -20,6 +20,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -134,7 +135,7 @@ public class SaturnAutoBasic {
 	protected static void refreshRegCenter(String url) throws Exception {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
-			HttpGet post = new HttpGet(url + "/registry_center/refreshRegCenter");
+			HttpPost post = new HttpPost(url + "/console/registryCenter/refresh");
 
 			CloseableHttpResponse httpResponse = httpClient.execute(post);
 			StatusLine statusLine = httpResponse.getStatusLine();

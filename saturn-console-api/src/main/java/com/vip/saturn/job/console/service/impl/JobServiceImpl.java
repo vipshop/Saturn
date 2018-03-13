@@ -573,7 +573,7 @@ public class JobServiceImpl implements JobService {
 			try {
 				CronExpression.validateExpression(jobConfig.getCron());
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException("cron表达式语法有误，" + e.toString());
+				throw new SaturnJobConsoleException("cron表达式语法有误" + e);
 			}
 		} else {
 			jobConfig.setCron(""); // 其他类型的不需要持久化保存cron表达式
@@ -973,7 +973,7 @@ public class JobServiceImpl implements JobService {
 				CronExpression.validateExpression(cron);
 			} catch (ParseException e) {
 				throw new SaturnJobConsoleException(
-						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e.toString()));
+						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e));
 			}
 		} else {
 			cron = "";// 其他类型的不需要持久化保存cron表达式
@@ -995,7 +995,7 @@ public class JobServiceImpl implements JobService {
 					shardingTotalCount = Integer.parseInt(tmp);
 				} catch (NumberFormatException e) {
 					throw new SaturnJobConsoleException(
-							createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e.toString()));
+							createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e));
 				}
 			} else {
 				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数必填"));
@@ -1051,7 +1051,7 @@ public class JobServiceImpl implements JobService {
 		jobConfig.setQueueName(getContents(rowCells, 10));
 		jobConfig.setChannelName(getContents(rowCells, 11));
 		jobConfig.setPreferList(getContents(rowCells, 12));
-		jobConfig.setUseDispreferList(!Boolean.valueOf(getContents(rowCells, 13)));
+		jobConfig.setUseDispreferList(!Boolean.parseBoolean(getContents(rowCells, 13)));
 
 		int processCountIntervalSeconds = 300;
 		try {
@@ -1061,7 +1061,7 @@ public class JobServiceImpl implements JobService {
 			}
 		} catch (NumberFormatException e) {
 			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e.toString()));
+					createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e));
 		}
 		jobConfig.setProcessCountIntervalSeconds(processCountIntervalSeconds);
 
@@ -1073,7 +1073,7 @@ public class JobServiceImpl implements JobService {
 			}
 		} catch (NumberFormatException e) {
 			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e.toString()));
+					createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e));
 		}
 		jobConfig.setLoadLevel(loadLevel);
 
@@ -1093,7 +1093,7 @@ public class JobServiceImpl implements JobService {
 			}
 		} catch (NumberFormatException e) {
 			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e.toString()));
+					createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e));
 		}
 		jobConfig.setJobDegree(jobDegree);
 
@@ -1123,7 +1123,7 @@ public class JobServiceImpl implements JobService {
 			}
 		} catch (NumberFormatException e) {
 			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e.toString()));
+					createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e));
 		}
 		jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
@@ -1210,7 +1210,7 @@ public class JobServiceImpl implements JobService {
 				String useDispreferList = curatorFrameworkOp
 						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_USE_DISPREFER_LIST));
 				if (useDispreferList != null) {
-					useDispreferList = String.valueOf(!Boolean.valueOf(useDispreferList));
+					useDispreferList = String.valueOf(!Boolean.parseBoolean(useDispreferList));
 				}
 				sheet1.addCell(new Label(13, i + 1, useDispreferList));
 				sheet1.addCell(new Label(14, i + 1, curatorFrameworkOp
@@ -1336,7 +1336,7 @@ public class JobServiceImpl implements JobService {
 				result.setJobType(JobType.JAVA_JOB.name());
 			}
 		}
-		result.setShardingTotalCount(Integer.parseInt(
+		result.setShardingTotalCount(Integer.valueOf(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT))));
 		String timeZone = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE));
 		if (Strings.isNullOrEmpty(timeZone)) {
@@ -1353,28 +1353,28 @@ public class JobServiceImpl implements JobService {
 				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)));
 		result.setJobParameter(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_PARAMETER)));
-		result.setProcessCountIntervalSeconds(Integer.parseInt(curatorFrameworkOp
+		result.setProcessCountIntervalSeconds(Integer.valueOf(curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS))));
 		String timeout4AlarmSecondsStr = curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS));
 		if (Strings.isNullOrEmpty(timeout4AlarmSecondsStr)) {
 			result.setTimeout4AlarmSeconds(0);
 		} else {
-			result.setTimeout4AlarmSeconds(Integer.parseInt(timeout4AlarmSecondsStr));
+			result.setTimeout4AlarmSeconds(Integer.valueOf(timeout4AlarmSecondsStr));
 		}
-		result.setTimeoutSeconds(Integer.parseInt(
+		result.setTimeoutSeconds(Integer.valueOf(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS))));
 		String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL));
 		if (Strings.isNullOrEmpty(lv)) {
 			result.setLoadLevel(1);
 		} else {
-			result.setLoadLevel(Integer.parseInt(lv));
+			result.setLoadLevel(Integer.valueOf(lv));
 		}
 		String jobDegree = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_DEGREE));
 		if (Strings.isNullOrEmpty(jobDegree)) {
 			result.setJobDegree(0);
 		} else {
-			result.setJobDegree(Integer.parseInt(jobDegree));
+			result.setJobDegree(Integer.valueOf(jobDegree));
 		}
 		result.setEnabled(Boolean
 				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));// 默认是禁用的

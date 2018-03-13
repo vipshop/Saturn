@@ -297,7 +297,7 @@ public class RestApiServiceImpl implements RestApiService {
 			if (!CollectionUtils.isEmpty(lastBeginTimeList)) {
 				Collections.sort(lastBeginTimeList);
 				try {
-					restApiJobStatistics.setLastBeginTime(Long.parseLong(lastBeginTimeList.get(0))); // 所有分片中最近最早的开始时间
+					restApiJobStatistics.setLastBeginTime(Long.valueOf(lastBeginTimeList.get(0))); // 所有分片中最近最早的开始时间
 				} catch (NumberFormatException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -307,7 +307,7 @@ public class RestApiServiceImpl implements RestApiService {
 				Collections.sort(lastCompleteTimeList);
 				try {
 					restApiJobStatistics.setLastCompleteTime(
-							Long.parseLong(
+							Long.valueOf(
 									lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
 				} catch (NumberFormatException e) {
 					log.error(e.getMessage(), e);
@@ -316,7 +316,7 @@ public class RestApiServiceImpl implements RestApiService {
 			if (!CollectionUtils.isEmpty(nextFireTimeList)) {
 				Collections.sort(nextFireTimeList);
 				try {
-					restApiJobStatistics.setNextFireTime(Long.parseLong(nextFireTimeList.get(0))); // 所有分片中下次最早的开始时间
+					restApiJobStatistics.setNextFireTime(Long.valueOf(nextFireTimeList.get(0))); // 所有分片中下次最早的开始时间
 				} catch (NumberFormatException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -360,7 +360,7 @@ public class RestApiServiceImpl implements RestApiService {
 							throws SaturnJobConsoleException {
 						String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
 						String enabled = curatorFrameworkOp.getData(enabledNodePath);
-						if (Boolean.valueOf(enabled)) {
+						if (Boolean.parseBoolean(enabled)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(),
 									"The job is already enable");
 						} else {
@@ -383,7 +383,7 @@ public class RestApiServiceImpl implements RestApiService {
 							throws SaturnJobConsoleException {
 						String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
 						String enabled = curatorFrameworkOp.getData(enabledNodePath);
-						if (Boolean.valueOf(enabled)) {
+						if (Boolean.parseBoolean(enabled)) {
 							long mtime = curatorFrameworkOp.getMtime(enabledNodePath);
 							checkUpdateStatusToDisableAllowed(mtime);
 

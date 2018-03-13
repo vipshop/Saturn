@@ -64,12 +64,12 @@ public class JobStatisticsAnalyzer {
 	public static int getProcessCountAllTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String processCountOfThisJobAllTimeStr = curatorFrameworkOp.getData(JobNodePath.getProcessCountPath(jobName));
 		return StringUtils.isBlank(processCountOfThisJobAllTimeStr) ? 0
-				: Integer.valueOf(processCountOfThisJobAllTimeStr);
+				: Integer.parseInt(processCountOfThisJobAllTimeStr);
 	}
 
 	public static int getErrorCountAllTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String errorCountOfThisJobAllTimeStr = curatorFrameworkOp.getData(JobNodePath.getErrorCountPath(jobName));
-		return StringUtils.isBlank(errorCountOfThisJobAllTimeStr) ? 0 : Integer.valueOf(errorCountOfThisJobAllTimeStr);
+		return StringUtils.isBlank(errorCountOfThisJobAllTimeStr) ? 0 : Integer.parseInt(errorCountOfThisJobAllTimeStr);
 	}
 
 	public Map<String, JobStatistics> getJobMap() {

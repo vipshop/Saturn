@@ -19,8 +19,8 @@ public class DashboardConstants {
 				System.getenv("VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE"));
 		if (refreshInterval != null) {
 			try {
-				REFRESH_INTERVAL_IN_MINUTE = Integer.valueOf(refreshInterval);
-				ALLOW_DELAY_MILLIONSECONDS = 60 * 1000 * REFRESH_INTERVAL_IN_MINUTE;
+				REFRESH_INTERVAL_IN_MINUTE = Integer.parseInt(refreshInterval);
+				ALLOW_DELAY_MILLIONSECONDS = 60 * 1000L * REFRESH_INTERVAL_IN_MINUTE;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
