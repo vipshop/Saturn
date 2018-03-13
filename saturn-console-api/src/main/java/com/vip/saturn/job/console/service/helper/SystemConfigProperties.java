@@ -22,4 +22,6 @@ public class SystemConfigProperties {
 	public static final String INTERVAL_TIME_OF_ENABLED_REPORT = "INTERVAL_TIME_OF_ENABLED_REPORT";
 
 	public static final String REFRESH_REGISTRY_CENTER_UUID = "REFRESH_REGISTRY_CENTER_UUID";
+
+	public static final String USE_AUTHORIZATION = "USE_AUTHORIZATION";
 }

@@ -88,6 +88,7 @@ public class ShiroServiceImpl implements ShiroService {
 	@Override
 	public User getUser(String userName) throws SaturnJobConsoleException {
 		User user = userRepository.select(userName);
+		//TODO user maybe is null
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		user.setUserRoles(userRoles);
 		if (userRoles == null) {
@@ -126,5 +127,22 @@ public class ShiroServiceImpl implements ShiroService {
 			superUsers.add(user);
 		}
 		return superUsers;
+	}
+
+	@Override
+	public Role getSuperRole() throws SaturnJobConsoleException {
+		Role role = roleRepository.selectByKey(superRoleKey);
+		if (role == null) {
+			return null;
+		}
+		List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(superRoleKey);
+		if (rolePermissions != null) {
+			for (RolePermission rolePermission : rolePermissions) {
+				Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+				rolePermission.setPermission(permission);
+			}
+		}
+		role.setRolePermissions(rolePermissions);
+		return role;
 	}
 }

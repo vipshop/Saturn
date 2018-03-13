@@ -6,9 +6,11 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
+import com.vip.saturn.job.console.utils.Permissions;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +40,7 @@ public class JobConfigController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobUpdate)
 	@PostMapping
 	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -49,20 +52,20 @@ public class JobConfigController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobRunAtOnce)
 	@PostMapping("/runAtOnce")
 	public SuccessResponseEntity runAtOnce(@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobName") @PathVariable String jobName)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		jobService.runAtOnce(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobStopAtOnce)
 	@PostMapping("/stopAtOnce")
 	public SuccessResponseEntity stopAtOnce(@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobName") @PathVariable String jobName)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		jobService.stopAtOnce(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
