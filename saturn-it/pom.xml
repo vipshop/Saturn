@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>com.vip.saturn</groupId>
 			<!-- 暂时使用saturn-console-old 直到ISSUE#299开发完成 -->
-			<artifactId>saturn-console-old</artifactId>
+			<artifactId>saturn-console</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
