@@ -42,6 +42,7 @@
 		<curator.version>2.10.0</curator.version>
 		<springframework.version>4.3.2.RELEASE</springframework.version>
 		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
+        <!-- could be removed, when saturn-console-old is removed -->
 		<cas.client.version>3.2.1</cas.client.version>
 
 		<mybatis.version>3.2.7</mybatis.version>
