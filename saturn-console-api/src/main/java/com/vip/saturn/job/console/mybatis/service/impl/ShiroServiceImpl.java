@@ -88,7 +88,9 @@ public class ShiroServiceImpl implements ShiroService {
 	@Override
 	public User getUser(String userName) throws SaturnJobConsoleException {
 		User user = userRepository.select(userName);
-		//TODO user maybe is null
+		if (user == null) {
+			return null;
+		}
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		user.setUserRoles(userRoles);
 		if (userRoles == null) {
