@@ -161,61 +161,47 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.version = version;
 	}
 
+	@Override
 	public boolean equals(Object o) {
-		if (o == this) {
-			return true;
-		}
-		if (o == null) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		RegistryCenterConfiguration that = (RegistryCenterConfiguration) o;
+
+		if (name != null ? !name.equals(that.name) : that.name != null) return false;
+		if (zkAddressList != null ? !zkAddressList.equals(that.zkAddressList) : that.zkAddressList != null)
 			return false;
-		}
-		if (this.getClass() != o.getClass()) {
+		if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) return false;
+		if (zkAlias != null ? !zkAlias.equals(that.zkAlias) : that.zkAlias != null) return false;
+		if (zkClusterKey != null ? !zkClusterKey.equals(that.zkClusterKey) : that.zkClusterKey != null) return false;
+		if (digest != null ? !digest.equals(that.digest) : that.digest != null) return false;
+		if (nameAndNamespace != null ? !nameAndNamespace.equals(that.nameAndNamespace) : that.nameAndNamespace != null)
 			return false;
-		}
-		RegistryCenterConfiguration other = (RegistryCenterConfiguration) o;
-		if (!other.canEqual(this)) {
-			return false;
-		}
-		Object this$name = getName();
-		Object other$name = other.getName();
-		if (this$name == null ? other$name != null : !this$name.equals(other$name)) {
-			return false;
-		}
-		Object this$namespace = getNamespace();
-		Object other$namespace = other.getNamespace();
-		if (this$namespace == null ? other$namespace != null : !this$namespace.equals(other$namespace)) {
-			return false;
-		}
-		Object this$sysAdmin = getSysAdmin();
-		Object other$sysAdmin = other.getSysAdmin();
-		if (this$sysAdmin == null ? other$sysAdmin != null : !this$sysAdmin.equals(other$sysAdmin)) {
-			return false;
-		}
-		Object this$techAdmin = getTechAdmin();
-		Object other$techAdmin = other.getTechAdmin();
-		if (this$techAdmin == null ? other$techAdmin != null : !this$techAdmin.equals(other$techAdmin)) {
-			return false;
-		}
-		Object this$degree = getDegree();
-		Object other$degree = other.getDegree();
-		return this$degree == null ? other$degree == null : this$degree.equals(other$degree);
+		if (sysAdmin != null ? !sysAdmin.equals(that.sysAdmin) : that.sysAdmin != null) return false;
+		if (techAdmin != null ? !techAdmin.equals(that.techAdmin) : that.techAdmin != null) return false;
+		if (degree != null ? !degree.equals(that.degree) : that.degree != null) return false;
+		return version != null ? version.equals(that.version) : that.version == null;
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + (zkAddressList != null ? zkAddressList.hashCode() : 0);
+		result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
+		result = 31 * result + (zkAlias != null ? zkAlias.hashCode() : 0);
+		result = 31 * result + (zkClusterKey != null ? zkClusterKey.hashCode() : 0);
+		result = 31 * result + (digest != null ? digest.hashCode() : 0);
+		result = 31 * result + (nameAndNamespace != null ? nameAndNamespace.hashCode() : 0);
+		result = 31 * result + (sysAdmin != null ? sysAdmin.hashCode() : 0);
+		result = 31 * result + (techAdmin != null ? techAdmin.hashCode() : 0);
+		result = 31 * result + (degree != null ? degree.hashCode() : 0);
+		result = 31 * result + (version != null ? version.hashCode() : 0);
+		return result;
 	}
 
 	protected boolean canEqual(Object other) {
 		return other instanceof RegistryCenterConfiguration;
-	}
-
-	public int hashCode() {
-		int result = 1;
-		Object $name = getName();
-		result = result * 59 + ($name == null ? 43 : $name.hashCode());
-		Object $namespace = getNamespace();
-		result = result * 59 + ($namespace == null ? 43 : $namespace.hashCode());
-		Object $sysAdmin = getSysAdmin();
-		result = result * 59 + ($sysAdmin == null ? 43 : $sysAdmin.hashCode());
-		Object $techAdmin = getTechAdmin();
-		result = result * 59 + ($techAdmin == null ? 43 : $techAdmin.hashCode());
-		Object $degree = getDegree();
-		return result * 59 + ($degree == null ? 43 : $degree.hashCode());
 	}
 
 	@Override

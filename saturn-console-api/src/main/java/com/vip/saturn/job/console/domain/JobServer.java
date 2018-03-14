@@ -50,11 +50,11 @@ public final class JobServer implements Serializable {
 	private boolean isContainer;
 
 	public String getPercentage() {
-		int count = processSuccessCount;
 		int total = processSuccessCount + processFailureCount;
 		if (total == 0) {
 			return "";
 		}
+		int count = processSuccessCount;
 		NumberFormat numberFormat = NumberFormat.getInstance();
 		// 设置精确到小数点后2位
 		numberFormat.setMaximumFractionDigits(2);

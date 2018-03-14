@@ -13,13 +13,10 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +29,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 @RequestMapping("/rest/v1")
 public class JobOperationRestApiController extends AbstractController {
-
-	private static final Logger log = LoggerFactory.getLogger(JobOperationRestApiController.class);
 
 	@Resource
 	private RestApiService restApiService;
@@ -177,14 +172,13 @@ public class JobOperationRestApiController extends AbstractController {
 
 	private JobConfig constructJobConfig(String namespace, Map<String, Object> reqParams)
 			throws SaturnJobConsoleException {
-		JobConfig jobConfig = new JobConfig();
-
 		checkMissingParameter("namespace", namespace);
-
 		if (!reqParams.containsKey("jobConfig")) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobConfig", "cannot be blank"));
 		}
+
+		JobConfig jobConfig = new JobConfig();
 		Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
 
 		jobConfig.setJobName(checkAndGetParametersValueAsString(reqParams, "jobName", true));

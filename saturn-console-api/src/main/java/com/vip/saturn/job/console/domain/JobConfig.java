@@ -59,11 +59,11 @@ public class JobConfig implements Serializable {
 
 	private Boolean useDispreferList;
 
-	private Boolean localMode = false;
+	private Boolean localMode = Boolean.FALSE;
 
-	private Boolean useSerial = false;
+	private Boolean useSerial = Boolean.FALSE;
 
-	private Boolean isCopyJob = false;
+	private Boolean isCopyJob = Boolean.FALSE;
 
 	private String jobMode;
 
@@ -86,9 +86,9 @@ public class JobConfig implements Serializable {
 		jobDegree = jobDegree == null ? 0 : jobDegree;
 		if (enabledReport == null) {
 			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
-				enabledReport = true;
+				enabledReport = Boolean.TRUE;
 			} else {
-				enabledReport = false;
+				enabledReport = Boolean.FALSE;
 			}
 		}
 		jobMode = jobMode == null ? "" : jobMode;
@@ -346,114 +346,56 @@ public class JobConfig implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
 		JobConfig jobConfig = (JobConfig) o;
 
-		if (jobName != null ? !jobName.equals(jobConfig.jobName) : jobConfig.jobName != null) {
+		if (jobName != null ? !jobName.equals(jobConfig.jobName) : jobConfig.jobName != null) return false;
+		if (jobClass != null ? !jobClass.equals(jobConfig.jobClass) : jobConfig.jobClass != null) return false;
+		if (shardingTotalCount != null ? !shardingTotalCount.equals(jobConfig.shardingTotalCount) : jobConfig.shardingTotalCount != null)
 			return false;
-		}
-		if (jobClass != null ? !jobClass.equals(jobConfig.jobClass) : jobConfig.jobClass != null) {
+		if (timeZone != null ? !timeZone.equals(jobConfig.timeZone) : jobConfig.timeZone != null) return false;
+		if (cron != null ? !cron.equals(jobConfig.cron) : jobConfig.cron != null) return false;
+		if (pausePeriodDate != null ? !pausePeriodDate.equals(jobConfig.pausePeriodDate) : jobConfig.pausePeriodDate != null)
 			return false;
-		}
-		if (shardingTotalCount != null ? !shardingTotalCount.equals(jobConfig.shardingTotalCount)
-				: jobConfig.shardingTotalCount != null) {
+		if (pausePeriodTime != null ? !pausePeriodTime.equals(jobConfig.pausePeriodTime) : jobConfig.pausePeriodTime != null)
 			return false;
-		}
-		if (timeZone != null ? !timeZone.equals(jobConfig.timeZone) : jobConfig.timeZone != null) {
+		if (shardingItemParameters != null ? !shardingItemParameters.equals(jobConfig.shardingItemParameters) : jobConfig.shardingItemParameters != null)
 			return false;
-		}
-		if (cron != null ? !cron.equals(jobConfig.cron) : jobConfig.cron != null) {
+		if (jobParameter != null ? !jobParameter.equals(jobConfig.jobParameter) : jobConfig.jobParameter != null)
 			return false;
-		}
-		if (pausePeriodDate != null ? !pausePeriodDate.equals(jobConfig.pausePeriodDate)
-				: jobConfig.pausePeriodDate != null) {
+		if (processCountIntervalSeconds != null ? !processCountIntervalSeconds.equals(jobConfig.processCountIntervalSeconds) : jobConfig.processCountIntervalSeconds != null)
 			return false;
-		}
-		if (pausePeriodTime != null ? !pausePeriodTime.equals(jobConfig.pausePeriodTime)
-				: jobConfig.pausePeriodTime != null) {
+		if (failover != null ? !failover.equals(jobConfig.failover) : jobConfig.failover != null) return false;
+		if (description != null ? !description.equals(jobConfig.description) : jobConfig.description != null)
 			return false;
-		}
-		if (shardingItemParameters != null ? !shardingItemParameters.equals(jobConfig.shardingItemParameters)
-				: jobConfig.shardingItemParameters != null) {
+		if (timeout4AlarmSeconds != null ? !timeout4AlarmSeconds.equals(jobConfig.timeout4AlarmSeconds) : jobConfig.timeout4AlarmSeconds != null)
 			return false;
-		}
-		if (jobParameter != null ? !jobParameter.equals(jobConfig.jobParameter) : jobConfig.jobParameter != null) {
+		if (timeoutSeconds != null ? !timeoutSeconds.equals(jobConfig.timeoutSeconds) : jobConfig.timeoutSeconds != null)
 			return false;
-		}
-		if (processCountIntervalSeconds != null ? !processCountIntervalSeconds
-				.equals(jobConfig.processCountIntervalSeconds)
-				: jobConfig.processCountIntervalSeconds != null) {
+		if (showNormalLog != null ? !showNormalLog.equals(jobConfig.showNormalLog) : jobConfig.showNormalLog != null)
 			return false;
-		}
-		if (failover != null ? !failover.equals(jobConfig.failover) : jobConfig.failover != null) {
+		if (channelName != null ? !channelName.equals(jobConfig.channelName) : jobConfig.channelName != null)
 			return false;
-		}
-		if (description != null ? !description.equals(jobConfig.description) : jobConfig.description != null) {
+		if (jobType != null ? !jobType.equals(jobConfig.jobType) : jobConfig.jobType != null) return false;
+		if (queueName != null ? !queueName.equals(jobConfig.queueName) : jobConfig.queueName != null) return false;
+		if (loadLevel != null ? !loadLevel.equals(jobConfig.loadLevel) : jobConfig.loadLevel != null) return false;
+		if (jobDegree != null ? !jobDegree.equals(jobConfig.jobDegree) : jobConfig.jobDegree != null) return false;
+		if (enabledReport != null ? !enabledReport.equals(jobConfig.enabledReport) : jobConfig.enabledReport != null)
 			return false;
-		}
-		if (timeout4AlarmSeconds != null ? !timeout4AlarmSeconds.equals(jobConfig.timeout4AlarmSeconds)
-				: jobConfig.timeout4AlarmSeconds != null) {
+		if (enabled != null ? !enabled.equals(jobConfig.enabled) : jobConfig.enabled != null) return false;
+		if (preferList != null ? !preferList.equals(jobConfig.preferList) : jobConfig.preferList != null) return false;
+		if (useDispreferList != null ? !useDispreferList.equals(jobConfig.useDispreferList) : jobConfig.useDispreferList != null)
 			return false;
-		}
-		if (timeoutSeconds != null ? !timeoutSeconds.equals(jobConfig.timeoutSeconds)
-				: jobConfig.timeoutSeconds != null) {
+		if (localMode != null ? !localMode.equals(jobConfig.localMode) : jobConfig.localMode != null) return false;
+		if (useSerial != null ? !useSerial.equals(jobConfig.useSerial) : jobConfig.useSerial != null) return false;
+		if (isCopyJob != null ? !isCopyJob.equals(jobConfig.isCopyJob) : jobConfig.isCopyJob != null) return false;
+		if (jobMode != null ? !jobMode.equals(jobConfig.jobMode) : jobConfig.jobMode != null) return false;
+		if (customContext != null ? !customContext.equals(jobConfig.customContext) : jobConfig.customContext != null)
 			return false;
-		}
-		if (showNormalLog != null ? !showNormalLog.equals(jobConfig.showNormalLog) : jobConfig.showNormalLog != null) {
+		if (dependencies != null ? !dependencies.equals(jobConfig.dependencies) : jobConfig.dependencies != null)
 			return false;
-		}
-		if (channelName != null ? !channelName.equals(jobConfig.channelName) : jobConfig.channelName != null) {
-			return false;
-		}
-		if (jobType != null ? !jobType.equals(jobConfig.jobType) : jobConfig.jobType != null) {
-			return false;
-		}
-		if (queueName != null ? !queueName.equals(jobConfig.queueName) : jobConfig.queueName != null) {
-			return false;
-		}
-		if (loadLevel != null ? !loadLevel.equals(jobConfig.loadLevel) : jobConfig.loadLevel != null) {
-			return false;
-		}
-		if (jobDegree != null ? !jobDegree.equals(jobConfig.jobDegree) : jobConfig.jobDegree != null) {
-			return false;
-		}
-		if (enabledReport != null ? !enabledReport.equals(jobConfig.enabledReport) : jobConfig.enabledReport != null) {
-			return false;
-		}
-		if (enabled != null ? !enabled.equals(jobConfig.enabled) : jobConfig.enabled != null) {
-			return false;
-		}
-		if (preferList != null ? !preferList.equals(jobConfig.preferList) : jobConfig.preferList != null) {
-			return false;
-		}
-		if (useDispreferList != null ? !useDispreferList.equals(jobConfig.useDispreferList)
-				: jobConfig.useDispreferList != null) {
-			return false;
-		}
-		if (localMode != null ? !localMode.equals(jobConfig.localMode) : jobConfig.localMode != null) {
-			return false;
-		}
-		if (useSerial != null ? !useSerial.equals(jobConfig.useSerial) : jobConfig.useSerial != null) {
-			return false;
-		}
-		if (isCopyJob != null ? !isCopyJob.equals(jobConfig.isCopyJob) : jobConfig.isCopyJob != null) {
-			return false;
-		}
-		if (jobMode != null ? !jobMode.equals(jobConfig.jobMode) : jobConfig.jobMode != null) {
-			return false;
-		}
-		if (customContext != null ? !customContext.equals(jobConfig.customContext) : jobConfig.customContext != null) {
-			return false;
-		}
-		if (dependencies != null ? !dependencies.equals(jobConfig.dependencies) : jobConfig.dependencies != null) {
-			return false;
-		}
 		return groups != null ? groups.equals(jobConfig.groups) : jobConfig.groups == null;
 	}
 

@@ -119,7 +119,7 @@ public class ExecutorStatistics implements Serializable {
 		if (processCountOfTheDay == 0) {
 			return 0;
 		}
-		float rate = (float) failureCountOfTheDay / processCountOfTheDay;
+		double rate = (double) failureCountOfTheDay / processCountOfTheDay;
 		return (float) (Math.floor(rate * 10000) / 10000.0);
 	}
 

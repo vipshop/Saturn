@@ -33,6 +33,154 @@ public class OutdatedNoRunningJobAnalyzer {
 
 	private List<AbnormalJob> outdatedNoRunningJobs = new ArrayList<>();
 
+	private static boolean isCronJob(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
+		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
+		return JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType);
+	}
+
+	private static boolean isEnabledPath(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			AbnormalJob abnormalJob) {
+		String enabledPath = JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "enabled");
+		return Boolean.parseBoolean(curatorFrameworkOp.getData(enabledPath));
+	}
+
+	public static boolean isEnabledReport(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
+		String enabledReportPath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
+		String enabledReportVal = curatorFrameworkOp.getData(enabledReportPath);
+		return enabledReportVal == null || "true".equals(enabledReportVal);
+	}
+
+	private static long getLastCompleteTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName,
+			String shardingItemStr) {
+		String lastCompleteTimePath = JobNodePath.getExecutionNodePath(jobName, shardingItemStr, "lastCompleteTime");
+		String data = curatorFrameworkOp.getData(lastCompleteTimePath);
+		return StringUtils.isBlank(data) ? 0 : Long.parseLong(data.trim());
+	}
+
+	/**
+	 * 该时间是否在作业暂停时间段范围内。
+	 * <p>
+	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
+	 *
+	 * @return 该时间是否在作业暂停时间段范围内。
+	 */
+	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
+			TimeZone timeZone) {
+		Calendar calendar = Calendar.getInstance(timeZone);
+		calendar.setTime(date);
+		int iMon = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
+		int d = calendar.get(Calendar.DAY_OF_MONTH);
+		int h = calendar.get(Calendar.HOUR_OF_DAY);
+		int m = calendar.get(Calendar.MINUTE);
+
+		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
+		boolean dateIn = false;
+		if (!pausePeriodDateIsEmpty) {
+			dateIn = isDateInPausePeriodDate(iMon, d, pausePeriodDate);
+		}
+
+		boolean timeIn = false;
+		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
+		if (!pausePeriodTimeIsEmpty) {
+			timeIn = isTimeInPausePeriodTime(h, m, pausePeriodTime);
+		}
+
+		if (pausePeriodDateIsEmpty) {
+			if (pausePeriodTimeIsEmpty) {
+				return false;
+			} else {
+				return timeIn;
+			}
+		} else {
+			if (pausePeriodTimeIsEmpty) {
+				return dateIn;
+			} else {
+				return dateIn && timeIn;
+			}
+		}
+	}
+
+	private static boolean isDateInPausePeriodDate(int m, int d, String pausePeriodDate) {
+		boolean dateIn = false;
+
+		String[] periodsDate = pausePeriodDate.split(",");
+		if (periodsDate == null) {
+			return dateIn;
+		}
+		for (String period : periodsDate) {
+			String[] tmp = period.trim().split("-");
+			if (tmp == null || tmp.length != 2) {
+				dateIn = false;
+				break;
+			}
+			String left = tmp[0].trim();
+			String right = tmp[1].trim();
+			String[] sMdLeft = left.split("/");
+			String[] sMdRight = right.split("/");
+			if (sMdLeft != null && sMdLeft.length == 2 && sMdRight != null && sMdRight.length == 2) {
+				try {
+					int iMLeft = Integer.parseInt(sMdLeft[0]);
+					int dLeft = Integer.parseInt(sMdLeft[1]);
+					int iMRight = Integer.parseInt(sMdRight[0]);
+					int dRight = Integer.parseInt(sMdRight[1]);
+					boolean isBiggerThanLeft = m > iMLeft || (m == iMLeft && d >= dLeft);
+					boolean isSmallerThanRight = m < iMRight || (m == iMRight && d <= dRight);
+					dateIn = isBiggerThanLeft && isSmallerThanRight;
+					if (dateIn) {
+						break;
+					}
+				} catch (NumberFormatException e) {
+					dateIn = false;
+					break;
+				}
+			} else {
+				dateIn = false;
+				break;
+			}
+		}
+		return dateIn;
+	}
+
+	private static boolean isTimeInPausePeriodTime(int hour, int min, String pausePeriodTime) {
+		boolean timeIn = false;
+		String[] periodsTime = pausePeriodTime.split(",");
+		if (periodsTime == null) {
+			return timeIn;
+		}
+		for (String period : periodsTime) {
+			String[] tmp = period.trim().split("-");
+			if (tmp == null || tmp.length != 2) {
+				timeIn = false;
+				break;
+			}
+			String left = tmp[0].trim();
+			String right = tmp[1].trim();
+			String[] hmLeft = left.split(":");
+			String[] hmRight = right.split(":");
+			if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
+				try {
+					int hLeft = Integer.parseInt(hmLeft[0]);
+					int mLeft = Integer.parseInt(hmLeft[1]);
+					int hRight = Integer.parseInt(hmRight[0]);
+					int mRight = Integer.parseInt(hmRight[1]);
+					boolean isBiggerThanLeft = hour > hLeft || (hour == hLeft && min >= mLeft);
+					boolean isSmallerThanRight = hour < hRight || (hour == hRight && min <= mRight);
+					timeIn = isBiggerThanLeft && isSmallerThanRight;
+					if (timeIn) {
+						break;
+					}
+				} catch (NumberFormatException e) {
+					timeIn = false;
+					break;
+				}
+			} else {
+				timeIn = false;
+				break;
+			}
+		}
+		return timeIn;
+	}
+
 	public void analyze(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, List<AbnormalJob> oldAbnormalJobs,
 			String jobName,
 			String jobDegree, RegistryCenterConfiguration config) {
@@ -69,29 +217,12 @@ public class OutdatedNoRunningJobAnalyzer {
 		}
 	}
 
-	private static boolean isCronJob(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
-		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-		return JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType);
-	}
-
-	private static boolean isEnabledPath(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob) {
-		String enabledPath = JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "enabled");
-		return Boolean.parseBoolean(curatorFrameworkOp.getData(enabledPath));
-	}
-
-	public static boolean isEnabledReport(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
-		String enabledReportPath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
-		String enabledReportVal = curatorFrameworkOp.getData(enabledReportPath);
-		return enabledReportVal == null || "true".equals(enabledReportVal);
-	}
-
 	/**
 	 * 检查和处理问题作业
 	 */
 	private void doCheckAndHandleOutdatedNoRunningJobByShardingItem(List<AbnormalJob> oldAbnormalJobs,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob, String enabledPath,
-			String item) throws Exception {
+			String item) {
 		if (contains(abnormalJob)) {
 			return;
 		}
@@ -171,8 +302,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private void handleOutdatedNoRunningJob(List<AbnormalJob> oldAbnormalJobs,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob, Long nextFireTime) throws Exception {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob, Long nextFireTime) {
 		String jobName = abnormalJob.getJobName();
 		String timeZone = getTimeZone(jobName, curatorFrameworkOp);
 		// 补充异常信息
@@ -185,8 +315,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private void fillAbnormalJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob,
-			String cause,
-			String timeZone, long nextFireTimeExcludePausePeriod) throws Exception {
+			String cause, String timeZone, long nextFireTimeExcludePausePeriod) {
 		if (executorNotReady(curatorFrameworkOp, abnormalJob)) {
 			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
 		}
@@ -247,8 +376,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	 * @return -1：状态正常，非-1：状态异常
 	 */
 	private long checkShardingItemState(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob, String enabledPath,
-			String shardingItemStr) throws Exception {
+			AbnormalJob abnormalJob, String enabledPath, String shardingItemStr) {
 		List<String> itemChildren = curatorFrameworkOp
 				.getChildren(JobNodePath.getExecutionItemNodePath(abnormalJob.getJobName(), shardingItemStr));
 
@@ -273,19 +401,16 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private long checkShardingItemStateWhenNotCompleted(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob,
-			String enabledPath, String shardingItemStr) {
+			AbnormalJob abnormalJob, String enabledPath, String shardingItemStr) {
 		if (abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime() == 0) {
 			long nextFireTimeAfterThis = curatorFrameworkOp.getMtime(enabledPath);
-			long lastCompleteTime = getLastCompleteTime(curatorFrameworkOp, abnormalJob.getJobName(),
-					shardingItemStr);
+			long lastCompleteTime = getLastCompleteTime(curatorFrameworkOp, abnormalJob.getJobName(), shardingItemStr);
 			if (nextFireTimeAfterThis < lastCompleteTime) {
 				nextFireTimeAfterThis = lastCompleteTime;
 			}
 
 			abnormalJob.setNextFireTimeAfterEnabledMtimeOrLastCompleteTime(
-					getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis,
-							abnormalJob.getJobName(),
+					getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, abnormalJob.getJobName(),
 							curatorFrameworkOp));
 		}
 		Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime();
@@ -297,16 +422,8 @@ public class OutdatedNoRunningJobAnalyzer {
 		return -1;
 	}
 
-	private static long getLastCompleteTime(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName,
-			String shardingItemStr) {
-		String lastCompleteTimePath = JobNodePath.getExecutionNodePath(jobName, shardingItemStr, "lastCompleteTime");
-		String data = curatorFrameworkOp.getData(lastCompleteTimePath);
-		return StringUtils.isBlank(data) ? 0 : Long.parseLong(data.trim());
-	}
-
 	private long checkShardingItemStateWhenIsCompleted(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob,
-			String enabledPath, String shardingItemStr) {
+			AbnormalJob abnormalJob, String enabledPath, String shardingItemStr) {
 		long currentTime = System.currentTimeMillis();
 		String completedPath = JobNodePath.getExecutionNodePath(abnormalJob.getJobName(), shardingItemStr, "completed");
 		long completedMtime = curatorFrameworkOp.getMtime(completedPath);
@@ -319,15 +436,13 @@ public class OutdatedNoRunningJobAnalyzer {
 			}
 
 			Long nextFireTimeExcludePausePeriod = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
-					nextFireTimeAfterThis,
-					abnormalJob.getJobName(), curatorFrameworkOp);
+					nextFireTimeAfterThis, abnormalJob.getJobName(), curatorFrameworkOp);
 			// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
 			if (nextFireTimeExcludePausePeriod != null
 					&& nextFireTimeExcludePausePeriod + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < currentTime) {
 				// 为了避免误报情况，加上一个delta，然后再计算
 				if (!doubleCheckShardingStateAfterAddingDeltaInterval(curatorFrameworkOp, abnormalJob,
-						nextFireTimeAfterThis,
-						nextFireTimeExcludePausePeriod, currentTime)) {
+						nextFireTimeAfterThis, nextFireTimeExcludePausePeriod, currentTime)) {
 					log.debug("still has problem after adding delta interval");
 					return nextFireTimeExcludePausePeriod;
 				} else {
@@ -344,16 +459,15 @@ public class OutdatedNoRunningJobAnalyzer {
 	 * @return false: 依然有异常；true: 修正后没有异常。
 	 */
 	private boolean doubleCheckShardingStateAfterAddingDeltaInterval(
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob, long nextFireTimeAfterThis, Long nextFireTimeExcludePausePeriod,
-			long currentTime) {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob,
+			long nextFireTimeAfterThis, Long nextFireTimeExcludePausePeriod, long currentTime) {
 		Long nextFireTimeExcludePausePeriodWithDelta = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
 				nextFireTimeAfterThis + DashboardConstants.INTERVAL_DELTA_IN_SECOND, abnormalJob.getJobName(),
 				curatorFrameworkOp);
 
 		if (nextFireTimeExcludePausePeriod.equals(nextFireTimeExcludePausePeriodWithDelta)
 				|| nextFireTimeExcludePausePeriodWithDelta
-				+ DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < currentTime) {
+						+ DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < currentTime) {
 			log.debug("still not work after adding delta interval");
 			return false;
 		}
@@ -397,114 +511,6 @@ public class OutdatedNoRunningJobAnalyzer {
 			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
 		}
 		return timeZoneStr;
-	}
-
-	/**
-	 * 该时间是否在作业暂停时间段范围内。
-	 * <p>
-	 * 特别的，无论pausePeriodDate，还是pausePeriodTime，如果解析发生异常，则忽略该节点，视为没有配置该日期或时分段。
-	 *
-	 * @return 该时间是否在作业暂停时间段范围内。
-	 */
-	private static boolean isInPausePeriod(Date date, String pausePeriodDate, String pausePeriodTime,
-			TimeZone timeZone) {
-		Calendar calendar = Calendar.getInstance(timeZone);
-		calendar.setTime(date);
-		int M = calendar.get(Calendar.MONTH) + 1; // Calendar.MONTH begin from 0.
-		int d = calendar.get(Calendar.DAY_OF_MONTH);
-		int h = calendar.get(Calendar.HOUR_OF_DAY);
-		int m = calendar.get(Calendar.MINUTE);
-
-		boolean dateIn = false;
-		boolean pausePeriodDateIsEmpty = (pausePeriodDate == null || pausePeriodDate.trim().isEmpty());
-		if (!pausePeriodDateIsEmpty) {
-			String[] periodsDate = pausePeriodDate.split(",");
-			if (periodsDate != null) {
-				for (String period : periodsDate) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] MdLeft = left.split("/");
-						String[] MdRight = right.split("/");
-						if (MdLeft != null && MdLeft.length == 2 && MdRight != null && MdRight.length == 2) {
-							try {
-								int MLeft = Integer.parseInt(MdLeft[0]);
-								int dLeft = Integer.parseInt(MdLeft[1]);
-								int MRight = Integer.parseInt(MdRight[0]);
-								int dRight = Integer.parseInt(MdRight[1]);
-								dateIn = (M > MLeft || M == MLeft && d >= dLeft)
-										&& (M < MRight || M == MRight && d <= dRight);// NOSONAR
-								if (dateIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								dateIn = false;
-								break;
-							}
-						} else {
-							dateIn = false;
-							break;
-						}
-					} else {
-						dateIn = false;
-						break;
-					}
-				}
-			}
-		}
-		boolean timeIn = false;
-		boolean pausePeriodTimeIsEmpty = (pausePeriodTime == null || pausePeriodTime.trim().isEmpty());
-		if (!pausePeriodTimeIsEmpty) {
-			String[] periodsTime = pausePeriodTime.split(",");
-			if (periodsTime != null) {
-				for (String period : periodsTime) {
-					String[] tmp = period.trim().split("-");
-					if (tmp != null && tmp.length == 2) {
-						String left = tmp[0].trim();
-						String right = tmp[1].trim();
-						String[] hmLeft = left.split(":");
-						String[] hmRight = right.split(":");
-						if (hmLeft != null && hmLeft.length == 2 && hmRight != null && hmRight.length == 2) {
-							try {
-								int hLeft = Integer.parseInt(hmLeft[0]);
-								int mLeft = Integer.parseInt(hmLeft[1]);
-								int hRight = Integer.parseInt(hmRight[0]);
-								int mRight = Integer.parseInt(hmRight[1]);
-								timeIn = (h > hLeft || h == hLeft && m >= mLeft)
-										&& (h < hRight || h == hRight && m <= mRight);// NOSONAR
-								if (timeIn) {
-									break;
-								}
-							} catch (NumberFormatException e) {
-								timeIn = false;
-								break;
-							}
-						} else {
-							timeIn = false;
-							break;
-						}
-					} else {
-						timeIn = false;
-						break;
-					}
-				}
-			}
-		}
-
-		if (pausePeriodDateIsEmpty) {
-			if (pausePeriodTimeIsEmpty) {
-				return false;
-			} else {
-				return timeIn;
-			}
-		} else {
-			if (pausePeriodTimeIsEmpty) {
-				return dateIn;
-			} else {
-				return dateIn && timeIn;
-			}
-		}
 	}
 
 	public List<AbnormalJob> getOutdatedNoRunningJobs() {
