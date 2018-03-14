@@ -7,7 +7,7 @@
         <result column="user_name" property="userName" jdbcType="VARCHAR"/>
         <result column="role_key" property="roleKey" jdbcType="VARCHAR"/>
         <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
-        <result column="approval" property="approval" jdbcType="BOOLEAN"/>
+        <result column="need_approval" property="needApproval" jdbcType="BOOLEAN"/>
         <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR"/>
@@ -16,15 +16,15 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.UserRole">
-        INSERT INTO `user_role`(`user_name`, `role_key`, `namespace`, `approval`, `created_by`, `create_time`,
+        INSERT INTO `user_role`(`user_name`, `role_key`, `namespace`, `need_approval`, `created_by`, `create_time`,
         `last_updated_by`, `last_update_time`, `is_deleted`)
         VALUES(#{userName, jdbcType=VARCHAR}, #{roleKey, jdbcType=VARCHAR}, #{namespace, jdbcType=VARCHAR},
-        #{approval, jdbcType=BOOLEAN},#{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP},
+        #{needApproval, jdbcType=BOOLEAN},#{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP},
         #{lastUpdatedBy, jdbcType=VARCHAR}, #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
     </insert>
 
     <sql id="selectAllSql">
-        SELECT `user_name`, `role_key`, `namespace`, `approval`, `created_by`, `create_time`, `last_updated_by`,
+        SELECT `user_name`, `role_key`, `namespace`, `need_approval`, `created_by`, `create_time`, `last_updated_by`,
         `last_update_time`, `is_deleted` FROM `user_role`
     </sql>
 
@@ -79,7 +79,7 @@
         `user_name` = #{cur.userName, jdbcType=VARCHAR},
         `role_key` = #{cur.roleKey, jdbcType=VARCHAR},
         `namespace` = #{cur.namespace, jdbcType=VARCHAR},
-        `approval` = #{cur.approval, jdbcType=VARCHAR},
+        `need_approval` = #{cur.needApproval, jdbcType=VARCHAR},
         `last_updated_by` = #{cur.lastUpdatedBy, jdbcType=VARCHAR},
         `is_deleted` = #{isDeleted, jdbcType=BOOLEAN}
         WHERE
