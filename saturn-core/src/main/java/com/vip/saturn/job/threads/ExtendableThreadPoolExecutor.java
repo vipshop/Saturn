@@ -80,9 +80,9 @@ public class ExtendableThreadPoolExecutor extends java.util.concurrent.ThreadPoo
 						submittedCount.decrementAndGet();
 						throw new RejectedExecutionException("Queue capacity is full.");
 					}
-				} catch (InterruptedException x) {
+				} catch (Exception ignore) {
 					submittedCount.decrementAndGet();
-					throw new RejectedExecutionException(x);
+					throw new RejectedExecutionException(ignore);
 				}
 			} else {
 				submittedCount.decrementAndGet();

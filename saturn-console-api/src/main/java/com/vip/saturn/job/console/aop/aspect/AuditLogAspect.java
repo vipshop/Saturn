@@ -40,10 +40,10 @@ public class AuditLogAspect {
 	public Object logAuditInfo(ProceedingJoinPoint joinPoint, Audit audit) throws Throwable {
 		addAuditParamsIfPossible(joinPoint);
 		String methodName = getMethodName(joinPoint, audit);
-		Boolean isSuccess = false;
+		Boolean isSuccess = Boolean.FALSE;
 		try {
 			Object result = joinPoint.proceed();
-			isSuccess = true;
+			isSuccess = Boolean.TRUE;
 			return result;
 		} finally {
 			logAudit(isSuccess, audit.type(), methodName);

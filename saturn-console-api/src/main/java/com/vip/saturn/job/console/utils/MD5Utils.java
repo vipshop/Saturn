@@ -1,5 +1,8 @@
 package com.vip.saturn.job.console.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -10,7 +13,9 @@ import java.security.NoSuchAlgorithmException;
  */
 public class MD5Utils {
 
-	private final static String[] HEXS = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e",
+	private static final Logger log = LoggerFactory.getLogger(MD5Utils.class);
+
+	private static final String[] HEXS = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e",
 			"f"};
 
 	private MD5Utils() {
@@ -22,7 +27,7 @@ public class MD5Utils {
 			MessageDigest md = MessageDigest.getInstance("MD5");
 			resultString = byteToString(md.digest(bytes));
 		} catch (NoSuchAlgorithmException ex) {
-			ex.printStackTrace();
+			log.warn("Exception: {}", ex);
 		}
 		return resultString;
 	}
@@ -38,10 +43,10 @@ public class MD5Utils {
 	}
 
 	private static String byteToString(byte[] bByte) {
-		StringBuffer sBuffer = new StringBuffer();
+		StringBuilder sBuilder = new StringBuilder();
 		for (int i = 0; i < bByte.length; i++) {
-			sBuffer.append(byteToArrayString(bByte[i]));
+			sBuilder.append(byteToArrayString(bByte[i]));
 		}
-		return sBuffer.toString();
+		return sBuilder.toString();
 	}
 }

@@ -257,7 +257,7 @@ public class JobServiceImpl implements JobService {
 		if (!jobConfig.getEnabled()) {
 			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于禁用状态");
 		}
-		jobConfig.setEnabled(false);
+		jobConfig.setEnabled(Boolean.FALSE);
 		jobConfig.setLastUpdateTime(new Date());
 		// FIXME:hebelala, ISSUE-359 完成后，username需要更新
 		jobConfig.setLastUpdateBy(null);
@@ -282,7 +282,7 @@ public class JobServiceImpl implements JobService {
 				.getCuratorFrameworkOp(namespace);
 		JobStatus jobStatus = getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
 
-		if (!JobStatus.STOPPED.equals(jobStatus)) {
+		if (JobStatus.STOPPED != jobStatus) {
 			throw new SaturnJobConsoleException(String.format("不能删除该作业(%s)，因为该作业不处于STOPPED状态", jobName));
 		}
 
