@@ -89,7 +89,7 @@ public class Timeout4AlarmJobAnalyzer {
 		for (String itemStr : items) {
 			long ctime = curatorFrameworkOp.getCtime(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
 			if (ctime > 0 && System.currentTimeMillis() - ctime > timeout4AlarmMills) {
-				timeout4AlarmJob.getTimeoutItems().add(Integer.parseInt(itemStr));
+				timeout4AlarmJob.getTimeoutItems().add(Integer.valueOf(itemStr));
 			}
 		}
 	}

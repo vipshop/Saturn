@@ -33,7 +33,6 @@ import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
-import com.vip.saturn.job.internal.server.ServerService;
 
 /**
  * 执行作业的服务.
@@ -47,8 +46,6 @@ public class ExecutionService extends AbstractSaturnService {
 
 	private ConfigurationService configService;
 
-	private ServerService serverService;
-
 	private ReportService reportService;
 
 	public ExecutionService(final JobScheduler jobScheduler) {
@@ -58,7 +55,6 @@ public class ExecutionService extends AbstractSaturnService {
 	@Override
 	public void start() {
 		configService = jobScheduler.getConfigService();
-		serverService = jobScheduler.getServerService();
 		reportService = jobScheduler.getReportService();
 	}
 

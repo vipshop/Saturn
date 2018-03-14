@@ -83,7 +83,8 @@ public class SaturnWorker implements Runnable {
 					while (paused && !halted.get()) {
 						try {
 							sigLock.wait(1000L);
-						} catch (InterruptedException ignore) {
+						} catch (Exception ignore) {
+							log.warn(ignore.getMessage());
 						}
 					}
 					if (halted.get()) {
@@ -114,7 +115,8 @@ public class SaturnWorker implements Runnable {
 
 						try {
 							sigLock.wait(timeUntilTrigger);
-						} catch (InterruptedException ignore) {
+						} catch (Exception ignore) {
+							log.warn(ignore.getMessage());
 						}
 
 						if (triggerObj != null) {
@@ -144,7 +146,8 @@ public class SaturnWorker implements Runnable {
 						} else { // 没有下次执行时间，则尝试睡一秒，防止不停的循环导致CPU使用率过高（如果cron不再改为周期性执行）
 							try {
 								sigLock.wait(1000L);
-							} catch (InterruptedException ignore) {
+							} catch (Exception ignore) {
+								log.warn(ignore.getMessage());
 							}
 						}
 					}

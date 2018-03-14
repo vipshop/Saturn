@@ -10,7 +10,7 @@ public enum JobType {
 	public static final JobType getJobType(String jobType) {
 		try {
 			return valueOf(jobType);
-		} catch (Exception e) {
+		} catch (Exception ignore) {
 			return UNKOWN_JOB;
 		}
 	}

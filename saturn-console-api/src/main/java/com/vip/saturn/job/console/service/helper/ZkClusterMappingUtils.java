@@ -56,7 +56,7 @@ public class ZkClusterMappingUtils {
 		}
 		String[] split = mappingValue.split(";");
 		for (String temp : split) {
-			int idx = temp.indexOf(":");
+			int idx = temp.indexOf(':');
 			if (idx < 0) {
 				log.warn(
 						"The {}' value {}, whose format is not correct, should like key:value1,value2;key2:value3,value4",
@@ -112,7 +112,7 @@ public class ZkClusterMappingUtils {
 		}
 		String[] split = mappingValue.split(";");
 		for (String temp : split) {
-			int idx = temp.indexOf(":");
+			int idx = temp.indexOf(':');
 			if (idx < 0) {
 				log.warn("The {}' value {}, whose format is not correct, should like key:value;key2:value2",
 						IDC_CONSOLE_DOMAIN_MAPPING, mappingValue);

@@ -45,12 +45,12 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 	/**
 	 * 会话超时时间
 	 */
-	private static int SESSION_TIMEOUT = 20 * 1000;
+	private static final int SESSION_TIMEOUT = 20 * 1000;
 
 	/**
 	 * 连接超时时间
 	 */
-	private static int CONNECTION_TIMEOUT = 20 * 1000;
+	private static final int CONNECTION_TIMEOUT = 20 * 1000;
 
 	@Override
 	public CuratorFramework connect(final String connectString, final String namespace, final String digest) {
@@ -99,7 +99,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		return new CuratorFrameworkOpImpl(curatorFramework);
 	}
 
-	class CuratorFrameworkOpImpl implements CuratorFrameworkOp {
+	static class CuratorFrameworkOpImpl implements CuratorFrameworkOp {
 
 		private CuratorFramework curatorFramework;
 
@@ -131,7 +131,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				} else {
 					return null;
 				}
-			} catch (final NoNodeException ex) {
+			} catch (final NoNodeException ignore) {
 				return null;
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
@@ -145,7 +145,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			try {
 				return curatorFramework.getChildren().forPath(znode);
 				// CHECKSTYLE:OFF
-			} catch (final NoNodeException ex) {
+			} catch (final NoNodeException ignore) {
 				return null;
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
@@ -163,7 +163,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		public void create(final String znode, Object data) {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(znode, data.toString().getBytes());
-			} catch (final NodeExistsException ex) {
+			} catch (final NodeExistsException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -179,7 +179,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				} else {
 					this.create(znode, value);
 				}
-			} catch (final NoNodeException ex) {
+			} catch (final NoNodeException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -193,7 +193,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				if (null != curatorFramework.checkExists().forPath(znode)) {
 					curatorFramework.delete().forPath(znode);
 				}
-			} catch (final NoNodeException ex) {
+			} catch (final NoNodeException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -207,7 +207,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				if (null != curatorFramework.checkExists().forPath(znode)) {
 					CuratorUtils.deletingChildrenIfNeeded(curatorFramework, znode);
 				}
-			} catch (final NoNodeException ex) {
+			} catch (final NoNodeException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -253,7 +253,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				if (stat != null) {
 					return stat.getMtime();
 				} else {
-					return 0l;
+					return 0L;
 				}
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -268,7 +268,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				if (stat != null) {
 					return stat.getCtime();
 				} else {
-					return 0l;
+					return 0L;
 				}
 			} catch (final Exception ex) {
 				// CHECKSTYLE:ON
@@ -294,7 +294,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			return curatorFramework;
 		}
 
-		class CuratorTransactionOpImpl implements CuratorTransactionOp {
+		static class CuratorTransactionOpImpl implements CuratorTransactionOp {
 
 			private CuratorTransactionFinal curatorTransactionFinal;
 			private CuratorFramework curatorClient;
@@ -327,11 +327,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 
 			private boolean bytesEquals(byte[] a, byte[] b) {
 				if (a == null || b == null) {
-					if (a == null && b == null) {
-						return true;
-					} else {
-						return false;
-					}
+					return (a == null && b == null);
 				}
 				if (a.length != b.length) {
 					return false;

@@ -38,7 +38,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 /**
  * @author chembo.huang
@@ -289,7 +288,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public String allProcessAndErrorCountOfTheDayByAllZkCluster() throws SaturnJobConsoleException {
-		int count = 0, error = 0;
+		int count = 0;
+		int error = 0;
 		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
@@ -469,18 +469,19 @@ public class DashboardServiceImpl implements DashboardService {
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<Integer, Integer> temp = loadJobRankDistribution(zkAddr);
-			if (temp != null) {
-				Iterator<Entry<Integer, Integer>> iterator = temp.entrySet().iterator();
-				while (iterator.hasNext()) {
-					Entry<Integer, Integer> next = iterator.next();
-					Integer jobDegree = next.getKey();
-					Integer count = next.getValue();
-					if (jobDegree != null && count != null) {
-						if (jobDegreeCountMap.containsKey(jobDegree)) {
-							jobDegreeCountMap.put(jobDegree, jobDegreeCountMap.get(jobDegree) + count);
-						} else {
-							jobDegreeCountMap.put(jobDegree, count);
-						}
+			if (temp == null) {
+				continue;
+			}
+			Iterator<Entry<Integer, Integer>> iterator = temp.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<Integer, Integer> next = iterator.next();
+				Integer jobDegree = next.getKey();
+				Integer count = next.getValue();
+				if (jobDegree != null && count != null) {
+					if (jobDegreeCountMap.containsKey(jobDegree)) {
+						jobDegreeCountMap.put(jobDegree, jobDegreeCountMap.get(jobDegree) + count);
+					} else {
+						jobDegreeCountMap.put(jobDegree, count);
 					}
 				}
 			}
@@ -508,18 +509,19 @@ public class DashboardServiceImpl implements DashboardService {
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<String, Long> temp = versionDomainNumber(zkAddr);
-			if (temp != null) {
-				Iterator<Entry<String, Long>> iterator = temp.entrySet().iterator();
-				while (iterator.hasNext()) {
-					Entry<String, Long> next = iterator.next();
-					String version = next.getKey();
-					Long domainNumber = next.getValue();
-					if (version != null && domainNumber != null) {
-						if (versionDomainNumberMap.containsKey(version)) {
-							versionDomainNumberMap.put(version, versionDomainNumberMap.get(version) + domainNumber);
-						} else {
-							versionDomainNumberMap.put(version, domainNumber);
-						}
+			if (temp == null) {
+				continue;
+			}
+			Iterator<Entry<String, Long>> iterator = temp.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<String, Long> next = iterator.next();
+				String version = next.getKey();
+				Long domainNumber = next.getValue();
+				if (version != null && domainNumber != null) {
+					if (versionDomainNumberMap.containsKey(version)) {
+						versionDomainNumberMap.put(version, versionDomainNumberMap.get(version) + domainNumber);
+					} else {
+						versionDomainNumberMap.put(version, domainNumber);
 					}
 				}
 			}
@@ -547,19 +549,20 @@ public class DashboardServiceImpl implements DashboardService {
 		for (ZkCluster zkCluster : zkClusterList) {
 			String zkAddr = zkCluster.getZkAddr();
 			Map<String, Long> temp = versionExecutorNumber(zkAddr);
-			if (temp != null) {
-				Iterator<Entry<String, Long>> iterator = temp.entrySet().iterator();
-				while (iterator.hasNext()) {
-					Entry<String, Long> next = iterator.next();
-					String version = next.getKey();
-					Long executorNumber = next.getValue();
-					if (version != null && executorNumber != null) {
-						if (versionExecutorNumberMap.containsKey(version)) {
-							versionExecutorNumberMap.put(version,
-									versionExecutorNumberMap.get(version) + executorNumber);
-						} else {
-							versionExecutorNumberMap.put(version, executorNumber);
-						}
+			if (temp == null) {
+				continue;
+			}
+			Iterator<Entry<String, Long>> iterator = temp.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<String, Long> next = iterator.next();
+				String version = next.getKey();
+				Long executorNumber = next.getValue();
+				if (version != null && executorNumber != null) {
+					if (versionExecutorNumberMap.containsKey(version)) {
+						versionExecutorNumberMap.put(version,
+								versionExecutorNumberMap.get(version) + executorNumber);
+					} else {
+						versionExecutorNumberMap.put(version, executorNumber);
 					}
 				}
 			}

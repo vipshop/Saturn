@@ -310,7 +310,8 @@ public class JobScheduler {
 			zkCacheManager.shutdown();
 			try {
 				Thread.sleep(500);// NOSONAR
-			} catch (InterruptedException e) {
+			} catch (Exception ignore) {
+				log.warn(ignore.getMessage());
 			}
 			if (removejob) {
 				jobNodeStorage.deleteJobNode();

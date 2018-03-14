@@ -20,7 +20,6 @@ import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -143,7 +142,7 @@ public class RestApiServiceImpl implements RestApiService {
 			}
 		}
 		String enabledNodePath = JobNodePath.getConfigNodePath(jobName, "enabled");
-		if (Boolean.valueOf(curatorFrameworkOp.getData(enabledNodePath))) {
+		if (Boolean.parseBoolean(curatorFrameworkOp.getData(enabledNodePath))) {
 			if (isRunning) {
 				restApiJobInfo.setRunningStatus(JobStatus.RUNNING.name());
 			} else {
@@ -545,6 +544,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 							reportAlarmService.raise(namespace, jobName, executorName, shardItem, alarmInfo);
 						} catch (ReportAlarmException e) {
+							log.warn("ReportAlarmException: {}", e);
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 									e.getMessage());
 						}
@@ -564,6 +564,7 @@ public class RestApiServiceImpl implements RestApiService {
 							String restartTime = obtainRestartTime(alarmInfo);
 							reportAlarmService.executorRestart(namespace, executorName, restartTime);
 						} catch (ReportAlarmException e) {
+							log.warn("ReportAlarmException: {}", e);
 							throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 									e.getMessage());
 						}

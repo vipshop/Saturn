@@ -907,11 +907,11 @@ public class JobServiceImpl implements JobService {
 				} catch (SaturnJobConsoleException e) {
 					importJobResult.setSuccess(false);
 					importJobResult.setMessage(e.getMessage());
-					log.info("exception: {}", e);
+					log.warn("exception: {}", e);
 				} catch (Exception e) {
 					importJobResult.setSuccess(false);
 					importJobResult.setMessage(e.toString());
-					log.info("exception: {}", e);
+					log.warn("exception: {}", e);
 				}
 				results.add(importJobResult);
 			}
@@ -1014,7 +1014,7 @@ public class JobServiceImpl implements JobService {
 			}
 		} catch (NumberFormatException e) {
 			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e.toString()));
+					createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e));
 		}
 		jobConfig.setTimeoutSeconds(timeoutSeconds);
 

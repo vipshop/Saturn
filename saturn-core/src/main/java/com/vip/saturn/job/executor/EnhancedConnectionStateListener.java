@@ -55,7 +55,8 @@ public abstract class EnhancedConnectionStateListener implements ConnectionState
                         do {
                             try {
                                 Thread.sleep(1000L);
-                            } catch (InterruptedException e) {
+                            } catch (Exception ignore) {
+                                LOGGER.warn(ignore.getMessage());
                             }
                             if (closed) {
                                 break;

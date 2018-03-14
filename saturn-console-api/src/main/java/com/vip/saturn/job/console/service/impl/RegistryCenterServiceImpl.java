@@ -57,6 +57,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -361,7 +362,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					try {
 						namespaceShardingManager.stop();
 					} catch (Exception e2) {
-						log.error(e.getMessage(), e);
+						log.error(e2.getMessage(), e2);
 					}
 				}
 				client.close();
@@ -383,16 +384,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		connectToZkClusterIfPossible(newClusterMap);
 
 		// 完善ZkCluster中的注册中心信息，关闭迁移了的域，新建迁移过来的域
-		for (String zkClusterKey : newClusterMap.keySet()) {
-			ZkCluster zkCluster = newClusterMap.get(zkClusterKey);
+		for (Map.Entry<String, ZkCluster> zkClusterEntry : newClusterMap.entrySet()) {
+
+			ZkCluster zkCluster = zkClusterEntry.getValue();
 			List<NamespaceZkClusterMapping> nsZkClusterMappingList = namespaceZkClusterMapping4SqlService
-					.getAllMappingsOfCluster(zkClusterKey);
+					.getAllMappingsOfCluster(zkClusterEntry.getKey());
 			// zkCluster对应的namespace列表
 			List<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
 
-			closeMoveOutNamespace(zkClusterKey, nsZkClusterMappingList, regCenterConfList);
+			closeMoveOutNamespace(zkClusterEntry.getKey(), nsZkClusterMappingList, regCenterConfList);
 
-			initMoveInNamespace(allOnlineNamespacesTemp, zkClusterKey, zkCluster, nsZkClusterMappingList,
+			initMoveInNamespace(allOnlineNamespacesTemp, zkClusterEntry.getKey(), zkCluster, nsZkClusterMappingList,
 					regCenterConfList);
 		}
 		// 直接赋值新的
@@ -734,7 +736,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 
 				String version = new String(bs, "UTF-8");
-				if (version != null && !version.trim().isEmpty()) {
+				if (!version.trim().isEmpty()) {
 					String tmp = version.trim();
 					if (!versionList.contains(tmp)) {
 						versionList.add(tmp);

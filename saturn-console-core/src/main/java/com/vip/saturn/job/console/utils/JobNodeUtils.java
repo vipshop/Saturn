@@ -27,7 +27,8 @@ public class JobNodeUtils {
 		List<String> items = null;
 		try {
 			items = curatorClient.getChildren().forPath(executionRootpath);
-		} catch (Exception e) {
+		} catch (Exception ignore){
+			return items;
 		}
 		return items;
 	}
@@ -65,7 +66,7 @@ public class JobNodeUtils {
 			} else {
 				return null;
 			}
-		} catch (final NoNodeException ex) {
+		} catch (final NoNodeException ignore) {
 			return null;
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
@@ -104,7 +105,7 @@ public class JobNodeUtils {
 			if (stat != null) {
 				return stat.getMtime();
 			} else {
-				return 0l;
+				return 0L;
 			}
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON

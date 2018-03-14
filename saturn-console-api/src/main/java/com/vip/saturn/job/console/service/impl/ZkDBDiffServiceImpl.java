@@ -149,7 +149,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 				}
 			}
 
-			List<JobDiffInfo> jobsInZkOnly = getJobNamesWhichInZKOnly(namespace, zkClient, jobNamesInDb);
+			List<JobDiffInfo> jobsInZkOnly = getJobNamesWhichInZKOnly(namespace, jobNamesInDb);
 			if (jobsInZkOnly != null && !jobsInZkOnly.isEmpty()) {
 				jobDiffInfos.addAll(jobsInZkOnly);
 			}
@@ -335,7 +335,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 		return null;
 	}
 
-	private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace, CuratorRepository.CuratorFrameworkOp zkClient,
+	private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace,
 			Set<String> jobNamesInDb) throws SaturnJobConsoleException {
 		List<JobDiffInfo> jobsOnlyInZK = Lists.newArrayList();
 		List<String> jobNamesInZk = jobService.getAllJobNamesFromZK(namespace);

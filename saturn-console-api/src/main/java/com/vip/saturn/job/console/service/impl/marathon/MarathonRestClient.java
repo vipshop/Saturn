@@ -27,6 +27,10 @@ import java.io.InputStreamReader;
  * @author hebelala
  */
 public class MarathonRestClient {
+ 	private static final String AUTHORIZATION_DES = "Authorization";
+	private static final String BASIC_DES = "Basic ";
+	private static final String UTF8_DES = "UTF-8";
+	private static final String API_VERSION_DES = "/v2/apps/";
 
 	private static Logger log = LoggerFactory.getLogger(MarathonRestClient.class);
 
@@ -82,8 +86,8 @@ public class MarathonRestClient {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpPost httpPost = new HttpPost(urlStr);
-			httpPost.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpPost.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			httpPost.setHeader("Content-type", "application/json; charset=utf-8");
 			httpPost.setEntity(new StringEntity(deployFormModel.toJSONString()));
 
@@ -92,9 +96,7 @@ public class MarathonRestClient {
 			if (statusLine != null) {
 				int statusCode = statusLine.getStatusCode();
 				String reasonPhrase = statusLine.getReasonPhrase();
-				if (statusCode == 200) {
-				} else if (statusCode == 201) {
-				} else {
+				if ((statusCode != 200) && (statusCode != 201)) {
 					HttpEntity entity = httpResponse.getEntity();
 					if (entity != null) {
 						String entityContent = getEntityContent(entity);
@@ -120,19 +122,18 @@ public class MarathonRestClient {
 	}
 
 	public static void destroy(String userName, String password, String appId) throws SaturnJobConsoleException {
-		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + "/v2/apps/" + appId;
+		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + API_VERSION_DES + appId;
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpDelete httpDelete = new HttpDelete(urlStr);
-			httpDelete.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpDelete.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			CloseableHttpResponse httpResponse = httpClient.execute(httpDelete);
 			StatusLine statusLine = httpResponse.getStatusLine();
 			if (statusLine != null) {
 				int statusCode = statusLine.getStatusCode();
 				String reasonPhrase = statusLine.getReasonPhrase();
-				if (statusCode == 200) {
-				} else {
+				if (statusCode != 200) {
 					HttpEntity entity = httpResponse.getEntity();
 					if (entity != null) {
 						String entityContent = getEntityContent(entity);
@@ -158,12 +159,12 @@ public class MarathonRestClient {
 	}
 
 	public static int count(String userName, String password, String appId) throws SaturnJobConsoleException {
-		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + "/v2/apps/" + appId + "/tasks";
+		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + API_VERSION_DES + appId + "/tasks";
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpGet httpGet = new HttpGet(urlStr);
-			httpGet.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpGet.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
 			HttpEntity entity = httpResponse.getEntity();
 			if (entity != null) {
@@ -171,7 +172,7 @@ public class MarathonRestClient {
 				StatusLine statusLine = httpResponse.getStatusLine();
 				if (statusLine != null && statusLine.getStatusCode() == 200) {
 					Tasks tasks = JSON.parseObject(entityContent, Tasks.class);
-					return tasks != null && tasks.getTasks() != null ? tasks.getTasks().size() : 0;
+					return tasks != null && tasks.getTaskList() != null ? tasks.getTaskList().size() : 0;
 				} else {
 					throw new SaturnJobConsoleException(entityContent);
 				}
@@ -194,12 +195,12 @@ public class MarathonRestClient {
 			throws SaturnJobConsoleException {
 		JSONObject params = new JSONObject();
 		params.put("instances", instances);
-		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + "/v2/apps/" + appId + "?force=true";
+		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + API_VERSION_DES + appId + "?force=true";
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpPut httpPut = new HttpPut(urlStr);
-			httpPut.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpPut.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			httpPut.setHeader("Content-type", "application/json; charset=utf-8");
 			httpPut.setEntity(new StringEntity(params.toJSONString()));
 			CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
@@ -207,9 +208,7 @@ public class MarathonRestClient {
 			if (statusLine != null) {
 				int statusCode = statusLine.getStatusCode();
 				String reasonPhrase = statusLine.getReasonPhrase();
-				if (statusCode == 200) {
-				} else if (statusCode == 201) {
-				} else {
+				if ((statusCode != 200) && (statusCode != 201)) {
 					HttpEntity entity = httpResponse.getEntity();
 					if (entity != null) {
 						String entityContent = getEntityContent(entity);
@@ -236,12 +235,12 @@ public class MarathonRestClient {
 
 	public static ContainerStatus getContainerStatus(String userName, String password, String appId)
 			throws SaturnJobConsoleException {
-		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + "/v2/apps/" + appId;
+		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + API_VERSION_DES + appId;
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpGet httpGet = new HttpGet(urlStr);
-			httpGet.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpGet.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
 			HttpEntity entity = httpResponse.getEntity();
 			if (entity != null) {
@@ -275,12 +274,12 @@ public class MarathonRestClient {
 	}
 
 	public static String info(String userName, String password, String appId) throws SaturnJobConsoleException {
-		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + "/v2/apps/" + appId;
+		String urlStr = SaturnEnvProperties.VIP_SATURN_DCOS_REST_URI + API_VERSION_DES + appId;
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
 			HttpGet httpGet = new HttpGet(urlStr);
-			httpGet.setHeader("Authorization",
-					"Basic " + Base64.encodeBase64String((userName + ":" + password).getBytes("UTF-8")));
+			httpGet.setHeader(AUTHORIZATION_DES,
+					BASIC_DES + Base64.encodeBase64String((userName + ":" + password).getBytes(UTF8_DES)));
 			CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
 			HttpEntity entity = httpResponse.getEntity();
 			if (entity != null) {

@@ -96,7 +96,7 @@ public class NamespaceInfoServiceImpl implements NamespaceInfoService {
 			}
 			try {
 				TimeUnit.MILLISECONDS.sleep(50);
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}

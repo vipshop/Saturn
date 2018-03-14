@@ -7,13 +7,13 @@ import java.util.List;
  */
 public class Tasks {
 
-	private List<Task> tasks;
+	private List<Task> taskList;
 
-	public List<Task> getTasks() {
-		return tasks;
+	public List<Task> getTaskList() {
+		return taskList;
 	}
 
-	public void setTasks(List<Task> tasks) {
-		this.tasks = tasks;
+	public void setTaskList(List<Task> taskList) {
+		this.taskList = taskList;
 	}
 }
