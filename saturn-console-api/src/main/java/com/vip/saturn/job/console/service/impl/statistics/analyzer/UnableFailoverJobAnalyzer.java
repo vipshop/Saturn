@@ -46,25 +46,26 @@ public class UnableFailoverJobAnalyzer {
 	private boolean isUnableFailoverJob(CuratorFrameworkOp curatorFrameworkOp, AbnormalJob unableFailoverJob) {
 		try {
 			String jobName = unableFailoverJob.getJobName();
-			String preferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"));
 			List<ExecutorProvided> preferListProvided = jobService
 					.getCandidateExecutors(curatorFrameworkOp.getCuratorFramework().getNamespace(), jobName);
 			if (CollectionUtils.isEmpty(preferListProvided)) {
 				return false;
 			}
+			String preferList = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "preferList"));
 			List<String> preferListArr = toPerferListArr(preferList);
 			boolean containerSelected = false;
 			int count = 0;
 			if (onlyUsePreferList(curatorFrameworkOp, jobName)) {
 				for (ExecutorProvided executorProvided : preferListProvided) {
-					if (preferListArr.contains(executorProvided.getExecutorName())) {
-						if (ExecutorProvidedType.DOCKER.equals(executorProvided.getType())) {
-							containerSelected = true;
-							break;
-						} else if (ExecutorProvidedType.PHYSICAL.equals(executorProvided.getType())
-								&& ExecutorProvidedStatus.ONLINE.equals(executorProvided.getStatus())) {
-							count++;
-						}
+					if (!preferListArr.contains(executorProvided.getExecutorName())) {
+						continue;
+					}
+					if (ExecutorProvidedType.DOCKER.equals(executorProvided.getType())) {
+						containerSelected = true;
+						break;
+					} else if (ExecutorProvidedType.PHYSICAL.equals(executorProvided.getType())
+							&& ExecutorProvidedStatus.ONLINE.equals(executorProvided.getStatus())) {
+						count++;
 					}
 				}
 			} else {
@@ -77,9 +78,9 @@ public class UnableFailoverJobAnalyzer {
 					if (ExecutorProvidedType.PHYSICAL.equals(executorProvided.getType()) &&
 							ExecutorProvidedStatus.ONLINE.equals(executorProvided.getStatus())) {
 						count++;
-						if (count > 1) {
-							break;
-						}
+					}
+					if (count > 1) {
+						break;
 					}
 				}
 			}

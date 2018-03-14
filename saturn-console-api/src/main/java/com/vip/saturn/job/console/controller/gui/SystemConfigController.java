@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -81,8 +80,8 @@ public class SystemConfigController extends AbstractGUIController {
 			List<SystemConfig> systemConfigs) {
 		Map<String, SystemConfig> systemConfigMap = convertList2Map(systemConfigs);
 		Map<String, List<SystemConfigVo>> jobConfigDisplayInfoMap = Maps.newHashMap();
-		for (String group : jobConfigGroups.keySet()) {
-			List<JobConfigMeta> jobConfigMetas = jobConfigGroups.get(group);
+		for (Map.Entry<String, List<JobConfigMeta>> group : jobConfigGroups.entrySet()) {
+			List<JobConfigMeta> jobConfigMetas = group.getValue();
 			List<SystemConfigVo> jobConfigVos = Lists.newArrayListWithCapacity(jobConfigMetas.size());
 			for (JobConfigMeta configMeta : jobConfigMetas) {
 				SystemConfig systemConfig = systemConfigMap.get(configMeta.getName());
@@ -90,7 +89,7 @@ public class SystemConfigController extends AbstractGUIController {
 				jobConfigVos.add(new SystemConfigVo(configMeta.getName(), value, configMeta.getDesc_zh()));
 			}
 
-			jobConfigDisplayInfoMap.put(group, jobConfigVos);
+			jobConfigDisplayInfoMap.put(group.getKey(), jobConfigVos);
 		}
 		return jobConfigDisplayInfoMap;
 	}
