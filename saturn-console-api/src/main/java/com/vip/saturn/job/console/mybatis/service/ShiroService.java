@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.Role;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 
@@ -22,5 +23,7 @@ public interface ShiroService {
 	User getUser(String userName) throws SaturnJobConsoleException;
 
 	List<User> getSupers() throws SaturnJobConsoleException;
+
+	Role getSuperRole() throws SaturnJobConsoleException;
 
 }

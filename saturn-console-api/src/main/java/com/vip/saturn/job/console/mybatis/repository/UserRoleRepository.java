@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,6 +26,6 @@ public interface UserRoleRepository {
 
 	int delete(UserRole userRole);
 
-	int update(UserRole pre, UserRole cur);
+	int update(@Param("pre") UserRole pre, @Param("cur") UserRole cur);
 
 }

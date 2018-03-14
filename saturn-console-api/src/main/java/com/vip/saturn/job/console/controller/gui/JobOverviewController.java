@@ -3,44 +3,27 @@ package com.vip.saturn.job.console.controller.gui;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.DependencyJob;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobOverviewJobVo;
-import com.vip.saturn.job.console.domain.JobOverviewVo;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.JobType;
-import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
-import com.vip.saturn.job.console.utils.AuditInfoContext;
-import com.vip.saturn.job.console.utils.SaturnBeanUtils;
-import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
-import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.console.utils.*;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Job overview related operations.
@@ -91,8 +74,8 @@ public class JobOverviewController extends AbstractGUIController {
 
 	private void updateAbnormalJobSizeInOverview(String namespace, JobOverviewVo jobOverviewVo) {
 		try {
-				List<AbnormalJob> abnormalJobList = alarmStatisticsService.getAbnormalJobListByNamespace(namespace);
-				jobOverviewVo.setAbnormalNumber(abnormalJobList.size());
+			List<AbnormalJob> abnormalJobList = alarmStatisticsService.getAbnormalJobListByNamespace(namespace);
+			jobOverviewVo.setAbnormalNumber(abnormalJobList.size());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -143,8 +126,8 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 	}
 
-	private void updateShardingListInOverview(String namespace, JobConfig jobConfig,
-			JobOverviewJobVo jobOverviewJobVo) throws SaturnJobConsoleException {
+	private void updateShardingListInOverview(String namespace, JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo)
+			throws SaturnJobConsoleException {
 		List<String> jobShardingAllocatedExecutorList = jobService
 				.getJobShardingAllocatedExecutorList(namespace, jobConfig.getJobName());
 
@@ -169,8 +152,7 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/dependency")
-	public SuccessResponseEntity getDependingJobs(final HttpServletRequest request,
-			@PathVariable String namespace,
+	public SuccessResponseEntity getDependingJobs(final HttpServletRequest request, @PathVariable String namespace,
 			@PathVariable String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
 		return new SuccessResponseEntity(dependencyJobs);
@@ -178,10 +160,8 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/dependency")
-	public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request,
-			@PathVariable String namespace,
-			@RequestParam List<String> jobNames)
-			throws SaturnJobConsoleException {
+	public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request, @PathVariable String namespace,
+			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
 			List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
@@ -195,17 +175,16 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/beDependedJobs")
-	public SuccessResponseEntity getDependedJobs(final HttpServletRequest request,
-			@PathVariable String namespace, @PathVariable String jobName) throws SaturnJobConsoleException {
+	public SuccessResponseEntity getDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
+			@PathVariable String jobName) throws SaturnJobConsoleException {
 		List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
 		return new SuccessResponseEntity(dependedJobs);
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/beDependedJobs")
-	public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request,
-			@PathVariable String namespace, @RequestParam List<String> jobNames)
-			throws SaturnJobConsoleException {
+	public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
+			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
 		for (String jobName : jobNames) {
 			List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
@@ -216,6 +195,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobEnable)
 	@PostMapping(value = "/{jobName}/enable")
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -226,11 +206,11 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobBatchEnable)
 	@PostMapping(value = "/enable")
 	public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobNames") @RequestParam List<String> jobNames)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName);
 		}
@@ -239,6 +219,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobDisable)
 	@PostMapping(value = "/{jobName}/disable")
 	public SuccessResponseEntity disableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -249,11 +230,11 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobBatchDisable)
 	@PostMapping(value = "/disable")
 	public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobNames") @RequestParam List<String> jobNames)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
 		}
@@ -262,6 +243,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobRemove)
 	@DeleteMapping(value = "/{jobName}")
 	public SuccessResponseEntity removeJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -272,6 +254,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobBatchRemove)
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -301,12 +284,12 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobSetPreferExecutors)
 	@PostMapping(value = "/preferExecutors")
 	public SuccessResponseEntity batchSetPreferExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames,
-			@AuditParam("preferList") @RequestParam String preferList)
-			throws SaturnJobConsoleException {
+			@AuditParam("preferList") @RequestParam String preferList) throws SaturnJobConsoleException {
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList);
 		}
@@ -315,6 +298,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobAdd)
 	@PostMapping(value = "/jobs")
 	public SuccessResponseEntity createJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
@@ -325,6 +309,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobCopy)
 	@PostMapping(value = "/{jobNameCopied}/copy")
 	public SuccessResponseEntity copyJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
@@ -336,6 +321,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobImport)
 	@PostMapping(value = "/import")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, @RequestParam("file") MultipartFile file)
@@ -353,6 +339,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.jobExport)
 	@GetMapping(value = "/export")
 	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
@@ -367,8 +354,8 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{jobName}/executors")
-	public SuccessResponseEntity getExecutors(final HttpServletRequest request,
-			@PathVariable String namespace, @PathVariable String jobName) throws SaturnJobConsoleException {
+	public SuccessResponseEntity getExecutors(final HttpServletRequest request, @PathVariable String namespace,
+			@PathVariable String jobName) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(jobService.getCandidateExecutors(namespace, jobName));
 	}
 

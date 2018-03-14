@@ -19,17 +19,16 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
+import com.vip.saturn.job.console.utils.Permissions;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Collection;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RequestMapping("/console/dashboard")
 public class DashboardController extends AbstractGUIController {
@@ -137,8 +136,8 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/top10FailDomain")
-	public SuccessResponseEntity top10FailDomain(
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+	public SuccessResponseEntity top10FailDomain(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 			SaturnStatistics ss = dashboardService.top10FailureDomain(zkCluster.getZkAddr());
@@ -149,8 +148,8 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/top10UnstableDomain")
-	public SuccessResponseEntity top10UnstableDomain(
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+	public SuccessResponseEntity top10UnstableDomain(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 			SaturnStatistics ss = dashboardService.top10UnstableDomain(zkCluster.getZkAddr());
@@ -161,8 +160,8 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/top10LoadExecutor")
-	public SuccessResponseEntity top10LoadExecutor(
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+	public SuccessResponseEntity top10LoadExecutor(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 			SaturnStatistics ss = dashboardService.top10LoadExecutor(zkCluster.getZkAddr());
@@ -195,8 +194,8 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/jobRank")
-	public SuccessResponseEntity loadJobRank(
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+	public SuccessResponseEntity loadJobRank(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 			return new SuccessResponseEntity(dashboardService.loadJobRankDistribution(zkCluster.getZkAddr()));
@@ -217,8 +216,8 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/executorVersionNumber")
-	public SuccessResponseEntity versionExecutorNumber(
-			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+	public SuccessResponseEntity versionExecutorNumber(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
 		if (StringUtils.isNotBlank(zkClusterKey)) {
 			ZkCluster zkCluster = checkAndGetZkCluster(zkClusterKey);
 			return new SuccessResponseEntity(dashboardService.versionExecutorNumber(zkCluster.getZkAddr()));
@@ -228,6 +227,7 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.dashboardCleanShardingCount)
 	@PostMapping(value = "/namespaces/{namespace:.+}/shardingCount/clean")
 	public SuccessResponseEntity cleanShardingCount(@PathVariable String namespace) throws SaturnJobConsoleException {
 		dashboardService.cleanShardingCount(namespace);
@@ -236,16 +236,17 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.dashboardCleanOneJobAnalyse)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobAnalyse(@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobName") @PathVariable String jobName)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		dashboardService.cleanOneJobAnalyse(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.dashboardCleanAllJobAnalyse)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobsAnalyse(@AuditParam("namespace") @PathVariable String namespace)
 			throws SaturnJobConsoleException {
@@ -255,10 +256,10 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
+	@RequiresPermissions(Permissions.dashboardCleanOneJobExecutorCount)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
 	public SuccessResponseEntity cleanJobExecutorCount(@AuditParam("namespace") @PathVariable String namespace,
-			@AuditParam("jobName") @PathVariable String jobName)
-			throws SaturnJobConsoleException {
+			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
 	}

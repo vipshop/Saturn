@@ -14,24 +14,28 @@ import com.vip.saturn.job.console.domain.SystemConfigVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.utils.Permissions;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Resource;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.annotation.Resource;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * System config related operations.
  *
  * @author kfchu
  */
+@RequiresPermissions(Permissions.systemConfig)
 @RequestMapping("/console/configs")
 public class SystemConfigController extends AbstractGUIController {
 
@@ -95,8 +99,7 @@ public class SystemConfigController extends AbstractGUIController {
 	}
 
 	private Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
-		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef
-				= new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
+		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef = new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
 		};
 
 		return YAML_OBJ_MAPPER.readValue(configYaml.getInputStream(), typeRef);

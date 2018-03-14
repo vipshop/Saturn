@@ -5,7 +5,7 @@ public class UserRole extends CommonFields {
 	private String userName;
 	private String roleKey;
 	private String namespace;
-	private Boolean approval;
+	private Boolean needApproval;
 	private User user;
 	private Role role;
 
@@ -33,12 +33,12 @@ public class UserRole extends CommonFields {
 		this.namespace = namespace;
 	}
 
-	public Boolean getApproval() {
-		return approval;
+	public Boolean getNeedApproval() {
+		return needApproval;
 	}
 
-	public void setApproval(Boolean approval) {
-		this.approval = approval;
+	public void setNeedApproval(Boolean needApproval) {
+		this.needApproval = needApproval;
 	}
 
 	public User getUser() {
