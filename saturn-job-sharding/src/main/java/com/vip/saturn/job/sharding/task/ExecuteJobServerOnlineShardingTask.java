@@ -4,11 +4,12 @@ import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 作业的executor上线，executor级别平衡摘取，但是只能摘取该作业的shard；添加的新的shard
@@ -37,8 +38,7 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 	private String getExecutorIp() throws Exception {
 		String ip = null;
 		String executorIpNodePath = SaturnExecutorsNode.getExecutorIpNodePath(executorName);
-		if (curatorFramework.checkExists()
-				.forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) != null) {
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorIpNodePath(executorName)) != null) {
 			byte[] ipBytes = curatorFramework.getData().forPath(executorIpNodePath);
 			if (ipBytes != null) {
 				ip = new String(ipBytes, "UTF-8");
@@ -125,48 +125,47 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 	private void pickBalance(List<Shard> shardList, List<Executor> executorList) {
 		int totalLoadLevel = getTotalLoadLevel(shardList, executorList);
 		int averageTotalLoad = totalLoadLevel / (executorList.size());
-		for (int i = 0; i < executorList.size(); i++) {
-			Executor executor = executorList.get(i);
-			while (true) {
-				int pickLoadLevel = executor.getTotalLoadLevel() - averageTotalLoad;
-				// 摘取现在totalLoad > 平均值的executor里面的shard
-				if (pickLoadLevel > 0 && !executor.getShardList().isEmpty()) {
-					Shard pickShard = null;
-					for (int j = 0; j < executor.getShardList().size(); j++) {
-						Shard shard = executor.getShardList().get(j);
-						if (!shard.getJobName().equals(jobName)) { // 如果当前Shard不属于该作业，则不摘取，继续下一个
-							continue;
-						}
-						if (pickShard == null) {
-							pickShard = shard;
-						} else {
-							if (pickShard.getLoadLevel() >= pickLoadLevel) {
-								if (shard.getLoadLevel() >= pickLoadLevel
-										&& shard.getLoadLevel() < pickShard.getLoadLevel()) {
-									pickShard = shard;
-								}
-							} else {
-								if (shard.getLoadLevel() >= pickLoadLevel) {
-									pickShard = shard;
-								} else {
-									if (shard.getLoadLevel() > pickShard.getLoadLevel()) {
-										pickShard = shard;
-									}
-								}
-							}
-						}
+		for (Executor executor : executorList) {
+			pickBalanceOnAExecutor(shardList, executor, averageTotalLoad);
+		}
+	}
+
+	private void pickBalanceOnAExecutor(List<Shard> shardList, Executor executor, int averageTotalLoad) {
+		int pickLoadLevel = executor.getTotalLoadLevel() - averageTotalLoad;
+		while (pickLoadLevel > 0 && !executor.getShardList().isEmpty()) {
+			// 摘取现在totalLoad > 平均值的executor里面的shard
+			Shard pickShard = null;
+			for (int j = 0; j < executor.getShardList().size(); j++) {
+				Shard shard = executor.getShardList().get(j);
+				if (!shard.getJobName().equals(jobName)) { // 如果当前Shard不属于该作业，则不摘取，继续下一个
+					continue;
+				}
+				if (pickShard == null) {
+					pickShard = shard;
+					continue;
+				}
+				if (pickShard.getLoadLevel() >= pickLoadLevel) {
+					if (shard.getLoadLevel() >= pickLoadLevel && shard.getLoadLevel() < pickShard.getLoadLevel()) {
+						pickShard = shard;
 					}
-					if (pickShard != null) {
-						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - pickShard.getLoadLevel());
-						executor.getShardList().remove(pickShard);
-						shardList.add(pickShard);
-					} else { // 没有符合摘取条件的，无需再选择摘取
-						break;
+					continue;
+				}
+				if (shard.getLoadLevel() >= pickLoadLevel) {
+					pickShard = shard;
+				} else {
+					if (shard.getLoadLevel() > pickShard.getLoadLevel()) {
+						pickShard = shard;
 					}
-				} else { // 无需再选择摘取
-					break;
 				}
 			}
+			if (pickShard != null) {
+				executor.setTotalLoadLevel(executor.getTotalLoadLevel() - pickShard.getLoadLevel());
+				executor.getShardList().remove(pickShard);
+				shardList.add(pickShard);
+			} else { // 没有符合摘取条件的，无需再选择摘取
+				break;
+			}
+			pickLoadLevel = executor.getTotalLoadLevel() - averageTotalLoad;
 		}
 	}
 
@@ -201,68 +200,74 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 	public void pickIntelligent(List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 		boolean preferListIsConfigured = preferListIsConfigured(jobName); // 是否配置了preferList
-		boolean useDispreferList = useDispreferList(jobName); // 是否useDispreferList
 		List<String> preferListConfigured = getPreferListConfigured(jobName); // 配置态的preferList
 		boolean localMode = isLocalMode(jobName);
-		int shardingTotalCount = getShardingTotalCount(jobName);
 		int loadLevel = getLoadLevel(jobName);
-
 		if (localMode) {
-			if (!preferListIsConfigured || preferListConfigured.contains(executorName)) {
+			if ((!preferListIsConfigured || preferListConfigured.contains(executorName))
+					&& allEnableJobs.contains(jobName)) {
+				shardList.add(createLocalShard(lastOnlineTrafficExecutorList, loadLevel));
+			}
+			return;
+		}
+
+		int shardingTotalCount = getShardingTotalCount(jobName);
+		boolean hasShardRunning = hasShardRunning(lastOnlineTrafficExecutorList);
+		if (preferListIsConfigured) {
+			pickIntelligentWithPreferListConfigured(allEnableJobs, shardList, lastOnlineTrafficExecutorList,
+					preferListConfigured, hasShardRunning, shardingTotalCount, loadLevel);
+
+		} else {
+			// 如果有分片正在运行，则平衡摘取
+			if (hasShardRunning) {
+				pickBalance(shardList, lastOnlineTrafficExecutorList);
+			} else {
+				// 如果没有分片正在运行，则需要新建，无需平衡摘取
 				if (allEnableJobs.contains(jobName)) {
-					shardList.add(createLocalShard(lastOnlineTrafficExecutorList, loadLevel));
+					shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
+				}
+			}
+		}
+	}
+
+	public void pickIntelligentWithPreferListConfigured(List<String> allEnableJobs, List<Shard> shardList,
+			List<Executor> lastOnlineTrafficExecutorList, List<String> preferListConfigured, boolean hasShardRunning,
+			int shardingTotalCount, int loadLevel) throws Exception {
+		boolean useDispreferList = useDispreferList(jobName); // 是否useDispreferList
+
+		if (preferListConfigured.contains(executorName)) {
+			// 如果有分片正在运行，摘取全部运行在非优先节点上的分片，还可以平衡摘取
+			if (hasShardRunning) {
+				shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
+				pickBalance(shardList, lastOnlineTrafficExecutorList);
+			} else {
+				// 如果没有分片正在运行，则需要新建，无需平衡摘取
+				if (allEnableJobs.contains(jobName)) {
+					shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
 				}
 			}
 		} else {
-			boolean hasShardRunning = hasShardRunning(lastOnlineTrafficExecutorList);
-			if (preferListIsConfigured) {
-				if (preferListConfigured.contains(executorName)) {
-					// 如果有分片正在运行，摘取全部运行在非优先节点上的分片，还可以平衡摘取
-					if (hasShardRunning) {
-						shardList.addAll(
-								pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
+			if (useDispreferList) {
+				// 如果有分片正在运行，并且都是运行在非优先节点上，可以平衡摘取分片
+				// 如果有分片正在运行，并且有运行在优先节点上，则摘取全部运行在非优先节点上的分片，不能再平衡摘取
+				if (hasShardRunning) {
+					boolean shardsAllRunningInDispreferList = shardsAllRunningInDispreferList(preferListConfigured,
+							lastOnlineTrafficExecutorList);
+					if (shardsAllRunningInDispreferList) {
 						pickBalance(shardList, lastOnlineTrafficExecutorList);
 					} else {
-						// 如果没有分片正在运行，则需要新建，无需平衡摘取
-						if (allEnableJobs.contains(jobName)) {
-							shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
-						}
-					}
-				} else {
-					if (useDispreferList) {
-						// 如果有分片正在运行，并且都是运行在非优先节点上，可以平衡摘取分片
-						// 如果有分片正在运行，并且有运行在优先节点上，则摘取全部运行在非优先节点上的分片，不能再平衡摘取
-						if (hasShardRunning) {
-							boolean shardsAllRunningInDispreferList = shardsAllRunningInDispreferList(
-									preferListConfigured, lastOnlineTrafficExecutorList);
-							if (shardsAllRunningInDispreferList) {
-								pickBalance(shardList, lastOnlineTrafficExecutorList);
-							} else {
-								shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured,
-										lastOnlineTrafficExecutorList));
-							}
-						} else {
-							// 如果没有分片正在运行，则需要新建，无需平衡摘取
-							if (allEnableJobs.contains(jobName)) {
-								shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
-							}
-						}
-					} else { // 不能再平衡摘取
-						// 摘取全部运行在非优先节点上的分片
 						shardList.addAll(
 								pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
 					}
-				}
-			} else {
-				// 如果有分片正在运行，则平衡摘取
-				if (hasShardRunning) {
-					pickBalance(shardList, lastOnlineTrafficExecutorList);
 				} else {
 					// 如果没有分片正在运行，则需要新建，无需平衡摘取
 					if (allEnableJobs.contains(jobName)) {
 						shardList.addAll(createUnLocalShards(shardingTotalCount, loadLevel));
 					}
 				}
+			} else { // 不能再平衡摘取
+				// 摘取全部运行在非优先节点上的分片
+				shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
 			}
 		}
 	}

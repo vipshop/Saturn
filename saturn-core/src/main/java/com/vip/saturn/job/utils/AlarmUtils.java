@@ -35,10 +35,7 @@ public class AlarmUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
-			if (i > 0) {
-				log.info("Fail to raise alarm. Try again.");
-			}
-			log.info("raise alarm of domain {} to url {}: {}", namespace, targetUrl, alarmInfo.toString());
+			log.info("raise alarm of domain {} to url {}: {}, retry count: {}", namespace, targetUrl, alarmInfo.toString(), i);
 
 			CloseableHttpClient httpClient = null;
 			try {

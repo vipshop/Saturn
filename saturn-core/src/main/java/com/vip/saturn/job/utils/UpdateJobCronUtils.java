@@ -33,10 +33,8 @@ public class UpdateJobCronUtils {
 
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
-			if (i > 0) {
-				log.info("Fail to raise alarm. Try again.");
-			}
-			log.info("update job cron of domain {} to url {}: {}", namespace, targetUrl, cron);
+
+			log.info("update job cron of domain {} to url {}: {}, retry count: {}", namespace, targetUrl, cron, i);
 
 			CloseableHttpClient httpClient = null;
 			try {
