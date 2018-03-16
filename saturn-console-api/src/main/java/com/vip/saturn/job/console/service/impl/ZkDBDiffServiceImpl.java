@@ -75,7 +75,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
 	@Override
 	public List<JobDiffInfo> diffByCluster(String clusterKey) throws SaturnJobConsoleException {
-		List<JobDiffInfo> resultList = Lists.newArrayList();
 
 		long startTime = System.currentTimeMillis();
 		List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(clusterKey);
@@ -91,6 +90,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 			callableList.add(callable);
 		}
 
+		List<JobDiffInfo> resultList = Lists.newArrayList();
 		try {
 			List<Future<List<JobDiffInfo>>> futures = diffExecutorService.invokeAll(callableList);
 

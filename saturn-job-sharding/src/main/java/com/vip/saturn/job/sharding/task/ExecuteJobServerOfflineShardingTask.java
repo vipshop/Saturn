@@ -41,22 +41,22 @@ public class ExecuteJobServerOfflineShardingTask extends AbstractAsyncShardingTa
 		// But use lastOnlineTrafficExecutorList, the executor maybe cannot be found.
 		for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 			Executor executor = lastOnlineExecutorList.get(i);
-			if (executor.getExecutorName().equals(executorName)) {
-				Iterator<Shard> iterator = executor.getShardList().iterator();
-				while (iterator.hasNext()) {
-					Shard shard = iterator.next();
-					if (shard.getJobName().equals(jobName)) {
-						if (!localMode) {
-							shardList.add(shard);
-						}
-						iterator.remove();
-					}
-				}
-				executor.getJobNameList().remove(jobName);
-				break;
+			if (!executor.getExecutorName().equals(executorName)) {
+				continue;
 			}
+			Iterator<Shard> iterator = executor.getShardList().iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				if (shard.getJobName().equals(jobName)) {
+					if (!localMode) {
+						shardList.add(shard);
+					}
+					iterator.remove();
+				}
+			}
+			executor.getJobNameList().remove(jobName);
+			break;
 		}
-
 		return true;
 	}
 

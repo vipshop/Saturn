@@ -315,17 +315,16 @@ public class JobNodeStorage {
 			newZk.remove(ServerNode.getServerNode(jobName, executorName));
 			for (int i = 0; i < MAX_DELETE_RETRY_TIMES; i++) {
 				String fullPath = JobNodePath.getJobNameFullPath(jobConfiguration.getJobName());
-				if (newZk.isExisted(fullPath)) {
-					List<String> servers = newZk.getChildrenKeys(ServerNode.getServerRoot(jobName));
-					if (servers == null || servers.isEmpty()) {
-						if (tryToRemoveNode(newZk, fullPath)) {
-							return;
-						}
-					}
-					BlockUtils.waitingShortTime();
-				} else {
+				if (!newZk.isExisted(fullPath)) {
 					return;
 				}
+				List<String> servers = newZk.getChildrenKeys(ServerNode.getServerRoot(jobName));
+				if (servers == null || servers.isEmpty()) {
+					if (tryToRemoveNode(newZk, fullPath)) {
+						return;
+					}
+				}
+				BlockUtils.waitingShortTime();
 			}
 		} finally {
 			newZk.close();
