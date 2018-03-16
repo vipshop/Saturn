@@ -19,7 +19,6 @@ import com.vip.saturn.job.console.utils.JobNodePath;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -76,7 +75,6 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
 	@Override
 	public List<JobDiffInfo> diffByCluster(String clusterKey) throws SaturnJobConsoleException {
-		List<JobDiffInfo> resultList = Lists.newArrayList();
 
 		long startTime = System.currentTimeMillis();
 		List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(clusterKey);
@@ -92,6 +90,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 			callableList.add(callable);
 		}
 
+		List<JobDiffInfo> resultList = Lists.newArrayList();
 		try {
 			List<Future<List<JobDiffInfo>>> futures = diffExecutorService.invokeAll(callableList);
 

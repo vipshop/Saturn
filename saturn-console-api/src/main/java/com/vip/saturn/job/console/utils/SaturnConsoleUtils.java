@@ -3,23 +3,17 @@ package com.vip.saturn.job.console.utils;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Random;
-import java.util.TimeZone;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.util.Random;
+import java.util.TimeZone;
 
 /**
  * Utils for saturn console.
@@ -27,8 +21,6 @@ import org.slf4j.LoggerFactory;
  * @author kfchu
  */
 public class SaturnConsoleUtils {
-
-	private static final Logger log = LoggerFactory.getLogger(SaturnConsoleUtils.class);
 
 	private static DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -81,9 +73,11 @@ public class SaturnConsoleUtils {
 		}
 
 		FileUtils.forceMkdir(tmp.getParentFile());
-		tmp.createNewFile();
-
-		return tmp;
+		if (tmp.createNewFile()) {
+			return tmp;
+		} else {
+			throw new SaturnJobConsoleException("fail to create temp file.");
+		}
 	}
 
 	private static String genTmpFileName() {
@@ -92,11 +86,10 @@ public class SaturnConsoleUtils {
 
 	public static void exportExcelFile(HttpServletResponse response, File srcFile, String exportFileName,
 			boolean deleteTmpFile) throws SaturnJobConsoleException {
-		try (InputStream inputStream = new FileInputStream(srcFile)	){
+		try (InputStream inputStream = new FileInputStream(srcFile)) {
 			exportExcelFile(response, inputStream, exportFileName);
 		} catch (IOException e) {
-			log.info("exception: {}", e);
-			throw new SaturnJobConsoleException("file not found:" + srcFile.getName());
+			throw new SaturnJobConsoleException("file not found:" + srcFile.getName(), e);
 		} finally {
 			if (deleteTmpFile && srcFile != null) {
 				srcFile.delete();
@@ -112,7 +105,7 @@ public class SaturnConsoleUtils {
 					"attachment; filename=" + new String(exportFileName.getBytes("UTF-8"), "ISO8859-1"));
 
 			try (BufferedInputStream bis = new BufferedInputStream(inputStream);
-				 BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream())) {
+					BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream())) {
 				byte[] buff = new byte[2048];
 				int bytesRead;
 				while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {

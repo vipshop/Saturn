@@ -261,64 +261,65 @@ public class RestApiServiceImpl implements RestApiService {
 			RestApiJobStatistics restApiJobStatistics, String jobName) {
 		String executionNodePath = JobNodePath.getExecutionNodePath(jobName);
 		List<String> items = curatorFrameworkOp.getChildren(executionNodePath);
-		if (items != null) {
-			List<String> lastBeginTimeList = new ArrayList<>();
-			List<String> lastCompleteTimeList = new ArrayList<>();
-			List<String> nextFireTimeList = new ArrayList<>();
-			int runningItemSize = 0;
-			for (String item : items) {
-				if (getRunningIP(item, jobName, curatorFrameworkOp) == null) {
-					continue;
-				}
-				++runningItemSize;
-				String lastBeginTime = curatorFrameworkOp
-						.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
-				if (null != lastBeginTime) {
-					lastBeginTimeList.add(lastBeginTime);
-				}
-				String lastCompleteTime = curatorFrameworkOp
-						.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
-				if (null != lastCompleteTime) {
-					boolean isItemCompleted = curatorFrameworkOp
-							.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
-					boolean isItemRunning = curatorFrameworkOp
-							.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
-					if (isItemCompleted && !isItemRunning) { // 如果作业分片已执行完毕，则添加该完成时间到集合中进行排序
-						lastCompleteTimeList.add(lastCompleteTime);
-					}
-				}
-				String nextFireTime = curatorFrameworkOp
-						.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
-				if (null != nextFireTime) {
-					nextFireTimeList.add(nextFireTime);
+		if (items == null) {
+			return;
+		}
+		List<String> lastBeginTimeList = new ArrayList<>();
+		List<String> lastCompleteTimeList = new ArrayList<>();
+		List<String> nextFireTimeList = new ArrayList<>();
+		int runningItemSize = 0;
+		for (String item : items) {
+			if (getRunningIP(item, jobName, curatorFrameworkOp) == null) {
+				continue;
+			}
+			++runningItemSize;
+			String lastBeginTime = curatorFrameworkOp
+					.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastBeginTime"));
+			if (null != lastBeginTime) {
+				lastBeginTimeList.add(lastBeginTime);
+			}
+			String lastCompleteTime = curatorFrameworkOp
+					.getData(JobNodePath.getExecutionNodePath(jobName, item, "lastCompleteTime"));
+			if (null != lastCompleteTime) {
+				boolean isItemCompleted = curatorFrameworkOp
+						.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "completed"));
+				boolean isItemRunning = curatorFrameworkOp
+						.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
+				if (isItemCompleted && !isItemRunning) { // 如果作业分片已执行完毕，则添加该完成时间到集合中进行排序
+					lastCompleteTimeList.add(lastCompleteTime);
 				}
 			}
-			if (!CollectionUtils.isEmpty(lastBeginTimeList)) {
-				Collections.sort(lastBeginTimeList);
-				try {
-					restApiJobStatistics.setLastBeginTime(Long.valueOf(lastBeginTimeList.get(0))); // 所有分片中最近最早的开始时间
-				} catch (NumberFormatException e) {
-					log.error(e.getMessage(), e);
-				}
+			String nextFireTime = curatorFrameworkOp
+					.getData(JobNodePath.getExecutionNodePath(jobName, item, "nextFireTime"));
+			if (null != nextFireTime) {
+				nextFireTimeList.add(nextFireTime);
 			}
-			if (!CollectionUtils.isEmpty(lastCompleteTimeList)
-					&& lastCompleteTimeList.size() == runningItemSize) { // 所有分配都完成才显示最近最晚的完成时间
-				Collections.sort(lastCompleteTimeList);
-				try {
-					restApiJobStatistics.setLastCompleteTime(
-							Long.valueOf(
-									lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
-				} catch (NumberFormatException e) {
-					log.error(e.getMessage(), e);
-				}
+		}
+		if (!CollectionUtils.isEmpty(lastBeginTimeList)) {
+			Collections.sort(lastBeginTimeList);
+			try {
+				restApiJobStatistics.setLastBeginTime(Long.valueOf(lastBeginTimeList.get(0))); // 所有分片中最近最早的开始时间
+			} catch (NumberFormatException e) {
+				log.error(e.getMessage(), e);
 			}
-			if (!CollectionUtils.isEmpty(nextFireTimeList)) {
-				Collections.sort(nextFireTimeList);
-				try {
-					restApiJobStatistics.setNextFireTime(Long.valueOf(nextFireTimeList.get(0))); // 所有分片中下次最早的开始时间
-				} catch (NumberFormatException e) {
-					log.error(e.getMessage(), e);
-				}
+		}
+		if (!CollectionUtils.isEmpty(lastCompleteTimeList)
+				&& lastCompleteTimeList.size() == runningItemSize) { // 所有分配都完成才显示最近最晚的完成时间
+			Collections.sort(lastCompleteTimeList);
+			try {
+				restApiJobStatistics.setLastCompleteTime(
+						Long.valueOf(
+								lastCompleteTimeList.get(lastCompleteTimeList.size() - 1))); // 所有分片中最近最晚的完成时间
+			} catch (NumberFormatException e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+		if (!CollectionUtils.isEmpty(nextFireTimeList)) {
+			Collections.sort(nextFireTimeList);
+			try {
+				restApiJobStatistics.setNextFireTime(Long.valueOf(nextFireTimeList.get(0))); // 所有分片中下次最早的开始时间
+			} catch (NumberFormatException e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
