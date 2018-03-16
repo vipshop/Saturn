@@ -16,7 +16,7 @@
 		location="classpath:application.properties" />
 
     <!-- GUI Controller Begin -->
-    <bean id="shiroController"
+    <bean id="authorizationManageController"
     class="com.vip.saturn.job.console.controller.gui.AuthorizationManageController"/>
     <bean id="dashboardController"
       class="com.vip.saturn.job.console.controller.gui.DashboardController"/>
