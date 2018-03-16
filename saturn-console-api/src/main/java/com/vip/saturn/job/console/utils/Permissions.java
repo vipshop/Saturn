@@ -1,49 +1,57 @@
 package com.vip.saturn.job.console.utils;
 
+import com.vip.saturn.job.console.mybatis.entity.Permission;
+
 /**
  * @author hebelala
  */
 public class Permissions {
 
-	public static final String jobEnable = "job:enable";
-	public static final String jobBatchEnable = "job:batchEnable";
-	public static final String jobDisable = "job:disable";
-	public static final String jobBatchDisable = "job:batchDisable";
-	public static final String jobRunAtOnce = "job:runAtOnce";
-	public static final String jobStopAtOnce = "job:stopAtOnce";
-	public static final String jobRemove = "job:remove";
-	public static final String jobBatchRemove = "job:batchRemove";
-	public static final String jobAdd = "job:add";
-	public static final String jobBatchAdd = "job:batchAdd";
-	public static final String jobCopy = "job:copy";
-	public static final String jobImport = "job:import";
-	public static final String jobExport = "job:export";
-	public static final String jobUpdate = "job:update";
-	public static final String jobSetPreferExecutors = "job:setPreferExecutors";
+	public static final Permission jobEnable = new Permission("job:enable");
+	public static final Permission jobBatchEnable = new Permission("job:batchEnable");
+	public static final Permission jobDisable = new Permission("job:disable");
+	public static final Permission jobBatchDisable = new Permission("job:batchDisable");
+	public static final Permission jobRunAtOnce = new Permission("job:runAtOnce");
+	public static final Permission jobStopAtOnce = new Permission("job:stopAtOnce");
+	public static final Permission jobRemove = new Permission("job:remove");
+	public static final Permission jobBatchRemove = new Permission("job:batchRemove");
+	public static final Permission jobAdd = new Permission("job:add");
+	public static final Permission jobCopy = new Permission("job:copy");
+	public static final Permission jobImport = new Permission("job:import");
+	public static final Permission jobExport = new Permission("job:export");
+	public static final Permission jobUpdate = new Permission("job:update");
+	public static final Permission jobBatchSetPreferExecutors = new Permission("job:batchSetPreferExecutors");
 
-	public static final String executorRestart = "executor:restart";
-	public static final String executorDump = "executor:dump";
-	public static final String executorExtractOrRecoverTraffic = "executor:extractOrRecoverTraffic";
-	public static final String executorBatchExtractOrRecoverTraffic = "executor:batchExtractOrRecoverTraffic";
-	public static final String executorRemove = "executor:remove";
-	public static final String executorBatchRemove = "executor:batchRemove";
-	public static final String executorShardAllAtOnce = "executor:shardAllAtOnce";
+	public static final Permission executorRestart = new Permission("executor:restart");
+	public static final Permission executorDump = new Permission("executor:dump");
+	public static final Permission executorExtractOrRecoverTraffic = new Permission("executor:extractOrRecoverTraffic");
+	public static final Permission executorBatchExtractOrRecoverTraffic = new Permission(
+			"executor:batchExtractOrRecoverTraffic");
+	public static final Permission executorRemove = new Permission("executor:remove");
+	public static final Permission executorBatchRemove = new Permission("executor:batchRemove");
+	public static final Permission executorShardAllAtOnce = new Permission("executor:shardAllAtOnce");
 
-	public static final String alarmCenterAbnormalJobSetRead = "alarmCenter:abnormalJob:setRead";
-	public static final String alarmCenterTimeout4AlarmJobSetRead = "alarmCenter:timeout4AlarmJob:setRead";
+	public static final Permission alarmCenterSetAbnormalJobRead = new Permission("alarmCenter:setAbnormalJobRead");
+	public static final Permission alarmCenterSetTimeout4AlarmJobRead = new Permission(
+			"alarmCenter:setTimeout4AlarmJobRead");
 
-	public static final String dashboardCleanShardingCount = "dashboard:cleanShardingCount";
-	public static final String dashboardCleanOneJobAnalyse = "dashboard:cleanOneJobAnalyse";
-	public static final String dashboardCleanAllJobAnalyse = "dashboard:cleanAllJobAnalyse";
-	public static final String dashboardCleanOneJobExecutorCount = "dashboard:cleanOneJobExecutorCount";
+	public static final Permission dashboardCleanShardingCount = new Permission("dashboard:cleanShardingCount");
+	public static final Permission dashboardCleanOneJobAnalyse = new Permission("dashboard:cleanOneJobAnalyse");
+	public static final Permission dashboardCleanAllJobAnalyse = new Permission("dashboard:cleanAllJobAnalyse");
+	public static final Permission dashboardCleanOneJobExecutorCount = new Permission(
+			"dashboard:cleanOneJobExecutorCount");
 
-	public static final String registryCenterAddNamespace = "registryCenter:addNamespace";
-	public static final String registryCenterBatchMoveNamespaces = "registryCenter:batchMoveNamespaces";
-	public static final String registryCenterExportNamespaces = "registryCenter:exportNamespaces";
-	public static final String registryCenterAddZkCluster = "registryCenter:addZkCluster";
+	public static final Permission registryCenterAddNamespace = new Permission("registryCenter:addNamespace");
+	public static final Permission registryCenterBatchMoveNamespaces = new Permission(
+			"registryCenter:batchMoveNamespaces");
+	public static final Permission registryCenterExportNamespaces = new Permission("registryCenter:exportNamespaces");
+	public static final Permission registryCenterAddZkCluster = new Permission("registryCenter:addZkCluster");
 
-	public static final String systemConfig = "systemConfig";
-	public static final String privilegeManage = "privilegeManage";
+	public static final Permission systemConfig = new Permission("systemConfig");
+	
+	public static final Permission privilegeManage = new Permission("privilegeManage");
+	
+	public static final Permission authorizationManage = new Permission("authorizationManage");
 
 
 }

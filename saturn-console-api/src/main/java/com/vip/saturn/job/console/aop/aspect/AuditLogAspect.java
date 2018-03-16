@@ -89,9 +89,8 @@ public class AuditLogAspect {
 
 	protected String getWebRequestContent(String name, Boolean isSuccess) {
 		String apiName = StringUtils.isNotBlank(name) ? name : "";
-		return buildLogContent(
-				String.format(GUI_AUDIT_LOG_TEMPLATE, apiName, getUri(), getUserName(), getIpAddress(),
-						getResultValue(isSuccess)));
+		return buildLogContent(String.format(GUI_AUDIT_LOG_TEMPLATE, apiName, getUri(), getUserName(), getIpAddress(),
+				getResultValue(isSuccess)));
 	}
 
 	protected String getRESTRequstContent(String name, Boolean isSuccess) {
@@ -136,7 +135,7 @@ public class AuditLogAspect {
 			return UNKNOWN;
 		}
 
-		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_NAME);
+		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_OA_NAME);
 		return StringUtils.isBlank(loginUser) ? UNKNOWN : loginUser;
 	}
 
@@ -145,7 +144,6 @@ public class AuditLogAspect {
 	}
 
 	private HttpServletRequest getRequestFromContext() {
-		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-				.getRequest();
+		return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 	}
 }

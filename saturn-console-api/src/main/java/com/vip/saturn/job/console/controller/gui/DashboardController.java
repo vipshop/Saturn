@@ -19,11 +19,10 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
-import com.vip.saturn.job.console.utils.Permissions;
+
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -227,39 +226,39 @@ public class DashboardController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.dashboardCleanShardingCount)
 	@PostMapping(value = "/namespaces/{namespace:.+}/shardingCount/clean")
 	public SuccessResponseEntity cleanShardingCount(@PathVariable String namespace) throws SaturnJobConsoleException {
+		assertIsSuper();
 		dashboardService.cleanShardingCount(namespace);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.dashboardCleanOneJobAnalyse)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobAnalyse(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+		assertIsSuper();
 		dashboardService.cleanOneJobAnalyse(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.dashboardCleanAllJobAnalyse)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobsAnalyse(@AuditParam("namespace") @PathVariable String namespace)
 			throws SaturnJobConsoleException {
+		assertIsSuper();
 		dashboardService.cleanAllJobAnalyse(namespace);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.dashboardCleanOneJobExecutorCount)
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
 	public SuccessResponseEntity cleanJobExecutorCount(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+		assertIsSuper();
 		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
 	}

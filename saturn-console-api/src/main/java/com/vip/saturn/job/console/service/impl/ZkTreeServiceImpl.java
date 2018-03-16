@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Random;
 import javax.annotation.Resource;
 import org.apache.commons.io.FileUtils;
-import org.springframework.stereotype.Service;
 
 /**
  * @author hebelala

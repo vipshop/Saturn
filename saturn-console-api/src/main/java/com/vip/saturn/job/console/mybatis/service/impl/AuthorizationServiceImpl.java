@@ -3,8 +3,12 @@ package com.vip.saturn.job.console.mybatis.service.impl;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.*;
 import com.vip.saturn.job.console.mybatis.repository.*;
-import com.vip.saturn.job.console.mybatis.service.ShiroService;
+import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
+import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +19,7 @@ import java.util.List;
  * @author hebelala
  */
 @Service
-public class ShiroServiceImpl implements ShiroService {
+public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Autowired
 	private PermissionRepository permissionRepository;
@@ -31,6 +35,12 @@ public class ShiroServiceImpl implements ShiroService {
 
 	@Autowired
 	private UserRoleRepository userRoleRepository;
+
+	@Autowired
+	private SystemConfigService systemConfigService;
+
+	@Value("${use.authorization.default}")
+	private boolean useAuthorizationDefault;
 
 	private String superRoleKey = "super";
 
@@ -146,5 +156,55 @@ public class ShiroServiceImpl implements ShiroService {
 		}
 		role.setRolePermissions(rolePermissions);
 		return role;
+	}
+
+	@Override
+	public boolean isPermitted(Permission permission, String userName, String namespace)
+			throws SaturnJobConsoleException {
+		if (!systemConfigService.getBooleanValue(SystemConfigProperties.USE_AUTHORIZATION, useAuthorizationDefault)) {
+			return true;
+		}
+		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
+		if (userRoles == null) {
+			return false;
+		}
+		for (UserRole userRole : userRoles) {
+			String roleKey = userRole.getRoleKey();
+			if (superRoleKey.equals(roleKey)) {
+				return true;
+			}
+			if (namespace.equals(userRole.getNamespace())) {
+				Role role = roleRepository.selectByKey(roleKey);
+				if (role == null) {
+					continue;
+				}
+				List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
+				if (rolePermissions == null) {
+					continue;
+				}
+				for (RolePermission rolePermission : rolePermissions) {
+					Permission p = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+					if (p != null && permission.getKey().equals(p.getKey())) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isSuperRole(String userName) throws SaturnJobConsoleException {
+		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
+		if (userRoles == null) {
+			return false;
+		}
+		for (UserRole userRole : userRoles) {
+			String roleKey = userRole.getRoleKey();
+			if (superRoleKey.equals(roleKey)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

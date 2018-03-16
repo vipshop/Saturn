@@ -12,7 +12,6 @@ import com.vip.saturn.job.console.utils.*;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -128,8 +127,8 @@ public class JobOverviewController extends AbstractGUIController {
 
 	private void updateShardingListInOverview(String namespace, JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo)
 			throws SaturnJobConsoleException {
-		List<String> jobShardingAllocatedExecutorList = jobService
-				.getJobShardingAllocatedExecutorList(namespace, jobConfig.getJobName());
+		List<String> jobShardingAllocatedExecutorList = jobService.getJobShardingAllocatedExecutorList(namespace,
+				jobConfig.getJobName());
 
 		StringBuilder shardingListSb = new StringBuilder();
 		for (String executor : jobShardingAllocatedExecutorList) {
@@ -195,22 +194,22 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobEnable)
 	@PostMapping(value = "/{jobName}/enable")
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobEnable, namespace);
 		jobService.enableJob(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobBatchEnable)
 	@PostMapping(value = "/enable")
 	public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobBatchEnable, namespace);
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName);
 		}
@@ -219,22 +218,22 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobDisable)
 	@PostMapping(value = "/{jobName}/disable")
 	public SuccessResponseEntity disableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobDisable, namespace);
 		jobService.disableJob(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobBatchDisable)
 	@PostMapping(value = "/disable")
 	public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobBatchDisable, namespace);
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName);
 		}
@@ -243,22 +242,22 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobRemove)
 	@DeleteMapping(value = "/{jobName}")
 	public SuccessResponseEntity removeJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobRemove, namespace);
 		jobService.removeJob(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobBatchRemove)
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobBatchRemove, namespace);
 		List<String> successJobNames = new ArrayList<>();
 		List<String> failJobNames = new ArrayList<>();
 		for (String jobName : jobNames) {
@@ -272,8 +271,7 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 		if (!failJobNames.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append("删除成功的作业:").append(successJobNames).append("，").append("删除失败的作业:")
-					.append(failJobNames);
+			message.append("删除成功的作业:").append(successJobNames).append("，").append("删除失败的作业:").append(failJobNames);
 			throw new SaturnJobConsoleGUIException(message.toString());
 		}
 		return new SuccessResponseEntity();
@@ -284,12 +282,12 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobSetPreferExecutors)
 	@PostMapping(value = "/preferExecutors")
 	public SuccessResponseEntity batchSetPreferExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames,
 			@AuditParam("preferList") @RequestParam String preferList) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobBatchSetPreferExecutors, namespace);
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList);
 		}
@@ -298,34 +296,34 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobAdd)
 	@PostMapping(value = "/jobs")
 	public SuccessResponseEntity createJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobAdd, namespace);
 		jobService.addJob(namespace, jobConfig);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobCopy)
 	@PostMapping(value = "/{jobNameCopied}/copy")
 	public SuccessResponseEntity copyJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNameCopied") @PathVariable String jobNameCopied, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobCopy, namespace);
 		jobService.copyJob(namespace, jobConfig, jobNameCopied);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobImport)
 	@PostMapping(value = "/import")
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, @RequestParam("file") MultipartFile file)
 			throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobImport, namespace);
 		if (file.isEmpty()) {
 			throw new SaturnJobConsoleGUIException("请上传一个有内容的文件");
 		}
@@ -339,10 +337,10 @@ public class JobOverviewController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.jobExport)
 	@GetMapping(value = "/export")
 	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.jobExport, namespace);
 		File exportJobFile = jobService.exportJobs(namespace);
 		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 		String exportFileName = namespace + "_allJobs_" + currentTime + ".xls";
