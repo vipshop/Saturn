@@ -74,11 +74,7 @@ export default {
       this.$emit('refresh-list');
     },
     handleRead(row) {
-      this.$http.post('/console/alarmStatistics/setTimeout4AlarmJobMonitorStatusToRead', { uuid: row.uuid }).then(() => {
-        this.refreshList();
-        this.$message.successNotify('操作成功');
-      })
-      .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
+      this.$emit('no-alarm', row.uuid);
     },
   },
 };

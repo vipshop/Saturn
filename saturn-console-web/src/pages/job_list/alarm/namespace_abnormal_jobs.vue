@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <div class="page-container">
-            <AbnormalJobs :abnormal-jobs-list="namespaceAbnormalJobsList" @refresh-list="getAbnormalJobs"></AbnormalJobs>
+            <AbnormalJobs :abnormal-jobs-list="namespaceAbnormalJobsList" @refresh-list="getAbnormalJobs" @no-alarm="noAlarm"></AbnormalJobs>
         </div>
     </div>
 </template>
@@ -24,6 +24,13 @@ export default {
       .finally(() => {
         this.loading = false;
       });
+    },
+    noAlarm(uuid) {
+      this.$http.post(`/console/namespaces/${this.domainName}/setAbnormalJobMonitorStatusToRead`, { uuid }).then(() => {
+        this.getAbnormalJobs();
+        this.$message.successNotify('操作成功');
+      })
+      .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
     },
   },
   created() {
