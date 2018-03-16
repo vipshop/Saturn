@@ -14,13 +14,6 @@ public class User extends CommonFields {
 	private String email;
 	private List<UserRole> userRoles;
 
-	public User() {
-	}
-
-	public User(String name) {
-		this.name = name;
-	}
-
 	public String getName() {
 		return name;
 	}

@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.RolePermission;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,6 +16,6 @@ public interface RolePermissionRepository {
 
 	List<RolePermission> selectAll();
 
-	List<RolePermission> selectByRoleKey(String roleKey);
+	List<RolePermission> selectByRoleKey(@Param("roleKey") String roleKey);
 
 }

@@ -81,10 +81,10 @@
         `namespace` = #{cur.namespace, jdbcType=VARCHAR},
         `need_approval` = #{cur.needApproval, jdbcType=VARCHAR},
         `last_updated_by` = #{cur.lastUpdatedBy, jdbcType=VARCHAR},
-        `is_deleted` = #{isDeleted, jdbcType=BOOLEAN}
+        `is_deleted` = #{cur.isDeleted, jdbcType=BOOLEAN}
         WHERE
         `user_name` = #{pre.userName, jdbcType=VARCHAR} AND
-        `role_key` = #{pre.role_key, jdbcType=VARCHAR} AND
+        `role_key` = #{pre.roleKey, jdbcType=VARCHAR} AND
         `namespace` = #{pre.namespace, jdbcType=VARCHAR}
     </update>
 

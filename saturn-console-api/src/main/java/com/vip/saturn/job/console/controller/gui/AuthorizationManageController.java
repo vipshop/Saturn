@@ -1,16 +1,5 @@
 package com.vip.saturn.job.console.controller.gui;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
@@ -19,9 +8,17 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
-
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xiaopeng.he
@@ -60,12 +57,17 @@ public class AuthorizationManageController extends AbstractGUIController {
 		userRole.setCreateTime(now);
 		userRole.setLastUpdatedBy(userOaName);
 		userRole.setLastUpdateTime(now);
-		User user = new User(userName);
-		user.setIsDeleted(false);
+		User user = new User();
+		user.setName(userOaName);
+		user.setPassword("");
+		user.setRealName("");
+		user.setEmployeeId("");
+		user.setEmail("");
 		user.setCreatedBy(userOaName);
 		user.setCreateTime(now);
 		user.setLastUpdatedBy(userOaName);
 		user.setLastUpdateTime(now);
+		user.setIsDeleted(false);
 		userRole.setUser(user);
 		authorizationService.addUserRole(userRole);
 		return new SuccessResponseEntity();

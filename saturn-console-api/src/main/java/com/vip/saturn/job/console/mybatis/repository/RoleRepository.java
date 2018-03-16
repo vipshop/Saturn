@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.Role;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,6 +16,6 @@ public interface RoleRepository {
 
 	List<Role> selectAll();
 
-	Role selectByKey(String key);
+	Role selectByKey(@Param("key") String key);
 
 }

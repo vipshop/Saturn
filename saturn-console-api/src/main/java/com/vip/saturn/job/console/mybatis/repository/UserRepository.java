@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.User;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,8 +18,8 @@ public interface UserRepository {
 
 	List<User> selectAll();
 
-	User select(String name);
+	User select(@Param("name") String name);
 
-	User selectWithNotFilterDeleted(String name);
+	User selectWithNotFilterDeleted(@Param("name")String name);
 
 }

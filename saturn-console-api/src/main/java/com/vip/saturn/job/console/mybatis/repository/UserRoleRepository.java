@@ -16,9 +16,9 @@ public interface UserRoleRepository {
 
 	List<UserRole> selectAll();
 
-	List<UserRole> selectByUserName(String userName);
+	List<UserRole> selectByUserName(@Param("userName") String userName);
 
-	List<UserRole> selectByRoleKey(String roleKey);
+	List<UserRole> selectByRoleKey(@Param("roleKey") String roleKey);
 
 	UserRole select(UserRole userRole);
 
