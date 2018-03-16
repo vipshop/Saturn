@@ -55,13 +55,13 @@ public class AuthorizationManageController extends AbstractGUIController {
 		userRole.setRoleKey(roleKey);
 		userRole.setNamespace(namespace);
 		userRole.setNeedApproval(needApproval);
-		userRole.setDeleted(false);
+		userRole.setIsDeleted(false);
 		userRole.setCreatedBy(userOaName);
 		userRole.setCreateTime(now);
 		userRole.setLastUpdatedBy(userOaName);
 		userRole.setLastUpdateTime(now);
 		User user = new User(userName);
-		user.setDeleted(false);
+		user.setIsDeleted(false);
 		user.setCreatedBy(userOaName);
 		user.setCreateTime(now);
 		user.setLastUpdatedBy(userOaName);
@@ -111,7 +111,7 @@ public class AuthorizationManageController extends AbstractGUIController {
 		cur.setNeedApproval(needApproval);
 		String userOaName = getUserOaNameInSession();
 		cur.setLastUpdatedBy(userOaName);
-		cur.setDeleted(false);
+		cur.setIsDeleted(false);
 		authorizationService.updateUserRole(pre, cur);
 		return new SuccessResponseEntity();
 	}
