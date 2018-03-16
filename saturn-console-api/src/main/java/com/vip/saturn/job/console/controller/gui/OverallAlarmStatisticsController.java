@@ -7,10 +7,10 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.utils.Permissions;
+
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,20 +77,21 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.alarmCenterAbnormalJobSetRead)
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
-	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
+	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid,
+			@AuditParam("namespace") @RequestParam(required = false) String namespace)
 			throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.alarmCenterSetAbnormalJobRead);
 		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(uuid);
 		return new SuccessResponseEntity();
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.alarmCenterTimeout4AlarmJobSetRead)
 	@PostMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
 			throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.alarmCenterSetTimeout4AlarmJobRead);
 		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(uuid);
 		return new SuccessResponseEntity();
 	}

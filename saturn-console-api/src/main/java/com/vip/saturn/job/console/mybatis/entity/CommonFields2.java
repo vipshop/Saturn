@@ -9,6 +9,15 @@ public class CommonFields2 extends CommonFields {
 	private String name;
 	private String description;
 
+	public CommonFields2() {
+		super();
+	}
+
+	public CommonFields2(String key) {
+		super();
+		this.key = key;
+	}
+
 	public String getKey() {
 		return key;
 	}

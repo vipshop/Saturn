@@ -11,7 +11,6 @@ import com.vip.saturn.job.console.domain.ZkStatistics;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
-import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.DashboardService;
 import com.vip.saturn.job.console.service.JobService;
@@ -54,9 +53,6 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Autowired
 	private JobService jobService;
-
-	@Autowired
-	private CuratorRepository curatorRepository;
 
 	@Autowired
 	private StatisticsRefreshService statisticsRefreshService;

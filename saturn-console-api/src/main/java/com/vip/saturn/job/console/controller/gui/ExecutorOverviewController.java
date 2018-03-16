@@ -11,9 +11,9 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.utils.Permissions;
+
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -68,40 +68,40 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorShardAllAtOnce)
 	@PostMapping(value = "/shardAll")
 	public SuccessResponseEntity shardAll(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorShardAllAtOnce, namespace);
 		executorService.shardAll(namespace);
 		return new SuccessResponseEntity();
 	}
 
 	/*
-	 *	摘流量与流量恢复
+	 * 摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorExtractOrRecoverTraffic)
 	@PostMapping(value = "/{executorName}/traffic")
 	public SuccessResponseEntity extractOrRecoverTraffic(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorName") @PathVariable String executorName,
 			@AuditParam("operation") @RequestParam String operation) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorExtractOrRecoverTraffic, namespace);
 		extractOrRecoverTraffic(namespace, executorName, operation);
 		return new SuccessResponseEntity();
 	}
 
 	/*
-	 *	批量摘流量与流量恢复
+	 * 批量摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorBatchExtractOrRecoverTraffic)
 	@PostMapping(value = "/traffic")
 	public SuccessResponseEntity batchExtractOrRecoverTraffic(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorNames") @RequestParam List<String> executorNames,
 			@AuditParam("operation") @RequestParam String operation) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorBatchExtractOrRecoverTraffic, namespace);
 		List<String> success2ExtractOrRecoverTrafficExecutors = Lists.newArrayList();
 		List<String> fail2ExtractOrRecoverTrafficExecutors = Lists.newArrayList();
 		for (String executorName : executorNames) {
@@ -140,11 +140,11 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorRemove)
 	@DeleteMapping(value = "/{executorName}")
 	public SuccessResponseEntity removeExecutor(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorName") @PathVariable String executorName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorRemove, namespace);
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.OFFLINE, "Executor在线，不能移除");
 		executorService.removeExecutor(namespace, executorName);
@@ -156,11 +156,11 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorBatchRemove)
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveExecutors(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorNames") @RequestParam List<String> executorNames) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorBatchRemove, namespace);
 		// check executor is existed and online.
 		List<String> success2RemoveExecutors = Lists.newArrayList();
 		List<String> fail2RemoveExecutors = Lists.newArrayList();
@@ -200,11 +200,11 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorDump)
 	@PostMapping(value = "/{executorName}/dump")
 	public SuccessResponseEntity dump(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorName") @PathVariable String executorName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorDump, namespace);
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以dump");
 		executorService.dump(namespace, executorName);
@@ -216,11 +216,11 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.executorRestart)
 	@PostMapping(value = "/{executorName}/restart")
 	public SuccessResponseEntity restart(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorName") @PathVariable String executorName) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.executorRestart, namespace);
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以重启");
 		executorService.restart(namespace, executorName);

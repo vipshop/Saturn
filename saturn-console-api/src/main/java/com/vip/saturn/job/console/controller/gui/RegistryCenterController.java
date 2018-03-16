@@ -12,7 +12,6 @@ import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,10 +36,10 @@ public class RegistryCenterController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.registryCenterAddNamespace)
 	@PostMapping(value = "/namespaces")
 	public SuccessResponseEntity createNamespace(@AuditParam("namespace") @RequestParam String namespace,
 			@AuditParam("zkClusterKey") @RequestParam String zkClusterKey) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.registryCenterAddNamespace);
 		NamespaceDomainInfo namespaceInfo = constructNamespaceDomainInfo(namespace, zkClusterKey);
 		registryCenterService.createNamespace(namespaceInfo);
 		return new SuccessResponseEntity();
@@ -72,10 +71,10 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 导出指定的namespce
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@RequiresPermissions(Permissions.registryCenterExportNamespaces)
 	@GetMapping(value = "/namespaces/export")
 	public void exportNamespaceInfo(@RequestParam(required = false) List<String> namespaceList,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.registryCenterExportNamespaces);
 		File exportFile = registryCenterService.exportNamespaceInfo(namespaceList);
 		SaturnConsoleUtils.exportExcelFile(response, exportFile, EXPORT_FILE_NAME, true);
 	}
@@ -123,10 +122,10 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.registryCenterAddZkCluster)
 	@PostMapping(value = "/zkClusters")
 	public SuccessResponseEntity createZkCluster(@RequestParam String zkClusterKey, @RequestParam String alias,
 			@RequestParam String connectString) throws SaturnJobConsoleException {
+		assertIsPermitted(Permissions.registryCenterAddZkCluster);
 		registryCenterService.createZkCluster(zkClusterKey, alias, connectString);
 		return new SuccessResponseEntity();
 	}
@@ -134,18 +133,18 @@ public class RegistryCenterController extends AbstractGUIController {
 	// 域迁移
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@RequiresPermissions(Permissions.registryCenterBatchMoveNamespaces)
 	@PostMapping(value = "/namespaces/zkCluster/migrate")
 	public SuccessResponseEntity migrateZkCluster(@AuditParam("namespaces") @RequestParam String namespaces,
 			@AuditParam("zkClusterNew") @RequestParam String zkClusterKeyNew,
 			@RequestParam(required = false, defaultValue = "false") boolean updateDBOnly)
 			throws SaturnJobConsoleException {
-		namespaceZkClusterMappingService
-				.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew, getUserNameInSession(), updateDBOnly);
+		assertIsPermitted(Permissions.registryCenterBatchMoveNamespaces);
+		namespaceZkClusterMappingService.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew,
+				getUserNameInSession(), updateDBOnly);
 		return new SuccessResponseEntity();
 	}
 
-	//获取域迁移信息
+	// 获取域迁移信息
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/namespaces/zkCluster/migrationStatus")
 	public SuccessResponseEntity getZkClusterMigrationStatus() throws SaturnJobConsoleException {
