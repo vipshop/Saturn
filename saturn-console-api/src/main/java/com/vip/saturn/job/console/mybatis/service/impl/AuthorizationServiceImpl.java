@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.mybatis.repository.*;
 import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -78,7 +77,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateUserRole(UserRole pre, UserRole cur) throws SaturnJobConsoleException {
-		userRoleRepository.update(pre, cur);
+		userRoleRepository.delete(pre);
+		UserRole userRole = userRoleRepository.selectWithNotFilterDeleted(cur);
+		if (userRole == null) {
+			userRoleRepository.update(pre, cur);
+		} else {
+			userRoleRepository.update(userRole, cur);
+		}
 	}
 
 	@Transactional(readOnly = true)
