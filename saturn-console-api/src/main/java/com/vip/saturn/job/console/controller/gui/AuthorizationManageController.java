@@ -112,7 +112,11 @@ public class AuthorizationManageController extends AbstractGUIController {
 		cur.setNamespace(namespace);
 		cur.setNeedApproval(needApproval);
 		String userOaName = getUserOaNameInSession();
+		Date now = new Date();
+		cur.setCreatedBy(userOaName);
+		cur.setCreateTime(now);
 		cur.setLastUpdatedBy(userOaName);
+		cur.setLastUpdateTime(now);
 		cur.setIsDeleted(false);
 		authorizationService.updateUserRole(pre, cur);
 		return new SuccessResponseEntity();
