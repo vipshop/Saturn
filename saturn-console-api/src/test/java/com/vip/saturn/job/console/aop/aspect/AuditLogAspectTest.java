@@ -101,7 +101,7 @@ public class AuditLogAspectTest {
 	private void prepareRequest(String ip, String uri, String username) {
 		given(request.getHeader("X-FORWARDED-FOR")).willReturn(ip);
 		given(request.getRequestURI()).willReturn(uri);
-		given(httpSession.getAttribute(SessionAttributeKeys.LOGIN_USER_NAME)).willReturn(username);
+		given(httpSession.getAttribute(SessionAttributeKeys.LOGIN_USER_OA_NAME)).willReturn(username);
 		given(request.getSession()).willReturn(httpSession);
 
 		ServletRequestAttributes servletRequestAttributes = new ServletRequestAttributes(request);
@@ -109,8 +109,7 @@ public class AuditLogAspectTest {
 	}
 
 	private void initAppender() {
-		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory
-				.getLogger("AUDITLOG");
+		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("AUDITLOG");
 		if (dummyAppender != null) {
 			dummyAppender.clear();
 		}
@@ -119,8 +118,7 @@ public class AuditLogAspectTest {
 	}
 
 	private void detachAppender() {
-		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory
-				.getLogger("AUDITLOG");
+		ch.qos.logback.classic.Logger auditlog = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("AUDITLOG");
 		if (dummyAppender != null) {
 			dummyAppender.clear();
 		}
