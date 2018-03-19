@@ -66,7 +66,7 @@
                             <el-table-column prop="lastBeginTime" label="最近启动时间" width="160px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE' && !scope.row.restarting">
+                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE' && !scope.row.restarting && isAbledDump(scope.row.version)">
                                         <el-button type="text" @click="handleRestart(scope.row)"><i class="fa fa-power-off"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
