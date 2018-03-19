@@ -38,7 +38,12 @@ public class AuthorizationController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/loginUser")
 	public SuccessResponseEntity getLoginUser(HttpSession httpSession) throws SaturnJobConsoleException {
-		User user = authorizationService.getUser(getUserOaNameInSession());
+		String userOaName = getUserOaNameInSession();
+		User user = authorizationService.getUser(userOaName);
+		if (user == null) {
+			user = new User();
+			user.setName(userOaName);
+		}
 		return new SuccessResponseEntity(user);
 	}
 
