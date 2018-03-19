@@ -43,6 +43,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	private String superRoleKey = "super";
 
+	@Override
+	public boolean useAuthorization() throws SaturnJobConsoleException {
+		return systemConfigService.getBooleanValue(SystemConfigProperties.USE_AUTHORIZATION, useAuthorizationDefault);
+	}
+
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void addUserRole(UserRole userRole) throws SaturnJobConsoleException {
@@ -146,6 +151,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return superUsers;
 	}
 
+	@Transactional(readOnly = true)
 	@Override
 	public Role getSuperRole() throws SaturnJobConsoleException {
 		Role role = roleRepository.selectByKey(superRoleKey);
@@ -163,12 +169,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return role;
 	}
 
+	@Transactional(readOnly = true)
 	@Override
 	public boolean isPermitted(Permission permission, String userName, String namespace)
 			throws SaturnJobConsoleException {
-		if (!systemConfigService.getBooleanValue(SystemConfigProperties.USE_AUTHORIZATION, useAuthorizationDefault)) {
-			return true;
-		}
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		if (userRoles == null) {
 			return false;
@@ -198,6 +202,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return false;
 	}
 
+	@Transactional(readOnly = true)
 	@Override
 	public boolean isSuperRole(String userName) throws SaturnJobConsoleException {
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
