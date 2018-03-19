@@ -738,7 +738,7 @@ public class JobServiceImpl implements JobService {
 	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
 	 */
 	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
-		if (!jobType.equals(JobType.JAVA_JOB.name()) && jobType.equals(JobType.SHELL_JOB.name())) {
+		if (!jobType.equals(JobType.JAVA_JOB.name()) && !jobType.equals(JobType.SHELL_JOB.name())) {
 			return false;
 		}
 
