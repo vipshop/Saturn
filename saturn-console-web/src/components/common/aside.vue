@@ -16,6 +16,7 @@
                             <span class="page-menu-item-title">
                                 {{menu.title}}
                             </span>
+                            <el-tag type="danger" class="warning-tag" v-if="menu.alarmCount && !collapse">{{menu.alarmCount}}</el-tag>
                         </el-menu-item>
                     </el-menu>
                   </div>
@@ -87,6 +88,13 @@
   };
 </script>
 <style lang="sass">
+.warning-tag {
+    border-radius: 10px;
+    margin-left: 15px;
+    width: 28px;
+    padding: 0 5px;
+    text-align: center;
+}
 .my-sider {
   .el-aside {
     overflow: visible;
