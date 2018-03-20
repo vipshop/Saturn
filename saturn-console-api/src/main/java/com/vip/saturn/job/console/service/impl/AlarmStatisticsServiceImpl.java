@@ -76,8 +76,6 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 			throw new SaturnJobConsoleException("uuid不能为空");
 		}
 		setAlarmJobMonitorStatusToRead(uuid, StatisticsTableKeyConstant.UNNORMAL_JOB, AbnormalJob.class);
-
-		throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
 	}
 
 	@Override
@@ -86,7 +84,6 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 			throw new SaturnJobConsoleException("uuid不能为空");
 		}
 		setAlarmJobMonitorStatusToRead(uuid, StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, Timeout4AlarmJob.class);
-		throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
 	}
 
 	public List<AbnormalJob> getAbnormalJobList() throws SaturnJobConsoleException {
@@ -130,7 +127,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	private <T extends AbstractAlarmJob> void setAlarmJobMonitorStatusToRead(String uuid, String alarmJobType,
-			Class<T> t) {
+			Class<T> t) throws SaturnJobConsoleException {
 		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = saturnStatisticsService.findStatisticsByNameAndZkList(alarmJobType,
@@ -156,6 +153,7 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 				}
 			}
 		}
+		throw new SaturnJobConsoleException(String.format("该uuid(%s)不存在", uuid));
 	}
 
 	private ZkCluster validateAndGetZKCluster(String zkClusterKey) throws SaturnJobConsoleException {
