@@ -224,7 +224,7 @@ public class JobServiceImpl implements JobService {
 	public void enableJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在");
+			throw new SaturnJobConsoleException("不能启用该作业（" + jobName + "），因为该作业不存在");
 		}
 		if (jobConfig.getEnabled()) {
 			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于启用状态");
