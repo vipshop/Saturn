@@ -85,11 +85,23 @@ export default {
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
+          let result = '';
+          const tooltipStr = `<b>${this.point.category}</b><br/>
           错误率: ${this.point.y}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
-          失败总数: ${this.point.errorCountOfAllTime}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
+          失败总数: ${this.point.errorCountOfAllTime}<br/>`;
+          const flag = this.$common.hasPerm('dashboard:cleanAllJobAnalyse');
+          if (flag) {
+            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
+          } else {
+            result = tooltipStr;
+          }
+          return result;
+          // return `<b>${this.point.category}</b><br/>
+          // 错误率: ${this.point.y}<br/>
+          // 执行总数: ${this.point.processCountOfAllTime}<br/>
+          // 失败总数: ${this.point.errorCountOfAllTime}<br/>
+          // <button class="chart-tooltip-btn";
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
