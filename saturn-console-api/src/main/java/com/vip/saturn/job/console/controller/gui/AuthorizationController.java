@@ -69,7 +69,7 @@ public class AuthorizationController extends AbstractGUIController {
 		userRole.setLastUpdatedBy(userOaName);
 		userRole.setLastUpdateTime(now);
 		User user = new User();
-		user.setName(userOaName);
+		user.setName(userName);
 		user.setPassword("");
 		user.setRealName("");
 		user.setEmployeeId("");
