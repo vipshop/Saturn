@@ -43,7 +43,7 @@
                             <div class="page-table-header-separator"></div>
                             <div>
                                 <el-button @click="batchEnabled()" v-if="$common.hasPerm('job:batchEnable', domainName)"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
-                                <el-button @click="batchDisabled()"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
+                                <el-button @click="batchDisabled()" v-if="$common.hasPerm('job:batchDisable', domainName)"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
                                 <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                             </div>
@@ -86,10 +86,10 @@
                             </el-table-column>
                             <el-table-column label="操作" width="100px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="启用" placement="top" v-if="scope.row.status === 'STOPPING' || scope.row.status === 'STOPPED'">
+                                    <el-tooltip content="启用" placement="top" v-if="$common.hasPerm('job:enable', domainName) && (scope.row.status === 'STOPPING' || scope.row.status === 'STOPPED')">
                                         <el-button type="text" @click="handleActive(scope.row, true)"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="禁用" placement="top" v-if="scope.row.status === 'READY' || scope.row.status === 'RUNNING'">
+                                    <el-tooltip content="禁用" placement="top" v-if="$common.hasPerm('job:disable', domainName) && (scope.row.status === 'READY' || scope.row.status === 'RUNNING')">
                                         <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="复制" placement="top">
