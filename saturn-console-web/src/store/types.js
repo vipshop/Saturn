@@ -4,3 +4,5 @@ export const SET_DOMAIN_INFO = 'setDomainInfo';
 export const SET_JOB_INFO = 'setJobInfo';
 
 export const SET_USER_AUTHORITY = 'setUserAuthority';
+
+export const SET_IS_USE_AUTH = 'setIsUseAuth';
