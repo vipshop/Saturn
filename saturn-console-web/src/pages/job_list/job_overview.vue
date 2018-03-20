@@ -42,7 +42,7 @@
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
-                                <el-button @click="batchEnabled()"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
+                                <el-button @click="batchEnabled()" v-if="$common.hasPerm('job:batchEnable', domainName)"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                                 <el-button @click="batchDisabled()"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
                                 <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()"><i class="fa fa-level-up text-btn"></i>优先</el-button>
