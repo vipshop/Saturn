@@ -22,10 +22,10 @@ export default {
       const storeUserAuthority = {
         username: 'null',
         role: 'guest',
-        isUseAuthority: false,
         authority: [],
       };
       this.$store.dispatch('setUserAuthority', storeUserAuthority);
+      this.$store.dispatch('setIsUseAuth', false);
       this.initialized = true;
     },
     init() {

@@ -15,12 +15,14 @@ export default {
       role: '',
       authority: [],
     },
+    isUseAuth: true,
   },
 
   getters: {
     domainInfo: state => state.domainInfo,
     jobInfo: state => state.jobInfo,
     userAuthority: state => state.userAuthority,
+    isUseAuth: state => state.isUseAuth,
   },
 
   mutations: {
@@ -47,6 +49,9 @@ export default {
       };
       console.log(state.userAuthority);
     },
+    [types.SET_IS_USE_AUTH](state, item) {
+      state.isUseAuth = item;
+    },
   },
 
   actions: {
@@ -61,6 +66,9 @@ export default {
     },
     [types.SET_USER_AUTHORITY]({ commit }, userAuthority) {
       commit(types.SET_USER_AUTHORITY, userAuthority);
+    },
+    [types.SET_IS_USE_AUTH]({ commit }, isUseAuth) {
+      commit(types.SET_IS_USE_AUTH, isUseAuth);
     },
   },
 };
