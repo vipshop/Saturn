@@ -10,11 +10,17 @@ export default {
       techAdmin: '',
     },
     jobInfo: {},
+    userAuthority: {
+      username: '',
+      role: '',
+      authority: [],
+    },
   },
 
   getters: {
     domainInfo: state => state.domainInfo,
     jobInfo: state => state.jobInfo,
+    userAuthority: state => state.userAuthority,
   },
 
   mutations: {
@@ -31,6 +37,16 @@ export default {
         ...item,
       };
     },
+    [types.SET_USER_AUTHORITY](state, item) {
+      console.log(item);
+      state.userAuthority = {
+        ...state.userAuthority,
+        username: item.username,
+        role: item.role,
+        authority: item.authority,
+      };
+      console.log(state.userAuthority);
+    },
   },
 
   actions: {
@@ -42,6 +58,9 @@ export default {
         commit(types.SET_JOB_INFO, data);
         return data;
       });
+    },
+    [types.SET_USER_AUTHORITY]({ commit }, userAuthority) {
+      commit(types.SET_USER_AUTHORITY, userAuthority);
     },
   },
 };

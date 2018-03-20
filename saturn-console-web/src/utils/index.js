@@ -5,6 +5,7 @@ import validate from './validate';
 import routerMapper from './router_mapper';
 import map from './map';
 import option from './option';
+import common from './common';
 
 const Utils = {
   array,
@@ -14,6 +15,7 @@ const Utils = {
   routerMapper,
   map,
   option,
+  common,
 };
 /* eslint-disable no-param-reassign */
 Utils.install = (Vue) => {
@@ -24,5 +26,6 @@ Utils.install = (Vue) => {
   Vue.prototype.$routermapper = routerMapper;
   Vue.prototype.$map = map;
   Vue.prototype.$option = option;
+  Vue.prototype.$common = common;
 };
 export default Utils;

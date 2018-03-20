@@ -1,7 +1,7 @@
 <template>
     <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
-            <el-button type="primary" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+            <el-button type="primary" v-if="$common.hasPerm('job:update', domainName)" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
@@ -211,7 +211,7 @@
                     </div>
                 </el-collapse-item>
             </el-collapse>
-            <el-button type="primary" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+            <el-button type="primary" v-if="$common.hasPerm('job:update', domainName)" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
         </el-form>
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>

@@ -20,7 +20,7 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
-                            <el-button type="primary" @click="handleReArrange()"><i class="fa fa-repeat"></i>一键重排</el-button>
+                            <el-button type="primary" v-if="$common.hasPerm('executor:shardAllAtOnce', domainName)" @click="handleReArrange()"><i class="fa fa-repeat"></i>一键重排</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
@@ -30,7 +30,7 @@
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
-                                <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
+                                <el-button @click="batchDelete()" v-if="$common.hasPerm('executor:batchRemove', domainName)"><i class="fa fa-trash text-danger"></i>删除</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -66,19 +66,19 @@
                             <el-table-column prop="lastBeginTime" label="最近启动时间" width="160px"></el-table-column>
                             <el-table-column label="操作" width="110px" align="center">
                                 <template slot-scope="scope">
-                                    <el-tooltip content="重启" placement="top" v-if="scope.row.status === 'ONLINE' && !scope.row.restarting && isAbledDump(scope.row.version)">
+                                    <el-tooltip content="重启" placement="top" v-if="$common.hasPerm('executor:restart', domainName) && (scope.row.status === 'ONLINE' && !scope.row.restarting && isAbledDump(scope.row.version))">
                                         <el-button type="text" @click="handleRestart(scope.row)"><i class="fa fa-power-off"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="摘取流量" placement="top" v-if="!scope.row.noTraffic">
+                                    <el-tooltip content="摘取流量" placement="top" v-if="$common.hasPerm('executor:extractOrRecoverTraffic', domainName) && !scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'extract')"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="恢复流量" placement="top" v-if="scope.row.noTraffic">
+                                    <el-tooltip content="恢复流量" placement="top" v-if="$common.hasPerm('executor:extractOrRecoverTraffic', domainName) && scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE' && isAbledDump(scope.row.version)">
+                                    <el-tooltip content="一键DUMP" placement="top" v-if="$common.hasPerm('executor:dump', domainName) && (scope.row.status === 'ONLINE' && isAbledDump(scope.row.version))">
                                         <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'OFFLINE'">
+                                    <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('executor:remove', domainName) && scope.row.status === 'OFFLINE'">
                                         <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>

@@ -4,6 +4,7 @@ import 'font-awesome/css/font-awesome.css';
 import '@cloudux/noah-theme/lib/index.css';
 import './components';
 import './components/filter';
+import App from './App';
 import Store from './store';
 import router from './routers';
 import Utils from './utils';
@@ -19,8 +20,8 @@ Vue.use(Utils);
 window.vm = new Vue({
   el: '#app',
   store: Store,
-  template: '<div><Container></Container></div>',
   router,
+  render: h => h(App),
 });
 vm.clearZk = function clear(url) {
   this.$message.confirmMessage('确定清除zk吗?', () => {
