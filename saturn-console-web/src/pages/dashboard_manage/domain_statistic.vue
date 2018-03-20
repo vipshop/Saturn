@@ -75,6 +75,7 @@ export default {
     },
     getTop10FailDomain() {
       return this.$http.get('/console/dashboard/top10FailDomain', { zkClusterKey: this.zkCluster }).then((data) => {
+        const hasAuth = this.$common.hasPerm('dashboard:cleanAllJobAnalyse');
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -90,18 +91,12 @@ export default {
           错误率: ${this.point.y}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
           失败总数: ${this.point.errorCountOfAllTime}<br/>`;
-          const flag = this.$common.hasPerm('dashboard:cleanAllJobAnalyse');
-          if (flag) {
+          if (hasAuth) {
             result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
           } else {
             result = tooltipStr;
           }
           return result;
-          // return `<b>${this.point.category}</b><br/>
-          // 错误率: ${this.point.y}<br/>
-          // 执行总数: ${this.point.processCountOfAllTime}<br/>
-          // 失败总数: ${this.point.errorCountOfAllTime}<br/>
-          // <button class="chart-tooltip-btn";
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -115,6 +110,7 @@ export default {
     },
     getTop10UnstableDomain() {
       return this.$http.get('/console/dashboard/top10UnstableDomain', { zkClusterKey: this.zkCluster }).then((data) => {
+        const hasAuth = this.$common.hasPerm('dashboard:cleanShardingCount');
         const resultData = JSON.parse(data);
         const domains = [];
         const dataArr = [];
@@ -125,9 +121,15 @@ export default {
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
-          分片次数: ${this.point.y}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
+          let result = '';
+          const tooltipStr = `<b>${this.point.category}</b><br/>
+          分片次数: ${this.point.y}<br/>`;
+          if (hasAuth) {
+            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
+          } else {
+            result = tooltipStr;
+          }
+          return result;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],

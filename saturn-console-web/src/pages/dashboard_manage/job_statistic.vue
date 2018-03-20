@@ -58,6 +58,7 @@ export default {
   methods: {
     getTop10FailJob() {
       return this.$http.get('/console/dashboard/top10FailJob', { zkClusterKey: this.zkCluster }).then((data) => {
+        const hasAuth = this.$common.hasPerm('dashboard:cleanOneJobAnalyse');
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -68,11 +69,17 @@ export default {
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
+          let result = '';
+          const tooltipStr = `<b>${this.point.category}</b><br/>
           所属域: ${this.point.domainName}<br/>
           执行总数: ${this.point.processCountOfAllTime}<br/>
-          失败总数: ${this.point.errorCountOfAllTime}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobAnalyse/clean')">清除zk</button>`;
+          失败总数: ${this.point.errorCountOfAllTime}<br/>`;
+          if (hasAuth) {
+            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobAnalyse/clean')">清除zk</button>`;
+          } else {
+            result = tooltipStr;
+          }
+          return result;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
@@ -86,6 +93,7 @@ export default {
     },
     getTop10ActiveJob() {
       return this.$http.get('/console/dashboard/top10ActiveJob', { zkClusterKey: this.zkCluster }).then((data) => {
+        const hasAuth = this.$common.hasPerm('dashboard:cleanOneJobExecutorCount');
         const resultData = JSON.parse(data);
         const jobs = [];
         const dataArr = [];
@@ -96,11 +104,17 @@ export default {
           dataArr.push(ele);
         });
         const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
+          let result = '';
+          const tooltipStr = `<b>${this.point.category}</b><br/>
           所属域: ${this.point.domainName}<br/>
           当天执行总数: ${this.point.processCountOfTheDay}<br/>
-          当天失败数: ${this.point.failureCountOfTheDay}<br/>
-          <button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobExecutorCount/clean')">清除zk</button>`;
+          当天失败数: ${this.point.failureCountOfTheDay}<br/>`;
+          if (hasAuth) {
+            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobExecutorCount/clean')">清除zk</button>`;
+          } else {
+            result = tooltipStr;
+          }
+          return result;
         };
         const optionInfo = {
           seriesData: [{ data: dataArr }],
