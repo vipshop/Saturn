@@ -44,13 +44,13 @@
                             <div>
                                 <el-button @click="batchEnabled()" v-if="$common.hasPerm('job:batchEnable', domainName)"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                                 <el-button @click="batchDisabled()" v-if="$common.hasPerm('job:batchDisable', domainName)"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
-                                <el-button @click="batchDelete()"><i class="fa fa-trash text-danger"></i>删除</el-button>
-                                <el-button @click="batchPriority()"><i class="fa fa-level-up text-btn"></i>优先</el-button>
+                                <el-button @click="batchDelete()" v-if="$common.hasPerm('job:batchRemove', domainName)"><i class="fa fa-trash text-danger"></i>删除</el-button>
+                                <el-button @click="batchPriority()" v-if="$common.hasPerm('job:batchSetPreferExecutors', domainName)"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                             </div>
                             <div class="pull-right">
-                                <el-button @click="handleAdd()"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
-                                <el-button @click="handleImport()"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
-                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
+                                <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
+                                <el-button @click="handleImport()" v-if="$common.hasPerm('job:import', domainName)"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
+                                <el-button @click="handleExport()" v-if="$common.hasPerm('job:export', domainName)"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -92,10 +92,10 @@
                                     <el-tooltip content="禁用" placement="top" v-if="$common.hasPerm('job:disable', domainName) && (scope.row.status === 'READY' || scope.row.status === 'RUNNING')">
                                         <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle text-warning"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="复制" placement="top">
+                                    <el-tooltip content="复制" placement="top" v-if="$common.hasPerm('job:copy', domainName)">
                                         <el-button type="text" @click="handleCopy(scope.row)"><i class="fa fa-clone"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="删除" placement="top" v-if="scope.row.status === 'STOPPED'">
+                                    <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('job:remove', domainName) && scope.row.status === 'STOPPED'">
                                         <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
