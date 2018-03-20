@@ -49,9 +49,6 @@ public class Permissions {
 
 	public static final Permission systemConfig = new Permission("systemConfig");
 	
-	public static final Permission privilegeManage = new Permission("privilegeManage");
-	
 	public static final Permission authorizationManage = new Permission("authorizationManage");
-
 
 }
