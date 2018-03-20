@@ -99,7 +99,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		long maxRestartInv = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_SECONDS_FORCE_KILL_EXECUTOR,
 				DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR) * 1000L;
 
-		// 如果restart结点存在，restarting结点存在的时间<300s，executor状态列显示RESTARTING；
+		// 如果restart结点存在，restart结点存在的时间<300s，executor状态列显示RESTARTING；
 		if (0 != restartTriggerTime && now - restartTriggerTime < maxRestartInv) {
 			executorInfo.setRestarting(true);
 		} else {
