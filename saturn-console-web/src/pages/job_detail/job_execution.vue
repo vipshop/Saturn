@@ -21,7 +21,7 @@
                         <el-tag type="danger" v-if="scope.row.failover">failover</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="jobMsg" label="分片返回信息" width="180px" show-overflow-tooltip>
+                <el-table-column prop="jobMsg" label="分片返回信息" show-overflow-tooltip>
                     <template slot-scope="scope"> 
                         {{scope.row.jobMsg}}
                     </template>
@@ -33,13 +33,13 @@
                         <div>止:{{scope.row.lastCompleteTime || ' ——'}}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="lastTimeConsumedInSec" label="最近执行时长">
+                <el-table-column prop="lastTimeConsumedInSec" label="执行时长(s)" width="100px">
                     <template slot-scope="scope"> 
                         <div v-if="scope.row.lastTimeConsumedInSec === 0">——</div>
                         <div v-else>{{scope.row.lastTimeConsumedInSec}}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="nextFireTime" label="下次开始时间"></el-table-column>
+                <el-table-column prop="nextFireTime" label="下次开始时间" width="180px"></el-table-column>
                 <el-table-column label="日志" width="50px" align="center">
                     <template slot-scope="scope"> 
                         <el-tooltip content="查看日志" placement="top">

@@ -35,17 +35,17 @@
                             </router-link>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="degree" label="域等级" sortable>
+                    <el-table-column prop="degree" label="域等级" width="110px" sortable>
                         <template slot-scope="scope">
                             {{$map.degreeMap[scope.row.degree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="jobDegree" label="作业等级" sortable>
+                    <el-table-column prop="jobDegree" label="作业等级" width="110px" sortable>
                         <template slot-scope="scope">
                             {{$map.degreeMap[scope.row.jobDegree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="timeout4AlarmSeconds" label="超时秒数"></el-table-column>
+                    <el-table-column prop="timeout4AlarmSeconds" label="超时秒数" width="110px"></el-table-column>
                     <el-table-column prop="timeoutItems" label="超时分片"></el-table-column>
                     <el-table-column label="操作" width="100px" align="center">
                         <template slot-scope="scope">

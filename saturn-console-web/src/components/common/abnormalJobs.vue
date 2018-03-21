@@ -35,18 +35,18 @@
                             </router-link>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="degree" label="域等级" sortable>
+                    <el-table-column prop="degree" label="域等级" width="110px" sortable>
                         <template slot-scope="scope">
                             {{$map.degreeMap[scope.row.degree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="jobDegree" label="作业等级" sortable>
+                    <el-table-column prop="jobDegree" label="作业等级" width="110px" sortable>
                         <template slot-scope="scope">
                             {{$map.degreeMap[scope.row.jobDegree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="nextFireTimeWithTimeZoneFormat" label="本该调度时间" min-width="120px"></el-table-column>
-                    <el-table-column prop="cause" label="异常原因" min-width="100">
+                    <el-table-column prop="nextFireTimeWithTimeZoneFormat" label="本该调度时间" width="160px"></el-table-column>
+                    <el-table-column prop="cause" label="异常原因" width="190px">
                         <template slot-scope="scope">
                             {{$map.causeMap[scope.row.cause]}}
                         </template>
