@@ -8,19 +8,19 @@ export default {
     if (isUseAuth) {
       if (myPermissions.role === 'super') {
         flag = myPermissions.authority.indexOf(permission) > -1;
-      }
-      if (namespace) {
+      } else if (namespace) {
         if (myPermissions.authority) {
-          let arr = [];
-          const hasNamespace = myPermissions.authority.some((ele) => {
+          const arr = [];
+          myPermissions.authority.forEach((ele) => {
             if (ele.namespace === namespace) {
-              arr = ele.permissionList;
-              return true;
+              ele.permissionList.forEach((ele2) => {
+                arr.push(ele2);
+              });
             }
-            return false;
           });
-          if (hasNamespace) {
-            flag = arr.indexOf(permission) > -1;
+          const permissionArr = Array.from(new Set(arr));
+          if (permissionArr) {
+            flag = permissionArr.indexOf(permission) > -1;
           }
         }
       }
