@@ -16,7 +16,7 @@
                             <div class="job-alarm-content">
                                 <div class="panel-row">{{abnormalJob.nextFireTimeWithTimeZoneFormat}}</div>
                                 <div class="panel-row">{{$map.causeMap[abnormalJob.cause]}}</div>
-                                <div class="panel-btn" v-if="!abnormalJob.read"><el-button size="small" type="warning" @click="handleAbnormalJob()">不再告警</el-button></div>
+                                <div class="panel-btn" v-if="$common.hasPerm('alarmCenter:setAbnormalJobRead', domainName)"><el-button :disabled="abnormalJob.read" size="small" type="warning" @click="handleAbnormalJob()">不再告警</el-button></div>
                             </div>
                         </div>
                     </Panel>
@@ -27,8 +27,8 @@
                         <div slot="content">
                             <div class="job-alarm-content">
                                 <div class="panel-row">超时秒数: {{timeoutJob.timeout4AlarmSeconds}}s</div>
-                                <div class="panel-row">超时分片: {{timeoutJob.timeoutItems.join(',')}}</div>
-                                <div class="panel-btn" v-if="!timeoutJob.read"><el-button size="small" type="warning" @click="handleTimeoutJob()">不再告警</el-button></div>
+                                <div class="panel-row">超时分片: {{timeoutJob.timeoutItems}}</div>
+                                <div class="panel-btn" v-if="$common.hasPerm('alarmCenter:setTimeout4AlarmJobRead', domainName)"><el-button :disabled="timeoutJob.read" size="small" type="warning" @click="handleTimeoutJob()">不再告警</el-button></div>
                             </div>
                         </div>
                     </Panel>
