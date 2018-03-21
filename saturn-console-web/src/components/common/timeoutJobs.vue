@@ -49,7 +49,7 @@
                     <el-table-column prop="timeoutItems" label="超时分片"></el-table-column>
                     <el-table-column label="操作" width="100px" align="center">
                         <template slot-scope="scope">
-                            <el-button size="small" type="primary" @click="handleRead(scope.row)" :disabled="scope.row.read">不再告警</el-button>
+                            <el-button v-if="$common.hasPerm('alarmCenter:setTimeout4AlarmJobRead', scope.row.domainName)" size="small" type="primary" @click="handleRead(scope.row)" :disabled="scope.row.read">不再告警</el-button>
                         </template>
                     </el-table-column>
                 </el-table>
