@@ -7,7 +7,6 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.utils.Permissions;
-
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
@@ -78,8 +77,7 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
-	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid,
-			@AuditParam("namespace") @RequestParam(required = false) String namespace)
+	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.alarmCenterSetAbnormalJobRead);
 		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(uuid);

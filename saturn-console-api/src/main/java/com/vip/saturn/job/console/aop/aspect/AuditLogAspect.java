@@ -5,9 +5,6 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.utils.AuditInfoContext;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
-import java.lang.annotation.Annotation;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -18,6 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 /**
  * Aspect to handle the audit log logic.
@@ -66,7 +67,10 @@ public class AuditLogAspect {
 			for (Annotation annotation : annotations[i]) {
 				if (annotation.annotationType() == AuditParam.class) {
 					AuditParam auditParamAnno = (AuditParam) annotation;
-					AuditInfoContext.put(auditParamAnno.value(), arg.toString());
+					String value = auditParamAnno.value();
+					if (value != null) {
+						AuditInfoContext.put(value, arg == null ? null : arg.toString());
+					}
 				}
 			}
 			i++;
