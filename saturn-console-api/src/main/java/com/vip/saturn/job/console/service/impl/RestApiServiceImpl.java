@@ -365,7 +365,7 @@ public class RestApiServiceImpl implements RestApiService {
 							throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
 									"不能启用该作业（" + jobName + "），因为该作业不存在");
 						}
-						if (!jobConfig.getEnabled()) {
+						if (jobConfig.getEnabled()) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.CREATED.value(),
 									"该作业（" + jobName + "）已经处于启用状态");
 						}
