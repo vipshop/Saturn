@@ -27,7 +27,7 @@ export default {
     },
     noAlarm(uuid) {
       this.$http.post(`/console/namespaces/${this.domainName}/setTimeout4AlarmJobMonitorStatusToRead`, { uuid }).then(() => {
-        this.getAbnormalJobs();
+        this.getTimeoutJobs();
         this.$message.successNotify('操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
