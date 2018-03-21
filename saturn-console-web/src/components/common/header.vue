@@ -1,7 +1,9 @@
 <template>
     <div class="header">
         <div class="header-title">
-            <span>Saturn Console</span>
+            <router-link tag="a" :to="{ name: 'job_manage' }">
+                <el-button type="text"><span class="header-tip">Saturn Console</span></el-button>
+            </router-link>
         </div>
         <div>
             <el-menu :default-active="activeIndex" class="el-menu--dark el-menu--has-container" mode="horizontal" :router="true">
@@ -70,6 +72,14 @@ export default {
     width: 150px;
     text-align: center;
     padding-left: 20px;
+    a .el-button {
+      height: 50px;
+      .header-tip {
+        color: #98a5b4;
+        font-weight: 700;
+        font-size: medium;
+      }
+    }
 }
 
 .user-dropdown {
