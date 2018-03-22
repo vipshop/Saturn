@@ -14,6 +14,8 @@ executor_configs:
 console_configs:
     - name: USE_AUTHORIZATION
       desc_zh: 是否使用鉴权
+    - name: API_TOKENS
+      desc_zh: REST API的authorization token
 
 cluster_configs:
     - name: CONSOLE_ZK_CLUSTER_MAPPING
