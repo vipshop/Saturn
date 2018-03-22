@@ -3,15 +3,15 @@
         <div class="page-table">
             <div class="page-table-header">
                 <div class="page-table-header-title"><i class="fa fa-list"></i>运行状态
-                    <el-button type="text" @click="getJobExecutors()"><i class="fa fa-refresh"></i></el-button>
+                    <!-- <el-button type="text" @click="getJobExecutors()"><i class="fa fa-refresh"></i></el-button> -->
                 </div>
-                <div class="page-table-header-separator"></div>
+                <!-- <div class="page-table-header-separator"></div>
                 <div>
                     <span class="refresh-text">自动刷新：</span>
                     <el-select v-model="autoRefreshTime" placeholder="请选择" size="mini" style="width: 120px;" @change="refreshExecutions">
                         <el-option v-for="item in refreshTimes" :value="item.value" :label="item.label" :key="item.value"></el-option>
                     </el-select>
-                </div>
+                </div> -->
             </div>
             <el-table stripe border :data="executions" style="width: 100%">
                 <el-table-column prop="item" label="分片项" width="80px"></el-table-column>
@@ -61,17 +61,17 @@ export default {
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       isViewLogVisible: false,
-      autoRefreshTime: 30000,
-      refreshTimes: [{
-        label: '15秒',
-        value: 15000,
-      }, {
-        label: '30秒',
-        value: 30000,
-      }, {
-        label: '60秒',
-        value: 60000,
-      }],
+    //   autoRefreshTime: 30000,
+    //   refreshTimes: [{
+    //     label: '15秒',
+    //     value: 15000,
+    //   }, {
+    //     label: '30秒',
+    //     value: 30000,
+    //   }, {
+    //     label: '60秒',
+    //     value: 60000,
+    //   }],
       statusTag: {
         RUNNING: 'success',
         COMPLETED: 'primary',
@@ -87,7 +87,7 @@ export default {
         PENDING: '未知',
       },
       executions: [],
-      interval: 0,
+    //   interval: 0,
       logContent: '',
     };
   },
@@ -105,11 +105,11 @@ export default {
     closeViewLogDialog() {
       this.isViewLogVisible = false;
     },
-    refreshExecutions() {
-      this.interval = setInterval(() => {
-        this.getJobExecutors();
-      }, this.autoRefreshTime);
-    },
+    // refreshExecutions() {
+    //   this.interval = setInterval(() => {
+    //     this.getJobExecutors();
+    //   }, this.autoRefreshTime);
+    // },
     getJobExecutors() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/execution/status`).then((data) => {
         this.executions = data;
@@ -119,11 +119,11 @@ export default {
   },
   created() {
     this.getJobExecutors();
-    this.refreshExecutions();
+    // this.refreshExecutions();
   },
-  destroyed() {
-    clearInterval(this.interval);
-  },
+//   destroyed() {
+//     clearInterval(this.interval);
+//   },
 };
 </script>
 <style lang="sass" scoped>
