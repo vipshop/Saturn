@@ -1,37 +1,10 @@
 package com.vip.saturn.it;
 
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.it.utils.NestedZkUtils;
 import com.vip.saturn.job.console.SaturnEnvProperties;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.RequestResultHelper;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.executor.Main;
@@ -50,6 +23,32 @@ import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Basic for Saturn test automation
@@ -152,7 +151,7 @@ public class SaturnAutoBasic {
 				String response = EntityUtils.toString(httpResponse.getEntity());
 				statusLine = httpResponse.getStatusLine();
 				if (statusLine != null && statusLine.getStatusCode() == 200) {
-					if (JSONObject.parseObject(response, RequestResult.class).isSuccess()) {
+					if (RequestResultHelper.isSuccess(JSONObject.parseObject(response, RequestResult.class))) {
 						return;
 					}
 				} else {
@@ -189,7 +188,7 @@ public class SaturnAutoBasic {
 		 * saturnClassloader = new SaturnClassLoader(getAppClassLoaderUrls(Main.class.getClassLoader()), null);
 		 * classloaders.put(executorName,saturnClassloader); }
 		 */
-		String[] args = { "-namespace", NAMESPACE, "-executorName", executorName };
+		String[] args = {"-namespace", NAMESPACE, "-executorName", executorName};
 		main.launchInner(args, Main.class.getClassLoader(), Main.class.getClassLoader());
 		saturnExecutorList.add(main);
 		Thread.sleep(1000);
@@ -206,7 +205,7 @@ public class SaturnAutoBasic {
 		} else {
 			Main main = new Main();
 			String executorName = "executorName" + index;
-			String[] args = { "-namespace", NAMESPACE, "-executorName", executorName };
+			String[] args = {"-namespace", NAMESPACE, "-executorName", executorName};
 			main.launchInner(args, Main.class.getClassLoader(), Main.class.getClassLoader());
 			saturnExecutorList.set(index, main);
 			Thread.sleep(1000);
@@ -325,8 +324,8 @@ public class SaturnAutoBasic {
 			if (saturnContainer == null) {
 				continue;
 			}
-			String path = JobNodePath.getNodeFullPath(jobName,
-					String.format(ServerNode.RUNONETIME, saturnContainer.getExecutorName()));
+			String path = JobNodePath
+					.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, saturnContainer.getExecutorName()));
 
 			if (regCenter.isExisted(path)) {
 				regCenter.remove(path);
@@ -341,8 +340,8 @@ public class SaturnAutoBasic {
 			if (saturnContainer == null) {
 				continue;
 			}
-			String path = JobNodePath.getNodeFullPath(jobName,
-					String.format(ServerNode.STOPONETIME, saturnContainer.getExecutorName()));
+			String path = JobNodePath
+					.getNodeFullPath(jobName, String.format(ServerNode.STOPONETIME, saturnContainer.getExecutorName()));
 
 			if (regCenter.isExisted(path)) {
 				regCenter.remove(path);
@@ -350,7 +349,7 @@ public class SaturnAutoBasic {
 			regCenter.persist(path, "1");
 		}
 	}
-	
+
 	public static void runAtOnceAndWaitShardingCompleted(final JobConfiguration jobConfiguration) throws Exception {
 		runAtOnce(jobConfiguration.getJobName());
 		Thread.sleep(1000L);
@@ -411,8 +410,8 @@ public class SaturnAutoBasic {
 				jobConfiguration.getShardingTotalCount());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.SHARDING_ITEM_PARAMETERS,
 				jobConfiguration.getShardingItemParameters());
-		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_PARAMETER,
-				jobConfiguration.getJobParameter());
+		jobNodeStorage
+				.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_PARAMETER, jobConfiguration.getJobParameter());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.TIMEZONE, jobConfiguration.getTimeZone());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.CRON, jobConfiguration.getCron());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.PREFER_LIST, jobConfiguration.getPreferList());
@@ -425,10 +424,10 @@ public class SaturnAutoBasic {
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.FAILOVER, jobConfiguration.isFailover());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.LOAD_LEVEL, jobConfiguration.getLoadLevel());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.DESCRIPTION, jobConfiguration.getDescription());
-		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.TIMEOUTSECONDS,
-				jobConfiguration.getTimeoutSeconds());
-		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.SHOW_NORMAL_LOG,
-				jobConfiguration.isShowNormalLog());
+		jobNodeStorage
+				.fillJobNodeIfNullOrOverwrite(ConfigurationNode.TIMEOUTSECONDS, jobConfiguration.getTimeoutSeconds());
+		jobNodeStorage
+				.fillJobNodeIfNullOrOverwrite(ConfigurationNode.SHOW_NORMAL_LOG, jobConfiguration.isShowNormalLog());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.QUEUE_NAME, jobConfiguration.getQueueName());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.CHANNEL_NAME, jobConfiguration.getChannelName());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.USE_DISPREFER_LIST,
@@ -472,7 +471,7 @@ public class SaturnAutoBasic {
 			}
 			// Thread.sleep(1000);
 			Thread.sleep(500); // Poll value. Note that a lot checks are done with zkServer, increase this to avoid some
-								// side-effect
+			// side-effect
 			count++;
 			if (count > timeOutInSeconds * 2) {
 				throw new Exception("time is up. check failed.");
@@ -592,8 +591,8 @@ public class SaturnAutoBasic {
 					for (int i = 0; i < saturnExecutorList.size(); i++) {
 						Main saturnContainer = saturnExecutorList.get(i);
 						for (int j = 0; j < shardCount; j++) {
-							long pid = ScriptPidUtils.getFirstPidFromFile(saturnContainer.getExecutorName(), jobName,
-									"" + j);
+							long pid = ScriptPidUtils
+									.getFirstPidFromFile(saturnContainer.getExecutorName(), jobName, "" + j);
 							if (pid > 0 && ScriptPidUtils.isPidRunning(pid)) {
 								return false;
 							}
@@ -787,16 +786,17 @@ public class SaturnAutoBasic {
 
 	private static void waitForMsgTotalCountChanged(final String queueUrl, final String userName, final String password)
 			throws Exception {
-		final String msgTotalCountBefore = StringUtils.substringBetween(getRestData(queueUrl, userName, password),
-				"messages\":", ",\"messages_details");
+		final String msgTotalCountBefore = StringUtils
+				.substringBetween(getRestData(queueUrl, userName, password), "messages\":", ",\"messages_details");
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
 				public boolean docheck() {
 					String msgTotalCountNow;
 					try {
-						msgTotalCountNow = StringUtils.substringBetween(getRestData(queueUrl, userName, password),
-								"messages\":", ",\"messages_details");
+						msgTotalCountNow = StringUtils
+								.substringBetween(getRestData(queueUrl, userName, password), "messages\":",
+										",\"messages_details");
 						return !msgTotalCountNow.equals(msgTotalCountBefore);
 					} catch (IOException e) {
 						log.error("Cannot get msgTotalCount!");

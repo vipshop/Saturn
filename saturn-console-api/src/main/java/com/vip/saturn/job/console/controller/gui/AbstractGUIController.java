@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RequestResult;
+import com.vip.saturn.job.console.domain.RequestResultHelper;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.Permission;
 import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
@@ -34,7 +35,7 @@ public class AbstractGUIController extends AbstractController {
 		if (StringUtils.isBlank(message)) {
 			message = ex.toString();
 		}
-		return new ResponseEntity<>(new RequestResult(false, message), HttpStatus.OK);
+		return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
 	}
 
 	public String getUserNameInSession() {
