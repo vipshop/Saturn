@@ -25,8 +25,8 @@ export default {
         this.loading = false;
       });
     },
-    noAlarm(uuid) {
-      this.$http.post(`/console/namespaces/${this.domainName}/setAbnormalJobMonitorStatusToRead`, { uuid }).then(() => {
+    noAlarm(params) {
+      this.$http.post(`/console/namespaces/${params.domainName}/setAbnormalJobMonitorStatusToRead`, { uuid: params.uuid }).then(() => {
         this.getAbnormalJobs();
         this.$message.successNotify('操作成功');
       })

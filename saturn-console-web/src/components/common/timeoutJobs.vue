@@ -74,7 +74,11 @@ export default {
       this.$emit('refresh-list');
     },
     handleRead(row) {
-      this.$emit('no-alarm', row.uuid);
+      const params = {
+        uuid: row.uuid,
+        domainName: row.domainName,
+      };
+      this.$emit('no-alarm', params);
     },
   },
 };
