@@ -55,9 +55,11 @@ export default {
           break;
       }
       axios.request(config).then((response) => {
-        if (response.data.success) {
+        if (response.data.status === 0) {
           showError = false;
           resolve(response.data.obj);
+        } else if (response.data.status === 2) {
+          top.location.href = response.data.obj;
         } else {
           message.errorMessage(response.data.message);
           showError = true;
