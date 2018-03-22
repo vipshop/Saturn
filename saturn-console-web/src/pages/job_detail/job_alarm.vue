@@ -80,14 +80,14 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取无法高可用作业信息请求失败！'); });
     },
     handleAbnormalJob() {
-      this.$http.post('/console/alarmStatistics/setAbnormalJobMonitorStatusToRead', { uuid: this.abnormalJob.uuid }).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/setAbnormalJobMonitorStatusToRead`, { uuid: this.abnormalJob.uuid }).then(() => {
         this.init();
         this.$message.successNotify('操作成功');
       })
       .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
     },
     handleTimeoutJob() {
-      this.$http.post('/console/alarmStatistics/setTimeout4AlarmJobMonitorStatusToRead', { uuid: this.timeoutJob.uuid }).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/setTimeout4AlarmJobMonitorStatusToRead`, { uuid: this.timeoutJob.uuid }).then(() => {
         this.init();
         this.$message.successNotify('操作成功');
       })
