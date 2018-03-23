@@ -38,9 +38,9 @@ public class AbstractGUIController extends AbstractController {
 		return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
 	}
 
+	//FIXME: Xiaopeng, 跟getUserOaNameInSession() 抽取一个公共代码，避免duplicate code
 	public String getUserNameInSession() {
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-				.getRequest();
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 		if (request == null) {
 			return UNKNOWN;
 		}
@@ -88,13 +88,14 @@ public class AbstractGUIController extends AbstractController {
 		}
 	}
 
+	//FIXME: Xiaopeng, rename Super to 'SystemAdmin'
 	public void assertIsSuper() throws SaturnJobConsoleException {
 		if (!authorizationService.useAuthorization()) {
 			return;
 		}
 		String userOaName = getUserOaNameInSession();
 		if (!authorizationService.isSuperRole(userOaName)) {
-			throw new SaturnJobConsoleException(String.format("您不是管理员，没有权限"));
+			throw new SaturnJobConsoleException("您不是管理员，没有权限");
 		}
 	}
 
