@@ -45,7 +45,7 @@ public class JobConfigController extends AbstractGUIController {
 			@AuditParam("jobName") @PathVariable String jobName, UpdateJobConfigVo updateJobConfigVo)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobUpdate, namespace);
-		jobService.updateJobConfig(namespace, updateJobConfigVo);
+		jobService.updateJobConfig(namespace, updateJobConfigVo, getUserName());
 		return new SuccessResponseEntity();
 	}
 

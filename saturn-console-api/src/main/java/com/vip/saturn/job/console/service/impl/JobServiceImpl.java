@@ -93,8 +93,8 @@ public class JobServiceImpl implements JobService {
 
 	private Random random = new Random();
 
-	private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class,
-			String.class);
+	private MapType customContextType = TypeFactory.defaultInstance()
+			.constructMapType(HashMap.class, String.class, String.class);
 
 	private JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
 			boolean enabled) {
@@ -221,7 +221,7 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void enableJob(String namespace, String jobName) throws SaturnJobConsoleException {
+	public void enableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
 			throw new SaturnJobConsoleException("不能启用该作业（" + jobName + "），因为该作业不存在");
@@ -237,8 +237,7 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setEnabled(true);
 		jobConfig.setLastUpdateTime(new Date());
-		// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-		jobConfig.setLastUpdateBy(null);
+		jobConfig.setLastUpdateBy(updatedBy);
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
@@ -249,7 +248,7 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void disableJob(String namespace, String jobName) throws SaturnJobConsoleException {
+	public void disableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
 			throw new SaturnJobConsoleException("不能禁用该作业（" + jobName + "），因为该作业不存在");
@@ -259,8 +258,7 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setEnabled(Boolean.FALSE);
 		jobConfig.setLastUpdateTime(new Date());
-		// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-		jobConfig.setLastUpdateBy(null);
+		jobConfig.setLastUpdateBy(updatedBy);
 		try {
 			currentJobConfigService.updateByPrimaryKey(jobConfig);
 		} catch (Exception e) {
@@ -401,13 +399,15 @@ public class JobServiceImpl implements JobService {
 			return executorProvidedList;
 		}
 
-		handlerPreferListString(curatorFrameworkOp, preferList, executors, dockerExecutorProvided, executorProvidedList);
+		handlerPreferListString(curatorFrameworkOp, preferList, executors, dockerExecutorProvided,
+				executorProvidedList);
 
 		return executorProvidedList;
 	}
 
 	private void handlerPreferListString(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String preferList,
-			List<String> executors, List<ExecutorProvided> dockerExecutorProvided, List<ExecutorProvided> executorProvidedList) {
+			List<String> executors, List<ExecutorProvided> dockerExecutorProvided,
+			List<ExecutorProvided> executorProvidedList) {
 		String[] preferExecutorList = preferList.split(",");
 		for (String preferExecutor : preferExecutorList) {
 			if (!preferExecutor.startsWith("@")) {
@@ -495,7 +495,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public void setPreferList(String namespace, String jobName, String preferList) throws SaturnJobConsoleException {
+	public void setPreferList(String namespace, String jobName, String preferList, String updatedBy)
+			throws SaturnJobConsoleException {
 		// save to db
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig == null) {
@@ -505,8 +506,7 @@ public class JobServiceImpl implements JobService {
 		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
 		newJobConfig.setPreferList(preferList);
 		try {
-			// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, null);
+			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, updatedBy);
 		} catch (Exception e) {
 			log.error("exception is thrown during change preferList in db", e);
 			throw new SaturnJobConsoleException(e);
@@ -545,9 +545,9 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException("作业类型未知");
 		}
 		// 如果是JAVA作业
-		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name())
-				|| jobConfig.getJobType().equals(JobType.MSG_JOB.name()))
-				&& (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty())) {
+		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
+				.equals(JobType.MSG_JOB.name())) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim()
+				.isEmpty())) {
 			// 作业实现类必填
 			throw new SaturnJobConsoleException("对于JAVA或消息作业，作业实现类必填");
 		}
@@ -563,8 +563,8 @@ public class JobServiceImpl implements JobService {
 
 	private void validateCronFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 如果是JAVA/SHELL作业
-		if (jobConfig.getJobType().equals(JobType.JAVA_JOB.name())
-				|| jobConfig.getJobType().equals(JobType.SHELL_JOB.name())) {
+		if (jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
+				.equals(JobType.SHELL_JOB.name())) {
 			// cron表达式必填
 			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
 				throw new SaturnJobConsoleException("对于JAVA/SHELL作业，cron表达式必填");
@@ -603,11 +603,9 @@ public class JobServiceImpl implements JobService {
 			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
 				throw new SaturnJobConsoleException("分片数不能为空，并且不能小于1");
 			}
-			if ((jobConfig.getShardingTotalCount() > 0)
-				&& (jobConfig.getShardingItemParameters() == null
-						|| jobConfig.getShardingItemParameters().trim().isEmpty()
-						|| jobConfig.getShardingItemParameters().split(",").length < jobConfig
-								.getShardingTotalCount()) ){
+			if ((jobConfig.getShardingTotalCount() > 0) && (jobConfig.getShardingItemParameters() == null || jobConfig
+					.getShardingItemParameters().trim().isEmpty()
+					|| jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount())) {
 				throw new SaturnJobConsoleException("分片参数不能小于分片总数");
 			}
 		}
@@ -615,17 +613,18 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
-		addOrCopyJob(namespace, jobConfig, null);
+	public void addJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException {
+		addOrCopyJob(namespace, jobConfig, null, createdBy);
 	}
 
 	@Transactional
 	@Override
-	public void copyJob(String namespace, JobConfig jobConfig, String jobNameCopied) throws SaturnJobConsoleException {
-		addOrCopyJob(namespace, jobConfig, jobNameCopied);
+	public void copyJob(String namespace, JobConfig jobConfig, String jobNameCopied, String createdBy)
+			throws SaturnJobConsoleException {
+		addOrCopyJob(namespace, jobConfig, jobNameCopied, createdBy);
 	}
 
-	private void addOrCopyJob(String namespace, JobConfig jobConfig, String jobNameCopied)
+	private void addOrCopyJob(String namespace, JobConfig jobConfig, String jobNameCopied, String createdBy)
 			throws SaturnJobConsoleException {
 		validateJobConfig(jobConfig);
 		String jobName = jobConfig.getJobName();
@@ -638,24 +637,24 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
 		} else {
 			if (jobNameCopied == null) {
-				persistJob(namespace, jobConfig);
+				persistJob(namespace, jobConfig, createdBy);
 			} else {
-				JobConfig4DB jobConfig4DBCopied = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
-						jobNameCopied);
+				JobConfig4DB jobConfig4DBCopied = currentJobConfigService
+						.findConfigByNamespaceAndJobName(namespace, jobNameCopied);
 				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, jobConfig4DBCopied);
-				persistJob(namespace, jobConfig4DBCopied);
+				persistJob(namespace, jobConfig4DBCopied, createdBy);
 			}
 		}
 	}
 
-	private void persistJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+	private void persistJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
 			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
 		}
 		correctConfigValueIfNeeded(jobConfig);
-		saveJobConfigToDb(namespace, jobConfig);
+		saveJobConfigToDb(namespace, jobConfig, createdBy);
 		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
 	}
 
@@ -680,8 +679,8 @@ public class JobServiceImpl implements JobService {
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfig4DBList != null) {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
-				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode())
-						&& jobConfig4DB.getJobMode().startsWith(JobMode.SYSTEM_PREFIX))) {
+				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
+						.startsWith(JobMode.SYSTEM_PREFIX))) {
 					JobConfig jobConfig = new JobConfig();
 					SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
 					unSystemJobs.add(jobConfig);
@@ -697,8 +696,8 @@ public class JobServiceImpl implements JobService {
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfig4DBList != null) {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
-				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode())
-						&& jobConfig4DB.getJobMode().startsWith(JobMode.SYSTEM_PREFIX))) {
+				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
+						.startsWith(JobMode.SYSTEM_PREFIX))) {
 					unSystemJobs.add(jobConfig4DB.getJobName());
 				}
 			}
@@ -744,8 +743,9 @@ public class JobServiceImpl implements JobService {
 
 		boolean enabledReport = true;
 		try {
-			Integer intervalTimeConfigured = systemConfigService.getIntegerValue(
-					SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
+			Integer intervalTimeConfigured = systemConfigService
+					.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT,
+							DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
 			if (intervalTimeConfigured == null) {
 				log.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
 				intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
@@ -774,7 +774,8 @@ public class JobServiceImpl implements JobService {
 		return enabledReport;
 	}
 
-	private void saveJobConfigToDb(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+	private void saveJobConfigToDb(String namespace, JobConfig jobConfig, String createdBy)
+			throws SaturnJobConsoleException {
 		String jobName = jobConfig.getJobName();
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
@@ -790,11 +791,11 @@ public class JobServiceImpl implements JobService {
 		}
 		JobConfig4DB currentJobConfig = new JobConfig4DB();
 		SaturnBeanUtils.copyProperties(jobConfig, currentJobConfig);
-		currentJobConfig.setCreateTime(new Date());
-		currentJobConfig.setLastUpdateTime(new Date());
-		// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-		currentJobConfig.setCreateBy(null);
-		currentJobConfig.setLastUpdateBy(null);
+		Date now = new Date();
+		currentJobConfig.setCreateTime(now);
+		currentJobConfig.setLastUpdateTime(now);
+		currentJobConfig.setCreateBy(createdBy);
+		currentJobConfig.setLastUpdateBy(createdBy);
 		currentJobConfig.setNamespace(namespace);
 		try {
 			currentJobConfigService.create(currentJobConfig);
@@ -816,9 +817,9 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getJobType());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE),
 				jobConfig.getJobMode());
-		curatorFrameworkOp.fillJobNodeIfNotExist(
-				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS),
-				jobConfig.getShardingItemParameters());
+		curatorFrameworkOp
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS),
+						jobConfig.getShardingItemParameters());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_PARAMETER),
 				jobConfig.getJobParameter());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME),
@@ -827,17 +828,17 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getChannelName());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER),
 				jobConfig.getFailover());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_MONITOR_EXECUTION),
-				"true");
-		curatorFrameworkOp.fillJobNodeIfNotExist(
-				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS),
-				jobConfig.getTimeout4AlarmSeconds());
+		curatorFrameworkOp
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_MONITOR_EXECUTION), "true");
+		curatorFrameworkOp
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS),
+						jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS),
 				jobConfig.getTimeoutSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE),
 				jobConfig.getTimeZone());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON),
-				jobConfig.getCron());
+		curatorFrameworkOp
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), jobConfig.getCron());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE),
 				jobConfig.getPausePeriodDate());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_TIME),
@@ -845,9 +846,9 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(
 				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
 				jobConfig.getProcessCountIntervalSeconds());
-		curatorFrameworkOp.fillJobNodeIfNotExist(
-				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
-				jobConfig.getShardingTotalCount());
+		curatorFrameworkOp
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
+						jobConfig.getShardingTotalCount());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG),
 				jobConfig.getShowNormalLog());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL),
@@ -873,7 +874,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<ImportJobResult> importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException {
+	public List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
+			throws SaturnJobConsoleException {
 		try {
 			Workbook workbook = Workbook.getWorkbook(file.getInputStream());
 
@@ -902,7 +904,7 @@ public class JobServiceImpl implements JobService {
 				ImportJobResult importJobResult = new ImportJobResult();
 				importJobResult.setJobName(jobConfig.getJobName());
 				try {
-					addJob(namespace, jobConfig);
+					addJob(namespace, jobConfig, createdBy);
 					importJobResult.setSuccess(true);
 				} catch (SaturnJobConsoleException e) {
 					importJobResult.setSuccess(false);
@@ -956,8 +958,8 @@ public class JobServiceImpl implements JobService {
 		jobConfig.setJobType(jobType);
 
 		String jobClass = getContents(rowCells, 2);
-		if ((jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.MSG_JOB.name()))
-				&& (jobClass == null || jobClass.trim().isEmpty())) {
+		if ((jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.MSG_JOB.name())) && (jobClass == null
+				|| jobClass.trim().isEmpty())) {
 			throw new SaturnJobConsoleException(
 					createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA或者消息作业，作业实现类必填。"));
 		}
@@ -1041,11 +1043,9 @@ public class JobServiceImpl implements JobService {
 							createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
 				}
 			}
-		} else if ((shardingTotalCount > 0)
-			&& (shardingItemParameters == null || shardingItemParameters.trim().isEmpty()
-					|| shardingItemParameters.split(",").length < shardingTotalCount)) {
-				throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
+		} else if ((shardingTotalCount > 0) && (shardingItemParameters == null || shardingItemParameters.trim()
+				.isEmpty() || shardingItemParameters.split(",").length < shardingTotalCount)) {
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
 		}
 		jobConfig.setShardingItemParameters(shardingItemParameters);
 
@@ -1073,8 +1073,7 @@ public class JobServiceImpl implements JobService {
 				loadLevel = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e));
 		}
 		jobConfig.setLoadLevel(loadLevel);
 
@@ -1093,8 +1092,7 @@ public class JobServiceImpl implements JobService {
 				jobDegree = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 21, "作业重要等级有误，" + e));
 		}
 		jobConfig.setJobDegree(jobDegree);
 
@@ -1123,8 +1121,7 @@ public class JobServiceImpl implements JobService {
 				timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e));
+			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e));
 		}
 		jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
@@ -1377,8 +1374,8 @@ public class JobServiceImpl implements JobService {
 		} else {
 			result.setJobDegree(Integer.valueOf(jobDegree));
 		}
-		result.setEnabled(Boolean
-				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));// 默认是禁用的
+		result.setEnabled(Boolean.valueOf(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));// 默认是禁用的
 		result.setPreferList(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PREFER_LIST)));
 		String useDispreferList = curatorFrameworkOp
@@ -1388,8 +1385,8 @@ public class JobServiceImpl implements JobService {
 		} else {
 			result.setUseDispreferList(Boolean.valueOf(useDispreferList));
 		}
-		result.setLocalMode(Boolean
-				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
+		result.setLocalMode(Boolean.valueOf(
+				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
 		result.setDependencies(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES)));
 		result.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS)));
@@ -1402,8 +1399,8 @@ public class JobServiceImpl implements JobService {
 		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME)));
 		result.setChannelName(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CHANNEL_NAME)));
-		if (!curatorFrameworkOp.checkExists(
-				JobNodePath.getConfigNodePath(jobName, JobServiceImpl.CONFIG_ITEM_SHOW_NORMAL_LOG))) {
+		if (!curatorFrameworkOp
+				.checkExists(JobNodePath.getConfigNodePath(jobName, JobServiceImpl.CONFIG_ITEM_SHOW_NORMAL_LOG))) {
 			curatorFrameworkOp.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG));
 		}
 		String enabledReport = curatorFrameworkOp
@@ -1493,11 +1490,11 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void updateJobConfig(String namespace, UpdateJobConfigVo updateJobConfigVo)
+	public void updateJobConfig(String namespace, UpdateJobConfigVo updateJobConfigVo, String updatedBy)
 			throws SaturnJobConsoleException {
 		JobConfig jobConfig = updateJobConfigVo.toJobConfig();
-		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
-				jobConfig.getJobName());
+		JobConfig4DB jobConfig4DB = currentJobConfigService
+				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobConfig.getJobName()));
 		}
@@ -1509,8 +1506,7 @@ public class JobServiceImpl implements JobService {
 		try {
 			curatorTransactionOp = curatorFrameworkOp.inTransaction()
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_JOB_MODE),
-							jobConfig.getJobMode(), bw)
-					.replaceIfchanged(
+							jobConfig.getJobMode(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_SHARDING_TOTAL_COUNT),
 							jobConfig.getShardingTotalCount(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_LOAD_LEVEL),
@@ -1522,26 +1518,19 @@ public class JobServiceImpl implements JobService {
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_TIME_ZONE),
 							StringUtils.trim(jobConfig.getTimeZone()), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_CRON),
-							StringUtils.trim(jobConfig.getCron()), bw)
-					.replaceIfchanged(
+							StringUtils.trim(jobConfig.getCron()), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_PAUSE_PERIOD_DATE),
-							jobConfig.getPausePeriodDate(), bw)
-					.replaceIfchanged(
+							jobConfig.getPausePeriodDate(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_PAUSE_PERIOD_TIME),
-							jobConfig.getPausePeriodTime(), bw)
-					.replaceIfchanged(
+							jobConfig.getPausePeriodTime(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_SHARDING_ITEM_PARAMETERS),
 							jobConfig.getShardingItemParameters(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_JOB_PARAMETER),
-							jobConfig.getJobParameter(), bw)
-					.replaceIfchanged(
-							JobNodePath.getConfigNodePath(jobConfig.getJobName(),
-									CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
-							jobConfig.getProcessCountIntervalSeconds(), bw)
-					.replaceIfchanged(
+							jobConfig.getJobParameter(), bw).replaceIfchanged(JobNodePath
+									.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
+							jobConfig.getProcessCountIntervalSeconds(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS),
-							jobConfig.getTimeout4AlarmSeconds(), bw)
-					.replaceIfchanged(
+							jobConfig.getTimeout4AlarmSeconds(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_TIMEOUT_SECONDS),
 							jobConfig.getTimeoutSeconds(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_DEPENDENCIES),
@@ -1553,13 +1542,11 @@ public class JobServiceImpl implements JobService {
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_CHANNEL_NAME),
 							StringUtils.trim(jobConfig.getChannelName()), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_QUEUE_NAME),
-							StringUtils.trim(jobConfig.getQueueName()), bw)
-					.replaceIfchanged(
+							StringUtils.trim(jobConfig.getQueueName()), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_SHOW_NORMAL_LOG),
 							jobConfig.getShowNormalLog(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_PREFER_LIST),
-							jobConfig.getPreferList(), bw)
-					.replaceIfchanged(
+							jobConfig.getPreferList(), bw).replaceIfchanged(
 							JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_USE_DISPREFER_LIST),
 							jobConfig.getUseDispreferList(), bw)
 					.replaceIfchanged(JobNodePath.getConfigNodePath(jobConfig.getJobName(), CONFIG_ITEM_FAILOVER),
@@ -1586,8 +1573,7 @@ public class JobServiceImpl implements JobService {
 				JobConfig4DB newJobConfig4DB = new JobConfig4DB();
 				SaturnBeanUtils.copyProperties(jobConfig4DB, newJobConfig4DB);
 				SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
-				// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
+				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, updatedBy);
 			}
 			if (curatorTransactionOp != null) {
 				curatorTransactionOp.commit();
@@ -1621,8 +1607,8 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
-			throws SaturnJobConsoleException {
+	public void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext,
+			String updatedBy) throws SaturnJobConsoleException {
 		String cron0 = cron;
 		if (cron0 != null && !cron0.trim().isEmpty()) {
 			try {
@@ -1659,7 +1645,7 @@ public class JobServiceImpl implements JobService {
 				newCron = cron0;
 			}
 			if (newCustomContextStr != null || newCron != null) {
-				saveCronToDb(jobName, curatorFrameworkOp, newCustomContextStr, newCron);
+				saveCronToDb(jobName, curatorFrameworkOp, newCustomContextStr, newCron, updatedBy);
 			}
 			if (newCustomContextStr != null) {
 				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CUSTOM_CONTEXT),
@@ -1674,7 +1660,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void saveCronToDb(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			String newCustomContextStr, String newCron) throws SaturnJobConsoleException {
+			String newCustomContextStr, String newCron, String updatedBy) throws SaturnJobConsoleException {
 		String namespace = curatorFrameworkOp.getCuratorFramework().getNamespace();
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
@@ -1692,8 +1678,7 @@ public class JobServiceImpl implements JobService {
 		}
 
 		try {
-			// FIXME:hebelala, ISSUE-359 完成后，username需要更新
-			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, null);
+			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, updatedBy);
 		} catch (Exception e) {
 			log.error("exception is thrown during change job state in db", e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);

@@ -75,7 +75,7 @@ public interface RegistryCenterService {
 	/**
 	 * Bind the namespace and zkCluster. Namespace should be ensured existed.
 	 */
-	void bindNamespaceAndZkCluster(String namespace, String zkClusterKey) throws SaturnJobConsoleException;
+	void bindNamespaceAndZkCluster(String namespace, String zkClusterKey, String updatedBy) throws SaturnJobConsoleException;
 
 	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
 

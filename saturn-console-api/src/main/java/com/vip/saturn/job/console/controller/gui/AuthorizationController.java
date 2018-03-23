@@ -38,7 +38,7 @@ public class AuthorizationController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/loginUser")
 	public SuccessResponseEntity getLoginUser(HttpSession httpSession) throws SaturnJobConsoleException {
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		User user = authorizationService.getUser(userOaName);
 		if (user == null) {
 			user = new User();
@@ -56,7 +56,7 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
 			throws SaturnJobConsoleException {
 		assertIsSuper();
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		Date now = new Date();
 		UserRole userRole = new UserRole();
 		userRole.setUserName(userName);
@@ -96,7 +96,7 @@ public class AuthorizationController extends AbstractGUIController {
 		userRole.setUserName(userName);
 		userRole.setRoleKey(roleKey);
 		userRole.setNamespace(namespace);
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		userRole.setLastUpdatedBy(userOaName);
 		authorizationService.deleteUserRole(userRole);
 		return new SuccessResponseEntity();
@@ -122,7 +122,7 @@ public class AuthorizationController extends AbstractGUIController {
 		cur.setRoleKey(roleKey);
 		cur.setNamespace(namespace);
 		cur.setNeedApproval(needApproval);
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		Date now = new Date();
 		cur.setCreatedBy(userOaName);
 		cur.setCreateTime(now);

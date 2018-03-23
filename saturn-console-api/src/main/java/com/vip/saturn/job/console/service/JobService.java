@@ -23,9 +23,9 @@ public interface JobService {
 
 	List<DependencyJob> getDependedJobs(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void enableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+	void enableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException;
 
-	void disableJob(String namespace, String jobName) throws SaturnJobConsoleException;
+	void disableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException;
 
 	void removeJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
@@ -34,11 +34,11 @@ public interface JobService {
 	 */
 	List<ExecutorProvided> getCandidateExecutors(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void setPreferList(String namespace, String jobName, String preferList) throws SaturnJobConsoleException;
+	void setPreferList(String namespace, String jobName, String preferList, String updatedBy) throws SaturnJobConsoleException;
 
-	void addJob(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+	void addJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException;
 
-	void copyJob(String namespace, JobConfig jobConfig, String copyingJobName) throws SaturnJobConsoleException;
+	void copyJob(String namespace, JobConfig jobConfig, String copyingJobName, String createdBy) throws SaturnJobConsoleException;
 
 	int getMaxJobNum() throws SaturnJobConsoleException;
 
@@ -58,7 +58,7 @@ public interface JobService {
 	 */
 	void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
-	List<ImportJobResult> importJobs(String namespace, MultipartFile file) throws SaturnJobConsoleException;
+	List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy) throws SaturnJobConsoleException;
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
@@ -72,11 +72,11 @@ public interface JobService {
 
 	GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void updateJobConfig(String namespace, UpdateJobConfigVo jobConfig) throws SaturnJobConsoleException;
+	void updateJobConfig(String namespace, UpdateJobConfigVo jobConfig, String updatedBy) throws SaturnJobConsoleException;
 
 	List<String> getAllJobNamesFromZK(String namespace) throws SaturnJobConsoleException;
 
-	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
+	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext, String updatedBy)
 			throws SaturnJobConsoleException;
 
 	/**

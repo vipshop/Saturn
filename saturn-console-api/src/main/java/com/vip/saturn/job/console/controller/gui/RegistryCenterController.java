@@ -140,7 +140,7 @@ public class RegistryCenterController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.registryCenterBatchMoveNamespaces);
 		namespaceZkClusterMappingService.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew,
-				getUserNameInSession(), updateDBOnly);
+				getUserRealName(), updateDBOnly);
 		return new SuccessResponseEntity();
 	}
 

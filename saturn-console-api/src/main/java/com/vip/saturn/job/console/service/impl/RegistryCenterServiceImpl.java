@@ -1113,7 +1113,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Transactional(rollbackFor = { Exception.class })
 	@Override
-	public void bindNamespaceAndZkCluster(String namespace, String zkClusterKey) throws SaturnJobConsoleException {
+	public void bindNamespaceAndZkCluster(String namespace, String zkClusterKey, String updatedBy) throws SaturnJobConsoleException {
 		ZkCluster currentCluster = getZkCluster(zkClusterKey);
 
 		if (currentCluster == null) {
@@ -1136,11 +1136,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 			}
 			if (zkClusterKeyOther == null) {
-				// TODO: 一旦用户功能完成，补全username
-				namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, "");
+				namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, updatedBy);
 			} else {
-				// TODO: 一旦用户功能完成，补全username
-				namespaceZkClusterMapping4SqlService.update(namespace, "", zkClusterKey, "");
+				namespaceZkClusterMapping4SqlService.update(namespace, "", zkClusterKey, updatedBy);
 			}
 
 			postBindNamespaceAndZkCluster(namespace, currentCluster);
@@ -1149,8 +1147,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			notifyRefreshRegCenter();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			// TODO: 一旦用户功能完成，补全username
-			namespaceZkClusterMapping4SqlService.remove(namespace, "");
+			namespaceZkClusterMapping4SqlService.remove(namespace, updatedBy);
 			throw new SaturnJobConsoleException(e.getMessage());
 		}
 	}

@@ -139,7 +139,7 @@ public class AuditLogAspect {
 			return UNKNOWN;
 		}
 
-		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_OA_NAME);
+		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_NAME);
 		return StringUtils.isBlank(loginUser) ? UNKNOWN : loginUser;
 	}
 

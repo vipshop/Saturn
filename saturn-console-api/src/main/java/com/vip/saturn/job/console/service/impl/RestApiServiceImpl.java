@@ -66,7 +66,7 @@ public class RestApiServiceImpl implements RestApiService {
 		ReuseUtils.reuse(namespace, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
 			@Override
 			public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
-				jobService.addJob(namespace, jobConfig);
+				jobService.addJob(namespace, jobConfig, "");
 			}
 		});
 
@@ -436,7 +436,7 @@ public class RestApiServiceImpl implements RestApiService {
 						checkUpdateConfigAllowed(mtime);
 						String oldcronStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "cron"));
 						if (!cron.equals(oldcronStr)) {
-							jobService.updateJobCron(namespace, jobName, cron, customContext);
+							jobService.updateJobCron(namespace, jobName, cron, customContext, "");
 						}
 					}
 				});

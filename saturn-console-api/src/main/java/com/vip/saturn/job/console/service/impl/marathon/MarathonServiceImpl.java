@@ -621,7 +621,7 @@ public class MarathonServiceImpl implements MarathonService {
 		jobConfig.setPausePeriodDate("");
 		jobConfig.setPausePeriodTime("");
 
-		jobService.addJob(namespace, jobConfig);
+		jobService.addJob(namespace, jobConfig, "");
 
 		ContainerScaleJobConfig containerScaleJobConfig = new ContainerScaleJobConfig();
 		containerScaleJobConfig.setJobName(jobName);

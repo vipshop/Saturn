@@ -38,41 +38,30 @@ public class AbstractGUIController extends AbstractController {
 		return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
 	}
 
-	//FIXME: Xiaopeng, 跟getUserOaNameInSession() 抽取一个公共代码，避免duplicate code
-	public String getUserNameInSession() {
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		if (request == null) {
-			return UNKNOWN;
-		}
-
-		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_NAME);
-		if (StringUtils.isBlank(loginUser)) {
-			return UNKNOWN;
-		}
-
-		return loginUser;
-	}
-
-	public String getUserOaNameInSession() {
+	private Object getAttributeInSession(String key) {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
 				.getRequest();
 		if (request == null) {
-			return UNKNOWN;
+			return null;
 		}
+		return request.getSession().getAttribute(key);
+	}
 
-		String loginUser = (String) request.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_OA_NAME);
-		if (StringUtils.isBlank(loginUser)) {
-			return UNKNOWN;
-		}
+	public String getUserRealName() {
+		String userRealName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_REAL_NAME);
+		return StringUtils.isBlank(userRealName) ? UNKNOWN : userRealName;
+	}
 
-		return loginUser;
+	public String getUserName() {
+		String userName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_NAME);
+		return StringUtils.isBlank(userName) ? UNKNOWN : userName;
 	}
 
 	public void assertIsPermitted(Permission permission, String namespace) throws SaturnJobConsoleException {
 		if (!authorizationService.useAuthorization()) {
 			return;
 		}
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		if (!authorizationService.isPermitted(permission, userOaName, namespace)) {
 			throw new SaturnJobConsoleException(String.format("您没有权限，域:%s，权限:%s", namespace, permission.getKey()));
 		}
@@ -82,20 +71,19 @@ public class AbstractGUIController extends AbstractController {
 		if (!authorizationService.useAuthorization()) {
 			return;
 		}
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		if (!authorizationService.isPermitted(permission, userOaName, "")) {
 			throw new SaturnJobConsoleException(String.format("您没有权限，权限:%s", permission.getKey()));
 		}
 	}
 
-	//FIXME: Xiaopeng, rename Super to 'SystemAdmin'
 	public void assertIsSuper() throws SaturnJobConsoleException {
 		if (!authorizationService.useAuthorization()) {
 			return;
 		}
-		String userOaName = getUserOaNameInSession();
+		String userOaName = getUserName();
 		if (!authorizationService.isSuperRole(userOaName)) {
-			throw new SaturnJobConsoleException("您不是管理员，没有权限");
+			throw new SaturnJobConsoleException("您不是超级管理员，没有权限");
 		}
 	}
 
