@@ -1,6 +1,6 @@
 package com.vip.saturn.job.console.mybatis.entity;
 
-public class UserRole extends CommonFields {
+public class UserRole extends EntityCommonFields {
 
 	private String userName;
 	private String roleKey;
@@ -56,4 +56,5 @@ public class UserRole extends CommonFields {
 	public void setRole(Role role) {
 		this.role = role;
 	}
+
 }

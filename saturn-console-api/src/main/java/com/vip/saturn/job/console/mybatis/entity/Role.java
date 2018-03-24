@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author hebelala
  */
-public class Role extends CommonFields2 {
+public class Role extends RoleAndPermissionCommonFields {
 
 	private List<RolePermission> rolePermissions;
 

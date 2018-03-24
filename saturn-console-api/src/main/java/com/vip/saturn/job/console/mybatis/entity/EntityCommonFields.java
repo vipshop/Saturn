@@ -5,12 +5,16 @@ import java.util.Date;
 /**
  * @author hebelala
  */
-public class CommonFields {
+public class EntityCommonFields {
 
 	private String createdBy;
+
 	private Date createTime;
+
 	private String lastUpdatedBy;
+
 	private Date lastUpdateTime;
+
 	private Boolean isDeleted;
 
 	public String getCreatedBy() {

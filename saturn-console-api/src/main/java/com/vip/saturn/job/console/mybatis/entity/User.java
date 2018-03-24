@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author hebelala
  */
-public class User extends CommonFields {
+public class User extends EntityCommonFields {
 
 	private String name;
 	private String password;

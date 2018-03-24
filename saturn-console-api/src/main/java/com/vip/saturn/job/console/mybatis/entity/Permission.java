@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.mybatis.entity;
 /**
  * @author hebelala
  */
-public class Permission extends CommonFields2 {
+public class Permission extends RoleAndPermissionCommonFields {
 
 	public Permission() {
 		super();

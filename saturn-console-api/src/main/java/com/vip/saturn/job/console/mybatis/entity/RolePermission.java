@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.mybatis.entity;
 /**
  * @author hebelala
  */
-public class RolePermission extends CommonFields {
+public class RolePermission extends EntityCommonFields {
 
 	private String roleKey;
 	private String permissionKey;
