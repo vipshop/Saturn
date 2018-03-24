@@ -8,11 +8,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
-import com.vip.saturn.job.console.service.SystemConfigService;
-import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,27 +29,20 @@ public class AuthorizationController extends AbstractGUIController {
 	@Resource
 	private AuthorizationService authorizationService;
 
-	@Resource
-	private SystemConfigService systemConfigService;
-
-	@Value("${authorization.enabled.default}")
-	private boolean enabledAuthorizationDefault;
-
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/useAuthorization")
 	public SuccessResponseEntity isAuthorizationEnabled() {
-		return new SuccessResponseEntity(systemConfigService
-				.getBooleanValue(SystemConfigProperties.ENABLE_AUTHORIZATION, enabledAuthorizationDefault));
+		return new SuccessResponseEntity(authorizationService.isAuthorizationEnabled());
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/loginUser")
 	public SuccessResponseEntity getLoginUser(HttpSession httpSession) throws SaturnJobConsoleException {
-		String userOaName = getUserName();
-		User user = authorizationService.getUser(userOaName);
+		String currentLoginUserName = getCurrentLoginUserName();
+		User user = authorizationService.getUser(currentLoginUserName);
 		if (user == null) {
 			user = new User();
-			user.setName(userOaName);
+			user.setName(currentLoginUserName);
 		}
 		return new SuccessResponseEntity(user);
 	}
@@ -66,7 +56,7 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
 			throws SaturnJobConsoleException {
 		assertIsSuper();
-		String userOaName = getUserName();
+		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
 		UserRole userRole = new UserRole();
 		userRole.setUserName(userName);
@@ -74,9 +64,9 @@ public class AuthorizationController extends AbstractGUIController {
 		userRole.setNamespace(namespace);
 		userRole.setNeedApproval(needApproval);
 		userRole.setIsDeleted(false);
-		userRole.setCreatedBy(userOaName);
+		userRole.setCreatedBy(currentLoginUserName);
 		userRole.setCreateTime(now);
-		userRole.setLastUpdatedBy(userOaName);
+		userRole.setLastUpdatedBy(currentLoginUserName);
 		userRole.setLastUpdateTime(now);
 		User user = new User();
 		user.setName(userName);
@@ -84,9 +74,9 @@ public class AuthorizationController extends AbstractGUIController {
 		user.setRealName("");
 		user.setEmployeeId("");
 		user.setEmail("");
-		user.setCreatedBy(userOaName);
+		user.setCreatedBy(currentLoginUserName);
 		user.setCreateTime(now);
-		user.setLastUpdatedBy(userOaName);
+		user.setLastUpdatedBy(currentLoginUserName);
 		user.setLastUpdateTime(now);
 		user.setIsDeleted(false);
 		userRole.setUser(user);
@@ -106,8 +96,8 @@ public class AuthorizationController extends AbstractGUIController {
 		userRole.setUserName(userName);
 		userRole.setRoleKey(roleKey);
 		userRole.setNamespace(namespace);
-		String userOaName = getUserName();
-		userRole.setLastUpdatedBy(userOaName);
+		String currentLoginUserName = getCurrentLoginUserName();
+		userRole.setLastUpdatedBy(currentLoginUserName);
 		authorizationService.deleteUserRole(userRole);
 		return new SuccessResponseEntity();
 	}
@@ -132,11 +122,11 @@ public class AuthorizationController extends AbstractGUIController {
 		cur.setRoleKey(roleKey);
 		cur.setNamespace(namespace);
 		cur.setNeedApproval(needApproval);
-		String userOaName = getUserName();
+		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
-		cur.setCreatedBy(userOaName);
+		cur.setCreatedBy(currentLoginUserName);
 		cur.setCreateTime(now);
-		cur.setLastUpdatedBy(userOaName);
+		cur.setLastUpdatedBy(currentLoginUserName);
 		cur.setLastUpdateTime(now);
 		cur.setIsDeleted(false);
 		authorizationService.updateUserRole(pre, cur);
@@ -145,7 +135,7 @@ public class AuthorizationController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/getAllUser")
-	public SuccessResponseEntity getAllUser() throws SaturnJobConsoleException {
+	public SuccessResponseEntity getAllUsers() throws SaturnJobConsoleException {
 		assertIsSuper();
 		List<User> allUser = authorizationService.getAllUsers();
 		return new SuccessResponseEntity(allUser);

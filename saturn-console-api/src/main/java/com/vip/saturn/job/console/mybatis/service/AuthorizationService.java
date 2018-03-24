@@ -12,6 +12,8 @@ import java.util.List;
  * @author hebelala
  */
 public interface AuthorizationService {
+	
+	boolean isAuthorizationEnabled();
 
 	void addUserRole(UserRole userRole) throws SaturnJobConsoleException;
 

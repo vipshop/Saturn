@@ -199,7 +199,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobEnable, namespace);
-		jobService.enableJob(namespace, jobName, getUserName());
+		jobService.enableJob(namespace, jobName, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
 
@@ -210,7 +210,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobBatchEnable, namespace);
-		String oaName = getUserName();
+		String oaName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName, oaName);
 		}
@@ -224,7 +224,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobDisable, namespace);
-		jobService.disableJob(namespace, jobName, getUserName());
+		jobService.disableJob(namespace, jobName, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
 
@@ -235,7 +235,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobBatchDisable, namespace);
-		String oaName = getUserName();
+		String oaName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName, oaName);
 		}
@@ -290,7 +290,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("jobNames") @RequestParam List<String> jobNames,
 			@AuditParam("preferList") @RequestParam String preferList) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobBatchSetPreferExecutors, namespace);
-		String oaName = getUserName();
+		String oaName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList, oaName);
 		}
@@ -304,7 +304,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobAdd, namespace);
-		jobService.addJob(namespace, jobConfig, getUserName());
+		jobService.addJob(namespace, jobConfig, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
 
@@ -316,7 +316,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("jobNameCopied") @PathVariable String jobNameCopied, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobCopy, namespace);
-		jobService.copyJob(namespace, jobConfig, jobNameCopied, getUserName());
+		jobService.copyJob(namespace, jobConfig, jobNameCopied, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
 
@@ -335,7 +335,7 @@ public class JobOverviewController extends AbstractGUIController {
 			throw new SaturnJobConsoleGUIException("仅支持.xls文件导入");
 		}
 		AuditInfoContext.put("originalFilename", originalFilename);
-		return new SuccessResponseEntity(jobService.importJobs(namespace, file, getUserName()));
+		return new SuccessResponseEntity(jobService.importJobs(namespace, file, getCurrentLoginUserName()));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

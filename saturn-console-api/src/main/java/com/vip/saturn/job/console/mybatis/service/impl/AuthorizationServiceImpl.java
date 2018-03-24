@@ -38,7 +38,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Autowired
 	private SystemConfigService systemConfigService;
 
+	@Value("${authorization.enabled.default}")
+	private boolean enabledAuthorizationDefault;
+
 	private String superRoleKey = "super";
+
+	@Override
+	public boolean isAuthorizationEnabled() {
+		return systemConfigService
+				.getBooleanValue(SystemConfigProperties.ENABLE_AUTHORIZATION, enabledAuthorizationDefault);
+	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
@@ -67,13 +76,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void deleteUserRole(UserRole userRole) throws SaturnJobConsoleException {
+	public void deleteUserRole(UserRole userRole) {
 		userRoleRepository.delete(userRole);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void updateUserRole(UserRole pre, UserRole cur) throws SaturnJobConsoleException {
+	public void updateUserRole(UserRole pre, UserRole cur) {
 		userRoleRepository.delete(pre);
 		UserRole userRole = userRoleRepository.selectWithNotFilterDeleted(cur);
 		if (userRole == null) {
@@ -85,7 +94,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getAllUsers() throws SaturnJobConsoleException {
+	public List<User> getAllUsers() {
 		List<User> allUsers = new ArrayList<>();
 		List<User> users = userRepository.selectAll();
 		if (users != null) {
@@ -98,28 +107,30 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public User getUser(String userName) throws SaturnJobConsoleException {
+	public User getUser(String userName) {
 		User user = userRepository.select(userName);
 		if (user == null) {
 			return null;
 		}
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		user.setUserRoles(userRoles);
 		if (userRoles == null) {
 			return user;
 		}
+		user.setUserRoles(userRoles);
 		for (UserRole userRole : userRoles) {
 			String roleKey = userRole.getRoleKey();
 			Role role = roleRepository.selectByKey(roleKey);
-			userRole.setRole(role);
 			if (role == null) {
 				continue;
 			}
+			userRole.setRole(role);
+
 			List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
-			role.setRolePermissions(rolePermissions);
 			if (rolePermissions == null) {
 				continue;
 			}
+			role.setRolePermissions(rolePermissions);
+
 			for (RolePermission rolePermission : rolePermissions) {
 				Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
 				rolePermission.setPermission(permission);
@@ -130,7 +141,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getSupers() throws SaturnJobConsoleException {
+	public List<User> getSupers() {
 		List<User> superUsers = new ArrayList<>();
 		List<UserRole> userRoles = userRoleRepository.selectByRoleKey(superRoleKey);
 		if (userRoles == null) {
@@ -145,7 +156,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public Role getSuperRole() throws SaturnJobConsoleException {
+	public Role getSuperRole() {
 		Role role = roleRepository.selectByKey(superRoleKey);
 		if (role == null) {
 			return null;
@@ -163,12 +174,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean isPermitted(Permission permission, String userName, String namespace)
-			throws SaturnJobConsoleException {
+	public boolean isPermitted(Permission permission, String userName, String namespace) {
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		if (userRoles == null) {
+		if (userRoles.isEmpty()) {
 			return false;
 		}
+
 		for (UserRole userRole : userRoles) {
 			String roleKey = userRole.getRoleKey();
 			if (superRoleKey.equals(roleKey)) {
@@ -184,8 +195,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 					continue;
 				}
 				for (RolePermission rolePermission : rolePermissions) {
-					Permission p = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-					if (p != null && permission.getKey().equals(p.getKey())) {
+					Permission tmpPermission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+					if (tmpPermission != null && tmpPermission.getKey().equals(permission.getKey())) {
 						return true;
 					}
 				}
@@ -196,9 +207,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean isSuperRole(String userName) throws SaturnJobConsoleException {
+	public boolean isSuperRole(String userName) {
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		if (userRoles == null) {
+		if (userRoles.isEmpty()) {
 			return false;
 		}
 		for (UserRole userRole : userRoles) {

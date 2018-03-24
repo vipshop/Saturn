@@ -47,42 +47,42 @@ public class AbstractGUIController extends AbstractController {
 		return request.getSession().getAttribute(key);
 	}
 
-	public String getUserRealName() {
+	public String getCurrentLoginUserRealName() {
 		String userRealName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_REAL_NAME);
 		return StringUtils.isBlank(userRealName) ? UNKNOWN : userRealName;
 	}
 
-	public String getUserName() {
+	public String getCurrentLoginUserName() {
 		String userName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_NAME);
 		return StringUtils.isBlank(userName) ? UNKNOWN : userName;
 	}
 
 	public void assertIsPermitted(Permission permission, String namespace) throws SaturnJobConsoleException {
-		if (!authorizationService.useAuthorization()) {
+		if (!authorizationService.isAuthorizationEnabled()) {
 			return;
 		}
-		String userOaName = getUserName();
+		String userOaName = getCurrentLoginUserName();
 		if (!authorizationService.isPermitted(permission, userOaName, namespace)) {
 			throw new SaturnJobConsoleException(String.format("您没有权限，域:%s，权限:%s", namespace, permission.getKey()));
 		}
 	}
 
 	public void assertIsPermitted(Permission permission) throws SaturnJobConsoleException {
-		if (!authorizationService.useAuthorization()) {
+		if (!authorizationService.isAuthorizationEnabled()) {
 			return;
 		}
-		String userOaName = getUserName();
-		if (!authorizationService.isPermitted(permission, userOaName, "")) {
+		String userName = getCurrentLoginUserName();
+		if (!authorizationService.isPermitted(permission, userName, "")) {
 			throw new SaturnJobConsoleException(String.format("您没有权限，权限:%s", permission.getKey()));
 		}
 	}
 
 	public void assertIsSuper() throws SaturnJobConsoleException {
-		if (!authorizationService.useAuthorization()) {
+		if (!authorizationService.isAuthorizationEnabled()) {
 			return;
 		}
-		String userOaName = getUserName();
-		if (!authorizationService.isSuperRole(userOaName)) {
+		String userName = getCurrentLoginUserName();
+		if (!authorizationService.isSuperRole(userName)) {
 			throw new SaturnJobConsoleException("您不是超级管理员，没有权限");
 		}
 	}
