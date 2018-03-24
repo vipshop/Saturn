@@ -13,8 +13,6 @@ import java.util.List;
  */
 public interface AuthorizationService {
 
-	boolean useAuthorization() throws SaturnJobConsoleException;
-
 	void addUserRole(UserRole userRole) throws SaturnJobConsoleException;
 
 	void deleteUserRole(UserRole userRole) throws SaturnJobConsoleException;

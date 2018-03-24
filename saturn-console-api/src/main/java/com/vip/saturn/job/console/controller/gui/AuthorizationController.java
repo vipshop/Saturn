@@ -8,8 +8,11 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
+import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,10 +32,17 @@ public class AuthorizationController extends AbstractGUIController {
 	@Resource
 	private AuthorizationService authorizationService;
 
+	@Resource
+	private SystemConfigService systemConfigService;
+
+	@Value("${authorization.enabled.default}")
+	private boolean enabledAuthorizationDefault;
+
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/useAuthorization")
-	public SuccessResponseEntity useAuthorization() throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(authorizationService.useAuthorization());
+	public SuccessResponseEntity isAuthorizationEnabled() {
+		return new SuccessResponseEntity(systemConfigService
+				.getBooleanValue(SystemConfigProperties.ENABLE_AUTHORIZATION, enabledAuthorizationDefault));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

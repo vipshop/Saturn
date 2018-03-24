@@ -38,15 +38,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Autowired
 	private SystemConfigService systemConfigService;
 
-	@Value("${use.authorization.default}")
-	private boolean useAuthorizationDefault;
-
 	private String superRoleKey = "super";
-
-	@Override
-	public boolean useAuthorization() throws SaturnJobConsoleException {
-		return systemConfigService.getBooleanValue(SystemConfigProperties.USE_AUTHORIZATION, useAuthorizationDefault);
-	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override

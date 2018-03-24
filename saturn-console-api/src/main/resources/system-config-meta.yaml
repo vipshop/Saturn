@@ -12,7 +12,7 @@ executor_configs:
       desc_zh: executor stop时最长等待时间
 
 console_configs:
-    - name: USE_AUTHORIZATION
+    - name: ENABLE_AUTHORIZATION
       desc_zh: 是否使用鉴权
     - name: API_TOKENS
       desc_zh: REST API的authorization token
