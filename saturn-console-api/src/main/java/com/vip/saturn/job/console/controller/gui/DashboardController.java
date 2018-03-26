@@ -228,7 +228,7 @@ public class DashboardController extends AbstractGUIController {
 	@Audit
 	@PostMapping(value = "/namespaces/{namespace:.+}/shardingCount/clean")
 	public SuccessResponseEntity cleanShardingCount(@PathVariable String namespace) throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		dashboardService.cleanShardingCount(namespace);
 		return new SuccessResponseEntity();
 	}
@@ -238,7 +238,7 @@ public class DashboardController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobAnalyse(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		dashboardService.cleanOneJobAnalyse(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
@@ -248,7 +248,7 @@ public class DashboardController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobAnalyse/clean")
 	public SuccessResponseEntity cleanJobsAnalyse(@AuditParam("namespace") @PathVariable String namespace)
 			throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		dashboardService.cleanAllJobAnalyse(namespace);
 		return new SuccessResponseEntity();
 	}
@@ -258,7 +258,7 @@ public class DashboardController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces/{namespace:.+}/jobs/{jobName}/jobExecutorCount/clean")
 	public SuccessResponseEntity cleanJobExecutorCount(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
 	}

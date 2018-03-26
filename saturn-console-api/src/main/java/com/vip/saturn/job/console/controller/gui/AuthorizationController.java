@@ -55,7 +55,7 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("namespace") @RequestParam String namespace,
 			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
 			throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
 		UserRole userRole = new UserRole();
@@ -91,7 +91,7 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("roleKey") @RequestParam String roleKey,
 			@AuditParam("namespace") @RequestParam String namespace, HttpSession httpSession)
 			throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		UserRole userRole = new UserRole();
 		userRole.setUserName(userName);
 		userRole.setRoleKey(roleKey);
@@ -112,7 +112,7 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("namespace") @RequestParam String namespace,
 			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
 			throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
 		UserRole pre = new UserRole();
@@ -136,9 +136,9 @@ public class AuthorizationController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping("/getAllUser")
+	@GetMapping("/getAllUsers")
 	public SuccessResponseEntity getAllUsers() throws SaturnJobConsoleException {
-		assertIsSuper();
+		assertIsSystemAdmin();
 		List<User> allUser = authorizationService.getAllUsers();
 		return new SuccessResponseEntity(allUser);
 	}

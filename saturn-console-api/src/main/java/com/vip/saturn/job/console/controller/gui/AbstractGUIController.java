@@ -81,7 +81,7 @@ public class AbstractGUIController extends AbstractController {
 		}
 	}
 
-	public void assertIsSuper() throws SaturnJobConsoleException {
+	public void assertIsSystemAdmin() throws SaturnJobConsoleException {
 		if (!authorizationService.isAuthorizationEnabled()) {
 			return;
 		}
