@@ -1,4 +1,4 @@
-# ![logo](https://vipshop.github.io/Saturn/_media/saturn-logo-new.png)
+# ![logo](https://vipshop.github.io/Saturn/saturn-logo-new.png)
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
 [![Read the Docs](https://img.shields.io/readthedocs/pip.svg)](https://vipshop.github.io/Saturn/)
