@@ -40,6 +40,6 @@ public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
 		metas = (List<JobConfigMeta>) objValue.get("cluster_configs");
 		assertEquals(4, metas.size());
 		metas = (List<JobConfigMeta>) objValue.get("console_configs");
-		assertEquals(1, metas.size());
+		assertEquals(2, metas.size());
 	}
 }
