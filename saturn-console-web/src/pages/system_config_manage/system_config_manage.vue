@@ -19,12 +19,12 @@
                     <config-input :parameters="systemConfig.cluster_configs" @config-input-success="configInputSuccess"></config-input>
                 </div>
             </el-collapse-item>
-            <el-collapse-item name="4">
+            <!-- <el-collapse-item name="4">
                 <template slot="title"><i class="fa fa-sitemap"></i>Console配置</template>
                 <div>
                     <config-input :parameters="systemConfig.console_configs" @config-input-success="configInputSuccess"></config-input>
                 </div>
-            </el-collapse-item>
+            </el-collapse-item> -->
         </el-collapse>
     </div>
 </template>
