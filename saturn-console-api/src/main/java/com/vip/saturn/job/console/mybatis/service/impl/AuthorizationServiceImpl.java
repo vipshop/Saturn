@@ -86,7 +86,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		userRoleRepository.delete(pre);
 		UserRole userRole = userRoleRepository.selectWithNotFilterDeleted(cur);
 		if (userRole == null) {
-			userRoleRepository.update(pre, cur);
+			userRoleRepository.insert(cur);
 		} else {
 			userRoleRepository.update(userRole, cur);
 		}

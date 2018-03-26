@@ -113,17 +113,19 @@ public class AuthorizationController extends AbstractGUIController {
 			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
 			throws SaturnJobConsoleException {
 		assertIsSuper();
+		String currentLoginUserName = getCurrentLoginUserName();
+		Date now = new Date();
 		UserRole pre = new UserRole();
 		pre.setUserName(preUserName);
 		pre.setRoleKey(preRoleKey);
 		pre.setNamespace(preNamespace);
+		pre.setLastUpdateTime(now);
+		pre.setLastUpdatedBy(currentLoginUserName);
 		UserRole cur = new UserRole();
 		cur.setUserName(userName);
 		cur.setRoleKey(roleKey);
 		cur.setNamespace(namespace);
 		cur.setNeedApproval(needApproval);
-		String currentLoginUserName = getCurrentLoginUserName();
-		Date now = new Date();
 		cur.setCreatedBy(currentLoginUserName);
 		cur.setCreateTime(now);
 		cur.setLastUpdatedBy(currentLoginUserName);
