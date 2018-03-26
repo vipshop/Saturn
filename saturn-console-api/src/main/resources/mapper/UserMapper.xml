@@ -4,7 +4,7 @@
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.UserRepository">
 
     <resultMap id="baseResultMap" type="com.vip.saturn.job.console.mybatis.entity.User">
-        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
         <result column="password" property="password" jdbcType="VARCHAR"/>
         <result column="real_name" property="realName" jdbcType="VARCHAR"/>
         <result column="employee_id" property="employeeId" jdbcType="VARCHAR"/>
@@ -17,9 +17,9 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.User">
-        INSERT INTO `user`(`name`, `password`, `real_name`, `employee_id`, `email`, `created_by`, `create_time`,
+        INSERT INTO `user`(`user_name`, `password`, `real_name`, `employee_id`, `email`, `created_by`, `create_time`,
         `last_updated_by`, `last_update_time`, `is_deleted`)
-        VALUES(#{name, jdbcType=VARCHAR}, #{password, jdbcType=VARCHAR}, #{realName, jdbcType=VARCHAR},
+        VALUES(#{userName, jdbcType=VARCHAR}, #{password, jdbcType=VARCHAR}, #{realName, jdbcType=VARCHAR},
         #{employeeId, jdbcType=VARCHAR}, #{email, jdbcType=VARCHAR}, #{createdBy, jdbcType=VARCHAR},
         #{createTime, jdbcType=TIMESTAMP}, #{lastUpdatedBy, jdbcType=VARCHAR}, #{lastUpdateTime, jdbcType=TIMESTAMP},
         #{isDeleted, jdbcType=BOOLEAN})
@@ -33,12 +33,12 @@
         `email` = #{email, jdbcType=VARCHAR},
         `last_updated_by` = #{lastUpdatedBy, jdbcType=VARCHAR},
         `is_deleted` = #{isDeleted, jdbcType=BOOLEAN}
-        WHERE `name` = #{name, jdbcType=VARCHAR}
+        WHERE `user_name` = #{userName, jdbcType=VARCHAR}
     </update>
 
     <sql id="selectAllSql">
-        SELECT `name`, `password`, `real_name`, `employee_id`, `email`, `created_by`, `create_time`, `last_updated_by`,
-        `last_update_time`, `is_deleted` FROM `user`
+        SELECT `user_name`, `password`, `real_name`, `employee_id`, `email`, `created_by`, `create_time`,
+        `last_updated_by`, `last_update_time`, `is_deleted` FROM `user`
     </sql>
 
     <select id="selectAll" resultMap="baseResultMap">
@@ -49,14 +49,14 @@
     <select id="select" resultMap="baseResultMap">
         <include refid="selectAllSql"></include>
         WHERE
-        `name` = #{name, jdbcType=VARCHAR} AND
+        `user_name` = #{userName, jdbcType=VARCHAR} AND
         `is_deleted` = '0'
     </select>
 
     <select id="selectWithNotFilterDeleted" resultMap="baseResultMap">
         <include refid="selectAllSql"></include>
         WHERE
-        `name` = #{name, jdbcType=VARCHAR}
+        `user_name` = #{userName, jdbcType=VARCHAR}
     </select>
 
 </mapper>

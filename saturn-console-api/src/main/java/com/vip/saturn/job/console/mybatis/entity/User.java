@@ -7,19 +7,19 @@ import java.util.List;
  */
 public class User extends EntityCommonFields {
 
-	private String name;
+	private String userName;
 	private String password;
 	private String realName;
 	private String employeeId;
 	private String email;
 	private List<UserRole> userRoles;
 
-	public String getName() {
-		return name;
+	public String getUserName() {
+		return userName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	public String getPassword() {

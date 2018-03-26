@@ -18,8 +18,8 @@ public interface UserRepository {
 
 	List<User> selectAll();
 
-	User select(@Param("name") String name);
+	User select(@Param("userName") String userName);
 
-	User selectWithNotFilterDeleted(@Param("name")String name);
+	User selectWithNotFilterDeleted(@Param("userName") String userName);
 
 }

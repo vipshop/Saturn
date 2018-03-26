@@ -139,8 +139,8 @@ public class RegistryCenterController extends AbstractGUIController {
 			@RequestParam(required = false, defaultValue = "false") boolean updateDBOnly)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.registryCenterBatchMoveNamespaces);
-		namespaceZkClusterMappingService.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew,
-				getCurrentLoginUserRealName(), updateDBOnly);
+		namespaceZkClusterMappingService
+				.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew, getCurrentLoginUserName(), updateDBOnly);
 		return new SuccessResponseEntity();
 	}
 

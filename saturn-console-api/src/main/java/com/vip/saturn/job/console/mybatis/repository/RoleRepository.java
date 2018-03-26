@@ -16,6 +16,6 @@ public interface RoleRepository {
 
 	List<Role> selectAll();
 
-	Role selectByKey(@Param("key") String key);
+	Role selectByKey(@Param("roleKey") String roleKey);
 
 }

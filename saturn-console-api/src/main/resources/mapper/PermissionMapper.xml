@@ -4,8 +4,8 @@
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.PermissionRepository">
 
     <resultMap id="baseResultMap" type="com.vip.saturn.job.console.mybatis.entity.Permission">
-        <result column="key" property="key" jdbcType="VARCHAR"/>
-        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="permission_key" property="permissionKey" jdbcType="VARCHAR"/>
+        <result column="permission_name" property="permissionName" jdbcType="VARCHAR"/>
         <result column="description" property="description" jdbcType="VARCHAR"/>
         <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
@@ -15,16 +15,17 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.Permission">
-        INSERT INTO `permission`(`key`, `name`, `description`, `created_by`, `create_time`, `last_updated_by`,
-        `last_update_time`, `is_deleted`)
-        VALUES(#{key, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR},
+        INSERT INTO `permission`(`permission_key`, `permission_name`, `description`, `created_by`, `create_time`,
+        `last_updated_by`, `last_update_time`, `is_deleted`)
+        VALUES(#{permissionKey, jdbcType=VARCHAR}, #{permissionName, jdbcType=VARCHAR},
+        #{description, jdbcType=VARCHAR},
         #{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP}, #{lastUpdatedBy, jdbcType=VARCHAR},
         #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
     </insert>
 
     <sql id="selectAllSql">
-        SELECT `key`, `name`, `description`, `created_by`, `create_time`, `last_updated_by`, `last_update_time`,
-        `is_deleted` FROM `permission`
+        SELECT `permission_key`, `permission_name`, `description`, `created_by`, `create_time`, `last_updated_by`,
+        `last_update_time`, `is_deleted` FROM `permission`
     </sql>
 
     <select id="selectAll" resultMap="baseResultMap">
@@ -35,7 +36,7 @@
     <select id="selectByKey" resultMap="baseResultMap">
         <include refid="selectAllSql"></include>
         WHERE
-        `key` = #{key, jdbcType=VARCHAR} AND
+        `permission_key` = #{permissionKey, jdbcType=VARCHAR} AND
         `is_deleted` = '0'
     </select>
 

@@ -30,7 +30,7 @@ public class AuthorizationController extends AbstractGUIController {
 	private AuthorizationService authorizationService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping("/useAuthorization")
+	@GetMapping("/isAuthorizationEnabled")
 	public SuccessResponseEntity isAuthorizationEnabled() {
 		return new SuccessResponseEntity(authorizationService.isAuthorizationEnabled());
 	}
@@ -42,7 +42,7 @@ public class AuthorizationController extends AbstractGUIController {
 		User user = authorizationService.getUser(currentLoginUserName);
 		if (user == null) {
 			user = new User();
-			user.setName(currentLoginUserName);
+			user.setUserName(currentLoginUserName);
 		}
 		return new SuccessResponseEntity(user);
 	}
@@ -69,7 +69,7 @@ public class AuthorizationController extends AbstractGUIController {
 		userRole.setLastUpdatedBy(currentLoginUserName);
 		userRole.setLastUpdateTime(now);
 		User user = new User();
-		user.setName(userName);
+		user.setUserName(userName);
 		user.setPassword("");
 		user.setRealName("");
 		user.setEmployeeId("");
@@ -142,9 +142,9 @@ public class AuthorizationController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping("/getSupers")
-	public SuccessResponseEntity getSupers() throws SaturnJobConsoleException {
-		List<User> supers = authorizationService.getSupers();
+	@GetMapping("/getSystemAdminUsers")
+	public SuccessResponseEntity getSystemAdminUsers() throws SaturnJobConsoleException {
+		List<User> supers = authorizationService.getSystemAdminUsers();
 		return new SuccessResponseEntity(supers);
 	}
 

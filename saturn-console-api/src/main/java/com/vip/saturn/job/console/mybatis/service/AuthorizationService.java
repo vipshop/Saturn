@@ -25,12 +25,12 @@ public interface AuthorizationService {
 
 	User getUser(String userName) throws SaturnJobConsoleException;
 
-	List<User> getSupers() throws SaturnJobConsoleException;
+	List<User> getSystemAdminUsers() throws SaturnJobConsoleException;
 
-	Role getSuperRole() throws SaturnJobConsoleException;
+	Role getSystemAdminRole() throws SaturnJobConsoleException;
 	
 	boolean isPermitted(Permission permission, String userName, String namespace) throws SaturnJobConsoleException;
 	
-	boolean isSuperRole(String userName) throws SaturnJobConsoleException;
+	boolean isSystemAdminRole(String userName) throws SaturnJobConsoleException;
 
 }

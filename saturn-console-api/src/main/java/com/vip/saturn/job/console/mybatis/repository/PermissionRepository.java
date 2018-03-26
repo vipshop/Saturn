@@ -16,6 +16,6 @@ public interface PermissionRepository {
 
 	List<Permission> selectAll();
 
-	Permission selectByKey(@Param("key") String key);
+	Permission selectByKey(@Param("permissionKey") String permissionKey);
 
 }

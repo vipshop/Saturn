@@ -47,23 +47,27 @@ public class AbstractGUIController extends AbstractController {
 		return request.getSession().getAttribute(key);
 	}
 
+	private String getCurrentUser(String key) {
+		String user = (String) getAttributeInSession(key);
+		return StringUtils.isBlank(user) ? UNKNOWN : user;
+	}
+
 	public String getCurrentLoginUserRealName() {
-		String userRealName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_REAL_NAME);
-		return StringUtils.isBlank(userRealName) ? UNKNOWN : userRealName;
+		return getCurrentUser(SessionAttributeKeys.LOGIN_USER_REAL_NAME);
 	}
 
 	public String getCurrentLoginUserName() {
-		String userName = (String) getAttributeInSession(SessionAttributeKeys.LOGIN_USER_NAME);
-		return StringUtils.isBlank(userName) ? UNKNOWN : userName;
+		return getCurrentUser(SessionAttributeKeys.LOGIN_USER_NAME);
 	}
 
 	public void assertIsPermitted(Permission permission, String namespace) throws SaturnJobConsoleException {
 		if (!authorizationService.isAuthorizationEnabled()) {
 			return;
 		}
-		String userOaName = getCurrentLoginUserName();
-		if (!authorizationService.isPermitted(permission, userOaName, namespace)) {
-			throw new SaturnJobConsoleException(String.format("您没有权限，域:%s，权限:%s", namespace, permission.getKey()));
+		String userName = getCurrentLoginUserName();
+		if (!authorizationService.isPermitted(permission, userName, namespace)) {
+			throw new SaturnJobConsoleException(
+					String.format("您没有权限，域:%s，权限:%s", namespace, permission.getPermissionKey()));
 		}
 	}
 
@@ -73,7 +77,7 @@ public class AbstractGUIController extends AbstractController {
 		}
 		String userName = getCurrentLoginUserName();
 		if (!authorizationService.isPermitted(permission, userName, "")) {
-			throw new SaturnJobConsoleException(String.format("您没有权限，权限:%s", permission.getKey()));
+			throw new SaturnJobConsoleException(String.format("您没有权限，权限:%s", permission.getPermissionKey()));
 		}
 	}
 
@@ -82,8 +86,8 @@ public class AbstractGUIController extends AbstractController {
 			return;
 		}
 		String userName = getCurrentLoginUserName();
-		if (!authorizationService.isSuperRole(userName)) {
-			throw new SaturnJobConsoleException("您不是超级管理员，没有权限");
+		if (!authorizationService.isSystemAdminRole(userName)) {
+			throw new SaturnJobConsoleException("您不是系统管理员，没有权限");
 		}
 	}
 

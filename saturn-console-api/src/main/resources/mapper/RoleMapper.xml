@@ -4,8 +4,8 @@
 <mapper namespace="com.vip.saturn.job.console.mybatis.repository.RoleRepository">
 
     <resultMap id="baseResultMap" type="com.vip.saturn.job.console.mybatis.entity.Role">
-        <result column="key" property="key" jdbcType="VARCHAR"/>
-        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="role_key" property="roleKey" jdbcType="VARCHAR"/>
+        <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
         <result column="description" property="description" jdbcType="VARCHAR"/>
         <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
@@ -15,16 +15,16 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.Role">
-        INSERT INTO `role`(`key`, `name`, `description`, `created_by`, `create_time`, `last_updated_by`,
+        INSERT INTO `role`(`role_key`, `role_name`, `description`, `created_by`, `create_time`, `last_updated_by`,
         `last_update_time`, `is_deleted`)
-        VALUES(#{key, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR},
+        VALUES(#{roleKey, jdbcType=VARCHAR}, #{roleName, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR},
         #{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP}, #{lastUpdatedBy, jdbcType=VARCHAR},
         #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
     </insert>
 
     <sql id="selectAllSql">
-        SELECT `key`, `name`, `description`, `created_by`, `create_time`, `last_updated_by`, `last_update_time`,
-        `is_deleted` FROM `role`
+        SELECT `role_key`, `role_name`, `description`, `created_by`, `create_time`, `last_updated_by`,
+        `last_update_time`, `is_deleted` FROM `role`
     </sql>
 
     <select id="selectAll" resultMap="baseResultMap">
@@ -35,7 +35,7 @@
     <select id="selectByKey" resultMap="baseResultMap">
         <include refid="selectAllSql"></include>
         WHERE
-        `key` = #{key, jdbcType=VARCHAR} AND
+        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
         `is_deleted` = '0'
     </select>
 

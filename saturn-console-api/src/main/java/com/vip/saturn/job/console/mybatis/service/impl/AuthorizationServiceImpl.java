@@ -39,14 +39,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private SystemConfigService systemConfigService;
 
 	@Value("${authorization.enabled.default}")
-	private boolean enabledAuthorizationDefault;
+	private boolean authorizationEnabledDefault;
 
-	private String superRoleKey = "super";
+	private String systemAdminRoleKey = "system_admin";
 
 	@Override
 	public boolean isAuthorizationEnabled() {
 		return systemConfigService
-				.getBooleanValue(SystemConfigProperties.ENABLE_AUTHORIZATION, enabledAuthorizationDefault);
+				.getBooleanValue(SystemConfigProperties.AUTHORIZATION_ENABLED, authorizationEnabledDefault);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
@@ -99,7 +99,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		List<User> users = userRepository.selectAll();
 		if (users != null) {
 			for (User user : users) {
-				allUsers.add(getUser(user.getName()));
+				allUsers.add(getUser(user.getUserName()));
 			}
 		}
 		return allUsers;
@@ -141,9 +141,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getSupers() {
+	public List<User> getSystemAdminUsers() {
 		List<User> superUsers = new ArrayList<>();
-		List<UserRole> userRoles = userRoleRepository.selectByRoleKey(superRoleKey);
+		List<UserRole> userRoles = userRoleRepository.selectByRoleKey(systemAdminRoleKey);
 		if (userRoles == null) {
 			return superUsers;
 		}
@@ -156,12 +156,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public Role getSuperRole() {
-		Role role = roleRepository.selectByKey(superRoleKey);
+	public Role getSystemAdminRole() {
+		Role role = roleRepository.selectByKey(systemAdminRoleKey);
 		if (role == null) {
 			return null;
 		}
-		List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(superRoleKey);
+		List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(systemAdminRoleKey);
 		if (rolePermissions != null) {
 			for (RolePermission rolePermission : rolePermissions) {
 				Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
@@ -182,7 +182,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 		for (UserRole userRole : userRoles) {
 			String roleKey = userRole.getRoleKey();
-			if (superRoleKey.equals(roleKey)) {
+			if (systemAdminRoleKey.equals(roleKey)) {
 				return true;
 			}
 			if (namespace.equals(userRole.getNamespace())) {
@@ -196,7 +196,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 				}
 				for (RolePermission rolePermission : rolePermissions) {
 					Permission tmpPermission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-					if (tmpPermission != null && tmpPermission.getKey().equals(permission.getKey())) {
+					if (tmpPermission != null && tmpPermission.getPermissionKey()
+							.equals(permission.getPermissionKey())) {
 						return true;
 					}
 				}
@@ -207,14 +208,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean isSuperRole(String userName) {
+	public boolean isSystemAdminRole(String userName) {
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		if (userRoles.isEmpty()) {
 			return false;
 		}
 		for (UserRole userRole : userRoles) {
 			String roleKey = userRole.getRoleKey();
-			if (superRoleKey.equals(roleKey)) {
+			if (systemAdminRoleKey.equals(roleKey)) {
 				return true;
 			}
 		}
