@@ -46,7 +46,7 @@ export default {
       this.$message.errorMessage(`上传失败: ${err}`);
     },
     handleSuccess(response) {
-      if (response.success) {
+      if (response.status === 0) {
         this.$emit('import-success', response.obj);
       } else {
         this.$message.errorMessage(response.message);

@@ -74,8 +74,6 @@
 </template>
 <script>
 import namespaceInfoDialog from './namespace_info_dialog';
-import batchMigrateDialog from './batch_migrate_dialog';
-import migrateStatusDialog from './migrate_status_dialog';
 
 export default {
   data() {
@@ -194,8 +192,6 @@ export default {
   },
   components: {
     'namespace-info-dialog': namespaceInfoDialog,
-    'batch-migrate-dialog': batchMigrateDialog,
-    'migrate-status-dialog': migrateStatusDialog,
   },
 };
 </script>
