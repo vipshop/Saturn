@@ -6,6 +6,7 @@ import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 
 import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_ADDED;
+import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_REMOVED;
 
 
 /**
@@ -14,6 +15,8 @@ import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NOD
 public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 
 	private static final String NODE_STATUS = "/status";
+
+	private static final int TREE_CACHE_DEPTH = 0;
 
 	private String jobName;
 
@@ -33,16 +36,19 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 
 	@Override
 	public void childEvent(Type type, String path, String nodeData) throws Exception {
-		if (isJobServerAdded(type, path)) {
-			String statusPath = path + NODE_STATUS;
-			shardingTreeCacheService.addTreeCacheIfAbsent(statusPath, 0);
-			shardingTreeCacheService.addTreeCacheListenerIfAbsent(statusPath, 0,
+		if (path.equals(jobServersNodePath)) {
+			return;
+		}
+
+		String statusPath = path + NODE_STATUS;
+		if (type == NODE_ADDED) {
+			shardingTreeCacheService.addTreeCacheIfAbsent(statusPath, TREE_CACHE_DEPTH);
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(statusPath, TREE_CACHE_DEPTH,
 					new JobServersTriggerShardingListener(jobName, namespaceShardingService));
+		} else if (type == NODE_REMOVED) { // 保证只watch新server clean事件
+			shardingTreeCacheService.removeTreeCache(statusPath, TREE_CACHE_DEPTH);
 		}
 	}
 
-	// 保证只watch新server上线事件
-	private boolean isJobServerAdded(Type type, String path) {
-		return type == NODE_ADDED && !path.equals(jobServersNodePath);
-	}
+
 }
