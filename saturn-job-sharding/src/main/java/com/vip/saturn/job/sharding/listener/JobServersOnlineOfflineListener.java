@@ -41,6 +41,7 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 		}
 	}
 
+	// 保证只watch新server上线事件
 	private boolean isJobServerAdded(Type type, String path) {
 		return type == NODE_ADDED && !path.equals(jobServersNodePath);
 	}
