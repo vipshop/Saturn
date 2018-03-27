@@ -402,8 +402,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	private void initMoveInNamespace(List<String> allOnlineNamespacesTemp, String zkClusterKey, ZkCluster zkCluster,
-			List<NamespaceZkClusterMapping> nsZkClusterMappingList,
-			List<RegistryCenterConfiguration> regCenterConfList) {
+			List<NamespaceZkClusterMapping> nsZkClusterMappingList, List<RegistryCenterConfiguration> regCenterConfList) {
 		if (nsZkClusterMappingList == null || zkCluster.isOffline()) {
 			return;
 		}
@@ -431,8 +430,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					if (!nnsOld.equals(nnsNew)) {
 						synchronized (getNnsLock(nnsOld)) {
 							closeNamespace(nnsOld);
-							log.info("closed the namespace info because it's nns is changed, namespace is {}",
-									namespace);
+							log.info("closed the namespace info because it's nns is changed, namespace is {}", namespace);
 						}
 					}
 					break;
@@ -441,17 +439,34 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			if (!include) {
 				CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
 				initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-				RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace,
-						zkCluster.getZkAddr());
+				RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
 				conf.setZkClusterKey(zkClusterKey);
 				conf.setVersion(getVersion(namespace, curatorFramework));
 				conf.setZkAlias(zkCluster.getZkAlias());
+				NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
+				if (namespaceInfo != null) {
+					postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
+				}
 				zkCluster.getRegCenterConfList().add(conf);
 			}
 			if (!allOnlineNamespacesTemp.contains(namespace)) {
 				allOnlineNamespacesTemp.add(namespace);
 			}
 		}
+	}
+
+	private NamespaceInfo getNamespaceInfo(String namespace) {
+		try {
+			return namespaceInfoService.selectByNamespace(namespace);
+		} catch (Exception e) {
+			log.error("fail to get namespaceInfo:{} from DB", namespace);
+			return null;
+		}
+	}
+
+	// For subclass override
+	protected void postConstructRegistryCenterConfiguration(RegistryCenterConfiguration conf, String content) {
+		// do nothing here
 	}
 
 	private void closeMoveOutNamespace(String zkClusterKey, List<NamespaceZkClusterMapping> nsZkClusterMappingList,
@@ -1121,32 +1136,33 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					String.format(ERR_MSG_TEMPLATE_FAIL_TO_CREATE, namespace, "not found zkcluster" + zkClusterKey));
 		}
 
+		// namespace必须要存在
 		if (!checkNamespaceExists(namespace)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), ERR_MSG_NS_NOT_FOUND);
 		}
 
-		try {
-			// 判断其它集群是否有该域
-			String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
-			if (zkClusterKeyOther != null) {
-				ZkCluster zkClusterOther = getZkCluster(zkClusterKeyOther);
-				if (zkClusterOther != null) {
-					throw new SaturnJobConsoleException(
-							namespace + "在zk=" + zkClusterOther.getZkAddr() + " 存在， 不能重复添加");
-				}
+		// 判断其它集群是否有该域
+		String zkClusterKeyOther = namespaceZkClusterMapping4SqlService.getZkClusterKey(namespace);
+		if (zkClusterKeyOther != null) {
+			ZkCluster zkClusterOther = getZkCluster(zkClusterKeyOther);
+			if (zkClusterOther == null) {
+				throw new SaturnJobConsoleException("zk cluster 不存在：" + zkClusterKeyOther);
 			}
-			if (zkClusterKeyOther == null) {
-				namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, updatedBy);
+
+			if (zkClusterOther.getZkClusterKey().equals(zkClusterKey)) {
+				throw new SaturnJobConsoleException("Namespace已经存在于此zk集群，不能重复添加");
 			} else {
-				namespaceZkClusterMapping4SqlService.update(namespace, "", zkClusterKey, updatedBy);
+				throw new SaturnJobConsoleException(
+						"Namespace存在于另外的zk集群：" + zkClusterOther.getZkClusterKey() + "，不能重复添加");
 			}
+		}
 
+		try {
+			namespaceZkClusterMapping4SqlService.insert(namespace, "", zkClusterKey, updatedBy);
 			postBindNamespaceAndZkCluster(namespace, currentCluster);
-
 			// refresh
 			notifyRefreshRegCenter();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 			namespaceZkClusterMapping4SqlService.remove(namespace, updatedBy);
 			throw new SaturnJobConsoleException(e.getMessage());
 		}
