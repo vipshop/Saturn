@@ -1168,7 +1168,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	protected void postBindNamespaceAndZkCluster(String namespace, ZkCluster currentCluster) throws Exception {
+	protected void postBindNamespaceAndZkCluster(String namespace, ZkCluster currentCluster) throws SaturnJobConsoleException {
 		// for subclass implement
 	}
 
