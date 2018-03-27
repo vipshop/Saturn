@@ -26,7 +26,6 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
-import com.vip.saturn.job.utils.SaturnUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.quartz.SchedulerException;
@@ -117,8 +116,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 		JobExecutionMultipleShardingContext shardingContext = null;
 		try {
-			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobScheduler.getCurrentConf());
-			if (!isEnabledReport || failoverService.getLocalHostFailoverItems().isEmpty()) {
+			if (!configService.isEnabledReport() || failoverService.getLocalHostFailoverItems().isEmpty()) {
 				shardingService.shardingIfNecessary();
 			}
 
@@ -165,7 +163,7 @@ public abstract class AbstractElasticJob implements Stopable {
 			executeJob(shardingContext);
 		} finally {
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
-			boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(getJobScheduler().getCurrentConf());
+			boolean isEnabledReport = configService.isEnabledReport();
 			for (int item : shardingContext.getShardingItems()) {
 				if (isEnabledReport && !checkIfZkLostAfterExecution(item)) {
 					continue;

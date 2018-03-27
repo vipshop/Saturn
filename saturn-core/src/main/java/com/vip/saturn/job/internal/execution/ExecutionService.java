@@ -14,13 +14,6 @@
 
 package com.vip.saturn.job.internal.execution;
 
-import java.util.Date;
-import java.util.List;
-
-import com.vip.saturn.job.utils.SaturnUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.vip.saturn.job.SaturnJobReturn;
@@ -33,6 +26,11 @@ import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * 执行作业的服务.
@@ -104,7 +102,7 @@ public class ExecutionService extends AbstractSaturnService {
 		if (log.isDebugEnabled()) {
 			log.debug("registerJobBeginByItem: " + item);
 		}
-		boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobConfiguration);
+		boolean isEnabledReport = configService.isEnabledReport();
 		if (isEnabledReport) {
 			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
 			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), executorName);
@@ -165,7 +163,7 @@ public class ExecutionService extends AbstractSaturnService {
 	public void registerJobCompletedControlInfoByItem(
 			final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
 
-		boolean isEnabledReport = SaturnUtils.checkIfJobIsEnabledReport(jobConfiguration);
+		boolean isEnabledReport = configService.isEnabledReport();
 		if (!isEnabledReport) {
 			return;
 		}

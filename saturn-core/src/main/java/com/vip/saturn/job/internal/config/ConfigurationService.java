@@ -384,11 +384,22 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	/**
 	 * 获取作业是否上报状态。
-	 *
-	 * @return true, 上报状态；false，不上报状态；
+	 * 如果存在/config/enabledReport节点，则返回节点的内容；
+	 * 如果不存在/config/enabledReport节点，如果作业类型是Java或者Shell，则返回true；否则，返回false；
 	 */
 	public boolean isEnabledReport() {
-		return jobConfiguration.isEnabledReport();
+		Boolean isEnabledReportInJobConfig = jobConfiguration.isEnabledReport();
+
+		if (isEnabledReportInJobConfig != null) {
+			return isEnabledReportInJobConfig;
+		}
+		// if isEnabledReportInJobConfig == null, 如果作业类型是JAVA或者Shell，默认上报
+		if ("JAVA_JOB".equals(jobConfiguration.getJobType())
+				|| "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
