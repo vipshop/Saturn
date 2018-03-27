@@ -92,7 +92,7 @@ public class AddJobListenersService {
 	}
 
 	private void addJobServersPathListener(String jobName) throws Exception {
-		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
+		String path = SaturnExecutorsNode.getJobServersNodePath(jobName);
 		if (curatorFramework.checkExists().forPath(path) == null) {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);

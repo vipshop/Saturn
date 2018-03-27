@@ -222,6 +222,13 @@ public class SaturnExecutorsNode {
 	}
 
 	/**
+	 * 获取$Jobs/xx/servers完整路径
+	 */
+	public static String getJobServersNodePath(String jobName) {
+		return String.format("/%s/%s/servers", JOBS_NODE, jobName);
+	}
+
+	/**
 	 * 获取$Jobs/xx/servers/yy完整路径
 	 */
 	public static String getJobServersExecutorNodePath(String jobName, String executorName) {

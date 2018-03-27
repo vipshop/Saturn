@@ -1,10 +1,12 @@
 package com.vip.saturn.job.sharding.listener;
 
-import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_ADDED;
-
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
 import com.vip.saturn.job.sharding.service.ShardingTreeCacheService;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+
+import static org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type.NODE_ADDED;
+
 
 /**
  * Job Server上下线Listener，会检测/status节点的添加和删除行为。
@@ -13,9 +15,9 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 
 	private static final String NODE_STATUS = "/status";
 
-	private static final String NODE_SERVERS = "/servers";
-
 	private String jobName;
+
+	private String jobServersNodePath;
 
 	private ShardingTreeCacheService shardingTreeCacheService;
 
@@ -24,6 +26,7 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 	public JobServersOnlineOfflineListener(String jobName, ShardingTreeCacheService shardingTreeCacheService,
 			NamespaceShardingService namespaceShardingService) {
 		this.jobName = jobName;
+		this.jobServersNodePath = SaturnExecutorsNode.getJobServersNodePath(jobName);
 		this.shardingTreeCacheService = shardingTreeCacheService;
 		this.namespaceShardingService = namespaceShardingService;
 	}
@@ -39,6 +42,6 @@ public class JobServersOnlineOfflineListener extends AbstractTreeCacheListener {
 	}
 
 	private boolean isJobServerAdded(Type type, String path) {
-		return type == NODE_ADDED && !path.endsWith(NODE_SERVERS);
+		return type == NODE_ADDED && !path.equals(jobServersNodePath);
 	}
 }
