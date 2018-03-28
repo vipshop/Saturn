@@ -28,6 +28,7 @@ saturn-job-console/logs/
 # system ignore
 .DS_Store
 Thumbs.db
+sh.exe.stackdump
 /saturn-job-st/info
 
 # console static ignore
