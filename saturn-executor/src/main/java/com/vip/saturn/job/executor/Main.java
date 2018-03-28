@@ -53,20 +53,24 @@ public class Main {
 	}
 
 	private String obtainParam(String[] args, int position, String paramName) {
-		try {
-			if (position >= args.length) {
-				throw new RuntimeException(String.format("Please set the value of parameter:%s", paramName));
-			}
-			return args[position].trim();
-		} catch (Exception e) {
-			throw new RuntimeException(String.format("Set the value of parameter:%s error", paramName));
+		String value = null;
+		if (position < args.length) {
+			value = args[position].trim();
 		}
+		if (isBlank(value)) {
+			throw new RuntimeException(String.format("Please set the value of parameter:%s", paramName));
+		}
+		return value;
 	}
 
 	private void validateMandatoryParameters() {
-		if (namespace == null || namespace.isEmpty()) {
+		if (isBlank(namespace)) {
 			throw new RuntimeException("Please set the namespace parameter");
 		}
+	}
+
+	private boolean isBlank(String str) {
+		return str == null || str.trim().isEmpty();
 	}
 
 	public String getExecutorName() {
