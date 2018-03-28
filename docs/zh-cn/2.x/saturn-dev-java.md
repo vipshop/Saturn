@@ -120,7 +120,7 @@ JavaJobReturn是作业结果返回的封装。里面三个成员变量，包括�
 运行以下命令打包
 
 ```Shell
-mvn saturn:zip
+mvn saturn-job:zip
 ```
 
 会在/target目录下得到**-app.zip**的一个压缩包，参照部署指引将压缩包部署到executor。
