@@ -26,24 +26,23 @@ public class Main {
 	protected void parseArgs(String[] inArgs) throws Exception {
 		String[] args = inArgs.clone();
 
-		for (int i = 0; i < args.length; i = i + 2) {
+		for (int i = 0; i < args.length; i++) {
 			String param = args[i].trim();
-			String value = args[i + 1];
 
 			switch (param) {
 				case "-namespace":
-					this.namespace = obtainParam(value, "namespace");
+					this.namespace = obtainParam(args, ++i, "namespace");
 					System.setProperty("app.instance.name", this.namespace);
 					System.setProperty("namespace", this.namespace);
 					break;
 				case "-executorName":
-					this.executorName = obtainParam(value, "executorName");
+					this.executorName = obtainParam(args, ++i, "executorName");
 					break;
 				case "-saturnLibDir":
-					this.saturnLibDir = obtainParam(value, "saturnLibDir");
+					this.saturnLibDir = obtainParam(args, ++i, "saturnLibDir");
 					break;
 				case "-appLibDir":
-					this.appLibDir = obtainParam(value, "appLibDir");
+					this.appLibDir = obtainParam(args, ++i, "appLibDir");
 					break;
 				default:
 					break;
@@ -53,12 +52,15 @@ public class Main {
 		validateMandatoryParameters();
 	}
 
-	private String obtainParam(String arg, String paramName) {
-		if (arg == null || arg.isEmpty()) {
-			throw new RuntimeException("Please set the value of parameter:" + paramName);
+	private String obtainParam(String[] args, int position, String paramName) {
+		try {
+			if (position >= args.length) {
+				throw new RuntimeException(String.format("Please set the value of parameter:%s", paramName));
+			}
+			return args[position].trim();
+		} catch (Exception e) {
+			throw new RuntimeException(String.format("Set the value of parameter:%s error", paramName));
 		}
-
-		return arg.trim();
 	}
 
 	private void validateMandatoryParameters() {

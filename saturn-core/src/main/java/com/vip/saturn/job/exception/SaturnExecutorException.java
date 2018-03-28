@@ -1,6 +1,6 @@
 package com.vip.saturn.job.exception;
 
-public class SaturnExecutorException extends RuntimeException {
+public class SaturnExecutorException extends Exception {
 
 	private final int code;
 

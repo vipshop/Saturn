@@ -1,6 +1,6 @@
 package com.vip.saturn.job.exception;
 
-public class SaturnExecutorExceptionType {
+public class SaturnExecutorExceptionCode {
 
 	public static final int NAMESPACE_NOT_EXIST = 404;
 

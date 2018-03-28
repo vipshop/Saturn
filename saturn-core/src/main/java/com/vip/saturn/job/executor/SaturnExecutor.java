@@ -1,9 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import static com.vip.saturn.job.internal.config.JobType.JAVA_JOB;
-import static com.vip.saturn.job.internal.config.JobType.MSG_JOB;
-import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
@@ -12,22 +8,15 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
 import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
 import com.vip.saturn.job.exception.SaturnExecutorException;
-import com.vip.saturn.job.exception.SaturnExecutorExceptionType;
+import com.vip.saturn.job.exception.SaturnExecutorExceptionCode;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
-import com.vip.saturn.job.utils.AlarmUtils;
-import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.ResourceUtils;
-import com.vip.saturn.job.utils.SaturnUtils;
-import com.vip.saturn.job.utils.ScriptPidUtils;
-import com.vip.saturn.job.utils.StartCheckUtil;
+import com.vip.saturn.job.utils.*;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
-import com.vip.saturn.job.utils.SystemEnvProperties;
-import java.util.EnumSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -43,16 +32,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static com.vip.saturn.job.internal.config.JobType.JAVA_JOB;
+import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
 
 public class SaturnExecutor {
 
@@ -207,10 +195,10 @@ public class SaturnExecutor {
 			if (!Strings.isNullOrEmpty(extClass)) {
 				Class<SaturnExecutorExtension> loadClass = (Class<SaturnExecutorExtension>) SaturnExecutor.class
 						.getClassLoader().loadClass(extClass);
-				Constructor<SaturnExecutorExtension> constructor = loadClass.getConstructor(String.class, String.class,
-						ClassLoader.class, ClassLoader.class);
-				saturnExecutorExtension = constructor.newInstance(executorName, namespace, executorClassLoader,
-						jobClassLoader);
+				Constructor<SaturnExecutorExtension> constructor = loadClass
+						.getConstructor(String.class, String.class, ClassLoader.class, ClassLoader.class);
+				saturnExecutorExtension = constructor
+						.newInstance(executorName, namespace, executorClassLoader, jobClassLoader);
 			}
 		} catch (Exception e) { // NOSONAR log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
@@ -261,10 +249,10 @@ public class SaturnExecutor {
 				} else {
 					handleDiscoverException(responseBody, statusCode);
 				}
-			} catch (SaturnExecutorException e1) {
-				log.error(e1.getMessage());
-				if (SaturnExecutorExceptionType.UNEXPECTED_EXCEPTION != e1.getCode()) {
-					throw e1;
+			} catch (SaturnExecutorException e) {
+				log.error(e.getMessage());
+				if (e.getCode() != SaturnExecutorExceptionCode.UNEXPECTED_EXCEPTION) {
+					throw e;
 				}
 			} catch (Exception e) {
 				log.error("Fail to discover zk connection. Url: " + url, e);
@@ -283,21 +271,26 @@ public class SaturnExecutor {
 				"Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
 	}
 
-	private void handleDiscoverException(String responseBody, Integer statusCode) {
+	private void handleDiscoverException(String responseBody, Integer statusCode) throws SaturnExecutorException {
 		String errMsgInResponse = obtainErrorResponseMsg(responseBody);
 
 		StringBuilder sb = new StringBuilder("Fail to discover zk connection string. ");
-		String exceptionMsg =
-				StringUtils.isBlank(errMsgInResponse) ? sb.toString() : sb.append(errMsgInResponse).toString();
-		if (HttpStatus.SC_NOT_FOUND == statusCode) {
-			throw new SaturnExecutorException(SaturnExecutorExceptionType.NAMESPACE_NOT_EXIST, exceptionMsg);
+		if (StringUtils.isNotBlank(errMsgInResponse)) {
+			sb.append(errMsgInResponse);
+		}
+		String exceptionMsg = sb.toString();
+
+		if (statusCode != null) {
+			if (statusCode.intValue() == HttpStatus.SC_NOT_FOUND) {
+				throw new SaturnExecutorException(SaturnExecutorExceptionCode.NAMESPACE_NOT_EXIST, exceptionMsg);
+			}
+
+			if (statusCode.intValue() == HttpStatus.SC_BAD_REQUEST) {
+				throw new SaturnExecutorException(SaturnExecutorExceptionCode.BAD_REQUEST, exceptionMsg);
+			}
 		}
 
-		if (HttpStatus.SC_BAD_REQUEST == statusCode) {
-			throw new SaturnExecutorException(SaturnExecutorExceptionType.BAD_REQUEST, exceptionMsg);
-		}
-
-		throw new SaturnExecutorException(SaturnExecutorExceptionType.UNEXPECTED_EXCEPTION, exceptionMsg);
+		throw new SaturnExecutorException(SaturnExecutorExceptionCode.UNEXPECTED_EXCEPTION, exceptionMsg);
 	}
 
 	private String obtainErrorResponseMsg(String responseBody) {
@@ -472,13 +465,15 @@ public class SaturnExecutor {
 		}
 	}
 
-	protected Map<String,Object> constructAlarmInfo(String namespace, String executorName) {
+	protected Map<String, Object> constructAlarmInfo(String namespace, String executorName) {
 		Map<String, Object> alarmInfo = new HashMap<>();
 		alarmInfo.put("executorName", executorName);
 		alarmInfo.put("name", "Saturn Event");
 		alarmInfo.put("title", "Executor_Restart");
 		alarmInfo.put("level", "WARNING");
-		alarmInfo.put("message", "Executor_Restart: namespace:["  + namespace + "] executor:[" + executorName + "] restart on " + SaturnUtils.convertTime2FormattedString(System.currentTimeMillis()));
+		alarmInfo.put("message",
+				"Executor_Restart: namespace:[" + namespace + "] executor:[" + executorName + "] restart on "
+						+ SaturnUtils.convertTime2FormattedString(System.currentTimeMillis()));
 
 		return alarmInfo;
 	}
