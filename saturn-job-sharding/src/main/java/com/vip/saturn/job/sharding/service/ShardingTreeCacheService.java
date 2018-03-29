@@ -1,12 +1,8 @@
 package com.vip.saturn.job.sharding.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.vip.saturn.job.sharding.TreeCacheThreadFactory;
 import com.vip.saturn.job.sharding.entity.ShardingTreeCache;
 import com.vip.saturn.job.sharding.exception.ShardingException;
-import java.util.List;
-import java.util.Set;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
@@ -89,22 +85,6 @@ public class ShardingTreeCacheService {
 			shardingTreeCache.removeTreeCache(path, depth);
 		}
 	}
-
-	public void removeTreeCacheWithPrefix(String prefix) throws ShardingException {
-		synchronized (isShutdownFlag) {
-			if (isShutdownFlag.get()) {
-				throw new ShardingException("ShardingTreeCacheService has been shutdown");
-			}
-
-			List<String> treeCacheKeys = shardingTreeCache.getTreeCachePaths();
-			for (String key : treeCacheKeys) {
-				if (key.startsWith(prefix)) {
-					shardingTreeCache.removeTreeCacheByKey(key);
-				}
-			}
-		}
-	}
-
 
 	public void start() {
 		synchronized (isShutdownFlag) {

@@ -51,8 +51,8 @@ public class AddJobListenersService {
 	}
 
 	public void removeJobPathTreeCache(String jobName) throws ShardingException {
-		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName;
-		shardingTreeCacheService.removeTreeCacheWithPrefix(path);
+		removeJobConfigPathTreeCache(jobName);
+		removeJobServersTreeCache(jobName);
 	}
 
 	/**
@@ -74,21 +74,29 @@ public class AddJobListenersService {
 				return false;
 			}
 			Thread.sleep(100L);
-		} while(true);
+		} while (true);
 
 		int depth = 0;
 		List<String> configPath2AddTreeCacheList = Lists
 				.newArrayList(SaturnExecutorsNode.getJobConfigEnableNodePath(jobName),
 						SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName));
 		for (String path2AddTreeCache : configPath2AddTreeCacheList) {
-			shardingTreeCacheService
-					.addTreeCacheIfAbsent(path2AddTreeCache, depth);
-			shardingTreeCacheService
-					.addTreeCacheListenerIfAbsent(path2AddTreeCache, depth,
-							new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
+			shardingTreeCacheService.addTreeCacheIfAbsent(path2AddTreeCache, depth);
+			shardingTreeCacheService.addTreeCacheListenerIfAbsent(path2AddTreeCache, depth,
+					new JobConfigTriggerShardingListener(jobName, namespaceShardingService));
 		}
 
 		return true;
+	}
+
+	private void removeJobConfigPathTreeCache(String jobName) throws ShardingException {
+		int depth = 0;
+		List<String> configPath2AddTreeCacheList = Lists
+				.newArrayList(SaturnExecutorsNode.getJobConfigEnableNodePath(jobName),
+						SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName));
+		for (String path2AddTreeCache : configPath2AddTreeCacheList) {
+			shardingTreeCacheService.removeTreeCache(path2AddTreeCache, depth);
+		}
 	}
 
 	private void addJobServersPathListener(String jobName) throws Exception {
@@ -104,6 +112,12 @@ public class AddJobListenersService {
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
 		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
 				new JobServersOnlineOfflineListener(jobName, shardingTreeCacheService, namespaceShardingService));
+	}
+
+	private void removeJobServersTreeCache(String jobName) throws ShardingException {
+		String path = SaturnExecutorsNode.getJobServersNodePath(jobName);
+		int depth = 1;
+		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
 
 }
