@@ -8,7 +8,7 @@
                         基本配置
                     </template>
                     <div class="job-setting-content">
-                        <el-row v-if="jobSettingInfo.jobType === 'JAVA_JOB'">
+                        <el-row v-if="jobSettingInfo.jobType !== 'SHELL_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="jobClass" label="作业实现类">
                                     <el-input v-model="jobSettingInfo.jobClass" disabled></el-input>
@@ -181,10 +181,7 @@
                         <el-row v-if="jobSettingInfo.jobType === 'MSG_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="channelName" label="Channel名">
-                                    <el-tooltip popper-class="form-tooltip" placement="bottom">
-                                        <div slot="content">
-                                            执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环
-                                        </div>
+                                    <el-tooltip popper-class="form-tooltip" content="执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环" placement="bottom">
                                         <el-input v-model="jobSettingInfo.channelName"></el-input>
                                     </el-tooltip>
                                 </el-form-item>
