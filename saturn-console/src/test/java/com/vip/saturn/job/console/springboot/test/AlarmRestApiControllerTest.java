@@ -70,18 +70,10 @@ public class AlarmRestApiControllerTest extends AbstractSaturnConsoleTest {
 
 	@Test
 	public void testRaiseAlarmFailAsMissingMandatoryField() throws Exception {
-		// missing jobName
-		AlarmEntity alarmEntity = new AlarmEntity(null, "exec", "name", "title", "CRITICAL");
+		// missing executorname
+		AlarmEntity alarmEntity = new AlarmEntity("job1", null, "name", "title", "CRITICAL");
 
 		MvcResult result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
-				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
-
-		assertEquals("error message not equal", "Invalid request. Missing parameter: {jobName}",
-				fetchErrorMessage(result));
-		// missing executorname
-		alarmEntity = new AlarmEntity("job1", null, "name", "title", "CRITICAL");
-
-		result = mvc.perform(post("/rest/v1/mydomain/alarms/raise").contentType(MediaType.APPLICATION_JSON)
 				.content(alarmEntity.toJSON())).andExpect(status().isBadRequest()).andReturn();
 
 		assertEquals("error message not equal", "Invalid request. Missing parameter: {executorName}",
