@@ -67,7 +67,7 @@ public class AlarmRestApiController extends AbstractController {
 			boolean isExecutorRestartAlarmEvent = isExecutorRestartAlarmEvent(alarmInfo);
 			if (isExecutorRestartAlarmEvent) {
 				boolean alarmRaisedOnExecutorRestart = systemConfigService
-						.getBooleanValue(ALARM_RAISED_ON_EXECUTOR_RESTART, Boolean.TRUE);
+						.getBooleanValue(ALARM_RAISED_ON_EXECUTOR_RESTART, Boolean.FALSE);
 				if (!alarmRaisedOnExecutorRestart) {
 					logger.warn(alarmInfo.getMessage());
 				} else {
