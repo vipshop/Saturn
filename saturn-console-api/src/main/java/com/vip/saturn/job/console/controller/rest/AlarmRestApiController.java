@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.aop.annotation.Audit;
+import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -47,6 +49,7 @@ public class AlarmRestApiController extends AbstractController {
 	@Resource
 	private SystemConfigService systemConfigService;
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
 			@RequestBody Map<String, Object> reqParams, HttpServletRequest request) throws SaturnJobConsoleException {
@@ -57,8 +60,8 @@ public class AlarmRestApiController extends AbstractController {
 
 			AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo, jobName,
-					executorName, shardItem);
+			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo, jobName, executorName,
+					shardItem);
 
 			// (since 2.1.4) 如果alarm title是Executor_Restart，而且系统配置ALARM_RAISED_ON_EXECUTOR_RESTART=false, 只记录日志不发送告警
 			boolean isExecutorRestartAlarmEvent = isExecutorRestartAlarmEvent(alarmInfo);
