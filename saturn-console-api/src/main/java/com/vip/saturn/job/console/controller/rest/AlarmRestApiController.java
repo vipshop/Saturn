@@ -1,60 +1,75 @@
 package com.vip.saturn.job.console.controller.rest;
 
-import com.vip.saturn.job.console.aop.annotation.Audit;
-import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
-import java.util.Map;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+
 /**
- * RESTful APIs of alarm handling. <p> Created by kfchu on 10/05/2017.
+ * RESTful APIs for alarm handling.
+ * <p>
+ * Created by jeff zhu on 10/05/2017.
  */
+@Controller
 @RequestMapping("/rest/v1/{namespace}/alarms")
 public class AlarmRestApiController extends AbstractController {
 
-	private static final String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
+	public static final String ALARM_TYPE = "SATURN.JOB.EXCEPTION";
 
 	private static final String ALARM_TITLE_EXECUTOR_RESTART = "Executor_Restart";
 
 	private static final String ALARM_NAME_EXECUTOR_RESTART = "Saturn Event";
 
-	private static final Logger log = LoggerFactory.getLogger(AlarmRestApiController.class);
+	private static final String ALARM_RAISED_ON_EXECUTOR_RESTART = "ALARM_RAISED_ON_EXECUTOR_RESTART";
+
+	private static final Logger logger = LoggerFactory.getLogger(AlarmRestApiController.class);
 
 	@Resource
 	private RestApiService restApiService;
 
-	@Audit(type = AuditType.REST)
+	@Resource
+	private SystemConfigService systemConfigService;
+
 	@RequestMapping(value = "/raise", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> raise(@PathVariable("namespace") String namespace,
-			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
+			@RequestBody Map<String, Object> reqParams, HttpServletRequest request) throws SaturnJobConsoleException {
 		try {
-			String jobName = checkAndGetParametersValueAsString(reqParams, "jobName", true);
+			String jobName = checkAndGetParametersValueAsString(reqParams, "jobName", false);
 			String executorName = checkAndGetParametersValueAsString(reqParams, "executorName", true);
 			Integer shardItem = checkAndGetParametersValueAsInteger(reqParams, "shardItem", false);
 
 			AlarmInfo alarmInfo = constructAlarmInfo(reqParams);
 
-			log.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo.toString(), jobName,
+			logger.info("try to raise alarm: {}, job: {}, executor: {}, item: {}", alarmInfo, jobName,
 					executorName, shardItem);
 
 			// (since 2.1.4) 如果alarm title是Executor_Restart，而且系统配置ALARM_RAISED_ON_EXECUTOR_RESTART=false, 只记录日志不发送告警
 			boolean isExecutorRestartAlarmEvent = isExecutorRestartAlarmEvent(alarmInfo);
 			if (isExecutorRestartAlarmEvent) {
-				restApiService.raiseExecutorRestartAlarm(namespace, executorName, alarmInfo);
+				boolean alarmRaisedOnExecutorRestart = systemConfigService
+						.getBooleanValue(ALARM_RAISED_ON_EXECUTOR_RESTART, Boolean.TRUE);
+				if (!alarmRaisedOnExecutorRestart) {
+					logger.warn(alarmInfo.getMessage());
+				} else {
+					restApiService.raiseExecutorRestartAlarm(namespace, executorName, alarmInfo);
+				}
 			} else {
 				if (StringUtils.isBlank(jobName)) {
 					throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
@@ -101,4 +116,5 @@ public class AlarmRestApiController extends AbstractController {
 
 		return alarmInfo;
 	}
+
 }
