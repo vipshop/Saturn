@@ -393,7 +393,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 			closeMoveOutNamespace(zkClusterEntry.getKey(), nsZkClusterMappingList, regCenterConfList);
 
-			initMoveInNamespace(allOnlineNamespacesTemp, zkClusterEntry.getKey(), zkCluster, nsZkClusterMappingList,
+			initOrUpdateNamespace(allOnlineNamespacesTemp, zkCluster, nsZkClusterMappingList,
 					regCenterConfList);
 		}
 		// 直接赋值新的
@@ -401,57 +401,96 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		allOnlineNamespaces = allOnlineNamespacesTemp;
 	}
 
-	private void initMoveInNamespace(List<String> allOnlineNamespacesTemp, String zkClusterKey, ZkCluster zkCluster,
+	private void initOrUpdateNamespace(List<String> allOnlineNamespacesTemp, ZkCluster zkCluster,
 			List<NamespaceZkClusterMapping> nsZkClusterMappingList, List<RegistryCenterConfiguration> regCenterConfList) {
 		if (nsZkClusterMappingList == null || zkCluster.isOffline()) {
 			return;
 		}
 
-		for (NamespaceZkClusterMapping mapping : nsZkClusterMappingList) {
-			String namespace = mapping.getNamespace();
-			String name = StringUtils.deleteWhitespace(mapping.getName());
-			if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
-				log.error("The namespace cannot be {}", SaturnSelfNodePath.ROOT_NAME);
-				continue;
-			}
-			boolean include = false;
-			if (regCenterConfList != null) {
-				for (RegistryCenterConfiguration conf : regCenterConfList) {
-					if (!namespace.equals(conf.getNamespace())) {
-						continue;
-					}
+		CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
+		ArrayList<RegistryCenterConfiguration> newRegCenterConfList = new ArrayList<>();
+		try {
+			for (NamespaceZkClusterMapping mapping : nsZkClusterMappingList) {
+				String namespace = mapping.getNamespace();
+				// 过滤$SaturnSelf
+				if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
+					continue;
+				}
+				// filter old version's(<1.0.9) jobs.
+				try {
+					if (isNewSaturn(namespace, curatorFramework)) {
+						// 对于新添加的域，需要初始化一些znode
+						initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
 
-					include = true;
-					String nnsOld = conf.getNameAndNamespace();
-					// update name
-					conf.setName(name);
-					conf.initNameAndNamespace();
-					String nnsNew = conf.getNameAndNamespace();
-					if (!nnsOld.equals(nnsNew)) {
-						synchronized (getNnsLock(nnsOld)) {
-							closeNamespace(nnsOld);
-							log.info("closed the namespace info because it's nns is changed, namespace is {}", namespace);
+						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(mapping.getName(), namespace, zkCluster.getZkAddr());
+						conf.setZkClusterKey(zkCluster.getZkClusterKey());
+						conf.setVersion(getVersion(namespace, curatorFramework));
+						conf.setZkAlias(zkCluster.getZkAlias());
+						NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
+						if (namespaceInfo != null) {
+							postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
+						}
+
+						newRegCenterConfList.add(conf);
+
+						if (!allOnlineNamespacesTemp.contains(namespace)) {
+							allOnlineNamespacesTemp.add(namespace);
 						}
 					}
-					break;
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
-			if (!include) {
-				CuratorFramework curatorFramework = zkCluster.getCuratorFramework();
-				initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-				RegistryCenterConfiguration conf = new RegistryCenterConfiguration(name, namespace, zkCluster.getZkAddr());
-				conf.setZkClusterKey(zkClusterKey);
-				conf.setVersion(getVersion(namespace, curatorFramework));
-				conf.setZkAlias(zkCluster.getZkAlias());
-				NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
-				if (namespaceInfo != null) {
-					postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		// 如果nns有改变，则需要关闭旧的
+		if (regCenterConfList != null) {
+			for (RegistryCenterConfiguration conf : regCenterConfList) {
+				String namespace = conf.getNamespace();
+				String nns = conf.getNameAndNamespace();
+				for (RegistryCenterConfiguration confNew : newRegCenterConfList) {
+					String namespaceNew = confNew.getNamespace();
+					if (namespace.equals(namespaceNew)) {
+						String nnsNew = confNew.getNameAndNamespace();
+						if (!nns.equals(nnsNew)) {
+							synchronized (getNnsLock(nns)) {
+								closeNamespace(nns);
+								log.info("closed the namespace info because it's nns is changed, namespace is {}", namespace);
+							}
+						}
+						break;
+					}
 				}
-				zkCluster.getRegCenterConfList().add(conf);
 			}
-			if (!allOnlineNamespacesTemp.contains(namespace)) {
-				allOnlineNamespacesTemp.add(namespace);
+		}
+
+		zkCluster.setRegCenterConfList(newRegCenterConfList);
+	}
+
+	private boolean isNewSaturn(String nameSpace, CuratorFramework curatorFramework) {
+		try {
+			String executorsPath = "/" + nameSpace + ExecutorNodePath.getExecutorNodePath();
+			if (null != curatorFramework.checkExists().forPath(executorsPath)) {
+				List<String> executors = curatorFramework.getChildren().forPath(executorsPath);
+				if (executors != null && !executors.isEmpty()) {
+					for (String exe : executors) {
+						String lastBeginTimePath = executorsPath + "/" + exe + "/lastBeginTime";
+						if (null != curatorFramework.checkExists().forPath(lastBeginTimePath)) {
+							return true;
+						}
+					}
+				}
 			}
+			// chcek if /$Job exists
+			if (null != curatorFramework.checkExists().forPath("/" + nameSpace + JobNodePath.get$JobsNodePath())) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return false;
 		}
 	}
 
@@ -709,7 +748,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	private void initNamespaceZkNodeIfNecessary(String namespace, CuratorFramework curatorFramework) {
+	protected void initNamespaceZkNodeIfNecessary(String namespace, CuratorFramework curatorFramework) {
 		try {
 			String executorsNodePath = "/" + namespace + ExecutorNodePath.get$ExecutorNodePath();
 			if (curatorFramework.checkExists().forPath(executorsNodePath) == null) {
@@ -1101,6 +1140,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			// 创建 namespaceInfo
 			NamespaceInfo namespaceInfo = constructNamespaceInfo(namespaceDomainInfo);
 			namespaceInfoService.update(namespaceInfo);
+			// refresh
+			notifyRefreshRegCenter();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
