@@ -12,10 +12,7 @@ import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -84,7 +81,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@PostMapping(value = "/registryCenter/refresh")
+	@RequestMapping(value = "/registryCenter/refresh", method = {RequestMethod.GET, RequestMethod.POST})
 	public SuccessResponseEntity notifyRefreshRegCenter() throws SaturnJobConsoleException {
 		registryCenterService.notifyRefreshRegCenter();
 		return new SuccessResponseEntity();
