@@ -417,16 +417,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					continue;
 				}
 
-				boolean isNamespaceNotInclude = false;
+				// 如果这个标记为true，意味是新域，或者是迁移过来的域
+				boolean isNamespaceNotIncludeInOriginRegCenerConfList = false;
 				if (isNamespaceNotIncludeInRegCenterConfList(namespace, regCenterConfList)) {
 					// 对于新添加的域，需要初始化一些znode
 					initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-					isNamespaceNotInclude = true;
+					isNamespaceNotIncludeInOriginRegCenerConfList = true;
 				}
 
-				// filter old version's(<1.0.9) jobs.
 				try {
-					if (isNamespaceNotInclude || isNewSaturn(namespace, curatorFramework)) {
+					if (isNamespaceNotIncludeInOriginRegCenerConfList || isNewerVersionSaturnNamespace(namespace, curatorFramework)) {
 						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(mapping.getName(), namespace, zkCluster.getZkAddr());
 						conf.setZkClusterKey(zkCluster.getZkClusterKey());
 						conf.setVersion(getVersion(namespace, curatorFramework));
@@ -471,6 +471,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 
+		log.info("Zkcluster [{}] maintains {} namespaces.", zkCluster.getZkClusterKey(), newRegCenterConfList.size());
+
 		zkCluster.setRegCenterConfList(newRegCenterConfList);
 	}
 
@@ -488,9 +490,18 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return true;
 	}
 
-	private boolean isNewSaturn(String nameSpace, CuratorFramework curatorFramework) {
+	/**
+	 * 确保namespace的作业版本>1.0.9
+	 * @return true namespace里面的作业均在>1.0.9以后创建; false, 反之亦然
+	 */
+	private boolean isNewerVersionSaturnNamespace(String namespace, CuratorFramework curatorFramework) {
 		try {
-			String executorsPath = "/" + nameSpace + ExecutorNodePath.getExecutorNodePath();
+			// chcek if /$Job exists
+			if (null != curatorFramework.checkExists().forPath("/" + namespace + JobNodePath.get$JobsNodePath())) {
+				return true;
+			}
+
+			String executorsPath = "/" + namespace + ExecutorNodePath.getExecutorNodePath();
 			if (null != curatorFramework.checkExists().forPath(executorsPath)) {
 				List<String> executors = curatorFramework.getChildren().forPath(executorsPath);
 				if (executors != null && !executors.isEmpty()) {
@@ -502,10 +513,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					}
 				}
 			}
-			// chcek if /$Job exists
-			if (null != curatorFramework.checkExists().forPath("/" + nameSpace + JobNodePath.get$JobsNodePath())) {
-				return true;
-			}
+
 			return false;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
