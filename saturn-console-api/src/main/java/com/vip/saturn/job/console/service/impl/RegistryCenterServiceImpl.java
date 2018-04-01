@@ -416,12 +416,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				if (SaturnSelfNodePath.ROOT_NAME.equals(namespace)) {
 					continue;
 				}
+
+				boolean isNamespaceNotInclude = false;
+				if (isNamespaceNotIncludeInRegCenterConfList(namespace, regCenterConfList)) {
+					// 对于新添加的域，需要初始化一些znode
+					initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
+					isNamespaceNotInclude = true;
+				}
+
 				// filter old version's(<1.0.9) jobs.
 				try {
-					if (isNewSaturn(namespace, curatorFramework)) {
-						// 对于新添加的域，需要初始化一些znode
-						initNamespaceZkNodeIfNecessary(namespace, curatorFramework);
-
+					if (isNamespaceNotInclude || isNewSaturn(namespace, curatorFramework)) {
 						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(mapping.getName(), namespace, zkCluster.getZkAddr());
 						conf.setZkClusterKey(zkCluster.getZkClusterKey());
 						conf.setVersion(getVersion(namespace, curatorFramework));
@@ -467,6 +472,20 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 
 		zkCluster.setRegCenterConfList(newRegCenterConfList);
+	}
+
+	private boolean isNamespaceNotIncludeInRegCenterConfList(String namespace, List<RegistryCenterConfiguration> regCenterConfList) {
+		if (regCenterConfList == null || regCenterConfList.isEmpty()) {
+			return true;
+		}
+
+		for (RegistryCenterConfiguration conf : regCenterConfList) {
+			if (namespace.equals(conf.getNamespace())) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private boolean isNewSaturn(String nameSpace, CuratorFramework curatorFramework) {
