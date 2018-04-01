@@ -471,7 +471,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 
-		log.info("Zkcluster [{}] maintains {} namespaces.", zkCluster.getZkClusterKey(), newRegCenterConfList.size());
+		int oldSize = regCenterConfList != null ? regCenterConfList.size() : 0;
+		if (oldSize != newRegCenterConfList.size()) {
+			log.info("Zkcluster [{}] namespace size change from {} to {}", zkCluster.getZkClusterKey(), oldSize, newRegCenterConfList.size());
+		}
 
 		zkCluster.setRegCenterConfList(newRegCenterConfList);
 	}
