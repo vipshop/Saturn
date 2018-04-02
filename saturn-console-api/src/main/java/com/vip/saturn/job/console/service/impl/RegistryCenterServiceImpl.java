@@ -172,7 +172,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					}
 				}
 			}
-		}, 60L, 300L, TimeUnit.SECONDS);
+		}, 2L, 5L, TimeUnit.MINUTES);
 	}
 
 	private void startLocalRefreshIfNecessaryTimer() {
@@ -181,26 +181,20 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			private String lastUuid = null;
 			@Override
 			public void run() {
-				if (isOnRefreshingFlag.compareAndSet(false, true)) {
-					try {
-						String uuid = systemConfigService.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
-						if (StringUtils.isBlank(uuid)) {
-							notifyRefreshRegCenter();
-						} else if (!uuid.equals(lastUuid)) {
-							if (isOnRefreshingFlag.compareAndSet(false, true)) {
-								try {
-									lastUuid = uuid;
-									localRefresh();
-								} catch (Exception e) {
-									log.error(e.getMessage(), e);
-								} finally {
-									isOnRefreshingFlag.set(false);
-								}
-							}
+				try {
+					String uuid = systemConfigService.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
+					if (StringUtils.isBlank(uuid)) {
+						notifyRefreshRegCenter();
+					} else if (!uuid.equals(lastUuid)) {
+						try {
+							lastUuid = uuid;
+							localRefresh();
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
 						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}, 1L, 1L, TimeUnit.SECONDS);
