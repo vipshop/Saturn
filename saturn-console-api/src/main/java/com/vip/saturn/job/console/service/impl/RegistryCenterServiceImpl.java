@@ -59,9 +59,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
@@ -120,17 +119,16 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private Set<String> restrictComputeZkClusterKeys = Sets.newHashSet();
 
-	private Timer localRefreshTimer = null;
+	private ScheduledThreadPoolExecutor localRefreshTimer;
 
-	private Timer localRefreshIfNecessaryTimer = null;
+	private ScheduledThreadPoolExecutor localRefreshIfNecessaryTimer;
 
-	private ExecutorService localRefreshThreadPool = null;
+	private AtomicBoolean isOnRefreshingFlag = new AtomicBoolean(false);
 
 	@PostConstruct
 	public void init() {
 		getConsoleClusterId();
 		localRefresh();
-		initLocalRefreshThreadPool();
 		startLocalRefreshTimer();
 		startLocalRefreshIfNecessaryTimer();
 	}
@@ -152,81 +150,67 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			closeZkCluster(iterator.next().getValue());
 		}
 		if (localRefreshTimer != null) {
-			localRefreshTimer.cancel();
+			localRefreshTimer.shutdownNow();
 		}
 		if (localRefreshIfNecessaryTimer != null) {
-			localRefreshIfNecessaryTimer.cancel();
+			localRefreshIfNecessaryTimer.shutdownNow();
 		}
-		if (localRefreshThreadPool != null) {
-			localRefreshThreadPool.shutdownNow();
-		}
-	}
-
-	private void initLocalRefreshThreadPool() {
-		localRefreshThreadPool = Executors
-				.newSingleThreadExecutor(new ConsoleThreadFactory("refresh-RegCenter-thread", false));
 	}
 
 	private void startLocalRefreshTimer() {
-		localRefreshTimer = new Timer("refresh-RegCenter-timer", true);
-		// 每隔5分钟刷新一次
-		localRefreshTimer.scheduleAtFixedRate(new TimerTask() {
+		localRefreshTimer = new ScheduledThreadPoolExecutor(1, new SaturnThreadFactory("refresh-RegCenter-timer"));
+		localRefreshTimer.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					localRefreshThreadPool.submit(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								localRefresh();
-							} catch (Exception e) {
-								log.error(e.getMessage(), e);
-							}
-						}
-					});
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+				if (isOnRefreshingFlag.compareAndSet(false, true)) {
+					try {
+						localRefresh();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					} finally {
+						isOnRefreshingFlag.set(false);
+					}
 				}
 			}
-		}, 1000L * 60 * 5, 1000L * 60 * 5);
+		}, 60L, 300L, TimeUnit.SECONDS);
 	}
 
 	private void startLocalRefreshIfNecessaryTimer() {
-		localRefreshIfNecessaryTimer = new Timer("refresh-RegCenter-if-necessary-timer", true);
-		localRefreshIfNecessaryTimer.schedule(new TimerTask() {
-
+		localRefreshIfNecessaryTimer = new ScheduledThreadPoolExecutor(1, new SaturnThreadFactory("refresh-RegCenter-if-necessary-timer"));
+		localRefreshIfNecessaryTimer.scheduleWithFixedDelay(new Runnable() {
 			private String lastUuid = null;
-
 			@Override
 			public void run() {
-				try {
-					String uuid = systemConfigService
-							.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
-					if (StringUtils.isBlank(uuid)) {
-						notifyRefreshRegCenter();
-					} else if (!uuid.equals(lastUuid)) {
-						lastUuid = uuid;
-						localRefreshThreadPool.submit(new Runnable() {
-							@Override
-							public void run() {
+				if (isOnRefreshingFlag.compareAndSet(false, true)) {
+					try {
+						String uuid = systemConfigService.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
+						if (StringUtils.isBlank(uuid)) {
+							notifyRefreshRegCenter();
+						} else if (!uuid.equals(lastUuid)) {
+							if (isOnRefreshingFlag.compareAndSet(false, true)) {
 								try {
+									lastUuid = uuid;
 									localRefresh();
 								} catch (Exception e) {
 									log.error(e.getMessage(), e);
+								} finally {
+									isOnRefreshingFlag.set(false);
 								}
 							}
-						});
+						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
 					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
 				}
 			}
-		}, 1000, 1000);
+		}, 1L, 1L, TimeUnit.SECONDS);
 	}
+
 
 	private synchronized void localRefresh() {
 		try {
 			log.info("Start refresh RegCenter");
+			long startTime = System.currentTimeMillis();
 			refreshRestrictComputeZkClusters();
 			if (restrictComputeZkClusterKeys.isEmpty()) {
 				log.warn("根据Console的集群ID:" + consoleClusterId + ",找不到配置可以参与Sharding和Dashboard计算的zk集群");
@@ -235,7 +219,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			refreshRegistryCenter();
 			refreshDashboardLeaderTreeCache();
 			refreshNamespaceShardingListenerManagerMap();
-			long startTime = System.currentTimeMillis();
 			log.info("End refresh RegCenter, cost {}ms", System.currentTimeMillis() - startTime);
 		} catch (Exception e) {
 			log.error("refresh RegCenter error", e);
