@@ -414,7 +414,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setZkClusterKey(zkCluster.getZkClusterKey());
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
-						if (namespaceInfo == null) {
+						if (namespaceInfo != null) {
 							postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
 						}
 
