@@ -404,14 +404,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 				try {
 					if (isNamespaceNotIncludeInOriginRegCenerConfList || isNewerVersionSaturnNamespace(namespace, curatorFramework)) {
+						NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
+						if (namespaceInfo == null) {
+							log.warn("No info about namespace {}, just skip it.", namespace);
+							continue;
+						}
+
 						RegistryCenterConfiguration conf = new RegistryCenterConfiguration(mapping.getName(), namespace, zkCluster.getZkAddr());
 						conf.setZkClusterKey(zkCluster.getZkClusterKey());
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
-						NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
-						if (namespaceInfo != null) {
-							postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
-						}
+						postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
 
 						newRegCenterConfList.add(conf);
 
