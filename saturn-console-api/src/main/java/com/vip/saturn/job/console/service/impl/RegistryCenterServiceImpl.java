@@ -60,7 +60,6 @@ import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
@@ -119,16 +118,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private Set<String> restrictComputeZkClusterKeys = Sets.newHashSet();
 
-	private ScheduledThreadPoolExecutor localRefreshTimer;
+	private Timer localRefreshTimer = null;
 
-	private ScheduledThreadPoolExecutor localRefreshIfNecessaryTimer;
+	private Timer localRefreshIfNecessaryTimer = null;
 
-	private AtomicBoolean isOnRefreshingFlag = new AtomicBoolean(false);
+	private ExecutorService localRefreshThreadPool = null;
 
 	@PostConstruct
 	public void init() {
 		getConsoleClusterId();
 		localRefresh();
+		initLocalRefreshThreadPool();
 		startLocalRefreshTimer();
 		startLocalRefreshIfNecessaryTimer();
 	}
@@ -150,56 +150,77 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			closeZkCluster(iterator.next().getValue());
 		}
 		if (localRefreshTimer != null) {
-			localRefreshTimer.shutdownNow();
+			localRefreshTimer.cancel();
 		}
 		if (localRefreshIfNecessaryTimer != null) {
-			localRefreshIfNecessaryTimer.shutdownNow();
+			localRefreshIfNecessaryTimer.cancel();
 		}
+		if (localRefreshThreadPool != null) {
+			localRefreshThreadPool.shutdownNow();
+		}
+	}
+
+	private void initLocalRefreshThreadPool() {
+		localRefreshThreadPool = Executors
+				.newSingleThreadExecutor(new ConsoleThreadFactory("refresh-RegCenter-thread", false));
 	}
 
 	private void startLocalRefreshTimer() {
-		localRefreshTimer = new ScheduledThreadPoolExecutor(1, new SaturnThreadFactory("refresh-RegCenter-timer"));
-		localRefreshTimer.scheduleWithFixedDelay(new Runnable() {
-			@Override
-			public void run() {
-				if (isOnRefreshingFlag.compareAndSet(false, true)) {
-					try {
-						localRefresh();
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					} finally {
-						isOnRefreshingFlag.set(false);
-					}
-				}
-			}
-		}, 2L, 5L, TimeUnit.MINUTES);
-	}
-
-	private void startLocalRefreshIfNecessaryTimer() {
-		localRefreshIfNecessaryTimer = new ScheduledThreadPoolExecutor(1, new SaturnThreadFactory("refresh-RegCenter-if-necessary-timer"));
-		localRefreshIfNecessaryTimer.scheduleWithFixedDelay(new Runnable() {
-			private String lastUuid = null;
+		localRefreshTimer = new Timer("refresh-RegCenter-timer", true);
+		// 每隔5分钟刷新一次
+		localRefreshTimer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					String uuid = systemConfigService.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
+					localRefreshThreadPool.submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								localRefresh();
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					});
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}, 1000L * 60 * 5, 1000L * 60 * 5);
+	}
+
+	private void startLocalRefreshIfNecessaryTimer() {
+		localRefreshIfNecessaryTimer = new Timer("refresh-RegCenter-if-necessary-timer", true);
+		localRefreshIfNecessaryTimer.schedule(new TimerTask() {
+
+			private String lastUuid = null;
+
+			@Override
+			public void run() {
+				try {
+					String uuid = systemConfigService
+							.getValueDirectly(SystemConfigProperties.REFRESH_REGISTRY_CENTER_UUID);
 					if (StringUtils.isBlank(uuid)) {
 						notifyRefreshRegCenter();
 					} else if (!uuid.equals(lastUuid)) {
-						try {
-							lastUuid = uuid;
-							localRefresh();
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						}
+						lastUuid = uuid;
+						localRefreshThreadPool.submit(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									localRefresh();
+								} catch (Exception e) {
+									log.error(e.getMessage(), e);
+								}
+							}
+						});
 					}
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
 			}
-		}, 1L, 1L, TimeUnit.SECONDS);
+		}, 1000, 1000);
 	}
-
 
 	private synchronized void localRefresh() {
 		try {
