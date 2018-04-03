@@ -405,7 +405,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				try {
 					if (isNamespaceNotIncludeInOriginRegCenerConfList || isNewerVersionSaturnNamespace(namespace, curatorFramework)) {
 						NamespaceInfo namespaceInfo = getNamespaceInfo(namespace);
-						if (namespaceInfo == null) {
+						if (namespaceInfo == null && !isNamespaceInfoNotFoundCanBeCalculate()) {
 							log.warn("No info about namespace {}, just skip it.", namespace);
 							continue;
 						}
@@ -414,7 +414,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 						conf.setZkClusterKey(zkCluster.getZkClusterKey());
 						conf.setVersion(getVersion(namespace, curatorFramework));
 						conf.setZkAlias(zkCluster.getZkAlias());
-						postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
+						if (namespaceInfo == null) {
+							postConstructRegistryCenterConfiguration(conf, namespaceInfo.getContent());
+						}
 
 						newRegCenterConfList.add(conf);
 
@@ -457,6 +459,10 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 
 		zkCluster.setRegCenterConfList(newRegCenterConfList);
+	}
+
+	protected boolean isNamespaceInfoNotFoundCanBeCalculate() {
+		return true;
 	}
 
 	private boolean isNamespaceNotIncludeInRegCenterConfList(String namespace, List<RegistryCenterConfiguration> regCenterConfList) {
