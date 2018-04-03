@@ -3,7 +3,7 @@ package com.vip.saturn.job.sharding.service;
 import com.google.common.collect.Lists;
 import com.vip.saturn.job.sharding.exception.ShardingException;
 import com.vip.saturn.job.sharding.listener.JobConfigTriggerShardingListener;
-import com.vip.saturn.job.sharding.listener.JobServersOnlineOfflineListener;
+import com.vip.saturn.job.sharding.listener.JobServersTriggerShardingListener;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
@@ -52,7 +52,22 @@ public class AddJobListenersService {
 
 	public void removeJobPathTreeCache(String jobName) throws ShardingException {
 		removeJobConfigPathTreeCache(jobName);
-		removeJobServersTreeCache(jobName);
+		removeJobServersPathTreeCache(jobName);
+	}
+
+	private void removeJobConfigPathTreeCache(String jobName) throws ShardingException {
+		int depth = 0;
+		List<String> configPath2AddTreeCacheList = Lists
+				.newArrayList(SaturnExecutorsNode.getJobConfigEnableNodePath(jobName), SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName));
+		for (String path2AddTreeCache : configPath2AddTreeCacheList) {
+			shardingTreeCacheService.removeTreeCache(path2AddTreeCache, depth);
+		}
+	}
+
+	private void removeJobServersPathTreeCache(String jobName) throws ShardingException {
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
+		int depth = 2;
+		shardingTreeCacheService.removeTreeCache(path, depth);
 	}
 
 	/**
@@ -89,18 +104,8 @@ public class AddJobListenersService {
 		return true;
 	}
 
-	private void removeJobConfigPathTreeCache(String jobName) throws ShardingException {
-		int depth = 0;
-		List<String> configPath2AddTreeCacheList = Lists
-				.newArrayList(SaturnExecutorsNode.getJobConfigEnableNodePath(jobName),
-						SaturnExecutorsNode.getJobConfigForceShardNodePath(jobName));
-		for (String path2AddTreeCache : configPath2AddTreeCacheList) {
-			shardingTreeCacheService.removeTreeCache(path2AddTreeCache, depth);
-		}
-	}
-
 	private void addJobServersPathListener(String jobName) throws Exception {
-		String path = SaturnExecutorsNode.getJobServersNodePath(jobName);
+		String path = SaturnExecutorsNode.JOBSNODE_PATH + "/" + jobName + "/servers";
 		if (curatorFramework.checkExists().forPath(path) == null) {
 			try {
 				curatorFramework.create().creatingParentsIfNeeded().forPath(path);
@@ -108,16 +113,9 @@ public class AddJobListenersService {
 				log.info("node {} already existed, so skip creation", path);
 			}
 		}
-		int depth = 1;
+		int depth = 2;
 		shardingTreeCacheService.addTreeCacheIfAbsent(path, depth);
-		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth,
-				new JobServersOnlineOfflineListener(jobName, shardingTreeCacheService, namespaceShardingService));
-	}
-
-	private void removeJobServersTreeCache(String jobName) throws ShardingException {
-		String path = SaturnExecutorsNode.getJobServersNodePath(jobName);
-		int depth = 1;
-		shardingTreeCacheService.removeTreeCache(path, depth);
+		shardingTreeCacheService.addTreeCacheListenerIfAbsent(path, depth, new JobServersTriggerShardingListener(jobName, namespaceShardingService));
 	}
 
 }
