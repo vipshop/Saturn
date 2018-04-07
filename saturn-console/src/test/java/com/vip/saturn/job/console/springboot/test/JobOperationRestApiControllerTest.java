@@ -173,14 +173,14 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 	@Test
 	public void testCreateFailAsJobAlreadyExisted() throws Exception {
 		JobEntity jobEntity = constructJobEntity("job2");
-		String errMsg = INVALID_PARAMETER_PREFIX + String.format("该作业(job2)已经存在");
+		String errMsg = INVALID_PARAMETER_PREFIX + "该作业(job2)已经存在";
 		willThrow(new SaturnJobConsoleException(errMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
 
 		MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
 				.andExpect(status().isBadRequest()).andReturn();
 
 		String message = fetchErrorMessage(result);
-		assertEquals("error message not equal", errMsg, message);
+		assertEquals("error message not equal", "该作业(job2)已经存在", message);
 	}
 
 	@Test

@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.controller.rest;
 
-import com.vip.saturn.job.console.controller.gui.AbstractGUIController;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -27,7 +26,7 @@ public class RestApiExceptionHandlerController {
 
 	private static final Logger log = LoggerFactory.getLogger(RestApiExceptionHandlerController.class);
 
-	private final static String NOT_EXISTED_PREFIX = "does not exists";
+	private static final String NOT_EXISTED_PREFIX = "does not exists";
 
 	@ExceptionHandler
 	public ResponseEntity<Object> handleSaturnJobConsoleException(SaturnJobConsoleException e) {
