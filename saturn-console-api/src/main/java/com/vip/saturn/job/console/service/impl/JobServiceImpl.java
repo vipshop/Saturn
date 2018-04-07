@@ -43,6 +43,8 @@ import java.lang.Boolean;
 import java.text.ParseException;
 import java.util.*;
 
+import static com.vip.saturn.job.console.utils.SaturnConstants.INVALID_PARAMETER_PREFIX;
+
 /**
  * @author hebelala
  */
@@ -82,6 +84,7 @@ public class JobServiceImpl implements JobService {
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 	private static final String ERR_MSG_PENDING_STATUS = "job:[{}] item:[{}] on executor:[{}] execution status is PENDING as {}";
+
 	@Resource
 	private RegistryCenterService registryCenterService;
 
@@ -526,30 +529,30 @@ public class JobServiceImpl implements JobService {
 	private void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 作业名必填
 		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
-			throw new SaturnJobConsoleException("作业名必填");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业名必填");
 		}
 		// 作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_
 		if (!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
-			throw new SaturnJobConsoleException("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
 		}
 		// 依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,
 		if (jobConfig.getDependencies() != null && !jobConfig.getDependencies().matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException("依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
 		}
 		// 作业类型必填
 		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
-			throw new SaturnJobConsoleException("作业类型必填");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业类型必填");
 		}
 		// 验证作业类型
 		if (JobType.getJobType(jobConfig.getJobType()).equals(JobType.UNKOWN_JOB)) {
-			throw new SaturnJobConsoleException("作业类型未知");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业类型未知");
 		}
 		// 如果是JAVA作业
 		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
 				.equals(JobType.MSG_JOB.name())) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim()
 				.isEmpty())) {
 			// 作业实现类必填
-			throw new SaturnJobConsoleException("对于JAVA或消息作业，作业实现类必填");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于JAVA或消息作业，作业实现类必填");
 		}
 		validateCronFieldOfJobConfig(jobConfig);
 
@@ -557,7 +560,7 @@ public class JobServiceImpl implements JobService {
 
 		// 不能添加系统作业
 		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
-			throw new SaturnJobConsoleException("作业模式有误，不能添加系统作业");
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业模式有误，不能添加系统作业");
 		}
 	}
 
@@ -567,13 +570,13 @@ public class JobServiceImpl implements JobService {
 				.equals(JobType.SHELL_JOB.name())) {
 			// cron表达式必填
 			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
-				throw new SaturnJobConsoleException("对于JAVA/SHELL作业，cron表达式必填");
+				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于JAVA/SHELL作业，cron表达式必填");
 			}
 			// cron表达式语法验证
 			try {
 				CronExpression.validateExpression(jobConfig.getCron());
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException("cron表达式语法有误" + e);
+				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "cron表达式语法有误" + e);
 			}
 		} else {
 			jobConfig.setCron(""); // 其他类型的不需要持久化保存cron表达式
@@ -583,7 +586,7 @@ public class JobServiceImpl implements JobService {
 	private void validateShardingItemFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
 			if (jobConfig.getShardingItemParameters() == null) {
-				throw new SaturnJobConsoleException("对于本地模式作业，分片参数必填。");
+				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于本地模式作业，分片参数必填。");
 			} else {
 				String[] split = jobConfig.getShardingItemParameters().split(",");
 				boolean includeXing = false;
@@ -595,18 +598,18 @@ public class JobServiceImpl implements JobService {
 					}
 				}
 				if (!includeXing) {
-					throw new SaturnJobConsoleException("对于本地模式作业，分片参数必须包含如*=xx。");
+					throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于本地模式作业，分片参数必须包含如*=xx。");
 				}
 			}
 		} else {
 			// 分片参数不能小于分片总数
 			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
-				throw new SaturnJobConsoleException("分片数不能为空，并且不能小于1");
+				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "分片数不能为空，并且不能小于1");
 			}
 			if ((jobConfig.getShardingTotalCount() > 0) && (jobConfig.getShardingItemParameters() == null || jobConfig
 					.getShardingItemParameters().trim().isEmpty()
 					|| jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount())) {
-				throw new SaturnJobConsoleException("分片参数不能小于分片总数");
+				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "分片参数不能小于分片总数");
 			}
 		}
 	}
@@ -630,11 +633,11 @@ public class JobServiceImpl implements JobService {
 		String jobName = jobConfig.getJobName();
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)已经存在", jobName));
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + String.format("该作业(%s)已经存在", jobName));
 		}
 		int maxJobNum = getMaxJobNum();
 		if (jobIncExceeds(namespace, maxJobNum, 1)) {
-			throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
+			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
 		} else {
 			if (jobNameCopied == null) {
 				persistJob(namespace, jobConfig, createdBy);
@@ -1615,7 +1618,7 @@ public class JobServiceImpl implements JobService {
 				cron0 = cron0.trim();
 				CronExpression.validateExpression(cron0);
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException("The cron expression is valid: " + cron);
+				throw new SaturnJobConsoleException("The cron expression is invalid: " + cron);
 			}
 		} else {
 			cron0 = "";
@@ -1655,7 +1658,7 @@ public class JobServiceImpl implements JobService {
 				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), newCron);
 			}
 		} else {
-			throw new SaturnJobConsoleException("The job is not found: " + jobName);
+			throw new SaturnJobConsoleException("The job does not exists: " + jobName);
 		}
 	}
 

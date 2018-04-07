@@ -36,4 +36,6 @@ public class SaturnConstants {
 
 	public static final String NO_GROUPS_LABEL = "未分组";
 
+	public static final String INVALID_PARAMETER_PREFIX = "不正确的请求或参数:";
+
 }

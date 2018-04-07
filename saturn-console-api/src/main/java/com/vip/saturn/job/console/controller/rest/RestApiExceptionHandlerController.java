@@ -1,9 +1,13 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.controller.gui.AbstractGUIController;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +25,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 public class RestApiExceptionHandlerController {
 
+	private static final Logger log = LoggerFactory.getLogger(RestApiExceptionHandlerController.class);
+
 	private final static String NOT_EXISTED_PREFIX = "does not exists";
 
 	@ExceptionHandler
@@ -31,9 +37,15 @@ public class RestApiExceptionHandlerController {
 		}
 
 		if (message.contains(NOT_EXISTED_PREFIX)) {
+			log.warn("Resource not found while calling REST API:" + message);
 			return constructErrorResponse(message, HttpStatus.NOT_FOUND);
+		} else if (message.startsWith(SaturnConstants.INVALID_PARAMETER_PREFIX)) {
+			String tmpMsg = StringUtils.removeStart(message, SaturnConstants.INVALID_PARAMETER_PREFIX);
+			log.warn("Bad request while calling REST API:" + tmpMsg);
+			return constructErrorResponse(tmpMsg, HttpStatus.BAD_REQUEST);
 		}
 
+		log.error("Internal server error happens while calling REST API:" + message);
 		return constructErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
@@ -41,14 +53,30 @@ public class RestApiExceptionHandlerController {
 	public ResponseEntity<Object> handleSaturnJobConsoleHttpException(SaturnJobConsoleHttpException e) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 
-		SaturnJobConsoleHttpException saturnJobConsoleHttpException = (SaturnJobConsoleHttpException) e;
-		int statusCode = saturnJobConsoleHttpException.getStatusCode();
-
+		int statusCode = e.getStatusCode();
 		if (statusCode == HttpStatus.CREATED.value()) {
 			return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
 		}
 
-		return constructErrorResponse(e.getMessage(), HttpStatus.valueOf(statusCode));
+		HttpStatus httpStatus;
+		try {
+			httpStatus = HttpStatus.valueOf(statusCode);
+		} catch (IllegalArgumentException e1) {
+			httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+		}
+
+		String message = e.getMessage();
+		if (StringUtils.isBlank(message)) {
+			message = e.toString();
+		}
+
+		if (httpStatus.is5xxServerError()) {
+			log.error("Internal server error happens while calling REST API:" + message);
+		} else {
+			log.warn("Exception happens while calling REST API:" + message);
+		}
+
+		return constructErrorResponse(message, httpStatus);
 	}
 
 	@ExceptionHandler
