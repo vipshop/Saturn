@@ -29,7 +29,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.ZkDBDiffService;
 
 @RequestMapping("/rest/v1")
-public class ZkDbDiffRestApiController extends AbstractController {
+public class ZkDbDiffRestApiController extends AbstractRestController {
 
 	@Resource
 	private ZkDBDiffService zkDBDiffService;

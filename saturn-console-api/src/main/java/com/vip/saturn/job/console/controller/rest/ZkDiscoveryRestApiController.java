@@ -25,7 +25,7 @@ import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
  * @author hebelala
  */
 @RequestMapping("/rest/v1")
-public class ZkDiscoveryRestApiController extends AbstractController {
+public class ZkDiscoveryRestApiController extends AbstractRestController {
 
 	@Resource
 	private ZkClusterInfoService zkClusterInfoService;
@@ -35,8 +35,7 @@ public class ZkDiscoveryRestApiController extends AbstractController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/discoverZk", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> discoverZk(String namespace, HttpServletRequest request)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> discoverZk(String namespace, HttpServletRequest request) throws SaturnJobConsoleException {
 		HttpHeaders headers = new HttpHeaders();
 		try {
 			checkMissingParameter("namespace", namespace);

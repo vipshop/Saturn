@@ -11,6 +11,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
+
 /**
  * @author hebelala
  */
@@ -28,7 +30,7 @@ public class ReuseUtils {
 			@Override
 			public T call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 				if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-					throw new SaturnJobConsoleException(String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
+					throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
 				}
 				return callBack.call(curatorFrameworkOp);
 			}
@@ -41,7 +43,7 @@ public class ReuseUtils {
 			RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 					.findConfigByNamespace(namespace);
 			if (registryCenterConfiguration == null) {
-				throw new SaturnJobConsoleException(String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
+				throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
 			}
 			RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
 			if (registryCenterClient != null && registryCenterClient.isConnected()) {
@@ -70,7 +72,7 @@ public class ReuseUtils {
 			@Override
 			public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
 				if (!curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
-					throw new SaturnJobConsoleException(String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
+					throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format(JOB_NOT_EXIST_TEMPLATE, jobName));
 				}
 				callBack.call(curatorFrameworkOp);
 			}
@@ -83,7 +85,7 @@ public class ReuseUtils {
 			RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 					.findConfigByNamespace(namespace);
 			if (registryCenterConfiguration == null) {
-				throw new SaturnJobConsoleException(String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
+				throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format(NAMESPACE_NOT_EXIST_TEMPLATE, namespace));
 			}
 			RegistryCenterClient registryCenterClient = registryCenterService.connectByNamespace(namespace);
 			if (registryCenterClient != null && registryCenterClient.isConnected()) {

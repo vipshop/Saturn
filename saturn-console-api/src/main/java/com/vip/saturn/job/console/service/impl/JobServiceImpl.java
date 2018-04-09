@@ -43,7 +43,8 @@ import java.lang.Boolean;
 import java.text.ParseException;
 import java.util.*;
 
-import static com.vip.saturn.job.console.utils.SaturnConstants.INVALID_PARAMETER_PREFIX;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
 
 /**
  * @author hebelala
@@ -137,7 +138,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<String> getGroups(String namespace) throws SaturnJobConsoleException {
+	public List<String> getGroups(String namespace) {
 		List<String> groups = new ArrayList<>();
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 		if (unSystemJobs != null) {
@@ -158,7 +159,7 @@ public class JobServiceImpl implements JobService {
 	public List<DependencyJob> getDependingJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {
-			throw new SaturnJobConsoleException("不能获取该作业（" + jobName + "）依赖的所有作业，因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能获取该作业（" + jobName + "）依赖的所有作业，因为该作业不存在");
 		}
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
@@ -194,7 +195,7 @@ public class JobServiceImpl implements JobService {
 	public List<DependencyJob> getDependedJobs(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {
-			throw new SaturnJobConsoleException("不能获取依赖该作业（" + jobName + "）的所有作业，因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能获取依赖该作业（" + jobName + "）的所有作业，因为该作业不存在");
 		}
 		List<DependencyJob> dependencyJobs = new ArrayList<>();
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
@@ -227,16 +228,16 @@ public class JobServiceImpl implements JobService {
 	public void enableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能启用该作业（" + jobName + "），因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能启用该作业（" + jobName + "），因为该作业不存在");
 		}
 		if (jobConfig.getEnabled()) {
-			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于启用状态");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "该作业（" + jobName + "）已经处于启用状态");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		boolean allShardsFinished = isAllShardsFinished(jobName, curatorFrameworkOp);
 		if (!allShardsFinished) {
-			throw new SaturnJobConsoleException("不能启用该作业（" + jobName + "），因为该作业不处于STOPPED状态");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "不能启用该作业（" + jobName + "），因为该作业不处于STOPPED状态");
 		}
 		jobConfig.setEnabled(true);
 		jobConfig.setLastUpdateTime(new Date());
@@ -254,10 +255,10 @@ public class JobServiceImpl implements JobService {
 	public void disableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能禁用该作业（" + jobName + "），因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能禁用该作业（" + jobName + "），因为该作业不存在");
 		}
 		if (!jobConfig.getEnabled()) {
-			throw new SaturnJobConsoleException("该作业（" + jobName + "）已经处于禁用状态");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "该作业（" + jobName + "）已经处于禁用状态");
 		}
 		jobConfig.setEnabled(Boolean.FALSE);
 		jobConfig.setLastUpdateTime(new Date());
@@ -277,21 +278,21 @@ public class JobServiceImpl implements JobService {
 	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能删除该作业（" + jobName + "），因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能删除该作业（" + jobName + "），因为该作业不存在");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		JobStatus jobStatus = getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
 
 		if (JobStatus.STOPPED != jobStatus) {
-			throw new SaturnJobConsoleException(String.format("不能删除该作业(%s)，因为该作业不处于STOPPED状态", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("不能删除该作业(%s)，因为该作业不处于STOPPED状态", jobName));
 		}
 
 		Stat stat = curatorFrameworkOp.getStat(JobNodePath.getJobNodePath(jobName));
 		if (stat != null) {
 			long createTimeDiff = System.currentTimeMillis() - stat.getCtime();
 			if (createTimeDiff < SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT) {
-				throw new SaturnJobConsoleException(String.format("不能删除该作业(%s)，因为该作业创建时间距离现在不超过%d分钟", jobName,
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("不能删除该作业(%s)，因为该作业创建时间距离现在不超过%d分钟", jobName,
 						SaturnConstants.JOB_CAN_BE_DELETE_TIME_LIMIT / 60000));
 			}
 		}
@@ -350,7 +351,7 @@ public class JobServiceImpl implements JobService {
 			throws SaturnJobConsoleException {
 		JobConfig4DB currentJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (currentJobConfig == null) {
-			throw new SaturnJobConsoleException("不能获取该作业（" + jobName + "）可选择的优先Executor，因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能获取该作业（" + jobName + "）可选择的优先Executor，因为该作业不存在");
 		}
 		List<ExecutorProvided> executorProvidedList = new ArrayList<>();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -503,7 +504,7 @@ public class JobServiceImpl implements JobService {
 		// save to db
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig == null) {
-			throw new SaturnJobConsoleException("设置该作业（" + jobName + "）优先Executor失败，因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "设置该作业（" + jobName + "）优先Executor失败，因为该作业不存在");
 		}
 		JobConfig4DB newJobConfig = new JobConfig4DB();
 		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
@@ -529,30 +530,30 @@ public class JobServiceImpl implements JobService {
 	private void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 作业名必填
 		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业名必填");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业名必填");
 		}
 		// 作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_
 		if (!jobConfig.getJobName().matches("[0-9a-zA-Z_]*")) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_");
 		}
 		// 依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,
 		if (jobConfig.getDependencies() != null && !jobConfig.getDependencies().matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,");
 		}
 		// 作业类型必填
 		if (jobConfig.getJobType() == null || jobConfig.getJobType().trim().isEmpty()) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业类型必填");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业类型必填");
 		}
 		// 验证作业类型
 		if (JobType.getJobType(jobConfig.getJobType()).equals(JobType.UNKOWN_JOB)) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业类型未知");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业类型未知");
 		}
 		// 如果是JAVA作业
 		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
 				.equals(JobType.MSG_JOB.name())) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim()
 				.isEmpty())) {
 			// 作业实现类必填
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于JAVA或消息作业，作业实现类必填");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于JAVA或消息作业，作业实现类必填");
 		}
 		validateCronFieldOfJobConfig(jobConfig);
 
@@ -560,7 +561,7 @@ public class JobServiceImpl implements JobService {
 
 		// 不能添加系统作业
 		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "作业模式有误，不能添加系统作业");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业模式有误，不能添加系统作业");
 		}
 	}
 
@@ -570,13 +571,13 @@ public class JobServiceImpl implements JobService {
 				.equals(JobType.SHELL_JOB.name())) {
 			// cron表达式必填
 			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
-				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于JAVA/SHELL作业，cron表达式必填");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于JAVA/SHELL作业，cron表达式必填");
 			}
 			// cron表达式语法验证
 			try {
 				CronExpression.validateExpression(jobConfig.getCron());
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "cron表达式语法有误" + e);
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "cron表达式语法有误" + e);
 			}
 		} else {
 			jobConfig.setCron(""); // 其他类型的不需要持久化保存cron表达式
@@ -586,7 +587,7 @@ public class JobServiceImpl implements JobService {
 	private void validateShardingItemFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
 			if (jobConfig.getShardingItemParameters() == null) {
-				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于本地模式作业，分片参数必填。");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于本地模式作业，分片参数必填。");
 			} else {
 				String[] split = jobConfig.getShardingItemParameters().split(",");
 				boolean includeXing = false;
@@ -598,18 +599,18 @@ public class JobServiceImpl implements JobService {
 					}
 				}
 				if (!includeXing) {
-					throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "对于本地模式作业，分片参数必须包含如*=xx。");
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于本地模式作业，分片参数必须包含如*=xx。");
 				}
 			}
 		} else {
 			// 分片参数不能小于分片总数
 			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
-				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "分片数不能为空，并且不能小于1");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片数不能为空，并且不能小于1");
 			}
 			if ((jobConfig.getShardingTotalCount() > 0) && (jobConfig.getShardingItemParameters() == null || jobConfig
 					.getShardingItemParameters().trim().isEmpty()
 					|| jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount())) {
-				throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + "分片参数不能小于分片总数");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片参数不能小于分片总数");
 			}
 		}
 	}
@@ -633,11 +634,11 @@ public class JobServiceImpl implements JobService {
 		String jobName = jobConfig.getJobName();
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + String.format("该作业(%s)已经存在", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("该作业(%s)已经存在", jobName));
 		}
 		int maxJobNum = getMaxJobNum();
 		if (jobIncExceeds(namespace, maxJobNum, 1)) {
-			throw new SaturnJobConsoleException(INVALID_PARAMETER_PREFIX + String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("总作业数超过最大限制(%d)，作业名%s创建失败", maxJobNum, jobName));
 		} else {
 			if (jobNameCopied == null) {
 				persistJob(namespace, jobConfig, createdBy);
@@ -789,7 +790,7 @@ public class JobServiceImpl implements JobService {
 				currentJobConfigService.deleteByPrimaryKey(oldJobConfig.getId());
 			} catch (Exception e) {
 				log.error("exception is thrown during delete job config in db", e);
-				throw new SaturnJobConsoleException("创建作业时，数据库存在已经存在该作业的相关配置！并且清理该配置的时候失败", e);
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "创建作业时，数据库存在已经存在该作业的相关配置！并且清理该配置的时候失败", e);
 			}
 		}
 		JobConfig4DB currentJobConfig = new JobConfig4DB();
@@ -899,7 +900,7 @@ public class JobServiceImpl implements JobService {
 			}
 			int maxJobNum = getMaxJobNum();
 			if (jobIncExceeds(namespace, maxJobNum, jobConfigList.size())) {
-				throw new SaturnJobConsoleException(String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum));
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum));
 			}
 			// 再进行添加
 			List<ImportJobResult> results = new ArrayList<>();
@@ -942,10 +943,10 @@ public class JobServiceImpl implements JobService {
 
 		String jobName = getContents(rowCells, 0);
 		if (jobName == null || jobName.trim().isEmpty()) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 1, "作业名必填。"));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 1, "作业名必填。"));
 		}
 		if (!jobName.matches("[0-9a-zA-Z_]*")) {
-			throw new SaturnJobConsoleException(
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 1, "作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
 		}
 		JobConfig jobConfig = new JobConfig();
@@ -953,17 +954,17 @@ public class JobServiceImpl implements JobService {
 
 		String jobType = getContents(rowCells, 1);
 		if (jobType == null || jobType.trim().isEmpty()) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型必填。"));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型必填。"));
 		}
 		if (JobType.getJobType(jobType).equals(JobType.UNKOWN_JOB)) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型未知。"));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型未知。"));
 		}
 		jobConfig.setJobType(jobType);
 
 		String jobClass = getContents(rowCells, 2);
 		if ((jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.MSG_JOB.name())) && (jobClass == null
 				|| jobClass.trim().isEmpty())) {
-			throw new SaturnJobConsoleException(
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA或者消息作业，作业实现类必填。"));
 		}
 		jobConfig.setJobClass(jobClass);
@@ -971,14 +972,14 @@ public class JobServiceImpl implements JobService {
 		String cron = getContents(rowCells, 3);
 		if (jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.SHELL_JOB.name())) {
 			if (cron == null || cron.trim().isEmpty()) {
-				throw new SaturnJobConsoleException(
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 						createExceptionMessage(sheetNumber, rowNumber, 4, "对于JAVA/SHELL作业，cron表达式必填。"));
 			}
 			cron = cron.trim();
 			try {
 				CronExpression.validateExpression(cron);
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException(
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 						createExceptionMessage(sheetNumber, rowNumber, 4, "cron表达式语法有误，" + e));
 			}
 		} else {
@@ -1000,14 +1001,14 @@ public class JobServiceImpl implements JobService {
 				try {
 					shardingTotalCount = Integer.parseInt(tmp);
 				} catch (NumberFormatException e) {
-					throw new SaturnJobConsoleException(
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 7, "分片数有误，" + e));
 				}
 			} else {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数必填"));
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 7, "分片数必填"));
 			}
 			if (shardingTotalCount < 1) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 7, "分片数不能小于1"));
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 7, "分片数不能小于1"));
 			}
 			jobConfig.setShardingTotalCount(shardingTotalCount);
 		}
@@ -1019,7 +1020,7 @@ public class JobServiceImpl implements JobService {
 				timeoutSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 8, "超时（Kill线程/进程）时间有误，" + e));
 		}
 		jobConfig.setTimeoutSeconds(timeoutSeconds);
@@ -1029,7 +1030,7 @@ public class JobServiceImpl implements JobService {
 		String shardingItemParameters = getContents(rowCells, 9);
 		if (jobConfig.getLocalMode()) {
 			if (shardingItemParameters == null) {
-				throw new SaturnJobConsoleException(
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 						createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必填。"));
 			} else {
 				String[] split = shardingItemParameters.split(",");
@@ -1042,13 +1043,13 @@ public class JobServiceImpl implements JobService {
 					}
 				}
 				if (!includeXing) {
-					throw new SaturnJobConsoleException(
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
 				}
 			}
 		} else if ((shardingTotalCount > 0) && (shardingItemParameters == null || shardingItemParameters.trim()
 				.isEmpty() || shardingItemParameters.split(",").length < shardingTotalCount)) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
 		}
 		jobConfig.setShardingItemParameters(shardingItemParameters);
 
@@ -1064,8 +1065,7 @@ public class JobServiceImpl implements JobService {
 				processCountIntervalSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(
-					createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 15, "统计处理数据量的间隔秒数有误，" + e));
 		}
 		jobConfig.setProcessCountIntervalSeconds(processCountIntervalSeconds);
 
@@ -1076,7 +1076,7 @@ public class JobServiceImpl implements JobService {
 				loadLevel = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 16, "负荷有误，" + e));
 		}
 		jobConfig.setLoadLevel(loadLevel);
 
@@ -1104,13 +1104,13 @@ public class JobServiceImpl implements JobService {
 		String jobMode = getContents(rowCells, 22);
 
 		if (jobMode != null && jobMode.startsWith(com.vip.saturn.job.console.domain.JobMode.SYSTEM_PREFIX)) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 23, "作业模式有误，不能添加系统作业"));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 23, "作业模式有误，不能添加系统作业"));
 		}
 		jobConfig.setJobMode(jobMode);
 
 		String dependencies = getContents(rowCells, 23);
 		if (dependencies != null && !dependencies.matches("[0-9a-zA-Z_,]*")) {
-			throw new SaturnJobConsoleException(
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 24, "依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
 		}
 		jobConfig.setDependencies(dependencies);
@@ -1124,7 +1124,7 @@ public class JobServiceImpl implements JobService {
 				timeout4AlarmSeconds = Integer.parseInt(tmp.trim());
 			}
 		} catch (NumberFormatException e) {
-			throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 26, "超时（告警）时间有误，" + e));
 		}
 		jobConfig.setTimeout4AlarmSeconds(timeout4AlarmSeconds);
 
@@ -1134,7 +1134,7 @@ public class JobServiceImpl implements JobService {
 		} else {
 			timeZone = timeZone.trim();
 			if (!SaturnConstants.TIME_ZONE_IDS.contains(timeZone)) {
-				throw new SaturnJobConsoleException(createExceptionMessage(sheetNumber, rowNumber, 27, "时区有误"));
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, createExceptionMessage(sheetNumber, rowNumber, 27, "时区有误"));
 			}
 		}
 		jobConfig.setTimeZone(timeZone);
@@ -1422,7 +1422,7 @@ public class JobServiceImpl implements JobService {
 	public JobConfig getJobConfig(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format("该作业(%s)不存在", jobName));
 		}
 		JobConfig jobConfig = new JobConfig();
 		SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
@@ -1433,7 +1433,7 @@ public class JobServiceImpl implements JobService {
 	public JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig == null) {
-			throw new SaturnJobConsoleException("不能获取该作业（" + jobName + "）的状态，因为该作业不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能获取该作业（" + jobName + "）的状态，因为该作业不存在");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
@@ -1466,7 +1466,7 @@ public class JobServiceImpl implements JobService {
 	public GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format("该作业(%s)不存在", jobName));
 		}
 		GetJobConfigVo getJobConfigVo = new GetJobConfigVo();
 		JobConfig jobConfig = new JobConfig();
@@ -1499,7 +1499,7 @@ public class JobServiceImpl implements JobService {
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)不存在", jobConfig.getJobName()));
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, String.format("该作业(%s)不存在", jobConfig.getJobName()));
 		}
 		jobConfig.setDefaultValues();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -1618,7 +1618,7 @@ public class JobServiceImpl implements JobService {
 				cron0 = cron0.trim();
 				CronExpression.validateExpression(cron0);
 			} catch (ParseException e) {
-				throw new SaturnJobConsoleException("The cron expression is invalid: " + cron);
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "The cron expression is invalid: " + cron);
 			}
 		} else {
 			cron0 = "";
@@ -1658,7 +1658,7 @@ public class JobServiceImpl implements JobService {
 				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), newCron);
 			}
 		} else {
-			throw new SaturnJobConsoleException("The job does not exists: " + jobName);
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "The job does not exists: " + jobName);
 		}
 	}
 
@@ -1768,7 +1768,7 @@ public class JobServiceImpl implements JobService {
 	public void runAtOnce(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobStatus jobStatus = getJobStatus(namespace, jobName);
 		if (!JobStatus.READY.equals(jobStatus)) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
 		}
 		List<JobServer> jobServers = getJobServers(namespace, jobName);
 		if (jobServers != null && !jobServers.isEmpty()) {
@@ -1787,10 +1787,10 @@ public class JobServiceImpl implements JobService {
 				}
 			}
 			if (!hasOnlineExecutor) {
-				throw new SaturnJobConsoleException("没有ONLINE的executor，不能立即执行");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "没有ONLINE的executor，不能立即执行");
 			}
 		} else {
-			throw new SaturnJobConsoleException(String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
 		}
 	}
 
@@ -1798,7 +1798,7 @@ public class JobServiceImpl implements JobService {
 	public void stopAtOnce(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobStatus jobStatus = getJobStatus(namespace, jobName);
 		if (!JobStatus.STOPPING.equals(jobStatus)) {
-			throw new SaturnJobConsoleException(String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
 		}
 		List<JobServer> jobServers = getJobServers(namespace, jobName);
 		if (jobServers != null && !jobServers.isEmpty()) {
@@ -1813,7 +1813,7 @@ public class JobServiceImpl implements JobService {
 				log.info("stopAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName, executorName);
 			}
 		} else {
-			throw new SaturnJobConsoleException(String.format("没有executor接管该作业(%s)，不能立即终止", jobName));
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("没有executor接管该作业(%s)，不能立即终止", jobName));
 		}
 	}
 

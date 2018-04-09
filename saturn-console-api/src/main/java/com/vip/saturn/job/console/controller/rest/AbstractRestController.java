@@ -1,9 +1,9 @@
 package com.vip.saturn.job.console.controller.rest;
 
+import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RestApiErrorResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,20 +13,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_INTERNAL_ERROR;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
+
 /**
- * Handler for RESTful API Exception. <p> Created by jeff.zhu on 26/05/2017.
+ * Handler for RESTful API Exception.
+ * <p> Created by jeff.zhu on 26/05/2017.
  */
-@ControllerAdvice
-public class RestApiExceptionHandlerController {
+public abstract class AbstractRestController extends AbstractController {
 
-	private static final Logger log = LoggerFactory.getLogger(RestApiExceptionHandlerController.class);
-
-	private static final String NOT_EXISTED_PREFIX = "does not exists";
+	private static final Logger log = LoggerFactory.getLogger(AbstractRestController.class);
 
 	@ExceptionHandler
 	public ResponseEntity<Object> handleSaturnJobConsoleException(SaturnJobConsoleException e) {
@@ -35,17 +36,18 @@ public class RestApiExceptionHandlerController {
 			message = e.toString();
 		}
 
-		if (message.contains(NOT_EXISTED_PREFIX)) {
-			log.warn("Resource not found while calling REST API:" + message);
-			return constructErrorResponse(message, HttpStatus.NOT_FOUND);
-		} else if (message.startsWith(SaturnConstants.INVALID_PARAMETER_PREFIX)) {
-			String tmpMsg = StringUtils.removeStart(message, SaturnConstants.INVALID_PARAMETER_PREFIX);
-			log.warn("Bad request while calling REST API:" + tmpMsg);
-			return constructErrorResponse(tmpMsg, HttpStatus.BAD_REQUEST);
+		switch (e.getErrorCode()) {
+			case ERROR_CODE_NOT_EXISTED:
+				log.warn("Resource not found while calling REST API:" + message);
+				return constructErrorResponse(message, HttpStatus.NOT_FOUND);
+			case ERROR_CODE_BAD_REQUEST:
+				log.warn("Bad request while calling REST API:" + message);
+				return constructErrorResponse(message, HttpStatus.BAD_REQUEST);
+			case ERROR_CODE_INTERNAL_ERROR:
+			default:
+				log.error("Internal server error happens while calling REST API:" + message);
+				return constructErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
-		log.error("Internal server error happens while calling REST API:" + message);
-		return constructErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@ExceptionHandler

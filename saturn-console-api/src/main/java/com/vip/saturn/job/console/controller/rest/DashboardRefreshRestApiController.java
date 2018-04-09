@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author timmy.hu
  */
 @RequestMapping("/rest/v1")
-public class DashboardRefreshRestApiController extends AbstractController {
+public class DashboardRefreshRestApiController extends AbstractRestController {
 
 	@Resource
 	private StatisticsRefreshService statisticsRefreshService;

@@ -26,7 +26,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
  * @author kfchu
  */
 @RequestMapping("/rest/v1")
-public class NamespaceManagementRestApiController extends AbstractController {
+public class NamespaceManagementRestApiController extends AbstractRestController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)

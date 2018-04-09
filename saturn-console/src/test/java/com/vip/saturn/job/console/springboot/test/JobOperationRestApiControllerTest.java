@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.springboot.test;
 
-import static com.vip.saturn.job.console.utils.SaturnConstants.INVALID_PARAMETER_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
@@ -13,7 +12,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import com.vip.saturn.job.console.service.ZkTreeService;
@@ -173,8 +171,9 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 	@Test
 	public void testCreateFailAsJobAlreadyExisted() throws Exception {
 		JobEntity jobEntity = constructJobEntity("job2");
-		String errMsg = INVALID_PARAMETER_PREFIX + "该作业(job2)已经存在";
-		willThrow(new SaturnJobConsoleException(errMsg)).given(restApiService).createJob(any(String.class), any(JobConfig.class));
+		String errMsg = "该作业(job2)已经存在";
+		willThrow(new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST, errMsg)).given(restApiService)
+				.createJob(any(String.class), any(JobConfig.class));
 
 		MvcResult result = mvc.perform(post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
 				.andExpect(status().isBadRequest()).andReturn();
