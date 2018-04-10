@@ -127,7 +127,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 				if (tmps != null && tmps.length == 2) {
 					kv.put(tmps[0].trim(), tmps[1].trim());
 				} else {
-					log.error("msg=Param is not valid {}", p);
+					log.warn("msg=Param is not valid {}", p);
 				}
 			}
 		}
