@@ -5,10 +5,7 @@ import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.job.utils.HttpUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -21,7 +18,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class JobOperationRestApiIT extends AbstractSaturnIT {
+public class RestApiIT extends AbstractSaturnIT {
 
 	private static final String CONSOLE_HOST_URL = "http://localhost:9089";
 
@@ -29,6 +26,7 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 
 	@BeforeClass
 	public static void setUp() throws Exception {
+		System.setProperty("ALARM_RAISED_ON_EXECUTOR_RESTART", "true");
 		startSaturnConsoleList(1);
 	}
 
@@ -43,16 +41,15 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 
 	@Test
 	public void testCreateAndQueryJobSuccessfully() throws Exception {
+		// create
 		JobEntity jobEntity = constructJobEntity("job1");
-
 		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
-
 		assertEquals(201, responseEntity.getStatusCode());
-
+		// query
 		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/job1");
 		assertEquals(200, responseEntity.getStatusCode());
 		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
-
+		// assert for details
 		assertEquals("job1", responseJobEntity.getJobName());
 		assertEquals("this is a description of job1", responseJobEntity.getDescription());
 		assertEquals("0 */1 * * * ?", responseJobEntity.getJobConfig().get("cron"));
@@ -126,12 +123,111 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 		assertEquals("不能删除该作业(jobTestDeleteJobSuccessfully)，因为该作业创建时间距离现在不超过2分钟", responseMap.get("message"));
 	}
 
+	@Test
+	public void testEnableAndDisableJobSuccessfully() throws IOException, InterruptedException {
+		// create
+		String jobName = "testEnableJobSuccessfully";
+		JobEntity jobEntity = constructJobEntity(jobName);
+		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		assertEquals(201, responseEntity.getStatusCode());
+		// sleep for 10 seconds
+		Thread.sleep(10100L);
+		// enable
+		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable", jobEntity.toJSON());
+		assertEquals(200, responseEntity.getStatusCode());
+		// query for status
+		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		assertEquals(200, responseEntity.getStatusCode());
+		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
+		assertEquals("READY", responseJobEntity.getRunningStatus());
+		// enable again
+		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable", jobEntity.toJSON());
+		assertEquals(201, responseEntity.getStatusCode());
+		// query for status
+		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		assertEquals(200, responseEntity.getStatusCode());
+		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
+		assertEquals("READY", responseJobEntity.getRunningStatus());
+		// sleep for 3 seconds
+		Thread.sleep(3010L);
+		// disable
+		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable", jobEntity.toJSON());
+		assertEquals(200, responseEntity.getStatusCode());
+		// query for status
+		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		assertEquals(200, responseEntity.getStatusCode());
+		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
+		assertEquals("STOPPED", responseJobEntity.getRunningStatus());
+		// disable again
+		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable", jobEntity.toJSON());
+		assertEquals(201, responseEntity.getStatusCode());
+		// query for status
+		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		assertEquals(200, responseEntity.getStatusCode());
+		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
+		assertEquals("STOPPED", responseJobEntity.getRunningStatus());
+	}
+
+	@Test
+	public void testRaiseExecutorRestartAlarmSuccessfully() throws IOException {
+		Map<String, Object> requestBody = Maps.newHashMap();
+		requestBody.put("executorName", "exec_1");
+		requestBody.put("level", "Critical");
+		requestBody.put("title", "Executor_Restart");
+		requestBody.put("name", "Saturn Event");
+
+		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/alarms/raise", gson.toJson(requestBody));
+		assertEquals(201, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void testUpdateCronSuccessfully() throws IOException, InterruptedException {
+		String jobName = "testUpdateCronSuccessfully";
+		// create
+		JobEntity jobEntity = constructJobEntity(jobName);
+		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		assertEquals(201, responseEntity.getStatusCode());
+		// sleep for a while ...
+		Thread.sleep(3010L);
+		// update cron
+		Map<String, Object> requestBody = Maps.newHashMap();
+		requestBody.put("cron", "0 0/11 * * * ?");
+
+		responseEntity = sendPutReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/cron", gson.toJson(requestBody));
+		System.out.println(responseEntity.getEntity());
+		assertEquals(200, responseEntity.getStatusCode());
+		// query again
+		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		assertEquals(200, responseEntity.getStatusCode());
+		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
+		assertEquals("0 0/11 * * * ?", responseJobEntity.getJobConfig().get("cron"));
+	}
 
 	private HttpResponseEntity sendPostReqest(String url, String jsonBody) throws IOException {
 		CloseableHttpClient httpClient = null;
 		try {
 			httpClient = HttpClientBuilder.create().build();
 			HttpPost request = new HttpPost(url);
+			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
+			request.setConfig(requestConfig);
+			StringEntity params = new StringEntity(jsonBody);
+			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+			request.setEntity(params);
+			// send request
+			CloseableHttpResponse response = httpClient.execute(request);
+
+			return new HttpResponseEntity(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
+
+		} finally {
+			HttpUtils.closeHttpClientQuitetly(httpClient);
+		}
+	}
+
+	private HttpResponseEntity sendPutReqest(String url, String jsonBody) throws IOException {
+		CloseableHttpClient httpClient = null;
+		try {
+			httpClient = HttpClientBuilder.create().build();
+			HttpPut request = new HttpPut(url);
 			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
 			request.setConfig(requestConfig);
 			StringEntity params = new StringEntity(jsonBody);
@@ -211,6 +307,7 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 		public String getEntity() {
 			return entity;
 		}
+
 	}
 
 	public class JobEntity {
@@ -219,6 +316,8 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 		private String jobName;
 
 		private String description;
+
+		private String runningStatus;
 
 		private Map<String, Object> jobConfig = Maps.newHashMap();
 
@@ -264,6 +363,14 @@ public class JobOperationRestApiIT extends AbstractSaturnIT {
 
 		public void setJobConfig(Map<String, Object> jobConfig) {
 			this.jobConfig = jobConfig;
+		}
+
+		public String getRunningStatus() {
+			return runningStatus;
+		}
+
+		public void setRunningStatus(String runningStatus) {
+			this.runningStatus = runningStatus;
 		}
 	}
 
