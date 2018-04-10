@@ -99,10 +99,11 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 	@Test
 	public void testCreateFailAsSaturnJobExceptionThrows() throws Exception {
 		String customErrMsg = "some exception throws";
-		willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class),
+		willThrow(new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_INTERNAL_ERROR, customErrMsg)).given(restApiService)
+				.createJob(any(String.class),
 				any(JobConfig.class));
 
-		JobEntity jobEntity = constructJobEntity("job1");
+		JobEntity jobEntity = constructJobEntity("job12345");
 		MvcResult result = mvc.perform(
 				post("/rest/v1/domain/jobs").contentType(MediaType.APPLICATION_JSON).content(jobEntity.toJSON()))
 				.andExpect(status().isInternalServerError()).andReturn();
@@ -112,7 +113,8 @@ public class JobOperationRestApiControllerTest extends AbstractSaturnConsoleTest
 
 		// Created
 		customErrMsg = "jobname does not exists";
-		willThrow(new SaturnJobConsoleException(customErrMsg)).given(restApiService).createJob(any(String.class),
+		willThrow(new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED, customErrMsg)).given(restApiService)
+				.createJob(any(String.class),
 				any(JobConfig.class));
 
 		result = mvc.perform(
