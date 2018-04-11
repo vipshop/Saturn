@@ -400,7 +400,7 @@ public class SaturnExecutor {
 			// 验证namespace是否存在
 			saturnExecutorExtension.validateNamespaceExisting(serverLists);
 
-			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, 3);
+			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, calculateRetryTimes());
 			regCenter = new ZookeeperRegistryCenter(zkConfig);
 			saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
 			saturnExecutorService.setJobClassLoader(jobClassLoader);
@@ -423,6 +423,17 @@ public class SaturnExecutor {
 			StartCheckUtil.setError(StartCheckItem.ZK);
 			throw e;
 		}
+	}
+
+	private int calculateRetryTimes() {
+		int retryTimes = -1;
+		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES != -1) {
+			retryTimes = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES;
+		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
+			retryTimes = SystemEnvProperties.VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK;
+		}
+
+		return retryTimes > ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES ? retryTimes : ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES;
 	}
 
 	private void registerExecutor() throws Exception {

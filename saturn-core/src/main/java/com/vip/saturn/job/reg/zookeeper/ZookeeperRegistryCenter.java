@@ -145,33 +145,35 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 					});
 		}
 
-		log.info(
-				"msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}",
-				zkConfig.getServerLists(), connectionTimeout, sessionTimeout);
+		log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}, retry_times: {}",
+				zkConfig.getServerLists(), connectionTimeout, sessionTimeout, zkConfig.getMaxRetries());
 		return builder.build();
 	}
 
 	private static int calculateConnectionTimeout() {
 		// default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1
-		int connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS
-				* 1000;
-
-		if (connectionTimeoutInMillSeconds <= MIN_CONNECTION_TIMEOUT) {
-			return MIN_CONNECTION_TIMEOUT;
+		int connectionTimeoutInMillSeconds = 0;
+		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS != -1) {
+			connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS * 1000;
+		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
+			// 60秒为默认不稳定网络下的设置
+			connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
 		}
 
-		return connectionTimeoutInMillSeconds;
+		return connectionTimeoutInMillSeconds > MIN_CONNECTION_TIMEOUT ? connectionTimeoutInMillSeconds : MIN_CONNECTION_TIMEOUT;
 	}
 
 	private static int calculateSessionTimeout() {
 		// default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = -1
-		int sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
-
-		if (sessionTimeoutInMillSeconds <= MIN_SESSION_TIMEOUT) {
-			return MIN_SESSION_TIMEOUT;
+		int sessionTimeoutInMillSeconds = 0;
+		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS != -1) {
+			sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
+		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
+			// 60秒为默认不稳定网络下的设置
+			sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_SESSION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
 		}
 
-		return sessionTimeoutInMillSeconds;
+		return sessionTimeoutInMillSeconds > MIN_SESSION_TIMEOUT ? sessionTimeoutInMillSeconds : MIN_SESSION_TIMEOUT;
 	}
 
 	@Override

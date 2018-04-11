@@ -24,6 +24,8 @@ import com.vip.saturn.job.reg.base.AbstractRegistryCenterConfiguration;
  */
 public class ZookeeperConfiguration extends AbstractRegistryCenterConfiguration {
 
+	public static final int MIN_CLIENT_RETRY_TIMES = 3;
+
 	/**
 	 * 连接Zookeeper服务器的列表. 包括IP地址和端口号. 多个地址用逗号分隔. 如: host1:2181,host2:2181
 	 */

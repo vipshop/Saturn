@@ -70,6 +70,16 @@ public class SystemEnvProperties {
 	public static final String NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = "VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT";
 	public static int VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1;
 
+	/**
+	 * Executor ZK Client retry times
+	 */
+	public static final String NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES = "VIP_SATURN_ZK_CLIENT_RETRY_TIMES";
+	public static int VIP_SATURN_ZK_CLIENT_RETRY_TIMES = -1;
+
+
+	private static final String NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING = "VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING";
+	public static boolean VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING = false;
+
 	// For restart and dump
 	public static boolean VIP_SATURN_ENABLE_EXEC_SCRIPT = Boolean.getBoolean("VIP_SATURN_ENABLE_EXEC_SCRIPT");
 	public static final String NAME_VIP_SATURN_PRG = "VIP_SATURN_PRG";
@@ -84,6 +94,10 @@ public class SystemEnvProperties {
 	// nohup max file size by default is 500 MB
 	public static long VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = 500 * 1024 * 1024L;
 	private static final String NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = "VIP_SATURN_NOHUPOUT_SIZE_LIMIT";
+
+	public static int VIP_SATURN_SESSION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
+	public static int VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
+	public static int VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK = 7;
 
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
@@ -138,8 +152,23 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC,
-				System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
+		String zkClientRetryTimes = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES));
+		if (!Strings.isNullOrEmpty(zkClientRetryTimes)) {
+			try {
+				VIP_SATURN_ZK_CLIENT_RETRY_TIMES = Integer.parseInt(zkClientRetryTimes);
+			} catch (Throwable t) {
+				log.error("msg=" + t.getMessage(), t);
+			}
+		}
+
+		String useUnstableNetworkSettings = System
+				.getProperty(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING, System.getenv(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING));
+		if (!Strings.isNullOrEmpty(useUnstableNetworkSettings)) {
+			VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING = Boolean.parseBoolean(useUnstableNetworkSettings);
+		}
+
+		String checkNohupOutSizeInterval = System
+				.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC, System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
 		if (!Strings.isNullOrEmpty(checkNohupOutSizeInterval)) {
 			try {
 				int interval_in_sec = Integer.parseInt(checkNohupOutSizeInterval);
