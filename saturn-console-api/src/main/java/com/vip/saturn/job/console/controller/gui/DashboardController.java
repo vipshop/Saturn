@@ -16,7 +16,6 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
 
@@ -28,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.Map;
+
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
 
 @RequestMapping("/console/dashboard")
 public class DashboardController extends AbstractGUIController {
@@ -89,10 +90,10 @@ public class DashboardController extends AbstractGUIController {
 		return new SuccessResponseEntity(dashboardService.top10FailureJobByAllZkCluster());
 	}
 
-	private ZkCluster checkAndGetZkCluster(String zkClusterKey) throws SaturnJobConsoleGUIException {
+	private ZkCluster checkAndGetZkCluster(String zkClusterKey) throws SaturnJobConsoleException {
 		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
 		if (zkCluster == null) {
-			throw new SaturnJobConsoleGUIException("zk clsuter " + zkClusterKey + "不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "zk clsuter " + zkClusterKey + "不存在");
 		}
 		return zkCluster;
 	}

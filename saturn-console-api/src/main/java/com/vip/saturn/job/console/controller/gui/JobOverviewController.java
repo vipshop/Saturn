@@ -5,7 +5,6 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.*;
@@ -23,6 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
 
 /**
  * Job overview related operations.
@@ -274,7 +275,7 @@ public class JobOverviewController extends AbstractGUIController {
 		if (!failJobNames.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append("删除成功的作业:").append(successJobNames).append("，").append("删除失败的作业:").append(failJobNames);
-			throw new SaturnJobConsoleGUIException(message.toString());
+			throw new SaturnJobConsoleException(message.toString());
 		}
 		return new SuccessResponseEntity();
 	}
@@ -328,11 +329,11 @@ public class JobOverviewController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.jobImport, namespace);
 		if (file.isEmpty()) {
-			throw new SaturnJobConsoleGUIException("请上传一个有内容的文件");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "请上传一个有内容的文件");
 		}
 		String originalFilename = file.getOriginalFilename();
 		if (originalFilename == null || !originalFilename.endsWith(".xls")) {
-			throw new SaturnJobConsoleGUIException("仅支持.xls文件导入");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "仅支持.xls文件导入");
 		}
 		AuditInfoContext.put("originalFilename", originalFilename);
 		return new SuccessResponseEntity(jobService.importJobs(namespace, file, getCurrentLoginUserName()));

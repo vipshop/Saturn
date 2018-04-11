@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -28,7 +27,7 @@ public class StaticResourceController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		InputStream is = getClass().getResourceAsStream("/download/" + EXPORT_FILE_NAME);
 		if (is == null) {
-			throw new SaturnJobConsoleGUIException("The jobs-template is not existing");
+			throw new SaturnJobConsoleException("The jobs-template is not existing");
 		}
 		SaturnConsoleUtils.exportExcelFile(response, is, EXPORT_FILE_NAME);
 	}

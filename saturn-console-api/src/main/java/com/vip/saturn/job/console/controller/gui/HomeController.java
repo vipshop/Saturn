@@ -4,7 +4,6 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.ArrayList;
@@ -15,6 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
 
 /**
  * Name space related operations.
@@ -43,7 +44,7 @@ public class HomeController extends AbstractGUIController {
 		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 				.findConfigByNamespace(namespace);
 		if (registryCenterConfiguration == null) {
-			throw new SaturnJobConsoleGUIException("该域名（" + namespace + "）不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "该域名（" + namespace + "）不存在");
 		}
 		return new SuccessResponseEntity(registryCenterConfiguration);
 	}

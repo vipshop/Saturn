@@ -8,7 +8,6 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleGUIException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.utils.Permissions;
 
@@ -21,6 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
 
 /**
  * Executor overview related operations.
@@ -118,7 +120,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 			StringBuilder message = new StringBuilder();
 			message.append("操作成功的executor:").append(success2ExtractOrRecoverTrafficExecutors).append("，")
 					.append("操作失败的executor:").append(fail2ExtractOrRecoverTrafficExecutors);
-			throw new SaturnJobConsoleGUIException(message.toString());
+			throw new SaturnJobConsoleException(message.toString());
 		}
 
 		return new SuccessResponseEntity();
@@ -131,7 +133,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 		} else if (TRAFFIC_OPERATION_RECOVER.equals(operation)) {
 			executorService.recoverTraffic(namespace, executorName);
 		} else {
-			throw new SaturnJobConsoleGUIException("operation " + operation + "不支持");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "operation " + operation + "不支持");
 		}
 	}
 
@@ -178,7 +180,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 			StringBuilder message = new StringBuilder();
 			message.append("删除成功的executor:").append(success2RemoveExecutors).append("，").append("删除失败的executor:")
 					.append(fail2RemoveExecutors);
-			throw new SaturnJobConsoleGUIException(message.toString());
+			throw new SaturnJobConsoleException(message.toString());
 		}
 
 		return new SuccessResponseEntity();
@@ -188,10 +190,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 			throws SaturnJobConsoleException {
 		ServerBriefInfo executorInfo = executorService.getExecutor(namespace, executorName);
 		if (executorInfo == null) {
-			throw new SaturnJobConsoleGUIException("Executor不存在");
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "Executor不存在");
 		}
 		if (status != executorInfo.getStatus()) {
-			throw new SaturnJobConsoleGUIException(errMsg);
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, errMsg);
 		}
 	}
 
