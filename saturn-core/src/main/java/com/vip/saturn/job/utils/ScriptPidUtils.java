@@ -450,7 +450,7 @@ public class ScriptPidUtils {
 				while (!Thread.interrupted()) {
 					try {
 						TimeUnit.MILLISECONDS.sleep(500);
-					} catch (Exception ignore) {
+					} catch (InterruptedException ignore) {
 						log.warn(ignore.getMessage());
 					}
 
