@@ -14,6 +14,12 @@ public class SaturnExecutorException extends Exception {
 		this.code = code;
 	}
 
+	public SaturnExecutorException(String message, Throwable cause) {
+		super(message, cause);
+		this.code = 0;
+	}
+
+
 	public int getCode() {
 		return code;
 	}

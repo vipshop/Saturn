@@ -18,14 +18,14 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
-import com.vip.saturn.job.basic.AbstractSaturnService;
-import com.vip.saturn.job.basic.JobExecutionMultipleShardingContext;
-import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.SaturnExecutionContext;
+import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
+import com.vip.saturn.job.reg.exception.RegException;
+import com.vip.saturn.job.utils.RetriableTask;
+import com.vip.saturn.job.utils.RetryCallable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,8 +113,8 @@ public class ExecutionService extends AbstractSaturnService {
 		reportService.initInfoOnBegin(item, nextFireTime);
 	}
 
-	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext,
-										   int item, Date nextFireTimePausePeriodEffected) {
+	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item,
+			Date nextFireTimePausePeriodEffected) throws Exception {
 		registerJobCompletedControlInfoByItem(jobExecutionShardingContext, item);
 		registerJobCompletedReportInfoByItem(jobExecutionShardingContext, item, nextFireTimePausePeriodEffected);
 	}
@@ -160,19 +160,51 @@ public class ExecutionService extends AbstractSaturnService {
 	 * 注册作业完成信息.
 	 *
 	 */
-	public void registerJobCompletedControlInfoByItem(
-			final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
+	public void registerJobCompletedControlInfoByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item)
+			throws Exception {
 
 		boolean isEnabledReport = configService.isEnabledReport();
 		if (!isEnabledReport) {
 			return;
 		}
 
+		updateErrorJobReturnIfPossible(jobExecutionShardingContext, item);
+		// create completed node
+		createCompletedNode(item);
+		// remove running node
+		tryTheBestToRemoveRunningNode(item);
+	}
+
+	private void tryTheBestToRemoveRunningNode(final int item) throws Exception {
+		RetriableTask<Void> retriableTask = new RetriableTask<>(new RetryCallable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
+				return null;
+			}
+		});
+
+		retriableTask.call();
+	}
+
+	private void createCompletedNode(int item) {
+		try {
+			getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
+		} catch (RegException e) {
+			log.warn("update job complete node fail.", e);
+		}
+	}
+
+	private void updateErrorJobReturnIfPossible(JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
 		if (jobExecutionShardingContext instanceof SaturnExecutionContext) {
 			// 为了展现分片处理失败的状态
 			SaturnExecutionContext saturnContext = (SaturnExecutionContext) jobExecutionShardingContext;
-			if (saturnContext.isSaturnJob()) {
-				SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
+			if (!saturnContext.isSaturnJob()) {
+				return;
+			}
+
+			SaturnJobReturn jobRet = saturnContext.getShardingItemResults().get(item);
+			try {
 				if (jobRet != null) {
 					int errorGroup = jobRet.getErrorGroup();
 					if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
@@ -183,14 +215,10 @@ public class ExecutionService extends AbstractSaturnService {
 				} else {
 					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 				}
+			} catch (RegException e) {
+				log.warn("update job return fail.", e);
 			}
 		}
-
-		// create completed node
-		getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
-		// remove running node
-		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
-
 	}
 
 	/**
@@ -263,14 +291,13 @@ public class ExecutionService extends AbstractSaturnService {
 	}
 
 	private List<Integer> getAllItems() {
-		return Lists.transform(getJobNodeStorage().getJobNodeChildrenKeys(ExecutionNode.ROOT),
-				new Function<String, Integer>() {
+		return Lists.transform(getJobNodeStorage().getJobNodeChildrenKeys(ExecutionNode.ROOT), new Function<String, Integer>() {
 
-					@Override
-					public Integer apply(final String input) {
-						return Integer.valueOf(input);
-					}
-				});
+			@Override
+			public Integer apply(final String input) {
+				return Integer.valueOf(input);
+			}
+		});
 	}
 
 	/**
