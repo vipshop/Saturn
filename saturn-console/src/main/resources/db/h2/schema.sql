@@ -224,3 +224,80 @@ CREATE TABLE `temporary_shared_status` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_tss_status_key` (`status_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `user` (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_name` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `password` varchar(255) NOT NULL DEFAULT '' COMMENT '用户密码',
+  `real_name` varchar(255) NOT NULL DEFAULT '' COMMENT '用户真实名字',
+  `employee_id` varchar(255) NOT NULL DEFAULT '' COMMENT '工号',
+  `email` varchar(255) NOT NULL DEFAULT '' COMMENT '邮箱',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '最近一次的更新时间',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_user_name` (`user_name`),
+  KEY `idx_user_is_deleted` (`is_deleted`)
+  )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `role` (
+  `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `role_key` varchar(255) NOT NULL DEFAULT '' COMMENT '角色标识',
+  `role_name` varchar(255) NOT NULL DEFAULT '' COMMENT '角色名',
+  `description` varchar(255) NOT NULL DEFAULT '' COMMENT '角色描述',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00'  COMMENT '最近一次的更新时间',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+PRIMARY KEY (`id`),
+UNIQUE KEY `uniq_role_role_key` (`role_key`),
+KEY `idx_role_is_deleted` (`is_deleted`)
+)ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `permission` (
+  `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `permission_key` varchar(255) NOT NULL DEFAULT '' COMMENT '权限标识',
+  `permission_name` varchar(255) NOT NULL DEFAULT '' COMMENT '权限名',
+  `description` varchar(255) NOT NULL DEFAULT '' COMMENT '权限描述',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00'  COMMENT '最近一次的更新时间',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_permission_permission_key` (`permission_key`),
+  KEY `idx_permission_is_deleted` (`is_deleted`)
+  )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `user_role` (
+  `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_name` varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
+  `role_key` varchar(255) NOT NULL DEFAULT '' COMMENT '角色标识',
+  `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
+  `need_approval` tinyint(4) NOT NULL DEFAULT '1' COMMENT '是否需要审批：0，不需要审批；1，需要审批',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00'  COMMENT '最近一次的更新时间',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_role_key` (`user_name`, `role_key`, `namespace`),
+  KEY `idx_user_role_is_deleted` (`is_deleted`)
+  )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `role_permission` (
+  `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `role_key` varchar(255) NOT NULL DEFAULT '' COMMENT '角色标识',
+  `permission_key` varchar(255) NOT NULL DEFAULT '' COMMENT '权限标识',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00'  COMMENT '最近一次的更新时间',
+  `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_permission_key` (`role_key`, `permission_key`),
+  KEY `idx_user_permission_key` (`is_deleted`)
+ )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

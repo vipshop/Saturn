@@ -46,7 +46,9 @@
 		class="com.vip.saturn.job.console.service.impl.statistics.StatisticsRefreshServiceImpl"/>
 	<bean id="registryCenterService"
 		class="com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl"/>
-	<!-- Service Beans End -->
+    <bean id="authenticationService"
+          class="com.vip.saturn.job.console.service.impl.AuthenticationServiceImpl"/>
+    <!-- Service Beans End -->
 
 	<aop:aspectj-autoproxy/>
 				  
