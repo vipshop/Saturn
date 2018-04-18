@@ -27,7 +27,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="executorName" label="Executor"></el-table-column>
-                <el-table-column label="最近执行时间(s)" width="180px">
+                <el-table-column label="最近执行时间" width="180px">
                     <template slot-scope="scope"> 
                         <div>起:{{scope.row.lastBeginTime || ' ——'}}</div>
                         <div>止:{{scope.row.lastCompleteTime || ' ——'}}</div>
