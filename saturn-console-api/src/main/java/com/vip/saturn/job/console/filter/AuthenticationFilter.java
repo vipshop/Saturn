@@ -12,12 +12,19 @@ import java.io.PrintWriter;
 
 public class AuthenticationFilter implements Filter {
 
+	private boolean isEnabled;
+
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 	}
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		if (!isEnabled) {
+			chain.doFilter(request, response);
+			return;
+		}
+
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
 
@@ -34,5 +41,9 @@ public class AuthenticationFilter implements Filter {
 
 	@Override
 	public void destroy() {
+	}
+
+	public void setEnabled(boolean enabled) {
+		isEnabled = enabled;
 	}
 }

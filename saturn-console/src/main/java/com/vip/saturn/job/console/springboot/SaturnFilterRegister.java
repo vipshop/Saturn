@@ -15,8 +15,8 @@ public class SaturnFilterRegister {
 	@Bean
 	public FilterRegistrationBean registerAuthenticationFilter() {
 		AuthenticationFilter filter = new AuthenticationFilter();
+		filter.setEnabled(authenticationEnabled);
 		FilterRegistrationBean registration = new FilterRegistrationBean(filter);
-		registration.setEnabled(authenticationEnabled);
 		registration.addUrlPatterns("/console/*");
 		registration.setOrder(0);
 		return registration;
