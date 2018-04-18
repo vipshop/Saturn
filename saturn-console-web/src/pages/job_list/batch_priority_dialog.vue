@@ -11,7 +11,7 @@
                     <el-select size="small" v-model="selectedExecutors" filterable multiple placeholder="请选择" style="width: 100%;">
                         <el-option v-for="item in onlineExecutors" :key="item.value" :label="item.value" :value="item.value">
                             <span style="float: left">{{ item.value }}</span>
-                            <span style="float: left" v-if="item.container"> (容器)</span>
+                            <span style="float: left" v-if="item.container"> (容器组)</span>
                         </el-option>
                     </el-select>
                 </el-col>

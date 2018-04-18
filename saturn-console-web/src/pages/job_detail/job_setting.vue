@@ -398,10 +398,10 @@ export default {
           } else {
             switch (rObj.status) {
               case 'DELETED':
-                rObj.executorDes = `${rObj.executorName}(容器已删除)`;
+                rObj.executorDes = `${rObj.executorName}(容器组已删除)`;
                 break;
               default:
-                rObj.executorDes = `${rObj.executorName}(容器)`;
+                rObj.executorDes = `${rObj.executorName}(容器组)`;
                 break;
             }
           }
