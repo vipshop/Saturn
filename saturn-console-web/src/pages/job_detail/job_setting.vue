@@ -321,7 +321,7 @@ export default {
       }
       arr.forEach((ele) => {
         if (ele.includes('=')) {
-          if (ele.split('=')[0] === '' || ele.split('=')[1] === '') {
+          if (ele.split('=')[0] === '') {
             flag = false;
           } else {
             flag = true;
