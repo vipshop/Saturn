@@ -14,8 +14,8 @@
                     <el-submenu index="">
                         <template slot="title"><i class="fa fa-user"></i>{{userInfo.username || 'null'}}</template>
                         <!-- <el-menu-item index=""><a><i class="fa fa-sign-out"></i>注销</a></el-menu-item> -->
-                        <el-menu-item index=""><a href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
-                        <el-menu-item index=""><a @click="handleVersion"><i class="fa fa-info-circle"></i>关于</a></el-menu-item>
+                        <el-menu-item index=""><a style="display: block;" href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
+                        <el-menu-item index=""><a style="display: block;" @click="handleVersion"><i class="fa fa-info-circle"></i>关于</a></el-menu-item>
                     </el-submenu>
                 </div>
             </el-menu>
