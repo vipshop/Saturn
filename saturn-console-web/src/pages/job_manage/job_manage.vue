@@ -1,22 +1,22 @@
 <template>
     <div>
         <el-main>
-            <div class="page-title">
-                <img width="200px" height="200px" src="../../image/saturn.png"/>
-            </div>
-            <div>
-                <el-row :gutter="20">
-                    <el-col :span="12" :offset="6">
-                        <el-autocomplete
-                          v-model="domainName"
-                          :fetch-suggestions="querySearchAsync"
-                          placeholder="请输入域名"
-                          @select="handleSelect"
-                          style="width: 100%;">
-                        <i class="el-icon-search el-input__icon" slot="suffix"></i>
-                        </el-autocomplete>
-                    </el-col>
-                </el-row>
+            <div class="page-home">
+              <div class="page-home-container">
+                  <div class="page-title">
+                      <img width="200px" height="200px" src="../../image/saturn.png"/>
+                  </div>
+                  <div>
+                      <el-autocomplete
+                        v-model="domainName"
+                        :fetch-suggestions="querySearchAsync"
+                        placeholder="请输入域名"
+                        @select="handleSelect"
+                        style="width: 600px;">
+                      <i class="el-icon-search el-input__icon" slot="suffix"></i>
+                      </el-autocomplete>
+                  </div>
+              </div>
             </div>
         </el-main>
     </div>
@@ -66,11 +66,18 @@ export default {
 };
 </script>
 <style lang="sass" scoped>
-.page-title {
-    font-size: 19px;
-    font-weight: normal;
-    margin: 10% 0 0;
-    text-align: center;
-    color: #159e74;
+.page-home {
+    width: 600px;
+    margin: 0 auto;
+    .page-home-container {
+        margin-top: 22%;
+        .page-title {
+            font-size: 19px;
+            font-weight: normal;
+            margin: 10% 0 0;
+            text-align: center;
+            color: #159e74;
+        }
+    }
 }
 </style>
