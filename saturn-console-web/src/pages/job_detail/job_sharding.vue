@@ -28,7 +28,7 @@
                         {{$array.strToArray(scope.row.sharding).length}}
                     </template>
                 </el-table-column>
-                <el-table-column prop="version" label="作业版本"></el-table-column>
+                <el-table-column prop="version" label="Executor版本"></el-table-column>
             </el-table>
         </div>
     </div>

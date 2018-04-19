@@ -33,7 +33,7 @@
                         <div>止:{{scope.row.lastCompleteTime || ' ——'}}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="lastTimeConsumedInSec" label="执行时长(s)" width="100px">
+                <el-table-column prop="lastTimeConsumedInSec" label="执行时长(秒)" width="100px">
                     <template slot-scope="scope"> 
                         <div v-if="scope.row.lastTimeConsumedInSec === 0">——</div>
                         <div v-else>{{scope.row.lastTimeConsumedInSec}}</div>
