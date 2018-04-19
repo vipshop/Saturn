@@ -8,8 +8,8 @@
             <span>所属集群: <router-link tag="a" :to="{ name: 'clusters_manage' }">{{domainInfo.zkAlias}}</router-link></span>
             <el-tooltip placement="right">
                 <div slot="content">
-                    运维负责人：<span>{{domainInfo.techAdmin || '空'}}</span><br/>
-                    开发负责人：<span>{{domainInfo.sysAdmin || '空'}}</span>
+                    运维负责人：<span>{{domainInfo.sysAdmin || '空'}}</span><br/>
+                    开发负责人：<span>{{domainInfo.techAdmin || '空'}}</span>
                 </div>
                 <i class="el-icon-warning"></i>
             </el-tooltip>
