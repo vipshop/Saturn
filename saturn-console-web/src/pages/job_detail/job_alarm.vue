@@ -1,5 +1,5 @@
 <template>
-    <div class="margin-20" v-loading="loading" element-loading-text="请稍等···">
+    <div class="margin-20">
         <div v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === ''">
             <el-col :span="24">
                 <div class="job-alarm-empty">
@@ -7,9 +7,9 @@
                 </div>
             </el-col>
         </div>
-        <div v-else>
+        <div v-else v-loading="loading" element-loading-text="请稍等···">
             <el-row :gutter="20">
-                <el-col :span="8" v-show="abnormalJob !== ''">
+                <el-col :span="8" v-if="abnormalJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
                         <div slot="title" class="job-alarm-title">异常告警</div>
                         <div slot="content">
@@ -21,7 +21,7 @@
                         </div>
                     </Panel>
                 </el-col>
-                <el-col :span="8" v-show="timeoutJob !== ''">
+                <el-col :span="8" v-if="timeoutJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
                         <div slot="title" class="job-alarm-title">超时告警</div>
                         <div slot="content">
@@ -33,7 +33,7 @@
                         </div>
                     </Panel>
                 </el-col>
-                <el-col :span="8" v-show="unableFailoverJob !== ''">
+                <el-col :span="8" v-if="unableFailoverJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
                         <div slot="title" class="job-alarm-title">无法高可用告警</div>
                         <div slot="content">
@@ -55,9 +55,9 @@ export default {
       loading: false,
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
-      abnormalJob: {},
-      timeoutJob: {},
-      unableFailoverJob: {},
+      abnormalJob: '',
+      timeoutJob: '',
+      unableFailoverJob: '',
     };
   },
   methods: {

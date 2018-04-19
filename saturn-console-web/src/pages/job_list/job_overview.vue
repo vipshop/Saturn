@@ -74,7 +74,7 @@
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" width="120px" sortable></el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
-                            <el-table-column label="分片情况">
+                            <el-table-column label="分片情况" width="120px">
                                 <template slot-scope="scope">
                                     <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
                                         <el-tag :type="$array.strToArray(scope.row.shardingList).length === 0 ? '' : 'primary'">{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
@@ -82,6 +82,11 @@
                                             <div>{{item}}</div>
                                         </div>
                                     </el-tooltip>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="description" label="描述">
+                                <template slot-scope="scope"> 
+                                    {{scope.row.description || '-'}}
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="100px" align="center">

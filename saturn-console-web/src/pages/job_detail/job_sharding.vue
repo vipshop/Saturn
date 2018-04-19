@@ -17,18 +17,24 @@
                         {{scope.row.executorName}}
                     </template>
                 </el-table-column>
-                <el-table-column prop="ip" label="IP"></el-table-column>
+                <el-table-column prop="ip" label="IP" width="130px"></el-table-column>
                 <el-table-column label="分片项">
                     <template slot-scope="scope">
                         <el-tag class="sharding-tag" type="primary" v-for="item in $array.strToArray(scope.row.sharding)" :key="item">{{item}}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="分片总数">
+                <el-table-column label="分片总数" width="90px">
                     <template slot-scope="scope">
                         {{$array.strToArray(scope.row.sharding).length}}
                     </template>
                 </el-table-column>
-                <el-table-column prop="version" label="作业版本"></el-table-column>
+                <el-table-column label="最近处理数(每天)">
+                    <template slot-scope="scope">
+                        <el-tag type="success">成功:{{scope.row.processSuccessCount}}</el-tag>
+                        <el-tag type="danger">失败:{{scope.row.processFailureCount}}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="version" label="Executor版本"></el-table-column>
             </el-table>
         </div>
     </div>

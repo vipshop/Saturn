@@ -9,6 +9,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -25,6 +27,10 @@ public class SaturnConsoleUtils {
 	private static DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
 	private static Random random = new Random();
+
+	public static Logger getAuditLogger() {
+		return LoggerFactory.getLogger("AUDITLOG");
+	}
 
 	public static String parseMillisecond2DisplayTime(String longInStr) {
 		return parseMillisecond2DisplayTime(longInStr, null);

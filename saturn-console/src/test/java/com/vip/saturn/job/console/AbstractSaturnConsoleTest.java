@@ -14,6 +14,7 @@ public abstract class AbstractSaturnConsoleTest {
 	@BeforeClass
 	public static void beforeClass() throws Exception {
 		System.setProperty("db.profiles.active", "h2");
+		System.setProperty("authentication.enabled", "false");
 		SaturnConsoleApp.startEmbeddedDb();
 	}
 

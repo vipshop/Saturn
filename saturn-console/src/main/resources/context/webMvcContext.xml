@@ -18,6 +18,8 @@
     <!-- GUI Controller Begin -->
     <bean id="authorizationController"
     class="com.vip.saturn.job.console.controller.gui.AuthorizationController"/>
+    <bean id="authenticationController"
+          class="com.vip.saturn.job.console.controller.gui.AuthenticationController"/>
     <bean id="dashboardController"
       class="com.vip.saturn.job.console.controller.gui.DashboardController"/>
     <bean id="executorOverviewController"
@@ -82,26 +84,4 @@
         </mvc:message-converters>
     </mvc:annotation-driven>
 
-    <mvc:interceptors>
-        <mvc:interceptor>
-            <mvc:mapping path="/job/**"/>
-            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
-        </mvc:interceptor>
-        <mvc:interceptor>
-            <mvc:mapping path="/server/**"/>
-            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
-        </mvc:interceptor>
-        <mvc:interceptor>
-            <mvc:mapping path="/job_detail**"/>
-            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
-        </mvc:interceptor>
-        <mvc:interceptor>
-            <mvc:mapping path="/executor/**"/>
-            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
-        </mvc:interceptor>
-        <mvc:interceptor>
-            <mvc:mapping path="/container/**"/>
-            <bean class="com.vip.saturn.job.console.interceptor.CuratorSessionClientInterceptor" />
-        </mvc:interceptor>
-    </mvc:interceptors>
 </beans>
