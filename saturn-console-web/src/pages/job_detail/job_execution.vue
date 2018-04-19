@@ -3,7 +3,7 @@
         <div class="page-table">
             <div class="page-table-header">
                 <div class="page-table-header-title"><i class="fa fa-list"></i>运行状态
-                    <!-- <el-button type="text" @click="getJobExecutors()"><i class="fa fa-refresh"></i></el-button> -->
+                    <el-button type="text" @click="getJobExecutors()"><i class="fa fa-refresh"></i></el-button>
                 </div>
                 <!-- <div class="page-table-header-separator"></div>
                 <div>
