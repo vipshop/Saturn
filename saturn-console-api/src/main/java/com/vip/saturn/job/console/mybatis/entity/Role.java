@@ -13,6 +13,14 @@ public class Role extends EntityCommonFields {
 
 	private List<RolePermission> rolePermissions;
 
+	public Role() {
+
+	}
+
+	public Role(String roleKey) {
+		this.roleKey = roleKey;
+	}
+
 	public String getRoleKey() {
 		return roleKey;
 	}

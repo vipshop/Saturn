@@ -1,14 +1,13 @@
-package com.vip.saturn.job.console.mybatis.service.impl;
+package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.*;
 import com.vip.saturn.job.console.mybatis.repository.*;
-import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
+import com.vip.saturn.job.console.service.AuthorizationService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -17,34 +16,33 @@ import java.util.List;
 /**
  * @author hebelala
  */
-@Service
 public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Autowired
-	private PermissionRepository permissionRepository;
+	protected PermissionRepository permissionRepository;
 
 	@Autowired
-	private RoleRepository roleRepository;
+	protected RoleRepository roleRepository;
 
 	@Autowired
-	private UserRepository userRepository;
+	protected UserRepository userRepository;
 
 	@Autowired
-	private RolePermissionRepository rolePermissionRepository;
+	protected RolePermissionRepository rolePermissionRepository;
 
 	@Autowired
-	private UserRoleRepository userRoleRepository;
+	protected UserRoleRepository userRoleRepository;
 
 	@Autowired
-	private SystemConfigService systemConfigService;
+	protected SystemConfigService systemConfigService;
 
 	@Value("${authorization.enabled.default}")
 	private boolean authorizationEnabledDefault;
 
-	private String systemAdminRoleKey = "system_admin";
+	protected String systemAdminRoleKey = "system_admin";
 
 	@Override
-	public boolean isAuthorizationEnabled() {
+	public boolean isAuthorizationEnabled() throws SaturnJobConsoleException {
 		return systemConfigService
 				.getBooleanValue(SystemConfigProperties.AUTHORIZATION_ENABLED, authorizationEnabledDefault);
 	}
@@ -76,13 +74,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void deleteUserRole(UserRole userRole) {
+	public void deleteUserRole(UserRole userRole) throws SaturnJobConsoleException {
 		userRoleRepository.delete(userRole);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void updateUserRole(UserRole pre, UserRole cur) {
+	public void updateUserRole(UserRole pre, UserRole cur) throws SaturnJobConsoleException {
 		userRoleRepository.delete(pre);
 		UserRole userRole = userRoleRepository.selectWithNotFilterDeleted(cur);
 		if (userRole == null) {
@@ -94,7 +92,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getAllUsers() {
+	public boolean hasUserRole(UserRole userRole) throws SaturnJobConsoleException {
+		UserRole result = userRoleRepository.select(userRole);
+		return result != null;
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<User> getAllUsers() throws SaturnJobConsoleException {
 		List<User> allUsers = new ArrayList<>();
 		List<User> users = userRepository.selectAll();
 		if (users != null) {
@@ -107,10 +112,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public User getUser(String userName) {
+	public User getUser(String userName) throws SaturnJobConsoleException {
 		User user = userRepository.select(userName);
 		if (user == null) {
-			return null;
+			user = new User();
+			user.setUserName(userName);
+			return user;
 		}
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		if (userRoles == null) {
@@ -141,7 +148,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getSystemAdminUsers() {
+	public List<User> getSystemAdminUsers() throws SaturnJobConsoleException {
 		List<User> superUsers = new ArrayList<>();
 		List<UserRole> userRoles = userRoleRepository.selectByRoleKey(systemAdminRoleKey);
 		if (userRoles == null) {
@@ -156,7 +163,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public Role getSystemAdminRole() {
+	public Role getSystemAdminRole() throws SaturnJobConsoleException {
 		Role role = roleRepository.selectByKey(systemAdminRoleKey);
 		if (role == null) {
 			return null;
@@ -174,51 +181,56 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean isPermitted(Permission permission, String userName, String namespace) {
-		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		if (userRoles.isEmpty()) {
-			return false;
+	public void assertIsPermitted(Permission permission, String userName, String namespace)
+			throws SaturnJobConsoleException {
+		if (!isAuthorizationEnabled()) {
+			return;
 		}
-
-		for (UserRole userRole : userRoles) {
-			String roleKey = userRole.getRoleKey();
-			if (systemAdminRoleKey.equals(roleKey)) {
-				return true;
-			}
-			if (namespace.equals(userRole.getNamespace())) {
-				Role role = roleRepository.selectByKey(roleKey);
-				if (role == null) {
-					continue;
+		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
+		if (userRoles != null) {
+			for (UserRole userRole : userRoles) {
+				String roleKey = userRole.getRoleKey();
+				if (systemAdminRoleKey.equals(roleKey)) {
+					return;
 				}
-				List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
-				if (rolePermissions == null) {
-					continue;
-				}
-				for (RolePermission rolePermission : rolePermissions) {
-					Permission tmpPermission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-					if (tmpPermission != null && tmpPermission.getPermissionKey()
-							.equals(permission.getPermissionKey())) {
-						return true;
+				if (namespace.equals(userRole.getNamespace())) {
+					Role role = roleRepository.selectByKey(roleKey);
+					if (role == null) {
+						continue;
+					}
+					List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
+					if (rolePermissions == null) {
+						continue;
+					}
+					for (RolePermission rolePermission : rolePermissions) {
+						Permission tmpPermission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+						if (tmpPermission != null && tmpPermission.getPermissionKey()
+								.equals(permission.getPermissionKey())) {
+							return;
+						}
 					}
 				}
 			}
 		}
-		return false;
+		throw new SaturnJobConsoleException(
+				String.format("您没有权限，域:%s，权限:%s", namespace, permission.getPermissionKey()));
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean isSystemAdminRole(String userName) {
-		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		if (userRoles.isEmpty()) {
-			return false;
+	public void assertIsSystemAdmin(String userName) throws SaturnJobConsoleException {
+		if (!isAuthorizationEnabled()) {
+			return;
 		}
-		for (UserRole userRole : userRoles) {
-			String roleKey = userRole.getRoleKey();
-			if (systemAdminRoleKey.equals(roleKey)) {
-				return true;
+		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
+		if (userRoles != null) {
+			for (UserRole userRole : userRoles) {
+				String roleKey = userRole.getRoleKey();
+				if (systemAdminRoleKey.equals(roleKey)) {
+					return;
+				}
 			}
 		}
-		return false;
+		throw new SaturnJobConsoleException("您不是系统管理员，没有权限");
 	}
 }

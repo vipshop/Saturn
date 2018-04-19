@@ -7,7 +7,7 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
-import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
+import com.vip.saturn.job.console.service.AuthorizationService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author xiaopeng.he
+ * @author hebelala
  */
 @RequestMapping("/console/authorization")
 public class AuthorizationController extends AbstractGUIController {
@@ -31,7 +31,7 @@ public class AuthorizationController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/isAuthorizationEnabled")
-	public SuccessResponseEntity isAuthorizationEnabled() {
+	public SuccessResponseEntity isAuthorizationEnabled() throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(authorizationService.isAuthorizationEnabled());
 	}
 
@@ -40,10 +40,6 @@ public class AuthorizationController extends AbstractGUIController {
 	public SuccessResponseEntity getLoginUser(HttpSession httpSession) throws SaturnJobConsoleException {
 		String currentLoginUserName = getCurrentLoginUserName();
 		User user = authorizationService.getUser(currentLoginUserName);
-		if (user == null) {
-			user = new User();
-			user.setUserName(currentLoginUserName);
-		}
 		return new SuccessResponseEntity(user);
 	}
 

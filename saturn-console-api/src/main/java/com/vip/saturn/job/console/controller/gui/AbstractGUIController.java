@@ -5,7 +5,7 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.RequestResultHelper;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.Permission;
-import com.vip.saturn.job.console.mybatis.service.AuthorizationService;
+import com.vip.saturn.job.console.service.AuthorizationService;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -61,34 +61,18 @@ public class AbstractGUIController extends AbstractController {
 	}
 
 	public void assertIsPermitted(Permission permission, String namespace) throws SaturnJobConsoleException {
-		if (!authorizationService.isAuthorizationEnabled()) {
-			return;
-		}
 		String userName = getCurrentLoginUserName();
-		if (!authorizationService.isPermitted(permission, userName, namespace)) {
-			throw new SaturnJobConsoleException(
-					String.format("您没有权限，域:%s，权限:%s", namespace, permission.getPermissionKey()));
-		}
+		authorizationService.assertIsPermitted(permission, userName, namespace);
 	}
 
 	public void assertIsPermitted(Permission permission) throws SaturnJobConsoleException {
-		if (!authorizationService.isAuthorizationEnabled()) {
-			return;
-		}
 		String userName = getCurrentLoginUserName();
-		if (!authorizationService.isPermitted(permission, userName, "")) {
-			throw new SaturnJobConsoleException(String.format("您没有权限，权限:%s", permission.getPermissionKey()));
-		}
+		authorizationService.assertIsPermitted(permission, userName, "");
 	}
 
 	public void assertIsSystemAdmin() throws SaturnJobConsoleException {
-		if (!authorizationService.isAuthorizationEnabled()) {
-			return;
-		}
 		String userName = getCurrentLoginUserName();
-		if (!authorizationService.isSystemAdminRole(userName)) {
-			throw new SaturnJobConsoleException("您不是系统管理员，没有权限");
-		}
+		authorizationService.assertIsSystemAdmin(userName);
 	}
 
 }

@@ -17,6 +17,8 @@
 	<context:component-scan base-package="com.vip.saturn.job.console"/>
 
 	<!-- Service Beans Begin -->
+    <bean id="authorizationService"
+          class="com.vip.saturn.job.console.service.impl.AuthorizationServiceImpl"/>
 	<bean id="systemConfigService"
 		class="com.vip.saturn.job.console.service.impl.SystemConfigServiceImpl"/>
 	<bean id="alarmStatisticsService"

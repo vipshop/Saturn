@@ -1,4 +1,4 @@
-package com.vip.saturn.job.console.mybatis.service;
+package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.Permission;
@@ -12,14 +12,16 @@ import java.util.List;
  * @author hebelala
  */
 public interface AuthorizationService {
-	
-	boolean isAuthorizationEnabled();
+
+	boolean isAuthorizationEnabled() throws SaturnJobConsoleException;
 
 	void addUserRole(UserRole userRole) throws SaturnJobConsoleException;
 
 	void deleteUserRole(UserRole userRole) throws SaturnJobConsoleException;
 
 	void updateUserRole(UserRole pre, UserRole cur) throws SaturnJobConsoleException;
+
+	boolean hasUserRole(UserRole userRole) throws SaturnJobConsoleException;
 
 	List<User> getAllUsers() throws SaturnJobConsoleException;
 
@@ -28,9 +30,9 @@ public interface AuthorizationService {
 	List<User> getSystemAdminUsers() throws SaturnJobConsoleException;
 
 	Role getSystemAdminRole() throws SaturnJobConsoleException;
-	
-	boolean isPermitted(Permission permission, String userName, String namespace) throws SaturnJobConsoleException;
-	
-	boolean isSystemAdminRole(String userName) throws SaturnJobConsoleException;
+
+	void assertIsPermitted(Permission permission, String userName, String namespace) throws SaturnJobConsoleException;
+
+	void assertIsSystemAdmin(String userName) throws SaturnJobConsoleException;
 
 }

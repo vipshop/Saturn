@@ -9,6 +9,16 @@ public class UserRole extends EntityCommonFields {
 	private User user;
 	private Role role;
 
+	public UserRole() {
+
+	}
+
+	public UserRole(String userName, String roleKey, String namespace) {
+		this.userName = userName;
+		this.roleKey = roleKey;
+		this.namespace = namespace;
+	}
+
 	public String getUserName() {
 		return userName;
 	}
