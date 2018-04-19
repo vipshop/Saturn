@@ -5,7 +5,7 @@
                 <el-button type="text"><span class="header-tip">Saturn Console</span></el-button>
             </router-link>
         </div>
-        <div>
+        <div class="header-content">
             <el-menu :default-active="activeIndex" class="el-menu--dark el-menu--has-container" mode="horizontal" :router="true">
                 <template v-for='item in serviceList'>
                   <el-menu-item :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
@@ -60,25 +60,28 @@ export default {
 .header {
     width: 100%;
     display: table;
-}
-
-.header-title {
-    display: table-cell;
-    background-color: #14212e; 
-    color: #98A5B4;
-    height: 50px;
-    line-height: 50px;
-    font-weight: 700;
-    width: 150px;
-    text-align: center;
-    padding-left: 20px;
-    a .el-button {
-      height: 50px;
-      .header-tip {
-        color: #98a5b4;
+    .header-title {
+        display: table-cell;
+        background-color: #14212e; 
+        color: #98A5B4;
+        height: 50px;
+        line-height: 50px;
         font-weight: 700;
-        font-size: medium;
-      }
+        width: 150px;
+        text-align: center;
+        padding-left: 20px;
+        a .el-button {
+          height: 50px;
+          .header-tip {
+            color: #98a5b4;
+            font-weight: 700;
+            font-size: medium;
+          }
+        }
+    }
+    .header-content {
+        display: table-cell;
+        vertical-align: middle;
     }
 }
 
