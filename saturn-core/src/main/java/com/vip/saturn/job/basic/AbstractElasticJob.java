@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -164,17 +165,21 @@ public abstract class AbstractElasticJob implements Stopable {
 		try {
 			executeJob(shardingContext);
 		} finally {
-			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
-			boolean isEnabledReport = configService.isEnabledReport();
-			for (int item : shardingContext.getShardingItems()) {
-				if (isEnabledReport && !checkIfZkLostAfterExecution(item)) {
-					continue;
-				}
-				if (!aborted) {
-					executionService.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
-				}
-				if (isFailoverSupported() && configService.isFailover()) {
-					failoverService.updateFailoverComplete(item);
+			List<Integer> shardingItems = shardingContext.getShardingItems();
+			if (!shardingItems.isEmpty()) {
+				Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
+				boolean isEnabledReport = configService.isEnabledReport();
+				for (int item : shardingItems) {
+					if (isEnabledReport && !checkIfZkLostAfterExecution(item)) {
+						continue;
+					}
+					if (!aborted) {
+						executionService
+								.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
+					}
+					if (isFailoverSupported() && configService.isFailover()) {
+						failoverService.updateFailoverComplete(item);
+					}
 				}
 			}
 			afterMainThreadDone(shardingContext);
@@ -206,7 +211,7 @@ public abstract class AbstractElasticJob implements Stopable {
 			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false
 			log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
 			return false;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			return false;
 		}

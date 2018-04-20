@@ -230,25 +230,30 @@ public class JobScheduler {
 	 * @return 下次作业触发时间
 	 */
 	public Date getNextFireTimePausePeriodEffected() {
-		SaturnScheduler saturnScheduler = job.getScheduler();
-		if (saturnScheduler == null) {
-			return null;
-		}
-		Trigger trigger = saturnScheduler.getTrigger();
+		try {
+			SaturnScheduler saturnScheduler = job.getScheduler();
+			if (saturnScheduler == null) {
+				return null;
+			}
+			Trigger trigger = saturnScheduler.getTrigger();
 
-		if (trigger == null) {
-			return null;
-		}
+			if (trigger == null) {
+				return null;
+			}
 
-		((OperableTrigger) trigger).updateAfterMisfire(null);
-		Date nextFireTime = trigger.getNextFireTime();
-		while (nextFireTime != null && configService.isInPausePeriod(nextFireTime)) {
-			nextFireTime = trigger.getFireTimeAfter(nextFireTime);
-		}
-		if (null == nextFireTime) {
+			((OperableTrigger) trigger).updateAfterMisfire(null);
+			Date nextFireTime = trigger.getNextFireTime();
+			while (nextFireTime != null && configService.isInPausePeriod(nextFireTime)) {
+				nextFireTime = trigger.getFireTimeAfter(nextFireTime);
+			}
+			if (null == nextFireTime) {
+				return null;
+			}
+			return nextFireTime;
+		} catch (Throwable t) {
+			log.error("fail to get next fire time", t);
 			return null;
 		}
-		return nextFireTime;
 	}
 
 	/**
