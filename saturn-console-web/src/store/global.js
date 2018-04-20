@@ -4,6 +4,7 @@ import Http from '../utils/request';
 
 export default {
   state: {
+    allDomains: [],
     domainInfo: {
       nameAndNamespace: '',
       sysAdmin: '',
@@ -19,6 +20,7 @@ export default {
   },
 
   getters: {
+    allDomains: state => state.allDomains,
     domainInfo: state => state.domainInfo,
     jobInfo: state => state.jobInfo,
     userAuthority: state => state.userAuthority,
@@ -26,6 +28,9 @@ export default {
   },
 
   mutations: {
+    [types.SET_ALL_DOMAINS](state, item) {
+      state.allDomains = item;
+    },
     [types.SET_DOMAIN_INFO](state, item) {
       state.domainInfo = {
         ...state.domainInfo,
@@ -55,6 +60,9 @@ export default {
   },
 
   actions: {
+    [types.SET_ALL_DOMAINS]({ commit }, allDomains) {
+      commit(types.SET_ALL_DOMAINS, allDomains);
+    },
     [types.SET_DOMAIN_INFO]({ commit }, domainInfo) {
       commit(types.SET_DOMAIN_INFO, domainInfo);
     },

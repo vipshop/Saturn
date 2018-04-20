@@ -12,13 +12,7 @@ export default {
   data() {
     return {
       loading: false,
-      domainName: this.$route.params.domain,
       domainInfo: {},
-      sidebarMenus: [
-        { index: 'job_overview', title: '作业总览', icon: 'fa fa-bar-chart-o fa-fw', name: 'job_overview', params: { domain: this.$route.params.domain } },
-        { index: 'executor_overview', title: 'Executor总览', icon: 'fa fa-area-chart', name: 'executor_overview', params: { domain: this.$route.params.domain } },
-        { index: 'namespace_alarm_center', title: '告警中心', icon: 'fa fa-bell', name: 'namespace_abnormal_jobs', params: { domain: this.$route.params.domain } },
-      ],
     };
   },
   methods: {
@@ -35,6 +29,22 @@ export default {
   },
   created() {
     this.getDomainInfo();
+  },
+  computed: {
+    domainName() {
+      return this.$route.params.domain;
+    },
+    sidebarMenus() {
+      const menus = [
+        { index: 'job_overview', title: '作业总览', icon: 'fa fa-bar-chart-o fa-fw', name: 'job_overview', params: { domain: this.$route.params.domain } },
+        { index: 'executor_overview', title: 'Executor总览', icon: 'fa fa-area-chart', name: 'executor_overview', params: { domain: this.$route.params.domain } },
+        { index: 'namespace_alarm_center', title: '告警中心', icon: 'fa fa-bell', name: 'namespace_abnormal_jobs', params: { domain: this.$route.params.domain } },
+      ];
+      return menus;
+    },
+  },
+  watch: {
+    $route: 'getDomainInfo',
   },
 };
 </script>

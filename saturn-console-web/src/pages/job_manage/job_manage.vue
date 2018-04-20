@@ -27,7 +27,7 @@ export default {
   data() {
     return {
       domainName: '',
-      domains: [],
+      domains: this.$store.getters.allDomains,
     };
   },
   methods: {
@@ -46,22 +46,6 @@ export default {
     toJobListPage(domain) {
       this.$router.push({ name: 'job_overview', params: { domain } });
     },
-    loadAllDomains() {
-      this.$http.get('/console/namespaces').then((data) => {
-        this.domains = data.map((obj) => {
-          const rObj = {};
-          rObj.value = obj;
-          return rObj;
-        });
-      })
-      .catch(() => { this.$http.buildErrorHandler('获取namespaces失败！'); })
-      .finally(() => {
-        this.loading = false;
-      });
-    },
-  },
-  created() {
-    this.loadAllDomains();
   },
 };
 </script>

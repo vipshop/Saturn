@@ -25,7 +25,6 @@
 export default {
   data() {
     return {
-      domainName: this.$route.params.domain,
       activeName: 'namespace_abnormal_jobs',
       countOfAlarmJobs: {
         unnormal_job: 0,
@@ -68,6 +67,11 @@ export default {
   created() {
     this.activeName = this.$route.name;
     this.getCountOfAlarmJobs();
+  },
+  computed: {
+    domainName() {
+      return this.$route.params.domain;
+    },
   },
   watch: {
     $route: 'getActiveName',

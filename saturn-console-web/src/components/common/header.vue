@@ -10,14 +10,32 @@
                 <template v-for='item in serviceList'>
                   <el-menu-item :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
                 </template>
-                <div class="pull-right user-dropdown">
+                <div class="pull-right" style="display: inline-flex">
+                    <div class="headerbase-search" v-if="isShowHeaderSearch">
+                        <el-autocomplete
+                          prefix-icon="el-icon-search"
+                          v-model="domainName"
+                          :fetch-suggestions="querySearchAsync"
+                          placeholder="请输入域名"
+                          popper-class="header-autocomplete"
+                          @select="handleSelect">
+                        </el-autocomplete>
+                    </div>
+                    <div class="user-dropdown">
+                        <el-submenu index="">
+                            <template slot="title"><i class="fa fa-user"></i>{{userInfo.username || 'null'}}</template>
+                            <el-menu-item index=""><a style="display: block;" href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
+                            <el-menu-item index=""><a style="display: block;" @click="handleVersion"><i class="fa fa-info-circle"></i>关于</a></el-menu-item>
+                        </el-submenu>
+                    </div>
+                </div>
+                <!-- <div class="pull-right user-dropdown">
                     <el-submenu index="">
                         <template slot="title"><i class="fa fa-user"></i>{{userInfo.username || 'null'}}</template>
-                        <!-- <el-menu-item index=""><a><i class="fa fa-sign-out"></i>注销</a></el-menu-item> -->
                         <el-menu-item index=""><a style="display: block;" href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
                         <el-menu-item index=""><a style="display: block;" @click="handleVersion"><i class="fa fa-info-circle"></i>关于</a></el-menu-item>
                     </el-submenu>
-                </div>
+                </div> -->
             </el-menu>
         </div>
     </div>
@@ -27,6 +45,8 @@
 export default {
   data() {
     return {
+      domains: this.$store.getters.allDomains,
+      domainName: '',
       serviceList: [
         { index: '/job', title: '作业管理', icon: 'fa fa-list-alt', path: this.$routermapper.GetPath('jobManage') },
         { index: '/dashboard', title: 'Dashboard', icon: 'fa fa-pie-chart', path: this.$routermapper.GetPath('dashboardManage') },
@@ -37,6 +57,22 @@ export default {
     };
   },
   methods: {
+    querySearchAsync(queryString, cb) {
+      const domains = this.domains;
+      const results = queryString ? domains.filter(this.createStateFilter(queryString)) : domains;
+      cb(results);
+    },
+    createStateFilter(queryString) {
+      return state =>
+        state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
+    },
+    handleSelect(item) {
+      this.toPage(item.value);
+    },
+    toPage(domain) {
+      this.domainName = '';
+      this.$router.push({ name: 'job_overview', params: { domain } });
+    },
     handleVersion() {
       this.$http.get('/console/utils/version').then((data) => {
         const versionHtml = `<strong>版本号: ${data}</strong>`;
@@ -52,11 +88,19 @@ export default {
     userInfo() {
       return this.$store.state.global.userAuthority;
     },
+    isShowHeaderSearch() {
+      let flag = false;
+      const pathArr = this.$route.path.split('/');
+      if (pathArr[1] === 'job_list' || pathArr[1] === 'job_detail') {
+        flag = true;
+      }
+      return flag;
+    },
   },
 };
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .header {
     width: 100%;
     display: table;
@@ -87,5 +131,36 @@ export default {
 
 .user-dropdown {
     padding-right: 20px;
+}
+
+.headerbase-search {
+    display: inline-block;
+    position: relative;
+    padding-top: 10px;
+}
+.header-autocomplete {
+  .el-autocomplete-suggestion__wrap {
+      margin-top: 0;
+      background: #14212e;
+      box-shadow: none;
+      border: none;
+      li {
+        color: #c2d0d7;
+        &:hover {
+          background: #253343;
+        }
+        &.highlighted {
+          background-color: #253343;
+        }
+      }
+  }
+  &.el-popper {
+      .popper__arrow {
+          border-bottom-color: #14212e;
+          &::after {
+              border-bottom-color: #14212e;
+          }
+      }
+  }
 }
 </style>

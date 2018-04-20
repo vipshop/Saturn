@@ -18,6 +18,17 @@ export default {
     };
   },
   methods: {
+    loadAllDomains() {
+      return this.$http.get('/console/namespaces').then((data) => {
+        const allNamespaces = data.map((obj) => {
+          const rObj = {};
+          rObj.value = obj;
+          return rObj;
+        });
+        this.$store.dispatch('setAllDomains', allNamespaces);
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取namespaces失败！'); });
+    },
     getLoginUser() {
       const storeUserAuthority = {
         username: 'null',
@@ -26,10 +37,13 @@ export default {
       };
       this.$store.dispatch('setUserAuthority', storeUserAuthority);
       this.$store.dispatch('setIsUseAuth', false);
-      this.initialized = true;
     },
     init() {
-      this.getLoginUser();
+      this.loading = true;
+      Promise.all([this.getLoginUser(), this.loadAllDomains()]).then(() => {
+        this.loading = false;
+        this.initialized = true;
+      });
     },
   },
   created() {

@@ -133,7 +133,6 @@ import importResultDialog from './import_result_dialog';
 export default {
   data() {
     return {
-      domainName: this.$route.params.domain,
       loading: false,
       isJobInfoVisible: false,
       jobInfoTitle: '',
@@ -469,24 +468,26 @@ export default {
       return resultArr;
     },
     getJobList() {
-      this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs`).then((data) => {
         this.jobList = data.jobs;
         this.totalNumber = data.totalNumber;
         this.enabledNumber = data.enabledNumber;
         this.abnormalNumber = data.abnormalNumber;
         this.total = data.length;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业列表失败！'); })
-      .finally(() => {
-        this.loading = false;
-      });
+      .catch(() => { this.$http.buildErrorHandler('获取作业列表失败！'); });
     },
     getGroupList() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
         this.groupList = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getJobList(), this.getGroupList()]).then(() => {
+        this.loading = false;
+      });
     },
   },
   components: {
@@ -495,8 +496,15 @@ export default {
     'import-result-dialog': importResultDialog,
   },
   created() {
-    this.getJobList();
-    this.getGroupList();
+    this.init();
+  },
+  watch: {
+    $route: 'init',
+  },
+  computed: {
+    domainName() {
+      return this.$route.params.domain;
+    },
   },
 };
 </script>

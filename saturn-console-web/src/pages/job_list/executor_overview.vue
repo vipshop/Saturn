@@ -100,7 +100,6 @@ import executorAllocationDialog from './executor_allocation_dialog';
 export default {
   data() {
     return {
-      domainName: this.$route.params.domain,
       loading: false,
       executorList: [],
       filters: {
@@ -270,12 +269,18 @@ export default {
     totalNum() {
       return this.executorList.length;
     },
+    domainName() {
+      return this.$route.params.domain;
+    },
   },
   created() {
     this.getExecutorList();
   },
   components: {
     'executor-allocation-dialog': executorAllocationDialog,
+  },
+  watch: {
+    $route: 'getExecutorList',
   },
 };
 </script>
