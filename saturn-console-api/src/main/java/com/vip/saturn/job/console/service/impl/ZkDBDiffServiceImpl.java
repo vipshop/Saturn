@@ -100,7 +100,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 					resultList.addAll(jobDiffInfos);
 				}
 			}
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e) {// NOSONAR
 			log.warn("the thread is interrupted", e);
 			throw new SaturnJobConsoleException("the diff thread is interrupted", e);
 		} catch (Exception e) {
@@ -179,16 +179,21 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 			JobConfig4DB dbJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 			JobConfig zkJobConfig = jobService.getJobConfigFromZK(namespace, jobName);
 
-			if (dbJobConfig == null && zkJobConfig != null) {
-				return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY,
-						Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
+			if (dbJobConfig == null) {
+				if (zkJobConfig != null) {
+					return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.ZK_ONLY,
+							Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
+				} else {
+					return null;
+				}
 			}
 
-			if (dbJobConfig != null && zkJobConfig == null) {
+			if (zkJobConfig == null) {
 				return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.DB_ONLY,
 						Lists.<JobDiffInfo.ConfigDiffInfo>newArrayList());
 			}
 
+			// diff only when dbJobConfig and zkJobConfig both not null
 			return diff(namespace, dbJobConfig, zkJobConfig, true);
 		} catch (Exception e) {
 			log.error("exception throws during diff by namespace [{}] and job [{}]", namespace, jobName, e);
@@ -276,8 +281,7 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 
 		if (!configDiffInfos.isEmpty()) {
 			if (needDetail) {
-				return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE,
-						configDiffInfos);
+				return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE, configDiffInfos);
 			}
 
 			return new JobDiffInfo(namespace, jobName, JobDiffInfo.DiffType.HAS_DIFFERENCE,
@@ -287,13 +291,13 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 		return null;
 	}
 
-	protected void diff(String key, Object valueInDb, Object valueInZk,
-			List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
-		if (valueInDb == null && valueInZk == null) {
-			return;
-		}
-
+	public void diff(String key, Object valueInDb, Object valueInZk, List<JobDiffInfo.ConfigDiffInfo> configDiffInfos) {
+		// 这里处理所有valueInDB 为空的情况
 		if (valueInDb == null) {
+			if (valueInZk == null) {
+				return;
+			}
+
 			// 空串与null视为相等
 			if (valueInZk instanceof String && StringUtils.isEmpty((String) valueInZk)) {
 				return;
@@ -304,12 +308,33 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 			return;
 		}
 
-		// 空串与null视为相等
-		if (valueInDb instanceof String && StringUtils.isEmpty((String) valueInDb) && StringUtils
-				.isEmpty((String) valueInZk)) {
+		// valueInDB != null && valueInZk == null
+		if (valueInZk == null) {
+			log.debug("key:{} has difference between zk and db", key);
+			configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
 			return;
 		}
 
+		/** 下面情况 valueInDB and valueInZk 均非空 **/
+		// 处理String类型
+		if (valueInDb instanceof String) {
+			String dbStr = (String) valueInDb;
+			String zkStr = (String) valueInZk;
+
+			if (StringUtils.isEmpty(dbStr) && StringUtils.isEmpty(zkStr)) {
+				return;
+			}
+
+			if (!dbStr.trim().equals(zkStr.trim())) {
+				log.debug("key:{} has difference between zk and db", key);
+				configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, dbStr, zkStr));
+				return;
+			}
+
+			return;
+		}
+
+		// 处理非String类型
 		if (!valueInDb.equals(valueInZk)) {
 			log.debug("key:{} has difference between zk and db", key);
 			configDiffInfos.add(new JobDiffInfo.ConfigDiffInfo(key, valueInDb, valueInZk));
@@ -334,8 +359,8 @@ public class ZkDBDiffServiceImpl implements ZkDBDiffService {
 		return null;
 	}
 
-	private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace,
-			Set<String> jobNamesInDb) throws SaturnJobConsoleException {
+	private List<JobDiffInfo> getJobNamesWhichInZKOnly(String namespace, Set<String> jobNamesInDb)
+			throws SaturnJobConsoleException {
 		List<JobDiffInfo> jobsOnlyInZK = Lists.newArrayList();
 		List<String> jobNamesInZk = jobService.getAllJobNamesFromZK(namespace);
 
