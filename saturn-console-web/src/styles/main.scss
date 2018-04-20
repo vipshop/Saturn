@@ -146,6 +146,10 @@ form {
 .el-main {
     overflow: hidden;
 }
+/* autocomplete */
+.el-autocomplete-suggestion li.highlighted, .el-autocomplete-suggestion li:hover {
+    background-color: #e4e8f1;
+}
 /* input-number */
 .el-input-number .el-input__inner {
     text-align: left;
