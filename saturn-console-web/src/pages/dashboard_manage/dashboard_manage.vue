@@ -2,7 +2,7 @@
     <div class="dashboard-content">
         <el-card>
             <div slot="header">
-                <span style="font-size: 23px;"><i class="fa fa-pie-chart"></i>dashboard</span>
+                <span style="font-size: 23px;"><i class="fa fa-pie-chart"></i>Dashboard</span>
                 <el-select size="small" class="pull-right" v-model="clusterKey" @change="clusterChange">
                     <el-option label="全部集群" value=""></el-option>
                     <el-option v-for="item in onlineClusterkeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
