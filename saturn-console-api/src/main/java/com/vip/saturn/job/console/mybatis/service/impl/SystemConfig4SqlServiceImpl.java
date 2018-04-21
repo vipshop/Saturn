@@ -30,6 +30,12 @@ public class SystemConfig4SqlServiceImpl implements SystemConfig4SqlService {
 
 	@Transactional
 	@Override
+	public List<SystemConfig> selectByPropertyPrefix(String prefix) {
+		return systemConfigRepository.selectByPropertyPrefix(prefix);
+	}
+
+	@Transactional
+	@Override
 	public Integer insert(SystemConfig systemConfig) {
 		return systemConfigRepository.insert(systemConfig);
 	}

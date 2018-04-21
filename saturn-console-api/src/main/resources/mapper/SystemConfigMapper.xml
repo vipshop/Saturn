@@ -27,6 +27,13 @@
         where id in
         (select max(id) from sys_config group by property)
     </select>
+    <select id="selectByPropertyPrefix" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_config
+        where property like
+        concat(#{prefix, jdbcType=VARCHAR},'%')
+    </select>
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.SystemConfig">
         insert into sys_config(property, value) values(#{property,jdbcType=VARCHAR}, #{value,jdbcType=VARCHAR})
     </insert>

@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.service.impl;
 
+import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.mybatis.service.SystemConfig4SqlService;
@@ -18,6 +19,7 @@ import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 /**
  * @author xiaopeng.he
@@ -129,6 +131,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 				? systemConfig4SqlService.selectByPropertiesAndLastly(properties)
 				: systemConfig4SqlService.selectByLastly();
 	}
+
+	@Override
+	public List<SystemConfig> getSystemConfigsByPrefix(String prefix) throws SaturnJobConsoleException {
+		if (StringUtils.isEmpty(prefix)) {
+			return Lists.newArrayList();
+		}
+
+		return systemConfig4SqlService.selectByPropertyPrefix(prefix);
+	}
+
 
 	@Override
 	public String getPropertiesCached() throws SaturnJobConsoleException {

@@ -21,6 +21,8 @@ public interface SystemConfigService {
 
 	List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException;
 
+	List<SystemConfig> getSystemConfigsByPrefix(String prefix) throws SaturnJobConsoleException;
+
 	String getPropertiesCached() throws SaturnJobConsoleException;
 
 	Integer insertOrUpdate(SystemConfig systemConfig) throws SaturnJobConsoleException;

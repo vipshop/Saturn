@@ -14,6 +14,8 @@ public interface SystemConfigRepository {
 
 	List<SystemConfig> selectByLastly();
 
+	List<SystemConfig> selectByPropertyPrefix(String prefix);
+
 	Integer insert(SystemConfig systemConfig);
 
 	Integer updateById(SystemConfig systemConfig);
