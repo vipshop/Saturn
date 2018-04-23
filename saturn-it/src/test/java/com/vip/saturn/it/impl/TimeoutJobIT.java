@@ -63,7 +63,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 			status.sleepSeconds = 30;
 			status.finished = false;
 			status.timeout = false;
-			status.beforetimeout = false;
+			status.beforeTimeout = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
@@ -87,7 +87,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
-						if (!status.finished || !status.timeout || !status.beforetimeout) {
+						if (!status.finished || !status.timeout || !status.beforeTimeout) {
 							return false;
 						}
 					}

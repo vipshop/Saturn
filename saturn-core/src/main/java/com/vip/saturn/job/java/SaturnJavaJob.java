@@ -188,6 +188,7 @@ public class SaturnJavaJob extends CrondJob {
 					log.info("[{}] msg=force stop {} - {}", jobName, shardingItemCallable.getJobName(),
 							shardingItemCallable.getItem());
 					if (shardingItemCallable.forceStop()) {
+						shardingItemFutureTask.getCallable().beforeForceStop();
 						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 					}
 				} catch (Throwable t) {
@@ -247,6 +248,12 @@ public class SaturnJavaJob extends CrondJob {
 			SaturnExecutionContext shardingContext,
 			final JavaShardingItemCallable callable) {
 		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "beforeTimeout", key, value);
+	}
+
+	public void beforeForceStop(final String jobName, final Integer key, final String value,
+			SaturnExecutionContext shardingContext,
+			final JavaShardingItemCallable callable) {
+		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "beforeForceStop", key, value);
 	}
 
 	public void postForceStop(final String jobName, final Integer key, final String value,

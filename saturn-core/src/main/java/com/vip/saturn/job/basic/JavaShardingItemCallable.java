@@ -224,6 +224,14 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		}
 	}
 
+	public void beforeForceStop() {
+		try {
+			((SaturnJavaJob) saturnJob).beforeForceStop(jobName, item, itemValue, shardingContext, this);
+		} catch (Throwable t) {
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+		}
+	}
+
 	protected void postForceStop() {
 		try {
 			((SaturnJavaJob) saturnJob).postForceStop(jobName, item, itemValue, shardingContext, this);

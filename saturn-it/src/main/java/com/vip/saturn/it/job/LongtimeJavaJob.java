@@ -15,7 +15,8 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 		public boolean running;
 		public boolean finished;
 		public boolean timeout;
-		public boolean beforetimeout;
+		public boolean beforeTimeout;
+		public Boolean beforeKilled = Boolean.FALSE;
 		public boolean killed;
 	}
 
@@ -43,6 +44,15 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 	}
 
 	@Override
+	public void beforeTimeout(String jobName, Integer shardItem, String shardParam,
+			SaturnJobExecutionContext shardingContext) {
+		String key = jobName + "_" + shardItem;
+		JobStatus status = statusMap.get(key);
+		status.beforeTimeout = true;
+		System.out.println(new Date() + "before timeout:" + jobName + "; " + shardItem + ";" + shardParam);
+	}
+
+	@Override
 	public void onTimeout(String jobName, Integer shardItem, String shardParam,
 			SaturnJobExecutionContext shardingContext) {
 		String key = jobName + "_" + shardItem;
@@ -52,12 +62,19 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 	}
 
 	@Override
-	public void beforeTimeout(String jobName, Integer shardItem, String shardParam,
+	public void beforeForceStop(String jobName, Integer shardItem, String shardParam,
 			SaturnJobExecutionContext shardingContext) {
 		String key = jobName + "_" + shardItem;
 		JobStatus status = statusMap.get(key);
-		status.beforetimeout = true;
-		System.out.println(new Date() + "before timeout:" + jobName + "; " + shardItem + ";" + shardParam);
+		status.beforeKilled = Boolean.TRUE;
+		System.out.println(new Date() + "before killed:" + jobName + "; " + shardItem + ";" + shardParam);
+		try {
+			synchronized (status.beforeKilled) {
+				status.beforeKilled.wait();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import com.vip.saturn.job.msg.MsgHolder;
 public abstract class AbstractSaturnMsgJob extends BaseSaturnJob {
 
 	/**
-	 * vms 作业处理入口
+	 * 消息作业处理入口
 	 *
 	 * @param jobName 作业名
 	 * @param shardItem 分片ID
@@ -16,17 +16,36 @@ public abstract class AbstractSaturnMsgJob extends BaseSaturnJob {
 	public abstract SaturnJobReturn handleMsgJob(String jobName, Integer shardItem, String shardParam,
 			MsgHolder msgHolder, SaturnJobExecutionContext shardingContext) throws InterruptedException;
 
-	public void onTimeout(String jobName, Integer key, String value, MsgHolder msgHolder,
+	/**
+	 * 超时强杀前调用此方法。
+	 */
+	public void beforeTimeout(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder,
 			SaturnJobExecutionContext shardingContext) {
 		// 由作业类实现逻辑
 	}
 
-	public void beforeTimeout(String jobName, Integer key, String value, MsgHolder msgHolder,
+	/**
+	 * 超时强杀之后调用此方法。
+	 */
+	public void onTimeout(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder,
 			SaturnJobExecutionContext shardingContext) {
 		// 由作业类实现逻辑
 	}
 
-	public void postForceStop(String jobName, Integer key, String value, MsgHolder msgHolder,
+	/**
+	 * 立即终止、Restart等造成的<b>强杀之前</b>会调用此方法。<br/>
+	 * 特别的是，超时强杀不会调用此方法，而是调用{@link #beforeTimeout(String, Integer, String, MsgHolder, SaturnJobExecutionContext)}方法。
+	 */
+	public void beforeForceStop(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder,
+			SaturnJobExecutionContext shardingContext) {
+		// 由作业类实现逻辑
+	}
+
+	/**
+	 * 立即终止、Restart等造成的<b>强杀之后</b>会调用此方法。<br/>
+	 * 特别的是，超时强杀之后不会调用此方法，而是调用{@link #onTimeout(String, Integer, String, MsgHolder, SaturnJobExecutionContext)}方法。
+	 */
+	public void postForceStop(String jobName, Integer shardItem, String shardParam, MsgHolder msgHolder,
 			SaturnJobExecutionContext shardingContext) {
 		// 由作业类实现逻辑
 	}

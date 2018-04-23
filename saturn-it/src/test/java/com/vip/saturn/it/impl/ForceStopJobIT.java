@@ -64,8 +64,10 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 			status.runningCount = 0;
 			status.sleepSeconds = 60;
 			status.finished = false;
-			status.killed = false;
+			status.beforeTimeout = false;
 			status.timeout = false;
+			status.beforeKilled = false;
+			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
@@ -94,6 +96,12 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 				public boolean docheck() {
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
+						if(status.beforeKilled == false) {
+							return false;
+						}
+						synchronized (status.beforeKilled) {
+							status.beforeKilled.notifyAll();
+						}
 						if (!status.finished || !status.killed) {
 							return false;
 						}
@@ -125,8 +133,10 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 			status.runningCount = 0;
 			status.sleepSeconds = 1;
 			status.finished = false;
-			status.killed = false;
+			status.beforeTimeout = false;
 			status.timeout = false;
+			status.beforeKilled = false;
+			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 		runAtOnce(jobName);
