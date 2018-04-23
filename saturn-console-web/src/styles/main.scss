@@ -150,6 +150,17 @@ form {
 .el-autocomplete-suggestion li.highlighted, .el-autocomplete-suggestion li:hover {
     background-color: #e4e8f1;
 }
+/* input-group */
+.el-input-group__append {
+    .el-button, .el-select {
+        margin: -2px -20px 0;
+    }
+}
+.el-input-group__prepend {
+    .el-button, .el-select {
+        margin: -2px -20px 0;
+    }
+}
 /* input-number */
 .el-input-number .el-input__inner {
     text-align: left;

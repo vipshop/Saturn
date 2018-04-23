@@ -23,19 +23,24 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select v-model="filters.groups" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.groups" @change="scope.search">
                                 <el-option label="全部分组" value=""></el-option>
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select v-model="filters.status" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="搜索" v-model="filters.jobName" @keyup.enter.native="scope.search"></el-input>
+                            <el-input :placeholder="filterColumnPlaceholder" v-model="filters[selectColumn]" @keyup.enter.native="scope.search">
+                              <el-select style="width: 120px;" slot="prepend" v-model="selectColumn">
+                                  <el-option label="作业名" value="jobName"></el-option>
+                                  <el-option label="描述" value="description"></el-option>
+                              </el-select>
+                            </el-input>
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
@@ -157,10 +162,12 @@ export default {
         jobName: '',
         groups: '',
         status: '',
+        description: '',
       },
       orderBy: 'jobName',
       groupList: [],
       jobList: [],
+      selectColumn: 'jobName',
       statusTag: {
         READY: 'primary',
         RUNNING: 'success',
@@ -511,6 +518,21 @@ export default {
   computed: {
     domainName() {
       return this.$route.params.domain;
+    },
+    filterColumnPlaceholder() {
+      let str = '';
+      switch (this.selectColumn) {
+        case 'jobName':
+          str = '请输入作业名';
+          break;
+        case 'description':
+          str = '请输入作业描述';
+          break;
+        default:
+          str = '';
+          break;
+      }
+      return str;
     },
   },
 };

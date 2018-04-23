@@ -80,7 +80,7 @@ export default {
             if (value || (typeof value === 'boolean')) {
               filtered = filtered.filter((e) => {
                 if (typeof e[key] === 'string') {
-                  return e[key].indexOf(value) > -1;
+                  return e[key].toLowerCase().indexOf(value.toLowerCase().trim()) > -1;
                 }
                 return e[key] === value;
               });
