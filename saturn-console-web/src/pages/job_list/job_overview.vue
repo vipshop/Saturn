@@ -29,6 +29,12 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
+                            <el-select v-model="filters.status" @change="scope.search">
+                                <el-option label="全部状态" value=""></el-option>
+                                <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="">
                             <el-input placeholder="搜索" v-model="filters.jobName" @keyup.enter.native="scope.search"></el-input>
                         </el-form-item>
                         <el-form-item>
@@ -55,7 +61,7 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="jobName" label="作业名" min-width="110" sortable>
+                            <el-table-column prop="jobName" label="作业名" sortable>
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
                                         <el-button type="text">
@@ -84,7 +90,7 @@
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="description" label="描述">
+                            <el-table-column prop="description" show-overflow-tooltip label="描述" width="170px">
                                 <template slot-scope="scope"> 
                                     {{scope.row.description || '-'}}
                                 </template>
@@ -150,6 +156,7 @@ export default {
       filters: {
         jobName: '',
         groups: '',
+        status: '',
       },
       orderBy: 'jobName',
       groupList: [],
