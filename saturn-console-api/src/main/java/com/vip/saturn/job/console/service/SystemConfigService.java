@@ -15,6 +15,8 @@ public interface SystemConfigService {
 
 	String getValueDirectly(String property);
 
+	List<String> getValuesByPrefix(String prefix);
+
 	Integer getIntegerValue(String property, int defaultValue);
 
 	boolean getBooleanValue(String property, boolean defaultValue);
@@ -26,5 +28,7 @@ public interface SystemConfigService {
 	String getPropertiesCached() throws SaturnJobConsoleException;
 
 	Integer insertOrUpdate(SystemConfig systemConfig) throws SaturnJobConsoleException;
+
+	void reload();
 
 }

@@ -38,7 +38,7 @@ import java.util.Map;
 @RequestMapping("/console/configs")
 public class SystemConfigController extends AbstractGUIController {
 
-	private static final ObjectMapper YAML_OBJ_MAPPER = new ObjectMapper(new YAMLFactory());
+	protected static final ObjectMapper YAML_OBJ_MAPPER = new ObjectMapper(new YAMLFactory());
 
 	@Resource
 	private SystemConfigService systemConfigService;
@@ -99,7 +99,7 @@ public class SystemConfigController extends AbstractGUIController {
 		return jobConfigDisplayInfoMap;
 	}
 
-	private Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
+	protected Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
 		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef = new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
 		};
 
@@ -118,5 +118,7 @@ public class SystemConfigController extends AbstractGUIController {
 		return configMap;
 	}
 
-
+	public SystemConfigService getSystemConfigService() {
+		return systemConfigService;
+	}
 }

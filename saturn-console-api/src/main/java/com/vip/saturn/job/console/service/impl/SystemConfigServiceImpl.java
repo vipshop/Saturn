@@ -98,6 +98,21 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	}
 
 	@Override
+	public List<String> getValuesByPrefix(String prefix) {
+		synchronized (systemConfigCache) {
+			List<String> result = Lists.newArrayList();
+
+			for (Map.Entry<String, String> entry : systemConfigCache.entrySet()) {
+				if (entry.getKey().startsWith(prefix)) {
+					result.add(entry.getValue());
+				}
+			}
+
+			return result;
+		}
+	}
+
+	@Override
 	public Integer getIntegerValue(String property, int defaultValue) {
 		String strValue = getValue(property);
 		if (strValue == null) {
@@ -177,6 +192,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		int result = systemConfig4SqlService.insert(systemConfig);
 		updateCacheIfNeed(systemConfig, result);
 		return result;
+	}
+
+	@Override
+	public void reload() {
+		loadAll();
 	}
 
 	private void updateCacheIfNeed(SystemConfig systemConfig, int result) {

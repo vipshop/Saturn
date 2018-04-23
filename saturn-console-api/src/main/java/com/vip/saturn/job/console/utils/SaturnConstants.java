@@ -23,7 +23,7 @@ public class SaturnConstants {
 	/**
 	 * 获取sys_config表数据的间隔时间
 	 */
-	public static final long GET_SYS_CONFIG_DATA_REFRESH_TIME = 1000L * 60 * 10;
+	public static final long GET_SYS_CONFIG_DATA_REFRESH_TIME = 1000L * 60 * 5;
 
 	public static final String TIME_ZONE_ID_DEFAULT = "Asia/Shanghai";
 
