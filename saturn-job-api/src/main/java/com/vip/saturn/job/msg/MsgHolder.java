@@ -86,6 +86,7 @@ public class MsgHolder implements Serializable {
 
 	/**
 	 * 使用当前字符集编码，将原始byte[]类型的payload转成字符串类型。如果有编码要求，建议直接使用{@link #getPayloadBytes()}
+	 * @return 返回payload的字符串
 	 */
 	@Deprecated
 	public String getPayload() {

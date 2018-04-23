@@ -2,6 +2,7 @@ package com.vip.saturn.job;
 
 import com.vip.saturn.job.alarm.AlarmInfo;
 import com.vip.saturn.job.exception.SaturnJobException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,22 +21,24 @@ public abstract class BaseSaturnJob {
 	}
 
 	/**
-	 * The version of the business logic.
-	 *
-	 * @return version of the job
+	 * @return 返回该作业业务的版本号
 	 */
 	public String getJobVersion() {
 		return EMPTY_VERSION;
 	}
 
 	/**
-	 * The job was just enabled.
+	 * 作业启用后，执行该方法。
+	 *
+	 * @param jobName 作业名
 	 */
 	public void onEnabled(String jobName) {
 	}
 
 	/**
-	 * The job was just disabled.
+	 * 作业禁用后，执行该方法。
+	 *
+	 * @param jobName 作业名
 	 */
 	public void onDisabled(String jobName) {
 	}
@@ -53,8 +56,8 @@ public abstract class BaseSaturnJob {
 		if (saturnApi != null) {
 			Class<?> clazz = saturnApi.getClass();
 			try {
-				clazz.getMethod("updateJobCron", String.class, String.class, Map.class).invoke(saturnApi, jobName, cron,
-						customContext);
+				clazz.getMethod("updateJobCron", String.class, String.class, Map.class)
+						.invoke(saturnApi, jobName, cron, customContext);
 			} catch (Exception e) {
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			}
@@ -65,8 +68,9 @@ public abstract class BaseSaturnJob {
 	 * 发告警到Saturn Console。
 	 *
 	 * @param jobName 作业名。必填。
-	 * @param shardItem 分片ID。可以为null。
+	 * @param shardItem 分片项。可以为null。
 	 * @param alarmInfo alarm详细信息。
+	 * @throws SaturnJobException 告警异常
 	 */
 	public void raiseAlarm(String jobName, Integer shardItem, AlarmInfo alarmInfo) throws SaturnJobException {
 		if (saturnApi != null) {
