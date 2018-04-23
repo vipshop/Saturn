@@ -66,9 +66,6 @@ export default {
         label: '关闭',
         value: '',
       }, {
-        label: '5秒',
-        value: 5000,
-      }, {
         label: '30秒',
         value: 30000,
       }, {
