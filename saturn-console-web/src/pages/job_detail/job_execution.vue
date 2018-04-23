@@ -61,16 +61,25 @@ export default {
       domainName: this.$route.params.domain,
       jobName: this.$route.params.jobName,
       isViewLogVisible: false,
-      autoRefreshTime: 30000,
+      autoRefreshTime: '',
       refreshTimes: [{
-        label: '15秒',
-        value: 15000,
+        label: '关闭',
+        value: '',
+      }, {
+        label: '5秒',
+        value: 5000,
       }, {
         label: '30秒',
         value: 30000,
       }, {
-        label: '60秒',
+        label: '1分钟',
         value: 60000,
+      }, {
+        label: '3分钟',
+        value: 180000,
+      }, {
+        label: '5分钟',
+        value: 300000,
       }],
       statusTag: {
         RUNNING: 'success',
@@ -106,9 +115,13 @@ export default {
       this.isViewLogVisible = false;
     },
     refreshExecutions() {
-      this.interval = setInterval(() => {
-        this.init();
-      }, this.autoRefreshTime);
+      if (this.autoRefreshTime) {
+        this.interval = setInterval(() => {
+          this.init();
+        }, this.autoRefreshTime);
+      } else {
+        clearInterval(this.interval);
+      }
     },
     getJobExecutors() {
       return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/execution/status`).then((data) => {
@@ -130,7 +143,6 @@ export default {
   },
   created() {
     this.init();
-    this.refreshExecutions();
   },
   destroyed() {
     clearInterval(this.interval);
