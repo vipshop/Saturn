@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,14 +33,16 @@ public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
 		String body = result.getResponse().getContentAsString();
 		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
 		Map<String, Object> objValue = (Map<String, Object>) resultMap.get("obj");
-		assertEquals(4, objValue.size());
+		assertEquals(5, objValue.size());
 		List<JobConfigMeta> metas = (List<JobConfigMeta>) objValue.get("job_configs");
-		assertEquals(2, metas.size());
+		assertTrue(metas.size() > 0);
 		metas = (List<JobConfigMeta>) objValue.get("executor_configs");
-		assertEquals(2, metas.size());
+		assertTrue(metas.size() > 0);
 		metas = (List<JobConfigMeta>) objValue.get("cluster_configs");
-		assertEquals(4, metas.size());
+		assertTrue(metas.size() > 0);
 		metas = (List<JobConfigMeta>) objValue.get("console_configs");
-		assertEquals(2, metas.size());
+		assertTrue(metas.size() > 0);
+		metas = (List<JobConfigMeta>) objValue.get("other_configs");
+		assertTrue(metas.size() > 0);
 	}
 }

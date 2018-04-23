@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * System config related operations.
@@ -81,22 +83,55 @@ public class SystemConfigController extends AbstractGUIController {
 		return new SuccessResponseEntity(genSystemConfigInfo(jobConfigGroups, systemConfigs));
 	}
 
+	/**
+	 * 根据Yaml定义，返回作业配置。
+	 *
+	 * @param jobConfigGroups 来自yaml定义的配置展现分类定义
+	 * @param systemConfigs 数据库的系统配置项
+	 * @return 配置分组与配置信息map
+	 */
 	private Map<String, List<SystemConfigVo>> genSystemConfigInfo(Map<String, List<JobConfigMeta>> jobConfigGroups,
 			List<SystemConfig> systemConfigs) {
 		Map<String, SystemConfig> systemConfigMap = convertList2Map(systemConfigs);
 		Map<String, List<SystemConfigVo>> jobConfigDisplayInfoMap = Maps.newHashMap();
+		Set<String> categorizedConfigKeySet = Sets.newHashSet();
+
 		for (Map.Entry<String, List<JobConfigMeta>> group : jobConfigGroups.entrySet()) {
 			List<JobConfigMeta> jobConfigMetas = group.getValue();
 			List<SystemConfigVo> jobConfigVos = Lists.newArrayListWithCapacity(jobConfigMetas.size());
 			for (JobConfigMeta configMeta : jobConfigMetas) {
-				SystemConfig systemConfig = systemConfigMap.get(configMeta.getName());
+				String configName = configMeta.getName();
+				SystemConfig systemConfig = systemConfigMap.get(configName);
 				String value = systemConfig != null ? systemConfig.getValue() : null;
-				jobConfigVos.add(new SystemConfigVo(configMeta.getName(), value, configMeta.getDesc_zh()));
+				jobConfigVos.add(new SystemConfigVo(configName, value, configMeta.getDesc_zh()));
+				categorizedConfigKeySet.add(configName);
 			}
 
 			jobConfigDisplayInfoMap.put(group.getKey(), jobConfigVos);
 		}
+
+		// 将所有没有在yaml定义的配置放到Others组别
+		if (categorizedConfigKeySet.size() != systemConfigs.size()) {
+			List<SystemConfigVo> unCategorizedJobConfigVos = getUncategorizedSystemConfigs(systemConfigs,
+					categorizedConfigKeySet);
+			jobConfigDisplayInfoMap.put("other_configs", unCategorizedJobConfigVos);
+		}
+
 		return jobConfigDisplayInfoMap;
+	}
+
+	private List<SystemConfigVo> getUncategorizedSystemConfigs(List<SystemConfig> systemConfigList,
+			Set<String> configKeySet) {
+		List<SystemConfigVo> unCategorizedJobConfigVos = Lists.newArrayList();
+		for (SystemConfig systemConfig : systemConfigList) {
+			String property = systemConfig.getProperty();
+			if (configKeySet.contains(property)) {
+				continue;
+			}
+			unCategorizedJobConfigVos.add(new SystemConfigVo(property, systemConfig.getValue(), ""));
+		}
+
+		return unCategorizedJobConfigVos;
 	}
 
 	protected Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
