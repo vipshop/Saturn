@@ -59,7 +59,7 @@ export default {
   methods: {
     handleOperate(operation) {
       if (operation === 'stopAtOnce') {
-        this.$message.confirmMessage(`确认立即终止作业 ${this.jobName} 吗?`, () => {
+        this.$message.confirmMessage(`警告：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现postForceStop方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。确认立即终止作业 ${this.jobName} 吗?`, () => {
           this.operateRequest(operation);
         });
       } else {

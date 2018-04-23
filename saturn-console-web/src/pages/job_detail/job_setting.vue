@@ -20,7 +20,7 @@
                                 <el-form-item prop="cron" label="Cron">
                                     <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                                         <el-input v-model="jobSettingInfo.cron">
-                                            <el-button slot="append" @click="checkAndForecastCron" style="margin-top: -15px">预测</el-button>
+                                            <el-button slot="append" @click="checkAndForecastCron">预测</el-button>
                                         </el-input>
                                     </el-tooltip>
                                 </el-form-item>
@@ -120,7 +120,12 @@
                             </el-col>
                             <el-col :span="11">
                                 <el-form-item prop="timeoutSeconds" label="超时强杀(秒)">
-                                    <el-input v-model="jobSettingInfo.timeoutSeconds"></el-input>
+                                    <el-tooltip popper-class="form-tooltip" placement="top" effect="light">
+                                        <div slot="content">
+                                            <span class="text-warning">警告：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现postForceStop方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。</span>
+                                        </div>
+                                        <el-input v-model="jobSettingInfo.timeoutSeconds"></el-input>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>

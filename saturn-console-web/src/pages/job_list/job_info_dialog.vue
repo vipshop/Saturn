@@ -23,7 +23,7 @@
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                             <el-input v-model="jobInfo.cron">
-                                <el-button slot="append" @click="checkAndForecastCron" style="margin-top: -15px">预测</el-button>
+                                <el-button slot="append" @click="checkAndForecastCron">预测</el-button>
                             </el-input>
                         </el-tooltip>
                     </el-col>
