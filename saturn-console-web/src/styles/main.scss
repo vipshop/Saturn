@@ -152,13 +152,39 @@ form {
 }
 /* input-group */
 .el-input-group__append {
+    button.el-button {
+        color: #606266;
+    }
     .el-button, .el-select {
         margin: -2px -20px 0;
     }
+    div.el-select {
+        .el-input__inner {
+            color: #606266;
+        }
+        &:hover {
+            .el-input__inner {
+                color: #606266;
+            }
+        }
+    }
 }
 .el-input-group__prepend {
+    button.el-button {
+        color: #606266;
+    }
     .el-button, .el-select {
         margin: -2px -20px 0;
+    }
+    div.el-select {
+        .el-input__inner {
+            color: #606266;
+        }
+        &:hover {
+            .el-input__inner {
+                color: #606266;
+            }
+        }
     }
 }
 /* input-number */
