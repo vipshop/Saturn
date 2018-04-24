@@ -22,6 +22,7 @@ import CronPredictDialog from './common/cronPredictDialog';
 import InputTags from './common/inputTags';
 import BatchMigrateDialog from './common/dialog/batch_migrate_dialog';
 import MigrateStatusDialog from './common/dialog/migrate_status_dialog';
+import AddConfigDialog from './common/dialog/add_config_dialog';
 
 Vue.component('Container', Container);
 Vue.component('Header', Header);
@@ -46,3 +47,4 @@ Vue.component('CronPredictDialog', CronPredictDialog);
 Vue.component('InputTags', InputTags);
 Vue.component('batch-migrate-dialog', BatchMigrateDialog);
 Vue.component('migrate-status-dialog', MigrateStatusDialog);
+Vue.component('add-config-dialog', AddConfigDialog);
