@@ -41,7 +41,7 @@ export default {
       this.$http.post('/console/configs', params).then(() => {
         this.$emit('config-input-success');
       })
-      .catch(() => { this.$http.buildErrorHandler('获取系统配置请求失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('更新系统配置请求失败！'); });
     },
   },
 };
