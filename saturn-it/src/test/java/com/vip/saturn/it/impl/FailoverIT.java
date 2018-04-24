@@ -3,13 +3,6 @@
  */
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.List;
-
-import org.junit.*;
-
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
@@ -18,7 +11,13 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ItemUtils;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FailoverIT extends AbstractSaturnIT {
@@ -45,7 +44,7 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景1：如果有空闲的Executor，failover就会立即执行，不需要等到主节点sharding完成 Executor个数 > 分片个数的情况
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@Test
@@ -59,7 +58,7 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景2：普通的failover场景 Executor个数 = 分片个数的情况
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@Test
@@ -73,7 +72,7 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景3：在failover执行之前禁用的作业重新启用后不应该继续上次的failover流程
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@Test
@@ -86,7 +85,7 @@ public class FailoverIT extends AbstractSaturnIT {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param shardCount
 	 * @param jobName
 	 * @throws InterruptedException
@@ -100,7 +99,6 @@ public class FailoverIT extends AbstractSaturnIT {
 			status.sleepSeconds = 10;
 			status.finished = false;
 			status.timeout = false;
-			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
@@ -140,8 +138,8 @@ public class FailoverIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 		Thread.sleep(2000);
-		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-				ShardingNode.getShardingNode(saturnExecutorList.get(0).getExecutorName()))));
+		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+				.getNodeFullPath(jobName, ShardingNode.getShardingNode(saturnExecutorList.get(0).getExecutorName()))));
 
 		// 4 停止第一个executor，在该executor上运行的分片会失败转移
 		stopExecutor(0);
@@ -171,7 +169,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		for (Integer item : items) {
 			String key = jobName + "_" + item;
 			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
-			if (!status.finished || !status.killed) {
+			if (!status.finished || status.killed == 0) {
 				fail("should finish and killed");
 			}
 			status.runningCount = 0;
@@ -208,7 +206,7 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 在failover执行之前禁用的作业重新启用后不应该继续上次的failover流程
-	 * 
+	 *
 	 * @param shardCount
 	 * @param jobName
 	 * @throws InterruptedException
@@ -223,7 +221,6 @@ public class FailoverIT extends AbstractSaturnIT {
 			status.sleepSeconds = 20;
 			status.finished = false;
 			status.timeout = false;
-			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
@@ -297,7 +294,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		for (Integer item : items) {
 			String key = jobName + "_" + item;
 			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
-			if (!status.finished || !status.killed) {
+			if (!status.finished || status.killed == 0) {
 				fail("should finish and killed");
 			}
 			status.runningCount = 0;
@@ -307,7 +304,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		for (Integer item : items2) {
 			String key = jobName + "_" + item;
 			LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
-			if (status.finished || status.killed || status.timeout) {
+			if (status.finished || status.killed > 0 || status.timeout) {
 				fail("should running");
 			}
 			if (status.runningCount != 0) {

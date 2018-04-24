@@ -102,7 +102,6 @@ public class RunAtOnceJobIT extends AbstractSaturnIT {
 		status.sleepSeconds = 3;
 		status.finished = false;
 		status.timeout = false;
-		status.killed = false;
 		LongtimeJavaJob.statusMap.put(jobName + "_" + 0, status);
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0 0 1 * * ?");

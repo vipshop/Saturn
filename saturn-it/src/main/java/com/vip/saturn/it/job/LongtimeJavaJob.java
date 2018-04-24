@@ -1,12 +1,12 @@
 package com.vip.saturn.it.job;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.vip.saturn.job.AbstractSaturnJavaJob;
 import com.vip.saturn.job.SaturnJobExecutionContext;
 import com.vip.saturn.job.SaturnJobReturn;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 	public static class JobStatus {
@@ -16,8 +16,10 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 		public boolean finished;
 		public boolean timeout;
 		public boolean beforeTimeout;
-		public Boolean beforeKilled = Boolean.FALSE;
-		public boolean killed;
+		public volatile int beforeKilled = 0;
+		public volatile int killed = 0;
+
+		public volatile int killCount = 0;
 	}
 
 	public static Map<String, JobStatus> statusMap = new HashMap<String, JobStatus>();
@@ -66,15 +68,8 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 			SaturnJobExecutionContext shardingContext) {
 		String key = jobName + "_" + shardItem;
 		JobStatus status = statusMap.get(key);
-		status.beforeKilled = Boolean.TRUE;
+		status.beforeKilled = ++status.killCount;
 		System.out.println(new Date() + "before killed:" + jobName + "; " + shardItem + ";" + shardParam);
-		try {
-			synchronized (status.beforeKilled) {
-				status.beforeKilled.wait();
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
@@ -82,7 +77,7 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 			SaturnJobExecutionContext shardingContext) {
 		String key = jobName + "_" + shardItem;
 		JobStatus status = statusMap.get(key);
-		status.killed = true;
+		status.killed = ++status.killCount;
 		System.out.println(new Date() + "runing process killed:" + jobName + "; " + shardItem + ";" + shardParam);
 	}
 }

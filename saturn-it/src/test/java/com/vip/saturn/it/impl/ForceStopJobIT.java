@@ -3,20 +3,19 @@
  */
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.Collection;
-
-import org.junit.*;
-
 import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.it.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * 项目名称：saturn-job-it 创建时间：2016年7月26日 上午11:32:56
@@ -66,8 +65,6 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 			status.finished = false;
 			status.beforeTimeout = false;
 			status.timeout = false;
-			status.beforeKilled = false;
-			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
@@ -96,13 +93,10 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 				public boolean docheck() {
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
-						if(status.beforeKilled == false) {
+						if (status.beforeKilled != 1) {
 							return false;
 						}
-						synchronized (status.beforeKilled) {
-							status.beforeKilled.notifyAll();
-						}
-						if (!status.finished || !status.killed) {
+						if (!status.finished || status.killed != 2) {
 							return false;
 						}
 					}
@@ -135,8 +129,6 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 			status.finished = false;
 			status.beforeTimeout = false;
 			status.timeout = false;
-			status.beforeKilled = false;
-			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 		runAtOnce(jobName);

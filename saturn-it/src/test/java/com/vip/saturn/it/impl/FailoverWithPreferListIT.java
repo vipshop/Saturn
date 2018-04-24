@@ -56,7 +56,6 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			status.sleepSeconds = 10;
 			status.finished = false;
 			status.timeout = false;
-			status.killed = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 

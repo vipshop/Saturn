@@ -52,7 +52,6 @@ public class ZkStopStartIT extends AbstractSaturnIT {
 			status.runningCount = 0;
 			status.sleepSeconds = 60;
 			status.finished = false;
-			status.killed = false;
 			status.timeout = false;
 			status.running = false;
 			LongtimeJavaJob.statusMap.put(key, status);

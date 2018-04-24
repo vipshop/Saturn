@@ -122,7 +122,6 @@ public class ExecutionIT extends AbstractSaturnIT {
 			status.runningCount = 0;
 			status.sleepSeconds = 20;
 			status.finished = false;
-			status.killed = false;
 			status.timeout = false;
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
