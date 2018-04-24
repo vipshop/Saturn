@@ -5,12 +5,12 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,9 +46,8 @@ public class SaturnJavaJob extends CrondJob {
 						.invoke(jobBusinessInstance);
 				setJobVersion(version);
 			} catch (Throwable t) {
-				log.error(
-						String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "error throws during get job version"),
-						t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
+						"error throws during get job version"), t);
 				throw new SchedulerException(t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
@@ -82,9 +81,10 @@ public class SaturnJavaJob extends CrondJob {
 		}
 	}
 
-	private void reflectionInvokeInitMethodsOfJobBusinessInstance(JobConfiguration currentConf,
-			String jobClassStr, ClassLoader jobClassLoader)
-			throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	private void reflectionInvokeInitMethodsOfJobBusinessInstance(JobConfiguration currentConf, String jobClassStr,
+			ClassLoader jobClassLoader)
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
 		Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
 		try {
 			Method getObject = jobClass.getMethod("getObject");
@@ -105,8 +105,8 @@ public class SaturnJavaJob extends CrondJob {
 		try {
 			jobBusinessInstance = getObject.invoke(null);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-					jobClassStr + " getObject error"), t);
+			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, jobClassStr + " getObject error"),
+					t);
 		}
 	}
 
@@ -185,9 +185,9 @@ public class SaturnJavaJob extends CrondJob {
 			Thread currentThread = shardingItemCallable.getCurrentThread();
 			if (currentThread != null) {
 				try {
-					log.info("[{}] msg=force stop {} - {}", jobName, shardingItemCallable.getJobName(),
-							shardingItemCallable.getItem());
 					if (shardingItemCallable.forceStop()) {
+						log.info("[{}] msg=Force stop job, jobName:{}, item:{}", jobName, jobName,
+								shardingItemCallable.getItem());
 						shardingItemFutureTask.getCallable().beforeForceStop();
 						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 					}
@@ -217,14 +217,13 @@ public class SaturnJavaJob extends CrondJob {
 						throws Exception {
 					return jobBusinessInstance.getClass()
 							.getMethod("handleJavaJob", String.class, Integer.class, String.class,
-									saturnJobExecutionContextClazz)
-							.invoke(jobBusinessInstance, jobName, key, value,
+									saturnJobExecutionContextClazz).invoke(jobBusinessInstance, jobName, key, value,
 									callable.getContextForJob(jobClassLoader));
 				}
 			}.call(jobBusinessInstance, saturnExecutorService);
 
-			SaturnJobReturn saturnJobReturn = (SaturnJobReturn) JavaShardingItemCallable.cloneObject(ret,
-					saturnExecutorService.getExecutorClassLoader());
+			SaturnJobReturn saturnJobReturn = (SaturnJobReturn) JavaShardingItemCallable
+					.cloneObject(ret, saturnExecutorService.getExecutorClassLoader());
 			if (saturnJobReturn != null) {
 				callable.setBusinessReturned(true);
 			}
@@ -239,26 +238,22 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	public void postTimeout(final String jobName, final Integer key, final String value,
-			SaturnExecutionContext shardingContext,
-			final JavaShardingItemCallable callable) {
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) {
 		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "onTimeout", key, value);
 	}
 
 	public void beforeTimeout(final String jobName, final Integer key, final String value,
-			SaturnExecutionContext shardingContext,
-			final JavaShardingItemCallable callable) {
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) {
 		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "beforeTimeout", key, value);
 	}
 
 	public void beforeForceStop(final String jobName, final Integer key, final String value,
-			SaturnExecutionContext shardingContext,
-			final JavaShardingItemCallable callable) {
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) {
 		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "beforeForceStop", key, value);
 	}
 
 	public void postForceStop(final String jobName, final Integer key, final String value,
-			SaturnExecutionContext shardingContext,
-			final JavaShardingItemCallable callable) {
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) {
 		callJobBusinessClassMethodTimeoutOrForceStop(jobName, shardingContext, callable, "postForceStop", key, value);
 	}
 
@@ -273,9 +268,8 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	private void callJobBusinessClassMethodTimeoutOrForceStop(final String jobName,
-			SaturnExecutionContext shardingContext,
-			final JavaShardingItemCallable callable, final String methodName, final Integer key,
-			final String value) {
+			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable, final String methodName,
+			final Integer key, final String value) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
 		log.info("[{}] msg=SaturnJavaJob {},  jobClass is {}", jobName, methodName, jobClass);
 
@@ -286,8 +280,7 @@ public class SaturnJavaJob extends CrondJob {
 						throws Exception {
 					return jobBusinessInstance.getClass()
 							.getMethod(methodName, String.class, Integer.class, String.class,
-									saturnJobExecutionContextClazz)
-							.invoke(jobBusinessInstance, jobName, key, value,
+									saturnJobExecutionContextClazz).invoke(jobBusinessInstance, jobName, key, value,
 									callable.getContextForJob(jobClassLoader));
 				}
 			}.call(jobBusinessInstance, saturnExecutorService);

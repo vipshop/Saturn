@@ -1,17 +1,16 @@
 package com.vip.saturn.job.basic;
 
+import com.vip.saturn.job.SaturnJobReturn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vip.saturn.job.SaturnJobReturn;
-
 /**
- * 
+ *
  * @author xiaopeng.he
  *
  */
@@ -90,7 +89,8 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			return ret;
 		} finally {
 			done();
-			log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", callable.getJobName(), callable.getItem(), callable.getExecutionTime());
+			log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", callable.getJobName(),
+					callable.getItem(), callable.getExecutionTime());
 		}
 	}
 
@@ -110,7 +110,8 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.onTimeout();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()),
+						t);
 			}
 
 			try {
@@ -118,7 +119,8 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.postForceStop();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()), t);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()),
+						t);
 			}
 
 			callable.checkAndSetSaturnJobReturn();
@@ -131,7 +133,8 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					doneFinallyCallback.call();
 				}
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), e.getMessage()), e);
+				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), e.getMessage()),
+						e);
 			}
 		}
 	}
@@ -141,11 +144,21 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 		Thread businessThread = shardingItemCallable.getCurrentThread();
 		if (businessThread != null) {
 			try {
-
+				// interrupt thread one time, wait business thread to break, wait 2000ms at most
+				if (!shardingItemCallable.isBreakForceStop() && !shardingItemFutureTask.isDone()) {
+					businessThread.interrupt();
+					for (int i = 0; i < 20; i++) {
+						if (shardingItemCallable.isBreakForceStop() || shardingItemFutureTask.isDone()) {
+							return;
+						}
+						Thread.sleep(100L);
+					}
+				}
+				// stop thread
 				while (!shardingItemCallable.isBreakForceStop() && !shardingItemFutureTask.isDone()) {
 					businessThread.stop();
 					if (!shardingItemCallable.isBreakForceStop() && !shardingItemFutureTask.isDone()) {
-						Thread.sleep(50);
+						Thread.sleep(50L);
 					} else {
 						break;
 					}

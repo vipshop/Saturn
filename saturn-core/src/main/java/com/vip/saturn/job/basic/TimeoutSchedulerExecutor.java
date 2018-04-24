@@ -1,12 +1,13 @@
 package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.threads.SaturnThreadFactory;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author chembo.huang
@@ -64,16 +65,18 @@ public class TimeoutSchedulerExecutor {
 		@Override
 		public void run() {
 			try {
-				if (!shardingItemFutureTask.isDone() && shardingItemFutureTask.getCallable().setTimeout()) {
-
-					// 调用beforeTimeout毁掉函数
-					shardingItemFutureTask.getCallable().beforeTimeout();
+				JavaShardingItemCallable javaShardingItemCallable = shardingItemFutureTask.getCallable();
+				if (!shardingItemFutureTask.isDone() && javaShardingItemCallable.setTimeout()) {
+					String jobName = javaShardingItemCallable.getJobName();
+					Integer item = javaShardingItemCallable.getItem();
+					log.info("[{}] msg=Force stop timeout job, jobName:{}, item:{}", jobName, jobName, item);
+					// 调用beforeTimeout函数
+					javaShardingItemCallable.beforeTimeout();
 					// 强杀
 					ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 				}
 			} catch (Throwable t) {
-				log.warn("Fail to force stop timeout job:" + shardingItemFutureTask.getCallable().getJobName()
-						+ " with reason:" + t.getMessage(), t);
+				log.warn("Failed to force stop timeout job", t);
 			}
 		}
 
