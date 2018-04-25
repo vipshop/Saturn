@@ -190,10 +190,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		if (userRoles != null) {
 			for (UserRole userRole : userRoles) {
 				String roleKey = userRole.getRoleKey();
-				if (systemAdminRoleKey.equals(roleKey)) {
-					return;
-				}
-				if (namespace.equals(userRole.getNamespace())) {
+				if (namespace.equals(userRole.getNamespace()) || systemAdminRoleKey.equals(roleKey)) {
 					Role role = roleRepository.selectByKey(roleKey);
 					if (role == null) {
 						continue;
