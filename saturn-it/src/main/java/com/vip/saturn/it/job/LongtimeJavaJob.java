@@ -18,6 +18,7 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 		public boolean beforeTimeout;
 		public volatile int beforeKilled = 0;
 		public volatile int killed = 0;
+		public boolean interrupted = false;
 
 		public volatile int killCount = 0;
 	}
@@ -35,9 +36,8 @@ public class LongtimeJavaJob extends AbstractSaturnJavaJob {
 		try {
 			Thread.sleep(status.sleepSeconds * 1000);
 			status.runningCount++;
-			status.finished = true;
 		} catch (InterruptedException e) {
-			status.finished = true;
+			status.interrupted = true;
 			System.out.println("i am terminating..");
 		} finally {
 			status.finished = true;

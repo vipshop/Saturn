@@ -93,6 +93,9 @@ public class ForceStopJobIT extends AbstractSaturnIT {
 				public boolean docheck() {
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
+						if (!status.interrupted) {
+							return false;
+						}
 						if (status.beforeKilled != 1) {
 							return false;
 						}
