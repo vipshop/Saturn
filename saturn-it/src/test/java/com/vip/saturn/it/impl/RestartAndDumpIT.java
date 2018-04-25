@@ -4,6 +4,7 @@ import com.vip.saturn.it.AbstractSaturnIT;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutorsNode;
 import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.apache.commons.exec.OS;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,6 +36,9 @@ public class RestartAndDumpIT extends AbstractSaturnIT {
 
     @Test
     public void test() throws Exception {
+		if (!OS.isFamilyUnix()) {
+			return;
+		}
         SystemEnvProperties.VIP_SATURN_ENABLE_EXEC_SCRIPT = true;
         SystemEnvProperties.VIP_SATURN_PRG = new File(PRG).getAbsolutePath();
         SystemEnvProperties.VIP_SATURN_LOG_OUTFILE = new File(OUTFILE).getAbsolutePath();
