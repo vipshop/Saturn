@@ -17,7 +17,7 @@
                       <el-button size="small" @click="handleActive(true)" v-if="$common.hasPerm('job:enable', domainName) && (jobInfo.status === 'STOPPING' || jobInfo.status === 'STOPPED')"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                       <el-button size="small" @click="handleActive(false)" v-if="$common.hasPerm('job:disable', domainName) && (jobInfo.status === 'READY' || jobInfo.status === 'RUNNING')"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
                       <el-button size="small" @click="handleOperate('runAtOnce')" v-if="$common.hasPerm('job:runAtOnce', domainName) && (jobInfo.status === 'READY' && jobStatusJudge() && jobInfo.jobType !== 'MSG_JOB')"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
-                      <el-button size="small" @click="handleOperate('stopAtOnce')" v-if="$common.hasPerm('job:stopAtOnce', domainName) && jobInfo.status === 'STOPPING'"><i class="fa fa-stop-circle-o text-warning"></i>立即终止</el-button>
+                      <el-button size="small" type="danger" @click="handleOperate('stopAtOnce')" v-if="$common.hasPerm('job:stopAtOnce', domainName) && jobInfo.status === 'STOPPING'"><i class="fa fa-stop-circle-o"></i>立即终止</el-button>
                       <el-button size="small" @click="handleDelete" v-if="$common.hasPerm('job:remove', domainName) && (jobInfo.status === 'STOPPED' || !jobInfo.enabled)"><i class="fa fa-trash text-danger"></i>删除</el-button>
                   </div>
               </div>
@@ -59,7 +59,9 @@ export default {
   methods: {
     handleOperate(operation) {
       if (operation === 'stopAtOnce') {
-        this.$message.confirmMessage(`警告：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现postForceStop方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。确认立即终止作业 ${this.jobName} 吗?`, () => {
+        const textHtml = `<span style="font-size:12px;color:#E6A23C;">* 注意：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现postForceStop方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。</span><br/>
+        <span>确认立即终止作业 ${this.jobName} 吗?</span>`;
+        this.$message.confirmMessage(textHtml, () => {
           this.operateRequest(operation);
         });
       } else {
