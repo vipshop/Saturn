@@ -15,6 +15,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_DISABLE_CALLING_REST_API;
+
 /**
  * Util for handling update job cron .
  *
@@ -29,6 +31,11 @@ public class UpdateJobCronUtils {
 	 */
 	public static void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext)
 			throws SaturnJobException {
+		if (VIP_SATURN_DISABLE_CALLING_REST_API) {
+			log.info("Update job cron will be ignored as calling REST API is disabled.");
+			return;
+		}
+
 		for (int i = 0, size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size(); i < size; i++) {
 
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
