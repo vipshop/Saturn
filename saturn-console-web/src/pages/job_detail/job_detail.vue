@@ -63,7 +63,9 @@ export default {
           this.operateRequest(operation);
         });
       } else {
-        this.operateRequest(operation);
+        this.$message.confirmMessage(`确认立即执行作业 ${this.jobName} 吗?`, () => {
+          this.operateRequest(operation);
+        });
       }
     },
     operateRequest(operation) {
