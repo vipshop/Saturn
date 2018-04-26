@@ -18,7 +18,7 @@ public class HttpUtils {
 	public static void handleResponse(CloseableHttpResponse httpResponse) throws IOException, SaturnJobException {
 		int status = httpResponse.getStatusLine().getStatusCode();
 
-		if (status == HttpStatus.SC_CREATED) {
+		if (status >= HttpStatus.SC_OK && status < HttpStatus.SC_MULTIPLE_CHOICES) {
 			return;
 		}
 
