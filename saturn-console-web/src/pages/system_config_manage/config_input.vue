@@ -4,8 +4,12 @@
             <el-table :data="parameters" border style="width: 100%">
                 <el-table-column label="配置项" header-align="left">
                     <template slot-scope="scope">
-                        <el-tooltip popper-class="form-tooltip" :content="scope.row.description" placement="bottom">
-                            <el-input v-model="scope.row.key" readonly></el-input>
+                        <el-tooltip popper-class="form-tooltip" placement="bottom">
+                            <div slot="content">
+                                <span v-if="scope.row.description">{{scope.row.description}}</span>
+                                <span v-else>暂无描述</span>
+                            </div>
+                            <span>{{scope.row.key}}</span>
                         </el-tooltip>
                     </template>
                 </el-table-column>

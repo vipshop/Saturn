@@ -36,7 +36,7 @@
             </el-collapse-item>
         </el-collapse>
         <div v-if="addConfigVisible">
-            <add-config-dialog @close-dialog="closeDialog" @add-config-success="configInputSuccess"></add-config-dialog>
+            <add-config-dialog @close-dialog="closeDialog" @add-config-success="addConfigSuccess"></add-config-dialog>
         </div>
     </div>
 </template>
@@ -69,6 +69,11 @@ export default {
       .finally(() => {
         this.loading = false;
       });
+    },
+    addConfigSuccess() {
+      this.addConfigVisible = false;
+      this.$message.successNotify('添加系统配置成功');
+      this.getSystemConfig();
     },
     configInputSuccess() {
       this.$message.successNotify('系统配置保存成功');
