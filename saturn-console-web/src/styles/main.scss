@@ -191,6 +191,10 @@ form {
 .el-input-number .el-input__inner {
     text-align: left;
 }
+/* input-textarea */
+.el-textarea__inner {
+    font-family: inherit;
+}
 /* upload */
 .el-upload-list__item-name [class^=el-icon] {
     height: initial;
