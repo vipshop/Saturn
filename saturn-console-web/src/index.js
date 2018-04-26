@@ -8,7 +8,6 @@ import App from './App';
 import Store from './store';
 import router from './routers';
 import Utils from './utils';
-// import './element-variables.scss';
 import './styles/iconfont/iconfont.css';
 import './styles/main.scss';
 

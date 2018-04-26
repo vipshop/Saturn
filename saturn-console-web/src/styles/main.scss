@@ -230,3 +230,16 @@ form {
 .el-message-box {
     word-wrap: break-word;
 }
+/* button */
+.el-button--default.is-plain {
+    color: #416f9e;
+    &:hover {
+        color: #416f9e;
+    }
+}
+.el-button--default.is-plain.is-disabled {
+    color: #c0c4cc;
+    &:hover {
+        color: #c0c4cc;
+    }
+}
