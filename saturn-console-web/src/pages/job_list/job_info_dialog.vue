@@ -67,7 +67,7 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="Channel名" prop="channelName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                <el-form-item label="执行结果发送的Channel名" prop="channelName" v-if="jobInfo.jobType === 'MSG_JOB'">
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" placement="bottom">
                             <div slot="content">
