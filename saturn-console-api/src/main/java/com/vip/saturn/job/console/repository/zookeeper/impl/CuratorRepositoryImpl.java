@@ -12,7 +12,6 @@ package com.vip.saturn.job.console.repository.zookeeper.impl;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.console.exception.JobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.utils.BooleanWrapper;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
 import com.vip.saturn.job.sharding.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -36,6 +35,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Repository
 public class CuratorRepositoryImpl implements CuratorRepository {
@@ -340,11 +340,11 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				return true;
 			}
 
-			public CuratorTransactionOpImpl replaceIfchanged(String znode, Object value) throws Exception {
-				return replaceIfchanged(znode, value, new BooleanWrapper(false));
+			public CuratorTransactionOpImpl replaceIfChanged(String znode, Object value) throws Exception {
+				return replaceIfChanged(znode, value, new AtomicInteger(0));
 			}
 
-			public CuratorTransactionOpImpl replaceIfchanged(String znode, Object value, BooleanWrapper ifChanged)
+			public CuratorTransactionOpImpl replaceIfChanged(String znode, Object value, AtomicInteger changedCount)
 					throws Exception {
 				byte[] newData = toData(value);
 				if (this.checkExists(znode)) {
@@ -352,10 +352,11 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 					if (!bytesEquals(newData, oldData)) {
 						curatorTransactionFinal = curatorTransactionFinal.check().forPath(znode).and().setData()
 								.forPath(znode, newData).and();
-						ifChanged.setValue(true);
+						changedCount.incrementAndGet();
 					}
 				} else {
 					this.create(znode, newData);
+					changedCount.incrementAndGet();
 				}
 				return this;
 			}

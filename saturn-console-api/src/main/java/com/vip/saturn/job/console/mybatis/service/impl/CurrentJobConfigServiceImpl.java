@@ -29,19 +29,19 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	@Autowired
 	private SqlSessionFactory sqlSessionFactory;
 
-	@Transactional(readOnly = false)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int create(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.insert(currentJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int createSelective(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.insertSelective(currentJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int deleteByPrimaryKey(Long id) throws Exception {
 		return currentJobConfigRepo.deleteByPrimaryKey(id);
@@ -60,13 +60,13 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		return currentJobConfigRepo.selectCount(currentJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKey(currentJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int updateByPrimaryKeySelective(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKeySelective(currentJobConfig);
@@ -88,17 +88,19 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception {
 		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
+	@Transactional(readOnly = true)
 	@Override
 	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws Exception {
@@ -120,7 +122,7 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int deleteAll(int limitNum) {
 		return currentJobConfigRepo.deleteAll(limitNum);

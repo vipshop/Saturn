@@ -9,12 +9,13 @@
 
 package com.vip.saturn.job.console.repository.zookeeper;
 
-import com.vip.saturn.job.console.utils.BooleanWrapper;
-import java.util.Collection;
-import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 import org.apache.zookeeper.data.Stat;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public interface CuratorRepository {
 
@@ -56,9 +57,10 @@ public interface CuratorRepository {
 
 		interface CuratorTransactionOp {
 
-			CuratorTransactionOp replaceIfchanged(String znode, Object value) throws Exception;
+			CuratorTransactionOp replaceIfChanged(String znode, Object value) throws Exception;
 
-			CuratorTransactionOp replaceIfchanged(String znode, Object value, BooleanWrapper bw) throws Exception;
+			CuratorTransactionOp replaceIfChanged(String znode, Object value, AtomicInteger changedCount)
+					throws Exception;
 
 			CuratorTransactionOp create(String znode) throws Exception;
 

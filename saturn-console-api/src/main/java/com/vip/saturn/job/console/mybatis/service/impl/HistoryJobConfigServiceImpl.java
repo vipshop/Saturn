@@ -16,19 +16,19 @@ public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {
 	@Autowired
 	private HistoryJobConfigRepository historyJobConfigRepo;
 
-	@Transactional(readOnly = false)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int create(JobConfig4DB historyJobConfig) throws Exception {
 		return historyJobConfigRepo.insert(historyJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int createSelective(JobConfig4DB historyJobConfig) throws Exception {
 		return historyJobConfigRepo.insertSelective(historyJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int deleteByPrimaryKey(Long id) throws Exception {
 		return historyJobConfigRepo.deleteByPrimaryKey(id);
@@ -48,18 +48,19 @@ public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {
 		return historyJobConfigRepo.selectCount(historyJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int updateByPrimaryKey(JobConfig4DB historyJobConfig) throws Exception {
 		return historyJobConfigRepo.updateByPrimaryKey(historyJobConfig);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int updateByPrimaryKeySelective(JobConfig4DB historyJobConfig) throws Exception {
 		return historyJobConfigRepo.updateByPrimaryKeySelective(historyJobConfig);
 	}
 
+	@Transactional
 	@Override
 	public List<JobConfig4DB> selectPage(JobConfig4DB historyjobconfig, Pageable pageable) throws Exception {
 		List<JobConfig4DB> historyJobConfigs = historyJobConfigRepo.selectPage(historyjobconfig, pageable);
