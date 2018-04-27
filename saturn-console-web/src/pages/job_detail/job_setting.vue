@@ -325,7 +325,7 @@ export default {
         arr = [this.jobSettingInfo.shardingItemParameters];
       }
       arr.forEach((ele) => {
-        if (ele.includes('=')) {
+        if (ele.indexOf('=') > -1) {
           if (ele.split('=')[0] === '') {
             flag = false;
           } else {
