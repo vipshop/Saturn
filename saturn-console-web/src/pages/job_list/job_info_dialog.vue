@@ -50,6 +50,13 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
+                <el-form-item label="自定义参数" prop="jobParameter">
+                    <el-col :span="18">
+                        <el-tooltip popper-class="form-tooltip" content="配置格式: 多个配置使用逗号分隔(key1=value1, key2=value2)。在分片序列号/参数对照表中可作为alias形式引用，格式为{key1}" placement="bottom">
+                            <el-input type="textarea" v-model="jobInfo.jobParameter"></el-input>
+                        </el-tooltip>
+                    </el-col>
+                </el-form-item>
                 <el-form-item prop="timeZone" label="时区">
                     <el-col :span="18">
                         <el-select filterable v-model="jobInfo.timeZone" style="width: 100%">
