@@ -209,7 +209,7 @@ public class ExecutionService extends AbstractSaturnService {
 					int errorGroup = jobRet.getErrorGroup();
 					if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
 						getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getTimeoutNode(item));
-					} else if (errorGroup == SaturnSystemErrorGroup.FAIL) {
+					} else if (is5xxErrorGroup(errorGroup)) {
 						getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 					}
 				} else {
@@ -219,6 +219,10 @@ public class ExecutionService extends AbstractSaturnService {
 				log.warn("update job return fail.", e);
 			}
 		}
+	}
+
+	private boolean is5xxErrorGroup(int errorGroup) {
+		return 5 == errorGroup / 100;
 	}
 
 	/**
