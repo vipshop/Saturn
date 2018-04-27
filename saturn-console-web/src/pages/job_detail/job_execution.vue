@@ -87,7 +87,7 @@ export default {
       },
       translateStatus: {
         RUNNING: '运行中',
-        COMPLETED: '成功',
+        COMPLETED: '完成',
         FAILED: '失败',
         TIMEOUT: '超时',
         PENDING: '未知',
