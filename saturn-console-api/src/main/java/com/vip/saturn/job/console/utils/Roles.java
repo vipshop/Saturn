@@ -12,5 +12,6 @@ public class Roles {
 	public static final Role namespaceAdmin = new Role("namespace_admin");
 	public static final Role namespaceJobAdmin = new Role("namespace_job_admin");
 	public static final Role namespaceExecutorAdmin = new Role("namespace_executor_admin");
+	public static final Role saAdmin = new Role("sa_admin");
 
 }
