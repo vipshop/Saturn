@@ -2,6 +2,7 @@
 <div class="fav-container">
   <el-popover trigger="click" ref="popover" title="我的收藏" @show="show = true" @hide="show = false" popper-class="my-fav" placement="bottom" width="400">
     <el-form :model="form">
+      {{groupsList}}
       <el-table :data="favorites" :show-header="true" v-if="show">
         <el-table-column property="title" label="名称" show-overflow-tooltip>
           <template slot-scope="scope">
@@ -121,17 +122,22 @@ export default {
       return this.favorites.length;
     },
     groupsList() {
-      const arr = [];
+      const resultArr = [];
+      const groupArrays = [];
       this.favorites.forEach((ele) => {
-        arr.push(ele.group);
+        groupArrays.push(ele.group);
       });
-      const groupArr = Array.from(new Set(arr));
-      return groupArr.map((obj) => {
-        const rObj = {};
-        rObj.text = obj;
-        rObj.value = obj;
-        return rObj;
+      const groupArr = Array.from(new Set(groupArrays));
+      groupArr.forEach((ele2) => {
+        if (ele2) {
+          const param = {
+            text: ele2,
+            value: ele2,
+          };
+          resultArr.push(param);
+        }
       });
+      return resultArr;
     },
   },
   methods: {
@@ -159,7 +165,7 @@ export default {
     showMessage(status, op, data) {
       if (op === 'add') {
         this.edit(data);
-        const messageText = status ? '该资源收藏成功！' : '该资源已收藏，勿重复收藏！';
+        const messageText = status ? '该资源收藏成功！' : '该资源已收藏！';
         const messageType = status ? 'success' : 'error';
         this.$message.customMessage(messageType, messageText);
       } else if (op === 'del') {
