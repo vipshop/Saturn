@@ -26,8 +26,6 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
-import com.vip.saturn.job.utils.RetriableTask;
-import com.vip.saturn.job.utils.RetryCallable;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.quartz.SchedulerException;
@@ -195,8 +193,8 @@ public abstract class AbstractElasticJob implements Stopable {
 		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient();
 		try {
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
-			Stat itemStat = tryTheBestToGetItemStat(curatorFramework, runningPath);
-			long sessionId = tryTheBestToGetSessionId(curatorFramework);
+			Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
+			long sessionId = curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
 			// 有itemStat的情况
 			if (itemStat != null) {
 				long ephemeralOwner = itemStat.getEphemeralOwner();
@@ -215,28 +213,6 @@ public abstract class AbstractElasticJob implements Stopable {
 			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			return false;
 		}
-	}
-
-	private long tryTheBestToGetSessionId(final CuratorFramework curatorFramework) throws Exception {
-		RetriableTask<Long> retriableTask = new RetriableTask<>(new RetryCallable<Long>() {
-			@Override
-			public Long call() throws Exception {
-				return curatorFramework.getZookeeperClient().getZooKeeper().getSessionId();
-			}
-		});
-
-		return retriableTask.call();
-	}
-
-	private Stat tryTheBestToGetItemStat(final CuratorFramework curatorFramework, final String runningPath) throws Exception {
-		RetriableTask<Stat> retriableTask = new RetriableTask<>(new RetryCallable<Stat>() {
-			@Override
-			public Stat call() throws Exception {
-				return curatorFramework.checkExists().forPath(runningPath);
-			}
-		});
-
-		return retriableTask.call();
 	}
 
 	protected abstract void executeJob(final JobExecutionMultipleShardingContext shardingContext);

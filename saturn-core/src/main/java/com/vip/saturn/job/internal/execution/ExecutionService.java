@@ -24,8 +24,6 @@ import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
 import com.vip.saturn.job.reg.exception.RegException;
-import com.vip.saturn.job.utils.RetriableTask;
-import com.vip.saturn.job.utils.RetryCallable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,8 +158,8 @@ public class ExecutionService extends AbstractSaturnService {
 	 * 注册作业完成信息.
 	 *
 	 */
-	public void registerJobCompletedControlInfoByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item)
-			throws Exception {
+	public void registerJobCompletedControlInfoByItem(
+			final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
 
 		boolean isEnabledReport = configService.isEnabledReport();
 		if (!isEnabledReport) {
@@ -172,19 +170,7 @@ public class ExecutionService extends AbstractSaturnService {
 		// create completed node
 		createCompletedNode(item);
 		// remove running node
-		tryTheBestToRemoveRunningNode(item);
-	}
-
-	private void tryTheBestToRemoveRunningNode(final int item) throws Exception {
-		RetriableTask<Void> retriableTask = new RetriableTask<>(new RetryCallable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
-				return null;
-			}
-		});
-
-		retriableTask.call();
+		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
 	}
 
 	private void createCompletedNode(int item) {

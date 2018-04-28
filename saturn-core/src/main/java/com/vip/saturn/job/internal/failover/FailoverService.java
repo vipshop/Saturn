@@ -20,8 +20,6 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.utils.RetriableTask;
-import com.vip.saturn.job.utils.RetryCallable;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
@@ -96,16 +94,8 @@ public class FailoverService extends AbstractSaturnService {
 	 *
 	 * @param item 执行完毕失效转移的分片项列表
 	 */
-	public void updateFailoverComplete(final Integer item) throws Exception {
-		RetriableTask<Void> retriableTask = new RetriableTask<>(new RetryCallable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getExecutionFailoverNode(item));
-				return null;
-			}
-		});
-
-		retriableTask.call();
+	public void updateFailoverComplete(final Integer item) {
+		getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getExecutionFailoverNode(item));
 	}
 
 	/**
