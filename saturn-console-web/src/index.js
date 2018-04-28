@@ -2,6 +2,7 @@ import Vue from 'vue';
 import ElementUI from 'element-ui';
 import 'font-awesome/css/font-awesome.css';
 import '@cloudux/noah-theme/lib/index.css';
+import Favorites from './components/common/favorites/';
 import './components';
 import './components/filter';
 import App from './App';
@@ -12,6 +13,7 @@ import './styles/iconfont/iconfont.css';
 import './styles/main.scss';
 
 Vue.use(ElementUI);
+Vue.use(Favorites, { key: '' });
 Vue.use(Utils);
 
 /* eslint-disable no-new */

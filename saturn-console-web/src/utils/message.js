@@ -1,4 +1,4 @@
-import { MessageBox, Loading, Notification } from 'element-ui';
+import { MessageBox, Loading, Notification, Message } from 'element-ui';
 
 export default {
   openMessage(text) {
@@ -46,6 +46,13 @@ export default {
       message: text,
       duration: 3000,
       type: 'success',
+    });
+  },
+  customMessage(type, text) {
+    Message({
+      type,
+      message: text,
+      showClose: true,
     });
   },
 };
