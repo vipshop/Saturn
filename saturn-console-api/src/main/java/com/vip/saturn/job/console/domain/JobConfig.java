@@ -49,14 +49,12 @@ public class JobConfig implements Serializable {
 	}
 
 	public void setDefaultValues() {
-		jobName = getDefaultIfNull(jobName, "");
 		jobClass = getDefaultIfNull(jobClass, "");
 		shardingTotalCount = getDefaultIfNull(shardingTotalCount, 1);
 		timeZone = getDefaultIfNull(timeZone, SaturnConstants.TIME_ZONE_ID_DEFAULT);
 		cron = getDefaultIfNull(cron, "");
 		pausePeriodDate = getDefaultIfNull(pausePeriodDate, "");
 		pausePeriodTime = getDefaultIfNull(pausePeriodTime, "");
-		shardingItemParameters = getDefaultIfNull(shardingItemParameters, "");
 		jobParameter = getDefaultIfNull(jobParameter, "");
 		processCountIntervalSeconds = getDefaultIfNull(processCountIntervalSeconds, 300);
 		description = getDefaultIfNull(description, "");
@@ -64,7 +62,6 @@ public class JobConfig implements Serializable {
 		timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
 		showNormalLog = getDefaultIfNull(showNormalLog, Boolean.FALSE);
 		channelName = getDefaultIfNull(channelName, "");
-		jobType = getDefaultIfNull(jobType, "");
 		queueName = getDefaultIfNull(queueName, "");
 		loadLevel = getDefaultIfNull(loadLevel, 1);
 		jobDegree = getDefaultIfNull(jobDegree, 0);
@@ -82,7 +79,6 @@ public class JobConfig implements Serializable {
 		useSerial = getDefaultIfNull(useSerial, Boolean.FALSE);
 		failover = getDefaultIfNull(failover, !localMode); // 已经设置localMode
 		jobMode = getDefaultIfNull(jobMode, "");
-		customContext = getDefaultIfNull(customContext, "");
 		dependencies = getDefaultIfNull(dependencies, "");
 		groups = getDefaultIfNull(groups, "");
 	}
