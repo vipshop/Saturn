@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.utils.Permissions;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
@@ -28,9 +27,6 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	@Resource
 	private NamespaceZkClusterMappingService namespaceZkClusterMappingService;
-
-	@Resource
-	private NamespaceZkClusterMapping4SqlService namespaceZkClusterMapping4SqlService;
 
 	/**
 	 * 创建域
@@ -66,10 +62,9 @@ public class RegistryCenterController extends AbstractGUIController {
 			if (!zkCluster.isOffline()) {
 				namespaceInfoList.addAll(zkCluster.getRegCenterConfList());
 			} else {
-				List<String> namespaces = namespaceZkClusterMapping4SqlService
-						.getAllNamespacesOfCluster(zkCluster.getZkClusterKey());
-				if (namespaces != null && !namespaces.isEmpty()) {
-					namespaceInfoList.addAll(constructRegistryCenterConfigurations(namespaces, zkCluster));
+				List<RegistryCenterConfiguration> configs = registryCenterService.findConfigsByZkCluster(zkCluster);
+				if (configs != null && !configs.isEmpty()) {
+					namespaceInfoList.addAll(configs);
 				}
 			}
 		}
@@ -77,17 +72,6 @@ public class RegistryCenterController extends AbstractGUIController {
 		return new SuccessResponseEntity(namespaceInfoList);
 	}
 
-	protected List<RegistryCenterConfiguration> constructRegistryCenterConfigurations(List<String> namespaces,
-			ZkCluster zkCluster) {
-		List<RegistryCenterConfiguration> result = Lists.newArrayList();
-		for (String namespace : namespaces) {
-			RegistryCenterConfiguration config = new RegistryCenterConfiguration("", namespace, zkCluster.getZkAddr());
-			config.setZkClusterKey(zkCluster.getZkClusterKey());
-			result.add(config);
-		}
-
-		return result;
-	}
 
 	/**
 	 * 导出指定的namespce

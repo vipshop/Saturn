@@ -531,7 +531,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	private NamespaceInfo getNamespaceInfo(String namespace) {
+	protected NamespaceInfo getNamespaceInfo(String namespace) {
 		try {
 			return namespaceInfoService.selectByNamespace(namespace);
 		} catch (Exception e) {
@@ -971,6 +971,28 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public List<RegistryCenterConfiguration> findConfigsByZkCluster(ZkCluster zkCluster) {
+		List<String> namespaces = namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(zkCluster.getZkClusterKey());
+		if (namespaces == null || namespaces.isEmpty()) {
+			return Lists.newArrayList();
+		}
+
+		List<RegistryCenterConfiguration> configs = Lists.newArrayList();
+		for (String namespace : namespaces) {
+			RegistryCenterConfiguration config = constructRegistryCenterConfiguration(zkCluster, namespace);
+			configs.add(config);
+		}
+
+		return configs;
+	}
+
+	protected RegistryCenterConfiguration constructRegistryCenterConfiguration(ZkCluster zkCluster, String namespace) {
+		RegistryCenterConfiguration config = new RegistryCenterConfiguration("", namespace, zkCluster.getZkAddr());
+		config.setZkClusterKey(zkCluster.getZkClusterKey());
+		return config;
 	}
 
 	@Override

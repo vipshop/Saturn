@@ -37,6 +37,8 @@ public interface RegistryCenterService {
 
 	RegistryCenterConfiguration findConfigByNamespace(String namespace);
 
+	List<RegistryCenterConfiguration> findConfigsByZkCluster(ZkCluster zkCluster);
+
 	CuratorRepository.CuratorFrameworkOp connectOnly(String zkAddr, String namespace) throws SaturnJobConsoleException;
 
 	boolean isDashboardLeader(String key);
