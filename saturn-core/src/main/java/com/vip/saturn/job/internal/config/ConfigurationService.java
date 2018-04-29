@@ -15,6 +15,7 @@
 package com.vip.saturn.job.internal.config;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
@@ -436,14 +437,11 @@ public class ConfigurationService extends AbstractSaturnService {
 	 * @return 自定义上下文map
 	 */
 	private Map<String, String> toCustomContext(String customContextStr) {
-		Map<String, String> customContext = null;
-		if (customContextStr != null) {
-			customContext = JsonUtils.fromJSON(customContextStr, customContextType);
+		if (StringUtils.isNotBlank(customContextStr)) {
+			return JsonUtils.fromJSON(customContextStr, customContextType);
 		}
-		if (customContext == null) {
-			customContext = new HashMap<>();
-		}
-		return customContext;
+
+		return Maps.newHashMap();
 	}
 
 	public String getRawJobType() {
