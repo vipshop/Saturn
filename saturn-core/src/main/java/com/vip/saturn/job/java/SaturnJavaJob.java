@@ -188,7 +188,7 @@ public class SaturnJavaJob extends CrondJob {
 					if (shardingItemCallable.forceStop()) {
 						log.info("[{}] msg=Force stop job, jobName:{}, item:{}", jobName, jobName,
 								shardingItemCallable.getItem());
-						shardingItemFutureTask.getCallable().beforeForceStop();
+						shardingItemCallable.beforeForceStop();
 						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 					}
 				} catch (Throwable t) {
