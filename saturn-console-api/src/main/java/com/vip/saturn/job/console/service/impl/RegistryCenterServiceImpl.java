@@ -992,6 +992,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	protected RegistryCenterConfiguration constructRegistryCenterConfiguration(ZkCluster zkCluster, String namespace) {
 		RegistryCenterConfiguration config = new RegistryCenterConfiguration("", namespace, zkCluster.getZkAddr());
 		config.setZkClusterKey(zkCluster.getZkClusterKey());
+		config.setZkAlias(zkCluster.getZkAlias());
 		return config;
 	}
 
