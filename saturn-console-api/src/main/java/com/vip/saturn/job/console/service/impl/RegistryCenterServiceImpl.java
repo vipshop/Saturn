@@ -1035,9 +1035,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void createZkCluster(String zkClusterKey, String alias, String connectString)
+	public void createOrUpdateZkCluster(String zkClusterKey, String alias, String connectString)
 			throws SaturnJobConsoleException {
-		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
+		if (zkClusterInfo == null) {
+			zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+		} else {
+			// cannot change alias but only connection string
+			zkClusterInfo.setConnectString(connectString);
+			zkClusterInfo.setLastUpdateTime(new Date());
+			zkClusterInfoService.updateZkCluster(zkClusterInfo);
+		}
 		notifyRefreshRegCenter();
 	}
 

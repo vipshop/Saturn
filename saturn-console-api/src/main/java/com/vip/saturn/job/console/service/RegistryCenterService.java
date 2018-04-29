@@ -45,7 +45,7 @@ public interface RegistryCenterService {
 
 	ZkCluster getZkCluster(String key);
 
-	void createZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
+	void createOrUpdateZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
 
 	Collection<ZkCluster> getZkClusterList();
 

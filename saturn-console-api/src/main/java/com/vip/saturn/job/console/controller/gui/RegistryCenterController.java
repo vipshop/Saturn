@@ -129,10 +129,10 @@ public class RegistryCenterController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/zkClusters")
-	public SuccessResponseEntity createZkCluster(@RequestParam String zkClusterKey, @RequestParam String alias,
+	public SuccessResponseEntity createOrUpdateZkCluster(@RequestParam String zkClusterKey, @RequestParam String alias,
 			@RequestParam String connectString) throws SaturnJobConsoleException {
 		assertIsPermitted(Permissions.registryCenterAddZkCluster);
-		registryCenterService.createZkCluster(zkClusterKey, alias, connectString);
+		registryCenterService.createOrUpdateZkCluster(zkClusterKey, alias, connectString.trim());
 		return new SuccessResponseEntity();
 	}
 

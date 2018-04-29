@@ -45,4 +45,10 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 		zkClusterInfo.setConnectString(connectString);
 		return zkClusterInfoRepository.insert(zkClusterInfo);
 	}
+
+	@Transactional
+	@Override
+	public int updateZkCluster(ZkClusterInfo zkClusterInfo) {
+		return zkClusterInfoRepository.update(zkClusterInfo);
+	}
 }

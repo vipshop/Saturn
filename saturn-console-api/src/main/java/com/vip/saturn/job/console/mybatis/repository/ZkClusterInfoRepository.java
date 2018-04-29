@@ -17,4 +17,6 @@ public interface ZkClusterInfoRepository {
 
 	int insert(ZkClusterInfo zkClusterInfo);
 
+	int update(ZkClusterInfo zkClusterInfo);
+
 }
