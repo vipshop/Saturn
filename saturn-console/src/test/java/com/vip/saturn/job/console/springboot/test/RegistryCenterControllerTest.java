@@ -51,7 +51,7 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 			resultMap = JSONObject.parseObject(responseBody, Map.class);
 			objValue = (List<Map<String, String>>) resultMap.get("obj");
 			size = objValue.size();
-		} while (size == 1 && count++ < 6);
+		} while (size == 1 && count++ < 10);
 
 		assertEquals(2, size);
 
@@ -92,8 +92,8 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 					break;
 				}
 			}
-		} while (!connectionString.equals("127.0.0.1:2182") && count++ < 6);
-
+		} while (!connectionString.equals("127.0.0.1:2182") && count++ < 10);
+		assertEquals("127.0.0.1:2182", connectionString);
 	}
 
 	private static class ZkClusterInfoForTest {
