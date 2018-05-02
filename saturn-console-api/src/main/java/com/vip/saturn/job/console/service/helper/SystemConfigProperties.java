@@ -24,4 +24,9 @@ public class SystemConfigProperties {
 	public static final String REFRESH_REGISTRY_CENTER_UUID = "REFRESH_REGISTRY_CENTER_UUID";
 
 	public static final String AUTHORIZATION_ENABLED = "AUTHORIZATION_ENABLED";
+
+	/**
+	 * Executor全局配置
+	 */
+	public static final String EXECUTOR_CONFIGS = "EXECUTOR_CONFIGS";
 }

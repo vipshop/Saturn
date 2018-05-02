@@ -48,8 +48,10 @@
           class="com.vip.saturn.job.console.controller.gui.RegistryCenterController"/>
     <bean id="staticResourceController"
           class="com.vip.saturn.job.console.controller.gui.StaticResourceController"/>
-    <bean id="systemConfigController"
-          class="com.vip.saturn.job.console.controller.gui.SystemConfigController"/>
+    <bean id="consoleConfigController"
+          class="com.vip.saturn.job.console.controller.gui.ConsoleConfigController"/>
+    <bean id="executorConfigController"
+          class="com.vip.saturn.job.console.controller.gui.ExecutorConfigController"/>
     <bean id="utilsController"
           class="com.vip.saturn.job.console.controller.gui.UtilsController"/>
     <!-- GUI Controller End -->

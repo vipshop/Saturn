@@ -2,7 +2,7 @@ package com.vip.saturn.job.console.springboot.test;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.console.AbstractSaturnConsoleTest;
-import com.vip.saturn.job.console.controller.gui.SystemConfigController;
+import com.vip.saturn.job.console.controller.gui.ConsoleConfigController;
 import com.vip.saturn.job.console.domain.JobConfigMeta;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,15 +21,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(SystemConfigController.class)
-public class SystemConfigControllerTest extends AbstractSaturnConsoleTest {
+@WebMvcTest(ConsoleConfigController.class)
+public class ConsoleConfigControllerTest extends AbstractSaturnConsoleTest {
 
 	@Autowired
 	private MockMvc mvc;
 
 	@Test
 	public void testGetConfigMeta() throws Exception {
-		MvcResult result = mvc.perform(get("/console/configs")).andExpect(status().isOk()).andReturn();
+		MvcResult result = mvc.perform(get("/console/configs/console")).andExpect(status().isOk()).andReturn();
 		String body = result.getResponse().getContentAsString();
 		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
 		Map<String, Object> objValue = (Map<String, Object>) resultMap.get("obj");

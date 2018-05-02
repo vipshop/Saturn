@@ -15,8 +15,8 @@ import com.vip.saturn.job.console.domain.SystemConfigVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.PermissionKeys;
-
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,18 +27,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * System config related operations.
  *
  * @author kfchu
  */
-@RequestMapping("/console/configs")
-public class SystemConfigController extends AbstractGUIController {
+@RequestMapping("/console/configs/console")
+public class ConsoleConfigController extends AbstractGUIController {
 
 	protected static final ObjectMapper YAML_OBJ_MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -60,6 +57,10 @@ public class SystemConfigController extends AbstractGUIController {
 	public SuccessResponseEntity createOrUpdateConfig(@AuditParam(value = "key") @RequestParam String key,
 			@AuditParam(value = "value") @RequestParam String value) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.systemConfig);
+		//不能更新EXECUTOR_CONFIGS
+		if (SystemConfigProperties.EXECUTOR_CONFIGS.equals(key)) {
+			throw new SaturnJobConsoleException(String.format("配置项不能为%s", key));
+		}
 		SystemConfig systemConfig = new SystemConfig();
 		systemConfig.setProperty(key);
 		systemConfig.setValue(value);
@@ -79,8 +80,27 @@ public class SystemConfigController extends AbstractGUIController {
 		Map<String, List<JobConfigMeta>> jobConfigGroups = getSystemConfigMeta();
 		//返回所有配置信息
 		List<SystemConfig> systemConfigs = systemConfigService.getSystemConfigsDirectly(null);
+		//剔除EXECUTOR_CONFIGS
+		removeExecutorConfigs(systemConfigs);
 
 		return new SuccessResponseEntity(genSystemConfigInfo(jobConfigGroups, systemConfigs));
+	}
+
+	/**
+	 * 移除Executor全局配置，该配置在单独的页面管理
+	 * @param systemConfigs 全量的系统配置数据
+	 */
+	private void removeExecutorConfigs(List<SystemConfig> systemConfigs) {
+		if (systemConfigs == null) {
+			return;
+		}
+		Iterator<SystemConfig> iterator = systemConfigs.iterator();
+		while (iterator.hasNext()) {
+			SystemConfig systemConfig = iterator.next();
+			if (SystemConfigProperties.EXECUTOR_CONFIGS.equals(systemConfig.getProperty())) {
+				iterator.remove();
+			}
+		}
 	}
 
 	/**
