@@ -2,7 +2,6 @@
 <div class="fav-container">
   <el-popover trigger="click" ref="popover" title="我的收藏" @show="show = true" @hide="show = false" popper-class="my-fav" placement="bottom" width="400">
     <el-form :model="form">
-      {{groupsList}}
       <el-table :data="favorites" :show-header="true" v-if="show">
         <el-table-column property="title" label="名称" show-overflow-tooltip>
           <template slot-scope="scope">
