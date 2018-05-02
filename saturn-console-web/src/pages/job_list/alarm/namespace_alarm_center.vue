@@ -50,7 +50,6 @@ export default {
     },
     getCountOfAlarmJobs() {
       this.$http.get(`/console/namespaces/${this.domainName}/alarmStatistics/countOfAlarmJobs`).then((data) => {
-        console.log(data);
         data.forEach((ele) => {
           if (ele.alarmJobType === 'unnormal_job') {
             this.$set(this.countOfAlarmJobs, 'unnormal_job', ele.count);
@@ -83,10 +82,12 @@ export default {
     margin: 10px 20px;
 }
 .alarm-tag {
-    border-radius: 10px;
+    border-radius: 6px;
     margin-left: 3px;
-    width: 26px;
+    min-width: 26px;
     padding: 0 5px;
     text-align: center;
+    height: 20px;
+    line-height: 20px;
 }
 </style>
