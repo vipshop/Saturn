@@ -100,7 +100,7 @@
                                     {{scope.row.description || '-'}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="操作" width="100px" align="center">
+                            <el-table-column label="操作" width="120px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="启用" placement="top" v-if="$common.hasPerm('job:enable', domainName) && (scope.row.status === 'STOPPING' || scope.row.status === 'STOPPED')">
                                         <el-button type="text" @click="handleActive(scope.row, true)"><i class="fa fa-play-circle"></i></el-button>
