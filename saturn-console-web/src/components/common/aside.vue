@@ -89,11 +89,13 @@
 </script>
 <style lang="sass">
 .warning-tag {
-    border-radius: 10px;
+    border-radius: 6px;
     margin-left: 15px;
-    width: 28px;
+    min-width: 28px;
     padding: 0 5px;
     text-align: center;
+    height: 20px;
+    line-height: 20px;
 }
 .my-sider {
   .el-aside {
