@@ -7,7 +7,7 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
-import com.vip.saturn.job.console.utils.Permissions;
+import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -36,7 +36,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	@PostMapping(value = "/namespaces")
 	public SuccessResponseEntity createNamespace(@AuditParam("namespace") @RequestParam String namespace,
 			@AuditParam("zkClusterKey") @RequestParam String zkClusterKey) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.registryCenterAddNamespace);
+		assertIsPermitted(PermissionKeys.registryCenterAddNamespace);
 		NamespaceDomainInfo namespaceInfo = constructNamespaceDomainInfo(namespace, zkClusterKey);
 		registryCenterService.createNamespace(namespaceInfo);
 		return new SuccessResponseEntity();
@@ -80,7 +80,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	@GetMapping(value = "/namespaces/export")
 	public void exportNamespaceInfo(@RequestParam(required = false) List<String> namespaceList,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.registryCenterExportNamespaces);
+		assertIsPermitted(PermissionKeys.registryCenterExportNamespaces);
 		File exportFile = registryCenterService.exportNamespaceInfo(namespaceList);
 		SaturnConsoleUtils.exportExcelFile(response, exportFile, EXPORT_FILE_NAME, true);
 	}
@@ -131,7 +131,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	@PostMapping(value = "/zkClusters")
 	public SuccessResponseEntity createOrUpdateZkCluster(@RequestParam String zkClusterKey, @RequestParam String alias,
 			@RequestParam String connectString) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.registryCenterAddZkCluster);
+		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
 		registryCenterService.createOrUpdateZkCluster(zkClusterKey, alias, connectString.trim());
 		return new SuccessResponseEntity();
 	}
@@ -144,7 +144,7 @@ public class RegistryCenterController extends AbstractGUIController {
 			@AuditParam("zkClusterNew") @RequestParam String zkClusterKeyNew,
 			@RequestParam(required = false, defaultValue = "false") boolean updateDBOnly)
 			throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.registryCenterBatchMoveNamespaces);
+		assertIsPermitted(PermissionKeys.registryCenterBatchMoveNamespaces);
 		namespaceZkClusterMappingService
 				.migrateNamespaceListToNewZk(namespaces, zkClusterKeyNew, getCurrentLoginUserName(), updateDBOnly);
 		return new SuccessResponseEntity();

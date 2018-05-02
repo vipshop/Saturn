@@ -86,7 +86,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public void assertIsPermitted(Permission permission, String userName, String namespace)
+	public void assertIsPermitted(String permissionKey, String userName, String namespace)
 			throws SaturnJobConsoleException {
 		if (!isAuthorizationEnabled()) {
 			return;
@@ -106,16 +106,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 					}
 					for (RolePermission rolePermission : rolePermissions) {
 						Permission tmpPermission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-						if (tmpPermission != null && tmpPermission.getPermissionKey()
-								.equals(permission.getPermissionKey())) {
+						if (tmpPermission != null && tmpPermission.getPermissionKey().equals(permissionKey)) {
 							return;
 						}
 					}
 				}
 			}
 		}
-		throw new SaturnJobConsoleException(
-				String.format("您没有权限，域:%s，权限:%s", namespace, permission.getPermissionKey()));
+		throw new SaturnJobConsoleException(String.format("您没有权限，域:%s，权限:%s", namespace, permissionKey));
 	}
 
 	@Transactional(readOnly = true)

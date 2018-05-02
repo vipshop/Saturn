@@ -14,7 +14,7 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
-import com.vip.saturn.job.console.utils.Permissions;
+import com.vip.saturn.job.console.utils.PermissionKeys;
 
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -56,7 +56,7 @@ public class JobAlarmStatisticsController extends AbstractGUIController {
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
 	public SuccessResponseEntity setAbnormalJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid,
 			@AuditParam("namespace") @PathVariable String namespace) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.alarmCenterSetAbnormalJobRead, namespace);
+		assertIsPermitted(PermissionKeys.alarmCenterSetAbnormalJobRead, namespace);
 		alarmStatisticsService.setAbnormalJobMonitorStatusToRead(uuid);
 		return new SuccessResponseEntity();
 	}
@@ -66,7 +66,7 @@ public class JobAlarmStatisticsController extends AbstractGUIController {
 	@PostMapping(value = "/setTimeout4AlarmJobMonitorStatusToRead")
 	public SuccessResponseEntity setTimeout4AlarmJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid,
 			@AuditParam("namespace") @PathVariable String namespace) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.alarmCenterSetTimeout4AlarmJobRead, namespace);
+		assertIsPermitted(PermissionKeys.alarmCenterSetTimeout4AlarmJobRead, namespace);
 		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(uuid);
 		return new SuccessResponseEntity();
 	}

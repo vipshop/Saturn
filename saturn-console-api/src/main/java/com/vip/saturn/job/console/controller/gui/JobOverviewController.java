@@ -199,7 +199,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity enableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobEnable, namespace);
+		assertIsPermitted(PermissionKeys.jobEnable, namespace);
 		jobService.enableJob(namespace, jobName, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
@@ -210,7 +210,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobBatchEnable, namespace);
+		assertIsPermitted(PermissionKeys.jobBatchEnable, namespace);
 		String userName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.enableJob(namespace, jobName, userName);
@@ -224,7 +224,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity disableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobDisable, namespace);
+		assertIsPermitted(PermissionKeys.jobDisable, namespace);
 		jobService.disableJob(namespace, jobName, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
@@ -235,7 +235,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobBatchDisable, namespace);
+		assertIsPermitted(PermissionKeys.jobBatchDisable, namespace);
 		String userName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.disableJob(namespace, jobName, userName);
@@ -249,7 +249,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity removeJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobRemove, namespace);
+		assertIsPermitted(PermissionKeys.jobRemove, namespace);
 		jobService.removeJob(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
@@ -260,7 +260,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobBatchRemove, namespace);
+		assertIsPermitted(PermissionKeys.jobBatchRemove, namespace);
 		List<String> successJobNames = new ArrayList<>();
 		List<String> failJobNames = new ArrayList<>();
 		for (String jobName : jobNames) {
@@ -290,7 +290,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNames") @RequestParam List<String> jobNames,
 			@AuditParam("preferList") @RequestParam String preferList) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobBatchSetPreferExecutors, namespace);
+		assertIsPermitted(PermissionKeys.jobBatchSetPreferExecutors, namespace);
 		String userName = getCurrentLoginUserName();
 		for (String jobName : jobNames) {
 			jobService.setPreferList(namespace, jobName, preferList, userName);
@@ -304,7 +304,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity createJob(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobAdd, namespace);
+		assertIsPermitted(PermissionKeys.jobAdd, namespace);
 		jobService.addJob(namespace, jobConfig, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
@@ -316,7 +316,7 @@ public class JobOverviewController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobNameCopied") @PathVariable String jobNameCopied, JobConfig jobConfig)
 			throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobCopy, namespace);
+		assertIsPermitted(PermissionKeys.jobCopy, namespace);
 		jobService.copyJob(namespace, jobConfig, jobNameCopied, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
@@ -327,7 +327,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity importJobs(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace, @RequestParam("file") MultipartFile file)
 			throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobImport, namespace);
+		assertIsPermitted(PermissionKeys.jobImport, namespace);
 		if (file.isEmpty()) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "请上传一个有内容的文件");
 		}
@@ -344,7 +344,7 @@ public class JobOverviewController extends AbstractGUIController {
 	@GetMapping(value = "/export")
 	public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobExport, namespace);
+		assertIsPermitted(PermissionKeys.jobExport, namespace);
 		File exportJobFile = jobService.exportJobs(namespace);
 		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 		String exportFileName = namespace + "_allJobs_" + currentTime + ".xls";

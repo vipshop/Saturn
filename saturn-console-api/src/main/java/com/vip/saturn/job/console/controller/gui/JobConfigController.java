@@ -6,7 +6,7 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.JobService;
-import com.vip.saturn.job.console.utils.Permissions;
+import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -44,7 +44,7 @@ public class JobConfigController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName, UpdateJobConfigVo updateJobConfigVo)
 			throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobUpdate, namespace);
+		assertIsPermitted(PermissionKeys.jobUpdate, namespace);
 		jobService.updateJobConfig(namespace, updateJobConfigVo, getCurrentLoginUserName());
 		return new SuccessResponseEntity();
 	}
@@ -54,7 +54,7 @@ public class JobConfigController extends AbstractGUIController {
 	@PostMapping("/runAtOnce")
 	public SuccessResponseEntity runAtOnce(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobRunAtOnce, namespace);
+		assertIsPermitted(PermissionKeys.jobRunAtOnce, namespace);
 		jobService.runAtOnce(namespace, jobName);
 		return new SuccessResponseEntity();
 	}
@@ -64,7 +64,7 @@ public class JobConfigController extends AbstractGUIController {
 	@PostMapping("/stopAtOnce")
 	public SuccessResponseEntity stopAtOnce(@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.jobStopAtOnce, namespace);
+		assertIsPermitted(PermissionKeys.jobStopAtOnce, namespace);
 		jobService.stopAtOnce(namespace, jobName);
 		return new SuccessResponseEntity();
 	}

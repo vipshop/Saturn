@@ -15,7 +15,7 @@ import com.vip.saturn.job.console.domain.SystemConfigVo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.service.SystemConfigService;
-import com.vip.saturn.job.console.utils.Permissions;
+import com.vip.saturn.job.console.utils.PermissionKeys;
 
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -59,7 +59,7 @@ public class SystemConfigController extends AbstractGUIController {
 	@PostMapping
 	public SuccessResponseEntity createOrUpdateConfig(@AuditParam(value = "key") @RequestParam String key,
 			@AuditParam(value = "value") @RequestParam String value) throws SaturnJobConsoleException {
-		assertIsPermitted(Permissions.systemConfig);
+		assertIsPermitted(PermissionKeys.systemConfig);
 		SystemConfig systemConfig = new SystemConfig();
 		systemConfig.setProperty(key);
 		systemConfig.setValue(value);
@@ -74,7 +74,7 @@ public class SystemConfigController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping
 	public SuccessResponseEntity getConfigs() throws IOException, SaturnJobConsoleException {
-		assertIsPermitted(Permissions.systemConfig);
+		assertIsPermitted(PermissionKeys.systemConfig);
 		//获取配置meta
 		Map<String, List<JobConfigMeta>> jobConfigGroups = getSystemConfigMeta();
 		//返回所有配置信息

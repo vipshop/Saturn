@@ -16,7 +16,7 @@ public interface AuthorizationService {
 
 	boolean hasUserRole(UserRole userRole) throws SaturnJobConsoleException;
 
-	void assertIsPermitted(Permission permission, String userName, String namespace) throws SaturnJobConsoleException;
+	void assertIsPermitted(String permissionKey, String userName, String namespace) throws SaturnJobConsoleException;
 
 	void assertIsSystemAdmin(String userName) throws SaturnJobConsoleException;
 
