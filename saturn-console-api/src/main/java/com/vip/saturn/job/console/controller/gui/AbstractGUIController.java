@@ -60,14 +60,14 @@ public class AbstractGUIController extends AbstractController {
 		return getCurrentUser(SessionAttributeKeys.LOGIN_USER_NAME);
 	}
 
-	public void assertIsPermitted(Permission permission, String namespace) throws SaturnJobConsoleException {
+	public void assertIsPermitted(String permissionKey, String namespace) throws SaturnJobConsoleException {
 		String userName = getCurrentLoginUserName();
-		authorizationService.assertIsPermitted(permission, userName, namespace);
+		authorizationService.assertIsPermitted(permissionKey, userName, namespace);
 	}
 
-	public void assertIsPermitted(Permission permission) throws SaturnJobConsoleException {
+	public void assertIsPermitted(String permissionKey) throws SaturnJobConsoleException {
 		String userName = getCurrentLoginUserName();
-		authorizationService.assertIsPermitted(permission, userName, "");
+		authorizationService.assertIsPermitted(permissionKey, userName, "");
 	}
 
 	public void assertIsSystemAdmin() throws SaturnJobConsoleException {
