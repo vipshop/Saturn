@@ -145,21 +145,21 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 		if (businessThread != null) {
 			try {
 				// interrupt thread one time, wait business thread to break, wait 2000ms at most
-				if (!canQuitKilling(shardingItemFutureTask, shardingItemCallable)) {
+				if (!businessIsBreak(shardingItemFutureTask, shardingItemCallable)) {
 					businessThread.interrupt();
 					for (int i = 0; i < 20; i++) {
-						if (canQuitKilling(shardingItemFutureTask, shardingItemCallable)) {
-							log.info("Interrupt biz thread done.");
+						if (businessIsBreak(shardingItemFutureTask, shardingItemCallable)) {
+							log.info("Interrupt business thread done.");
 							return;
 						}
 						Thread.sleep(100L);
 					}
 				}
 				// stop thread
-				while (!canQuitKilling(shardingItemFutureTask, shardingItemCallable)) {
+				while (!businessIsBreak(shardingItemFutureTask, shardingItemCallable)) {
 					businessThread.stop();
-					if (canQuitKilling(shardingItemFutureTask, shardingItemCallable)) {
-						log.info("Force stop biz thread done.");
+					if (businessIsBreak(shardingItemFutureTask, shardingItemCallable)) {
+						log.info("Force stop business thread done.");
 						return;
 					}
 					Thread.sleep(50L);
@@ -168,11 +168,11 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			} catch (InterruptedException e) {// NOSONAR
 			}
 		} else {
-			log.info("biz thread is not there while killing it");
+			log.warn("Business thread is null while killing it");
 		}
 	}
 
-	private static boolean canQuitKilling(ShardingItemFutureTask shardingItemFutureTask,
+	private static boolean businessIsBreak(ShardingItemFutureTask shardingItemFutureTask,
 			JavaShardingItemCallable shardingItemCallable) {
 		return shardingItemCallable.isBreakForceStop() || shardingItemFutureTask.isDone();
 	}
