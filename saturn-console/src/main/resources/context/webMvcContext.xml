@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xmlns:context="http://www.springframework.org/schema/context" 
-    xmlns:mvc="http://www.springframework.org/schema/mvc" 
-    xmlns:p="http://www.springframework.org/schema/p" 
-    xsi:schemaLocation="http://www.springframework.org/schema/beans
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
                         http://www.springframework.org/schema/beans/spring-beans.xsd
                         http://www.springframework.org/schema/context
                         http://www.springframework.org/schema/context/spring-context.xsd
@@ -12,59 +12,61 @@
                         http://www.springframework.org/schema/mvc/spring-mvc.xsd
                         ">
     <context:property-placeholder
-		ignore-resource-not-found="true"
-		location="classpath:application.properties" />
+            ignore-resource-not-found="true"
+            location="classpath:application.properties"/>
 
     <!-- GUI Controller Begin -->
     <bean id="authorizationController"
-    class="com.vip.saturn.job.console.controller.gui.AuthorizationController"/>
+          class="com.vip.saturn.job.console.controller.gui.AuthorizationController"/>
+    <bean id="authorizationManageController"
+          class="com.vip.saturn.job.console.controller.gui.AuthorizationManageController"/>
     <bean id="authenticationController"
           class="com.vip.saturn.job.console.controller.gui.AuthenticationController"/>
     <bean id="dashboardController"
-      class="com.vip.saturn.job.console.controller.gui.DashboardController"/>
+          class="com.vip.saturn.job.console.controller.gui.DashboardController"/>
     <bean id="executorOverviewController"
-      class="com.vip.saturn.job.console.controller.gui.ExecutorOverviewController"/>
+          class="com.vip.saturn.job.console.controller.gui.ExecutorOverviewController"/>
     <bean id="homeController"
-      class="com.vip.saturn.job.console.controller.gui.HomeController"/>
+          class="com.vip.saturn.job.console.controller.gui.HomeController"/>
     <bean id="jobAlarmStatController"
-      class="com.vip.saturn.job.console.controller.gui.JobAlarmStatisticsController"/>
+          class="com.vip.saturn.job.console.controller.gui.JobAlarmStatisticsController"/>
     <bean id="jobConfigController"
-      class="com.vip.saturn.job.console.controller.gui.JobConfigController"/>
+          class="com.vip.saturn.job.console.controller.gui.JobConfigController"/>
     <bean id="jobExecutionController"
-      class="com.vip.saturn.job.console.controller.gui.JobExecutionController"/>
+          class="com.vip.saturn.job.console.controller.gui.JobExecutionController"/>
     <bean id="jobOverviewController"
-      class="com.vip.saturn.job.console.controller.gui.JobOverviewController"/>
+          class="com.vip.saturn.job.console.controller.gui.JobOverviewController"/>
     <bean id="jobShardingController"
-      class="com.vip.saturn.job.console.controller.gui.JobShardingController"/>
+          class="com.vip.saturn.job.console.controller.gui.JobShardingController"/>
     <bean id="marathonController"
-      class="com.vip.saturn.job.console.controller.gui.MarathonController"/>
+          class="com.vip.saturn.job.console.controller.gui.MarathonController"/>
     <bean id="namespaceAlramStatController"
-      class="com.vip.saturn.job.console.controller.gui.NamespaceAlarmStatisticsController"/>
+          class="com.vip.saturn.job.console.controller.gui.NamespaceAlarmStatisticsController"/>
     <bean id="overallAlramStatController"
-      class="com.vip.saturn.job.console.controller.gui.OverallAlarmStatisticsController"/>
+          class="com.vip.saturn.job.console.controller.gui.OverallAlarmStatisticsController"/>
     <bean id="registryCenterController"
-      class="com.vip.saturn.job.console.controller.gui.RegistryCenterController"/>
+          class="com.vip.saturn.job.console.controller.gui.RegistryCenterController"/>
     <bean id="staticResourceController"
-      class="com.vip.saturn.job.console.controller.gui.StaticResourceController"/>
+          class="com.vip.saturn.job.console.controller.gui.StaticResourceController"/>
     <bean id="systemConfigController"
-      class="com.vip.saturn.job.console.controller.gui.SystemConfigController"/>
+          class="com.vip.saturn.job.console.controller.gui.SystemConfigController"/>
     <bean id="utilsController"
-      class="com.vip.saturn.job.console.controller.gui.UtilsController"/>
+          class="com.vip.saturn.job.console.controller.gui.UtilsController"/>
     <!-- GUI Controller End -->
 
     <!-- Rest API Controller Begin -->
     <bean id="alarmRestApiController"
-      class="com.vip.saturn.job.console.controller.rest.AlarmRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.AlarmRestApiController"/>
     <bean id="dashboardRefreshApiController"
-      class="com.vip.saturn.job.console.controller.rest.DashboardRefreshRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.DashboardRefreshRestApiController"/>
     <bean id="jobOperationRestApiController"
-      class="com.vip.saturn.job.console.controller.rest.JobOperationRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.JobOperationRestApiController"/>
     <bean id="namespaceMgmtRestApiController"
-      class="com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController"/>
     <bean id="zkDbDiffRestApiController"
-      class="com.vip.saturn.job.console.controller.rest.ZkDbDiffRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.ZkDbDiffRestApiController"/>
     <bean id="zkDiscoveryRestApiController"
-      class="com.vip.saturn.job.console.controller.rest.ZkDiscoveryRestApiController"/>
+          class="com.vip.saturn.job.console.controller.rest.ZkDiscoveryRestApiController"/>
     <!-- Rest API Controller End -->
 
     <mvc:annotation-driven>
@@ -77,9 +79,9 @@
                 </property>
             </bean>
             <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
-            	<property name="objectMapper">
-    				<bean class="com.vip.saturn.job.console.response.converter.CustomNullValueMapper" />
-            	</property>
+                <property name="objectMapper">
+                    <bean class="com.vip.saturn.job.console.response.converter.CustomNullValueMapper"/>
+                </property>
             </bean>
         </mvc:message-converters>
     </mvc:annotation-driven>
