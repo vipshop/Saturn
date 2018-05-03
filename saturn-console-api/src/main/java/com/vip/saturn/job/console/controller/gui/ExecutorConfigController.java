@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * @author hebelala
@@ -65,10 +66,17 @@ public class ExecutorConfigController extends AbstractGUIController {
 		if (StringUtils.isNotBlank(executorConfigsJson)) {
 			jsonObject = JSON.parseObject(executorConfigsJson.trim());
 		}
-		if (jsonObject == null) {
-			jsonObject = new JSONObject();
+		List<Map<String, String>> result = new ArrayList<>();
+		if (jsonObject != null) {
+			Set<String> keys = jsonObject.keySet();
+			for (String key : keys) {
+				Map<String, String> element = new HashMap<>();
+				element.put("key", key);
+				element.put("value", jsonObject.getString(key));
+				result.add(element);
+			}
 		}
-		return new SuccessResponseEntity(jsonObject);
+		return new SuccessResponseEntity(result);
 	}
 
 }
