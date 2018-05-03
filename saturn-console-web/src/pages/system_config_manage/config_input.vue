@@ -31,7 +31,7 @@
 <script>
 
 export default {
-  props: ['parameters'],
+  props: ['parameters', 'type'],
   data() {
     return {
     };
@@ -42,10 +42,10 @@ export default {
         key: row.key,
         value: row.value,
       };
-      this.$http.post('/console/configs', params).then(() => {
+      this.$http.post(`/console/configs/${type}`, params).then(() => {
         this.$emit('config-input-success');
       })
-      .catch(() => { this.$http.buildErrorHandler('更新系统配置请求失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('更新配置请求失败！'); });
     },
   },
 };
