@@ -164,7 +164,7 @@ export default {
         status: '',
         description: '',
       },
-      orderBy: 'jobName',
+      orderBy: '',
       groupList: [],
       jobList: [],
       selectColumn: 'jobName',
