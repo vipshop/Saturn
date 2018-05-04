@@ -6,6 +6,7 @@ import com.vip.saturn.job.console.mybatis.repository.*;
 import com.vip.saturn.job.console.service.AuthorizationService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,50 +78,50 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	@Transactional(readOnly = true)
-	private synchronized void refreshAuthToCache() throws InterruptedException {
+	public synchronized void refreshAuthToCache() {
 		try {
-			if (isAuthorizationEnabled()) {
-				ConcurrentMap<String, Role> rolesMap = new ConcurrentHashMap<>();
-				List<Role> roles = roleRepository.selectAll();
-				if (roles != null) {
-					for (Role role : roles) {
-						String roleKey = role.getRoleKey();
-						if (roleKey == null) {
-							continue;
-						}
-						List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
-						if (rolePermissions != null) {
-							role.setRolePermissions(rolePermissions);
-							for (RolePermission rolePermission : rolePermissions) {
-								Permission permission = permissionRepository
-										.selectByKey(rolePermission.getPermissionKey());
-								rolePermission.setPermission(permission);
-							}
-						}
-						rolesMap.put(roleKey, role);
+			if (!isAuthorizationEnabled()) {
+				return;
+			}
+
+			List<Role> roles = roleRepository.selectAll();
+			if (roles == null || roles.isEmpty()) {
+				rolesCache.clear();
+				return;
+			}
+
+			ConcurrentMap<String, Role> rolesMap = new ConcurrentHashMap<>();
+			for (Role role : roles) {
+				String roleKey = role.getRoleKey();
+				if (StringUtils.isBlank(roleKey)) {
+					continue;
+				}
+
+				List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
+				if (rolePermissions != null) {
+					role.setRolePermissions(rolePermissions);
+					for (RolePermission rolePermission : rolePermissions) {
+						Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+						rolePermission.setPermission(permission);
 					}
 				}
-				rolesCache = rolesMap;
+
+				rolesMap.put(roleKey, role);
 			}
+
+			rolesCache = rolesMap;
 		} catch (Throwable t) {
-			if (t instanceof InterruptedException) {
-				throw (InterruptedException) t;
-			}
 			log.error(t.getMessage(), t);
 		}
 	}
 
 	@Override
-	public void refreshCache() throws SaturnJobConsoleException {
-		try {
-			refreshAuthToCache();
-		} catch (InterruptedException e) {
-			throw new SaturnJobConsoleException(e);
-		}
+	public void refreshCache() {
+		refreshAuthToCache();
 	}
 
 	@Override
-	public boolean isAuthorizationEnabled() throws SaturnJobConsoleException {
+	public boolean isAuthorizationEnabled() {
 		return systemConfigService
 				.getBooleanValue(SystemConfigProperties.AUTHORIZATION_ENABLED, authorizationEnabledDefault);
 	}
@@ -128,12 +129,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Transactional(readOnly = true)
 	@Override
 	public User getUser(String userName) throws SaturnJobConsoleException {
-		User user = null;
 		if (!isAuthorizationEnabled()) {
-			return getAvailableUser(user, userName);
+			return initUser(userName);
 		}
-		user = userRepository.select(userName);
-		user = getAvailableUser(user, userName);
+
+		User user = getUserFromDB(userName);
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		if (userRoles != null) {
 			user.setUserRoles(userRoles);
@@ -146,20 +146,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return user;
 	}
 
-	protected User getAvailableUser(User user, String userName) {
-		if (user == null) {
-			user = new User();
-			user.setUserName(userName);
-		}
-		if (user.getUserRoles() == null) {
-			user.setUserRoles(new ArrayList<UserRole>());
-		}
+	protected User initUser(String userName) {
+		User user = new User();
+		user.setUserName(userName);
+		user.setUserRoles(new ArrayList<UserRole>());
 		return user;
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean hasUserRole(UserRole userRole) throws SaturnJobConsoleException {
+	public boolean hasUserRole(UserRole userRole) {
 		if (!isAuthorizationEnabled()) {
 			return true;
 		}
@@ -181,19 +177,29 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 				if (role == null) {
 					continue;
 				}
-				if (namespace.equals(userRole.getNamespace()) || systemAdminRoleKey.equals(userRole.getRoleKey())) {
-					List<RolePermission> rolePermissions = role.getRolePermissions();
-					if (rolePermissions != null) {
-						for (RolePermission rolePermission : rolePermissions) {
-							if (permissionKey.equals(rolePermission.getPermissionKey())) {
-								return;
-							}
-						}
+
+				if (!isUserRoleDefinedInNamespace(namespace, userRole) && !systemAdminRoleKey
+						.equals(userRole.getRoleKey())) {
+					continue;
+				}
+
+				List<RolePermission> rolePermissions = role.getRolePermissions();
+				if (rolePermissions == null || rolePermissions.isEmpty()) {
+					continue;
+				}
+
+				for (RolePermission rolePermission : rolePermissions) {
+					if (permissionKey.equals(rolePermission.getPermissionKey())) {
+						return;
 					}
 				}
 			}
 		}
-		throw new SaturnJobConsoleException(String.format("您没有权限，域:%s，权限:%s", namespace, permissionKey));
+		throw new SaturnJobConsoleException(String.format("您没有操作所需要的权限：域:%s，权限:%s", namespace, permissionKey));
+	}
+
+	private boolean isUserRoleDefinedInNamespace(String namespace, UserRole userRole) {
+		return namespace.equals(userRole.getNamespace()) || "*".equals(userRole.getNamespace());
 	}
 
 	@Override
@@ -211,5 +217,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			}
 		}
 		throw new SaturnJobConsoleException("您不是系统管理员，没有权限");
+	}
+
+	protected User getUserFromDB(String userName) {
+		User user = userRepository.select(userName);
+		if (user.getUserRoles() == null) {
+			user.setUserRoles(new ArrayList<UserRole>());
+		}
+
+		return user;
 	}
 }
