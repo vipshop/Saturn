@@ -2,7 +2,7 @@
 <div class="fav-container">
   <el-popover trigger="click" ref="popover" title="我的收藏" @show="show = true" @hide="show = false" popper-class="my-fav" placement="bottom" width="400">
     <el-form :model="form">
-      <el-table :data="favorites" :show-header="true" v-if="show">
+      <el-table :data="favorites" :show-header="true" v-if="show" class="fav-table">
         <el-table-column property="title" label="名称" show-overflow-tooltip>
           <template slot-scope="scope">
             <el-form-item v-if="scope.row.path === editPath" style="margin-bottom: 0;">
@@ -34,7 +34,7 @@
             <span v-else>{{scope.row.group || '暂无分组'}}</span>
           </template>
         </el-table-column>
-        <el-table-column width="70" label="操作">
+        <el-table-column width="80px" label="操作">
           <template slot-scope="scope">
             <div v-if="scope.row.path === editPath">
               <el-tooltip class="item" effect="dark" content="保存" placement="top" key="floppy">
@@ -180,6 +180,10 @@ export default {
   margin: 0 10px;
   height: 40px;
   line-height: 40px;
+}
+.fav-table {
+  max-height: 350px;
+  overflow: auto;
 }
 .my-fav {
   &.el-popover {
