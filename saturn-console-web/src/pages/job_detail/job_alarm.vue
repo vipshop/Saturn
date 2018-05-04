@@ -53,8 +53,6 @@ export default {
   data() {
     return {
       loading: false,
-      domainName: this.$route.params.domain,
-      jobName: this.$route.params.jobName,
       abnormalJob: '',
       timeoutJob: '',
       unableFailoverJob: '',
@@ -100,6 +98,17 @@ export default {
         this.loading = false;
       });
     },
+  },
+  computed: {
+    domainName() {
+      return this.$route.params.domain;
+    },
+    jobName() {
+      return this.$route.params.jobName;
+    },
+  },
+  watch: {
+    $route: 'init',
   },
   created() {
     this.init();

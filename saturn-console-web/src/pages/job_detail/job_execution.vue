@@ -58,8 +58,6 @@
 export default {
   data() {
     return {
-      domainName: this.$route.params.domain,
-      jobName: this.$route.params.jobName,
       isViewLogVisible: false,
       autoRefreshTime: '',
       refreshTimes: [{
@@ -136,6 +134,17 @@ export default {
     },
     init() {
       Promise.all([this.getJobExecutors(), this.getJobInfo()]).then(() => {});
+    },
+  },
+  watch: {
+    $route: 'init',
+  },
+  computed: {
+    domainName() {
+      return this.$route.params.domain;
+    },
+    jobName() {
+      return this.$route.params.jobName;
     },
   },
   created() {

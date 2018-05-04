@@ -32,14 +32,6 @@ export default {
   data() {
     return {
       loading: false,
-      domainName: this.$route.params.domain,
-      jobName: this.$route.params.jobName,
-      sidebarMenus: [
-        { index: 'job_setting', title: '作业设置', icon: 'fa fa-gear', name: 'job_setting', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-        { index: 'job_sharding', title: '分片情况', icon: 'fa fa-server', name: 'job_sharding', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-        { index: 'job_execution', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'job_execution', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-        { index: 'job_alarm', title: '告警中心', icon: 'fa fa-bell', name: 'job_alarm', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
-      ],
       domainInfo: {},
       statusTag: {
         READY: 'primary',
@@ -145,7 +137,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     getDomainInfo() {
-      this.$http.get(`/console/namespaces/${this.domainName}/`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/`).then((data) => {
         this.domainInfo = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); });
@@ -155,14 +147,10 @@ export default {
         domainName: this.domainName,
         jobName: this.jobName,
       };
-      this.loading = true;
-      this.$store.dispatch('setJobInfo', params).then((resp) => {
+      return this.$store.dispatch('setJobInfo', params).then((resp) => {
         console.log(resp);
       })
-      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'))
-      .finally(() => {
-        this.loading = false;
-      });
+      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'));
     },
     jobStatusJudge() {
       return this.jobShardings.some((ele) => {
@@ -173,21 +161,43 @@ export default {
       });
     },
     getJobExecutors() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
         this.jobShardings = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业运行状态请求失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getDomainInfo(), this.getJobInfo(), this.getJobExecutors()]).then(() => {
+        this.loading = false;
+      });
     },
   },
   computed: {
     jobInfo() {
       return this.$store.state.global.jobInfo;
     },
+    domainName() {
+      return this.$route.params.domain;
+    },
+    jobName() {
+      return this.$route.params.jobName;
+    },
+    sidebarMenus() {
+      const menus = [
+        { index: 'job_setting', title: '作业设置', icon: 'fa fa-gear', name: 'job_setting', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_sharding', title: '分片情况', icon: 'fa fa-server', name: 'job_sharding', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_execution', title: '运行状态', icon: 'fa fa-dot-circle-o', name: 'job_execution', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+        { index: 'job_alarm', title: '告警中心', icon: 'fa fa-bell', name: 'job_alarm', params: { domain: this.$route.params.domain, jobName: this.$route.params.jobName } },
+      ];
+      return menus;
+    },
+  },
+  watch: {
+    $route: 'init',
   },
   created() {
-    this.getDomainInfo();
-    this.getJobInfo();
-    this.getJobExecutors();
+    this.init();
   },
 };
 </script>

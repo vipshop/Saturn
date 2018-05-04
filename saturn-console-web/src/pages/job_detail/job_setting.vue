@@ -227,8 +227,6 @@ export default {
     return {
       loading: false,
       isCronPredictVisible: false,
-      domainName: this.$route.params.domain,
-      jobName: this.$route.params.jobName,
       activeNames: ['1'],
       cronPredictParams: {},
       rules: {
@@ -415,6 +413,15 @@ export default {
       }
       return jobInfoData;
     },
+    domainName() {
+      return this.$route.params.domain;
+    },
+    jobName() {
+      return this.$route.params.jobName;
+    },
+  },
+  watch: {
+    $route: 'getJobSettingInfo',
   },
 };
 </script>

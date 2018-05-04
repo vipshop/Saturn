@@ -43,8 +43,6 @@
 export default {
   data() {
     return {
-      domainName: this.$route.params.domain,
-      jobName: this.$route.params.jobName,
       jobShardings: [],
     };
   },
@@ -66,9 +64,18 @@ export default {
       });
       return arr;
     },
+    domainName() {
+      return this.$route.params.domain;
+    },
+    jobName() {
+      return this.$route.params.jobName;
+    },
   },
   created() {
     this.getJobSharding();
+  },
+  watch: {
+    $route: 'getJobSharding',
   },
 };
 </script>
