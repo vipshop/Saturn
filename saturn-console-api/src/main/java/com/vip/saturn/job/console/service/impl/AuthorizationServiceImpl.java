@@ -80,6 +80,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Transactional(readOnly = true)
 	@Override
 	public synchronized void refreshAuthCache() throws SaturnJobConsoleException {
+		log.info("Start refresh auth cache");
+		long startTime = System.currentTimeMillis();
+		try {
+			handleRefreshAuthCache();
+		} finally {
+			log.info("End refresh auth cache, cost {}ms", System.currentTimeMillis() - startTime);
+		}
+	}
+
+	/**
+	 * You could override this method to implement yourself caches
+	 * @throws SaturnJobConsoleException exception
+	 */
+	protected void handleRefreshAuthCache() throws SaturnJobConsoleException {
 		if (!isAuthorizationEnabled()) {
 			rolesCache.clear();
 			return;
