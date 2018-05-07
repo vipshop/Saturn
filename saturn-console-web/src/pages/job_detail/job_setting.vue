@@ -122,7 +122,7 @@
                                 <el-form-item prop="timeoutSeconds" label="超时强杀(秒)">
                                     <el-tooltip popper-class="form-tooltip" placement="top" effect="light">
                                         <div slot="content">
-                                            <span class="text-warning">警告：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现postForceStop方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。</span>
+                                            <span class="text-warning">警告：对于Java作业，立即终止操作（即强杀）会stop业务线程，如果作业代码没有实现onTimeout方法来释放资源，有可能导致资源的不释放，例如数据库连接的不释放。</span>
                                         </div>
                                         <el-input v-model="jobSettingInfo.timeoutSeconds"></el-input>
                                     </el-tooltip>
