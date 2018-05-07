@@ -81,6 +81,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	public synchronized void refreshAuthToCache() {
 		try {
 			if (!isAuthorizationEnabled()) {
+				rolesCache.clear();
 				return;
 			}
 
@@ -128,7 +129,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public User getUser(String userName) throws SaturnJobConsoleException {
+	public User getUser(String userName) {
 		if (!isAuthorizationEnabled()) {
 			return initUser(userName);
 		}
@@ -178,8 +179,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 					continue;
 				}
 
-				if (!isUserRoleDefinedInNamespace(namespace, userRole) && !systemAdminRoleKey
-						.equals(userRole.getRoleKey())) {
+				if (!isUserRoleDefinedInNamespace(namespace, userRole)) {
 					continue;
 				}
 
@@ -199,6 +199,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	private boolean isUserRoleDefinedInNamespace(String namespace, UserRole userRole) {
+		// system_admin and sa_admin, etc, whose namespace is *
 		return namespace.equals(userRole.getNamespace()) || "*".equals(userRole.getNamespace());
 	}
 
