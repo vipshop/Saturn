@@ -36,7 +36,7 @@
                         </el-form-item>
                         <el-form-item label="">
                             <el-input :placeholder="filterColumnPlaceholder" v-model="filters[selectColumn]" @keyup.enter.native="scope.search">
-                              <el-select style="width: 120px;" slot="prepend" v-model="selectColumn">
+                              <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>
                               </el-select>
@@ -97,7 +97,7 @@
                             </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述" width="170px">
                                 <template slot-scope="scope"> 
-                                    {{scope.row.description || '-'}}
+                                    {{scope.row.description}}
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="120px" align="center">
@@ -188,6 +188,10 @@ export default {
     };
   },
   methods: {
+    selectColumnChange() {
+      this.filters.jobName = '';
+      this.filters.description = '';
+    },
     toAbnormalJobPage() {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
     },
