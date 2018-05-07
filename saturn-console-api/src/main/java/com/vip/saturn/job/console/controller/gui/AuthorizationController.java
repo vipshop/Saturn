@@ -44,7 +44,7 @@ public class AuthorizationController extends AbstractGUIController {
 	@RequestMapping(value = "/refreshCache", method = {RequestMethod.GET, RequestMethod.POST})
 	public SuccessResponseEntity refreshCache(HttpSession httpSession) throws SaturnJobConsoleException {
 		AuditInfoContext.put("loginUser", getCurrentLoginUserName());
-		authorizationService.refreshCache();
+		authorizationService.refreshAuthCache();
 		return new SuccessResponseEntity();
 	}
 

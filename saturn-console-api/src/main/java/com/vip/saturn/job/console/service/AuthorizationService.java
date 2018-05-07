@@ -10,7 +10,7 @@ import com.vip.saturn.job.console.mybatis.entity.UserRole;
  */
 public interface AuthorizationService {
 
-	void refreshCache() throws SaturnJobConsoleException;
+	void refreshAuthCache() throws SaturnJobConsoleException;
 
 	boolean isAuthorizationEnabled() throws SaturnJobConsoleException;
 

@@ -53,16 +53,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	protected String systemAdminRoleKey = "system_admin";
 
 	protected ConcurrentMap<String, Role> rolesCache = new ConcurrentHashMap<>();
-	private Timer refreshAuthToCacheTimer = null;
+	private Timer refreshAuthCacheTimer = null;
 
 	@PostConstruct
 	public void init() {
-		refreshAuthToCacheTimer = new Timer("refresh-auth-to-cache-timer", true);
-		refreshAuthToCacheTimer.schedule(new TimerTask() {
+		refreshAuthCacheTimer = new Timer("refresh-auth-cache-timer", true);
+		refreshAuthCacheTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					refreshAuthToCache();
+					refreshAuthCache();
 				} catch (Throwable t) {
 					log.error(t.getMessage(), t);
 				}
@@ -72,64 +72,55 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@PreDestroy
 	public void destroy() {
-		if (refreshAuthToCacheTimer != null) {
-			refreshAuthToCacheTimer.cancel();
+		if (refreshAuthCacheTimer != null) {
+			refreshAuthCacheTimer.cancel();
 		}
 	}
 
 	@Transactional(readOnly = true)
-	public synchronized void refreshAuthToCache() {
-		try {
-			if (!isAuthorizationEnabled()) {
-				rolesCache.clear();
-				return;
-			}
-
-			List<Role> roles = roleRepository.selectAll();
-			if (roles == null || roles.isEmpty()) {
-				rolesCache.clear();
-				return;
-			}
-
-			ConcurrentMap<String, Role> rolesMap = new ConcurrentHashMap<>();
-			for (Role role : roles) {
-				String roleKey = role.getRoleKey();
-				if (StringUtils.isBlank(roleKey)) {
-					continue;
-				}
-
-				List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
-				if (rolePermissions != null) {
-					role.setRolePermissions(rolePermissions);
-					for (RolePermission rolePermission : rolePermissions) {
-						Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-						rolePermission.setPermission(permission);
-					}
-				}
-
-				rolesMap.put(roleKey, role);
-			}
-
-			rolesCache = rolesMap;
-		} catch (Throwable t) {
-			log.error(t.getMessage(), t);
+	@Override
+	public synchronized void refreshAuthCache() throws SaturnJobConsoleException {
+		if (!isAuthorizationEnabled()) {
+			rolesCache.clear();
+			return;
 		}
+
+		List<Role> roles = roleRepository.selectAll();
+		if (roles == null || roles.isEmpty()) {
+			rolesCache.clear();
+			return;
+		}
+
+		ConcurrentMap<String, Role> rolesMap = new ConcurrentHashMap<>();
+		for (Role role : roles) {
+			String roleKey = role.getRoleKey();
+			if (StringUtils.isBlank(roleKey)) {
+				continue;
+			}
+
+			List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
+			if (rolePermissions != null) {
+				role.setRolePermissions(rolePermissions);
+				for (RolePermission rolePermission : rolePermissions) {
+					Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
+					rolePermission.setPermission(permission);
+				}
+			}
+
+			rolesMap.put(roleKey, role);
+		}
+		rolesCache = rolesMap;
 	}
 
 	@Override
-	public void refreshCache() {
-		refreshAuthToCache();
-	}
-
-	@Override
-	public boolean isAuthorizationEnabled() {
+	public boolean isAuthorizationEnabled() throws SaturnJobConsoleException {
 		return systemConfigService
 				.getBooleanValue(SystemConfigProperties.AUTHORIZATION_ENABLED, authorizationEnabledDefault);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public User getUser(String userName) {
+	public User getUser(String userName) throws SaturnJobConsoleException {
 		if (!isAuthorizationEnabled()) {
 			return initUser(userName);
 		}
@@ -156,7 +147,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public boolean hasUserRole(UserRole userRole) {
+	public boolean hasUserRole(UserRole userRole) throws SaturnJobConsoleException {
 		if (!isAuthorizationEnabled()) {
 			return true;
 		}
