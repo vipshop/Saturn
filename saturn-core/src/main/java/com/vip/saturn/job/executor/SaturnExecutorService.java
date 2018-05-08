@@ -36,17 +36,21 @@ public class SaturnExecutorService {
 
 	private String executorName;
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
+	private SaturnExecutorExtension saturnExecutorExtension;
 
 	private List<String> jobNames = new ArrayList<>();
 	private TreeCache jobsTreeCache;
 	private String ipNode;
 	private ClassLoader jobClassLoader;
 	private ClassLoader executorClassLoader;
+	private ExecutorConfigService executorConfigService;
 	private RestartAndDumpService restartExecutorService;
 
-	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName) {
+	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName,
+			SaturnExecutorExtension saturnExecutorExtension) {
 		this.coordinatorRegistryCenter = coordinatorRegistryCenter;
 		this.executorName = executorName;
+		this.saturnExecutorExtension = saturnExecutorExtension;
 		if (coordinatorRegistryCenter != null) {
 			coordinatorRegistryCenter.setExecutorName(executorName);
 		}
@@ -69,14 +73,22 @@ public class SaturnExecutorService {
 		}
 
 		// 持久化clean
-		coordinatorRegistryCenter.persist(executorCleanNode,
-				String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));
+		coordinatorRegistryCenter
+				.persist(executorCleanNode, String.valueOf(SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN));
 
 		// 持久task
 		if (StringUtils.isNotBlank(SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID)) {
 			log.info("persist znode '/task': {}", SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
 			coordinatorRegistryCenter.persist(executorTaskNode, SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID);
 		}
+
+		// 获取配置并添加watcher
+		if (executorConfigService != null) {
+			executorConfigService.stop();
+		}
+		executorConfigService = new ExecutorConfigService(executorName, coordinatorRegistryCenter,
+				saturnExecutorExtension.getExecutorConfigClass());
+		executorConfigService.start();
 
 		// add watcher for restart
 		if (restartExecutorService != null) {
@@ -101,8 +113,8 @@ public class SaturnExecutorService {
 		// 启动时检查本机与注册中心的时间误差秒数是否在允许范围
 		String executorNode = SaturnExecutorsNode.EXECUTORS_ROOT + "/" + executorName;
 		try {
-			long timeDiff = Math.abs(System.currentTimeMillis()
-					- coordinatorRegistryCenter.getRegistryCenterTime(executorNode + "/systemTime/current"));
+			long timeDiff = Math.abs(System.currentTimeMillis() - coordinatorRegistryCenter
+					.getRegistryCenterTime(executorNode + "/systemTime/current"));
 			int maxTimeDiffSeconds = 60;
 			if (timeDiff > maxTimeDiffSeconds * 1000L) {
 				Long timeDiffSeconds = Long.valueOf(timeDiff / 1000);
@@ -136,10 +148,10 @@ public class SaturnExecutorService {
 	 */
 	public void registerCallbackAndStartExistingJob(final ScheduleNewJobCallback callback) throws Exception {
 		jobsTreeCache = TreeCache
-				.newBuilder((CuratorFramework) coordinatorRegistryCenter.getRawClient(), JobNodePath.ROOT)
-				.setExecutor(new CloseableExecutorService(Executors.newSingleThreadExecutor(
-						new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true))
-				.setMaxDepth(1).build();
+				.newBuilder((CuratorFramework) coordinatorRegistryCenter.getRawClient(), JobNodePath.ROOT).setExecutor(
+						new CloseableExecutorService(Executors.newSingleThreadExecutor(
+								new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true)).setMaxDepth(1)
+				.build();
 		jobsTreeCache.getListenable().addListener(new TreeCacheListener() {
 			@Override
 			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
@@ -205,6 +217,16 @@ public class SaturnExecutorService {
 		}
 	}
 
+	private void stopExecutorConfigService() {
+		try {
+			if (executorConfigService != null) {
+				executorConfigService.stop();
+			}
+		} catch (Throwable t) {
+			log.error(t.getMessage(), t);
+		}
+	}
+
 	private void removeIpNode() {
 		try {
 			if (coordinatorRegistryCenter != null && ipNode != null && coordinatorRegistryCenter.isConnected()) {
@@ -229,6 +251,7 @@ public class SaturnExecutorService {
 	// Attention, catch Throwable and not throw it.
 	public void shutdown() {
 		stopRestartExecutorService();
+		stopExecutorConfigService();
 		removeIpNode();
 		closeJobsTreeCache();
 	}
@@ -279,6 +302,10 @@ public class SaturnExecutorService {
 
 	public void setIpNode(String ipNode) {
 		this.ipNode = ipNode;
+	}
+
+	public ExecutorConfig getExecutorConfig() {
+		return executorConfigService == null ? new ExecutorConfig() : executorConfigService.getExecutorConfig();
 	}
 
 }

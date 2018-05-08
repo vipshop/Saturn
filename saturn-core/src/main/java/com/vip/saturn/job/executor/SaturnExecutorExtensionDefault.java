@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  * @author hebelala
  *
  */
@@ -31,8 +31,8 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void initLogDirEnv() {
-		String saturnLogDir = System.getProperty(NAME_VIP_SATURN_LOG_DIR,
-				getEnv(NAME_VIP_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
+		String saturnLogDir = System
+				.getProperty(NAME_VIP_SATURN_LOG_DIR, getEnv(NAME_VIP_SATURN_LOG_DIR, getDefaultLogDir(executorName)));
 		System.setProperty("saturn.log.dir", saturnLogDir); // for logback.xml
 	}
 
@@ -85,4 +85,8 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 		registerJobType();
 	}
 
+	@Override
+	public Class getExecutorConfigClass() {
+		return ExecutorConfig.class;
+	}
 }

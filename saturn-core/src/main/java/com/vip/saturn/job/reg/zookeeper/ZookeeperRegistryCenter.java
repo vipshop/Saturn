@@ -105,14 +105,13 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
 	private CuratorFramework buildZkClient() {
 		if (zkConfig.isUseNestedZookeeper()) {
-			NestedZookeeperServers.getInstance().startServerIfNotStarted(zkConfig.getNestedPort(),
-					zkConfig.getNestedDataDir());
+			NestedZookeeperServers.getInstance()
+					.startServerIfNotStarted(zkConfig.getNestedPort(), zkConfig.getNestedDataDir());
 		}
 
-		Builder builder = CuratorFrameworkFactory.builder().connectString(zkConfig.getServerLists())
-				.retryPolicy(new ExponentialBackoffRetry(zkConfig.getBaseSleepTimeMilliseconds(),
-						zkConfig.getMaxRetries(), zkConfig.getMaxSleepTimeMilliseconds()))
-				.namespace(zkConfig.getNamespace());
+		Builder builder = CuratorFrameworkFactory.builder().connectString(zkConfig.getServerLists()).retryPolicy(
+				new ExponentialBackoffRetry(zkConfig.getBaseSleepTimeMilliseconds(), zkConfig.getMaxRetries(),
+						zkConfig.getMaxSleepTimeMilliseconds())).namespace(zkConfig.getNamespace());
 
 		if (0 != zkConfig.getSessionTimeoutMilliseconds()) {
 			sessionTimeout = zkConfig.getSessionTimeoutMilliseconds();
@@ -145,7 +144,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 					});
 		}
 
-		log.info("msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}, retry_times: {}",
+		log.info(
+				"msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}, retry_times: {}",
 				zkConfig.getServerLists(), connectionTimeout, sessionTimeout, zkConfig.getMaxRetries());
 		return builder.build();
 	}
@@ -154,13 +154,17 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		// default SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = -1
 		int connectionTimeoutInMillSeconds = 0;
 		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS != -1) {
-			connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS * 1000;
+			connectionTimeoutInMillSeconds =
+					SystemEnvProperties.VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS * 1000;
 		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
 			// 60秒为默认不稳定网络下的设置
-			connectionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
+			connectionTimeoutInMillSeconds =
+					SystemEnvProperties.VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
 		}
 
-		return connectionTimeoutInMillSeconds > MIN_CONNECTION_TIMEOUT ? connectionTimeoutInMillSeconds : MIN_CONNECTION_TIMEOUT;
+		return connectionTimeoutInMillSeconds > MIN_CONNECTION_TIMEOUT ?
+				connectionTimeoutInMillSeconds :
+				MIN_CONNECTION_TIMEOUT;
 	}
 
 	private static int calculateSessionTimeout() {
@@ -170,7 +174,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS * 1000;
 		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
 			// 60秒为默认不稳定网络下的设置
-			sessionTimeoutInMillSeconds = SystemEnvProperties.VIP_SATURN_SESSION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
+			sessionTimeoutInMillSeconds =
+					SystemEnvProperties.VIP_SATURN_SESSION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK * 1000;
 		}
 
 		return sessionTimeoutInMillSeconds > MIN_SESSION_TIMEOUT ? sessionTimeoutInMillSeconds : MIN_SESSION_TIMEOUT;
@@ -243,8 +248,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	public void persist(final String key, final String value) {
 		try {
 			if (!isExisted(key)) {
-				client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(key,
-						value.getBytes());
+				client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
+						.forPath(key, value.getBytes());
 			} else {
 				update(key, value);
 			}
@@ -273,8 +278,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			if (isExisted(key)) {
 				client.delete().deletingChildrenIfNeeded().forPath(key);
 			}
-			client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(key,
-					value.getBytes(Charset.forName("UTF-8")));
+			client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
+					.forPath(key, value.getBytes(Charset.forName("UTF-8")));
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON
@@ -334,6 +339,10 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		return client;
 	}
 
+	public void setClient(CuratorFramework client) {
+		this.client = client;
+	}
+
 	@Override
 	public void addConnectionStateListener(final ConnectionStateListener listener) {
 		client.getConnectionStateListenable().addListener(listener);
@@ -349,6 +358,10 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		return sessionTimeout;
 	}
 
+	public void setSessionTimeout(int sessionTimeout) {
+		this.sessionTimeout = sessionTimeout;
+	}
+
 	@Override
 	public String getNamespace() {
 		return zkConfig.getNamespace();
@@ -357,6 +370,19 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	@Override
 	public boolean isConnected() {
 		return client != null && client.getZookeeperClient().isConnected();
+	}
+
+	@Override
+	public CoordinatorRegistryCenter usingNamespace(String namespace) {
+		// If usingNamespace is frequently-used, consider cache it
+		ZookeeperConfiguration zkConfigNew = new ZookeeperConfiguration(zkConfig.getServerLists(), namespace,
+				zkConfig.getBaseSleepTimeMilliseconds(), zkConfig.getMaxSleepTimeMilliseconds(),
+				zkConfig.getMaxRetries());
+		ZookeeperRegistryCenter zookeeperRegistryCenter = new ZookeeperRegistryCenter(zkConfigNew);
+		zookeeperRegistryCenter.setExecutorName(executorName);
+		zookeeperRegistryCenter.setClient(client.usingNamespace(namespace));
+		zookeeperRegistryCenter.setSessionTimeout(sessionTimeout);
+		return zookeeperRegistryCenter;
 	}
 
 }

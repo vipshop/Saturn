@@ -1,7 +1,7 @@
 package com.vip.saturn.job.executor;
 
 /**
- * 
+ *
  * @author hebelala
  *
  */
@@ -33,5 +33,7 @@ public abstract class SaturnExecutorExtension {
 	public abstract void validateNamespaceExisting(String connectString) throws Exception;
 
 	public abstract void init();
+
+	public abstract Class getExecutorConfigClass();
 
 }

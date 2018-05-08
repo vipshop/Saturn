@@ -14,9 +14,9 @@
 
 package com.vip.saturn.job.reg.base;
 
-import java.util.List;
-
 import org.apache.curator.framework.state.ConnectionStateListener;
+
+import java.util.List;
 
 /**
  * 用于协调分布式服务的注册中心.
@@ -97,5 +97,12 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
 	 * @return
 	 */
 	boolean isConnected();
+
+	/**
+	 * 使用基于namespace的客户端，如果namespace为null，则视为不使用namespace
+	 * @param namespace
+	 * @return
+	 */
+	CoordinatorRegistryCenter usingNamespace(String namespace);
 
 }

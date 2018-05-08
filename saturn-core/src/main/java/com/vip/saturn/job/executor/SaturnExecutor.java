@@ -187,8 +187,8 @@ public class SaturnExecutor {
 		log = LoggerFactory.getLogger(SaturnExecutor.class);
 	}
 
-	private static void initExtension(String executorName, String namespace, ClassLoader executorClassLoader,
-			ClassLoader jobClassLoader) {
+	private static synchronized void initExtension(String executorName, String namespace,
+			ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
 		try {
 			Properties props = ResourceUtils.getResource("properties/saturn-ext.properties");
 			String extClass = props.getProperty("saturn.ext");
@@ -202,16 +202,11 @@ public class SaturnExecutor {
 			}
 		} catch (Exception e) { // NOSONAR log is not allowed to use, before saturnExecutorExtension.init().
 			e.printStackTrace(); // NOSONAR
-		}
-
-		initSaturnExecutorExtension(executorName, namespace, executorClassLoader, jobClassLoader);
-	}
-
-	private static synchronized void initSaturnExecutorExtension(String executorName, String namespace,
-			ClassLoader executorClassLoader, ClassLoader jobClassLoader) {
-		if (saturnExecutorExtension == null) {
-			saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace, executorClassLoader,
-					jobClassLoader);
+		} finally {
+			if (saturnExecutorExtension == null) {
+				saturnExecutorExtension = new SaturnExecutorExtensionDefault(executorName, namespace,
+						executorClassLoader, jobClassLoader);
+			}
 		}
 	}
 
@@ -345,6 +340,7 @@ public class SaturnExecutor {
 
 				serverLists = serverLists.trim();
 
+				// 初始化注册中心
 				initRegistryCenter(serverLists);
 
 				// 检测是否存在仍然有正在运行的SHELL作业
@@ -356,7 +352,6 @@ public class SaturnExecutor {
 				TimeoutSchedulerExecutor.createScheduler(executorName);
 
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
-				// 注册Executor
 				registerExecutor();
 
 				// 启动定时清空nohup文件的线程
@@ -400,14 +395,11 @@ public class SaturnExecutor {
 			// 验证namespace是否存在
 			saturnExecutorExtension.validateNamespaceExisting(serverLists);
 
-			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000, calculateRetryTimes());
-			regCenter = new ZookeeperRegistryCenter(zkConfig);
-			saturnExecutorService = new SaturnExecutorService(regCenter, executorName);
-			saturnExecutorService.setJobClassLoader(jobClassLoader);
-			saturnExecutorService.setExecutorClassLoader(executorClassLoader);
-
 			// 初始化注册中心
 			log.info("start to init reg center.");
+			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000,
+					calculateRetryTimes());
+			regCenter = new ZookeeperRegistryCenter(zkConfig);
 			regCenter.init();
 			connectionLostListener = new EnhancedConnectionStateListener(executorName) {
 				@Override
@@ -417,6 +409,11 @@ public class SaturnExecutor {
 				}
 			};
 			regCenter.addConnectionStateListener(connectionLostListener);
+
+			//  创建SaturnExecutorService
+			saturnExecutorService = new SaturnExecutorService(regCenter, executorName, saturnExecutorExtension);
+			saturnExecutorService.setJobClassLoader(jobClassLoader);
+			saturnExecutorService.setExecutorClassLoader(executorClassLoader);
 
 			StartCheckUtil.setOk(StartCheckItem.ZK);
 		} catch (Exception e) {
@@ -433,7 +430,9 @@ public class SaturnExecutor {
 			retryTimes = SystemEnvProperties.VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK;
 		}
 
-		return retryTimes > ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES ? retryTimes : ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES;
+		return retryTimes > ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES ?
+				retryTimes :
+				ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES;
 	}
 
 	private void registerExecutor() throws Exception {
