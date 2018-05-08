@@ -99,11 +99,6 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
 	public static int VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK = 9;
 
-	public static final String NAME_VIP_SATURN_DISABLE_CALLING_REST_API = "VIP_SATURN_DISABLE_CALLING_REST_API";
-	public static boolean VIP_SATURN_DISABLE_CALLING_REST_API = Boolean
-			.parseBoolean(System.getProperty(NAME_VIP_SATURN_DISABLE_CALLING_REST_API, System.getenv(NAME_VIP_SATURN_DISABLE_CALLING_REST_API)));
-
-
 	static {
 		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
 				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));

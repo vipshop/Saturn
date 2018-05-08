@@ -3,19 +3,12 @@ package com.vip.saturn.job.basic;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.utils.AlarmUtils;
 import com.vip.saturn.job.utils.UpdateJobCronUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
-
-import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_DISABLE_CALLING_REST_API;
 
 /**
  * Provide the hook for client job callback.
  */
 public class SaturnApi {
-
-	private static Logger log = LoggerFactory.getLogger(SaturnApi.class);
 
 	private String namespace;
 

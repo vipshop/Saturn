@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.net.ConnectException;
 import java.util.Map;
 
-import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_DISABLE_CALLING_REST_API;
-
 /**
  * Util for handling alarm.
  * <p>
@@ -31,11 +29,6 @@ public class AlarmUtils {
 	 * Send alarm request to Alarm API in Console.
 	 */
 	public static void raiseAlarm(Map<String, Object> alarmInfo, String namespace) throws SaturnJobException {
-		if (VIP_SATURN_DISABLE_CALLING_REST_API) {
-			log.info("Raise alarm will be ignored as calling REST API is disabled.");
-			return;
-		}
-
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
 		for (int i = 0; i < size; i++) {
 
