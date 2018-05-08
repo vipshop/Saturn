@@ -16,7 +16,7 @@
                             <span class="page-menu-item-title">
                                 {{menu.title}}
                             </span>
-                            <el-tag type="danger" class="warning-tag" v-if="menu.alarmCount && !collapse">{{menu.alarmCount}}</el-tag>
+                            <el-tag :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" class="warning-tag" v-if="menu.alarmCount && !collapse">{{menu.alarmCount}}</el-tag>
                         </el-menu-item>
                     </el-menu>
                   </div>

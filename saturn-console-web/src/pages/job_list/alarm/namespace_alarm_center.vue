@@ -13,7 +13,7 @@
             </el-tab-pane>
             <el-tab-pane name="namespace_failover_jobs">
               <span slot="label"><i class="fa fa-exclamation-triangle"></i>无法高可用作业
-                <el-tag type="danger" class="alarm-tag" v-if="countOfAlarmJobs.unable_failover_job">{{countOfAlarmJobs.unable_failover_job}}</el-tag>
+                <el-tag type="warning" class="alarm-tag" v-if="countOfAlarmJobs.unable_failover_job">{{countOfAlarmJobs.unable_failover_job}}</el-tag>
               </span>
             </el-tab-pane>
             <!-- <el-tab-pane name="namespace_abnormal_containers"><span slot="label"><i class="fa fa-cube"></i>异常容器</span></el-tab-pane> -->
