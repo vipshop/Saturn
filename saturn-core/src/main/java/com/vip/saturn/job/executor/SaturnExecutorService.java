@@ -86,7 +86,8 @@ public class SaturnExecutorService {
 		if (executorConfigService != null) {
 			executorConfigService.stop();
 		}
-		executorConfigService = new ExecutorConfigService(executorName, coordinatorRegistryCenter,
+		executorConfigService = new ExecutorConfigService(executorName,
+				(CuratorFramework) coordinatorRegistryCenter.getRawClient(),
 				saturnExecutorExtension.getExecutorConfigClass());
 		executorConfigService.start();
 
