@@ -4,10 +4,11 @@
 package com.vip.saturn.job.console.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.sharding.listener.AbstractConnectionListener;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import org.apache.curator.framework.CuratorFramework;
 
 /**
  * @author chembo.huang
@@ -27,7 +28,7 @@ public class ZkCluster implements Serializable {
 	private boolean offline = false;
 
 	@JsonIgnore
-	private transient CuratorFramework curatorFramework;
+	private transient CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
 
 	@JsonIgnore
 	private transient AbstractConnectionListener connectionListener;
@@ -77,12 +78,12 @@ public class ZkCluster implements Serializable {
 		this.offline = offline;
 	}
 
-	public CuratorFramework getCuratorFramework() {
-		return curatorFramework;
+	public CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp() {
+		return curatorFrameworkOp;
 	}
 
-	public void setCuratorFramework(CuratorFramework curatorFramework) {
-		this.curatorFramework = curatorFramework;
+	public void setCuratorFrameworkOp(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		this.curatorFrameworkOp = curatorFrameworkOp;
 	}
 
 	public AbstractConnectionListener getConnectionListener() {

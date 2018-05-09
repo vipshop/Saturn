@@ -18,4 +18,9 @@ public class SaturnSelfNodePath {
 	public static final String SATURN_CONSOLE_DASHBOARD_LEADER_LATCH = SATURN_CONSOLE_DASHBOARD_LEADER + "/latch";
 
 	public static final String SATURN_CONSOLE_DASHBOARD_LEADER_HOST = SATURN_CONSOLE_DASHBOARD_LEADER + "/host";
+
+	public static final String SATURN_EXECUTOR = ROOT + "/saturn-executor";
+
+	public static final String SATURN_EXECUTOR_CONFIG = SATURN_EXECUTOR + "/config";
+
 }

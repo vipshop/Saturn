@@ -16,7 +16,7 @@ public class ExecutorConfigService {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecutorConfigService.class);
 
-	private static final String executorConfigPath = "/$Config/executor";
+	private static final String executorConfigPath = "/$SaturnSelf/saturn-executor/config";
 
 	private String executorName;
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;

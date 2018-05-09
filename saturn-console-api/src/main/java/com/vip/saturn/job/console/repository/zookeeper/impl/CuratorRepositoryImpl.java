@@ -61,7 +61,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			builder.namespace(namespace);
 		}
 		if (!Strings.isNullOrEmpty(digest)) {
-			builder.authorization("digest", digest.getBytes()).aclProvider(new ACLProvider() {
+			builder.authorization("digest", digest.getBytes(Charset.forName("UTF-8"))).aclProvider(new ACLProvider() {
 
 				@Override
 				public List<ACL> getDefaultAcl() {
@@ -162,7 +162,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		@Override
 		public void create(final String znode, Object data) {
 			try {
-				curatorFramework.create().creatingParentsIfNeeded().forPath(znode, data.toString().getBytes());
+				curatorFramework.create().creatingParentsIfNeeded().forPath(znode, data.toString().getBytes(Charset.forName("UTF-8")));
 			} catch (final NodeExistsException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
@@ -229,7 +229,7 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 			if (!checkExists(node)) {
 				try {
-					curatorFramework.create().creatingParentsIfNeeded().forPath(node, value.toString().getBytes());
+					curatorFramework.create().creatingParentsIfNeeded().forPath(node, value.toString().getBytes(Charset.forName("UTF-8")));
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
