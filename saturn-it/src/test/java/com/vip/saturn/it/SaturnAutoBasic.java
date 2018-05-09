@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.RequestResultHelper;
 import com.vip.saturn.job.console.springboot.SaturnConsoleApp;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
+import com.vip.saturn.job.executor.ExecutorConfig;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.executor.SaturnExecutor;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -64,7 +65,7 @@ public class SaturnAutoBasic {
 	protected static List<Main> saturnExecutorList = new ArrayList<>();
 	protected static List<SaturnConsoleInstance> saturnConsoleInstanceList = new ArrayList<>();
 
-	private static class SaturnConsoleInstance {
+	public static class SaturnConsoleInstance {
 
 		public ApplicationContext applicationContext;
 		public int port;
@@ -105,6 +106,8 @@ public class SaturnAutoBasic {
 		// org.springframework.jmx.export.UnableToRegisterMBeanException: Unable to register MBean
 		// [org.springframework.cloud.context.environment.EnvironmentManager@77fecd2c] with key 'environmentManager';
 		System.setProperty("spring.jmx.enabled", "false");
+		System.setProperty("authorization.enabled.default", "false");
+		System.setProperty("authentication.enabled", "false");
 		SaturnEnvProperties.VIP_SATURN_CONSOLE_CLUSTER_ID = "CONSOLE-IT";
 		prepareForItSql();
 		SaturnConsoleApp.startEmbeddedDb();
@@ -238,6 +241,13 @@ public class SaturnAutoBasic {
 			}
 		}
 		saturnExecutorList.clear();
+	}
+
+	public static ExecutorConfig getExecutorConfig(int index) {
+		assertThat(saturnExecutorList.size()).isGreaterThan(index);
+		Main saturnContainer = saturnExecutorList.get(index);
+		SaturnExecutor saturnExecutor = (SaturnExecutor) saturnContainer.getSaturnExecutor();
+		return saturnExecutor.getSaturnExecutorService().getExecutorConfig();
 	}
 
 	public static void startSaturnConsoleList(int count) throws Exception {

@@ -2,16 +2,12 @@ package com.vip.saturn.it.impl;
 
 import com.google.gson.Gson;
 import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.job.utils.HttpUtils;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
+import com.vip.saturn.it.utils.HttpClientUtils;
 import org.assertj.core.util.Maps;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Map;
@@ -20,14 +16,14 @@ import static org.junit.Assert.assertEquals;
 
 public class RestApiIT extends AbstractSaturnIT {
 
-	private static final String CONSOLE_HOST_URL = "http://localhost:9089";
-
 	private final Gson gson = new Gson();
+	private static String CONSOLE_HOST_URL;
 
 	@BeforeClass
 	public static void setUp() throws Exception {
 		System.setProperty("ALARM_RAISED_ON_EXECUTOR_RESTART", "true");
 		startSaturnConsoleList(1);
+		CONSOLE_HOST_URL = saturnConsoleInstanceList.get(0).url;
 	}
 
 	@AfterClass
@@ -43,10 +39,11 @@ public class RestApiIT extends AbstractSaturnIT {
 	public void testCreateAndQueryJobSuccessfully() throws Exception {
 		// create
 		JobEntity jobEntity = constructJobEntity("job1");
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 		// query
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/job1");
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/job1");
 		assertEquals(200, responseEntity.getStatusCode());
 		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		// assert for details
@@ -55,18 +52,21 @@ public class RestApiIT extends AbstractSaturnIT {
 		assertEquals("0 */1 * * * ?", responseJobEntity.getJobConfig().get("cron"));
 		assertEquals("SHELL_JOB", responseJobEntity.getJobConfig().get("jobType"));
 		assertEquals(2.0, responseJobEntity.getJobConfig().get("shardingTotalCount"));
-		assertEquals("0=echo 0;sleep $SLEEP_SECS,1=echo 1", responseJobEntity.getJobConfig().get("shardingItemParameters"));
+		assertEquals("0=echo 0;sleep $SLEEP_SECS,1=echo 1",
+				responseJobEntity.getJobConfig().get("shardingItemParameters"));
 	}
 
 	@Test
 	public void testCreateJobFailAsJobAlreadyExisted() throws Exception {
 		JobEntity jobEntity = constructJobEntity("job2");
 
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 
 		assertEquals(201, responseEntity.getStatusCode());
 
-		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 
 		assertEquals(400, responseEntity.getStatusCode());
 
@@ -78,7 +78,8 @@ public class RestApiIT extends AbstractSaturnIT {
 	public void testCreateJobFailAsNamespaceNotExisted() throws Exception {
 		JobEntity jobEntity = constructJobEntity("job3");
 
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/unknown/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/unknown/jobs", jobEntity.toJSON());
 
 		assertEquals(404, responseEntity.getStatusCode());
 
@@ -91,7 +92,8 @@ public class RestApiIT extends AbstractSaturnIT {
 		JobEntity jobEntity = constructJobEntity("job3");
 		jobEntity.getJobConfig().remove("cron");
 
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 		assertEquals(400, responseEntity.getStatusCode());
 		Map<String, String> responseMap = gson.fromJson(responseEntity.getEntity(), Map.class);
 		assertEquals("对于JAVA/SHELL作业，cron表达式必填", responseMap.get("message"));
@@ -99,7 +101,8 @@ public class RestApiIT extends AbstractSaturnIT {
 
 	@Test
 	public void testQueryJobFailAsJobIsNotFound() throws IOException {
-		HttpResponseEntity responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/not_existed");
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/not_existed");
 
 		assertEquals(404, responseEntity.getStatusCode());
 		Map<String, String> responseMap = gson.fromJson(responseEntity.getEntity(), Map.class);
@@ -113,11 +116,13 @@ public class RestApiIT extends AbstractSaturnIT {
 		// create a job
 		JobEntity jobEntity = constructJobEntity(jobName);
 
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 
 		// and delete it
-		responseEntity = sendDeleteResponse(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils
+				.sendDeleteResponseJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(400, responseEntity.getStatusCode());
 		Map<String, String> responseMap = gson.fromJson(responseEntity.getEntity(), Map.class);
 		assertEquals("不能删除该作业(jobTestDeleteJobSuccessfully)，因为该作业创建时间距离现在不超过2分钟", responseMap.get("message"));
@@ -128,41 +133,50 @@ public class RestApiIT extends AbstractSaturnIT {
 		// create
 		String jobName = "testEnableJobSuccessfully";
 		JobEntity jobEntity = constructJobEntity(jobName);
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 		// sleep for 10 seconds
 		Thread.sleep(10100L);
 		// enable
-		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable", jobEntity.toJSON());
+		responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable",
+						jobEntity.toJSON());
 		assertEquals(200, responseEntity.getStatusCode());
 		// query for status
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(200, responseEntity.getStatusCode());
 		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		assertEquals("READY", responseJobEntity.getRunningStatus());
 		// enable again
-		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable", jobEntity.toJSON());
+		responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/enable",
+						jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 		// query for status
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(200, responseEntity.getStatusCode());
 		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		assertEquals("READY", responseJobEntity.getRunningStatus());
 		// sleep for 3 seconds
 		Thread.sleep(3010L);
 		// disable
-		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable", jobEntity.toJSON());
+		responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable",
+						jobEntity.toJSON());
 		assertEquals(200, responseEntity.getStatusCode());
 		// query for status
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(200, responseEntity.getStatusCode());
 		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		assertEquals("STOPPED", responseJobEntity.getRunningStatus());
 		// disable again
-		responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable", jobEntity.toJSON());
+		responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/disable",
+						jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 		// query for status
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(200, responseEntity.getStatusCode());
 		responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		assertEquals("STOPPED", responseJobEntity.getRunningStatus());
@@ -176,7 +190,8 @@ public class RestApiIT extends AbstractSaturnIT {
 		requestBody.put("title", "Executor_Restart");
 		requestBody.put("name", "Saturn Event");
 
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/alarms/raise", gson.toJson(requestBody));
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/alarms/raise", gson.toJson(requestBody));
 		assertEquals(201, responseEntity.getStatusCode());
 	}
 
@@ -185,7 +200,8 @@ public class RestApiIT extends AbstractSaturnIT {
 		String jobName = "testUpdateCronSuccessfully";
 		// create
 		JobEntity jobEntity = constructJobEntity(jobName);
-		HttpResponseEntity responseEntity = sendPostReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
+		HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+				.sendPostRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs", jobEntity.toJSON());
 		assertEquals(201, responseEntity.getStatusCode());
 		// sleep for a while ...
 		Thread.sleep(3010L);
@@ -193,90 +209,18 @@ public class RestApiIT extends AbstractSaturnIT {
 		Map<String, Object> requestBody = Maps.newHashMap();
 		requestBody.put("cron", "0 0/11 * * * ?");
 
-		responseEntity = sendPutReqest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/cron", gson.toJson(requestBody));
+		responseEntity = HttpClientUtils
+				.sendPutRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName + "/cron",
+						gson.toJson(requestBody));
 		System.out.println(responseEntity.getEntity());
 		assertEquals(200, responseEntity.getStatusCode());
 		// query again
-		responseEntity = sendGetRequest(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
+		responseEntity = HttpClientUtils.sendGetRequestJson(CONSOLE_HOST_URL + "/rest/v1/it-saturn/jobs/" + jobName);
 		assertEquals(200, responseEntity.getStatusCode());
 		JobEntity responseJobEntity = gson.fromJson(responseEntity.getEntity(), JobEntity.class);
 		assertEquals("0 0/11 * * * ?", responseJobEntity.getJobConfig().get("cron"));
 	}
 
-	private HttpResponseEntity sendPostReqest(String url, String jsonBody) throws IOException {
-		CloseableHttpClient httpClient = null;
-		try {
-			httpClient = HttpClientBuilder.create().build();
-			HttpPost request = new HttpPost(url);
-			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
-			request.setConfig(requestConfig);
-			StringEntity params = new StringEntity(jsonBody);
-			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			request.setEntity(params);
-			// send request
-			CloseableHttpResponse response = httpClient.execute(request);
-
-			return new HttpResponseEntity(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
-
-		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
-		}
-	}
-
-	private HttpResponseEntity sendPutReqest(String url, String jsonBody) throws IOException {
-		CloseableHttpClient httpClient = null;
-		try {
-			httpClient = HttpClientBuilder.create().build();
-			HttpPut request = new HttpPut(url);
-			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
-			request.setConfig(requestConfig);
-			StringEntity params = new StringEntity(jsonBody);
-			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			request.setEntity(params);
-			// send request
-			CloseableHttpResponse response = httpClient.execute(request);
-
-			return new HttpResponseEntity(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
-
-		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
-		}
-	}
-
-	private HttpResponseEntity sendGetRequest(String url) throws IOException {
-		CloseableHttpClient httpClient = null;
-		try {
-			httpClient = HttpClientBuilder.create().build();
-			HttpGet request = new HttpGet(url);
-			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
-			request.setConfig(requestConfig);
-			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-
-			CloseableHttpResponse response = httpClient.execute(request);
-
-			return new HttpResponseEntity(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
-		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
-		}
-	}
-
-	private HttpResponseEntity sendDeleteResponse(String url) throws IOException {
-		CloseableHttpClient httpClient = null;
-		try {
-			httpClient = HttpClientBuilder.create().build();
-			HttpDelete request = new HttpDelete(url);
-			final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(10000).build();
-			request.setConfig(requestConfig);
-			request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			// send request
-			CloseableHttpResponse response = httpClient.execute(request);
-
-			return new HttpResponseEntity(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
-
-		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
-		}
-	}
 
 	private JobEntity constructJobEntity(String job) {
 		JobEntity jobEntity = new JobEntity(job);
@@ -290,25 +234,6 @@ public class RestApiIT extends AbstractSaturnIT {
 		return jobEntity;
 	}
 
-	public class HttpResponseEntity {
-		private int statusCode;
-
-		private String entity;
-
-		public HttpResponseEntity(int statusCode, String entity) {
-			this.statusCode = statusCode;
-			this.entity = entity;
-		}
-
-		public int getStatusCode() {
-			return statusCode;
-		}
-
-		public String getEntity() {
-			return entity;
-		}
-
-	}
 
 	public class JobEntity {
 		private final Gson gson = new Gson();
