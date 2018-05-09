@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author hebelala
  */
-public class AuthorizationManageServiceIml implements AuthorizationManageService {
+public class AuthorizationManageServiceImpl implements AuthorizationManageService {
 
 	@Autowired
 	protected PermissionRepository permissionRepository;

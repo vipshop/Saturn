@@ -19,8 +19,8 @@
 	<!-- Service Beans Begin -->
     <bean id="authorizationService"
           class="com.vip.saturn.job.console.service.impl.AuthorizationServiceImpl"/>
-    <bean id="authorizationManageServiceIml"
-          class="com.vip.saturn.job.console.service.impl.AuthorizationManageServiceIml"/>
+    <bean id="authorizationManageServiceImpl"
+          class="com.vip.saturn.job.console.service.impl.AuthorizationManageServiceImpl"/>
 	<bean id="systemConfigService"
 		class="com.vip.saturn.job.console.service.impl.SystemConfigServiceImpl"/>
 	<bean id="alarmStatisticsService"
