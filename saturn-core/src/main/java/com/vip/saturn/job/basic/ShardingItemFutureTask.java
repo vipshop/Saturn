@@ -146,10 +146,11 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			try {
 				// interrupt thread one time, wait business thread to break, wait 2000ms at most
 				if (!isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
+					log.info("try to interrupt business thread");
 					businessThread.interrupt();
 					for (int i = 0; i < 20; i++) {
 						if (isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-							log.info("Interrupt business thread done.");
+							log.info("interrupt business thread done");
 							return;
 						}
 						Thread.sleep(100L);
@@ -157,18 +158,19 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 				}
 				// stop thread
 				while (!isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
+					log.info("try to force stop business thread");
 					businessThread.stop();
 					if (isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-						log.info("Force stop business thread done.");
+						log.info("force stop business thread done");
 						return;
 					}
 					Thread.sleep(50L);
 				}
-
+				log.info("kill business thread done");
 			} catch (InterruptedException e) {// NOSONAR
 			}
 		} else {
-			log.warn("Business thread is null while killing it");
+			log.warn("business thread is null while killing it");
 		}
 	}
 
