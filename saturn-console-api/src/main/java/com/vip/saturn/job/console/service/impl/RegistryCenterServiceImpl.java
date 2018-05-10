@@ -752,7 +752,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				zkCluster.getConnectionListener().shutdownNowUntilTerminated();
 				zkCluster.setConnectionListener(null);
 			}
-			if (zkCluster.getCuratorFrameworkOp() != null) {
+			if (zkCluster.getCuratorFrameworkOp() != null
+					&& zkCluster.getCuratorFrameworkOp().getCuratorFramework() != null) {
 				zkCluster.getCuratorFrameworkOp().getCuratorFramework().close();
 			}
 		} catch (Exception e) {
@@ -806,13 +807,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = zkCluster.getCuratorFrameworkOp();
 			String dbData = systemConfigService.getValueDirectly(SystemConfigProperties.EXECUTOR_CONFIGS);
 			// 反序列化为JSON对象，来验证数据的正确性
-			JSONObject jsonObject = null;
-			if (StringUtils.isNotBlank(dbData)) {
-				jsonObject = JSON.parseObject(dbData.trim());
-			}
-			if (jsonObject == null) {
-				jsonObject = new JSONObject();
-			}
+			JSONObject jsonObject = parseExecutorConfigJson(dbData);
 			String configStr = jsonObject.toJSONString();
 			// 对比数据，如果不相等，则更新
 			String data = curatorFrameworkOp.getData(SaturnSelfNodePath.SATURN_EXECUTOR_CONFIG);
@@ -822,6 +817,19 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			curatorFrameworkOp.update(SaturnSelfNodePath.SATURN_EXECUTOR_CONFIG, configStr);
 		} catch (Exception e) {
 			log.error(String.format("update %s executor config error", zkCluster.getZkClusterKey()), e);
+		}
+	}
+
+	private JSONObject parseExecutorConfigJson(String jsonStr) {
+		if (StringUtils.isBlank(jsonStr)) {
+			return new JSONObject();
+		}
+
+		try {
+			return JSON.parseObject(jsonStr.trim());
+		} catch (Throwable t) {
+			log.error("Fail to parse data from json string" + jsonStr, t);
+			return new JSONObject();
 		}
 	}
 
@@ -862,15 +870,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 
 				String version = curatorFrameworkOp.getData(versionPath);
-				if (version == null) {
+				if (StringUtils.isBlank(version)) {
 					continue;
 				}
 
-				if (!version.trim().isEmpty()) {
-					String tmp = version.trim();
-					if (!versionList.contains(tmp)) {
-						versionList.add(tmp);
-					}
+				String tmp = version.trim();
+				if (!versionList.contains(tmp)) {
+					versionList.add(tmp);
 				}
 			}
 
