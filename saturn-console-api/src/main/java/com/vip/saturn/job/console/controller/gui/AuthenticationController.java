@@ -27,16 +27,19 @@ public class AuthenticationController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@RequestMapping(value = "/login", method = {RequestMethod.POST})
-	public SuccessResponseEntity login(String username, String password, HttpServletRequest request) throws IOException, SaturnJobConsoleException {
+	public SuccessResponseEntity login(String username, String password, HttpServletRequest request)
+			throws IOException, SaturnJobConsoleException {
 
 		User user = authenticationService.authenticate(username, password);
 		if (user == null) {
 			throw new SaturnJobConsoleException("Invalid username or password");
 		}
 
+		request.getSession().setAttribute(SessionAttributeKeys.LOGIN_USER_NAME, user.getUserName());
 		request.getSession().setAttribute(SessionAttributeKeys.LOGIN_USER_REAL_NAME, user.getRealName());
 
-		AUDIT_LOGGER.info("{}({}) was login where ip={} ", user.getUserName(), user.getRealName(), request.getRemoteAddr());
+		AUDIT_LOGGER
+				.info("{}({}) was login where ip={} ", user.getUserName(), user.getRealName(), request.getRemoteAddr());
 
 		return new SuccessResponseEntity();
 	}
@@ -44,7 +47,8 @@ public class AuthenticationController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
 	public SuccessResponseEntity logout(HttpServletRequest request) {
-		AUDIT_LOGGER.info("{}({}) logout, ip {}. ", getCurrentLoginUserName(), getCurrentLoginUserRealName(), request.getRemoteAddr());
+		AUDIT_LOGGER.info("{}({}) logout, ip {}. ", getCurrentLoginUserName(), getCurrentLoginUserRealName(),
+				request.getRemoteAddr());
 		request.getSession().invalidate();
 		return new SuccessResponseEntity();
 	}
