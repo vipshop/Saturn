@@ -387,14 +387,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 		// 完善ZkCluster中的注册中心信息，关闭迁移了的域，新建迁移过来的域
 		for (Map.Entry<String, ZkCluster> zkClusterEntry : newClusterMap.entrySet()) {
-
 			ZkCluster zkCluster = zkClusterEntry.getValue();
+			String key = zkClusterEntry.getKey();
 			List<NamespaceZkClusterMapping> nsZkClusterMappingList = namespaceZkClusterMapping4SqlService
-					.getAllMappingsOfCluster(zkClusterEntry.getKey());
+					.getAllMappingsOfCluster(key);
 			// zkCluster对应的namespace列表
 			List<RegistryCenterConfiguration> regCenterConfList = zkCluster.getRegCenterConfList();
 
-			closeMoveOutNamespace(zkClusterEntry.getKey(), nsZkClusterMappingList, regCenterConfList);
+			closeMoveOutNamespace(key, nsZkClusterMappingList, regCenterConfList);
 
 			initOrUpdateNamespace(allOnlineNamespacesTemp, zkCluster, nsZkClusterMappingList, regCenterConfList);
 		}
