@@ -135,11 +135,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Transactional(readOnly = true)
 	@Override
 	public User getUser(String userName) throws SaturnJobConsoleException {
+		User user = null;
 		if (!isAuthorizationEnabled()) {
-			return initUser(userName);
+			return constructAvailableUser(user, userName);
 		}
 
-		User user = getUserFromDB(userName);
+		user = constructAvailableUser(userRepository.select(userName), userName);
 		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
 		if (userRoles != null) {
 			user.setUserRoles(userRoles);
@@ -152,10 +153,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return user;
 	}
 
-	protected User initUser(String userName) {
-		User user = new User();
+	protected User constructAvailableUser(User user, String userName) {
+		if (user == null) {
+			user = new User();
+		}
 		user.setUserName(userName);
-		user.setUserRoles(new ArrayList<UserRole>());
+		if (user.getUserRoles() == null) {
+			user.setUserRoles(new ArrayList<UserRole>());
+		}
 		return user;
 	}
 
@@ -225,12 +230,4 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		throw new SaturnJobConsoleException("您不是系统管理员，没有权限");
 	}
 
-	protected User getUserFromDB(String userName) {
-		User user = userRepository.select(userName);
-		if (user.getUserRoles() == null) {
-			user.setUserRoles(new ArrayList<UserRole>());
-		}
-
-		return user;
-	}
 }
