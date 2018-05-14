@@ -397,8 +397,7 @@ public class SaturnExecutor {
 
 			// 初始化注册中心
 			log.info("start to init reg center.");
-			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000,
-					calculateRetryTimes());
+			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000);
 			regCenter = new ZookeeperRegistryCenter(zkConfig);
 			regCenter.init();
 			connectionLostListener = new EnhancedConnectionStateListener(executorName) {
@@ -420,19 +419,6 @@ public class SaturnExecutor {
 			StartCheckUtil.setError(StartCheckItem.ZK);
 			throw e;
 		}
-	}
-
-	private int calculateRetryTimes() {
-		int retryTimes = -1;
-		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES != -1) {
-			retryTimes = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES;
-		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
-			retryTimes = SystemEnvProperties.VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK;
-		}
-
-		return retryTimes > ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES ?
-				retryTimes :
-				ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES;
 	}
 
 	private void registerExecutor() throws Exception {

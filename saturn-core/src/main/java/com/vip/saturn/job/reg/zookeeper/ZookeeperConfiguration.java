@@ -16,6 +16,7 @@ package com.vip.saturn.job.reg.zookeeper;
 
 import com.google.common.base.Strings;
 import com.vip.saturn.job.reg.base.AbstractRegistryCenterConfiguration;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 
 /**
  * 基于Zookeeper的注册中心配置.
@@ -96,6 +97,28 @@ public class ZookeeperConfiguration extends AbstractRegistryCenterConfiguration 
 		this.baseSleepTimeMilliseconds = baseSleepTimeMilliseconds;
 		this.maxSleepTimeMilliseconds = maxSleepTimeMilliseconds;
 		this.maxRetries = maxRetries;
+	}
+
+	public ZookeeperConfiguration(final String serverLists, final String namespace, final int baseSleepTimeMilliseconds,
+			final int maxSleepTimeMilliseconds) {
+		this.serverLists = serverLists;
+		this.namespace = namespace;
+		this.baseSleepTimeMilliseconds = baseSleepTimeMilliseconds;
+		this.maxSleepTimeMilliseconds = maxSleepTimeMilliseconds;
+		this.maxRetries = calculateRetryTimes();
+	}
+
+	private int calculateRetryTimes() {
+		int retryTimes = -1;
+		if (SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES != -1) {
+			retryTimes = SystemEnvProperties.VIP_SATURN_ZK_CLIENT_RETRY_TIMES;
+		} else if (SystemEnvProperties.VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING) {
+			retryTimes = SystemEnvProperties.VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK;
+		}
+
+		return retryTimes > ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES ?
+				retryTimes :
+				ZookeeperConfiguration.MIN_CLIENT_RETRY_TIMES;
 	}
 
 	/**

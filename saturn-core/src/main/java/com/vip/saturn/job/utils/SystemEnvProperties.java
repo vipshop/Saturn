@@ -100,8 +100,12 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK = 9;
 
 	static {
-		String maxNumberOfJobs = System.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS,
-				System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
+		loadProperties();
+	}
+
+	public static void loadProperties() {
+		String maxNumberOfJobs = System
+				.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS, System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
 		if (!Strings.isNullOrEmpty(maxNumberOfJobs)) {
 			try {
 				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.parseInt(maxNumberOfJobs);
@@ -110,8 +114,8 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String shutdownTimeout = System.getProperty(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT,
-				System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
+		String shutdownTimeout = System
+				.getProperty(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT, System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
 		if (!Strings.isNullOrEmpty(shutdownTimeout)) {
 			try {
 				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.parseInt(shutdownTimeout);
@@ -127,8 +131,8 @@ public class SystemEnvProperties {
 		if (StringUtils.isNotBlank(dcosTaskId)) {
 			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = dcosTaskId;
 		} else {
-			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = System.getProperty(NAME_VIP_SATURN_K8S_DEPLOYMENT,
-					System.getenv(NAME_VIP_SATURN_K8S_DEPLOYMENT));
+			VIP_SATURN_CONTAINER_DEPLOYMENT_ID = System
+					.getProperty(NAME_VIP_SATURN_K8S_DEPLOYMENT, System.getenv(NAME_VIP_SATURN_K8S_DEPLOYMENT));
 		}
 
 		String zkClientSessionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS,
@@ -141,8 +145,8 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String zkClientConnectionTimeoutStr = System.getProperty(
-				NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS,
+		String zkClientConnectionTimeoutStr = System
+				.getProperty(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS,
 				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
 		if (!Strings.isNullOrEmpty(zkClientConnectionTimeoutStr)) {
 			try {
@@ -161,14 +165,14 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String useUnstableNetworkSettings = System
-				.getProperty(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING, System.getenv(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING));
+		String useUnstableNetworkSettings = System.getProperty(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING,
+				System.getenv(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING));
 		if (!Strings.isNullOrEmpty(useUnstableNetworkSettings)) {
 			VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING = Boolean.parseBoolean(useUnstableNetworkSettings);
 		}
 
-		String checkNohupOutSizeInterval = System
-				.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC, System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
+		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC,
+				System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
 		if (!Strings.isNullOrEmpty(checkNohupOutSizeInterval)) {
 			try {
 				int interval_in_sec = Integer.parseInt(checkNohupOutSizeInterval);
@@ -192,7 +196,6 @@ public class SystemEnvProperties {
 				log.error("msg=" + t.getMessage(), t);
 			}
 		}
-
 	}
 
 	protected static String trim(String property) {
