@@ -17,6 +17,5 @@ export default {
     system_admin: '系统管理员',
     namespace_admin: '域管理员',
     namespace_developer: '域开发人员',
-    sa_admin: '运维管理员',
   },
 };

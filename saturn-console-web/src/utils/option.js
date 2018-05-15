@@ -28,8 +28,5 @@ export default {
   }, {
     value: 'namespace_developer',
     label: '域开发人员',
-  }, {
-    value: 'sa_admin',
-    label: '运维管理员',
   }],
 };
