@@ -46,6 +46,7 @@ export default {
         { index: '/alarm', title: '告警中心', icon: 'fa fa-bell', path: this.$routermapper.GetPath('alarmManage') },
         { index: '/registry', title: '注册中心', icon: 'fa fa-server', path: this.$routermapper.GetPath('registryManage') },
         { index: '/system', title: '系统配置', icon: 'fa fa-cog', path: this.$routermapper.GetPath('systemConfigManage') },
+        { index: '/authority', title: '权限管理', icon: 'fa fa-check-square-o', path: this.$routermapper.GetPath('authorityManage'), isSuper: this.$common.hasPerm('authorizationManage') },
       ],
     };
   },

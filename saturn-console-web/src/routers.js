@@ -30,6 +30,7 @@ import UnableFailoverJobs from './pages/alarm_manage/unable_failover_jobs';
 import AlarmAbnormalContainers from './pages/alarm_manage/alarm_abnormal_containers';
 import SystemConfigManage from './pages/system_config_manage/system_config_manage';
 import ConsoleConfig from './pages/system_config_manage/console_config';
+import AuthorityManage from './pages/authority_manage/authority_manage';
 
 Vue.use(Router);
 
@@ -110,6 +111,10 @@ export default new Router({
         { path: '', redirect: 'console_config' },
         { name: 'console_config', path: RouterMapper.GetPath('consoleConfig'), component: ConsoleConfig },
       ],
+    }, {
+      path: RouterMapper.GetPath('authorityManage'),
+      name: 'authority_manage',
+      component: AuthorityManage,
     },
   ],
 });

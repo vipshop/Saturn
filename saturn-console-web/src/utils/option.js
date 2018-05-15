@@ -19,4 +19,17 @@ export default {
     value: 'STOPPED',
     label: '已停止',
   }],
+  roleTypes: [{
+    value: 'system_admin',
+    label: '系统管理员',
+  }, {
+    value: 'namespace_admin',
+    label: '域管理员',
+  }, {
+    value: 'namespace_developer',
+    label: '域开发人员',
+  }, {
+    value: 'sa_admin',
+    label: '运维管理员',
+  }],
 };

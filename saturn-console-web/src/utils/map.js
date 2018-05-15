@@ -13,4 +13,10 @@ export default {
     NO_SHARDS: '没有分片',
     EXECUTORS_NOT_READY: '没有executor能运行该作业',
   },
+  roleMap: {
+    system_admin: '系统管理员',
+    namespace_admin: '域管理员',
+    namespace_developer: '域开发人员',
+    sa_admin: '运维管理员',
+  },
 };
