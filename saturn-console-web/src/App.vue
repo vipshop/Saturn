@@ -1,7 +1,7 @@
 <template>
     <div>
         <template v-if="initialized || initComponent === 'Login'">
-            <component :is="initComponent"></component>
+            <component :is="initComponent" @login-success="loginSuccess"></component>
         </template>
         <template v-else>
             <div v-loading.fullscreen="loading" element-loading-text="正在初始化应用，请稍等···"></div>
@@ -21,6 +21,9 @@ export default {
     };
   },
   methods: {
+    loginSuccess() {
+      this.init();
+    },
     loadAllDomains() {
       return this.$http.get('/console/namespaces').then((data) => {
         const allNamespaces = data.map((obj) => {
@@ -75,13 +78,13 @@ export default {
       if (this.$route.path === '/login') {
         resultComponent = 'Login';
       } else {
-        this.init();
         resultComponent = 'Container';
       }
       return resultComponent;
     },
   },
   created() {
+    this.init();
   },
   components: {
     Login,

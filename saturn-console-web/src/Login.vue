@@ -39,6 +39,7 @@ export default {
       this.loading = true;
       this.$http.post('/console/authentication/login', this.loginInfo).then(() => {
         this.$router.push({ path: '/' });
+        this.$emit('login-success');
       })
       .catch(() => { this.$http.buildErrorHandler('登录失败，请重新登录！'); })
       .finally(() => {
