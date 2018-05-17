@@ -11,7 +11,6 @@ import com.vip.saturn.job.exception.SaturnExecutorException;
 import com.vip.saturn.job.exception.SaturnExecutorExceptionCode;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.config.JobType;
-import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
@@ -297,25 +296,6 @@ public class SaturnExecutor {
 		return "";
 	}
 
-	private boolean scheduleJob(String jobName) {
-		log.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
-		JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
-		if (jobConfig.getSaturnJobClass() == null) {
-			log.warn("[{}] msg={} - {} the saturnJobClass is null, jobType is {}", jobConfig, executorName, jobName,
-					jobConfig.getJobType());
-			return false;
-		}
-		if (jobConfig.isDeleting()) {
-			log.warn("[{}] msg={} - {} the job is on deleting", jobName, executorName, jobName);
-			String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
-			regCenter.remove(serverNodePath);
-			return false;
-		}
-		JobScheduler scheduler = new JobScheduler(regCenter, jobConfig);
-		scheduler.setSaturnExecutorService(saturnExecutorService);
-		return scheduler.init();
-	}
-
 	public void execute() throws Exception {
 		shutdownLock.lockInterruptibly();
 
@@ -366,17 +346,7 @@ public class SaturnExecutor {
 
 				// 添加新增作业时的回调方法，启动已经存在的作业
 				log.info("start to register newJobCallback, and async start existing jobs.");
-				saturnExecutorService.registerCallbackAndStartExistingJob(new ScheduleNewJobCallback() {
-					@Override
-					public boolean call(String jobName) {
-						try {
-							return scheduleJob(jobName);
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-							return false;
-						}
-					}
-				});
+				saturnExecutorService.registerJobsWatcher();
 
 				log.info("The executor {} start successfully which used {} ms", executorName,
 						System.currentTimeMillis() - startTime);
@@ -513,9 +483,12 @@ public class SaturnExecutor {
 		shutdownLock.lockInterruptibly();
 		try {
 			log.info("Try to stop executor {}", executorName);
+			if (saturnExecutorService != null) {
+				saturnExecutorService.unregisterJobsWatcher();
+			}
 			shutdownUnfinishJob();
 			if (saturnExecutorService != null) {
-				saturnExecutorService.shutdown();
+				saturnExecutorService.unregisterExecutor();
 			}
 			if (connectionLostListener != null) {
 				connectionLostListener.close();
@@ -547,7 +520,8 @@ public class SaturnExecutor {
 			shutdownAllCountThread();
 
 			if (saturnExecutorService != null) {
-				saturnExecutorService.shutdown();
+				saturnExecutorService.unregisterJobsWatcher();
+				saturnExecutorService.unregisterExecutor();
 			}
 			if (resetCountService != null) {
 				resetCountService.shutdownRestCountTimer();

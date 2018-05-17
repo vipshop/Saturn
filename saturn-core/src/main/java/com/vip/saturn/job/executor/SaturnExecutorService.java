@@ -1,27 +1,14 @@
 package com.vip.saturn.job.executor;
 
 import com.vip.saturn.job.exception.TimeDiffIntolerableException;
-import com.vip.saturn.job.internal.config.ConfigurationNode;
-import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.SaturnVersionUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.TreeCache;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
-import org.apache.curator.framework.recipes.cache.TreeCacheListener;
-import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
 
 /**
  * @author xiaopeng.he
@@ -38,11 +25,10 @@ public class SaturnExecutorService {
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 	private SaturnExecutorExtension saturnExecutorExtension;
 
-	private List<String> jobNames = new ArrayList<>();
-	private TreeCache jobsTreeCache;
 	private String ipNode;
 	private ClassLoader jobClassLoader;
 	private ClassLoader executorClassLoader;
+	private InitNewJobService initNewJobService;
 	private ExecutorConfigService executorConfigService;
 	private RestartAndDumpService restartExecutorService;
 
@@ -53,6 +39,50 @@ public class SaturnExecutorService {
 		this.saturnExecutorExtension = saturnExecutorExtension;
 		if (coordinatorRegistryCenter != null) {
 			coordinatorRegistryCenter.setExecutorName(executorName);
+		}
+	}
+
+	/**
+	 * 注册Executor
+	 */
+	public void registerExecutor() throws Exception {
+		checkExecutor();
+		registerExecutor0();
+	}
+
+	/**
+	 * 启动前先检查本机与注册中心的时间误差秒数是否在允许范围和Executor是否已启用
+	 */
+	private void checkExecutor() throws Exception {
+		// 启动时检查本机与注册中心的时间误差秒数是否在允许范围
+		String executorNode = SaturnExecutorsNode.EXECUTORS_ROOT + "/" + executorName;
+		try {
+			long timeDiff = Math.abs(System.currentTimeMillis() - coordinatorRegistryCenter
+					.getRegistryCenterTime(executorNode + "/systemTime/current"));
+			int maxTimeDiffSeconds = 60;
+			if (timeDiff > maxTimeDiffSeconds * 1000L) {
+				Long timeDiffSeconds = Long.valueOf(timeDiff / 1000);
+				throw new TimeDiffIntolerableException(timeDiffSeconds.intValue(), maxTimeDiffSeconds);
+			}
+		} finally {
+			String executorSystemTimePath = executorNode + "/systemTime";
+			coordinatorRegistryCenter.remove(executorSystemTimePath);
+		}
+		// 启动时检查Executor是否已启用（ExecutorName为判断的唯一标识）
+		if (coordinatorRegistryCenter.isExisted(executorNode)) {
+			int count = 0;
+			do {
+				if (!coordinatorRegistryCenter.isExisted(executorNode + "/ip")) {
+					return;
+				}
+
+				log.warn("{}/ip node found. Try to sleep and wait for this node disappear.", executorNode);
+				Thread.sleep(100L);
+			} while (++count <= WAIT_FOR_IP_NODE_DISAPPEAR_COUNT);
+
+			throw new Exception("The executor (" + executorName + ") is running, cannot running the instance twice.");
+		} else {
+			coordinatorRegistryCenter.persist(executorNode, "");
 		}
 	}
 
@@ -102,110 +132,13 @@ public class SaturnExecutorService {
 		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
 	}
 
-	public void registerExecutor() throws Exception {
-		checkExecutor();
-		registerExecutor0();
-	}
-
 	/**
-	 * 启动前先检查本机与注册中心的时间误差秒数是否在允许范围和Executor是否已启用
+	 * 注销Executor
 	 */
-	private void checkExecutor() throws Exception {
-		// 启动时检查本机与注册中心的时间误差秒数是否在允许范围
-		String executorNode = SaturnExecutorsNode.EXECUTORS_ROOT + "/" + executorName;
-		try {
-			long timeDiff = Math.abs(System.currentTimeMillis() - coordinatorRegistryCenter
-					.getRegistryCenterTime(executorNode + "/systemTime/current"));
-			int maxTimeDiffSeconds = 60;
-			if (timeDiff > maxTimeDiffSeconds * 1000L) {
-				Long timeDiffSeconds = Long.valueOf(timeDiff / 1000);
-				throw new TimeDiffIntolerableException(timeDiffSeconds.intValue(), maxTimeDiffSeconds);
-			}
-		} finally {
-			String executorSystemTimePath = executorNode + "/systemTime";
-			coordinatorRegistryCenter.remove(executorSystemTimePath);
-		}
-		// 启动时检查Executor是否已启用（ExecutorName为判断的唯一标识）
-		if (coordinatorRegistryCenter.isExisted(executorNode)) {
-			int count = 0;
-			do {
-				if (!coordinatorRegistryCenter.isExisted(executorNode + "/ip")) {
-					return;
-				}
-
-				log.warn("{}/ip node found. Try to sleep and wait for this node disappear.", executorNode);
-				Thread.sleep(100L);
-			} while (++count <= WAIT_FOR_IP_NODE_DISAPPEAR_COUNT);
-
-			throw new Exception("The executor (" + executorName + ") is running, cannot running the instance twice.");
-		} else {
-			coordinatorRegistryCenter.persist(executorNode, "");
-		}
-	}
-
-	/**
-	 * Register NewJobCallback, and async start existing jobs. The TreeCache will publish the create events for already
-	 * existing jobs.
-	 */
-	public void registerCallbackAndStartExistingJob(final ScheduleNewJobCallback callback) throws Exception {
-		jobsTreeCache = TreeCache
-				.newBuilder((CuratorFramework) coordinatorRegistryCenter.getRawClient(), JobNodePath.ROOT).setExecutor(
-						new CloseableExecutorService(Executors.newSingleThreadExecutor(
-								new SaturnThreadFactory(executorName + "-$Jobs-watcher", false)), true)).setMaxDepth(1)
-				.build();
-		jobsTreeCache.getListenable().addListener(new TreeCacheListener() {
-			@Override
-			public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
-				if (event == null) {
-					return;
-				}
-
-				ChildData data = event.getData();
-				if (data == null) {
-					return;
-				}
-
-				String path = data.getPath();
-				if (path == null || path.equals(JobNodePath.ROOT)) {
-					return;
-				}
-
-				Type type = event.getType();
-				if (type == null || !type.equals(Type.NODE_ADDED)) {
-					return;
-				}
-
-				String jobName = StringUtils.substringAfterLast(path, "/");
-				String jobClassPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_CLASS);
-				// wait 5 seconds at most until jobClass created.
-				for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i++) {
-					if (client.checkExists().forPath(jobClassPath) == null) {
-						Thread.sleep(200);
-						continue;
-					}
-
-					log.info("new job: {} 's jobClass created event received", jobName);
-					if (!jobNames.contains(jobName)) {
-						if (callback.call(jobName)) {
-							jobNames.add(jobName);
-							log.info("the job {} initialize successfully", jobName);
-						} else {
-							log.warn("the job {} initialize fail", jobName);
-						}
-					} else {
-						log.warn("the job {} is unnecessary to initialize, because it's already existing", jobName);
-					}
-					break;
-				}
-			}
-		});
-		jobsTreeCache.start();
-	}
-
-	public void removeJobName(String jobName) {
-		if (jobNames.contains(jobName)) {
-			jobNames.remove(jobName);
-		}
+	public void unregisterExecutor() {
+		stopRestartExecutorService();
+		stopExecutorConfigService();
+		removeIpNode();
 	}
 
 	private void stopRestartExecutorService() {
@@ -239,22 +172,30 @@ public class SaturnExecutorService {
 		}
 	}
 
-	private void closeJobsTreeCache() {
-		try {
-			if (jobsTreeCache != null) {
-				jobsTreeCache.close();
-			}
-		} catch (Throwable t) {
-			log.error(t.getMessage(), t);
+	/**
+	 * 注册$/Jobs的watcher，响应添加作业的事件，初始化作业。注意，会响应已经存在的作业。
+	 */
+	public void registerJobsWatcher() throws Exception {
+		if (initNewJobService != null) {
+			initNewJobService.shutdown();
+		}
+		initNewJobService = new InitNewJobService(this);
+		initNewJobService.start();
+	}
+
+	/**
+	 * 销毁监听添加作业的watcher。关闭正在初始化作业的线程，直到其结束。
+	 */
+	public void unregisterJobsWatcher() {
+		if (initNewJobService != null) {
+			initNewJobService.shutdown();
 		}
 	}
 
-	// Attention, catch Throwable and not throw it.
-	public void shutdown() {
-		stopRestartExecutorService();
-		stopExecutorConfigService();
-		removeIpNode();
-		closeJobsTreeCache();
+	public void removeJobName(String jobName) {
+		if (initNewJobService != null) {
+			initNewJobService.removeJobName(jobName);
+		}
 	}
 
 	public CoordinatorRegistryCenter getCoordinatorRegistryCenter() {
@@ -283,14 +224,6 @@ public class SaturnExecutorService {
 
 	public String getExecutorName() {
 		return executorName;
-	}
-
-	public List<String> getJobNames() {
-		return jobNames;
-	}
-
-	public void setJobNames(List<String> jobNames) {
-		this.jobNames = jobNames;
 	}
 
 	public void setExecutorName(String executorName) {
