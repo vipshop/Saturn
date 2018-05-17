@@ -24,6 +24,7 @@
                     <div class="user-dropdown">
                         <el-submenu index="">
                             <template slot="title"><i class="fa fa-user"></i>{{userInfo.username || 'null'}}</template>
+                            <el-menu-item index=""><a style="display: block;" @click="handleLogout"><i class="fa fa-sign-out"></i>注销</a></el-menu-item>
                             <el-menu-item index=""><a style="display: block;" href="https://vipshop.github.io/Saturn/#/" target="_blank"><i class="fa fa-question-circle"></i>帮助</a></el-menu-item>
                             <el-menu-item index=""><a style="display: block;" @click="handleVersion"><i class="fa fa-info-circle"></i>关于</a></el-menu-item>
                         </el-submenu>
@@ -51,6 +52,12 @@ export default {
     };
   },
   methods: {
+    handleLogout() {
+      this.$http.post('/console/authentication/logout', {}).then(() => {
+        this.$router.push({ name: 'login' });
+      })
+      .catch(() => { this.$http.buildErrorHandler('注销失败！'); });
+    },
     querySearchAsync(queryString, cb) {
       const domains = this.domains;
       const results = queryString ? domains.filter(this.createStateFilter(queryString)) : domains;
