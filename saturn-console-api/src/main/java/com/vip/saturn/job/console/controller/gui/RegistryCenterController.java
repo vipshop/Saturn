@@ -82,7 +82,7 @@ public class RegistryCenterController extends AbstractGUIController {
 			final HttpServletResponse response) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.registryCenterExportNamespaces);
 		File exportFile = registryCenterService.exportNamespaceInfo(namespaceList);
-		SaturnConsoleUtils.exportExcelFile(response, exportFile, EXPORT_FILE_NAME, true);
+		SaturnConsoleUtils.exportFile(response, exportFile, EXPORT_FILE_NAME, true);
 	}
 
 	/**

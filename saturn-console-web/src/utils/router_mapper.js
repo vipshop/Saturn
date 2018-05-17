@@ -1,4 +1,5 @@
 const routermapperlist = [
+    { name: 'login', path: '/login' },
     { name: 'jobManage', path: '/job_manage' },
     { name: 'jobList', path: '/job_list/:domain' },
     { name: 'jobOverview', path: '/job_list/:domain/job_overview' },

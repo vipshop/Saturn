@@ -12,10 +12,10 @@ import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 @RequestMapping("/console/authentication")
 public class AuthenticationController extends AbstractGUIController {
@@ -27,8 +27,8 @@ public class AuthenticationController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@RequestMapping(value = "/login", method = {RequestMethod.POST})
-	public SuccessResponseEntity login(String username, String password, HttpServletRequest request)
-			throws IOException, SaturnJobConsoleException {
+	public SuccessResponseEntity login(@RequestParam String username, @RequestParam String password,
+			HttpServletRequest request) throws SaturnJobConsoleException {
 
 		User user = authenticationService.authenticate(username, password);
 		if (user == null) {

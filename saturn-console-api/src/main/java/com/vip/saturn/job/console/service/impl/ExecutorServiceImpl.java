@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -216,6 +217,11 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	@Override
+	public File dumpAsFile(String namespace, String executorName) throws SaturnJobConsoleException {
+		throw new UnsupportedOperationException("this method is not supported yet");
+	}
+
+	@Override
 	public void restart(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
 		String restartNodePath = ExecutorNodePath.getExecutorRestartNodePath(executorName);
@@ -230,7 +236,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 	}
 
-	private CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
+	protected CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException {
 		return registryCenterService.getCuratorFrameworkOp(namespace);
 	}
 }

@@ -4,6 +4,8 @@ import com.vip.saturn.job.console.domain.ServerAllocationInfo;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+
+import java.io.File;
 import java.util.List;
 
 /**
@@ -80,12 +82,20 @@ public interface ExecutorService {
 	void shardAll(String namespace) throws SaturnJobConsoleException;
 
 	/**
-	 * 一键dump，包括threaddump和gc.log备份。
+	 * 一键dump，包括threaddump和gc.log备份，文件不作返回。
 	 *
 	 * @param namespace 域
 	 * @param executorName 目标executor
 	 */
 	void dump(String namespace, String executorName) throws SaturnJobConsoleException;
+
+	/**
+	 * 一键dump，包括threaddump和gc.log备份，并返回文件到前台。
+	 *
+	 * @param namespace 域
+	 * @param executorName 目标executor
+	 */
+	File dumpAsFile(String namespace, String executorName) throws SaturnJobConsoleException;
 
 	/**
 	 * 一键restart。

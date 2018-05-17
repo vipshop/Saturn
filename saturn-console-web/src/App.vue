@@ -1,7 +1,7 @@
 <template>
     <div>
-        <template v-if="initialized">
-            <Container></Container>
+        <template v-if="initialized || initComponent === 'Login'">
+            <component :is="initComponent" @login-success="loginSuccess"></component>
         </template>
         <template v-else>
             <div v-loading.fullscreen="loading" element-loading-text="正在初始化应用，请稍等···"></div>
@@ -9,6 +9,9 @@
     </div>
 </template>
 <script>
+import Vue from 'vue';
+import Login from './Login';
+import Favorites from './components/common/favorites/';
 
 export default {
   data() {
@@ -18,6 +21,9 @@ export default {
     };
   },
   methods: {
+    loginSuccess() {
+      this.init();
+    },
     loadAllDomains() {
       return this.$http.get('/console/namespaces').then((data) => {
         const allNamespaces = data.map((obj) => {
@@ -29,25 +35,59 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取namespaces失败！'); });
     },
+    getUseAuth() {
+      return this.$http.get('/console/authorization/isAuthorizationEnabled').then((data) => {
+        this.$store.dispatch('setIsUseAuth', data);
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取权限开关请求失败！'); });
+    },
     getLoginUser() {
-      const storeUserAuthority = {
-        username: 'null',
-        role: 'guest',
-        authority: [],
-      };
-      this.$store.dispatch('setUserAuthority', storeUserAuthority);
-      this.$store.dispatch('setIsUseAuth', false);
+      return this.$http.get('/console/authorization/loginUser').then((data) => {
+        Vue.use(Favorites, { key: data.userName });
+        const storeUserAuthority = {
+          username: data.userName,
+          authority: [],
+        };
+        if (data.userRoles.length > 0) {
+          data.userRoles.forEach((ele) => {
+            const permission = {
+              namespace: ele.namespace,
+              permissionList: [],
+            };
+            ele.role.rolePermissions.forEach((ele2) => {
+              permission.permissionList.push(ele2.permissionKey);
+            });
+            storeUserAuthority.authority.push(permission);
+          });
+        }
+        this.$store.dispatch('setUserAuthority', storeUserAuthority);
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取用户请求失败！'); });
     },
     init() {
       this.loading = true;
-      Promise.all([this.getLoginUser(), this.loadAllDomains()]).then(() => {
+      Promise.all([this.getLoginUser(), this.getUseAuth(), this.loadAllDomains()]).then(() => {
         this.loading = false;
         this.initialized = true;
       });
     },
   },
+  computed: {
+    initComponent() {
+      let resultComponent = '';
+      if (this.$route.path === '/login') {
+        resultComponent = 'Login';
+      } else {
+        resultComponent = 'Container';
+      }
+      return resultComponent;
+    },
+  },
   created() {
     this.init();
+  },
+  components: {
+    Login,
   },
 };
 </script>

@@ -13,7 +13,6 @@ export default {
     jobInfo: {},
     userAuthority: {
       username: '',
-      role: '',
       authority: [],
     },
     isUseAuth: true,
@@ -45,11 +44,9 @@ export default {
       };
     },
     [types.SET_USER_AUTHORITY](state, item) {
-      console.log(item);
       state.userAuthority = {
         ...state.userAuthority,
         username: item.username,
-        role: item.role,
         authority: item.authority,
       };
       console.log(state.userAuthority);

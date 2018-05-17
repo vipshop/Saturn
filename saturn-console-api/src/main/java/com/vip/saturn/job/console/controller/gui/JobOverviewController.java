@@ -348,7 +348,7 @@ public class JobOverviewController extends AbstractGUIController {
 		File exportJobFile = jobService.exportJobs(namespace);
 		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 		String exportFileName = namespace + "_allJobs_" + currentTime + ".xls";
-		SaturnConsoleUtils.exportExcelFile(response, exportJobFile, exportFileName, true);
+		SaturnConsoleUtils.exportFile(response, exportJobFile, exportFileName, true);
 	}
 
 	/**

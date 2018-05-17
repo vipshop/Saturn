@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import RouterMapper from './utils/router_mapper';
+import Login from './Login';
 import JobManage from './pages/job_manage/job_manage';
 import JobList from './pages/job_list/job_list';
 import JobOverview from './pages/job_list/job_overview';
@@ -43,6 +44,10 @@ export default new Router({
     }, {
       path: '/',
       redirect: 'job_manage',
+    }, {
+      path: RouterMapper.GetPath('login'),
+      name: 'login',
+      component: Login,
     }, {
       path: RouterMapper.GetPath('jobList'),
       component: JobList,
