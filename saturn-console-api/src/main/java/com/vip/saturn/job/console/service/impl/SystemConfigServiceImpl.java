@@ -16,10 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 
 /**
  * @author xiaopeng.he
@@ -115,7 +116,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	@Override
 	public Integer getIntegerValue(String property, int defaultValue) {
 		String strValue = getValue(property);
-		if (strValue == null) {
+		if (StringUtils.isBlank(strValue)) {
 			return defaultValue;
 		}
 		try {
@@ -129,7 +130,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	@Override
 	public boolean getBooleanValue(String property, boolean defaultValue) {
 		String strValue = getValue(property);
-		if (strValue == null) {
+		if (StringUtils.isBlank(strValue)) {
 			return defaultValue;
 		}
 		try {
@@ -149,7 +150,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
 	@Override
 	public List<SystemConfig> getSystemConfigsByPrefix(String prefix) throws SaturnJobConsoleException {
-		if (StringUtils.isEmpty(prefix)) {
+		if (StringUtils.isBlank(prefix)) {
 			return Lists.newArrayList();
 		}
 
