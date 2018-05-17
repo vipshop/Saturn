@@ -26,12 +26,17 @@ public class AuthenticationFilter implements Filter {
 		}
 
 		HttpServletRequest req = (HttpServletRequest) request;
+		if (req.getRequestURL().toString().endsWith("/console/authentication/login")) {
+			chain.doFilter(request, response);
+			return;
+		}
+
 		HttpServletResponse resp = (HttpServletResponse) response;
 
 		if (req.getSession().getAttribute(SessionAttributeKeys.LOGIN_USER_NAME) == null) {
 			response.setContentType("application/json;charset=UTF-8");
 			PrintWriter writer = resp.getWriter();
-			writer.print(JSON.toJSONString(RequestResultHelper.redirect("/login")));
+			writer.print(JSON.toJSONString(RequestResultHelper.redirect("/#/login")));
 			writer.flush();
 			return;
 		}
