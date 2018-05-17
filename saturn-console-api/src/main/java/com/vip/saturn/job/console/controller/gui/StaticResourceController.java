@@ -29,7 +29,7 @@ public class StaticResourceController extends AbstractGUIController {
 		if (is == null) {
 			throw new SaturnJobConsoleException("The jobs-template is not existing");
 		}
-		SaturnConsoleUtils.exportExcelFile(response, is, EXPORT_FILE_NAME);
+		SaturnConsoleUtils.exportFile(response, is, EXPORT_FILE_NAME);
 	}
 
 }

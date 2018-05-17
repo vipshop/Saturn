@@ -90,10 +90,10 @@ public class SaturnConsoleUtils {
 		return "tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls";
 	}
 
-	public static void exportExcelFile(HttpServletResponse response, File srcFile, String exportFileName,
+	public static void exportFile(HttpServletResponse response, File srcFile, String exportFileName,
 			boolean deleteTmpFile) throws SaturnJobConsoleException {
 		try (InputStream inputStream = new FileInputStream(srcFile)) {
-			exportExcelFile(response, inputStream, exportFileName);
+			exportFile(response, inputStream, exportFileName);
 		} catch (IOException e) {
 			throw new SaturnJobConsoleException("file not found:" + srcFile.getName(), e);
 		} finally {
@@ -103,7 +103,7 @@ public class SaturnConsoleUtils {
 		}
 	}
 
-	public static void exportExcelFile(HttpServletResponse response, InputStream inputStream, String exportFileName)
+	public static void exportFile(HttpServletResponse response, InputStream inputStream, String exportFileName)
 			throws SaturnJobConsoleException {
 		try {
 			response.setContentType("application/octet-stream");
