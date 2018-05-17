@@ -9,11 +9,11 @@
             <el-form-item label="角色" prop="roleKey">
                 <el-col :span="20">
                     <el-select v-model="userInfo.roleKey" style="width: 100%">
-                        <el-option v-for="item in $option.roleTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
+                        <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
                     </el-select>
                 </el-col>
             </el-form-item>
-            <el-form-item label="所属域" prop="namespace" v-if="userInfo.roleKey === 'namespace_admin' || userInfo.roleKey === 'namespace_developer'">
+            <el-form-item label="所属域" prop="namespace" v-if="userInfo.roleKey !== 'system_admin' && userInfo.roleKey !== 'sa_admin'">
                 <el-col :span="20">
                     <el-autocomplete
                       v-model="userInfo.namespace"
@@ -33,7 +33,7 @@
 
 <script>
 export default {
-  props: ['userInfo', 'userInfoTitle', 'userInfoOperate'],
+  props: ['userInfo', 'userInfoTitle', 'userInfoOperate', 'roles'],
   data() {
     return {
       isVisible: true,

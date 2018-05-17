@@ -1,17 +1,26 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <div class="margin-20">
-            <FilterPageList :data="userAuthorityList" :total="total" :order-by="orderBy" :filters="filters">
+            <FilterPageList ref="pageListRef" :data="userAuthorityList" :total="total" :order-by="orderBy" :filters="filters">
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <input type="text" v-show="false"/>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model="filters[selectColumn]" @keyup.enter.native="scope.search">
-                              <el-select style="width: 120px;" slot="prepend" v-model="selectColumn">
-                                  <el-option label="用户名" value="userName"></el-option>
-                                  <el-option label="所属域" value="namespace"></el-option>
-                              </el-select>
-                            </el-input>
+                            <el-select v-model="filters.roleKey" @change="scope.search">
+                                <el-option label="全部角色" value=""></el-option>
+                                <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="">
+                            <el-input placeholder="请输入用户名" v-model="filters.userName" @keyup.enter.native="scope.search"></el-input>
+                        </el-form-item>
+                        <el-form-item label="">
+                            <el-autocomplete
+                              v-model="filters.namespace"
+                              :fetch-suggestions="querySearchAsync"
+                              placeholder="请输入域名"
+                              @select="handleSelect">
+                            </el-autocomplete>
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
@@ -28,7 +37,7 @@
                             <el-table-column prop="userName" label="用户名"></el-table-column>
                             <el-table-column prop="roleKey" label="角色">
                                 <template slot-scope="scope">
-                                    {{$map.roleMap[scope.row.roleKey]}}
+                                    {{rolesMaps[scope.row.roleKey]}}
                                 </template>
                             </el-table-column>
                             <el-table-column prop="namespace" label="所属域">
@@ -56,7 +65,7 @@
                 </template>
             </FilterPageList>
             <div v-if="isUserVisible">
-                <user-info-dialog :user-info="userInfo" :user-info-title="userInfoTitle" :user-info-operate="userInfoOperate" @user-info-success="userInfoSuccess" @close-dialog="closeInfoDialog"></user-info-dialog>
+                <user-info-dialog :user-info="userInfo" :user-info-title="userInfoTitle" :user-info-operate="userInfoOperate" :roles="roles" @user-info-success="userInfoSuccess" @close-dialog="closeInfoDialog"></user-info-dialog>
             </div>
         </div>
     </div>
@@ -73,23 +82,38 @@ export default {
       userInfoTitle: '',
       userInfoOperate: '',
       userList: [],
-      selectColumn: 'userName',
+      roles: [],
+      rolesMaps: {},
       total: 0,
       filters: {
         userName: '',
+        roleKey: '',
         namespace: '',
       },
-      orderBy: 'userName',
+      orderBy: '',
+      domains: this.$store.getters.allDomains,
     };
   },
   methods: {
+    querySearchAsync(queryString, cb) {
+      const domains = this.domains;
+      const results = queryString ? domains.filter(this.createStateFilter(queryString)) : domains;
+      cb(results);
+    },
+    createStateFilter(queryString) {
+      return state =>
+        state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
+    },
+    handleSelect() {
+      this.$refs.pageListRef.search();
+    },
     handleAdd() {
       this.isUserVisible = true;
       this.userInfoTitle = '添加用户';
       this.userInfoOperate = 'add';
       const userAddInfo = {
         userName: '',
-        roleKey: 'namespace_admin',
+        roleKey: '',
         namespace: '',
         needApproval: false,
       };
@@ -132,6 +156,15 @@ export default {
         .catch(() => { this.$http.buildErrorHandler('删除用户请求失败！'); });
       });
     },
+    getRoles() {
+      return this.$http.get('/console/authorizationManage/getRoles').then((data) => {
+        this.roles = data;
+        data.forEach((ele) => {
+          this.rolesMaps[ele.roleKey] = ele.roleName;
+        });
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取用户角色请求失败！'); });
+    },
     getAllUser() {
       return this.$http.get('/console/authorizationManage/getAllUsers').then((data) => {
         this.userList = data;
@@ -140,7 +173,7 @@ export default {
     },
     init() {
       this.loading = true;
-      Promise.all([this.getAllUser()]).then(() => {
+      Promise.all([this.getAllUser(), this.getRoles()]).then(() => {
         this.loading = false;
       });
     },
@@ -157,21 +190,6 @@ export default {
       });
       this.total = arr.length;
       return arr;
-    },
-    filterColumnPlaceholder() {
-      let str = '';
-      switch (this.selectColumn) {
-        case 'userName':
-          str = '请输入用户名';
-          break;
-        case 'namespace':
-          str = '请输入所属域';
-          break;
-        default:
-          str = '';
-          break;
-      }
-      return str;
     },
   },
   components: {
