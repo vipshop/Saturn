@@ -316,6 +316,14 @@ INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');
 INSERT INTO `role`(`role_key`) VALUES('namespace_admin');
+UPDATE `role` SET `role_name`='系统管理' WHERE `role_key`='system_admin';
+UPDATE `role` SET `role_name`='域开发管理' WHERE `role_key`='namespace_developer';
+UPDATE `role` SET `role_name`='域管理' WHERE `role_key`='namespace_admin';
+INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_job_admin', '作业管理');
+INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_admin', 'Execuor管理');
+INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_restart', 'Executor重启');
+INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_monitor', 'Executor监控');
+INSERT INTO `role`(`role_key`, `role_name`) VALUES('sa_admin', '运维管理');
 
 INSERT INTO `permission`(`permission_key`) VALUES('job:enable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchEnable');
@@ -416,3 +424,61 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_ad
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'executor:shardAllAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setAbnormalJobRead');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setTimeout4AlarmJobRead');
+
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:enable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:batchEnable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:disable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:batchDisable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:runAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:stopAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:remove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:batchRemove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:add');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:copy');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:import');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:export');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:update');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:batchSetPreferExecutors');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'alarmCenter:setAbnormalJobRead');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'alarmCenter:setTimeout4AlarmJobRead');
+
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:restart');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:dump');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:extractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:batchExtractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:remove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:batchRemove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_admin', 'executor:shardAllAtOnce');
+
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_restart', 'executor:restart');
+
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:dump');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:extractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:batchExtractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:remove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:batchRemove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_executor_monitor', 'executor:shardAllAtOnce');
+
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:enable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:batchEnable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:disable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:batchDisable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:runAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:stopAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:remove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:batchRemove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:add');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:copy');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:import');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:export');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:update');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'job:batchSetPreferExecutors');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:restart');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:dump');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:extractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:batchExtractOrRecoverTraffic');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:remove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:batchRemove');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'executor:shardAllAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'alarmCenter:setAbnormalJobRead');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('sa_admin', 'alarmCenter:setTimeout4AlarmJobRead');

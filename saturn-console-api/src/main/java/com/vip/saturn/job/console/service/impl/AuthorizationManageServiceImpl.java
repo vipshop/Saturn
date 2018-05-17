@@ -122,4 +122,10 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 		}
 		return user;
 	}
+
+	@Override
+	public List<Role> getRoles() throws SaturnJobConsoleException {
+		List<Role> roles = roleRepository.selectAll();
+		return roles == null ? new ArrayList<Role>() : roles;
+	}
 }

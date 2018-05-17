@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.Role;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
@@ -125,5 +126,12 @@ public class AuthorizationManageController extends AbstractGUIController {
 		return new SuccessResponseEntity(allUser);
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping("/getRoles")
+	public SuccessResponseEntity getRoles() throws SaturnJobConsoleException {
+		assertIsSystemAdmin();
+		List<Role> roles = authorizationManageService.getRoles();
+		return new SuccessResponseEntity(roles);
+	}
 
 }
