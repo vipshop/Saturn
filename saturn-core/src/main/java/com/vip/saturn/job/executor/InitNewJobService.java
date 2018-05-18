@@ -68,7 +68,7 @@ public class InitNewJobService {
 		try {
 			if (executorService != null && !executorService.isTerminated()) {
 				executorService.shutdownNow();
-				while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+				while (!executorService.awaitTermination(50, TimeUnit.MILLISECONDS)) {
 					executorService.shutdownNow();
 				}
 			}
