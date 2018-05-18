@@ -53,14 +53,35 @@ export default {
 .page-home {
     width: 600px;
     margin: 0 auto;
+    height: 620px;
     .page-home-container {
-        margin-top: 22%;
+        position: relative;
         .page-title {
             font-size: 19px;
             font-weight: normal;
-            margin: 10% 0 0;
+            margin: 0;
             text-align: center;
             color: #159e74;
+        }
+    }
+    @media screen and (min-width: 768px) {
+        .page-home-container {
+            top: 12%;
+        }
+    }
+    @media screen and (min-width: 992px) {
+        .page-home-container {
+            top: 12%;
+        }
+    }
+    @media screen and (min-width: 1200px) {
+        .page-home-container {
+            top: 12%;
+        }
+    }
+    @media screen and (min-width: 1920px) {
+        .page-home-container {
+            top: 25%;
         }
     }
 }
