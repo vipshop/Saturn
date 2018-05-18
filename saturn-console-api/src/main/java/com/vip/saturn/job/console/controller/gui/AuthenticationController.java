@@ -32,7 +32,8 @@ public class AuthenticationController extends AbstractGUIController {
 
 		User user = authenticationService.authenticate(username, password);
 		if (user == null) {
-			throw new SaturnJobConsoleException("Invalid username or password");
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL,
+					"Invalid username or password");
 		}
 
 		request.getSession().setAttribute(SessionAttributeKeys.LOGIN_USER_NAME, user.getUserName());

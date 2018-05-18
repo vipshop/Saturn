@@ -14,6 +14,8 @@ public class SaturnJobConsoleException extends Exception {
 
 	public static final int ERROR_CODE_INTERNAL_ERROR = 0;
 
+	public static final int ERROR_CODE_AUTHN_FAIL = 4;
+
 	private int errorCode = ERROR_CODE_INTERNAL_ERROR;
 
 	public SaturnJobConsoleException() {

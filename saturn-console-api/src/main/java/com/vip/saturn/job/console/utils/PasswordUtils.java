@@ -1,6 +1,9 @@
 package com.vip.saturn.job.console.utils;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -14,6 +17,8 @@ public class PasswordUtils {
 	public static final String HASH_METHOD_PLANTEXT = "plaintext";
 
 	public static final String HASH_METHOD_PBKDF2 = "PBKDF2WithHmacSHA1";
+
+	private static final Logger log = LoggerFactory.getLogger(PasswordUtils.class);
 
 	private static final int ITERATIONS = 10 * 1000;
 
@@ -31,7 +36,7 @@ public class PasswordUtils {
 	}
 
 	public static String genPassword(String password, byte[] salt, String hashMethod) throws Exception {
-		return hash(password, salt, hashMethod) + "$" + Base64.encodeBase64String(salt);
+		return hash(password, salt, hashMethod) + "$" + Hex.encodeHexString(salt);
 	}
 
 	public static String hash(String password, byte[] salt, String hashMethod) throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -43,21 +48,31 @@ public class PasswordUtils {
 		}
 
 		SecretKey key = secretKeyFactory.generateSecret(new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LEN));
-		return Base64.encodeBase64String(key.getEncoded());
+		return Hex.encodeHexString(key.getEncoded());
 	}
 
-	public static boolean validate(String password, String passwordInDB, String hashMethod) throws Exception {
+	public static boolean validate(String password, String passwordInDB, String hashMethod) {
 		if (PasswordUtils.HASH_METHOD_PLANTEXT.equals(hashMethod)) {
 			return password.equals(passwordInDB);
 		}
 
 		String[] saltAndPassword = passwordInDB.split("\\$");
 		if (saltAndPassword.length != 2) {
-			throw new IllegalArgumentException("Invalid password stored in DB");
+			log.debug("malformed password in db");
+			return false;
 		}
 
-		String hashOfRequestPassword = hash(password, Base64.decodeBase64(saltAndPassword[1]), hashMethod);
+		String hashOfRequestPassword = null;
+		try {
+			hashOfRequestPassword = hash(password, getSalt(saltAndPassword[1]), hashMethod);
+		} catch (Exception e) {
+			return false;
+		}
 		return hashOfRequestPassword.equals(new String(saltAndPassword[0]));
+	}
+
+	private static byte[] getSalt(String s) throws DecoderException {
+		return Hex.decodeHex(s.toCharArray());
 	}
 
 }

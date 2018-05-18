@@ -12,27 +12,22 @@ public class PasswordUtilsTest {
 	@Test
 	public void testGenSaltedPassword() throws Exception {
 		String password = PasswordUtils.genPassword("password", "salt".getBytes(), "PBKDF2WithHmacSHA1");
-		assertEquals("osJkYYaChHS3VFkaVHwY8TLYjXRMFSZVpHAWGhoFITU=$c2FsdA==", password);
+		assertEquals("a2c2646186828474b754591a547c18f132d88d744c152655a470161a1a052135$73616c74", password);
 	}
 
 	@Test
 	public void testValidate() throws Exception {
-		assertTrue(PasswordUtils.validate("password", "osJkYYaChHS3VFkaVHwY8TLYjXRMFSZVpHAWGhoFITU=$c2FsdA==", "PBKDF2WithHmacSHA1"));
-		assertFalse(PasswordUtils.validate("password1", "osJkYYaChHS3VFkaVHwY8TLYjXRMFSZVpHAWGhoFITU=$c2FsdA==", "PBKDF2WithHmacSHA1"));
+		String passwordInDB = "a2c2646186828474b754591a547c18f132d88d744c152655a470161a1a052135$73616c74";
+
+		assertTrue(PasswordUtils.validate("password", passwordInDB, "PBKDF2WithHmacSHA1"));
+		assertFalse(PasswordUtils.validate("password1", passwordInDB, "PBKDF2WithHmacSHA1"));
 		assertTrue(PasswordUtils.validate("password", "password", "plaintext"));
 		assertFalse(PasswordUtils.validate("password1", "password", "plaintext"));
 	}
 
 	@Test
-	public void testValidateWherePasswordInDBisMalfomred() {
+	public void testValidateWherePasswordInDBisMalfomred() throws Exception {
 		int count = 0;
-		try {
-			PasswordUtils.validate("password", "password", "PBKDF2WithHmacSHA1");
-		} catch (Exception e) {
-			count++;
-			assertEquals("Invalid password stored in DB", e.getMessage());
-		}
-
-		assertEquals(1, count);
+		assertFalse(PasswordUtils.validate("password", "password", "PBKDF2WithHmacSHA1"));
 	}
 }
