@@ -74,16 +74,6 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="执行结果发送的Channel名" prop="channelName">
-                    <el-col :span="18">
-                        <el-tooltip popper-class="form-tooltip" placement="bottom">
-                            <div slot="content">
-                                执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环
-                            </div>
-                            <el-input v-model="jobInfo.channelName"></el-input>
-                        </el-tooltip>
-                    </el-col>
-                </el-form-item>
                 <el-form-item label="描述" prop="description">
                     <el-col :span="18">
                         <el-input type="textarea" v-model="jobInfo.description"></el-input>

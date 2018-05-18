@@ -229,7 +229,6 @@ export default {
         timeZone: 'Asia/Shanghai',
         preferList: [],
         queueName: '',
-        channelName: '',
         description: '',
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
@@ -328,7 +327,6 @@ export default {
           shardingItemParameters: data.shardingItemParameters,
           timeZone: data.timeZone,
           queueName: data.queueName,
-          channelName: data.channelName,
           description: data.description,
         };
         this.isJobInfoVisible = true;
