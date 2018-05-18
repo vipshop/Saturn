@@ -49,7 +49,7 @@
                 <el-button type="text" icon="el-icon-edit" @click="edit(scope.row, scope.row.path)"></el-button>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="删除" placement="top" key="delete">
-                <el-button type="text" icon="el-icon-delete text-danger" v-favorites:favorites.del="scope.row.path" @favorites-del="showMessage"></el-button>
+                <el-button type="text" :key="scope.row.path" icon="el-icon-delete text-danger" v-favorites:favorites.del="scope.row.path" @favorites-del="showMessage"></el-button>
               </el-tooltip>
             </div>
           </template>
