@@ -183,7 +183,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                        <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="channelName" label="执行结果发送的Channel名">
                                     <el-tooltip popper-class="form-tooltip" content="执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环" placement="bottom">
