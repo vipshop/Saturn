@@ -72,8 +72,8 @@ export default {
         this.$set(this.userInfo, 'needApproval', true);
       } else {
         this.$set(this.userInfo, 'needApproval', false);
-        if (this.userInfo.roleKey === 'system_admin' || this.userInfo.roleKey === 'sa_admin') {
-          this.$set(this.userInfo, 'namespace', '*');
+        if (!this.isShowNamespace) {
+          this.$set(this.userInfo, 'namespace', '');
         }
       }
       this.loading = true;
