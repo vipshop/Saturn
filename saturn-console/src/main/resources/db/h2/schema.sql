@@ -301,3 +301,6 @@ CREATE TABLE `role_permission` (
   UNIQUE KEY `uniq_user_permission_key` (`role_key`, `permission_key`),
   KEY `idx_user_permission_key` (`is_deleted`)
  )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+-- 3.0.1 update
+ALTER TABLE `role` ADD `is_relating_to_namespace` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否关联域：0，不关联；1，关联';

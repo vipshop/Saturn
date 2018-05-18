@@ -316,14 +316,6 @@ INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');
 INSERT INTO `role`(`role_key`) VALUES('namespace_admin');
-UPDATE `role` SET `role_name`='系统管理' WHERE `role_key`='system_admin';
-UPDATE `role` SET `role_name`='域开发管理' WHERE `role_key`='namespace_developer';
-UPDATE `role` SET `role_name`='域管理' WHERE `role_key`='namespace_admin';
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_job_admin', '作业管理');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_admin', 'Execuor管理');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_restart', 'Executor重启');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_monitor', 'Executor监控');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('sa_admin', '运维管理');
 
 INSERT INTO `permission`(`permission_key`) VALUES('job:enable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchEnable');
@@ -424,6 +416,18 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_ad
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'executor:shardAllAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setAbnormalJobRead');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setTimeout4AlarmJobRead');
+
+-- 3.0.1 update
+ALTER TABLE `role` ADD `is_relating_to_namespace` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否关联域：0，不关联；1，关联';
+
+UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHERE `role_key`='system_admin';
+UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
+UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
+INSERT INTO `role`(`role_key`, `role_name`, `is_relating_to_namespace`) VALUES('namespace_job_admin', '作业管理', '1');
+INSERT INTO `role`(`role_key`, `role_name`, `is_relating_to_namespace`) VALUES('namespace_executor_admin', 'Execuor管理', '1');
+INSERT INTO `role`(`role_key`, `role_name`, `is_relating_to_namespace`) VALUES('namespace_executor_restart', 'Executor重启', '1');
+INSERT INTO `role`(`role_key`, `role_name`, `is_relating_to_namespace`) VALUES('namespace_executor_monitor', 'Executor监控', '1');
+INSERT INTO `role`(`role_key`, `role_name`, `is_relating_to_namespace`) VALUES('sa_admin', '运维管理', '0');
 
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:enable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_job_admin', 'job:batchEnable');

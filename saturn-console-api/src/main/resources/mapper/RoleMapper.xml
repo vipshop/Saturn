@@ -7,6 +7,7 @@
         <result column="role_key" property="roleKey" jdbcType="VARCHAR"/>
         <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
         <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="is_relating_to_namespace" property="isRelatingToNamespace" jdbcType="BOOLEAN"/>
         <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR"/>
@@ -15,16 +16,16 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.Role">
-        INSERT INTO `role`(`role_key`, `role_name`, `description`, `created_by`, `create_time`, `last_updated_by`,
-        `last_update_time`, `is_deleted`)
+        INSERT INTO `role`(`role_key`, `role_name`, `description`, `is_relating_to_namespace`, `created_by`,
+        `create_time`, `last_updated_by`, `last_update_time`, `is_deleted`)
         VALUES(#{roleKey, jdbcType=VARCHAR}, #{roleName, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR},
-        #{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP}, #{lastUpdatedBy, jdbcType=VARCHAR},
-        #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
+        #{isRelatingToNamespace, jdbcType=BOOLEAN}, #{createdBy, jdbcType=VARCHAR}, #{createTime, jdbcType=TIMESTAMP},
+        #{lastUpdatedBy, jdbcType=VARCHAR}, #{lastUpdateTime, jdbcType=TIMESTAMP}, #{isDeleted, jdbcType=BOOLEAN})
     </insert>
 
     <sql id="selectAllSql">
-        SELECT `role_key`, `role_name`, `description`, `created_by`, `create_time`, `last_updated_by`,
-        `last_update_time`, `is_deleted` FROM `role`
+        SELECT `role_key`, `role_name`, `description`, `is_relating_to_namespace`, `created_by`, `create_time`,
+        `last_updated_by`, `last_update_time`, `is_deleted` FROM `role`
     </sql>
 
     <select id="selectAll" resultMap="baseResultMap">

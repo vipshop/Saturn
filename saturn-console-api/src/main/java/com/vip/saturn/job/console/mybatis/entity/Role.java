@@ -10,6 +10,7 @@ public class Role extends EntityCommonFields {
 	private String roleKey;
 	private String roleName;
 	private String description;
+	private Boolean isRelatingToNamespace;
 
 	private List<RolePermission> rolePermissions;
 
@@ -39,6 +40,14 @@ public class Role extends EntityCommonFields {
 
 	public String getDescription() {
 		return description;
+	}
+
+	public Boolean getIsRelatingToNamespace() {
+		return isRelatingToNamespace;
+	}
+
+	public void setIsRelatingToNamespace(Boolean isRelatingToNamespace) {
+		this.isRelatingToNamespace = isRelatingToNamespace;
 	}
 
 	public void setDescription(String description) {

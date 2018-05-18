@@ -189,7 +189,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 					continue;
 				}
 
-				if (!isUserRoleDefinedInNamespace(namespace, userRole)) {
+				if (role.getIsRelatingToNamespace() && !namespace.equals(userRole.getNamespace())) {
 					continue;
 				}
 
@@ -206,11 +206,6 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			}
 		}
 		throw new SaturnJobConsoleException(String.format("您没有操作所需要的权限：域:%s，权限:%s", namespace, permissionKey));
-	}
-
-	private boolean isUserRoleDefinedInNamespace(String namespace, UserRole userRole) {
-		// system_admin and sa_admin, etc, whose namespace is *
-		return namespace.equals(userRole.getNamespace()) || "*".equals(userRole.getNamespace());
 	}
 
 	@Override
