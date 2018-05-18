@@ -13,7 +13,7 @@
                     </el-select>
                 </el-col>
             </el-form-item>
-            <el-form-item label="所属域" prop="namespace" v-if="userInfo.roleKey !== 'system_admin' && userInfo.roleKey !== 'sa_admin'">
+            <el-form-item label="所属域" prop="namespace" v-if="isShowNamespace">
                 <el-col :span="20">
                     <el-autocomplete
                       v-model="userInfo.namespace"
@@ -92,6 +92,17 @@ export default {
   computed: {
     isEditable() {
       return this.userInfoOperate !== 'edit';
+    },
+    isShowNamespace() {
+      let flag = false;
+      this.roles.some((ele) => {
+        if (this.userInfo.roleKey === ele.roleKey) {
+          flag = ele.isRelatingToNamespace;
+          return true;
+        }
+        return false;
+      });
+      return flag;
     },
   },
 };
