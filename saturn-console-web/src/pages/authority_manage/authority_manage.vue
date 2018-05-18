@@ -37,7 +37,7 @@
                             <el-table-column prop="userName" label="用户名"></el-table-column>
                             <el-table-column prop="roleKey" label="角色">
                                 <template slot-scope="scope">
-                                    {{rolesMaps[scope.row.roleKey]}}
+                                    {{rolesMaps[scope.row.roleKey] || scope.row.roleKey}}
                                 </template>
                             </el-table-column>
                             <el-table-column prop="namespace" label="所属域">
