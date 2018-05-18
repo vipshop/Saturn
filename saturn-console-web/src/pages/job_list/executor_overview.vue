@@ -76,7 +76,7 @@
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="一键DUMP" placement="top" v-if="$common.hasPerm('executor:dump', domainName) && scope.row.status === 'ONLINE'">
-                                        <el-button type="text" @click="handleDump(scope.row)"><i class="fa fa-database"></i></el-button>
+                                        <el-button type="text" @click="$common.handleDump(scope.row, domainName, dumpNext.bind(this))"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('executor:remove', domainName) && scope.row.status === 'OFFLINE'">
                                         <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
@@ -117,6 +117,10 @@ export default {
     };
   },
   methods: {
+    dumpNext() {
+      this.getExecutorList();
+      this.$message.successNotify('一键DUMP操作成功');
+    },
     handleRestart(row) {
       this.$message.confirmMessage(`确定重启 ${row.executorName} 吗?`, () => {
         this.$http.post(`/console/namespaces/${this.domainName}/executors/${row.executorName}/restart`, '').then(() => {
@@ -177,15 +181,6 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
-    },
-    handleDump(row) {
-      this.$message.confirmMessage(`确定dump ${row.executorName} 吗?`, () => {
-        this.$http.post(this.$apiMapper.GetUrl('executor_dump', { domainName: this.domainName, executorName: row.executorName }), '').then(() => {
-          this.getExecutorList();
-          this.$message.successNotify('一键DUMP操作成功');
-        })
-        .catch(() => { this.$http.buildErrorHandler('一键DUMP请求失败！'); });
-      });
     },
     handleDelete(row) {
       this.$message.confirmMessage(`确定删除Executor ${row.executorName} 吗?`, () => {

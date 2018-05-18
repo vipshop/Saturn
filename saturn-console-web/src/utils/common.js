@@ -1,5 +1,8 @@
 import Moment from 'moment';
 import Store from '../store';
+import Http from './request';
+import Message from './message';
+import ApiMapper from './apiMapper';
 
 export default {
   hasPerm(permission, namespace) {
@@ -54,5 +57,13 @@ export default {
     const date = new Date(time);
     const formatTime = Moment(date).format(format);
     return formatTime;
+  },
+  handleDump(row, domainName, dumpNext) {
+    Message.confirmMessage(`确定dump ${row.executorName} 吗?`, () => {
+      Http.post(ApiMapper.GetUrl('executor_dump', { domainName, executorName: row.executorName }), '').then(() => {
+        dumpNext();
+      })
+      .catch(() => { Http.buildErrorHandler('一键DUMP请求失败！'); });
+    });
   },
 };
