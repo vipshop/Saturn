@@ -52,6 +52,7 @@ export default {
           data.userRoles.forEach((ele) => {
             const permission = {
               namespace: ele.namespace,
+              isRelatingToNamespace: ele.role.isRelatingToNamespace,
               permissionList: [],
             };
             ele.role.rolePermissions.forEach((ele2) => {

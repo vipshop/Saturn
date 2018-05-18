@@ -12,18 +12,18 @@ export default {
     if (isUseAuth) {
       if (myPermissions.authority) {
         const isAllNamespace = myPermissions.authority.some((ele) => {
-          if (ele.namespace === '*') {
+          if (!ele.isRelatingToNamespace) {
             return true;
           }
           return false;
         });
         if (isAllNamespace) {
-          const allPermission = this.getAllPermisson(myPermissions.authority, '*');
+          const allPermission = this.getAllPermisson(myPermissions.authority);
           if (allPermission) {
             flag = allPermission.indexOf(permission) > -1;
           }
         } else {
-          const permissionArr = this.getAllPermisson(myPermissions.authority, namespace);
+          const permissionArr = this.getNamepacePermisson(myPermissions.authority, namespace);
           if (permissionArr) {
             flag = permissionArr.indexOf(permission) > -1;
           }
@@ -34,7 +34,18 @@ export default {
     }
     return flag;
   },
-  getAllPermisson(authorityArray, namespace) {
+  getAllPermisson(authorityArray) {
+    const allPermissionsArray = [];
+    authorityArray.forEach((ele) => {
+      if (!ele.isRelatingToNamespace) {
+        ele.permissionList.forEach((ele1) => {
+          allPermissionsArray.push(ele1);
+        });
+      }
+    });
+    return Array.from(new Set(allPermissionsArray));
+  },
+  getNamepacePermisson(authorityArray, namespace) {
     const allPermissionsArray = [];
     authorityArray.forEach((ele) => {
       if (ele.namespace === namespace) {
