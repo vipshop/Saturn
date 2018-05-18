@@ -18,6 +18,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public class AbstractGUIController extends AbstractController {
 
@@ -73,6 +75,13 @@ public class AbstractGUIController extends AbstractController {
 	public void assertIsSystemAdmin() throws SaturnJobConsoleException {
 		String userName = getCurrentLoginUserName();
 		authorizationService.assertIsSystemAdmin(userName);
+	}
+
+	public void printErrorToJsAlert(String errorMsg, HttpServletResponse response) throws IOException {
+		response.setContentType("text/html; charset=utf-8");
+		StringBuilder msg = new StringBuilder().append("<script language='javascript'>").append("alert(\"")
+				.append(errorMsg.replaceAll("\"", "\\\"")).append("\");").append("history.back();").append("</script>");
+		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
 
 }
