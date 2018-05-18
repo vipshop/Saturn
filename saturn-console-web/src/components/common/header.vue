@@ -8,7 +8,7 @@
         <div class="header-content">
             <el-menu :default-active="activeIndex" class="el-menu--dark el-menu--has-container" mode="horizontal" :router="true">
                 <template v-for='item in serviceList'>
-                  <el-menu-item :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
+                  <el-menu-item v-if="item.isSuper" :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
                 </template>
                 <div class="pull-right" style="display: inline-flex">
                     <div class="headerbase-search" v-if="isShowHeaderSearch">
@@ -42,11 +42,11 @@ export default {
       domains: this.$store.getters.allDomains,
       domainName: '',
       serviceList: [
-        { index: '/job', title: '作业管理', icon: 'fa fa-list-alt', path: this.$routermapper.GetPath('jobManage') },
-        { index: '/dashboard', title: 'Dashboard', icon: 'fa fa-pie-chart', path: this.$routermapper.GetPath('dashboardManage') },
-        { index: '/alarm', title: '告警中心', icon: 'fa fa-bell', path: this.$routermapper.GetPath('alarmManage') },
-        { index: '/registry', title: '注册中心', icon: 'fa fa-server', path: this.$routermapper.GetPath('registryManage') },
-        { index: '/system', title: '系统配置', icon: 'fa fa-cog', path: this.$routermapper.GetPath('systemConfigManage') },
+        { index: '/job', title: '作业管理', icon: 'fa fa-list-alt', path: this.$routermapper.GetPath('jobManage'), isSuper: true },
+        { index: '/dashboard', title: 'Dashboard', icon: 'fa fa-pie-chart', path: this.$routermapper.GetPath('dashboardManage'), isSuper: true },
+        { index: '/alarm', title: '告警中心', icon: 'fa fa-bell', path: this.$routermapper.GetPath('alarmManage'), isSuper: true },
+        { index: '/registry', title: '注册中心', icon: 'fa fa-server', path: this.$routermapper.GetPath('registryManage'), isSuper: true },
+        { index: '/system', title: '系统配置', icon: 'fa fa-cog', path: this.$routermapper.GetPath('systemConfigManage'), isSuper: this.$common.hasPerm('systemConfig') },
         { index: '/authority', title: '权限管理', icon: 'fa fa-check-square-o', path: this.$routermapper.GetPath('authorityManage'), isSuper: this.$common.hasPerm('authorizationManage') },
       ],
     };
