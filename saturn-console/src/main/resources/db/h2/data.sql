@@ -9,14 +9,6 @@ INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');
 INSERT INTO `role`(`role_key`) VALUES('namespace_admin');
-UPDATE `role` SET `role_name`='系统管理' WHERE `role_key`='system_admin';
-UPDATE `role` SET `role_name`='域开发管理' WHERE `role_key`='namespace_developer';
-UPDATE `role` SET `role_name`='域管理' WHERE `role_key`='namespace_admin';
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_job_admin', '作业管理');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_admin', 'Execuor管理');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_restart', 'Executor重启');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('namespace_executor_monitor', 'Executor监控');
-INSERT INTO `role`(`role_key`, `role_name`) VALUES('sa_admin', '运维管理');
 
 INSERT INTO `permission`(`permission_key`) VALUES('job:enable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchEnable');
