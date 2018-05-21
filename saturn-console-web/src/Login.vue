@@ -4,6 +4,7 @@
             用户登录
         </div>
         <div class="login-body">
+            <div class="msg-error" v-if="loginErrorMsg"><i class="el-icon-remove"></i>{{loginErrorMsg}}</div> 
             <el-row>  
                 <el-col>  
                     <el-input size="medium" v-model="loginInfo.username" placeholder="请输入帐号"></el-input>   
@@ -32,14 +33,19 @@ export default {
         username: '',
         password: '',
       },
+      loginErrorMsg: '',
     };
   },
   methods: {
     login() {
       this.loading = true;
-      this.$http.post('/console/authentication/login', this.loginInfo).then(() => {
-        this.$router.push({ path: '/' });
-        this.$emit('login-success');
+      this.$http.post('/console/authentication/login', this.loginInfo).then((data) => {
+        if (data.status === 1) {
+          this.loginErrorMsg = data.message;
+        } else {
+          this.$router.push({ path: '/' });
+          this.$emit('login-success');
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('登录失败，请重新登录！'); })
       .finally(() => {
@@ -69,6 +75,19 @@ export default {
             &:last-child {  
                 margin-bottom: 0;  
             } 
+        }
+        .msg-error {
+            position: relative;
+            background: #ffebeb;
+            color: #e4393c;
+            border: 1px solid #faccc6;
+            line-height: 15px;
+            font-size: 13px;
+            padding: 3px 10px;
+            margin-bottom: 10px;
+            i {
+                margin-right: 5px;
+            }
         }
     }
 } 
