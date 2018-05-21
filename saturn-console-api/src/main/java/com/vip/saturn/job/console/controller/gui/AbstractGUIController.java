@@ -21,14 +21,43 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.*;
+
 public class AbstractGUIController extends AbstractController {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractGUIController.class);
 
 	private static final String UNKNOWN = "Unkown";
 
+	private static final String AUTHENTICATION_FAIL_PREFIX = "认证失败：";
+
 	@Resource
 	private AuthorizationService authorizationService;
+
+	@ExceptionHandler
+	public ResponseEntity<RequestResult> handleSaturnJobConsoleException(SaturnJobConsoleException e) {
+		String message = e.getMessage();
+		if (StringUtils.isBlank(message)) {
+			message = e.toString();
+		}
+
+		switch (e.getErrorCode()) {
+			case ERROR_CODE_BAD_REQUEST:
+				log.warn("bad request while calling GUI API:" + message);
+				return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
+			case ERROR_CODE_NOT_EXISTED:
+				log.warn("resource not existed while calling GUI API:" + message);
+				return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
+			case ERROR_CODE_AUTHN_FAIL:
+				log.warn("authentication fail while calling GUI API:" + message);
+				return new ResponseEntity<>(RequestResultHelper.failure(AUTHENTICATION_FAIL_PREFIX + message),
+						HttpStatus.OK);
+			case ERROR_CODE_INTERNAL_ERROR:
+			default:
+				log.error("internal server error happens while calling GUI API:" + message);
+				return new ResponseEntity<>(RequestResultHelper.failure(message), HttpStatus.OK);
+		}
+	}
 
 	@ExceptionHandler(Throwable.class)
 	public ResponseEntity<RequestResult> handleException(Throwable ex) {

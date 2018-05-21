@@ -38,14 +38,14 @@ public abstract class AbstractRestController extends AbstractController {
 
 		switch (e.getErrorCode()) {
 			case ERROR_CODE_NOT_EXISTED:
-				log.warn("Resource not found while calling REST API:" + message);
+				log.warn("resource not found while calling REST API:" + message);
 				return constructErrorResponse(message, HttpStatus.NOT_FOUND);
 			case ERROR_CODE_BAD_REQUEST:
-				log.warn("Bad request while calling REST API:" + message);
+				log.warn("bad request while calling REST API:" + message);
 				return constructErrorResponse(message, HttpStatus.BAD_REQUEST);
 			case ERROR_CODE_INTERNAL_ERROR:
 			default:
-				log.error("Internal server error happens while calling REST API:" + message);
+				log.error("internal server error happens while calling REST API:" + message);
 				return constructErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
