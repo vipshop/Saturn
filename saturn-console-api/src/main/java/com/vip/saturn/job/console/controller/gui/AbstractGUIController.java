@@ -4,7 +4,6 @@ import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.domain.RequestResultHelper;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.Permission;
 import com.vip.saturn.job.console.service.AuthorizationService;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +26,7 @@ public class AbstractGUIController extends AbstractController {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractGUIController.class);
 
-	private static final String UNKNOWN = "Unkown";
+	private static final String UNKNOWN = "Unknown";
 
 	private static final String AUTHENTICATION_FAIL_PREFIX = "认证失败：";
 
