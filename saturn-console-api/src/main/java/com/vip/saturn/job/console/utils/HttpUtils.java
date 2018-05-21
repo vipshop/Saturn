@@ -10,7 +10,7 @@ public class HttpUtils {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
 
-	public static void closeHttpClientQuitetly(CloseableHttpClient httpClient) {
+	public static void closeHttpClientQuietly(CloseableHttpClient httpClient) {
 		if (httpClient != null) {
 			try {
 				httpClient.close();

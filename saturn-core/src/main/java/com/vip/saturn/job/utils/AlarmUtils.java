@@ -68,7 +68,7 @@ public class AlarmUtils {
 				log.error("Other exception throws: {}", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
-				HttpUtils.closeHttpClientQuitetly(httpClient);
+				HttpUtils.closeHttpClientQuietly(httpClient);
 			}
 		}
 	}

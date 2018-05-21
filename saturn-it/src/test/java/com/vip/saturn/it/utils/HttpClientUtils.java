@@ -43,7 +43,7 @@ public class HttpClientUtils {
 					EntityUtils.toString(response.getEntity()));
 
 		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
+			HttpUtils.closeHttpClientQuietly(httpClient);
 		}
 	}
 
@@ -65,7 +65,7 @@ public class HttpClientUtils {
 					EntityUtils.toString(response.getEntity()));
 
 		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
+			HttpUtils.closeHttpClientQuietly(httpClient);
 		}
 	}
 
@@ -87,7 +87,7 @@ public class HttpClientUtils {
 					EntityUtils.toString(response.getEntity()));
 
 		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
+			HttpUtils.closeHttpClientQuietly(httpClient);
 		}
 	}
 
@@ -106,7 +106,7 @@ public class HttpClientUtils {
 			return new HttpResponseEntity(response.getStatusLine().getStatusCode(),
 					EntityUtils.toString(response.getEntity()));
 		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
+			HttpUtils.closeHttpClientQuietly(httpClient);
 		}
 	}
 
@@ -126,7 +126,7 @@ public class HttpClientUtils {
 					EntityUtils.toString(response.getEntity()));
 
 		} finally {
-			HttpUtils.closeHttpClientQuitetly(httpClient);
+			HttpUtils.closeHttpClientQuietly(httpClient);
 		}
 	}
 

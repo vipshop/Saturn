@@ -8,18 +8,17 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.SessionAttributeKeys;
 import com.vip.saturn.job.console.utils.ThreadLocalCuratorClient;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * //TODO 删除session中存储的域、集群等信息，这些信息从每个请求中获取
@@ -188,13 +187,6 @@ public class AbstractController {
 			return configuration.getNamespace();
 		}
 		return null;
-	}
-
-	public void printErrorToJsAlert(String errorMsg, HttpServletResponse response) throws IOException {
-		response.setContentType("text/html; charset=utf-8");
-		StringBuilder msg = new StringBuilder().append("<script language='javascript'>").append("alert(\"")
-				.append(errorMsg.replaceAll("\"", "\\\"")).append("\");").append("history.back();").append("</script>");
-		response.getOutputStream().print(new String(msg.toString().getBytes("UTF-8"), "ISO8859-1"));
 	}
 
 }

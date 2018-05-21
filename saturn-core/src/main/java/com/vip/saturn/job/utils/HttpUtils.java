@@ -2,7 +2,6 @@ package com.vip.saturn.job.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vip.saturn.job.exception.SaturnJobException;
-import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,6 +9,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class HttpUtils {
 
@@ -38,7 +39,7 @@ public class HttpUtils {
 	}
 
 
-	public static void closeHttpClientQuitetly(CloseableHttpClient httpClient) {
+	public static void closeHttpClientQuietly(CloseableHttpClient httpClient) {
 		if (httpClient != null) {
 			try {
 				httpClient.close();

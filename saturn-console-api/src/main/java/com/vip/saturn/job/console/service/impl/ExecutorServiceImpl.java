@@ -1,11 +1,7 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobStatus;
-import com.vip.saturn.job.console.domain.ServerAllocationInfo;
-import com.vip.saturn.job.console.domain.ServerBriefInfo;
-import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
@@ -33,6 +29,7 @@ import java.util.List;
 public class ExecutorServiceImpl implements ExecutorService {
 
 	private static final int DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR = 300;
+	private static final int SMALLEST_VERSION_SUPPORTED_DUMP = 3;
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -108,15 +105,14 @@ public class ExecutorServiceImpl implements ExecutorService {
 		}
 
 		// 是否已被摘流量
-		executorInfo.setNoTraffic(curatorFrameworkOp
-				.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName)));
+		executorInfo.setNoTraffic(
+				curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName)));
 		// lastBeginTime
 		String lastBeginTime = curatorFrameworkOp
 				.getData(ExecutorNodePath.getExecutorNodePath(executorInfo.getExecutorName(), "lastBeginTime"));
 		executorInfo.setLastBeginTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(lastBeginTime));
 		// version
-		executorInfo.setVersion(
-				curatorFrameworkOp.getData(ExecutorNodePath.getExecutorVersionNodePath(executorName)));
+		executorInfo.setVersion(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorVersionNodePath(executorName)));
 
 		String task = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorTaskNodePath(executorName));
 		if (StringUtils.isNotBlank(task)) {
@@ -154,8 +150,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 				// concat executorSharding
 				serverAllocationInfo.getAllocationMap().put(jobName, sharding);
 				// calculate totalLoad
-				String loadLevelNode = curatorFrameworkOp
-						.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
+				String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
 				Integer loadLevel = 1;
 				if (StringUtils.isNotBlank(loadLevelNode)) {
 					loadLevel = Integer.valueOf(loadLevelNode);
@@ -211,9 +206,28 @@ public class ExecutorServiceImpl implements ExecutorService {
 	@Override
 	public void dump(String namespace, String executorName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		String version = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorVersionNodePath(executorName));
+		if (!isVersionSupportedDump(version)) {
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST,
+					"Saturn executor版本低于3.0.0无法进行一键dump");
+		}
 		String dumpNodePath = ExecutorNodePath.getExecutorDumpNodePath(executorName);
 		curatorFrameworkOp.delete(dumpNodePath);
 		curatorFrameworkOp.create(dumpNodePath);
+	}
+
+	private boolean isVersionSupportedDump(String version) {
+		if ("saturn-dev".equals(version)) {
+			return true;
+		}
+
+		String[] items = version.split("\\.");
+		if (items.length < 3) {
+			return false;
+		}
+
+		int majorVersion = Integer.parseInt(items[0]);
+		return majorVersion >= SMALLEST_VERSION_SUPPORTED_DUMP;
 	}
 
 	@Override
