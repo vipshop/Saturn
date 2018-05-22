@@ -68,7 +68,12 @@ public class InitNewJobService {
 		try {
 			if (executorService != null && !executorService.isTerminated()) {
 				executorService.shutdownNow();
+				int count = 0;
 				while (!executorService.awaitTermination(50, TimeUnit.MILLISECONDS)) {
+					if (++count == 4) {
+						log.info("executorService try to shutdown now");
+						count = 0;
+					}
 					executorService.shutdownNow();
 				}
 			}
@@ -109,7 +114,7 @@ public class InitNewJobService {
 			// wait 5 seconds at most until jobClass created.
 			for (int i = 0; i < WAIT_JOBCLASS_ADDED_COUNT; i++) {
 				if (!regCenter.isExisted(jobClassPath)) {
-					Thread.sleep(200);
+					Thread.sleep(200L);
 					continue;
 				}
 
