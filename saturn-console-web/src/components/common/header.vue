@@ -129,11 +129,6 @@ export default {
         vertical-align: middle;
     }
 }
-
-.user-dropdown {
-    padding-right: 20px;
-}
-
 .headerbase-search {
     display: inline-block;
     position: relative;

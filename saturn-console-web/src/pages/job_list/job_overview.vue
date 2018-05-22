@@ -5,21 +5,21 @@
                 <el-col :span="8">
                     <Panel type="success">
                         <div slot="title">启用作业数 / 总作业数</div>
-                        <div slot="content">{{enabledNumber}} / {{totalNumber}}</div>
+                        <div slot="content">{{jobListInfo.enabledNumber}} / {{jobListInfo.totalNumber}}</div>
                     </Panel>
                 </el-col>
                 <el-col :span="8">
                     <a @click="toAbnormalJobPage">
                         <Panel type="danger">
                             <div slot="title">异常作业数</div>
-                            <div slot="content">{{abnormalNumber}}</div>
+                            <div slot="content">{{jobListInfo.abnormalNumber}}</div>
                         </Panel>
                     </a>
                 </el-col>
             </el-row>
         </div>
         <div class="page-container">
-            <FilterPageList :data="jobList" :total="total" :order-by="orderBy" :filters="filters">
+            <FilterPageList :data="jobListInfo.jobList" :total="jobListInfo.total" :order-by="orderBy" :filters="filters">
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
@@ -49,7 +49,7 @@
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>作业列表
-                                <el-button type="text" @click="getJobList"><i class="fa fa-refresh"></i></el-button>
+                                <el-button type="text" @click="init"><i class="fa fa-refresh"></i></el-button>
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
@@ -166,7 +166,6 @@ export default {
       },
       orderBy: '',
       groupList: [],
-      jobList: [],
       selectColumn: 'jobName',
       statusTag: {
         READY: 'primary',
@@ -180,11 +179,7 @@ export default {
         STOPPING: '停止中',
         STOPPED: '已停止',
       },
-      total: 0,
       multipleSelection: [],
-      abnormalNumber: 0,
-      enabledNumber: 0,
-      totalNumber: 0,
     };
   },
   methods: {
@@ -212,7 +207,7 @@ export default {
     },
     closeImportResultDialog() {
       this.isImportResultVisible = false;
-      this.getJobList();
+      this.init();
     },
     handleAdd() {
       this.isJobInfoVisible = true;
@@ -238,7 +233,7 @@ export default {
     },
     jobInfoSuccess() {
       this.isJobInfoVisible = false;
-      this.getJobList();
+      this.init();
       this.$message.successNotify('保存作业操作成功');
     },
     batchEnabled() {
@@ -278,7 +273,7 @@ export default {
           };
           this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
-              this.getJobList();
+              this.init();
               this.$message.successNotify('批量删除作业操作成功');
             })
             .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
@@ -298,7 +293,7 @@ export default {
     },
     batchPrioritySuccess() {
       this.isBatchPriorityVisible = false;
-      this.getJobList();
+      this.init();
       this.$message.successNotify('批量设置作业的优先Executors成功');
     },
     batchOperation(text, callback) {
@@ -339,7 +334,7 @@ export default {
     handleDelete(row) {
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
         this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${row.jobName}`).then(() => {
-          this.getJobList();
+          this.init();
           this.$message.successNotify('删除作业操作成功');
         })
         .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
@@ -449,14 +444,14 @@ export default {
     batchActiveRequest(params, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
         this.$message.successNotify('操作成功');
-        this.getJobList();
+        this.init();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     activeRequest(jobName, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
-        this.getJobList();
+        this.init();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
@@ -486,14 +481,13 @@ export default {
       return resultArr;
     },
     getJobList() {
-      return this.$http.get(`/console/namespaces/${this.domainName}/jobs`).then((data) => {
-        this.jobList = data.jobs;
-        this.totalNumber = data.totalNumber;
-        this.enabledNumber = data.enabledNumber;
-        this.abnormalNumber = data.abnormalNumber;
-        this.total = data.length;
+      const params = {
+        domainName: this.domainName,
+      };
+      return this.$store.dispatch('setJobListInfo', params).then((resp) => {
+        console.log(resp);
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业列表失败！'); });
+      .catch(() => this.$http.buildErrorHandler('获取作业列表请求失败！'));
     },
     getGroupList() {
       return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
@@ -514,7 +508,7 @@ export default {
     'import-result-dialog': importResultDialog,
   },
   created() {
-    this.init();
+    this.getGroupList();
   },
   watch: {
     $route: 'init',
@@ -522,6 +516,9 @@ export default {
   computed: {
     domainName() {
       return this.$route.params.domain;
+    },
+    jobListInfo() {
+      return this.$store.state.global.jobListInfo;
     },
     filterColumnPlaceholder() {
       let str = '';

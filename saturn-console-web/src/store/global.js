@@ -11,6 +11,13 @@ export default {
       techAdmin: '',
     },
     jobInfo: {},
+    jobListInfo: {
+      jobList: [],
+      totalNumber: 0,
+      enabledNumber: 0,
+      abnormalNumber: 0,
+      total: 0,
+    },
     userAuthority: {
       username: '',
       authority: [],
@@ -22,6 +29,7 @@ export default {
     allDomains: state => state.allDomains,
     domainInfo: state => state.domainInfo,
     jobInfo: state => state.jobInfo,
+    jobListInfo: state => state.jobListInfo,
     userAuthority: state => state.userAuthority,
     isUseAuth: state => state.isUseAuth,
   },
@@ -42,6 +50,17 @@ export default {
       state.jobInfo = {
         ...item,
       };
+    },
+    [types.SET_JOB_LIST_INFO](state, item) {
+      state.jobListInfo = {
+        ...state.jobListInfo,
+        jobList: item.jobList,
+        totalNumber: item.totalNumber,
+        enabledNumber: item.enabledNumber,
+        abnormalNumber: item.abnormalNumber,
+        total: item.total,
+      };
+      console.log(state.jobListInfo);
     },
     [types.SET_USER_AUTHORITY](state, item) {
       state.userAuthority = {
@@ -66,6 +85,19 @@ export default {
     [types.SET_JOB_INFO]({ commit }, jobInfoParams) {
       return Http.get(`/console/namespaces/${jobInfoParams.domainName}/jobs/${jobInfoParams.jobName}/config`).then((data) => {
         commit(types.SET_JOB_INFO, data);
+        return data;
+      });
+    },
+    [types.SET_JOB_LIST_INFO]({ commit }, jobListInfoParams) {
+      return Http.get(`/console/namespaces/${jobListInfoParams.domainName}/jobs`).then((data) => {
+        const dataResult = {
+          jobList: data.jobs,
+          totalNumber: data.totalNumber,
+          enabledNumber: data.enabledNumber,
+          abnormalNumber: data.abnormalNumber,
+          total: data.jobs.length,
+        };
+        commit(types.SET_JOB_LIST_INFO, dataResult);
         return data;
       });
     },

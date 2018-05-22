@@ -17,18 +17,20 @@ export default {
   },
   methods: {
     getDomainInfo() {
-      this.loading = true;
-      this.$http.get(`/console/namespaces/${this.domainName}/`).then((data) => {
+      return this.$http.get(`/console/namespaces/${this.domainName}/`).then((data) => {
         this.domainInfo = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); })
-      .finally(() => {
+      .catch(() => { this.$http.buildErrorHandler('获取namespace信息请求失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getDomainInfo()]).then(() => {
         this.loading = false;
       });
     },
   },
   created() {
-    this.getDomainInfo();
+    this.init();
   },
   computed: {
     domainName() {
@@ -44,7 +46,7 @@ export default {
     },
   },
   watch: {
-    $route: 'getDomainInfo',
+    $route: 'init',
   },
 };
 </script>

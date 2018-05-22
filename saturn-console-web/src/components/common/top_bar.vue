@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-loading.fullscreen="loading" element-loading-text="请稍等···">
         <div class="top-bar">
             <div class="top-bar-left">
                 <i class="fa fa-home"></i>
@@ -16,15 +16,80 @@
                 </el-tooltip>
             </div>
             <div class="top-bar-right">
+                <el-autocomplete
+                    v-if="isShowBarSearch"
+                    v-model="jobNameSelect"
+                    :fetch-suggestions="querySearchAsync"
+                    placeholder="切换作业"
+                    popper-class="header-autocomplete"
+                    class="top-bar-search"
+                    @select="handleSelect">
+                </el-autocomplete>
                 <Favorites></Favorites>
             </div>
         </div>
-        
     </div>
 </template>
 <script>
 export default {
   props: ['domain', 'domainInfo'],
+  data() {
+    return {
+      jobNameSelect: '',
+      loading: false,
+    };
+  },
+  methods: {
+    querySearchAsync(queryString, cb) {
+      const jobList = this.jobList;
+      const results = queryString ? jobList.filter(this.createStateFilter(queryString)) : jobList;
+      cb(results);
+    },
+    createStateFilter(queryString) {
+      return state =>
+        state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
+    },
+    handleSelect(item) {
+      this.toPage(item.value);
+    },
+    toPage(jobName) {
+      this.jobNameSelect = '';
+      this.$router.push({ name: 'job_setting', params: { domain: this.domain, jobName } });
+    },
+    getJobList() {
+      const params = {
+        domainName: this.domain,
+      };
+      return this.$store.dispatch('setJobListInfo', params).then(() => {})
+      .catch(() => this.$http.buildErrorHandler('获取作业列表请求失败！'));
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getJobList()]).then(() => {
+        this.loading = false;
+      });
+    },
+  },
+  computed: {
+    jobList() {
+      return this.$store.state.global.jobListInfo.jobList.map((obj) => {
+        const rObj = {};
+        rObj.value = obj.jobName;
+        return rObj;
+      });
+    },
+    isShowBarSearch() {
+      let flag = false;
+      const pathArr = this.$route.path.split('/');
+      if (pathArr[1] === 'job_detail') {
+        flag = true;
+      }
+      return flag;
+    },
+  },
+  created() {
+    this.init();
+  },
 };
 </script>
 <style lang="sass">
@@ -56,5 +121,16 @@ export default {
             }
         }
     }
+}
+.top-bar-search {
+    margin-right: 5px;
+    .el-input__inner {
+        border: none;
+        background-color: #2b3846;
+        color: #c2d0d7;
+    }
+    input::-webkit-input-placeholder {  
+        color: #606f7e;   
+    } 
 }
 </style>
