@@ -71,7 +71,7 @@ public class InitNewJobService {
 				int count = 0;
 				while (!executorService.awaitTermination(50, TimeUnit.MILLISECONDS)) {
 					if (++count == 4) {
-						log.info("executorService try to shutdown now");
+						log.info("InitNewJob executorService try to shutdown now");
 						count = 0;
 					}
 					executorService.shutdownNow();
