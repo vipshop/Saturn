@@ -169,6 +169,8 @@ export default {
     getAllUser() {
       if (this.backFilter.userName || this.backFilter.roleKey || this.backFilter.namespace) {
         this.getUserRolesReq();
+      } else {
+        this.userList = [];
       }
     },
     getUserRolesReq() {
