@@ -13,7 +13,7 @@
                     </el-select>
                 </el-col>
             </el-form-item>
-            <el-form-item label="所属域" prop="namespace" v-if="isShowNamespace">
+            <el-form-item label="所属域" prop="namespace" v-if="isShowNamespace" required>
                 <el-col :span="20">
                     <el-autocomplete
                       v-model="userInfo.namespace"

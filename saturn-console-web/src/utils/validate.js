@@ -1,3 +1,4 @@
+import Store from '../store';
 
 const isIPv4 = (ip) => {
   const re = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/;
@@ -161,6 +162,19 @@ export default {
     if (Array.isArray(value)) {
       if (value.length === 0) {
         callback(new Error('内容为空，请选择'));
+      }
+      callback();
+    }
+  },
+  validateContainDomain(rule, value, callback) {
+    if (!value) {
+      callback(new Error('请选择域名'));
+    } else {
+      const flag = Store.getters.allDomains.some(ele =>
+        ele.value === value,
+      );
+      if (!flag) {
+        callback(new Error('该域不存在，请重新选择！'));
       }
       callback();
     }

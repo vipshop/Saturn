@@ -6,8 +6,7 @@
                     <el-form :inline="true" class="table-filter">
                         <input type="text" v-show="false"/>
                         <el-form-item label="">
-                            <el-select v-model="backFilter.roleKey">
-                                <el-option label="全部角色" value=""></el-option>
+                            <el-select clearable v-model="backFilter.roleKey">
                                 <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
                             </el-select>
                         </el-form-item>
@@ -174,8 +173,13 @@ export default {
       }
     },
     getUserRolesReq() {
+      const params = {
+        userName: this.backFilter.userName !== '' ? this.backFilter.userName : null,
+        roleKey: this.backFilter.roleKey !== '' ? this.backFilter.roleKey : null,
+        namespace: this.backFilter.namespace !== '' ? this.backFilter.namespace : null,
+      };
       this.loading = true;
-      this.$http.get('/console/authorizationManage/getUserRoles', this.backFilter).then((data) => {
+      this.$http.get('/console/authorizationManage/getUserRoles', params).then((data) => {
         this.userList = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取用户权限列表请求失败！'); })
