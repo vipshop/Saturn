@@ -6,7 +6,7 @@
                     <el-form :inline="true" class="table-filter">
                         <input type="text" v-show="false"/>
                         <el-form-item label="">
-                            <el-select v-model="backFilter.roleKey" @change="getAllUser">
+                            <el-select v-model="backFilter.roleKey">
                                 <el-option label="全部角色" value=""></el-option>
                                 <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
                             </el-select>
@@ -18,8 +18,7 @@
                             <el-autocomplete
                               v-model="backFilter.namespace"
                               :fetch-suggestions="querySearchAsync"
-                              placeholder="请输入域名"
-                              @select="handleSelect">
+                              placeholder="请输入域名">
                             </el-autocomplete>
                         </el-form-item>
                         <el-form-item>
@@ -104,9 +103,6 @@ export default {
     createStateFilter(queryString) {
       return state =>
         state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
-    },
-    handleSelect() {
-      this.getAllUser();
     },
     handleAdd() {
       this.isUserVisible = true;
