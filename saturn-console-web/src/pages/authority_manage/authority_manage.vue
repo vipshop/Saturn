@@ -1,36 +1,36 @@
 <template>
     <div v-loading="loading" element-loading-text="请稍等···">
         <div class="margin-20">
-            <FilterPageList ref="pageListRef" :data="userAuthorityList" :total="total" :order-by="orderBy" :filters="filters">
+            <FilterPageList ref="pageListRef" :data="userList" :total="total" :order-by="orderBy" :filters="filters">
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <input type="text" v-show="false"/>
                         <el-form-item label="">
-                            <el-select v-model="filters.roleKey" @change="scope.search">
+                            <el-select v-model="backFilter.roleKey" @change="getAllUser">
                                 <el-option label="全部角色" value=""></el-option>
                                 <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="请输入用户名" v-model="filters.userName" @keyup.enter.native="scope.search"></el-input>
+                            <el-input placeholder="请输入用户名" v-model="backFilter.userName" @keyup.enter.native="getAllUser"></el-input>
                         </el-form-item>
                         <el-form-item label="">
                             <el-autocomplete
-                              v-model="filters.namespace"
+                              v-model="backFilter.namespace"
                               :fetch-suggestions="querySearchAsync"
                               placeholder="请输入域名"
                               @select="handleSelect">
                             </el-autocomplete>
                         </el-form-item>
                         <el-form-item>
-                            <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
+                            <el-button type="primary" icon="el-icon-search" @click="getAllUser">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加用户</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>用户权限列表
-                                <el-button type="text" @click="init"><i class="fa fa-refresh"></i></el-button>
+                                <el-button type="text" @click="getAllUser"><i class="fa fa-refresh"></i></el-button>
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -85,10 +85,11 @@ export default {
       roles: [],
       rolesMaps: {},
       total: 0,
-      filters: {
-        userName: '',
-        roleKey: '',
-        namespace: '',
+      filters: {},
+      backFilter: {
+        userName: null,
+        roleKey: null,
+        namespace: null,
       },
       orderBy: '',
       domains: this.$store.getters.allDomains,
@@ -105,7 +106,7 @@ export default {
         state.value.toLowerCase().indexOf(queryString.toLowerCase()) >= 0;
     },
     handleSelect() {
-      this.$refs.pageListRef.search();
+      this.getAllUser();
     },
     handleAdd() {
       this.isUserVisible = true;
@@ -136,7 +137,7 @@ export default {
     },
     userInfoSuccess() {
       this.isUserVisible = false;
-      this.init();
+      this.getAllUser();
       this.$message.successNotify('保存用户权限操作成功');
     },
     closeInfoDialog() {
@@ -150,53 +151,43 @@ export default {
           namespace: row.namespace,
         };
         this.$http.post('/console/authorizationManage/deleteUserRole', params).then(() => {
-          this.init();
+          this.getAllUser();
           this.$message.successNotify('删除用户操作成功');
         })
         .catch(() => { this.$http.buildErrorHandler('删除用户请求失败！'); });
       });
     },
     getRoles() {
-      return this.$http.get('/console/authorizationManage/getRoles').then((data) => {
+      this.loading = true;
+      this.$http.get('/console/authorizationManage/getRoles').then((data) => {
         this.roles = data;
         data.forEach((ele) => {
           this.rolesMaps[ele.roleKey] = ele.roleName;
         });
       })
-      .catch(() => { this.$http.buildErrorHandler('获取用户角色请求失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('获取用户角色请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
     },
     getAllUser() {
-      return this.$http.get('/console/authorizationManage/getAllUsers').then((data) => {
+      this.loading = true;
+      this.$http.get('/console/authorizationManage/getUserRoles', this.backFilter).then((data) => {
         this.userList = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取用户权限列表请求失败！'); });
-    },
-    init() {
-      this.loading = true;
-      Promise.all([this.getAllUser(), this.getRoles()]).then(() => {
+      .catch(() => { this.$http.buildErrorHandler('获取用户权限列表请求失败！'); })
+      .finally(() => {
         this.loading = false;
       });
     },
   },
   computed: {
-    userAuthorityList() {
-      const arr = [];
-      this.userList.forEach((ele) => {
-        if (ele.userRoles) {
-          ele.userRoles.forEach((ele2) => {
-            arr.push(ele2);
-          });
-        }
-      });
-      this.total = arr.length;
-      return arr;
-    },
   },
   components: {
     'user-info-dialog': userInfoDialog,
   },
   created() {
-    this.init();
+    this.getRoles();
   },
 };
 </script>
