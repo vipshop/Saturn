@@ -49,10 +49,19 @@
 
     <select id="select" resultMap="baseResultMap">
         <include refid="selectAllSql"></include>
-        WHERE
-        `user_name` = #{userName, jdbcType=VARCHAR} AND
-        `role_key` = #{roleKey, jdbcType=VARCHAR} AND
-        `namespace` = #{namespace, jdbcType=VARCHAR} AND
+        WHERE 1 = 1 AND
+        <if test="userName != null">
+            `user_name` = #{userName, jdbcType=VARCHAR} AND
+        </if>
+        <if test="roleKey != null">
+            `role_key` = #{roleKey, jdbcType=VARCHAR} AND
+        </if>
+        <if test="namespace != null">
+            `namespace` = #{namespace, jdbcType=VARCHAR} AND
+        </if>
+        <if test="needApproval != null">
+            `need_approval` = #{needApproval, jdbcType=BOOLEAN} AND
+        </if>
         `is_deleted` = '0'
     </select>
 

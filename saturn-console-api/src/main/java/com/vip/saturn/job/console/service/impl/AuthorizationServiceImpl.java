@@ -170,8 +170,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		if (!isAuthorizationEnabled()) {
 			return true;
 		}
-		UserRole result = userRoleRepository.select(userRole);
-		return result != null;
+		List<UserRole> result = userRoleRepository.select(userRole);
+		return result != null && !result.isEmpty();
 	}
 
 	@Override

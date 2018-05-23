@@ -20,7 +20,10 @@ public interface UserRoleRepository {
 
 	List<UserRole> selectByRoleKey(@Param("roleKey") String roleKey);
 
-	UserRole select(UserRole userRole);
+	/**
+	 * 如果字段为null，则不作为where语句条件
+	 */
+	List<UserRole> select(UserRole userRole);
 
 	UserRole selectWithNotFilterDeleted(UserRole userRole);
 

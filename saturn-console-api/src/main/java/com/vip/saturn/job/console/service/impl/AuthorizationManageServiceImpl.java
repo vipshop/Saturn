@@ -1,8 +1,12 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.*;
-import com.vip.saturn.job.console.mybatis.repository.*;
+import com.vip.saturn.job.console.mybatis.entity.Role;
+import com.vip.saturn.job.console.mybatis.entity.User;
+import com.vip.saturn.job.console.mybatis.entity.UserRole;
+import com.vip.saturn.job.console.mybatis.repository.RoleRepository;
+import com.vip.saturn.job.console.mybatis.repository.UserRepository;
+import com.vip.saturn.job.console.mybatis.repository.UserRoleRepository;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,16 +20,10 @@ import java.util.List;
 public class AuthorizationManageServiceImpl implements AuthorizationManageService {
 
 	@Autowired
-	protected PermissionRepository permissionRepository;
-
-	@Autowired
 	protected RoleRepository roleRepository;
 
 	@Autowired
 	protected UserRepository userRepository;
-
-	@Autowired
-	protected RolePermissionRepository rolePermissionRepository;
 
 	@Autowired
 	protected UserRoleRepository userRoleRepository;
@@ -75,57 +73,17 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<User> getAllUsers() throws SaturnJobConsoleException {
-		List<User> allUsers = new ArrayList<>();
-		List<User> users = userRepository.selectAll();
-		if (users != null) {
-			for (User user : users) {
-				User user2 = getUser(user.getUserName());
-				if (user2 != null) {
-					allUsers.add(user2);
-				}
-			}
-		}
-		return allUsers;
-	}
-
-	@Transactional(readOnly = true)
-	@Override
-	public User getUser(String userName) throws SaturnJobConsoleException {
-		User user = userRepository.select(userName);
-		if (user == null) {
-			return null;
-		}
-		List<UserRole> userRoles = userRoleRepository.selectByUserName(userName);
-		if (userRoles == null) {
-			return user;
-		}
-		user.setUserRoles(userRoles);
-		for (UserRole userRole : userRoles) {
-			String roleKey = userRole.getRoleKey();
-			Role role = roleRepository.selectByKey(roleKey);
-			if (role == null) {
-				continue;
-			}
-			userRole.setRole(role);
-
-			List<RolePermission> rolePermissions = rolePermissionRepository.selectByRoleKey(roleKey);
-			if (rolePermissions == null) {
-				continue;
-			}
-			role.setRolePermissions(rolePermissions);
-
-			for (RolePermission rolePermission : rolePermissions) {
-				Permission permission = permissionRepository.selectByKey(rolePermission.getPermissionKey());
-				rolePermission.setPermission(permission);
-			}
-		}
-		return user;
-	}
-
-	@Override
 	public List<Role> getRoles() throws SaturnJobConsoleException {
 		List<Role> roles = roleRepository.selectAll();
 		return roles == null ? new ArrayList<Role>() : roles;
 	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<UserRole> getUserRoles(String userName, String roleKey, String namespace)
+			throws SaturnJobConsoleException {
+		List<UserRole> userRoles = userRoleRepository.select(new UserRole(userName, roleKey, namespace));
+		return userRoles == null ? new ArrayList<UserRole>() : userRoles;
+	}
+
 }

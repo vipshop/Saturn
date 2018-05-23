@@ -11,13 +11,14 @@ import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.List;
 
@@ -26,6 +27,8 @@ import java.util.List;
  */
 @RequestMapping("/console/authorizationManage")
 public class AuthorizationManageController extends AbstractGUIController {
+
+	private static final Logger log = LoggerFactory.getLogger(AuthorizationManageController.class);
 
 	@Resource
 	private AuthorizationManageService authorizationManageService;
@@ -36,8 +39,7 @@ public class AuthorizationManageController extends AbstractGUIController {
 	public SuccessResponseEntity addUserRoles(@AuditParam("userName") @RequestParam String userName,
 			@AuditParam("roleKey") @RequestParam String roleKey,
 			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
-			throws SaturnJobConsoleException {
+			@AuditParam("needApproval") @RequestParam Boolean needApproval) throws SaturnJobConsoleException {
 		assertIsSystemAdmin();
 		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
@@ -72,8 +74,7 @@ public class AuthorizationManageController extends AbstractGUIController {
 	@PostMapping("/deleteUserRole")
 	public SuccessResponseEntity deleteUserRole(@AuditParam("userName") @RequestParam String userName,
 			@AuditParam("roleKey") @RequestParam String roleKey,
-			@AuditParam("namespace") @RequestParam String namespace, HttpSession httpSession)
-			throws SaturnJobConsoleException {
+			@AuditParam("namespace") @RequestParam String namespace) throws SaturnJobConsoleException {
 		assertIsSystemAdmin();
 		UserRole userRole = new UserRole();
 		userRole.setUserName(userName);
@@ -93,8 +94,7 @@ public class AuthorizationManageController extends AbstractGUIController {
 			@AuditParam("preNamespace") @RequestParam String preNamespace,
 			@AuditParam("userName") @RequestParam String userName, @AuditParam("roleKey") @RequestParam String roleKey,
 			@AuditParam("namespace") @RequestParam String namespace,
-			@AuditParam("needApproval") @RequestParam Boolean needApproval, HttpSession httpSession)
-			throws SaturnJobConsoleException {
+			@AuditParam("needApproval") @RequestParam Boolean needApproval) throws SaturnJobConsoleException {
 		assertIsSystemAdmin();
 		String currentLoginUserName = getCurrentLoginUserName();
 		Date now = new Date();
@@ -119,19 +119,21 @@ public class AuthorizationManageController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping("/getAllUsers")
-	public SuccessResponseEntity getAllUsers() throws SaturnJobConsoleException {
-		assertIsSystemAdmin();
-		List<User> allUser = authorizationManageService.getAllUsers();
-		return new SuccessResponseEntity(allUser);
-	}
-
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping("/getRoles")
 	public SuccessResponseEntity getRoles() throws SaturnJobConsoleException {
 		assertIsSystemAdmin();
 		List<Role> roles = authorizationManageService.getRoles();
 		return new SuccessResponseEntity(roles);
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping("/getUserRoles")
+	public SuccessResponseEntity getUsersBy(@RequestParam(required = false) String userName,
+			@RequestParam(required = false) String roleKey, @RequestParam(required = false) String namespace)
+			throws SaturnJobConsoleException {
+		assertIsSystemAdmin();
+		List<UserRole> userRoles = authorizationManageService.getUserRoles(userName, roleKey, namespace);
+		return new SuccessResponseEntity(userRoles);
 	}
 
 }
