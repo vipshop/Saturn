@@ -35,7 +35,7 @@
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
                             <el-table-column prop="userName" label="用户名"></el-table-column>
-                            <el-table-column prop="roleKey" label="角色">
+                            <el-table-column prop="roleKey" label="权限集合">
                                 <template slot-scope="scope">
                                     {{rolesMaps[scope.row.roleKey] || scope.row.roleKey}}
                                 </template>

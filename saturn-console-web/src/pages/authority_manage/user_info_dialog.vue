@@ -6,7 +6,7 @@
                     <el-input v-model="userInfo.userName" :disabled="!isEditable"></el-input>
                 </el-col>
             </el-form-item>
-            <el-form-item label="角色" prop="roleKey">
+            <el-form-item label="权限集合" prop="roleKey">
                 <el-col :span="20">
                     <el-select v-model="userInfo.roleKey" style="width: 100%">
                         <el-option v-for="item in roles" :label="item.roleName" :value="item.roleKey" :key="item.roleKey"></el-option>
