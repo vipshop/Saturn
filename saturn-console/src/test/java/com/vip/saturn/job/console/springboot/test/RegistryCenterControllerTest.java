@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,10 +67,18 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 
 		assertEquals("127.0.0.1:2181", connectionString);
 
+		// get 单个zkcluster
+		result = mvc.perform(get("/console/zkClusters/clusterx")).andExpect(status().isOk()).andReturn();
+		responseBody = result.getResponse().getContentAsString();
+		resultMap = JSONObject.parseObject(responseBody, Map.class);
+		Map<String, Object> zkClusterMap = (Map<String, Object>) resultMap.get("obj");
+		assertEquals("clusterx", zkClusterMap.get("zkClusterKey"));
+		assertEquals("127.0.0.1:2181", zkClusterMap.get("zkAddr"));
+		assertTrue((Boolean) zkClusterMap.get("offline"));
+
 		// update
 		result = mvc.perform(post("/console/zkClusters/clusterx").contentType(MediaType.APPLICATION_FORM_URLENCODED)
-				.content("connectString=127.0.0.1:2182  "))
-				.andExpect(status().isOk()).andReturn();
+				.content("connectString=127.0.0.1:2182  ")).andExpect(status().isOk()).andReturn();
 		responseBody = result.getResponse().getContentAsString();
 		resultMap = JSONObject.parseObject(responseBody, Map.class);
 		assertEquals(0, resultMap.get("status"));
@@ -94,6 +103,15 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 			}
 		} while (!connectionString.equals("127.0.0.1:2182") && count++ < 10);
 		assertEquals("127.0.0.1:2182", connectionString);
+
+		// get 单个zkcluster
+		result = mvc.perform(get("/console/zkClusters/clusterx")).andExpect(status().isOk()).andReturn();
+		responseBody = result.getResponse().getContentAsString();
+		resultMap = JSONObject.parseObject(responseBody, Map.class);
+		zkClusterMap = (Map<String, Object>) resultMap.get("obj");
+		assertEquals("clusterx", zkClusterMap.get("zkClusterKey"));
+		assertEquals("127.0.0.1:2182", zkClusterMap.get("zkAddr"));
+		assertTrue((Boolean) zkClusterMap.get("offline"));
 	}
 
 	private static class ZkClusterInfoForTest {

@@ -72,7 +72,6 @@ public class RegistryCenterController extends AbstractGUIController {
 		return new SuccessResponseEntity(namespaceInfoList);
 	}
 
-
 	/**
 	 * 导出指定的namespce
 	 */
@@ -145,6 +144,18 @@ public class RegistryCenterController extends AbstractGUIController {
 		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
 		registryCenterService.updateZkCluster(zkClusterKey, connectString.trim());
 		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/zkClusters/{zkClusterKey}")
+	public SuccessResponseEntity getZkCluster(@PathVariable String zkClusterKey) throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
+		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+		if (zkCluster == null) {
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
+					String.format("ZK cluster[%s]不存在", zkClusterKey));
+		}
+		return new SuccessResponseEntity(zkCluster);
 	}
 
 	// 域迁移
