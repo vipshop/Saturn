@@ -12,7 +12,7 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="请输入用户名" v-model="backFilter.userName" @keyup.enter.native="getAllUser"></el-input>
+                            <el-input placeholder="请输入用户名" v-model="backFilter.userName" @keyup.enter.native="getUserRolesReq"></el-input>
                         </el-form-item>
                         <el-form-item label="">
                             <el-autocomplete
@@ -22,14 +22,14 @@
                             </el-autocomplete>
                         </el-form-item>
                         <el-form-item>
-                            <el-button type="primary" icon="el-icon-search" @click="getAllUser">查询</el-button>
+                            <el-button type="primary" icon="el-icon-search" @click="getUserRolesReq">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加用户</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>用户权限列表
-                                <el-button type="text" @click="getAllUser"><i class="fa fa-refresh"></i></el-button>
+                                <el-button type="text" @click="getUserRolesReq"><i class="fa fa-refresh"></i></el-button>
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -167,6 +167,11 @@ export default {
       });
     },
     getAllUser() {
+      if (this.backFilter.userName || this.backFilter.roleKey || this.backFilter.namespace) {
+        this.getUserRolesReq();
+      }
+    },
+    getUserRolesReq() {
       this.loading = true;
       this.$http.get('/console/authorizationManage/getUserRoles', this.backFilter).then((data) => {
         this.userList = data;
