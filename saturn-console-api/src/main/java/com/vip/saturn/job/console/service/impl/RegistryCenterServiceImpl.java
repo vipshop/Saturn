@@ -1082,17 +1082,29 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void createOrUpdateZkCluster(String zkClusterKey, String alias, String connectString)
+	public void createZkCluster(String zkClusterKey, String alias, String connectString)
 			throws SaturnJobConsoleException {
 		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
-		if (zkClusterInfo == null) {
-			zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
-		} else {
-			// cannot change alias but only connection string
-			zkClusterInfo.setConnectString(connectString);
-			zkClusterInfo.setLastUpdateTime(new Date());
-			zkClusterInfoService.updateZkCluster(zkClusterInfo);
+		if (zkClusterInfo != null) {
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST,
+					String.format("ZK cluster[%s]已经存在", zkClusterKey));
 		}
+		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+		notifyRefreshRegCenter();
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public void updateZkCluster(String zkClusterKey, String connectString) throws SaturnJobConsoleException {
+		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
+		if (zkClusterInfo == null) {
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
+					String.format("ZK cluster[%s]不存在", zkClusterKey));
+		}
+		// cannot change alias but only connection string
+		zkClusterInfo.setConnectString(connectString);
+		zkClusterInfo.setLastUpdateTime(new Date());
+		zkClusterInfoService.updateZkCluster(zkClusterInfo);
 		notifyRefreshRegCenter();
 	}
 

@@ -13,7 +13,6 @@ import com.vip.saturn.job.console.domain.RegistryCenterClient;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import java.io.File;
 import org.apache.curator.framework.CuratorFramework;
@@ -45,7 +44,9 @@ public interface RegistryCenterService {
 
 	ZkCluster getZkCluster(String key);
 
-	void createOrUpdateZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
+	void createZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
+
+	void updateZkCluster(String zkClusterKey, String connectString) throws SaturnJobConsoleException;
 
 	Collection<ZkCluster> getZkClusterList();
 

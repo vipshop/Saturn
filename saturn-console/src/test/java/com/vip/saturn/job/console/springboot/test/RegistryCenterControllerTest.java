@@ -67,8 +67,8 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 		assertEquals("127.0.0.1:2181", connectionString);
 
 		// update
-		zkClusterInfo = new ZkClusterInfoForTest("clusterx", "alias1", "127.0.0.1:2182  ");
-		result = mvc.perform(post("/console/zkClusters").contentType(MediaType.APPLICATION_FORM_URLENCODED).content(zkClusterInfo.toContent()))
+		result = mvc.perform(post("/console/zkClusters/clusterx").contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.content("connectString=127.0.0.1:2182  "))
 				.andExpect(status().isOk()).andReturn();
 		responseBody = result.getResponse().getContentAsString();
 		resultMap = JSONObject.parseObject(responseBody, Map.class);
