@@ -135,6 +135,7 @@ export default {
     padding-top: 10px;
 }
 .header-autocomplete {
+  width: 300px !important;
   .el-autocomplete-suggestion__wrap {
       margin-top: 0;
       background: #14212e;

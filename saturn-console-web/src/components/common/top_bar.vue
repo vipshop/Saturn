@@ -18,6 +18,7 @@
             <div class="top-bar-right">
                 <el-autocomplete
                     v-if="isShowBarSearch"
+                    prefix-icon="el-icon-search"
                     v-model="jobNameSelect"
                     :fetch-suggestions="querySearchAsync"
                     placeholder="切换作业"
@@ -128,6 +129,9 @@ export default {
         border: none;
         background-color: #2b3846;
         color: #c2d0d7;
+    }
+    .el-input__prefix {
+        color: #606f7e;
     }
     input::-webkit-input-placeholder {  
         color: #606f7e;   
