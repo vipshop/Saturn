@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -19,6 +20,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Default implementation of ExecutorService.
@@ -30,6 +32,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 	private static final int DEFAULT_MAX_SECONDS_FORCE_KILL_EXECUTOR = 300;
 	private static final int SMALLEST_VERSION_SUPPORTED_DUMP = 3;
+	private static final Set<String> SUPPORT_DUMP_VERSION_WHITE_LIST = Sets.newHashSet("saturn-dev", "master-SNAPSHOT");
 
 	@Resource
 	private CuratorRepository curatorRepository;
@@ -217,7 +220,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 	}
 
 	private boolean isVersionSupportedDump(String version) {
-		if ("saturn-dev".equals(version)) {
+		if (SUPPORT_DUMP_VERSION_WHITE_LIST.contains(version)) {
 			return true;
 		}
 
