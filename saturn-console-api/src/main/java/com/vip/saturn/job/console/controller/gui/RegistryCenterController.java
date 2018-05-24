@@ -95,21 +95,6 @@ public class RegistryCenterController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
-	/**
-	 * 获取所有zk集群信息
-	 */
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/zkClusters")
-	public SuccessResponseEntity getZkClustersInfo(@RequestParam(required = false) String status) {
-		Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
-		if (StringUtils.isBlank(status) || !"online".equals(status)) {
-			return new SuccessResponseEntity(zkClusters);
-		}
-
-		List<ZkCluster> onlineZkCluster = filterOnlineZkClusters(zkClusters);
-		return new SuccessResponseEntity(onlineZkCluster);
-	}
-
 	private List<ZkCluster> filterOnlineZkClusters(Collection<ZkCluster> zkClusters) {
 		if (zkClusters == null) {
 			return Lists.newLinkedList();
@@ -138,24 +123,37 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@PostMapping(value = "/zkClusters/{zkClusterKey}")
-	public SuccessResponseEntity updateZkCluster(@PathVariable String zkClusterKey,
+	@PutMapping(value = "/zkClusters")
+	public SuccessResponseEntity updateZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey,
 			@AuditParam("newConnectString") @RequestParam String connectString) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
 		registryCenterService.updateZkCluster(zkClusterKey, connectString.trim());
 		return new SuccessResponseEntity();
 	}
 
+	/**
+	 * 获取单个或所有zk集群信息
+	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/zkClusters/{zkClusterKey}")
-	public SuccessResponseEntity getZkCluster(@PathVariable String zkClusterKey) throws SaturnJobConsoleException {
-		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
-		ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
-		if (zkCluster == null) {
-			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
-					String.format("ZK cluster[%s]不存在", zkClusterKey));
+	@GetMapping(value = "/zkClusters")
+	public SuccessResponseEntity getZkClusters(@RequestParam(required = false) String status,
+			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
+		if (StringUtils.isNotBlank(zkClusterKey)) {
+			ZkCluster zkCluster = registryCenterService.getZkCluster(zkClusterKey);
+			if (zkCluster == null) {
+				throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
+						String.format("ZK cluster[%s]不存在", zkClusterKey));
+			}
+			return new SuccessResponseEntity(zkCluster);
 		}
-		return new SuccessResponseEntity(zkCluster);
+
+		Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
+		if (StringUtils.isBlank(status) || !"online".equals(status)) {
+			return new SuccessResponseEntity(zkClusters);
+		}
+
+		List<ZkCluster> onlineZkCluster = filterOnlineZkClusters(zkClusters);
+		return new SuccessResponseEntity(onlineZkCluster);
 	}
 
 	// 域迁移
