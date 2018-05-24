@@ -510,6 +510,13 @@ public class JobServiceImpl implements JobService {
 		if (oldJobConfig == null) {
 			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "设置该作业（" + jobName + "）优先Executor失败，因为该作业不存在");
 		}
+		// 启用状态的本地模式作业，不能设置preferList
+		Boolean enabled = oldJobConfig.getEnabled();
+		Boolean localMode = oldJobConfig.getLocalMode();
+		if (enabled != null && enabled && localMode != null && localMode) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+					String.format("启用状态的本地模式作业(%s)，不能设置优先Executor，请先禁用它", jobName));
+		}
 		JobConfig4DB newJobConfig = new JobConfig4DB();
 		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
 		newJobConfig.setPreferList(preferList);
