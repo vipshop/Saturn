@@ -23,8 +23,6 @@ import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.JsonUtils;
-
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
@@ -49,14 +47,12 @@ public class ConfigurationService extends AbstractSaturnService {
 	// 参考http://stackoverflow.com/questions/17963969/java-regex-pattern-split-commna
 	private static final String PATTERN = ",(?=(([^\"]*\"){2})*[^\"]*$)";
 
-	private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class,
-			String.class);
+	private MapType customContextType = TypeFactory.defaultInstance()
+			.constructMapType(HashMap.class, String.class, String.class);
 
 	private TimeZone jobTimeZone;
 
 	private ExecutorService executorService;
-
-	private static final Object lock = new Object();
 
 	public ConfigurationService(JobScheduler jobScheduler) {
 		super(jobScheduler);
@@ -78,34 +74,30 @@ public class ConfigurationService extends AbstractSaturnService {
 	}
 
 	public void notifyJobEnabledOrNot() {
-		executorService.execute(new Runnable() {
-			@Override
-			public void run() {
-				synchronized (lock) {
-					try {
-						if (isJobEnabled()) {
-							jobScheduler.getJob().notifyJobEnabled();
-						} else {
-							jobScheduler.getJob().notifyJobDisabled();
-						}
-					} catch (Throwable t) {
-						LOGGER.error(t.getMessage(), t);
-					}
-				}
-			}
-		});
+		if (isJobEnabled()) {
+			notifyJobEnabledIfNecessary();
+		} else {
+			notifyJobDisabled();
+		}
 	}
 
-	public void notifyJobEnabled() {
+	/**
+	 * 如果是本地模式，并且配置了优先Executor，并且当前Executor不属于优先Executor，则不需要通知
+	 */
+	public void notifyJobEnabledIfNecessary() {
+		if (isLocalMode()) {
+			List<String> preferList = getPreferList();
+			if (preferList != null && !preferList.isEmpty() && !preferList.contains(executorName)) {
+				return;
+			}
+		}
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
-				synchronized (lock) {
-					try {
-						jobScheduler.getJob().notifyJobEnabled();
-					} catch (Throwable t) {
-						LOGGER.error(t.getMessage(), t);
-					}
+				try {
+					jobScheduler.getJob().notifyJobEnabled();
+				} catch (Throwable t) {
+					LOGGER.error(t.getMessage(), t);
 				}
 			}
 		});
@@ -115,35 +107,13 @@ public class ConfigurationService extends AbstractSaturnService {
 		executorService.execute(new Runnable() {
 			@Override
 			public void run() {
-				synchronized (lock) {
-					try {
-						jobScheduler.getJob().notifyJobDisabled();
-					} catch (Throwable t) {
-						LOGGER.error(t.getMessage(), t);
-					}
+				try {
+					jobScheduler.getJob().notifyJobDisabled();
+				} catch (Throwable t) {
+					LOGGER.error(t.getMessage(), t);
 				}
 			}
 		});
-	}
-
-	/**
-	 * 判断是否需要发送Enabled或者Disabled事件
-	 *
-	 * 非Local模式的作业，所有的Executor都会收到事件
-	 *
-	 * 对于Local模式的作业，如果配置了优先Executor，那么事件只会给优先Executor的服务器发送
-	 *
-	 * @return
-	 */
-	public boolean needSendJobEnabledOrDisabledEvent() {
-		if (!this.isLocalMode()) {
-			return true;
-		}
-		List<String> perferList = this.getPreferList();
-		if (CollectionUtils.isEmpty(perferList)) {
-			return true;
-		}
-		return perferList.contains(this.executorName);
 	}
 
 	/**
@@ -395,8 +365,7 @@ public class ConfigurationService extends AbstractSaturnService {
 			return isEnabledReportInJobConfig;
 		}
 		// if isEnabledReportInJobConfig == null, 如果作业类型是JAVA或者Shell，默认上报
-		if ("JAVA_JOB".equals(jobConfiguration.getJobType())
-				|| "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+		if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
 			return true;
 		}
 
@@ -512,8 +481,7 @@ public class ConfigurationService extends AbstractSaturnService {
 		for (int i = 0; i < allExistsExecutors.size(); i++) {
 			String executor = allExistsExecutors.get(i);
 			if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorTaskNodePath(executor))) {
-				String taskData = coordinatorRegistryCenter
-						.get(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
+				String taskData = coordinatorRegistryCenter.get(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
 				if (taskData != null && task.equals(taskData) && !preferList.contains(executor)) {
 					preferList.add(executor);
 				}

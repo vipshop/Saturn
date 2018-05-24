@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -14,12 +14,6 @@
 
 package com.vip.saturn.job.internal.config;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
-import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
@@ -27,6 +21,11 @@ import com.vip.saturn.job.internal.failover.FailoverService;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConfigurationListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ConfigurationListenerManager.class);
@@ -69,7 +68,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 	class EnabledPathListener extends AbstractJobListener {
 		/**
-		 * 
+		 *
 		 * if it's a msgJob, job should go down and up as the enabled value changed from false to true.<br>
 		 * therefor, we don't care about whether the channel/queue name is changed.
 		 */
@@ -81,7 +80,6 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
 				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
-				boolean sendEventFlag = configurationService.needSendJobEnabledOrDisabledEvent();
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
 					if (!isJobNotNull()) {
@@ -93,9 +91,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 					}
 					failoverService.removeFailoverInfo();
 					jobScheduler.getJob().enableJob();
-					if (sendEventFlag) {
-						configurationService.notifyJobEnabled();
-					}
+					configurationService.notifyJobEnabledIfNecessary();
 				} else {
 					if (!isJobNotNull()) {
 						return;
@@ -103,9 +99,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 
 					jobScheduler.getJob().disableJob();
 					failoverService.removeFailoverInfo(); // clear failover info when disable job.
-					if (sendEventFlag) {
-						configurationService.notifyJobDisabled();
-					}
+					configurationService.notifyJobDisabled();
 				}
 			}
 		}

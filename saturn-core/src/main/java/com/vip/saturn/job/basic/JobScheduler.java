@@ -14,19 +14,6 @@
 
 package com.vip.saturn.job.basic;
 
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.spi.OperableTrigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.LimitMaxJobsService;
 import com.vip.saturn.job.executor.SaturnExecutorService;
@@ -49,6 +36,18 @@ import com.vip.saturn.job.threads.ExtendableThreadPoolExecutor;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
+import org.apache.curator.framework.CuratorFramework;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.spi.OperableTrigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 作业调度器.
@@ -150,10 +149,8 @@ public class JobScheduler {
 			startAll();
 			createJob();
 			serverService.persistServerOnline(job);
-			if (configService.needSendJobEnabledOrDisabledEvent()) {
-				// Notify job enabled or disabled after that all are ready, include job was initialized.
-				configService.notifyJobEnabledOrNot();
-			}
+			// Notify job enabled or disabled after that all are ready, include job was initialized.
+			configService.notifyJobEnabledOrNot();
 			return true;
 		} catch (Throwable t) {
 			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
