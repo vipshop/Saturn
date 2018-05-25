@@ -101,8 +101,28 @@ export default {
         return data;
       });
     },
-    [types.SET_USER_AUTHORITY]({ commit }, userAuthority) {
-      commit(types.SET_USER_AUTHORITY, userAuthority);
+    [types.SET_USER_AUTHORITY]({ commit }) {
+      return Http.get('/console/authorization/loginUser').then((data) => {
+        const storeUserAuthority = {
+          username: data.userName,
+          authority: [],
+        };
+        if (data.userRoles.length > 0) {
+          data.userRoles.forEach((ele) => {
+            const permission = {
+              namespace: ele.namespace,
+              isRelatingToNamespace: ele.role.isRelatingToNamespace,
+              permissionList: [],
+            };
+            ele.role.rolePermissions.forEach((ele2) => {
+              permission.permissionList.push(ele2.permissionKey);
+            });
+            storeUserAuthority.authority.push(permission);
+          });
+        }
+        commit(types.SET_USER_AUTHORITY, storeUserAuthority);
+        return data;
+      });
     },
     [types.SET_IS_USE_AUTH]({ commit }, isUseAuth) {
       commit(types.SET_IS_USE_AUTH, isUseAuth);

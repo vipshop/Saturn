@@ -42,28 +42,10 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取权限开关请求失败！'); });
     },
     getLoginUser() {
-      return this.$http.get('/console/authorization/loginUser').then((data) => {
-        Vue.use(Favorites, { key: data.userName });
-        const storeUserAuthority = {
-          username: data.userName,
-          authority: [],
-        };
-        if (data.userRoles.length > 0) {
-          data.userRoles.forEach((ele) => {
-            const permission = {
-              namespace: ele.namespace,
-              isRelatingToNamespace: ele.role.isRelatingToNamespace,
-              permissionList: [],
-            };
-            ele.role.rolePermissions.forEach((ele2) => {
-              permission.permissionList.push(ele2.permissionKey);
-            });
-            storeUserAuthority.authority.push(permission);
-          });
-        }
-        this.$store.dispatch('setUserAuthority', storeUserAuthority);
+      return this.$store.dispatch('setUserAuthority').then((resp) => {
+        Vue.use(Favorites, { key: resp.userName });
       })
-      .catch(() => { this.$http.buildErrorHandler('获取用户请求失败！'); });
+      .catch(() => this.$http.buildErrorHandler('获取用户请求失败！'));
     },
     init() {
       this.loading = true;
