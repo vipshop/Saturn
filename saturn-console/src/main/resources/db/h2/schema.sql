@@ -304,3 +304,7 @@ CREATE TABLE `role_permission` (
 
 -- 3.0.1 update
 ALTER TABLE `role` ADD `is_relating_to_namespace` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否关联域：0，不关联；1，关联';
+ALTER TABLE `user_role` ADD KEY `idx_user_role_u_r_n_n_i` (`user_name`, `role_key`, `namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_r_n_n_i` (`role_key`, `namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_n_n_i` (`namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_deleted`);
