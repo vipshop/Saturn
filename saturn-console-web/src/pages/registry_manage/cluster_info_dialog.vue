@@ -1,14 +1,14 @@
 <template>
-    <el-dialog title="添加集群" width="35%" :visible.sync="isVisible" :before-close="closeDialog" v-loading="loading" element-loading-text="请稍等···">
+    <el-dialog :title="clusterInfoTitle" width="35%" :visible.sync="isVisible" :before-close="closeDialog" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="clusterInfo" :rules="rules" ref="clusterInfo" label-width="100px">
             <el-form-item label="集群ID" prop="zkClusterKey">
                 <el-col :span="20">
-                    <el-input v-model="clusterInfo.zkClusterKey"></el-input>
+                    <el-input v-model="clusterInfo.zkClusterKey" :disabled="!isEditable"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="集群名称" prop="alias">
                 <el-col :span="20">
-                    <el-input v-model="clusterInfo.alias"></el-input>
+                    <el-input v-model="clusterInfo.alias" :disabled="!isEditable"></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item label="连接串" prop="connectString">
@@ -29,7 +29,7 @@
 
 <script>
 export default {
-  props: ['clusterInfo'],
+  props: ['clusterInfo', 'clusterInfoTitle', 'clusterInfoOperate'],
   data() {
     return {
       isVisible: true,
@@ -50,17 +50,33 @@ export default {
       });
     },
     clusterInfoRequest(url) {
-      this.$http.post(url, this.clusterInfo).then(() => {
+      if (this.clusterInfoOperate === 'add') {
         this.loading = true;
-        setTimeout(() => {
-          this.loading = false;
-          this.$emit('cluster-info-success');
-        }, 3000);
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
+        this.$http.post(url, this.clusterInfo).then(() => {
+          setTimeout(() => {
+            this.loading = false;
+            this.$emit('cluster-info-success');
+          }, 3000);
+        })
+        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
+      } else {
+        this.loading = true;
+        this.$http.put(url, this.clusterInfo).then(() => {
+          setTimeout(() => {
+            this.loading = false;
+            this.$emit('cluster-info-success');
+          }, 3000);
+        })
+        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
+      }
     },
     closeDialog() {
       this.$emit('close-dialog');
+    },
+  },
+  computed: {
+    isEditable() {
+      return this.clusterInfoOperate !== 'edit';
     },
   },
 };

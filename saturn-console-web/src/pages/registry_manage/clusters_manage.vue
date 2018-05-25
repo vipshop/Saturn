@@ -28,12 +28,19 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="zkAddr" label="连接串" width="500px" :show-overflow-tooltip="true"></el-table-column>
+                            <el-table-column label="操作" width="80px" align="center">
+                                <template slot-scope="scope">
+                                    <el-tooltip content="编辑" placement="top" v-if="$common.hasPerm('registryCenter:addZkCluster')">
+                                        <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
                         </el-table>
                     </div>
                 </template>
             </FilterPageList>
             <div v-if="isClusterVisible">
-                <cluster-info-dialog :cluster-info="clusterInfo" @cluster-info-success="clusterInfoSuccess" @close-dialog="closeInfoDialog"></cluster-info-dialog>
+                <cluster-info-dialog :cluster-info="clusterInfo" :cluster-info-title="clusterInfoTitle" :cluster-info-operate="clusterInfoOperate" @cluster-info-success="clusterInfoSuccess" @close-dialog="closeInfoDialog"></cluster-info-dialog>
             </div>
         </div>
     </div>
@@ -48,6 +55,8 @@ export default {
       isClusterVisible: false,
       zkClusterList: [],
       clusterInfo: {},
+      clusterInfoTitle: '',
+      clusterInfoOperate: '',
       filters: {
         zkClusterKey: '',
       },
@@ -61,13 +70,15 @@ export default {
   },
   methods: {
     handleAdd() {
-      this.isClusterVisible = true;
       const clusterAddInfo = {
         zkClusterKey: '',
         alias: '',
         connectString: '',
       };
+      this.clusterInfoTitle = '添加ZK集群';
+      this.clusterInfoOperate = 'add';
       this.clusterInfo = JSON.parse(JSON.stringify(clusterAddInfo));
+      this.isClusterVisible = true;
     },
     closeInfoDialog() {
       this.isClusterVisible = false;
@@ -76,6 +87,24 @@ export default {
       this.isClusterVisible = false;
       this.getAllClusters();
       this.$message.successNotify('保存ZK集群操作成功,若列表未更新,请稍后手动刷新页面');
+    },
+    handleEdit(row) {
+      this.loading = true;
+      this.$http.get('/console/zkClusters', { zkClusterKey: row.zkClusterKey }).then((data) => {
+        const clusterEditInfo = {
+          zkClusterKey: data.zkClusterKey,
+          alias: data.zkAlias,
+          connectString: data.zkAddr,
+        };
+        this.clusterInfoTitle = '编辑ZK集群';
+        this.clusterInfoOperate = 'edit';
+        this.clusterInfo = JSON.parse(JSON.stringify(clusterEditInfo));
+        this.isClusterVisible = true;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取集群信息请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
     },
     getAllClusters() {
       this.loading = true;
