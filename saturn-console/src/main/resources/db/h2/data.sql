@@ -5,6 +5,8 @@ INSERT INTO `namespace_zkcluster_mapping`(`namespace`, `name`, `zk_cluster_key`)
 INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','CONSOLE-IT:it_cluster;default:cluster1,it_cluster');
 
 INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
+INSERT INTO `user`(`user_name`,`password`) VALUES('guest','guest');
+INSERT INTO `user_role`(`user_name`, `role_key`, `need_approval`) VALUES('admin', 'system_admin', '0');
 
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');

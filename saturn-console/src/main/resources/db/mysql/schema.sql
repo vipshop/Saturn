@@ -312,6 +312,8 @@ CREATE TABLE `role_permission` (
   )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='角色权限关系表';
 
 INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
+INSERT INTO `user`(`user_name`,`password`) VALUES('guest','guest');
+INSERT INTO `user_role`(`user_name`, `role_key`, `need_approval`) VALUES('admin', 'system_admin', '0');
 
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');
