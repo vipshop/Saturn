@@ -10,7 +10,6 @@ import com.vip.saturn.job.console.mybatis.repository.UserRoleRepository;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,18 +30,13 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void addUserRole(UserRole userRole) throws SaturnJobConsoleException {
-		// add user first if not exists
-		User user = userRepository.selectWithNotFilterDeleted(userRole.getUserName());
-		if (user == null) {
-			userRepository.insert(userRole.getUser());
-		} else {
-			userRepository.update(user);
-		}
+		String userName = userRole.getUserName();
+		validateUser(userName);
 		// check role is existing
 		String roleKey = userRole.getRoleKey();
 		Role role = roleRepository.selectByKey(roleKey);
 		if (role == null) {
-			throw new SaturnJobConsoleException(String.format("该角色key(%s)不存在", roleKey));
+			throw new SaturnJobConsoleException(String.format("角色key(%s)不存在", roleKey));
 		}
 		// insert or update userRole
 		UserRole pre = userRoleRepository.selectWithNotFilterDeleted(userRole);
@@ -50,6 +44,13 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 			userRoleRepository.insert(userRole);
 		} else {
 			userRoleRepository.update(pre, userRole);
+		}
+	}
+
+	protected void validateUser(String userName) throws SaturnJobConsoleException {
+		User user = userRepository.selectWithNotFilterDeleted(userName);
+		if (user == null) {
+			throw new SaturnJobConsoleException(String.format("用户名(%s)不存在", userName));
 		}
 	}
 

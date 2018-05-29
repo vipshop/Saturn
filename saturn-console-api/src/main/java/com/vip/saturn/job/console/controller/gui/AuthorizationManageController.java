@@ -55,15 +55,6 @@ public class AuthorizationManageController extends AbstractGUIController {
 		userRole.setLastUpdateTime(now);
 		User user = new User();
 		user.setUserName(userName);
-		user.setPassword("");
-		user.setRealName("");
-		user.setEmployeeId("");
-		user.setEmail("");
-		user.setCreatedBy(currentLoginUserName);
-		user.setCreateTime(now);
-		user.setLastUpdatedBy(currentLoginUserName);
-		user.setLastUpdateTime(now);
-		user.setIsDeleted(false);
 		userRole.setUser(user);
 		authorizationManageService.addUserRole(userRole);
 		return new SuccessResponseEntity();
