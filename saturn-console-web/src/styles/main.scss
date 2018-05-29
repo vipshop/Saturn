@@ -93,8 +93,12 @@ form {
 }
 
 .table-filter{
+    height: 36px;
     .el-form-item {
         margin-bottom: 5px;
+    }
+    .operate-form-item {
+        display: inline;
     }
 }
 

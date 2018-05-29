@@ -58,7 +58,10 @@ export default {
             this.$emit('cluster-info-success');
           }, 3000);
         })
-        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
+        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); })
+        .finally(() => {
+          this.loading = false;
+        });
       } else {
         this.loading = true;
         this.$http.put(url, this.clusterInfo).then(() => {
@@ -67,7 +70,10 @@ export default {
             this.$emit('cluster-info-success');
           }, 3000);
         })
-        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); });
+        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); })
+        .finally(() => {
+          this.loading = false;
+        });
       }
     },
     closeDialog() {
