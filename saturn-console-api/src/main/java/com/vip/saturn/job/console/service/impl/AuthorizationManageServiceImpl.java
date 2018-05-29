@@ -10,6 +10,7 @@ import com.vip.saturn.job.console.mybatis.repository.UserRoleRepository;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +31,7 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void addUserRole(UserRole userRole) throws SaturnJobConsoleException {
-		String userName = userRole.getUserName();
-		validateUser(userName);
+		validateUser(userRole);
 		// check role is existing
 		String roleKey = userRole.getRoleKey();
 		Role role = roleRepository.selectByKey(roleKey);
@@ -47,7 +47,8 @@ public class AuthorizationManageServiceImpl implements AuthorizationManageServic
 		}
 	}
 
-	protected void validateUser(String userName) throws SaturnJobConsoleException {
+	protected void validateUser(UserRole userRole) throws SaturnJobConsoleException {
+		String userName = userRole.getUserName();
 		User user = userRepository.selectWithNotFilterDeleted(userName);
 		if (user == null) {
 			throw new SaturnJobConsoleException(String.format("用户名(%s)不存在", userName));

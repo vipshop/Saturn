@@ -6,7 +6,6 @@ import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.RequestResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.Role;
-import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.entity.UserRole;
 import com.vip.saturn.job.console.service.AuthorizationManageService;
 import io.swagger.annotations.ApiResponse;
@@ -53,9 +52,6 @@ public class AuthorizationManageController extends AbstractGUIController {
 		userRole.setCreateTime(now);
 		userRole.setLastUpdatedBy(currentLoginUserName);
 		userRole.setLastUpdateTime(now);
-		User user = new User();
-		user.setUserName(userName);
-		userRole.setUser(user);
 		authorizationManageService.addUserRole(userRole);
 		return new SuccessResponseEntity();
 	}
