@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.service.AuthenticationService;
 import com.vip.saturn.job.console.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -17,18 +18,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Value("${authentication.hash:plaintext}")
 	private String hashMethod;
 
+	@Transactional(readOnly = true)
 	@Override
 	public User authenticate(String username, String password) throws SaturnJobConsoleException {
 		if (StringUtils.isEmpty(password)) {
-			return null;
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "密码不能为空");
 		}
 
 		User user = userRepository.select(username);
 		if (user == null) {
-			return null;
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
 		}
 
-		return PasswordUtils.validate(password, user.getPassword(), hashMethod) ? user : null;
+		PasswordUtils.validate(password, user.getPassword(), hashMethod);
+
+		return user;
 	}
 
 	public void setHashMethod(String hashMethod) {

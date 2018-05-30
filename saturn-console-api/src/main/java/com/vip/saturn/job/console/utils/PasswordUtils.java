@@ -53,29 +53,35 @@ public class PasswordUtils {
 		return Hex.encodeHexString(key.getEncoded());
 	}
 
-	public static boolean validate(String password, String passwordInDB, String hashMethod)
+	public static void validate(String password, String passwordInDB, String hashMethod)
 			throws SaturnJobConsoleException {
 		if (!isHashMethodSupported(hashMethod)) {
 			throw new SaturnJobConsoleException(String.format("hash method [%s] is not supported", hashMethod));
 		}
 
 		if (PasswordUtils.HASH_METHOD_PLANTEXT.equals(hashMethod)) {
-			return password.equals(passwordInDB);
+			if (!password.equals(passwordInDB)) {
+				throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
+			}
+			return;
 		}
 
 		String[] saltAndPassword = passwordInDB.split("\\$");
 		if (saltAndPassword.length != 2) {
 			log.debug("malformed password in db");
-			return false;
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
 		}
 
 		String hashOfRequestPassword;
 		try {
 			hashOfRequestPassword = hash(password, getSalt(saltAndPassword[1]));
 		} catch (Exception e) {
-			return false;
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
 		}
-		return hashOfRequestPassword.equals(new String(saltAndPassword[0]));
+
+		if (!hashOfRequestPassword.equals(new String(saltAndPassword[0]))) {
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
+		}
 	}
 
 	public static boolean isHashMethodSupported(String hashMethod) {

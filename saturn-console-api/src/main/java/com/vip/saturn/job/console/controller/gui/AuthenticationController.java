@@ -31,9 +31,6 @@ public class AuthenticationController extends AbstractGUIController {
 			HttpServletRequest request) throws SaturnJobConsoleException {
 
 		User user = authenticationService.authenticate(username, password);
-		if (user == null) {
-			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
-		}
 
 		request.getSession().setAttribute(SessionAttributeKeys.LOGIN_USER_NAME, user.getUserName());
 		request.getSession().setAttribute(SessionAttributeKeys.LOGIN_USER_REAL_NAME, user.getRealName());
