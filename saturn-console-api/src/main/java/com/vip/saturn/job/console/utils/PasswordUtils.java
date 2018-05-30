@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.utils;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
@@ -26,32 +27,38 @@ public class PasswordUtils {
 
 	private static final int KEY_LEN = 256;
 
-	/**
-	 * 生成带盐的密码串，密码和盐使用'$'符号分隔。
-	 * @param hashMethod 为JDK SecretKeyFactory支持的算法，如果算法不存在，会使用PBKDF2WithHmacSHA1
-	 */
 	public static String genPassword(String password, String hashMethod) throws Exception {
 		byte[] salt = SecureRandom.getInstance("SHA1PRNG").generateSeed(SALT_LEN);
-		return hash(password, salt, hashMethod);
+		return genPassword(password, salt, hashMethod);
 	}
 
 	public static String genPassword(String password, byte[] salt, String hashMethod) throws Exception {
-		return hash(password, salt, hashMethod) + "$" + Hex.encodeHexString(salt);
-	}
-
-	public static String hash(String password, byte[] salt, String hashMethod) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		SecretKeyFactory secretKeyFactory;
-		try {
-			secretKeyFactory = SecretKeyFactory.getInstance(hashMethod);
-		} catch (NoSuchAlgorithmException e) {
-			secretKeyFactory = SecretKeyFactory.getInstance(HASH_METHOD_PBKDF2);
+		if (!isHashMethodSupported(hashMethod)) {
+			throw new SaturnJobConsoleException(String.format("hash method [%s] is not supported", hashMethod));
 		}
 
+		if (HASH_METHOD_PLANTEXT.equals(hashMethod)) {
+			return password;
+		}
+
+		return hash(password, salt) + "$" + Hex.encodeHexString(salt);
+	}
+
+	/**
+	 * 当前只支持PBKDF2WithHmacSHA1
+	 */
+	public static String hash(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(HASH_METHOD_PBKDF2);
 		SecretKey key = secretKeyFactory.generateSecret(new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LEN));
 		return Hex.encodeHexString(key.getEncoded());
 	}
 
-	public static boolean validate(String password, String passwordInDB, String hashMethod) {
+	public static boolean validate(String password, String passwordInDB, String hashMethod)
+			throws SaturnJobConsoleException {
+		if (!isHashMethodSupported(hashMethod)) {
+			throw new SaturnJobConsoleException(String.format("hash method [%s] is not supported", hashMethod));
+		}
+
 		if (PasswordUtils.HASH_METHOD_PLANTEXT.equals(hashMethod)) {
 			return password.equals(passwordInDB);
 		}
@@ -62,13 +69,17 @@ public class PasswordUtils {
 			return false;
 		}
 
-		String hashOfRequestPassword = null;
+		String hashOfRequestPassword;
 		try {
-			hashOfRequestPassword = hash(password, getSalt(saltAndPassword[1]), hashMethod);
+			hashOfRequestPassword = hash(password, getSalt(saltAndPassword[1]));
 		} catch (Exception e) {
 			return false;
 		}
 		return hashOfRequestPassword.equals(new String(saltAndPassword[0]));
+	}
+
+	public static boolean isHashMethodSupported(String hashMethod) {
+		return HASH_METHOD_PBKDF2.equals(hashMethod) || HASH_METHOD_PLANTEXT.equals(hashMethod);
 	}
 
 	private static byte[] getSalt(String s) throws DecoderException {

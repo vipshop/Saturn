@@ -2,9 +2,6 @@ package com.vip.saturn.job.console.utils;
 
 import org.junit.Test;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 import static org.junit.Assert.*;
 
 public class PasswordUtilsTest {

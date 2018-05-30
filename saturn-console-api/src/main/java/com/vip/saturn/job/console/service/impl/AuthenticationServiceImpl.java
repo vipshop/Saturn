@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.service.impl;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.User;
 import com.vip.saturn.job.console.mybatis.repository.UserRepository;
 import com.vip.saturn.job.console.service.AuthenticationService;
@@ -17,7 +18,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private String hashMethod;
 
 	@Override
-	public User authenticate(String username, String password) {
+	public User authenticate(String username, String password) throws SaturnJobConsoleException {
 		if (StringUtils.isEmpty(password)) {
 			return null;
 		}
