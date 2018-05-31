@@ -34,14 +34,30 @@ public class AuthenticationServiceImplTest {
 	public void testAuthenticationFailWhenUserIsNotFound() throws SaturnJobConsoleException {
 		authnService.setHashMethod("plaintext");
 		when(userRepository.select("john")).thenReturn(null);
+		boolean hasException = false;
+		try {
+			assertNull(authnService.authenticate("john", "password"));
+		} catch (SaturnJobConsoleException e) {
+			hasException = true;
+			assertEquals(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, e.getErrorCode());
+		}
 
-		assertNull(authnService.authenticate("john", "password"));
+		assertTrue(hasException);
+
 	}
 
 	@Test
 	public void testAuthenticationFailWhenPasswordInputIsEmpty() throws SaturnJobConsoleException {
 		authnService.setHashMethod("plaintext");
-		assertNull(authnService.authenticate("john", ""));
+		boolean hasException = false;
+		try {
+			authnService.authenticate("john", "");
+		} catch (SaturnJobConsoleException e) {
+			hasException = true;
+			assertEquals(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, e.getErrorCode());
+		}
+
+		assertTrue(hasException);
 	}
 
 	private User createUser(String username, String password) {
