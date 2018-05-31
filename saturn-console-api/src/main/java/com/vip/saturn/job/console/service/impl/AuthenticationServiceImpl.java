@@ -27,7 +27,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		User user = userRepository.select(username);
 		if (user == null) {
-			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名或密码不正确");
+			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_AUTHN_FAIL, "用户名不存在");
 		}
 
 		PasswordUtils.validate(password, user.getPassword(), hashMethod);
