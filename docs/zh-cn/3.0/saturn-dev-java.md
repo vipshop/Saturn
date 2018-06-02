@@ -1,4 +1,4 @@
-# Saturn作业开发指引之Java作业 (via Maven)
+# Saturn作业开发指引之Java作业
 
 这一节想介绍如何写一个简单的Java作业，并使用你熟悉的IDE进行调试。
 

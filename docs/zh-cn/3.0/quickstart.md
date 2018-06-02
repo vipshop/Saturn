@@ -11,12 +11,22 @@ Saturn Executor是执行任务的Worker：按照作业配置的要求去执行�
 
 ## 1 一键启动
 
-首先，请确保本机环境：
+首先，请确保本机安装了以下软件：
 
 * JDK 7 or JDK 8
-* Maven 3.0.4 +
+* Maven 3.0.4+
+* node.js 8.7.0+
+* npm 5.4.2+
 
-然后，git克隆本仓库到本地，checkout对应版本分支，进入`quickstart`目录，如果是Windows系统，请运行`quickstart.bat`，如果是Linux/Unix/MacOS系统，请运行`quickstart.sh`。
+然后，git clone本仓库到本地，checkout对应版本分支，进入`quickstart`目录。如果是Windows系统，请运行`quickstart.bat`，如果是Linux/Unix/MacOS系统，请运行`quickstart.sh`。
+
+```
+$ git clone https://github.com/vipshop/Saturn
+$ git checkout develop
+$ cd saturn-docker
+$ chmod +x quickstart.sh
+$ ./quickstart.sh
+```
 
 quickstart脚本将做如下事情：
 * 启动内嵌的ZooKeeper
@@ -25,6 +35,18 @@ quickstart脚本将做如下事情：
 * 在Saturn-Console添加该Java作业
 
 启动完成后，您可以访问Saturn-Console：[http://localhost:9088](http://localhost:9088)
+
+如果你见到如下界面，则恭喜你，你的console已经启动。
+
+![home_page](_media/home_page.jpg)
+
+在首页的search bar点击会出现一个叫做'mydomain'的namespace。点击进去会见到一个名为'demoJavaJob'的作业，该作业有5个分片，每隔5秒调度一次。
+
+![demo_job](_media/quickstart_demojob.jpg)
+
+
+
+一个叫做'executor-1'的executor执行器调度该作业。
 
 ## 2 Docker启动
 

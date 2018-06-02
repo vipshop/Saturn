@@ -1,6 +1,6 @@
 # Saturn Console部署
 
-这一节会介绍如何安装和部署Saturn Console。
+这一节会介绍如何从零开始安装和部署Saturn Console。
 
 ## 1 部署前准备
 
@@ -50,72 +50,24 @@ CREATE DATABASE saturn CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 执行schema.sql。
 
-#### 2.3.3 数据创建
-
-##### 2.3.3.1 注册zk cluster信息
-
-下面的例子是创建一个key位'cluster1'的zk集群。
-
-```mysql
-INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'localhost:2181,localhost:2182');
-```
-
-其中：
-
-* **zk_cluster_key**代表集群的ID
-* **alias**用于界面展示
-* **connection_string**是zk连接串，多个zk server用逗号分隔
-
-##### 2.3.3.2 注册域信息
-
-下面的例子展示如何注册名字为"www.abc.com"的namespace：
-
-```mysql
-INSERT INTO `namespace_info`(`namespace`) VALUES('www.abc.com');
-```
-
-##### 2.3.3.3 注册域与zk集群的关系
-
-将namespace关联到zk集群。下面以"www.abc.com"关联到cluster1为例子。
-
-```mysql
-INSERT INTO `namespace_zkcluster_mapping`(`namespace`, `name`, `zk_cluster_key`) VALUES('www.abc.com', '业务组abc', 'cluster1');
-```
-
-##### 2.3.3.4 注册Console与zk集群的关系 （Optional）
-
-设置console与zk集群的关系。只有console（集群）和特定zk集群绑定了，才可以sharding该zk集群上的namespace的作业。
-
-如果只有1个console和1个zk集群，则使用**default:<zk-cluster-name>**即可。
-
-```mysql
-INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','default:cluster1');
-```
-
-如果你有多个zk集群和console集群，则需要指定console集群和zk集群的关系，下面是例子：
-
-```mysql
-INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','console-gd:cluster1;console-bj:cluster2');
-```
-
-这个例子表示console集群为console-gd的console管辖cluster1的作业，而console集群console-bj管辖cluster2的作业。关于如何指定console属于哪个console集群，见下面**2.4 安装Console**。
-
 ### 2.4 安装Console
 
 #### 2.4.1 下载
 
 从<https://github.com/vipshop/Saturn/releases> 中点击最新版本的“Console Zip File”，下载得到saturn-console-{version}-exec.jar，将之放到合适的目录。
 
-> 2.x版本为稳定版本。本教程以2.x为例。
+> 本教程以3.x为例。
 
 #### 2.4.2 启动Console
 
 ```shell
 # 可通过参数SATURN_CONSOLE_LOG指定日志路径
-nohup java -DSATURN_CONSOLE_DB_URL=jdbc:mysql://localhost:3306/saturn -DSATURN_CONSOLE_DB_USERNAME=root -DSATURN_CONSOLE_DB_PASSWORD=password -jar saturn-console-{version}-exec.jar &
+nohup java -DSATURN_CONSOLE_DB_URL=jdbc:mysql://localhost:3306/saturn -DSATURN_CONSOLE_DB_USERNAME=your_username -DSATURN_CONSOLE_DB_PASSWORD=your_password -jar saturn-console-{version}-exec.jar &
 ```
 
 访问http://{ip}:9088 即可看到saturn控制台。其中ip指的是console安装的机器的IP。
+
+日志会输出到路径/apps/logs/saturn_console/saturn.console.log
 
 ##### 2.4.2.1 JVM参数推荐
 
@@ -143,11 +95,42 @@ JDK 1.8:
 | SATURN_CONSOLE_LOG                       | 都支持            | 日志目录。默认是/apps/logs/saturn_console | N    |
 | VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE | 都支持            | Dashboard后台刷新频率，单位是分钟。默认值是1。      | N    |
 | server.port | JVM参数           | 启动端口，默认9088      | N    |
+| authentication.enabled | JVM参数 | 是否启用用户认证。默认为false。详情参阅认证和授权一节 | N |
+| authorization.enabled.default | JVM参数 | 是否默认启用用户鉴权。默认为false。详情参阅认证和授权一节 | N |
 
 使用浏览器访问 http://localhost:9088 即可看到你的Saturn Console！
 
-下面的章节会介绍如何开发你的第一个作业。
+#### 2.4.3 创建ZK集群
+
+Executor会从ZK获取相应域的作业信息，并上报作业的运行状态到ZK。而一个Console（集群）可以管理多个ZK集群。下面会介绍如何在Console添加zk集群。假设我们要添加的zk集群id为test。
+
+##### 2.4.3.1 在系统配置绑定console与zk集群
+
+在“系统配置”处的CONSOLE_ZK_CLUSTER_MAPPING，绑定console和zk集群，格式为{console_id}:{zk_cluster_id}。如果console启动没有指定VIP_SATURN_CONSOLE_CLUSTER，则使用default。
+
+![create_console_zk mapping](_media/create_consolezk_mapping.jpg)
+
+##### 2.4.3.2 创建zk集群
+
+点击“注册中心菜单”，点击“ZK集群管理”子菜单里面的“添加集群”按钮。输入ZK信息，如下：
+
+![create_zkcluster](_media/create_zkcluster.jpg)
+
+添加完成后，会看到zk在线。
+
+![zk_list](_media/zk_list.jpg)
+
+#### 2.4.4 创建域
+
+域是多个作业的管理单元，域与zk集群进行绑定，两者是多对一的关系。一个域只从属于一个zk集群。
+
+在注册中心的“域管理”页面，添加域(namespace), 同时与zk cluster绑定。
+
+![create_ns](_media/create_ns.jpg)
+
+创建完域，下一章会告诉你，如何创建一个Java作业。
 
 ### 2.5 关于Console的集群部署
 
 为了实现Console的高可用性，我们都希望Console有多台服务器所组成。我们只需要在多台不同的服务器的环境变量中指定相同的VIP_SATURN_CONSOLE_CLUSTER即可，至于VIP_SATURN_CONSOLE_CLUSTER的值，由你自行指定，只是一个集群标识而已。
+
