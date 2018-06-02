@@ -2,6 +2,10 @@ INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUE
 
 INSERT INTO `namespace_zkcluster_mapping`(`namespace`, `name`, `zk_cluster_key`) VALUES('mydomain', '业务组', 'cluster1');
 
+INSERT INTO `job_config` (`job_name`, `namespace`, `zk_list`, `job_class`, `sharding_total_count`, `load_level`, `cron`, `pause_period_date`, `pause_period_time`, `sharding_item_parameters`, `job_parameter`, `monitor_execution`, `process_count_interval_seconds`, `concurrent_data_process_thread_count`, `fetch_data_count`, `max_time_diff_seconds`, `monitor_port`, `failover`, `misfire`, `job_sharding_strategy_class`, `description`, `timeout_seconds`, `show_normal_log`, `channel_name`, `job_type`, `queue_name`, `create_by`, `create_time`, `last_update_by`, `last_update_time`, `prefer_list`, `local_mode`, `use_disprefer_list`, `use_serial`, `backup1`, `backup2`, `backup3`, `job_degree`, `enabled_report`, `dependencies`, `groups`, `timeout_4_alarm_seconds`, `time_zone`, `is_enabled`, `job_mode`, `custom_context`)
+VALUES
+	('demoJavaJob', 'mydomain', NULL, 'demo.DemoJavaJob', 5, 1, '0/5 * * * * ?', '', '', '0=0,1=1,2=2,3=3,4=4', '', 1, 300, NULL, NULL, NULL, NULL, 1, NULL, NULL, '', 0, 0, '', 'JAVA_JOB', '', 'admin', '2017-10-13 19:06:24', 'Unkown User', '2017-10-18 18:11:27', '', 0, 1, 0, NULL, NULL, NULL, 0, 1, '', '', 0, 'Asia/Shanghai', 1, '', NULL);
+
 INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','CONSOLE-IT:it_cluster;default:cluster1,it_cluster');
 
 INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');

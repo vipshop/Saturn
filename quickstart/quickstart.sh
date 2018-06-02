@@ -17,7 +17,7 @@ if [ $? -ne 0 ];then
   exit -1
 fi
 
-echo "[Step 2] Running Saturn Console, visit  http://localhost:9088 after a few seconds"
+echo "[Step 2] Running Saturn Console, visit http://localhost:9088 after a few seconds"
 nohup java -Dfile.encoding=UTF-8 -Dsaturn.embeddedZk=true -Dsaturn.embeddedDb=true -Dspring.h2.console.enabled=true -Dsaturn.stdout=true -jar saturn-console/target/saturn-console-master-SNAPSHOT-exec.jar > ./saturn-console.log 2>&1 &
 sleep 30
 
@@ -40,4 +40,4 @@ if [ $? -ne 0 ];then
   exit -1
 fi
 
-echo "[Step 5] Done, visit ${CONSOLR_URI} for more"
+echo "[Step 5] Done, visit ${CONSOLR_URI} for more,and you can visit %CONSOLR_URI%/h2-console to connect to the in-memory db."
