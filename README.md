@@ -1,7 +1,6 @@
-# ![logo](https://vipshop.github.io/Saturn/saturn-logo-new.png)
+# ![logo](https://vipshop.github.io/Saturn/zh-cn/3.0/_media/saturn-logo-new.png)
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
-[![Read the Docs](https://img.shields.io/readthedocs/pip.svg)](https://vipshop.github.io/Saturn/)
 [![GitHub release](https://img.shields.io/github/release/vipshop/Saturn.svg)](https://github.com/vipshop/Saturn/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
