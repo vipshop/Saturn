@@ -4,7 +4,12 @@
   - [开发Shell作业](zh-cn/3.0/saturn-dev-shell.md)
   - [开发Java作业](zh-cn/3.0/saturn-dev-java.md)
   - [部署Saturn Executor](zh-cn/3.0/saturn-executor-deployment.md)
-  
+
+- Console操作手册  
+  - [创建作业](zh-cn/3.0/create_job.md)
+  - [停止作业](zh-cn/3.0/stop_job.md)
+  - [Executor运维](zh-cn/3.0/executor_monitor.md)
+
 - [FAQ](zh-cn/3.0/faq.md)
 
 - API与命令参数详解
