@@ -9,6 +9,7 @@
   - [创建作业](zh-cn/3.0/create_job.md)
   - [停止作业](zh-cn/3.0/stop_job.md)
   - [Executor运维](zh-cn/3.0/executor_monitor.md)
+  - [用户的认证与授权](zh-cn/3.0/aa.md)
 
 - [FAQ](zh-cn/3.0/faq.md)
 
