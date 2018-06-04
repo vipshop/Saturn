@@ -41,7 +41,7 @@ Please go to https://vipshop.github.io/Saturn for reading the documents.
 
 ## Getting help, and helping out 社区互助
 
-WeChat Group: Please add group owner `dylan_xueke` to join us!
+WeChat Group: Please add group owner `viptech128` (备注"saturn") to join us!
 
 ## Special thanks 特别鸣谢
 
