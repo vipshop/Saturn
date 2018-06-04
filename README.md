@@ -6,11 +6,11 @@
 
 Saturn is a platform created by VIP.com(唯品会) to provIde a distributed, fault tolerant and high available job scheduling service.
 
-## Why Saturn? Saturn的优势
+## Why Saturn?
 
 - Time based and language unrestricted job
 - Easy job implmentation and web based management
-- Parallel subtask(shard) sheduling
+- Parallel subtask(shard) scheduling
 - 1-second-level scheduling supported
 - Intelligent load based job allocation
 - Fail detection & failover support
