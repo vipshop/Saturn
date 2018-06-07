@@ -16,7 +16,7 @@
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addNamespace')">添加域</el-button>
-                            <!-- <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button> -->
+                            <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
@@ -105,7 +105,8 @@ export default {
     handleRefreshCenter() {
       this.loading = true;
       this.$http.post('/console/registryCenter/refresh', '').then(() => {
-        this.getAllNamespace();
+        this.$message.successNotify('刷新注册中心操作完成');
+        this.init();
       })
       .catch(() => { this.$http.buildErrorHandler('刷新注册中心请求失败！'); })
       .finally(() => {
@@ -132,7 +133,7 @@ export default {
     },
     closeMigrateStatusDialog() {
       this.isMigrateStatusVisible = false;
-      this.getAllNamespace();
+      this.init();
     },
     batchOperation(text, callback) {
       if (this.multipleSelection.length <= 0) {
@@ -162,33 +163,30 @@ export default {
     namespaceInfoSuccess() {
       this.isNamespaceVisible = false;
       this.$message.successNotify('添加域操作成功,若列表未更新,请稍后手动刷新页面');
-      this.getAllNamespace();
+      this.init();
     },
     getAllNamespace() {
-      this.loading = true;
       this.$http.get('/console/namespaces/detail').then((data) => {
         this.namespaceList = data;
         this.total = this.namespaceList.length;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取所有域请求失败！'); })
-      .finally(() => {
-        this.loading = false;
-      });
+      .catch(() => { this.$http.buildErrorHandler('获取所有域请求失败！'); });
     },
     getAllClusters() {
-      this.loading = true;
       this.$http.get('/console/zkClusters').then((data) => {
         this.zkClusterKeys = data;
       })
-      .catch(() => { this.$http.buildErrorHandler('获取所有集群请求失败！'); })
-      .finally(() => {
+      .catch(() => { this.$http.buildErrorHandler('获取所有集群请求失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getAllNamespace(), this.getAllClusters()]).then(() => {
         this.loading = false;
       });
     },
   },
   created() {
-    this.getAllNamespace();
-    this.getAllClusters();
+    this.init();
   },
   components: {
     'namespace-info-dialog': namespaceInfoDialog,
