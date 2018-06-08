@@ -64,9 +64,25 @@ handleJavaJob方法是作业调用主入口，当调度周期到达时，Saturn�
 
 JavaJobReturn是作业结果返回的封装。里面三个成员变量，包括：
 
-- returnCode: 结果码。0代表结果成功，其余值代表失败。默认为0。用户可以根据自己业务的情况设置返回值，但注意，如下返回码是保留字不能使用，包括：0，1，2，9999。
-- returnMsg：返回信息。将显示在Console里面。没有默认值。
-- errorGroup：异常码。详情参见教程。
+- errorGroup：异常码，异常码的返回值将会影响作业的执行结果状态，用户应该根据实际情况返回相应的异常码
+
+ErrorGroup | 含义 | Saturn Console状态栏显示 
+ - | :-: | :-:
+SaturnSystemErrorGroup.SUCCESS | 成功| '完成' 
+SaturnSystemErrorGroup.FAIL | 失败 | '失败' 
+SaturnSystemErrorGroup.TIMEOUT | 超时 | '超时'
+SaturnSystemErrorGroup.FAIL_NEED_RAISE_ALARM | 失败并通知 | '失败'
+
+- returnCode: 结果码,作为保留之用。0代表结果成功，其余值代表失败，用户可以根据自己业务的情况设置返回值。但注意，如下返回码是保留字不能使用。
+
+ReturnCode | 含义 | 保留值 
+ - | :-: | :-:
+SaturnSystemReturnCode.SUCCESS | 成功| 0 
+SaturnSystemReturnCode.SYSTEM_FAIL | 系统原因失败 | 1
+SaturnSystemReturnCode.USER_FAIL | 用户原因失败 | 2
+SaturnSystemReturnCode.JOB_NO_COUNT | 未知原因 | 9999
+
+- returnMsg：返回信息。将显示在Console里面,没有默认值。
 
 ## 3 在IDE中调试作业
 
