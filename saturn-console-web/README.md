@@ -23,10 +23,10 @@ Node4.0以上
 
 #### 如何安装
 
-* npm：`npm install` or `npm i`
+* npm：`cnpm install` or `cnpm i`
 * yarn： `yarn install`
 
-#### 进入开发模式
+#### 进入开发模
 
 * npm: `npm run dev`
 * yarn: `yarn dev`
@@ -35,7 +35,7 @@ Node4.0以上
 
 如果需要配置不同端口可以在/tasks/conf/app.conf.js的`devPort`里修改为其他端口
 
-#### 构建生产可用文件
+#### 构建生产可用文件 发布环境运行
 
 * npm: `npm run build`
 * yarn: `yarn build`
