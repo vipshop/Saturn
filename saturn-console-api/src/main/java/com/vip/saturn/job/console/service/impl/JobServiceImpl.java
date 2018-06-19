@@ -623,6 +623,7 @@ public class JobServiceImpl implements JobService {
 					|| jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount())) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片参数不能小于分片总数");
 			}
+			validateShardingItemFormat(jobConfig);
 		}
 	}
 
@@ -2079,6 +2080,23 @@ public class JobServiceImpl implements JobService {
 			}
 
 			resultMap.put(value.trim(), server);
+		}
+	}
+
+	private void validateShardingItemFormat(JobConfig jobConfig) throws SaturnJobConsoleException {
+		String parameters = jobConfig.getShardingItemParameters();
+		String[] kvs = parameters.trim().split(",");
+		for (int i = 0; i < kvs.length; i++) {
+			String keyAndValue = kvs[i];
+			if (!keyAndValue.contains("=")) {
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("分片参数'%s'格式有误", keyAndValue));
+			}
+			String key = keyAndValue.trim().split("=")[0].trim();
+			boolean isNumeric = StringUtils.isNumeric(key);
+			if (!isNumeric) {
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+						String.format("分片参数'%s'格式有误", jobConfig.getShardingItemParameters()));
+			}
 		}
 	}
 
