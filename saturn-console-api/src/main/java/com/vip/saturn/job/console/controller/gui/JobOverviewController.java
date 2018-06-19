@@ -304,23 +304,9 @@ public class JobOverviewController extends AbstractGUIController {
     public SuccessResponseEntity createJob(final HttpServletRequest request,
                                            @AuditParam("namespace") @PathVariable String namespace, JobConfig jobConfig)
             throws SaturnJobConsoleException {
-        assertJobConfigIsValid(jobConfig);
         assertIsPermitted(PermissionKeys.jobAdd, namespace);
         jobService.addJob(namespace, jobConfig, getCurrentLoginUserName());
         return new SuccessResponseEntity();
-    }
-
-    private void assertJobConfigIsValid(JobConfig jobConfig) throws SaturnJobConsoleException {
-        String parameters = jobConfig.getShardingItemParameters();
-        String[] kvs = parameters.trim().split(",");
-        for (int i = 0; i < kvs.length; i++) {
-            String keyAndValue = kvs[i];
-            String key = keyAndValue.trim().split("=")[0].trim();
-            boolean isNumeric = StringUtils.isNumeric(key);
-            if (!isNumeric) {
-                throw new SaturnJobConsoleException(String.format("分片参数'%s'格式有误", jobConfig.getShardingItemParameters()));
-            }
-        }
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
