@@ -26,7 +26,7 @@
                                 </el-form-item>
                                 <el-form-item class="form-annotation">
                                     <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
-                                    <span>2. 每小时运行一次的表达式：0 * * * * ?</span>
+                                    <span>2. 每分钟运行一次的表达式：0 * * * * ?</span>
                                 </el-form-item>
                             </el-col>
                         </el-row>
