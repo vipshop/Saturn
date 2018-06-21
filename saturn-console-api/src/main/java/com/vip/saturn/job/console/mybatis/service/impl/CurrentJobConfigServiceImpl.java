@@ -94,7 +94,6 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -116,7 +115,6 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		historyJobConfigService.create(oldJobConfig);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
