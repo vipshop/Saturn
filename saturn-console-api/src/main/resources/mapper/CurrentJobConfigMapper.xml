@@ -59,6 +59,12 @@
     from job_config
     where namespace = #{namespace,jdbcType=VARCHAR}
   </select>
+  <select id="findConfigNamesByNamespace" resultType="String">
+    select
+    job_name
+    from job_config
+    where namespace = #{namespace,jdbcType=VARCHAR}
+  </select>
   <select id="findConfigByNamespaceAndJobName" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />

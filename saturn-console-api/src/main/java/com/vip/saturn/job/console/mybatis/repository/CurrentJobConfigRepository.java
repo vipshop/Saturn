@@ -28,6 +28,8 @@ public interface CurrentJobConfigRepository {
 
 	List<JobConfig4DB> findConfigsByNamespace(@Param("namespace") String namespace);
 
+	List<String> findConfigNamesByNamespace(@Param("namespace") String namespace);
+
 	JobConfig4DB findConfigByNamespaceAndJobName(@Param("namespace") String namespace,
 			@Param("jobName") String jobName);
 

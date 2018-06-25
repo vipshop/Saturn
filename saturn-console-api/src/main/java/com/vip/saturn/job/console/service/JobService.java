@@ -46,8 +46,14 @@ public interface JobService {
 
 	List<JobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
 
+	/**
+	 * since 3.1.0，不再支持systemjob
+	 */
+	@Deprecated
 	List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException;
 
+
+	List<String> getJobNames(String namespace) throws SaturnJobConsoleException;
 	/**
 	 * 持久化作业到指定namespace
 	 */

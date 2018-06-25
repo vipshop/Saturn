@@ -723,6 +723,13 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	public List<String> getJobNames(String namespace) {
+		List<String> jobNames = currentJobConfigService.findConfigNamesByNamespace(namespace);
+		return jobNames != null ? jobNames : Lists.<String>newArrayList();
+	}
+
+
+	@Override
 	public void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
 		jobConfig.setDefaultValues();
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService

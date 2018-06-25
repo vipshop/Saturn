@@ -28,6 +28,8 @@ public interface CurrentJobConfigService {
 
 	JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName);
 
+	List<String> findConfigNamesByNamespace(String namespace);
+
 	List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception;
 
 	void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,

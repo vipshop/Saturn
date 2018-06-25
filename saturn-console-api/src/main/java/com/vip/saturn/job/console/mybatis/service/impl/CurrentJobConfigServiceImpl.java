@@ -88,13 +88,11 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		}
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception {
 		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -116,10 +114,14 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		historyJobConfigService.create(oldJobConfig);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
+	}
+
+	@Override
+	public List<String> findConfigNamesByNamespace(String namespace) {
+		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}
 
 	@Transactional(rollbackFor = Exception.class)

@@ -41,12 +41,28 @@ public class JobOverviewController extends AbstractGUIController {
     @Resource
     private AlarmStatisticsService alarmStatisticsService;
 
+	/**
+	 * 获取域下所有作业的细节信息
+	 * @param namespace 域名
+	 * @return 作业细节
+	 */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
     @GetMapping
     public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace)
             throws SaturnJobConsoleException {
         return new SuccessResponseEntity(getJobOverviewVo(namespace));
     }
+
+	/**
+	 * 获取域下所有作业的名字
+	 * @param namespace 域名
+	 * @return 全域作业名字
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/names")
+	public SuccessResponseEntity getJobNames(@PathVariable String namespace) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getJobNames(namespace));
+	}
 
     public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
