@@ -29,7 +29,10 @@
 		<module>saturn-console-core</module>
 		<module>saturn-console-old</module>
 		<module>saturn-it</module>
-	</modules>
+        <module>../../../work/java/Saturn</module>
+        <module>../Saturn-app</module>
+        <module>saturn-job-realization</module>
+    </modules>
 
 	<properties>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
