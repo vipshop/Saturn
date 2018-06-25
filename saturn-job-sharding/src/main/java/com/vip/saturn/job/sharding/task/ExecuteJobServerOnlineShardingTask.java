@@ -60,9 +60,13 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 		}
 		int item = 0;
 		if (!itemList.isEmpty()) {
-			boolean[] flags = new boolean[itemList.size() + 1];
-			for (int i = 0; i < itemList.size(); i++) {
-				flags[itemList.get(i)] = true;
+			int itemListSize = itemList.size();
+			boolean[] flags = new boolean[itemListSize + 1];
+			for (int i = 0; i < itemListSize; i++) {
+				Integer itemAlreadyExists = itemList.get(i);
+				if (itemAlreadyExists <= itemListSize) {
+					flags[itemAlreadyExists] = true;
+				}
 			}
 			for (int i = 0; i < flags.length; i++) {
 				if (!flags[i]) {
