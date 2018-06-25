@@ -508,7 +508,7 @@ export default {
     'import-result-dialog': importResultDialog,
   },
   created() {
-    this.getGroupList();
+    this.init();
   },
   watch: {
     $route: 'init',
