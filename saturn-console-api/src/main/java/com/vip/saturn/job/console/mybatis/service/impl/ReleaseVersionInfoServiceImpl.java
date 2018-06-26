@@ -4,11 +4,12 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
 import com.vip.saturn.job.console.mybatis.repository.ReleaseVersionInfoRepository;
 import com.vip.saturn.job.console.mybatis.service.ReleaseVersionInfoService;
-import java.util.Date;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author timmy.hu
@@ -68,6 +69,11 @@ public class ReleaseVersionInfoServiceImpl implements ReleaseVersionInfoService 
 			throw new SaturnJobConsoleException("删除失败：该版本号" + versionNumber + "已经在域的待升级版本设置中！");
 		}
 		return releaseVersionInfoRepository.deleteByVersionNumber(versionNumber);
+	}
+
+	@Override
+	public int update(ReleaseVersionInfo releaseVersionInfo) {
+		return releaseVersionInfoRepository.updateByVersionNumber(releaseVersionInfo);
 	}
 
 }

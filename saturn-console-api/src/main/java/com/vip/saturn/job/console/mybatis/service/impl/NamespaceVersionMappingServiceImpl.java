@@ -3,11 +3,12 @@ package com.vip.saturn.job.console.mybatis.service.impl;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceVersionMappingRepository;
 import com.vip.saturn.job.console.mybatis.service.NamespaceVersionMappingService;
-import java.util.Date;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author timmy.hu
@@ -52,5 +53,10 @@ public class NamespaceVersionMappingServiceImpl implements NamespaceVersionMappi
 	@Override
 	public NamespaceVersionMapping selectByNamespace(String namespace) {
 		return namespaceVersionMappingRepository.selectByNamespace(namespace);
+	}
+
+	@Override
+	public int deleteMapping(String namespace, String versionNumber) {
+		return namespaceVersionMappingRepository.deleteByNamespaceAndVersionNumber(namespace, versionNumber);
 	}
 }
