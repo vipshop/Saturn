@@ -15,6 +15,7 @@
             ignore-resource-not-found="true"
             location="classpath:application.properties"/>
 
+
     <!-- GUI Controller Begin -->
     <bean id="authorizationController"
           class="com.vip.saturn.job.console.controller.gui.AuthorizationController"/>

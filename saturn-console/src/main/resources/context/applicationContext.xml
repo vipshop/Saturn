@@ -70,5 +70,6 @@
 		<property name="typeAliasesPackage" value="com.vip.saturn.job.console.mybatis.entity" />
 		<property name="mapperLocations" value="classpath*:mapper/*Mapper.xml" />
 	</bean>
-	<import resource="applicationContext_datasource_${db.profiles.active:mysql}.xml"></import>
+	<!--配置数据库连接xml-->
+	<import resource="applicationContext_datasource_mysql.xml"></import>
 </beans>
