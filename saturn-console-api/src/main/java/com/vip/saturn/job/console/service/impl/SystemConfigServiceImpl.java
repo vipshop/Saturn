@@ -205,7 +205,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	}
 
 	@Override
-	public Integer updateConfig(SystemConfig systemConfig) {
+	public Integer updateConfig(SystemConfig systemConfig) throws SaturnJobConsoleException {
 		List<String> properties = new ArrayList<>();
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
@@ -219,7 +219,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 				return result;
 			}
 		}
-		return 0;
+		throw new SaturnJobConsoleException("systemConfig not existed, update fail");
 	}
 
 	@Override
