@@ -16,7 +16,7 @@
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addNamespace')">添加域</el-button>
-                            <el-button type="warning" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button>
+                            <el-button type="primary" icon="el-icon-refresh" @click="handleRefreshCenter()">刷新注册中心</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
