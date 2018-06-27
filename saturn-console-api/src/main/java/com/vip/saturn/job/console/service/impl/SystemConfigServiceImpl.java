@@ -175,7 +175,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<String> properties = new ArrayList<>();
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
-		if (systemConfigs != null && systemConfigs.size() == 1) {
+		if (systemConfigs != null && systemConfigs.size() > 0) {
 			SystemConfig systemConfig1 = systemConfigs.get(0);
 			if (systemConfig1 != null) {
 				systemConfig1.setProperty(systemConfig.getProperty());

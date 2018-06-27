@@ -32,7 +32,7 @@ public interface SystemConfigService {
 
 	Integer createConfig(SystemConfig systemConfig) throws SaturnJobConsoleException;
 
-	Integer updateConfig(SystemConfig systemConfig);
+	Integer updateConfig(SystemConfig systemConfig) throws SaturnJobConsoleException;
 
 	void reload();
 
