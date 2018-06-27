@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
+
 import java.util.List;
 
 /**
@@ -28,6 +29,10 @@ public interface SystemConfigService {
 	String getPropertiesCached() throws SaturnJobConsoleException;
 
 	Integer insertOrUpdate(SystemConfig systemConfig) throws SaturnJobConsoleException;
+
+	Integer createConfig(SystemConfig systemConfig) throws SaturnJobConsoleException;
+
+	Integer updateConfig(SystemConfig systemConfig);
 
 	void reload();
 

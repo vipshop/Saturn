@@ -89,13 +89,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 		systemConfig.setProperty(key);
 		systemConfig.setValue(value);
 
-		ArrayList keys = new ArrayList();
-		keys.add(key);
-		List configs = systemConfigService.getSystemConfigsDirectly(keys);
-		if (configs.size() > 0) {
-			throw new SaturnJobConsoleException(String.format("配置%s已存在", key));
-		}
-		systemConfigService.insertOrUpdate(systemConfig);
+		systemConfigService.createConfig(systemConfig);
 		return new SuccessResponseEntity();
 	}
 
@@ -119,13 +113,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 		systemConfig.setProperty(key);
 		systemConfig.setValue(value);
 
-		ArrayList keys = new ArrayList();
-		keys.add(key);
-		List configs = systemConfigService.getSystemConfigsDirectly(keys);
-		if (configs.size() == 0) {
-			throw new SaturnJobConsoleException(String.format("配置%s不存在", key));
-		}
-		systemConfigService.insertOrUpdate(systemConfig);
+		systemConfigService.updateConfig(systemConfig);
 		return new SuccessResponseEntity();
 	}
 

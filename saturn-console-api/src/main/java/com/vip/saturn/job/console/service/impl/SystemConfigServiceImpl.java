@@ -6,21 +6,16 @@ import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.mybatis.service.SystemConfig4SqlService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author xiaopeng.he
@@ -143,9 +138,9 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 
 	@Override
 	public List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException {
-		return properties != null && !properties.isEmpty()
-				? systemConfig4SqlService.selectByPropertiesAndLastly(properties)
-				: systemConfig4SqlService.selectByLastly();
+		return properties != null && !properties.isEmpty() ?
+				systemConfig4SqlService.selectByPropertiesAndLastly(properties) :
+				systemConfig4SqlService.selectByLastly();
 	}
 
 	@Override
@@ -193,6 +188,38 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		int result = systemConfig4SqlService.insert(systemConfig);
 		updateCacheIfNeed(systemConfig, result);
 		return result;
+	}
+
+	@Override
+	public Integer createConfig(SystemConfig systemConfig) throws SaturnJobConsoleException {
+		List<String> properties = new ArrayList<>();
+		properties.add(systemConfig.getProperty());
+		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
+		if (systemConfigs == null || systemConfigs.size() == 0) {
+			int result = systemConfig4SqlService.insert(systemConfig);
+			updateCacheIfNeed(systemConfig, result);
+			return result;
+		} else {
+			throw new SaturnJobConsoleException("systemConfig already existed");
+		}
+	}
+
+	@Override
+	public Integer updateConfig(SystemConfig systemConfig) {
+		List<String> properties = new ArrayList<>();
+		properties.add(systemConfig.getProperty());
+		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
+		if (systemConfigs != null && systemConfigs.size() == 1) {
+			SystemConfig config = systemConfigs.get(0);
+			if (config != null) {
+				config.setProperty(systemConfig.getProperty());
+				config.setValue(systemConfig.getValue());
+				int result = systemConfig4SqlService.updateById(config);
+				updateCacheIfNeed(systemConfig, result);
+				return result;
+			}
+		}
+		return 0;
 	}
 
 	@Override
