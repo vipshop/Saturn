@@ -195,13 +195,14 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<String> properties = new ArrayList<>();
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
-		if (systemConfigs == null || systemConfigs.size() == 0) {
-			int result = systemConfig4SqlService.insert(systemConfig);
-			updateCacheIfNeed(systemConfig, result);
-			return result;
-		} else {
+
+		if (systemConfig != null && systemConfigs.size() > 0) {
 			throw new SaturnJobConsoleException("systemConfig already existed");
 		}
+
+		int result = systemConfig4SqlService.insert(systemConfig);
+		updateCacheIfNeed(systemConfig, result);
+		return result;
 	}
 
 	@Override
@@ -209,17 +210,17 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<String> properties = new ArrayList<>();
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
-		if (systemConfigs != null && systemConfigs.size() == 1) {
-			SystemConfig config = systemConfigs.get(0);
-			if (config != null) {
-				config.setProperty(systemConfig.getProperty());
-				config.setValue(systemConfig.getValue());
-				int result = systemConfig4SqlService.updateById(config);
-				updateCacheIfNeed(systemConfig, result);
-				return result;
-			}
+
+		if (systemConfig == null || systemConfigs.size() == 0) {
+			throw new SaturnJobConsoleException("systemConfig not existed, update fail");
 		}
-		throw new SaturnJobConsoleException("systemConfig not existed, update fail");
+
+		SystemConfig config = systemConfigs.get(0);
+		config.setProperty(systemConfig.getProperty());
+		config.setValue(systemConfig.getValue());
+		int result = systemConfig4SqlService.updateById(config);
+		updateCacheIfNeed(systemConfig, result);
+		return result;
 	}
 
 	@Override
