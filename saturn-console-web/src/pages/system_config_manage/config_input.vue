@@ -42,7 +42,7 @@ export default {
         key: row.key,
         value: row.value,
       };
-      this.$http.post(`/console/configs/${this.type}`, params).then(() => {
+      this.$http.post(`/console/configs/${this.type}/update`, params).then(() => {
         this.$emit('config-input-success');
       })
       .catch(() => { this.$http.buildErrorHandler('更新配置请求失败！'); });
