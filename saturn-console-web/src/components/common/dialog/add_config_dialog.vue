@@ -40,7 +40,8 @@ export default {
     handleSubmit() {
       this.$refs.configInfo.validate((valid) => {
         if (valid) {
-          this.$http.post(`/console/configs/${this.type}/create`, this.configInfo).then(() => {
+          const url = this.type === 'console' ? `/console/configs/${this.type}/create` : `/console/configs/${this.type}`;
+          this.$http.post(url, this.configInfo).then(() => {
             this.$emit('add-config-success');
           })
           .catch(() => { this.$http.buildErrorHandler('添加系统配置请求失败！'); });

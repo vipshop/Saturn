@@ -38,11 +38,12 @@ export default {
   },
   methods: {
     handleSubmit(row) {
+      const url = this.type === 'console' ? `/console/configs/${this.type}/update` : `/console/configs/${this.type}`;
       const params = {
         key: row.key,
         value: row.value,
       };
-      this.$http.post(`/console/configs/${this.type}/update`, params).then(() => {
+      this.$http.post(url, params).then(() => {
         this.$emit('config-input-success');
       })
       .catch(() => { this.$http.buildErrorHandler('更新配置请求失败！'); });
