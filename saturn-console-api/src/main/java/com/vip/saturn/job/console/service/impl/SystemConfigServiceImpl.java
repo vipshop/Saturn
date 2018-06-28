@@ -197,7 +197,8 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
 
 		if (systemConfig != null && systemConfigs.size() > 0) {
-			throw new SaturnJobConsoleException("systemConfig already existed");
+			throw new SaturnJobConsoleException(
+					String.format("systemConfig %s already existed", systemConfig.getProperty()));
 		}
 
 		int result = systemConfig4SqlService.insert(systemConfig);
@@ -212,7 +213,8 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
 
 		if (systemConfig == null || systemConfigs.size() == 0) {
-			throw new SaturnJobConsoleException("systemConfig not existed, update fail");
+			throw new SaturnJobConsoleException(
+					String.format("systemConfig %s not existed, update fail", systemConfig.getProperty()));
 		}
 
 		SystemConfig config = systemConfigs.get(0);
