@@ -91,6 +91,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	@Audit
 	@RequestMapping(value = "/registryCenter/refresh", method = {RequestMethod.GET, RequestMethod.POST})
 	public SuccessResponseEntity notifyRefreshRegCenter() throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.registryCenterAddNamespace);
 		registryCenterService.notifyRefreshRegCenter();
 		return new SuccessResponseEntity();
 	}
