@@ -151,7 +151,9 @@ public class JobNodeStorage {
 	 * @param node 作业节点名称
 	 */
 	public void removeJobNodeIfExisted(final String node) {
-		coordinatorRegistryCenter.remove(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
+		if (isJobNodeExisted(node)) {
+			coordinatorRegistryCenter.remove(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
+		}
 	}
 
 	/**
