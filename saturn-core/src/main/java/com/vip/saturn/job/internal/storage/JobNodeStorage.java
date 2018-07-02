@@ -146,7 +146,7 @@ public class JobNodeStorage {
 	}
 
 	/**
-	 * 删除作业节点.
+	 * 如果节点存在，则删除作业节点
 	 * 
 	 * @param node 作业节点名称
 	 */
@@ -155,6 +155,16 @@ public class JobNodeStorage {
 			coordinatorRegistryCenter.remove(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
 		}
 	}
+
+	/**
+	 * 删除作业节点
+	 *
+	 * @param node 作业节点名称
+	 */
+	public void removeJobNode(final String node) {
+		coordinatorRegistryCenter.remove(JobNodePath.getNodeFullPath(jobConfiguration.getJobName(), node));
+	}
+
 
 	/**
 	 * 如果节点不存在或允许覆盖则填充节点数据.
