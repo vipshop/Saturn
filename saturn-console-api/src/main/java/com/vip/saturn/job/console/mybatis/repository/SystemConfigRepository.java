@@ -20,4 +20,7 @@ public interface SystemConfigRepository {
 
 	Integer updateById(SystemConfig systemConfig);
 
+	List<SystemConfig> selectByProperty(String property);
+
+	List<SystemConfig> selectAllConfig();
 }

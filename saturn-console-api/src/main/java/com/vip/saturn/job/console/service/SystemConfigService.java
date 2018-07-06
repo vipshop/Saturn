@@ -22,6 +22,8 @@ public interface SystemConfigService {
 
 	boolean getBooleanValue(String property, boolean defaultValue);
 
+	List<SystemConfig> getAllSystemConfigs();
+
 	List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException;
 
 	List<SystemConfig> getSystemConfigsByPrefix(String prefix) throws SaturnJobConsoleException;

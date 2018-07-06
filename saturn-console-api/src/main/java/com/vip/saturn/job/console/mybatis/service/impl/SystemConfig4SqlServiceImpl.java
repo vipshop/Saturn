@@ -18,6 +18,16 @@ public class SystemConfig4SqlServiceImpl implements SystemConfig4SqlService {
 	@Autowired
 	private SystemConfigRepository systemConfigRepository;
 
+	@Override
+	public List<SystemConfig> selectAllConfig() {
+		return systemConfigRepository.selectAllConfig();
+	}
+
+	@Override
+	public List<SystemConfig> selectByProperty(String property) {
+		return systemConfigRepository.selectByProperty(property);
+	}
+
 	@Transactional(readOnly = true)
 	@Override
 	public List<SystemConfig> selectByPropertiesAndLastly(List<String> properties) {
