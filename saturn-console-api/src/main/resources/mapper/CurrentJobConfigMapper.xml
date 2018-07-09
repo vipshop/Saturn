@@ -59,6 +59,35 @@
     from job_config
     where namespace = #{namespace,jdbcType=VARCHAR}
   </select>
+
+  <select id="findConfigsByNamespaceWithCondition" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from job_config
+    <where>
+      namespace = #{namespace,jdbcType=VARCHAR}
+        <choose>
+          <when test="condition.type == 1">
+            and job_name like CONCAT('%',#{condition.key},'%')
+          </when>
+          <when test="condition.type == 2">
+            and description like CONCAT('%',#{condition.key},'%')
+          </when>
+        </choose>
+        <if test="condition.groups != null">
+          and groups = #{condition.groups}
+        </if>
+        <if test="condition.isEnabled != null">
+          and is_enabled = #{condition.isEnabled}
+        </if>
+    </where>
+    order by job_name
+    <if test="condition.order == 'desc'">
+      desc
+    </if>
+    limit #{offset}, #{number}
+  </select>
+
   <select id="findConfigNamesByNamespace" resultType="String">
     select
     job_name

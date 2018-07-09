@@ -46,6 +46,9 @@ public interface JobService {
 
 	List<JobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException;
 
+	List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition, int offset, int size)
+			throws SaturnJobConsoleException;
+	
 	/**
 	 * since 3.1.0，不再支持systemjob
 	 */

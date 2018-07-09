@@ -708,6 +708,25 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition, int offset,
+			int size) throws SaturnJobConsoleException {
+		List<JobConfig> unSystemJobs = new ArrayList<>();
+		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
+				condition, offset, size);
+		if (jobConfig4DBList != null) {
+			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
+				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
+						.startsWith(JobMode.SYSTEM_PREFIX))) {
+					JobConfig jobConfig = new JobConfig();
+					SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
+					unSystemJobs.add(jobConfig);
+				}
+			}
+		}
+		return unSystemJobs;
+	}
+
+	@Override
 	public List<String> getUnSystemJobNames(String namespace) {
 		List<String> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);

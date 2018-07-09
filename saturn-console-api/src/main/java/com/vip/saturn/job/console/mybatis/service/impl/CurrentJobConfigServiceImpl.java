@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -117,6 +118,12 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
+	}
+
+	@Override
+	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition,
+			int offset, int size) {
+		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, offset, size);
 	}
 
 	@Override

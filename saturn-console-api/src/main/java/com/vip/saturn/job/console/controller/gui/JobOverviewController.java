@@ -48,10 +48,26 @@ public class JobOverviewController extends AbstractGUIController {
 	 */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
     @GetMapping
-    public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace)
-            throws SaturnJobConsoleException {
-        return new SuccessResponseEntity(getJobOverviewVo(namespace));
+    public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace,
+            @RequestParam(required = false, defaultValue = "0")int offset,
+            @RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
+        return new SuccessResponseEntity(getJobOverviewVo(namespace, null, offset, size));
     }
+
+    /**
+     * 按条件分页获取域下所有作业的细节信息
+     * @param namespace 域名
+     * @return 作业细节
+     */
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @GetMapping("search")
+    public SuccessResponseEntity getJobsCondition(final HttpServletRequest request, @PathVariable String namespace,
+            @RequestParam Map<String, String> condition,
+            @RequestParam(required = false, defaultValue = "0")int offset,
+            @RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
+        return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, offset, size));
+    }
+
 
 	/**
 	 * 获取域下所有作业的名字
@@ -64,12 +80,13 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getJobNames(namespace));
 	}
 
-    public JobOverviewVo getJobOverviewVo(String namespace) throws SaturnJobConsoleException {
+	public JobOverviewVo getJobOverviewVo(String namespace, Map<String, String> condition, int offset, int size)
+			throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         try {
             List<JobOverviewJobVo> jobList = new ArrayList<>();
             int enabledNumber = 0;
-            List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
+            List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, offset, size);
             if (unSystemJobs != null) {
                 enabledNumber = updateJobOverviewDetail(namespace, jobList, enabledNumber, unSystemJobs);
             }
