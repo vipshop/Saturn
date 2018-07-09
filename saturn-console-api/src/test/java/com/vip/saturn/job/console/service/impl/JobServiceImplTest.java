@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
@@ -57,6 +58,7 @@ public class JobServiceImplTest {
 				.thenReturn(true);
 		when(curatorFrameworkOp.getData(JobNodePath.getEnabledReportNodePath(jobName)))
 				.thenReturn("true");
+
 		// 0号分片running
 		mockExecutionStatusNode(true, false, false, false, false, executorName, jobName, "0");
 		// 1号分片completed
@@ -208,6 +210,8 @@ public class JobServiceImplTest {
 		config.setNamespace(namespace);
 		config.setJobName(jobName);
 		config.setEnabled(true);
+		config.setEnabledReport(true);
+		config.setJobType(JobType.JAVA_JOB.toString());
 		return config;
 	}
 }

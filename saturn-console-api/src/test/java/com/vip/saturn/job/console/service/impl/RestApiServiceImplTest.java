@@ -63,11 +63,6 @@ public class RestApiServiceImplTest {
 	}
 
 	@Test
-	public void testCreateJobSuccessfully() {
-
-	}
-
-	@Test
 	public void testRunAtOnceSuccessfully() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
@@ -78,8 +73,23 @@ public class RestApiServiceImplTest {
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
+		List<JobServerStatus> jobServerStatusList = getJobServerStatus(servers);
+		when(jobService.getJobServersStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(jobServerStatusList);
 		// run
 		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
+	}
+
+	private List<JobServerStatus> getJobServerStatus(List<JobServer> servers) {
+		List<JobServerStatus> result = Lists.newArrayList();
+		for (JobServer server : servers) {
+			JobServerStatus jobServerStatus = new JobServerStatus();
+			jobServerStatus.setJobName(server.getJobName());
+			jobServerStatus.setExecutorName(server.getExecutorName());
+			jobServerStatus.setServerStatus(ServerStatus.ONLINE);
+
+			result.add(jobServerStatus);
+		}
+		return result;
 	}
 
 	@Test
@@ -135,7 +145,8 @@ public class RestApiServiceImplTest {
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
-
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 	}
@@ -150,6 +161,8 @@ public class RestApiServiceImplTest {
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
@@ -166,6 +179,9 @@ public class RestApiServiceImplTest {
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
+
 		// run
 		try {
 			restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
@@ -173,6 +189,15 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "job cannot be stopped while it is enable", e.getMessage());
 		}
+	}
+
+	private List<String> getJobServerNameList(List<JobServer> servers) {
+		List<String> result = Lists.newArrayList();
+		for (JobServer jobServer : servers) {
+			result.add(jobServer.getExecutorName());
+		}
+
+		return result;
 	}
 
 	@Test

@@ -1495,6 +1495,19 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	public List<String> getJobServerList(String namespace, String jobName) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		String executorsPath = JobNodePath.getServerNodePath(jobName);
+		List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
+		if (executors == null || CollectionUtils.isEmpty(executors)) {
+			return Lists.newArrayList();
+		}
+
+		return executors;
+	}
+
+	@Override
 	public GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (jobConfig4DB == null) {
@@ -1766,15 +1779,45 @@ public class JobServiceImpl implements JobService {
 		List<JobServer> result = new ArrayList<>();
 		if (executors != null && !executors.isEmpty()) {
 			String leaderIp = curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host"));
+			JobStatus jobStatus = getJobStatus(namespace, jobName);
 			for (String each : executors) {
-				result.add(getJobServer(namespace, jobName, leaderIp, each, curatorFrameworkOp));
+				JobServer jobServer = getJobServer(jobName, leaderIp, each, curatorFrameworkOp);
+				jobServer.setJobStatus(jobStatus);
+				result.add(jobServer);
 			}
 		}
 		return result;
 	}
 
-	private JobServer getJobServer(String namespace, String jobName, String leaderIp, String executorName,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+	@Override
+	public List<JobServerStatus> getJobServersStatus(String namespace, String jobName)
+			throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		List<String> executors = getJobServerList(namespace, jobName);
+		List<JobServerStatus> result = new ArrayList<>();
+		if (executors != null && !executors.isEmpty()) {
+			for (String each : executors) {
+				result.add(getJobServerStatus(jobName, each, curatorFrameworkOp));
+			}
+		}
+
+		return result;
+	}
+
+	private JobServerStatus getJobServerStatus(String jobName, String executorName,
+			CuratorFrameworkOp curatorFrameworkOp) {
+		JobServerStatus result = new JobServerStatus();
+		result.setExecutorName(executorName);
+		result.setJobName(jobName);
+		String ip = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "ip"));
+		result.setServerStatus(ServerStatus.getServerStatus(ip));
+
+		return result;
+	}
+
+	private JobServer getJobServer(String jobName, String leaderIp, String executorName,
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		JobServer result = new JobServer();
 		result.setExecutorName(executorName);
 		result.setIp(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "ip")));
@@ -1787,18 +1830,12 @@ public class JobServiceImpl implements JobService {
 		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
 		result.setSharding(
 				curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding")));
-		result.setStatus(getServerStatus(executorName, curatorFrameworkOp));
+		result.setStatus(ServerStatus.getServerStatus(result.getIp()));
 		result.setLeader(executorName.equals(leaderIp));
-		result.setJobStatus(getJobStatus(namespace, jobName));
 		result.setJobVersion(getJobVersion(jobName, executorName, curatorFrameworkOp));
 		result.setContainer(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorTaskNodePath(executorName)));
 
 		return result;
-	}
-
-	private ServerStatus getServerStatus(String executorName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
-		String ip = curatorFrameworkOp.getData(ExecutorNodePath.getExecutorNodePath(executorName, "ip"));
-		return ServerStatus.getServerStatus(ip);
 	}
 
 	private String getJobVersion(String jobName, String executorName,
@@ -1815,14 +1852,14 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
 		}
-		List<JobServer> jobServers = getJobServers(namespace, jobName);
-		if (jobServers != null && !jobServers.isEmpty()) {
+		List<JobServerStatus> jobServersStatus = getJobServersStatus(namespace, jobName);
+		if (jobServersStatus != null && !jobServersStatus.isEmpty()) {
 			boolean hasOnlineExecutor = false;
 			CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-			for (JobServer jobServer : jobServers) {
-				if (ServerStatus.ONLINE.equals(jobServer.getStatus())) {
+			for (JobServerStatus jobServerStatus : jobServersStatus) {
+				if (ServerStatus.ONLINE.equals(jobServerStatus.getServerStatus())) {
 					hasOnlineExecutor = true;
-					String executorName = jobServer.getExecutorName();
+					String executorName = jobServerStatus.getExecutorName();
 					String path = JobNodePath.getRunOneTimePath(jobName, executorName);
 					if (curatorFrameworkOp.checkExists(path)) {
 						curatorFrameworkOp.delete(path);
@@ -1847,11 +1884,10 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
 		}
-		List<JobServer> jobServers = getJobServers(namespace, jobName);
-		if (jobServers != null && !jobServers.isEmpty()) {
+		List<String> jobServerList = getJobServerList(namespace, jobName);
+		if (jobServerList != null && !jobServerList.isEmpty()) {
 			CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
-			for (JobServer jobServer : jobServers) {
-				String executorName = jobServer.getExecutorName();
+			for (String executorName : jobServerList) {
 				String path = JobNodePath.getStopOneTimePath(jobName, executorName);
 				if (curatorFrameworkOp.checkExists(path)) {
 					curatorFrameworkOp.delete(path);
@@ -1886,7 +1922,7 @@ public class JobServiceImpl implements JobService {
 		Map<String, String> itemExecutorMap = buildItem2ExecutorMap(jobName, curatorFrameworkOp);
 		for (Map.Entry<String, String> itemExecutorEntry : itemExecutorMap.entrySet()) {
 			result.add(buildExecutionInfo(jobName, itemExecutorEntry.getKey(), itemExecutorEntry.getValue(),
-					curatorFrameworkOp));
+					curatorFrameworkOp, jobConfig));
 		}
 
 		// 可能有漏掉的running分片，比如新的机器接管了failover分片
@@ -1898,7 +1934,7 @@ public class JobServiceImpl implements JobService {
 			String runningNodePath = JobNodePath.getExecutionNodePath(jobName, shardItem, "running");
 			boolean running = curatorFrameworkOp.checkExists(runningNodePath);
 			if (running) {
-				result.add(buildExecutionInfo(jobName, shardItem, null, curatorFrameworkOp));
+				result.add(buildExecutionInfo(jobName, shardItem, null, curatorFrameworkOp, jobConfig));
 			}
 		}
 
@@ -1923,19 +1959,19 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private ExecutionInfo buildExecutionInfo(String jobName, String shardItem, String executorName,
-			CuratorFrameworkOp curatorFrameworkOp) {
+			CuratorFrameworkOp curatorFrameworkOp, JobConfig jobConfig) {
 		ExecutionInfo executionInfo = new ExecutionInfo();
 		executionInfo.setJobName(jobName);
 		executionInfo.setItem(Integer.parseInt(shardItem));
 
-		setExecutorNameAndStatus(jobName, shardItem, executorName, curatorFrameworkOp, executionInfo);
+		setExecutorNameAndStatus(jobName, shardItem, executorName, curatorFrameworkOp, executionInfo, jobConfig);
 
 		// jobMsg
 		String jobMsg = curatorFrameworkOp.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "jobMsg"));
 		executionInfo.setJobMsg(jobMsg);
 
 		// timeZone
-		String timeZoneStr = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE));
+		String timeZoneStr = jobConfig.getTimeZone();
 		if (StringUtils.isBlank(timeZoneStr)) {
 			timeZoneStr = SaturnConstants.TIME_ZONE_ID_DEFAULT;
 		}
@@ -1945,10 +1981,15 @@ public class JobServiceImpl implements JobService {
 		String lastBeginTime = curatorFrameworkOp
 				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "lastBeginTime"));
 		executionInfo.setLastBeginTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(lastBeginTime, timeZone));
-		// next fire time
-		String nextFireTime = curatorFrameworkOp
-				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "nextFireTime"));
-		executionInfo.setNextFireTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(nextFireTime, timeZone));
+		// next fire time, ignore if jobType is Msg
+		JobType jobType = JobType.getJobType(jobConfig.getJobType());
+		if (jobType == JobType.JAVA_JOB || jobType == JobType.SHELL_JOB) {
+			String nextFireTime = curatorFrameworkOp
+					.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "nextFireTime"));
+			executionInfo.setNextFireTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(nextFireTime, timeZone));
+		} else {
+			executionInfo.setNextFireTime(null);
+		}
 		// last complete time
 		String lastCompleteTime = curatorFrameworkOp
 				.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "lastCompleteTime"));
@@ -1972,8 +2013,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void setExecutorNameAndStatus(String jobName, String shardItem, String executorName,
-			CuratorFrameworkOp curatorFrameworkOp, ExecutionInfo executionInfo) {
-		boolean isEnabledReport = SaturnConsoleUtils.checkIfJobIsEnabledReport(jobName, curatorFrameworkOp);
+			CuratorFrameworkOp curatorFrameworkOp, ExecutionInfo executionInfo, JobConfig jobConfig) {
+		boolean isEnabledReport = jobConfig.getEnabledReport();
 		if (!isEnabledReport) {
 			executionInfo.setExecutorName(executorName);
 			executionInfo.setStatus(ExecutionStatus.BLANK);

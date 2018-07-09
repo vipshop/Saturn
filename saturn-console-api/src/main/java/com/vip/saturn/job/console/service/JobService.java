@@ -76,6 +76,8 @@ public interface JobService {
 
 	List<String> getJobShardingAllocatedExecutorList(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	List<String> getJobServerList(String namespace, String jobName) throws SaturnJobConsoleException;
+
 	GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	void updateJobConfig(String namespace, UpdateJobConfigVo jobConfig, String updatedBy) throws SaturnJobConsoleException;
@@ -89,6 +91,11 @@ public interface JobService {
 	 * 获取作业所分配的executor及先关分配信息。
 	 */
 	List<JobServer> getJobServers(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	/**
+	 * 获取JobServer状态信息
+	 */
+	List<JobServerStatus> getJobServersStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	void runAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
 
