@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
@@ -48,6 +47,8 @@ public interface JobService {
 
 	List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition, int offset, int size)
 			throws SaturnJobConsoleException;
+
+	int countUnSystemJobsWithCondition(String namespace, Map<String, String> condition);
 	
 	/**
 	 * since 3.1.0，不再支持systemjob

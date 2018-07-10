@@ -42,31 +42,17 @@ public class JobOverviewController extends AbstractGUIController {
     private AlarmStatisticsService alarmStatisticsService;
 
 	/**
-	 * 获取域下所有作业的细节信息
+	 * 按条件分页获取域下所有作业的细节信息
 	 * @param namespace 域名
 	 * @return 作业细节
 	 */
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-    @GetMapping
-    public SuccessResponseEntity getJobs(final HttpServletRequest request, @PathVariable String namespace,
-            @RequestParam(required = false, defaultValue = "0")int offset,
-            @RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
-        return new SuccessResponseEntity(getJobOverviewVo(namespace, null, offset, size));
-    }
-
-    /**
-     * 按条件分页获取域下所有作业的细节信息
-     * @param namespace 域名
-     * @return 作业细节
-     */
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-    @GetMapping("search")
-    public SuccessResponseEntity getJobsCondition(final HttpServletRequest request, @PathVariable String namespace,
-            @RequestParam Map<String, String> condition,
-            @RequestParam(required = false, defaultValue = "0")int offset,
-            @RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
-        return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, offset, size));
-    }
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+	@GetMapping
+	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
+			@RequestParam Map<String, String> condition, @RequestParam(required = false, defaultValue = "0") int offset,
+			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, offset, size));
+	}
 
 
 	/**
@@ -92,7 +78,7 @@ public class JobOverviewController extends AbstractGUIController {
             }
             jobOverviewVo.setJobs(jobList);
             jobOverviewVo.setEnabledNumber(enabledNumber);
-            jobOverviewVo.setTotalNumber(jobList.size());
+            jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace, condition));
 
             // 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
             updateAbnormalJobSizeInOverview(namespace, jobOverviewVo);

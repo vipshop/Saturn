@@ -29,6 +29,8 @@ public interface CurrentJobConfigService {
 
 	List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition, int offset,
 			int size);
+
+	int countConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition);
 	
 	JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName);
 

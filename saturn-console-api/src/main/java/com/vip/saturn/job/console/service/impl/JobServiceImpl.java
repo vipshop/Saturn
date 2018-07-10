@@ -726,7 +726,12 @@ public class JobServiceImpl implements JobService {
 		return unSystemJobs;
 	}
 
-	@Override
+    @Override
+    public int countUnSystemJobsWithCondition(String namespace, Map<String, String> condition) {
+        return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
+    }
+
+    @Override
 	public List<String> getUnSystemJobNames(String namespace) {
 		List<String> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);

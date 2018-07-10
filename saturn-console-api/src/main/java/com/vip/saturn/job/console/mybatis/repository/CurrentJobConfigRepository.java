@@ -30,8 +30,11 @@ public interface CurrentJobConfigRepository {
 	List<JobConfig4DB> findConfigsByNamespace(@Param("namespace") String namespace);
 
 	List<JobConfig4DB> findConfigsByNamespaceWithCondition(@Param("namespace") String namespace,
-			@Param("condition") Map<String, String> condition, @Param("offset") int offset, @Param("number") int number);
+			@Param("condition") Map<String, String> condition, @Param("offset") int offset, @Param("size") int size);
 
+	int countConfigsByNamespaceWithCondition(@Param("namespace") String namespace,
+			@Param("condition") Map<String, String> condition);
+	
 	List<String> findConfigNamesByNamespace(@Param("namespace") String namespace);
 
 	JobConfig4DB findConfigByNamespaceAndJobName(@Param("namespace") String namespace,
