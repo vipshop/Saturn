@@ -1,9 +1,0 @@
-FROM vdos-registry.vip.vip.com:5000/saturn-executor:1.1.3
-
-COPY ./saturn-job-demo-with-spring-1.0-SNAPSHOT-zip.zip /saturn-job-demo-with-spring-1.0-SNAPSHOT-zip.zip
-RUN mkdir -p /apps/dat/web/working \
-    && unzip saturn-job-demo-with-spring-1.0-SNAPSHOT-zip.zip -d /apps/dat/web/working \
-    && mv /apps/dat/web/working/saturn-job-demo-with-spring-1.0-SNAPSHOT/apps/dat/web/working/app \
-    && rm -rf saturn-job-demo-with-spring-1.0-SNAPSHOT-zip.zip
-
-CMD [ "/bin/bash" ]
