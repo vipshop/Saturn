@@ -5,21 +5,21 @@
                 <el-col :span="8">
                     <Panel type="success">
                         <div slot="title">启用作业数 / 总作业数</div>
-                        <div slot="content">{{jobListInfo.enabledNumber}} / {{jobListInfo.totalNumber}}</div>
+                        <div slot="content">{{jobTotalInfo.enabledNumber}} / {{jobTotalInfo.totalNumber}}</div>
                     </Panel>
                 </el-col>
                 <el-col :span="8">
                     <a @click="toAbnormalJobPage">
                         <Panel type="danger">
                             <div slot="title">异常作业数</div>
-                            <div slot="content">{{jobListInfo.abnormalNumber}}</div>
+                            <div slot="content">{{jobTotalInfo.abnormalNumber}}</div>
                         </Panel>
                     </a>
                 </el-col>
             </el-row>
         </div>
         <div class="page-container">
-            <FilterPageList :data="jobListInfo.jobList" :total="jobListInfo.total" :order-by="orderBy" :filters="filters">
+            <FilterPageList ref="pageListRef" :get-data="getJobList" :total="total" :order-by="orderBy" :filters="filters">
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
@@ -29,7 +29,7 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.isEnabled" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
@@ -49,7 +49,7 @@
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>作业列表
-                                <el-button type="text" @click="init"><i class="fa fa-refresh"></i></el-button>
+                                <el-button type="text" @click="scope.search"><i class="fa fa-refresh"></i></el-button>
                             </div>
                             <div class="page-table-header-separator"></div>
                             <div>
@@ -64,9 +64,9 @@
                                 <el-button @click="handleExport()" v-if="$common.hasPerm('job:export', domainName)"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                             </div>
                         </div>
-                        <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
+                        <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" :data="jobList" @sort-change="scope.onSortChange" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="jobName" label="作业名" sortable>
+                            <el-table-column prop="jobName" label="作业名" sortable="custom">
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
                                         <el-button type="text">
@@ -78,12 +78,12 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" width="100px" sortable>
+                            <el-table-column label="状态" prop="status" width="100px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="groups" label="分组" width="120px" sortable></el-table-column>
+                            <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
                             <el-table-column label="分片情况" width="120px">
                                 <template slot-scope="scope">
@@ -158,12 +158,19 @@ export default {
       },
       importUrl: '',
       jobNamesArray: [],
+      jobTotalInfo: {
+        totalNumber: 0,
+        enabledNumber: 0,
+        abnormalNumber: 0,
+      },
       filters: {
         jobName: '',
         groups: '',
-        status: '',
+        isEnabled: '',
         description: '',
       },
+      jobList: [],
+      total: 0,
       orderBy: '',
       groupList: [],
       selectColumn: 'jobName',
@@ -480,14 +487,24 @@ export default {
       });
       return resultArr;
     },
-    getJobList() {
-      const params = {
-        domainName: this.domainName,
-      };
-      return this.$store.dispatch('setJobListInfo', params).then((resp) => {
-        console.log(resp);
+    getJobTotal() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/counts`).then((data) => {
+        this.jobTotalInfo.totalNumber = data.totalNumber;
+        this.jobTotalInfo.enabledNumber = data.enabledNumber;
+        this.jobTotalInfo.abnormalNumber = data.abnormalNumber;
       })
-      .catch(() => this.$http.buildErrorHandler('获取作业列表请求失败！'));
+      .catch(() => { this.$http.buildErrorHandler('获取作业总数失败！'); });
+    },
+    getJobList(params) {
+      this.loading = true;
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs`, params).then((data) => {
+        this.jobList = data.jobs;
+        this.total = data.totalNumber;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业列表请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
     },
     getGroupList() {
       return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
@@ -497,9 +514,12 @@ export default {
     },
     init() {
       this.loading = true;
-      Promise.all([this.getJobList(), this.getGroupList()]).then(() => {
+      Promise.all([this.getJobTotal(), this.getGroupList()]).then(() => {
         this.loading = false;
       });
+    },
+    refreshPage() {
+      this.$refs.pageListRef.search();
     },
   },
   components: {
@@ -516,9 +536,6 @@ export default {
   computed: {
     domainName() {
       return this.$route.params.domain;
-    },
-    jobListInfo() {
-      return this.$store.state.global.jobListInfo;
     },
     filterColumnPlaceholder() {
       let str = '';
