@@ -19,6 +19,7 @@ import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import java.awt.print.Pageable;
 import jxl.Cell;
 import jxl.CellType;
 import jxl.Sheet;
@@ -708,11 +709,11 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition, int offset,
-			int size) throws SaturnJobConsoleException {
+	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition,
+			 int page, int size) throws SaturnJobConsoleException {
 		List<JobConfig> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
-				condition, offset, size);
+				condition, PageableUtil.generatePageble(page, size));
 		if (jobConfig4DBList != null) {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
 				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
@@ -729,6 +730,11 @@ public class JobServiceImpl implements JobService {
     @Override
     public int countUnSystemJobsWithCondition(String namespace, Map<String, String> condition) {
         return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
+    }
+
+    @Override
+    public int countEnabledUnSystemJobs(String namespace) {
+        return currentJobConfigService.countEnabledUnSystemJobsByNamespace(namespace);
     }
 
     @Override

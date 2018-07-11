@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
@@ -49,11 +50,22 @@ public class JobOverviewController extends AbstractGUIController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
 	@GetMapping
 	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
-			@RequestParam Map<String, String> condition, @RequestParam(required = false, defaultValue = "0") int offset,
+			@RequestParam Map<String, String> condition, @RequestParam(required = false, defaultValue = "1") int page,
 			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, offset, size));
+		return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, page, size));
 	}
 
+    /**
+     * 获取域下的总作业数、启用作业数和异常作业数
+     * @param namespace 域名
+     * @return 总作业数、启用作业数和异常作业数总数
+     */
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+    @GetMapping(value = "/counts")
+    public SuccessResponseEntity countJobsStatus(final HttpServletRequest request, @PathVariable String namespace
+            ) throws SaturnJobConsoleException {
+        return new SuccessResponseEntity(countJobOverviewVo(namespace));
+    }
 
 	/**
 	 * 获取域下所有作业的名字
@@ -66,22 +78,20 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getJobNames(namespace));
 	}
 
-	public JobOverviewVo getJobOverviewVo(String namespace, Map<String, String> condition, int offset, int size)
+	public JobOverviewVo getJobOverviewVo(String namespace, Map<String, String> condition, int page, int size)
 			throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         try {
             List<JobOverviewJobVo> jobList = new ArrayList<>();
-            int enabledNumber = 0;
-            List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, offset, size);
+            if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
+                condition.put("groups", "");
+            }
+            List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
             if (unSystemJobs != null) {
-                enabledNumber = updateJobOverviewDetail(namespace, jobList, enabledNumber, unSystemJobs);
+                updateJobOverviewDetail(namespace, jobList, unSystemJobs);
             }
             jobOverviewVo.setJobs(jobList);
-            jobOverviewVo.setEnabledNumber(enabledNumber);
             jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace, condition));
-
-            // 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
-            updateAbnormalJobSizeInOverview(namespace, jobOverviewVo);
         } catch (SaturnJobConsoleException e) {
             throw e;
         } catch (Exception e) {
@@ -100,8 +110,8 @@ public class JobOverviewController extends AbstractGUIController {
         }
     }
 
-    private int updateJobOverviewDetail(String namespace, List<JobOverviewJobVo> jobList, int enabledNumber,
-                                        List<JobConfig> unSystemJobs) {
+	private void updateJobOverviewDetail(String namespace, List<JobOverviewJobVo> jobList,
+			List<JobConfig> unSystemJobs) {
         for (JobConfig jobConfig : unSystemJobs) {
             try {
                 jobConfig.setDefaultValues();
@@ -121,16 +131,11 @@ public class JobOverviewController extends AbstractGUIController {
                 if (!JobStatus.STOPPED.equals(jobStatus)) {// 作业如果是STOPPED状态，不需要显示已分配的executor
                     updateShardingListInOverview(namespace, jobConfig, jobOverviewJobVo);
                 }
-
-                if (jobOverviewJobVo.getEnabled()) {
-                    enabledNumber++;
-                }
                 jobList.add(jobOverviewJobVo);
             } catch (Exception e) {
                 log.error("list job " + jobConfig.getJobName() + " error", e);
             }
         }
-        return enabledNumber;
     }
 
     private void updateJobTypesInOverview(JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo) {
@@ -157,6 +162,16 @@ public class JobOverviewController extends AbstractGUIController {
         if (shardingListSb.length() > 0) {
             jobOverviewJobVo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
         }
+    }
+
+    public JobOverviewVo countJobOverviewVo(String namespace) {
+        JobOverviewVo jobOverviewVo = new JobOverviewVo();
+        jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace,
+                Maps.<String, String>newHashMap()));
+        jobOverviewVo.setEnabledNumber(jobService.countEnabledUnSystemJobs(namespace));
+        // 获取该域下的异常作业数量，捕获所有异常，打日志，不抛到前台
+        updateAbnormalJobSizeInOverview(namespace, jobOverviewVo);
+        return jobOverviewVo;
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

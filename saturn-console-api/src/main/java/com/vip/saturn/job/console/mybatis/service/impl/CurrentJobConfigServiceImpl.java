@@ -122,8 +122,8 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition,
-			int offset, int size) {
-		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, offset, size);
+			Pageable pageable) {
+		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, pageable);
 	}
 
 	@Override
@@ -131,7 +131,12 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	    return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
     }
 
-	@Override
+    @Override
+    public int countEnabledUnSystemJobsByNamespace(String namespace) {
+        return currentJobConfigRepo.countEnabledUnSystemJobsByNamespace(namespace, 1);
+    }
+
+    @Override
 	public List<String> findConfigNamesByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}

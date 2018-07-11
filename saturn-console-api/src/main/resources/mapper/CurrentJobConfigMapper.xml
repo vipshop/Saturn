@@ -62,36 +62,32 @@
 
   <select id="findConfigsByNamespaceWithCondition" resultMap="BaseResultMap">
     select
-    <include refid="Base_Column_List" />
+    <include refid="Base_Column_List"/>
     from job_config
-    <if test="condition == null">
-      where namespace = #{namespace,jdbcType=VARCHAR}
-    </if>
-
-    <if test="condition != null">
-      <where>
-        namespace = #{namespace,jdbcType=VARCHAR}
-          <choose>
-            <when test="condition.type == 1">
-              and job_name like CONCAT('%',#{condition.key},'%')
-            </when>
-            <when test="condition.type == 2">
-              and description like CONCAT('%',#{condition.key},'%')
-            </when>
-          </choose>
-          <if test="condition.groups != null">
-            and groups = #{condition.groups}
-          </if>
-          <if test="condition.isEnabled != null">
-            and is_enabled = #{condition.isEnabled}
-          </if>
-      </where>
+    <where>
+      namespace = #{namespace,jdbcType=VARCHAR}
+      <choose>
+        <when test="condition.jobName != null">
+          and job_name like CONCAT('%',#{condition.jobName},'%')
+        </when>
+        <when test="condition.description != null">
+          and description like CONCAT('%',#{condition.description},'%')
+        </when>
+      </choose>
+      <if test="condition.groups != null">
+        and groups = #{condition.groups}
+      </if>
+      <if test="condition.isEnabled != null">
+        and is_enabled = #{condition.isEnabled}
+      </if>
+    </where>
+    <if test="condition.order != null">
       order by job_name
-      <if test="condition.order == 'desc'">
+      <if test="condition.order == 'descending'">
         desc
       </if>
     </if>
-    limit #{offset}, #{size}
+    limit #{pageable.offset}, #{pageable.pageSize}
   </select>
 
   <select id="countConfigsByNamespaceWithCondition" resultType="Integer">
@@ -115,6 +111,10 @@
         and is_enabled = #{condition.isEnabled}
       </if>
     </where>
+  </select>
+
+  <select id="countEnabledUnSystemJobsByNamespace" resultType="Integer">
+    select count(*) from job_config where namespace = #{namespace} and is_enabled = #{isEnabled}
   </select>
 
   <select id="findConfigNamesByNamespace" resultType="String">
