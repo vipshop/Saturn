@@ -29,9 +29,9 @@ import java.sql.SQLException;
  *
  */
 @SpringBootApplication
-@ComponentScan({ "com.vip.saturn.job.console" })
-@EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
-		JpaRepositoriesAutoConfiguration.class })
+@ComponentScan({"com.vip.saturn.job.console"})
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
+		JpaRepositoriesAutoConfiguration.class})
 @ImportResource("classpath*:context/*Context.xml")
 public class SaturnConsoleApp {
 
@@ -44,6 +44,9 @@ public class SaturnConsoleApp {
 		}
 		if (Boolean.getBoolean("saturn.embeddedDb")) {
 			startEmbeddedDb();
+		}
+		if (System.getProperty("jxl.nogc") == null) {
+			System.setProperty("jxl.nogc", "true");
 		}
 
 		SpringApplication.run(SaturnConsoleApp.class, args);
