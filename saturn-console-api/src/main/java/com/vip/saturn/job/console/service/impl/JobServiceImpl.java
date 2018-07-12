@@ -712,6 +712,7 @@ public class JobServiceImpl implements JobService {
 	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition,
 			 int page, int size) throws SaturnJobConsoleException {
 		List<JobConfig> unSystemJobs = new ArrayList<>();
+		convertUnallocatedCondition(condition);
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
 				condition, PageableUtil.generatePageble(page, size));
 		if (jobConfig4DBList != null) {
@@ -727,7 +728,13 @@ public class JobServiceImpl implements JobService {
 		return unSystemJobs;
 	}
 
-    @Override
+	private void convertUnallocatedCondition(Map<String, String> condition) {
+		if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
+			condition.put("groups", "");
+		}
+	}
+
+	@Override
     public int countUnSystemJobsWithCondition(String namespace, Map<String, String> condition) {
         return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
     }

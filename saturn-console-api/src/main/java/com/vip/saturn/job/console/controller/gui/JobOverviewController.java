@@ -52,7 +52,7 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
 			@RequestParam Map<String, String> condition, @RequestParam(required = false, defaultValue = "1") int page,
 			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(getJobOverviewVo(namespace, condition, page, size));
+		return new SuccessResponseEntity(getJobOverviewByPage(namespace, condition, page, size));
 	}
 
     /**
@@ -78,14 +78,11 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getJobNames(namespace));
 	}
 
-	public JobOverviewVo getJobOverviewVo(String namespace, Map<String, String> condition, int page, int size)
-			throws SaturnJobConsoleException {
+	public JobOverviewVo getJobOverviewByPage(String namespace, Map<String, String> condition, int page,
+			int size) throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         try {
             List<JobOverviewJobVo> jobList = new ArrayList<>();
-            if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
-                condition.put("groups", "");
-            }
             List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
             if (unSystemJobs != null) {
                 updateJobOverviewDetail(namespace, jobList, unSystemJobs);
