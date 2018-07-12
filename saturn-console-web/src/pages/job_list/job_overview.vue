@@ -214,7 +214,7 @@ export default {
     },
     closeImportResultDialog() {
       this.isImportResultVisible = false;
-      this.init();
+      this.refreshPage();
     },
     handleAdd() {
       this.isJobInfoVisible = true;
@@ -240,7 +240,7 @@ export default {
     },
     jobInfoSuccess() {
       this.isJobInfoVisible = false;
-      this.init();
+      this.refreshPage();
       this.$message.successNotify('保存作业操作成功');
     },
     batchEnabled() {
@@ -280,7 +280,7 @@ export default {
           };
           this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
-              this.init();
+              this.refreshPage();
               this.$message.successNotify('批量删除作业操作成功');
             })
             .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
@@ -300,7 +300,7 @@ export default {
     },
     batchPrioritySuccess() {
       this.isBatchPriorityVisible = false;
-      this.init();
+      this.refreshPage();
       this.$message.successNotify('批量设置作业的优先Executors成功');
     },
     batchOperation(text, callback) {
@@ -341,7 +341,7 @@ export default {
     handleDelete(row) {
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
         this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${row.jobName}`).then(() => {
-          this.init();
+          this.refreshPage();
           this.$message.successNotify('删除作业操作成功');
         })
         .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
@@ -451,14 +451,14 @@ export default {
     batchActiveRequest(params, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
         this.$message.successNotify('操作成功');
-        this.init();
+        this.refreshPage();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     activeRequest(jobName, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
-        this.init();
+        this.refreshPage();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
@@ -520,6 +520,7 @@ export default {
     },
     refreshPage() {
       this.$refs.pageListRef.search();
+      this.init();
     },
   },
   components: {
