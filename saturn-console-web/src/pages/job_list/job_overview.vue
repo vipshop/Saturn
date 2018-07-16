@@ -85,14 +85,9 @@
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
-                            <el-table-column label="分片情况" width="120px">
+                            <el-table-column label="是否已分配分片" width="120px">
                                 <template slot-scope="scope">
-                                    <el-tooltip placement="right" :disabled="$array.strToArray(scope.row.shardingList).length === 0">
-                                        <el-tag :type="$array.strToArray(scope.row.shardingList).length === 0 ? '' : 'primary'">{{$array.strToArray(scope.row.shardingList).length}} Executor(s)</el-tag>
-                                        <div slot="content" v-for="item in $array.strToArray(scope.row.shardingList)" :key="item">
-                                            <div>{{item}}</div>
-                                        </div>
-                                    </el-tooltip>
+                                    <el-tag :type="scope.row.shardingList ? 'primary' : ''">{{ scope.row.shardingList ? '已分配' : '未分配' }}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述" width="170px">
