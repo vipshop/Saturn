@@ -204,7 +204,8 @@
                         <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodTime" label="暂停时间段">
-                                    <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开。例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停" placement="bottom">
+                                    <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段，逗号隔开，例如12:23-13:23,16:00-17:00。当日期为不空，时间段为空，表示那些日期段24小时都暂停。针对跨日的时间段，
+                                    编辑时需要分成2个段，以23:00-03:00为例，需写成23:00-23:59,00:00-03:00" placement="bottom">
                                         <InputTags :dynamic-tags="jobSettingInfo.pausePeriodTime" title="时间段"></InputTags>
                                     </el-tooltip>
                                 </el-form-item>
