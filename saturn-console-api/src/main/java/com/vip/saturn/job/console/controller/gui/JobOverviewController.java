@@ -149,19 +149,13 @@ public class JobOverviewController extends AbstractGUIController {
 
     private void updateShardingListInOverview(String namespace, JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo)
             throws SaturnJobConsoleException {
-        List<String> jobShardingAllocatedExecutorList = jobService
-                .getJobShardingAllocatedExecutorList(namespace, jobConfig.getJobName());
-
-        StringBuilder shardingListSb = new StringBuilder();
-        for (String executor : jobShardingAllocatedExecutorList) {
-            shardingListSb.append(executor).append(",");
-        }
-        if (shardingListSb.length() > 0) {
-            jobOverviewJobVo.setShardingList(shardingListSb.substring(0, shardingListSb.length() - 1));
+		boolean isAllocated = jobService.isJobShardingAllocatedExecutor(namespace, jobConfig.getJobName());
+        if (isAllocated) {
+            jobOverviewJobVo.setShardingList("已分配分片");
         }
     }
 
-    public JobOverviewVo countJobOverviewVo(String namespace) {
+    public JobOverviewVo countJobOverviewVo(String namespace) throws SaturnJobConsoleException{
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace,
                 Maps.<String, String>newHashMap()));

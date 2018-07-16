@@ -1510,25 +1510,22 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<String> getJobShardingAllocatedExecutorList(String namespace, String jobName)
+	public boolean isJobShardingAllocatedExecutor(String namespace, String jobName)
 			throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		String executorsPath = JobNodePath.getServerNodePath(jobName);
 		List<String> executors = curatorFrameworkOp.getChildren(executorsPath);
 		if (CollectionUtils.isEmpty(executors)) {
-			return Lists.newArrayList();
+			return false;
 		}
-
-		List<String> shardingList = Lists.newArrayList();
 		for (String executor : executors) {
 			String sharding = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
-				shardingList.add(executor);
+				return true;
 			}
 		}
-
-		return shardingList;
+		return false;
 	}
 
 	@Override
