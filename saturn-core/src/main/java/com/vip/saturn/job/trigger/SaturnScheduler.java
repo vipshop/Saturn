@@ -1,16 +1,15 @@
 /**
- * 
+ *
  */
 package com.vip.saturn.job.trigger;
+
+import com.vip.saturn.job.basic.AbstractElasticJob;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-
-import com.vip.saturn.job.basic.AbstractElasticJob;
 
 /**
  * @author chembo.huang
@@ -57,6 +56,11 @@ public class SaturnScheduler {
 	public void shutdown() {
 		saturnQuartzWorker.halt();
 		executor.shutdown();
+	}
+
+	public void shutdownNow() {
+		saturnQuartzWorker.halt();
+		executor.shutdownNow();
 	}
 
 	public void triggerJob() {
