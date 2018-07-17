@@ -263,7 +263,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
 		updateJobConfigVo
-				.setOnlyUsePreferList(checkAndGetParametersValueAsBoolean(configParams, "onlyUseDispreferList", false));
+				.setOnlyUsePreferList(checkAndGetParametersValueAsBoolean(configParams, "onlyUsePreferList", false));
 		return updateJobConfigVo;
 	}
 
