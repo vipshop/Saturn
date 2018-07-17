@@ -44,4 +44,9 @@ public interface Stopable {
 	 * 关闭作业
 	 */
 	void shutdown();
+
+	/**
+	 * 优雅关闭作业
+	 */
+	void shutdownGracefully();
 }

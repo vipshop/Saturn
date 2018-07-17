@@ -327,6 +327,32 @@ public class JobScheduler {
 		}
 	}
 
+	public void shutdownGracefully() {
+		synchronized (isShutdownFlag) {
+			isShutdownFlag.set(true);
+			if (job != null) {
+				job.shutdownGracefully();
+			}
+			listenerManager.shutdown();
+			shardingService.shutdown();
+			configService.shutdown();
+			leaderElectionService.shutdown();
+			serverService.shutdown();
+			executionContextService.shutdown();
+			executionService.shutdown();
+			failoverService.shutdown();
+			statisticsService.shutdown();
+			analyseService.shutdown();
+			limitMaxJobsService.shutdown();
+			zkCacheManager.shutdown();
+
+			JobRegistry.clearJob(executorName, jobName);
+			if (executorService != null && !executorService.isShutdown()) {
+				executorService.shutdown();
+			}
+		}
+	}
+
 	/**
 	 * 重新调度作业.
 	 *

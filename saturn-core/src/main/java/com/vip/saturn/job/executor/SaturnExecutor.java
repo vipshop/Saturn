@@ -458,7 +458,7 @@ public class SaturnExecutor {
 		}
 	}
 
-	private void shutdownUnfinishJob() {
+	private void shutdownUnfinishJob(boolean shutdownGracefully) {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {
 			Iterator<String> it = schdMap.keySet().iterator();
@@ -470,7 +470,11 @@ public class SaturnExecutor {
 						log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
 						jobScheduler.stopJob(true);
 					}
-					jobScheduler.shutdown(false);
+					if (shutdownGracefully) {
+						jobScheduler.shutdownGracefully();
+					} else {
+						jobScheduler.shutdown(false);
+					}
 				}
 			}
 		}
@@ -486,7 +490,7 @@ public class SaturnExecutor {
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterJobsWatcher();
 			}
-			shutdownUnfinishJob();
+			shutdownUnfinishJob(false);
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterExecutor();
 			}
@@ -533,7 +537,7 @@ public class SaturnExecutor {
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
 			try {
 				blockUntilJobCompletedIfNotTimeout();
-				shutdownUnfinishJob();
+				shutdownUnfinishJob(true);
 				JobRegistry.clearExecutor(executorName);
 			} finally {
 				if (connectionLostListener != null) {
