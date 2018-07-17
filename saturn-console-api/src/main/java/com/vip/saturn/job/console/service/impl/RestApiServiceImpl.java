@@ -16,6 +16,7 @@ import com.vip.saturn.job.console.service.helper.ReuseCallBackWithoutReturn;
 import com.vip.saturn.job.console.service.helper.ReuseUtils;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
@@ -631,6 +632,25 @@ public class RestApiServiceImpl implements RestApiService {
 			log.warn(errMsg);
 			throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
 		}
+	}
+
+	@Override
+	public void updateJob(final String namespace, final String jobName, final UpdateJobConfigVo updateJobConfigVo) throws SaturnJobConsoleException {
+		ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
+				new ReuseCallBackWithoutReturn() {
+					@Override
+					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+							throws SaturnJobConsoleException {
+                        JobStatus js = jobService.getJobStatus(namespace, jobName);
+
+                        if (!JobStatus.STOPPED.equals(js)) {
+                            throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+                                    String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPED.name()));
+                        }
+					    jobService.updateJobConfig(namespace, updateJobConfigVo, "");
+						log.info("job {} update done", jobName);
+					}
+				});
 	}
 
 }

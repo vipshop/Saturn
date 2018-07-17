@@ -2,7 +2,6 @@ package com.vip.saturn.job.console.controller.rest;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
-import com.vip.saturn.job.console.controller.AbstractController;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
@@ -10,6 +9,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
 
+import com.vip.saturn.job.console.utils.SaturnBeanUtils;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
@@ -170,6 +171,21 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
+	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> update(@PathVariable("namespace") String namespace, @PathVariable String jobName,
+			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
+		try {
+			UpdateJobConfigVo updateJobConfigVo = constructUpdateJobConfig(namespace, reqParams);
+			restApiService.updateJob(namespace, jobName, updateJobConfigVo);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+		}
+	}
+
 	private JobConfig constructJobConfig(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		checkMissingParameter("namespace", namespace);
 		if (!reqParams.containsKey("jobConfig")) {
@@ -237,6 +253,18 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setShowNormalLog(checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
 
 		return jobConfig;
+	}
+
+	private UpdateJobConfigVo constructUpdateJobConfig(String namespace, Map<String, Object> reqParams)
+			throws SaturnJobConsoleException {
+		JobConfig jobConfig = constructJobConfig(namespace, reqParams);
+		UpdateJobConfigVo updateJobConfigVo = new UpdateJobConfigVo();
+		SaturnBeanUtils.copyProperties(jobConfig, updateJobConfigVo);
+
+		Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
+		updateJobConfigVo
+				.setOnlyUsePreferList(checkAndGetParametersValueAsBoolean(configParams, "onlyUseDispreferList", false));
+		return updateJobConfigVo;
 	}
 
 }
