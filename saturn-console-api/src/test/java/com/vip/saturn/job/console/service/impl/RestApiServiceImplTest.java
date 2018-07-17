@@ -3,10 +3,13 @@ package com.vip.saturn.job.console.service.impl;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
+import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -39,6 +42,9 @@ public class RestApiServiceImplTest {
 
 	@Mock
 	private JobService jobService;
+	
+	@Mock
+	private CurrentJobConfigService currentJobConfigService;
 
 	@Mock
 	private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
@@ -268,6 +274,32 @@ public class RestApiServiceImplTest {
 		verify(jobService, times(0)).removeJob(TEST_NAME_SPACE_NAME, jobName);
 	}
 
+	@Test
+	public void testUpdateJobSuccessfully() throws SaturnJobConsoleException {
+		String jobName = "testJob";
+		UpdateJobConfigVo updateJobConfigVo = buildUpdateJobConfig(jobName);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPED);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(TEST_NAME_SPACE_NAME, jobName))
+				.thenReturn(buildJobConfig4DB(TEST_NAME_SPACE_NAME, jobName));
+
+		// run
+		restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, updateJobConfigVo);
+	}
+
+	@Test
+	public void testUpdateJobFailAsSaturnsIsNotStopped() throws SaturnJobConsoleException {
+		String jobName = "testJob";
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
+
+		// run
+		try {
+			restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, buildUpdateJobConfig(jobName));
+		} catch (SaturnJobConsoleHttpException e) {
+			assertEquals("status code is not 400", 400, e.getStatusCode());
+			assertEquals("error message is not equals", "job' status is not {STOPPED}", e.getMessage());
+		}
+	}
+
 	private JobServer createJobServer(String name) {
 		JobServer jobServer = new JobServer();
 		jobServer.setJobName(name);
@@ -277,4 +309,23 @@ public class RestApiServiceImplTest {
 		return jobServer;
 	}
 
+	private UpdateJobConfigVo buildUpdateJobConfig(String name) {
+		UpdateJobConfigVo updateJobConfigVo = new UpdateJobConfigVo();
+		updateJobConfigVo.setJobName("name");
+		updateJobConfigVo.setJobClass("com.TestJob");
+		updateJobConfigVo.setJobType(JobType.JAVA_JOB.name());
+		updateJobConfigVo.setShardingItemParameters("0=0");
+		updateJobConfigVo.setShardingTotalCount(2);
+		return updateJobConfigVo;
+	}
+
+	private JobConfig4DB buildJobConfig4DB(String namespace, String jobName) {
+		JobConfig4DB config = new JobConfig4DB();
+		config.setNamespace(namespace);
+		config.setJobName(jobName);
+		config.setEnabled(false);
+		config.setEnabledReport(true);
+		config.setJobType(JobType.JAVA_JOB.toString());
+		return config;
+	}
 }
