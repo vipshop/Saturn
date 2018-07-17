@@ -178,7 +178,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 		try {
 			UpdateJobConfigVo updateJobConfigVo = constructUpdateJobConfig(namespace, reqParams);
 			restApiService.updateJob(namespace, jobName, updateJobConfigVo);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {
