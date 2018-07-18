@@ -19,7 +19,7 @@
             </el-row>
         </div>
         <div class="page-container">
-            <FilterPageList ref="pageListRef" :get-data="getJobList" :total="total" :order-by="orderBy" :filters="filters">
+            <FilterPageList ref="pageListRef" :get-data="getJobList" :total="total" :order-by="orderBy" :filters="filters" v-loading="tableLoading" element-loading-text="请稍等···">
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
@@ -140,6 +140,7 @@ export default {
   data() {
     return {
       loading: false,
+      tableLoading: false,
       isJobInfoVisible: false,
       jobInfoTitle: '',
       jobInfoOperation: '',
@@ -491,14 +492,14 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业总数失败！'); });
     },
     getJobList(params) {
-      this.loading = true;
+      this.tableLoading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/jobs`, params).then((data) => {
         this.jobList = data.jobs;
         this.total = data.totalNumber;
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业列表请求失败！'); })
       .finally(() => {
-        this.loading = false;
+        this.tableLoading = false;
       });
     },
     getGroupList() {

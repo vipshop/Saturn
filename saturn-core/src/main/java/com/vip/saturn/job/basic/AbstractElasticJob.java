@@ -96,13 +96,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		}
 	}
 
-	@Override
-	public void shutdownGracefully() {
-		if (scheduler != null) {
-			scheduler.shutdownNow();
-		}
-	}
-
 	public ExecutorService getExecutorService() {
 		return jobScheduler.getExecutorService();
 	}

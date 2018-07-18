@@ -291,7 +291,6 @@ public class JobScheduler {
 			try {
 				if (job != null) {
 					job.shutdown();
-					Thread.sleep(500);// NOSONAR
 				}
 			} catch (final Exception e) {
 				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
@@ -310,41 +309,16 @@ public class JobScheduler {
 			limitMaxJobsService.shutdown();
 
 			zkCacheManager.shutdown();
-			try {
-				Thread.sleep(500);// NOSONAR
-			} catch (InterruptedException ignore) {
-				log.warn(ignore.getMessage());
-			}
+
 			if (removejob) {
+				try {
+					Thread.sleep(500);// NOSONAR
+				} catch (InterruptedException ignore) {
+					log.warn(ignore.getMessage());
+				}
 				jobNodeStorage.deleteJobNode();
 				saturnExecutorService.removeJobName(jobName);
 			}
-
-			JobRegistry.clearJob(executorName, jobName);
-			if (executorService != null && !executorService.isShutdown()) {
-				executorService.shutdown();
-			}
-		}
-	}
-
-	public void shutdownGracefully() {
-		synchronized (isShutdownFlag) {
-			isShutdownFlag.set(true);
-			if (job != null) {
-				job.shutdownGracefully();
-			}
-			listenerManager.shutdown();
-			shardingService.shutdown();
-			configService.shutdown();
-			leaderElectionService.shutdown();
-			serverService.shutdown();
-			executionContextService.shutdown();
-			executionService.shutdown();
-			failoverService.shutdown();
-			statisticsService.shutdown();
-			analyseService.shutdown();
-			limitMaxJobsService.shutdown();
-			zkCacheManager.shutdown();
 
 			JobRegistry.clearJob(executorName, jobName);
 			if (executorService != null && !executorService.isShutdown()) {
