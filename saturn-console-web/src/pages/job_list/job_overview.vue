@@ -90,7 +90,7 @@
                                     <el-tag :type="scope.row.shardingList ? 'primary' : ''">{{ scope.row.shardingList ? '已分配' : '未分配' }}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="description" show-overflow-tooltip label="描述" width="170px">
+                            <el-table-column prop="description" show-overflow-tooltip label="描述">
                                 <template slot-scope="scope"> 
                                     {{scope.row.description}}
                                 </template>
