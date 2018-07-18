@@ -19,7 +19,6 @@ import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import java.awt.print.Pageable;
 import jxl.Cell;
 import jxl.CellType;
 import jxl.Sheet;
@@ -709,12 +708,10 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, String> condition,
+	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition,
 			 int page, int size) throws SaturnJobConsoleException {
 		List<JobConfig> unSystemJobs = new ArrayList<>();
-		convertUnallocatedCondition(condition);
-		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
-				condition, PageableUtil.generatePageble(page, size));
+		List<JobConfig4DB> jobConfig4DBList = getJobConfigByStatusWithCondition(namespace, condition, page, size);
 		if (jobConfig4DBList != null) {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
 				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
@@ -728,14 +725,28 @@ public class JobServiceImpl implements JobService {
 		return unSystemJobs;
 	}
 
-	private void convertUnallocatedCondition(Map<String, String> condition) {
-		if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
-			condition.put("groups", "");
+	private List<JobConfig4DB> getJobConfigByStatusWithCondition(String namespace, Map<String, Object> condition,
+			int page, int size) throws SaturnJobConsoleException {
+		JobStatus jobStatus = (JobStatus) condition.get("jobStatus");
+        if (jobStatus == null || JobStatus.STOPPED.equals(jobStatus)) {
+			return currentJobConfigService.findConfigsByNamespaceWithCondition(namespace, condition,
+					PageableUtil.generatePageble(page, size));
 		}
+
+        List<JobConfig4DB> jobConfig4DBList = new ArrayList<>();
+		List<JobConfig4DB> enabledJobConfigList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
+				condition, null);
+		for (JobConfig4DB jobConfig4DB : enabledJobConfigList) {
+			JobStatus currentJobStatus = getJobStatus(namespace, jobConfig4DB.getJobName());
+			if (jobStatus.equals(currentJobStatus)) {
+				jobConfig4DBList.add(jobConfig4DB);
+			}
+		}
+		return jobConfig4DBList;
 	}
 
 	@Override
-    public int countUnSystemJobsWithCondition(String namespace, Map<String, String> condition) {
+    public int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition) {
         return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
     }
 

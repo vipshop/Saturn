@@ -121,13 +121,13 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition,
+	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition,
 			Pageable pageable) {
 		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, pageable);
 	}
 
 	@Override
-    public int countConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition) {
+    public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition) {
 	    return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
     }
 

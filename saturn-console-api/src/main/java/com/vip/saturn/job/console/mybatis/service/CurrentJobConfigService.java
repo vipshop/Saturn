@@ -27,10 +27,10 @@ public interface CurrentJobConfigService {
 
 	List<JobConfig4DB> findConfigsByNamespace(String namespace);
 
-	List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition,
+	List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition,
 			Pageable pageable);
 
-	int countConfigsByNamespaceWithCondition(String namespace, Map<String, String> condition);
+	int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition);
 
 	int countEnabledUnSystemJobsByNamespace(String namespace);
 
