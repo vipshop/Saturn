@@ -12,5 +12,11 @@ export default {
   }, {
     value: 1,
     label: '已就绪',
+  }, {
+    value: 2,
+    label: '运行中',
+  }, {
+    value: 3,
+    label: '停止中',
   }],
 };
