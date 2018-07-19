@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -41,6 +42,12 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 		String shouldFiredTimeFormatted = timeZone + " " + format.format(shouldFiredTime);
 		log.error("dashboardAbnormalJob, namespace is {}, jobName is {}, timeZone is {}, shouldFiredTime is {}",
 				namespace, jobName, timeZone, shouldFiredTimeFormatted);
+	}
+
+	@Override
+	public void dashboardAbnormalBatchJobs(String namespace, List<Map<String, String>> jobList)
+			throws ReportAlarmException {
+		//do nothing
 	}
 
 	@Override
