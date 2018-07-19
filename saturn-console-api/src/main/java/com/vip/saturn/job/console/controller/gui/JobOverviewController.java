@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -91,18 +92,20 @@ public class JobOverviewController extends AbstractGUIController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
 	@GetMapping(value = "/sharding/status")
 	public SuccessResponseEntity getJobsShardingStatus(@PathVariable String namespace,
-			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+			@RequestParam(required = false) List<String> jobNames) throws SaturnJobConsoleException {
 		Map<String, String> jobShardingMap = new HashMap<>();
-		for (String jobName : jobNames) {
-			JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
-			boolean isAllocated = !JobStatus.STOPPED.equals(jobStatus)
-					&& jobService.isJobShardingAllocatedExecutor(namespace, jobName);
-			if (isAllocated) {
-				jobShardingMap.put(jobName, "已分配");
-			} else {
-				jobShardingMap.put(jobName, "未分配");
-			}
-		}
+		if (!CollectionUtils.isEmpty(jobNames)) {
+            for (String jobName : jobNames) {
+                JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
+                boolean isAllocated = !JobStatus.STOPPED.equals(jobStatus)
+                        && jobService.isJobShardingAllocatedExecutor(namespace, jobName);
+                if (isAllocated) {
+                    jobShardingMap.put(jobName, "已分配");
+                } else {
+                    jobShardingMap.put(jobName, "未分配");
+                }
+            }
+        }
 		return new SuccessResponseEntity(jobShardingMap);
 	}
 
@@ -192,9 +195,10 @@ public class JobOverviewController extends AbstractGUIController {
                 }
 
                 if (jobStatus == null) {
-					jobStatus = jobService.getJobStatus(namespace, jobConfig);
+                    jobOverviewJobVo.setStatus(jobService.getJobStatus(namespace, jobConfig));
+                } else {
+                    jobOverviewJobVo.setStatus(jobStatus);
                 }
-                jobOverviewJobVo.setStatus(jobStatus);
 				result.add(jobOverviewJobVo);
             } catch (Exception e) {
                 log.error("list job " + jobConfig.getJobName() + " error", e);
@@ -213,14 +217,6 @@ public class JobOverviewController extends AbstractGUIController {
             } else {
                 jobOverviewJobVo.setJobType(JobType.JAVA_JOB.name());
             }
-        }
-    }
-
-    private void updateShardingListInOverview(String namespace, JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo)
-            throws SaturnJobConsoleException {
-		boolean isAllocated = jobService.isJobShardingAllocatedExecutor(namespace, jobConfig.getJobName());
-        if (isAllocated) {
-            jobOverviewJobVo.setShardingList("已分配分片");
         }
     }
 
