@@ -192,7 +192,7 @@ public class JobOverviewController extends AbstractGUIController {
                 }
 
                 if (jobStatus == null) {
-                    jobStatus = jobService.getJobStatus(namespace, jobConfig.getJobName());
+					jobStatus = jobService.getJobStatus(namespace, jobConfig);
                 }
                 jobOverviewJobVo.setStatus(jobStatus);
 				result.add(jobOverviewJobVo);

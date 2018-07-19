@@ -1521,6 +1521,13 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	public JobStatus getJobStatus(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
+				.getCuratorFrameworkOp(namespace);
+		return getJobStatus(jobConfig.getJobName(), curatorFrameworkOp, jobConfig.getEnabled());
+	}
+
+	@Override
 	public boolean isJobShardingAllocatedExecutor(String namespace, String jobName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);

@@ -79,6 +79,8 @@ public interface JobService {
 
 	JobStatus getJobStatus(String namespace, String jobName) throws SaturnJobConsoleException;
 
+	JobStatus getJobStatus(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException;
+
 	boolean isJobShardingAllocatedExecutor(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	List<String> getJobServerList(String namespace, String jobName) throws SaturnJobConsoleException;
