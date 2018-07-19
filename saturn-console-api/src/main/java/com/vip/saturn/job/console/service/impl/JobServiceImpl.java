@@ -708,8 +708,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition,
-			 int page, int size) throws SaturnJobConsoleException {
+	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition, int page,
+			int size) throws SaturnJobConsoleException {
 		List<JobConfig> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = getJobConfigByStatusWithCondition(namespace, condition, page, size);
 		if (jobConfig4DBList != null) {
@@ -728,14 +728,14 @@ public class JobServiceImpl implements JobService {
 	private List<JobConfig4DB> getJobConfigByStatusWithCondition(String namespace, Map<String, Object> condition,
 			int page, int size) throws SaturnJobConsoleException {
 		JobStatus jobStatus = (JobStatus) condition.get("jobStatus");
-        if (jobStatus == null || JobStatus.STOPPED.equals(jobStatus)) {
+		if (jobStatus == null) {
 			return currentJobConfigService.findConfigsByNamespaceWithCondition(namespace, condition,
 					PageableUtil.generatePageble(page, size));
 		}
 
-        List<JobConfig4DB> jobConfig4DBList = new ArrayList<>();
-		List<JobConfig4DB> enabledJobConfigList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
-				condition, null);
+		List<JobConfig4DB> jobConfig4DBList = new ArrayList<>();
+		List<JobConfig4DB> enabledJobConfigList = currentJobConfigService
+				.findConfigsByNamespaceWithCondition(namespace, condition, null);
 		for (JobConfig4DB jobConfig4DB : enabledJobConfigList) {
 			JobStatus currentJobStatus = getJobStatus(namespace, jobConfig4DB.getJobName());
 			if (jobStatus.equals(currentJobStatus)) {
@@ -746,16 +746,16 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-    public int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition) {
-        return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
-    }
+	public int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition) {
+		return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
+	}
 
-    @Override
-    public int countEnabledUnSystemJobs(String namespace) {
-        return currentJobConfigService.countEnabledUnSystemJobsByNamespace(namespace);
-    }
+	@Override
+	public int countEnabledUnSystemJobs(String namespace) {
+		return currentJobConfigService.countEnabledUnSystemJobsByNamespace(namespace);
+	}
 
-    @Override
+	@Override
 	public List<String> getUnSystemJobNames(String namespace) {
 		List<String> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
@@ -1521,8 +1521,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public boolean isJobShardingAllocatedExecutor(String namespace, String jobName)
-			throws SaturnJobConsoleException {
+	public boolean isJobShardingAllocatedExecutor(String namespace, String jobName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		String executorsPath = JobNodePath.getServerNodePath(jobName);

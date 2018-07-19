@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.controller.gui;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
@@ -53,6 +54,14 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
 			@RequestParam Map<String, Object> condition, @RequestParam(required = false, defaultValue = "1") int page,
 			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
+		if (condition.containsKey("status")) {
+			String statusStr = checkAndGetParametersValueAsString(condition, "status", false);
+			JobStatus jobStatus = JobStatus.getJobStatus(statusStr);
+			if (jobStatus != null) {
+				return new SuccessResponseEntity(
+						getJobOverviewByStatusAndPage(namespace, jobStatus, condition, page, size));
+			}
+		}
 		return new SuccessResponseEntity(getJobOverviewByPage(namespace, condition, page, size));
 	}
 
@@ -97,53 +106,65 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobShardingMap);
 	}
 
-	public JobOverviewVo getJobOverviewByPage(String namespace, Map<String, Object> condition, int page,
+
+	private JobOverviewVo getJobOverviewByPage(String namespace, Map<String, Object> condition, int page,
 			int size) throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         try {
             preHandleCondition(condition);
-            List<JobOverviewJobVo> jobList = new ArrayList<>();
+
             List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
-            // 当查询条件ready、running、stopping 状态时，获取作业列表会返回满足状态的所有作业
-            // 若查询条件不为前面三种状态，获取作业列表返回相应页的作业集合
-            Pageable pageable = PageableUtil.generatePageble(page, size);
-            JobStatus jobStatus = (JobStatus) condition.get("jobStatus");
-            if (jobStatus == null || JobStatus.STOPPED.equals(jobStatus)) {
-                jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace, condition));
-            } else {
-                jobOverviewVo.setTotalNumber(unSystemJobs.size());
-                unSystemJobs = unSystemJobs.subList(pageable.getOffset(), pageable.getPageSize());
-            }
-            updateJobOverviewDetail(namespace, jobList, unSystemJobs, jobStatus);
-            jobOverviewVo.setJobs(jobList);
-        } catch (SaturnJobConsoleException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SaturnJobConsoleException(e);
-        }
+			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, unSystemJobs, null);
 
-        return jobOverviewVo;
-    }
+			jobOverviewVo.setJobs(jobOverviewList);
+			jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace, condition));
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+
+		return jobOverviewVo;
+	}
+
+	private JobOverviewVo getJobOverviewByStatusAndPage(String namespace, JobStatus jobStatus,
+			Map<String, Object> condition, int page, int size) throws SaturnJobConsoleException {
+		JobOverviewVo jobOverviewVo = new JobOverviewVo();
+		try {
+			preHandleStatusAndCondition(condition, jobStatus);
+
+			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
+			Pageable pageable = PageableUtil.generatePageble(page, size);
+
+			List<JobConfig> targetJobs = unSystemJobs.subList(pageable.getOffset(), pageable.getPageSize());
+			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, targetJobs, jobStatus);
+
+			jobOverviewVo.setJobs(jobOverviewList);
+			jobOverviewVo.setTotalNumber(unSystemJobs.size());
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+
+		return jobOverviewVo;
+	}
 
 
-
-    private void preHandleCondition(Map<String, Object> condition) throws SaturnJobConsoleException {
+	private void preHandleCondition(Map<String, Object> condition) {
         if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
             condition.put("groups", "");
         }
-        if (condition.containsKey("status")) {
-			JobStatus jobStatus = JobStatus
-					.getJobStatus(checkAndGetParametersValueAsString(condition, "status", false));
-			condition.put("jobStatus", jobStatus);
-			if (jobStatus != null) {
-			    if (JobStatus.STOPPED.equals(jobStatus)) {
-			        condition.put("isEnabled", 0);
-                } else {
-			        condition.put("isEnabled", 1);
-                }
-            }
-        }
-    }
+	}
+
+	private void preHandleStatusAndCondition(Map<String, Object> condition, JobStatus jobStatus) {
+		condition.put("jobStatus", jobStatus);
+		if (JobStatus.STOPPED.equals(jobStatus) || JobStatus.STOPPING.equals(jobStatus)) {
+			condition.put("isEnabled", SaturnConstants.JOB_IS_DISABLE);
+		} else {
+			condition.put("isEnabled", SaturnConstants.JOB_IS_ENABLE);
+		}
+	}
 
     private void updateAbnormalJobSizeInOverview(String namespace, JobOverviewVo jobOverviewVo) {
         try {
@@ -154,8 +175,9 @@ public class JobOverviewController extends AbstractGUIController {
         }
     }
 
-	private void updateJobOverviewDetail(String namespace, List<JobOverviewJobVo> jobList,
-			List<JobConfig> unSystemJobs, JobStatus jobStatus) {
+	private List<JobOverviewJobVo> updateJobOverviewDetail(String namespace, List<JobConfig> unSystemJobs,
+			JobStatus jobStatus) {
+		List<JobOverviewJobVo> result = Lists.newArrayList();
         for (JobConfig jobConfig : unSystemJobs) {
             try {
                 jobConfig.setDefaultValues();
@@ -173,15 +195,13 @@ public class JobOverviewController extends AbstractGUIController {
                     jobStatus = jobService.getJobStatus(namespace, jobConfig.getJobName());
                 }
                 jobOverviewJobVo.setStatus(jobStatus);
-
-                if (!JobStatus.STOPPED.equals(jobStatus)) {// 作业如果是STOPPED状态，不需要显示已分配的executor
-                    updateShardingListInOverview(namespace, jobConfig, jobOverviewJobVo);
-                }
-                jobList.add(jobOverviewJobVo);
+				result.add(jobOverviewJobVo);
             } catch (Exception e) {
                 log.error("list job " + jobConfig.getJobName() + " error", e);
             }
         }
+
+		return result;
     }
 
     private void updateJobTypesInOverview(JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo) {

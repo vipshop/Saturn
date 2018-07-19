@@ -36,4 +36,8 @@ public class SaturnConstants {
 
 	public static final String NO_GROUPS_LABEL = "未分组";
 
+	public static final int JOB_IS_ENABLE = 1;
+
+	public static final int JOB_IS_DISABLE = 0;
+
 }
