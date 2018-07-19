@@ -8,7 +8,10 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.*;
+import com.vip.saturn.job.console.service.JobService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.service.StatisticsRefreshService;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.DashboardConstants;
 import com.vip.saturn.job.console.service.helper.ZkClusterMappingUtils;
 import com.vip.saturn.job.console.service.impl.statistics.analyzer.*;
@@ -36,7 +39,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author timmy.hu
@@ -204,6 +206,9 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		}
 	}
 
+	public void postRefreshStatistics2DB(StatisticsModel statisticsModel) {
+	}
+
 	private void forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
 		CloseableHttpClient httpClient = null;
 		String url = null;
@@ -268,6 +273,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 				statExecutorService.invokeAll(callableList);
 			}
 			statisticsPersistence.persist(statisticsModel, zkCluster);
+			postRefreshStatistics2DB(statisticsModel);
 		} catch (InterruptedException e) {
 			log.warn("the refreshStatistics2DB thread is interrupted", e);
 			Thread.currentThread().interrupt();
@@ -306,7 +312,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			List<Timeout4AlarmJob> oldTimeout4AlarmJobs = getOldTimeout4AlarmJobs(zkCluster);
 			statisticsModel.analyzeExecutor(curatorFrameworkOp, config);
 			List<String> jobs = jobService.getUnSystemJobNames(config.getNamespace());
-			fireBeforeLoopingJob(config);
 			for (String job : jobs) {
 				if (!curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(job))) {
 					continue;
@@ -330,31 +335,12 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 					log.info(String.format("analyzeStatistics namespace(%s) jobName(%s) error", namespace, job), e);
 				}
 			}
-			fireAfterLoopingJob(config);
 			statisticsModel.analyzeProcessCount(domain, jobs, config);
 		} catch (Exception e) {
 			log.info(String.format("analyzeStatistics namespace(%s) error", namespace), e);
 			return false;
 		}
 		return true;
-	}
-
-	private void fireBeforeLoopingJob(RegistryCenterConfiguration config) {
-		for (Object observer : this.analyzeStatisticsObserver) {
-			if (observer != null && observer instanceof StatisticsRefreshObserver) {
-				StatisticsRefreshObserver statisticsRefreshObserver = (StatisticsRefreshObserver) observer;
-				statisticsRefreshObserver.beforeAnalyzeJobs(config);
-			}
-		}
-	}
-
-	private void fireAfterLoopingJob(RegistryCenterConfiguration config) {
-		for (Object observer : this.analyzeStatisticsObserver) {
-			if (observer != null && observer instanceof StatisticsRefreshObserver) {
-				StatisticsRefreshObserver statisticsRefreshObserver = (StatisticsRefreshObserver) observer;
-				statisticsRefreshObserver.afterAnalyzeJobs(config);
-			}
-		}
 	}
 
 	private List<AbnormalJob> getOldAbnormalJobs(ZkCluster zkCluster) {
