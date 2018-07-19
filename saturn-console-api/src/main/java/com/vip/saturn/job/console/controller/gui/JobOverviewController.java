@@ -79,6 +79,24 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getJobNames(namespace));
 	}
 
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+	@GetMapping(value = "/sharding/status")
+	public SuccessResponseEntity getJobsShardingStatus(@PathVariable String namespace,
+			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		Map<String, String> jobShardingMap = new HashMap<>();
+		for (String jobName : jobNames) {
+			JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
+			boolean isAllocated = !JobStatus.STOPPED.equals(jobStatus)
+					&& jobService.isJobShardingAllocatedExecutor(namespace, jobName);
+			if (isAllocated) {
+				jobShardingMap.put(jobName, "已分配");
+			} else {
+				jobShardingMap.put(jobName, "未分配");
+			}
+		}
+		return new SuccessResponseEntity(jobShardingMap);
+	}
+
 	public JobOverviewVo getJobOverviewByPage(String namespace, Map<String, Object> condition, int page,
 			int size) throws SaturnJobConsoleException {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
