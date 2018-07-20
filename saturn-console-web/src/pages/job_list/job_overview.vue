@@ -284,7 +284,8 @@ export default {
           const params = {
             jobNames: this.getJobNameArray(stopedJob).join(','),
           };
-          this.$message.confirmMessage(`确认删除作业 ${params.jobNames} 吗?`, () => {
+          const confirmText = stopedJob.length < 10 ? `确认删除作业 ${params.jobNames} 吗?` : `确认删除已选的 ${stopedJob.length} 条作业吗?`;
+          this.$message.confirmMessage(confirmText, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
               this.refreshPage();
               this.$message.successNotify('批量删除作业操作成功');
@@ -396,7 +397,8 @@ export default {
             this.batchActiveRequest(params, activeRequest);
           });
         } else {
-          this.$message.confirmMessage(`确定${operation}作业${params.jobNames}吗?`, () => {
+          const confirmText = jobArray.length < 10 ? `确定${operation}作业${params.jobNames}吗?` : `确认${operation}已选的 ${jobArray.length} 条作业吗?`;
+          this.$message.confirmMessage(confirmText, () => {
             this.batchActiveRequest(params, activeRequest);
           });
         }

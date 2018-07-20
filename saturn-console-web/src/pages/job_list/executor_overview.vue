@@ -158,7 +158,8 @@ export default {
           const params = {
             executorNames: this.getExecutorNameArray(offlineExecutors).join(','),
           };
-          this.$message.confirmMessage(`确定删除Executor ${params.executorNames} 吗?`, () => {
+          const confirmText = offlineExecutors.length < 10 ? `确定删除Executor ${params.executorNames} 吗?` : `确认删除已选的 ${offlineExecutors.length} 条Executor吗?`;
+          this.$message.confirmMessage(confirmText, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/executors`, params).then(() => {
               this.getExecutorList();
               this.$message.successNotify('批量删除Executor操作成功');
