@@ -83,17 +83,17 @@
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
-                            <el-table-column width="150px" :render-header="shardingRender">
-                                <template slot-scope="scope">
-                                    <span v-if="scope.row.shardingList === ''">-</span>
-                                    <el-tag v-else :type="scope.row.shardingList === '已分配' ? 'primary' : ''">{{ scope.row.shardingList }}</el-tag>
-                                </template>
-                            </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述">
                                 <template slot-scope="scope"> 
                                     {{scope.row.description}}
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
+                            <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
+                                <template slot-scope="scope">
+                                    <span v-if="scope.row.shardingList === ''">-</span>
+                                    <el-tag v-else :type="scope.row.shardingList === '已分配' ? 'primary' : ''">{{ scope.row.shardingList }}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="120px" align="center">
@@ -142,7 +142,6 @@ export default {
     return {
       loading: false,
       tableLoading: false,
-      shardingStatusLoading: false,
       isJobInfoVisible: false,
       jobInfoTitle: '',
       jobInfoOperation: '',
@@ -188,31 +187,14 @@ export default {
     };
   },
   methods: {
-    shardingRender(h) {
-      return h(
-        'div',
-        [
-          h('el-button', { props: { loading: this.shardingStatusLoading, type: 'primary', size: 'small' }, on: { click: this.getShardings } },
-            [
-              h('i', { class: { 'fa fa-search': true } }),
-              h('span', '查看分片分配'),
-            ],
-          ),
-        ],
-      );
-    },
     getShardings() {
-      this.shardingStatusLoading = true;
       const jobNamesStr = this.getJobNameArray(this.jobList).join(',');
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/sharding/status`, { jobNames: jobNamesStr }).then((data) => {
         this.jobList.forEach((ele) => {
           this.$set(ele, 'shardingList', data[ele.jobName]);
         });
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); })
-      .finally(() => {
-        this.shardingStatusLoading = false;
-      });
+      .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
     selectColumnChange() {
       this.filters.jobName = '';
@@ -524,6 +506,9 @@ export default {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs`, params).then((data) => {
         this.jobList = data.jobs;
         this.total = data.totalNumber;
+        if (this.jobList) {
+          this.getShardings();
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业列表请求失败！'); })
       .finally(() => {
