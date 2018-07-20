@@ -29,7 +29,7 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.isEnabled" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
@@ -164,7 +164,7 @@ export default {
       filters: {
         jobName: '',
         groups: '',
-        isEnabled: '',
+        status: '',
         description: '',
       },
       jobList: [],
