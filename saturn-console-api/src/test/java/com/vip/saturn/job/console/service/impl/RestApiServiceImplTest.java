@@ -9,7 +9,6 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -277,13 +276,13 @@ public class RestApiServiceImplTest {
 	@Test
 	public void testUpdateJobSuccessfully() throws SaturnJobConsoleException {
 		String jobName = "testJob";
-		UpdateJobConfigVo updateJobConfigVo = buildUpdateJobConfig(jobName);
+		JobConfig jobConfig = buildUpdateJobConfig(jobName);
 		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPED);
 		when(currentJobConfigService.findConfigByNamespaceAndJobName(TEST_NAME_SPACE_NAME, jobName))
 				.thenReturn(buildJobConfig4DB(TEST_NAME_SPACE_NAME, jobName));
 
 		// run
-		restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, updateJobConfigVo);
+		restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, jobConfig);
 	}
 
 	@Test
@@ -309,14 +308,12 @@ public class RestApiServiceImplTest {
 		return jobServer;
 	}
 
-	private UpdateJobConfigVo buildUpdateJobConfig(String name) {
-		UpdateJobConfigVo updateJobConfigVo = new UpdateJobConfigVo();
-		updateJobConfigVo.setJobName("name");
-		updateJobConfigVo.setJobClass("com.TestJob");
-		updateJobConfigVo.setJobType(JobType.JAVA_JOB.name());
-		updateJobConfigVo.setShardingItemParameters("0=0");
-		updateJobConfigVo.setShardingTotalCount(2);
-		return updateJobConfigVo;
+	private JobConfig buildUpdateJobConfig(String name) {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("name");
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setShardingTotalCount(2);
+		return jobConfig;
 	}
 
 	private JobConfig4DB buildJobConfig4DB(String namespace, String jobName) {

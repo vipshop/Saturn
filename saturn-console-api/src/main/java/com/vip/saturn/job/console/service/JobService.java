@@ -4,7 +4,6 @@ import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
-import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -33,11 +32,13 @@ public interface JobService {
 	 */
 	List<ExecutorProvided> getCandidateExecutors(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void setPreferList(String namespace, String jobName, String preferList, String updatedBy) throws SaturnJobConsoleException;
+	void setPreferList(String namespace, String jobName, String preferList, String updatedBy)
+			throws SaturnJobConsoleException;
 
 	void addJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException;
 
-	void copyJob(String namespace, JobConfig jobConfig, String copyingJobName, String createdBy) throws SaturnJobConsoleException;
+	void copyJob(String namespace, JobConfig jobConfig, String copyingJobName, String createdBy)
+			throws SaturnJobConsoleException;
 
 	int getMaxJobNum() throws SaturnJobConsoleException;
 
@@ -51,6 +52,7 @@ public interface JobService {
 	int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition);
 
 	int countEnabledUnSystemJobs(String namespace);
+
 	/**
 	 * since 3.1.0，不再支持systemjob
 	 */
@@ -59,6 +61,7 @@ public interface JobService {
 
 
 	List<String> getJobNames(String namespace) throws SaturnJobConsoleException;
+
 	/**
 	 * 持久化作业到指定namespace
 	 */
@@ -69,7 +72,8 @@ public interface JobService {
 	 */
 	void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
-	List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy) throws SaturnJobConsoleException;
+	List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
+			throws SaturnJobConsoleException;
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
@@ -87,12 +91,12 @@ public interface JobService {
 
 	GetJobConfigVo getJobConfigVo(String namespace, String jobName) throws SaturnJobConsoleException;
 
-	void updateJobConfig(String namespace, UpdateJobConfigVo jobConfig, String updatedBy) throws SaturnJobConsoleException;
+	void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy) throws SaturnJobConsoleException;
 
 	List<String> getAllJobNamesFromZK(String namespace) throws SaturnJobConsoleException;
 
-	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext, String updatedBy)
-			throws SaturnJobConsoleException;
+	void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext,
+			String updatedBy) throws SaturnJobConsoleException;
 
 	/**
 	 * 获取作业所分配的executor及先关分配信息。

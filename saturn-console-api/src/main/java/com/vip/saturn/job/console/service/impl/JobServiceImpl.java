@@ -17,7 +17,6 @@ import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.*;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
-import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import jxl.Cell;
 import jxl.CellType;
@@ -1589,9 +1588,8 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	@Override
-	public void updateJobConfig(String namespace, UpdateJobConfigVo updateJobConfigVo, String updatedBy)
+	public void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy)
 			throws SaturnJobConsoleException {
-		JobConfig jobConfig = updateJobConfigVo.toJobConfig();
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {

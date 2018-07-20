@@ -8,14 +8,6 @@ import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
-
-import com.vip.saturn.job.console.utils.SaturnBeanUtils;
-import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
 
 /**
  * RESTful APIs of Job Operations.
@@ -41,7 +38,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 	public ResponseEntity<Object> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams)
 			throws SaturnJobConsoleException {
 		try {
-			JobConfig jobConfig = constructJobConfig(namespace, reqParams);
+			JobConfig jobConfig = constructJobConfigOfCreate(namespace, reqParams);
 			restApiService.createJob(namespace, jobConfig);
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} catch (SaturnJobConsoleException e) {
@@ -176,8 +173,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 	public ResponseEntity<Object> update(@PathVariable("namespace") String namespace, @PathVariable String jobName,
 			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		try {
-			UpdateJobConfigVo updateJobConfigVo = constructUpdateJobConfig(namespace, reqParams);
-			restApiService.updateJob(namespace, jobName, updateJobConfigVo);
+			JobConfig jobConfig = constructJobConfigOfUpdate(namespace, jobName, reqParams);
+			restApiService.updateJob(namespace, jobName, jobConfig);
 			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -186,7 +183,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
-	private JobConfig constructJobConfig(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
+	private JobConfig constructJobConfigOfCreate(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		checkMissingParameter("namespace", namespace);
 		if (!reqParams.containsKey("jobConfig")) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
@@ -255,16 +252,70 @@ public class JobOperationRestApiController extends AbstractRestController {
 		return jobConfig;
 	}
 
-	private UpdateJobConfigVo constructUpdateJobConfig(String namespace, Map<String, Object> reqParams)
+	private JobConfig constructJobConfigOfUpdate(String namespace, String jobName, Map<String, Object> reqParams)
 			throws SaturnJobConsoleException {
-		JobConfig jobConfig = constructJobConfig(namespace, reqParams);
-		UpdateJobConfigVo updateJobConfigVo = new UpdateJobConfigVo();
-		SaturnBeanUtils.copyProperties(jobConfig, updateJobConfigVo);
+		checkMissingParameter("namespace", namespace);
+		checkMissingParameter("jobName", jobName);
+		if (!reqParams.containsKey("jobConfig")) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					String.format(INVALID_REQUEST_MSG, "jobConfig", "cannot be blank"));
+		}
 
+		JobConfig jobConfig = new JobConfig();
 		Map<String, Object> configParams = (Map<String, Object>) reqParams.get("jobConfig");
-		updateJobConfigVo
-				.setOnlyUsePreferList(checkAndGetParametersValueAsBoolean(configParams, "onlyUsePreferList", false));
-		return updateJobConfigVo;
+
+		jobConfig.setJobName(jobName);
+
+		jobConfig.setDescription(checkAndGetParametersValueAsString(reqParams, "description", false));
+
+		jobConfig.setChannelName(checkAndGetParametersValueAsString(configParams, "channelName", false));
+
+		jobConfig.setCron(checkAndGetParametersValueAsString(configParams, "cron", false));
+
+		jobConfig.setJobParameter(checkAndGetParametersValueAsString(configParams, "jobParameter", false));
+
+		jobConfig.setLoadLevel(checkAndGetParametersValueAsInteger(configParams, "loadLevel", false));
+
+		jobConfig.setLocalMode(checkAndGetParametersValueAsBoolean(configParams, "localMode", false));
+
+		jobConfig.setPausePeriodDate(checkAndGetParametersValueAsString(configParams, "pausePeriodDate", false));
+
+		jobConfig.setPausePeriodTime(checkAndGetParametersValueAsString(configParams, "pausePeriodTime", false));
+
+		jobConfig.setPreferList(checkAndGetParametersValueAsString(configParams, "preferList", false));
+
+		jobConfig.setQueueName(checkAndGetParametersValueAsString(configParams, "queueName", false));
+
+		jobConfig.setShardingItemParameters(
+				checkAndGetParametersValueAsString(configParams, "shardingItemParameters", false));
+
+		jobConfig.setShardingTotalCount(checkAndGetParametersValueAsInteger(configParams, "shardingTotalCount", false));
+
+		jobConfig.setTimeout4AlarmSeconds(
+				checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
+
+		jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
+
+		jobConfig.setUseDispreferList(checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
+
+		jobConfig.setUseSerial(checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
+
+		jobConfig.setJobDegree(checkAndGetParametersValueAsInteger(configParams, "jobDegree", false));
+
+		jobConfig.setDependencies(checkAndGetParametersValueAsString(configParams, "dependencies", false));
+
+		jobConfig.setTimeZone(checkAndGetParametersValueAsString(configParams, "timeZone", false));
+
+		jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeoutSeconds", false));
+
+		jobConfig.setProcessCountIntervalSeconds(
+				checkAndGetParametersValueAsInteger(configParams, "processCountIntervalSeconds", false));
+
+		jobConfig.setGroups(checkAndGetParametersValueAsString(configParams, "groups", false));
+
+		jobConfig.setShowNormalLog(checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
+
+		return jobConfig;
 	}
 
 }

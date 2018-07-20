@@ -3,8 +3,8 @@ package com.vip.saturn.job.console.service;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
+
 import java.util.List;
 import java.util.Map;
 
@@ -100,5 +100,5 @@ public interface RestApiService {
 	/**
 	 * update the job
 	 */
-	void updateJob(String namespace, String jobName, UpdateJobConfigVo jobConfig) throws SaturnJobConsoleException;
+	void updateJob(String namespace, String jobName, JobConfig jobConfig) throws SaturnJobConsoleException;
 }
