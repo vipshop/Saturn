@@ -139,7 +139,7 @@ public class JobOverviewController extends AbstractGUIController {
 			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
 			Pageable pageable = PageableUtil.generatePageble(page, size);
 
-			List<JobConfig> targetJobs = unSystemJobs.subList(pageable.getOffset(), pageable.getPageSize());
+			List<JobConfig> targetJobs = getJobSubListByPage(unSystemJobs, pageable);
 			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, targetJobs, jobStatus);
 
 			jobOverviewVo.setJobs(jobOverviewList);
@@ -218,6 +218,18 @@ public class JobOverviewController extends AbstractGUIController {
                 jobOverviewJobVo.setJobType(JobType.JAVA_JOB.name());
             }
         }
+    }
+
+    private List<JobConfig> getJobSubListByPage(List<JobConfig> unSystemJobs, Pageable pageable) {
+        int totalCount = unSystemJobs.size();
+        int offset = pageable.getOffset();
+        int end = offset + pageable.getPageSize();
+        int fromIndex = totalCount >= offset ? offset : -1;
+        int toIndex = totalCount >= end ? end : totalCount;
+        if (fromIndex == -1 || fromIndex > toIndex) {
+            return Lists.newArrayList();
+        }
+        return unSystemJobs.subList(fromIndex, toIndex);
     }
 
     public JobOverviewVo countJobOverviewVo(String namespace) throws SaturnJobConsoleException{
