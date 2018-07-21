@@ -117,6 +117,12 @@ public class JobOverviewController extends AbstractGUIController {
             preHandleCondition(condition);
 
             List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
+			if (unSystemJobs == null || unSystemJobs.size() == 0) {
+				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
+				jobOverviewVo.setTotalNumber(0);
+				return jobOverviewVo;
+			}
+
 			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, unSystemJobs, null);
 
 			jobOverviewVo.setJobs(jobOverviewList);
@@ -137,6 +143,12 @@ public class JobOverviewController extends AbstractGUIController {
 			preHandleStatusAndCondition(condition, jobStatus);
 
 			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
+			if (unSystemJobs == null || unSystemJobs.size() == 0) {
+				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
+				jobOverviewVo.setTotalNumber(0);
+				return jobOverviewVo;
+			}
+
 			Pageable pageable = PageableUtil.generatePageble(page, size);
 
 			List<JobConfig> targetJobs = getJobSubListByPage(unSystemJobs, pageable);
@@ -220,7 +232,7 @@ public class JobOverviewController extends AbstractGUIController {
         }
     }
 
-    private List<JobConfig> getJobSubListByPage(List<JobConfig> unSystemJobs, Pageable pageable) {
+	protected List<JobConfig> getJobSubListByPage(List<JobConfig> unSystemJobs, Pageable pageable) {
         int totalCount = unSystemJobs.size();
         int offset = pageable.getOffset();
         int end = offset + pageable.getPageSize();
