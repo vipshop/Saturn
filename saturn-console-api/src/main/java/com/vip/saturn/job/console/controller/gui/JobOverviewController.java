@@ -39,6 +39,10 @@ public class JobOverviewController extends AbstractGUIController {
 
     private static final Logger log = LoggerFactory.getLogger(JobOverviewController.class);
 
+	private static final String QUERY_CONDITION_STATUS = "status";
+
+	private static final String QUERY_CONDITION_GROUP = "groups";
+
     @Resource
     private JobService jobService;
 
@@ -55,8 +59,8 @@ public class JobOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
 			@RequestParam Map<String, Object> condition, @RequestParam(required = false, defaultValue = "1") int page,
 			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
-		if (condition.containsKey("status")) {
-			String statusStr = checkAndGetParametersValueAsString(condition, "status", false);
+		if (condition.containsKey(QUERY_CONDITION_STATUS)) {
+			String statusStr = checkAndGetParametersValueAsString(condition, QUERY_CONDITION_STATUS, false);
 			JobStatus jobStatus = JobStatus.getJobStatus(statusStr);
 			if (jobStatus != null) {
 				return new SuccessResponseEntity(
@@ -73,8 +77,7 @@ public class JobOverviewController extends AbstractGUIController {
      */
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
     @GetMapping(value = "/counts")
-    public SuccessResponseEntity countJobsStatus(final HttpServletRequest request, @PathVariable String namespace
-            ) throws SaturnJobConsoleException {
+	public SuccessResponseEntity countJobsStatus(final HttpServletRequest request, @PathVariable String namespace) {
         return new SuccessResponseEntity(countJobOverviewVo(namespace));
     }
 
@@ -117,7 +120,7 @@ public class JobOverviewController extends AbstractGUIController {
             preHandleCondition(condition);
 
             List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
-			if (unSystemJobs == null || unSystemJobs.size() == 0) {
+			if (unSystemJobs == null || unSystemJobs.isEmpty()) {
 				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
 				jobOverviewVo.setTotalNumber(0);
 				return jobOverviewVo;
@@ -143,7 +146,7 @@ public class JobOverviewController extends AbstractGUIController {
 			preHandleStatusAndCondition(condition, jobStatus);
 
 			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
-			if (unSystemJobs == null || unSystemJobs.size() == 0) {
+			if (unSystemJobs == null || unSystemJobs.isEmpty()) {
 				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
 				jobOverviewVo.setTotalNumber(0);
 				return jobOverviewVo;
@@ -167,8 +170,9 @@ public class JobOverviewController extends AbstractGUIController {
 
 
 	private void preHandleCondition(Map<String, Object> condition) {
-        if (condition.containsKey("groups") && SaturnConstants.NO_GROUPS_LABEL.equals(condition.get("groups"))) {
-            condition.put("groups", "");
+		if (condition.containsKey(QUERY_CONDITION_GROUP) && SaturnConstants.NO_GROUPS_LABEL
+				.equals(condition.get(QUERY_CONDITION_GROUP))) {
+			condition.put(QUERY_CONDITION_GROUP, "");
         }
 	}
 
@@ -244,7 +248,7 @@ public class JobOverviewController extends AbstractGUIController {
         return unSystemJobs.subList(fromIndex, toIndex);
     }
 
-    public JobOverviewVo countJobOverviewVo(String namespace) throws SaturnJobConsoleException{
+	private JobOverviewVo countJobOverviewVo(String namespace) {
         JobOverviewVo jobOverviewVo = new JobOverviewVo();
         jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace,
                 Maps.<String, Object>newHashMap()));
