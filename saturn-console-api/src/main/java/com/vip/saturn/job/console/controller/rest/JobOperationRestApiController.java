@@ -229,8 +229,6 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setTimeout4AlarmSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
 
-		jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
-
 		jobConfig.setUseDispreferList(checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
 
 		jobConfig.setUseSerial(checkAndGetParametersValueAsBoolean(configParams, "useSerial", false));
@@ -293,8 +291,6 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setTimeout4AlarmSeconds(
 				checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
-
-		jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4Seconds", false));
 
 		jobConfig.setUseDispreferList(checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
 
