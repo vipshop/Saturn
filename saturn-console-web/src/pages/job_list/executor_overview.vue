@@ -75,7 +75,7 @@
                                     <el-tooltip content="恢复流量" placement="top" v-if="$common.hasPerm('executor:extractOrRecoverTraffic', domainName) && scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="一键DUMP" placement="top" v-if="$common.hasPerm('executor:dump', domainName) && scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="$common.handleDump(scope.row, domainName, dumpNext.bind(this))"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('executor:remove', domainName) && scope.row.status === 'OFFLINE'">
