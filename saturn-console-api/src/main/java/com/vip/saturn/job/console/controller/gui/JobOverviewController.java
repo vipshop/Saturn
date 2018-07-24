@@ -462,7 +462,6 @@ public class JobOverviewController extends AbstractGUIController {
     @GetMapping(value = "/export")
     public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
                            final HttpServletResponse response) throws SaturnJobConsoleException {
-        assertIsPermitted(PermissionKeys.jobExport, namespace);
         File exportJobFile = jobService.exportJobs(namespace);
         String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String exportFileName = namespace + "_allJobs_" + currentTime + ".xls";
