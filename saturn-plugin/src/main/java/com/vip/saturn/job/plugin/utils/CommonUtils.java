@@ -20,10 +20,12 @@ import java.util.zip.ZipOutputStream;
  */
 public class CommonUtils {
 
-	private static final String fileSeparator = System.getProperty("file.separator");
+	private static final String FILE_SEPARATOR = System.getProperty("file.separator");
+
+	private CommonUtils() {}
 
 	public static boolean initSaturnHome() {
-		File saturnHome = new File(System.getProperty("user.home") + fileSeparator + ".saturn");
+		File saturnHome = new File(System.getProperty("user.home") + FILE_SEPARATOR + ".saturn");
 		saturnHome.mkdirs();
 		File saturnCaches = new File(saturnHome, "caches");
 		saturnCaches.mkdirs();
@@ -31,10 +33,10 @@ public class CommonUtils {
 	}
 
 	public static File getSaturnHomeCaches() {
-		return new File(System.getProperty("user.home") + fileSeparator + ".saturn" + fileSeparator + "caches");
+		return new File(System.getProperty("user.home") + FILE_SEPARATOR + ".saturn" + FILE_SEPARATOR + "caches");
 	}
 
-	public static void unzip(File zip, File directory) throws ZipException, IOException {
+	public static void unzip(File zip, File directory) throws IOException {
 		ZipFile zipFile = new ZipFile(zip);
 		try {
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -45,21 +47,20 @@ public class CommonUtils {
 					temp.mkdirs();
 					continue;
 				}
-				BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(zipEntry));
 				File f = new File(directory + File.separator + zipEntry.getName());
-				File f_p = f.getParentFile();
-				if (f_p != null && !f_p.exists()) {
-					f_p.mkdirs();
+				try(BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(zipEntry));
+						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f))) {
+					File f_p = f.getParentFile();
+					if (f_p != null && !f_p.exists()) {
+						f_p.mkdirs();
+					}
+					int len = -1;
+					byte[] bs = new byte[2048];
+					while ((len = bis.read(bs, 0, 2048)) != -1) {
+						bos.write(bs, 0, len);
+					}
+					bos.flush();
 				}
-				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
-				int len = -1;
-				byte[] bs = new byte[2048];
-				while ((len = bis.read(bs, 0, 2048)) != -1) {
-					bos.write(bs, 0, len);
-				}
-				bos.flush();
-				bos.close();
-				bis.close();
 			}
 		} finally {
 			zipFile.close();
@@ -73,7 +74,7 @@ public class CommonUtils {
 		 */
 
 		for (File file : runtimeLibFiles) {
-			zip(file, "app" + fileSeparator + "lib", zos);
+			zip(file, "app" + FILE_SEPARATOR + "lib", zos);
 		}
 		zos.close();
 	}
@@ -82,17 +83,17 @@ public class CommonUtils {
 		if (file == null || !file.exists())
 			return;
 		if (file.isFile()) {
-			String entryName = parent == null ? file.getName() : parent + fileSeparator + file.getName();
+			String entryName = parent == null ? file.getName() : parent + FILE_SEPARATOR + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName));
-			FileInputStream fis = new FileInputStream(file);
-			int len = -1;
-			byte[] bs = new byte[2048];
-			while ((len = fis.read(bs, 0, 2048)) != -1) {
-				zos.write(bs, 0, len);
+			try(FileInputStream fis = new FileInputStream(file)) {
+				int len = -1;
+				byte[] bs = new byte[2048];
+				while ((len = fis.read(bs, 0, 2048)) != -1) {
+					zos.write(bs, 0, len);
+				}
 			}
-			fis.close();
 		} else if (file.isDirectory()) {
-			String entryName = parent == null ? file.getName() : parent + fileSeparator + file.getName();
+			String entryName = parent == null ? file.getName() : parent + FILE_SEPARATOR + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName + "/"));
 			File[] listFiles = file.listFiles();
 			if (listFiles != null) {
