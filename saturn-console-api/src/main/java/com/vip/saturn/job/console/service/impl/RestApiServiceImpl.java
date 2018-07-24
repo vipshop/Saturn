@@ -38,7 +38,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
-	private static final String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
+	private static final String JOB_STATUS_NOT_CORRECT_TEMPATE = "job's status is not {%s}";
 
 	private static final String ALL_EXECUTORS_ARE_OFFLINE = "all executors are offline";
 
