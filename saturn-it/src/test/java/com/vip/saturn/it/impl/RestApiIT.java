@@ -351,6 +351,42 @@ public class RestApiIT extends AbstractSaturnIT {
 	}
 
 	@Test
+    public void testUpdateCronFailAsCronInvalid() throws Exception{
+        String jobName = "testUpdateCronFailAsCronInvalid";
+        // create
+        JobEntity jobEntity = constructJobEntity(jobName);
+        HttpClientUtils.HttpResponseEntity responseEntity = HttpClientUtils
+                .sendPostRequestJson(BASE_URL, jobEntity.toJSON());
+        assertEquals(201, responseEntity.getStatusCode());
+        // sleep for a while ...
+        Thread.sleep(3010L);
+        // update cron
+        Map<String, Object> requestBody = Maps.newHashMap();
+        requestBody.put("cron", "abc");
+
+        responseEntity = HttpClientUtils.sendPutRequestJson(
+                BASE_URL + PATH_SEPARATOR + jobName + "/cron", gson.toJson(requestBody));
+        System.out.println(responseEntity.getEntity());
+		assertEquals(400, responseEntity.getStatusCode());
+		assertEquals("The cron expression is invalid: abc",
+				gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
+    }
+
+    @Test
+    public void testUpdateCronFailAsJobNotExists() throws Exception{
+        String jobName = "testUpdateCronFailAsJobNotExists";
+        // update cron
+        Map<String, Object> requestBody = Maps.newHashMap();
+        requestBody.put("cron", "abc");
+        HttpResponseEntity responseEntity = HttpClientUtils.sendPutRequestJson(
+                BASE_URL + PATH_SEPARATOR + "unknown" + "/cron", gson.toJson(requestBody));
+        System.out.println(responseEntity.getEntity());
+        assertEquals(404, responseEntity.getStatusCode());
+        assertEquals("The job {unknown} does not exists.",
+                gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
+    }
+
+	@Test
 	public void testUpdateJobSuccessfully() throws Exception {
 		String jobName = "testUpdateJobSuccessful";
 		JobEntity jobEntity = constructJobEntity(jobName);
