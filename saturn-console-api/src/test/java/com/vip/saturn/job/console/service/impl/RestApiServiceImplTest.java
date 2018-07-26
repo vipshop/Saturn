@@ -108,7 +108,7 @@ public class RestApiServiceImplTest {
 			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
-			assertEquals("error message is not equals", "job' status is not {READY}", e.getMessage());
+			assertEquals("error message is not equals", "job's status is not {READY}", e.getMessage());
 		}
 	}
 
@@ -266,7 +266,7 @@ public class RestApiServiceImplTest {
 			restApiService.deleteJob(TEST_NAME_SPACE_NAME, jobName);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
-			assertEquals("error message is not equals", "job' status is not {STOPPED}", e.getMessage());
+			assertEquals("error message is not equals", "job's status is not {STOPPED}", e.getMessage());
 		}
 
 		// verify
@@ -295,7 +295,7 @@ public class RestApiServiceImplTest {
 			restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, buildUpdateJobConfig(jobName));
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
-			assertEquals("error message is not equals", "job' status is not {STOPPED}", e.getMessage());
+			assertEquals("error message is not equals", "job's status is not {STOPPED}", e.getMessage());
 		}
 	}
 
