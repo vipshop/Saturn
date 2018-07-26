@@ -104,7 +104,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 		//获取配置meta
 		Map<String, List<JobConfigMeta>> jobConfigGroups = getSystemConfigMeta();
 		//返回所有配置信息
-		List<SystemConfig> systemConfigs = systemConfigService.getAllSystemConfigs();
+		List<SystemConfig> systemConfigs = systemConfigService.getSystemConfigsDirectly(null);
 		//剔除EXECUTOR_CONFIGS
 		removeExecutorConfigs(systemConfigs);
 
