@@ -202,11 +202,13 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByProperty(systemConfig.getProperty());
 
 		boolean found = false;
-		for (int i = 0; i < systemConfigs.size(); i++) {
-			SystemConfig config = systemConfigs.get(i);
-			if (StringUtils.equals(config.getProperty(), systemConfig.getProperty())) {
-				found = true;
-				break;
+		if (systemConfigs != null) {
+			for (int i = 0; i < systemConfigs.size(); i++) {
+				SystemConfig config = systemConfigs.get(i);
+				if (StringUtils.equals(config.getProperty(), systemConfig.getProperty())) {
+					found = true;
+					break;
+				}
 			}
 		}
 
@@ -226,7 +228,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
 
-		if (systemConfigs.size() == 0) {
+		if (systemConfigs == null || systemConfigs.isEmpty()) {
 			throw new SaturnJobConsoleException(
 					String.format("systemConfig %s not existed, update fail", systemConfig.getProperty()));
 		}
