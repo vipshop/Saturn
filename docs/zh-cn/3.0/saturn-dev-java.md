@@ -84,6 +84,11 @@ JavaJobReturn是作业结果返回的封装。里面三个成员变量，包括�
 ### 3.2 IntelliJ IDEA
 
 ![idea_mvn_run_config.png](_media/idea_mvn_run_config.jpg)
+添加启动参数:
+
+saturn:run -Dnamespace=www.abc.com -DexecutorName=exec01 -DVIP_SATURN_CONSOLE_URI=http://127.0.0.1:9088
+
+参数含义请参考3.1节
 
 ## 4 在Console添加Java作业
 

@@ -1,15 +1,6 @@
 # Saturn作业开发指引之Java作业 (via Maven)
 
-这一节想介绍如何写一个简单的Java作业，并使用你熟悉的IDE进行调试。
-
-> 但要注意的是，作业开发完需要将其部署到Executor才能真正的工作。关于如何部署，见“部署 Saturn Executor”一节。
-
-## 0 前置条件
-
-确保你已经部署好Saturn Console。如果没有，请参见“部署Saturn Console”一节。
-
 ## 1 添加maven依赖
-
 在pom.xml添加dependency
 
 ```xml
@@ -68,22 +59,17 @@ JavaJobReturn是作业结果返回的封装。里面三个成员变量，包括�
 - returnMsg：返回信息。将显示在Console里面。没有默认值。
 - errorGroup：异常码。详情参见教程。
 
-## 3 在IDE中调试作业
+## 3 启动Executor
 
-这一步会在IDE启动一个Executor进程。
+使用以下Maven命令启动
 
-### 3.1 Eclipse
-
-点工程右键 -> Run/Debug As -> Run Configuration 
-
-![eclipse_mvn_run_config.png](_media/eclipse_mvn_run_config.png)
+```Shell
+mvn saturn-job:run -Dnamespace=www.abc.com -DexecutorName=exe01 -DVIP_SATURN_CONSOLE_URI=http://127.0.0.1:9080
+```
 
 - namespace： 命名空间。命名空间用于对作业进行分组，作业必须属于某个命名空间，同一个命名空间下的作业名不能重复。
 - executorName：执行结点唯一标识
-
-### 3.2 IntelliJ IDEA
-
-![idea_mvn_run_config.png](_media/idea_mvn_run_config.jpg)
+- VIP_SATURN_CONSOLE_URI：saturn-console的地址
 
 ## 4 在Console添加Java作业
 
@@ -129,9 +115,7 @@ JavaJobReturn是作业结果返回的封装。里面三个成员变量，包括�
 运行以下命令打包
 
 ```Shell
-mvn saturn:zip
+mvn saturn-job:zip
 ```
 
 会在/target目录下得到**-app.zip**的一个压缩包，参照部署指引将压缩包部署到executor。
-
-当你走完这一步，你的作业已经开发并调试完毕，请参见“部署Saturn Executor”一节，了解如何把打包好的作业部署到Executor运行。
