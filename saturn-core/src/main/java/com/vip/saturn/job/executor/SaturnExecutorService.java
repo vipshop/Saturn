@@ -3,12 +3,15 @@ package com.vip.saturn.job.executor;
 import com.vip.saturn.job.exception.TimeDiffIntolerableException;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.SaturnVersionUtils;
+import com.vip.saturn.job.utils.ResourceUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * @author xiaopeng.he
@@ -22,6 +25,7 @@ public class SaturnExecutorService {
 	private static Logger log = LoggerFactory.getLogger(SaturnExecutorService.class);
 
 	private String executorName;
+	private String executorVersion;
 	private CoordinatorRegistryCenter coordinatorRegistryCenter;
 	private SaturnExecutorExtension saturnExecutorExtension;
 
@@ -98,8 +102,8 @@ public class SaturnExecutorService {
 
 		// 持久化最近启动时间
 		coordinatorRegistryCenter.persist(lastBeginTimeNode, String.valueOf(System.currentTimeMillis()));
-		String executorVersion = SaturnVersionUtils.getVersion();
 		// 持久化版本
+		executorVersion = getExecutorVersionFromFile();
 		if (executorVersion != null) {
 			coordinatorRegistryCenter.persist(versionNode, executorVersion);
 		}
@@ -132,6 +136,26 @@ public class SaturnExecutorService {
 
 		// 持久化ip
 		coordinatorRegistryCenter.persistEphemeral(ipNode, LocalHostService.cachedIpAddress);
+	}
+
+	private String getExecutorVersionFromFile() {
+		try {
+			Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
+			if (props != null) {
+				String version = props.getProperty("build.version");
+				if (!StringUtils.isBlank(version)) {
+					return version.trim();
+				} else {
+					log.error("the build.version property is not existing");
+				}
+			} else {
+				log.error("the saturn-core.properties file is not existing");
+			}
+			return null;
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+			return null;
+		}
 	}
 
 	/**
@@ -230,6 +254,10 @@ public class SaturnExecutorService {
 
 	public void setExecutorName(String executorName) {
 		this.executorName = executorName;
+	}
+
+	public String getExecutorVersion() {
+		return executorVersion;
 	}
 
 	public void setCoordinatorRegistryCenter(CoordinatorRegistryCenter coordinatorRegistryCenter) {
