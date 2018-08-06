@@ -30,8 +30,7 @@ public class LGSimpleJob extends AbstractSaturnJavaJob {
     @Override
     public SaturnJobReturn handleJavaJob(final String jobName, final Integer shardItem, final String shardParam, final SaturnJobExecutionContext shardingContext) throws InterruptedException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-       /* System.out.println("《《《:"+sdf.format(new Date()));
-        return new SaturnJobReturn();*/
+        System.out.println("《《《:"+sdf.format(new Date()));
         switch (shardItem) {
             case 0:
                 System.out.println("《《《:"+sdf.format(new Date()));
