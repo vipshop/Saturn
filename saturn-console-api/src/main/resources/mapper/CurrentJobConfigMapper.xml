@@ -67,7 +67,12 @@
     <where>
       namespace = #{namespace,jdbcType=VARCHAR}
       <if test="condition.groups != null">
-        and groups = #{condition.groups}
+        and (
+        groups = #{condition.groups}
+        <if test="condition.groups == ''">
+          or groups is NULL
+        </if>
+        )
       </if>
       <if test="condition.isEnabled != null">
         and is_enabled = #{condition.isEnabled}
@@ -99,7 +104,12 @@
     <where>
       namespace = #{namespace,jdbcType=VARCHAR}
       <if test="condition.groups != null">
-        and groups = #{condition.groups}
+        and (
+        groups = #{condition.groups}
+        <if test="condition.groups == ''">
+          or groups is NULL
+        </if>
+        )
       </if>
       <if test="condition.isEnabled != null">
         and is_enabled = #{condition.isEnabled}
