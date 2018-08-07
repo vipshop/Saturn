@@ -29,6 +29,7 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
+        <!--rocketMq 测试-->
 
     </dependencies>
     <build>

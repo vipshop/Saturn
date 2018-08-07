@@ -29,7 +29,7 @@
 		<fileSet>
 			<directory>src/main/assembly/bin</directory>
 			<outputDirectory>bin</outputDirectory>
-		</fileSet>	
+		</fileSet>
 
 	</fileSets>
 
