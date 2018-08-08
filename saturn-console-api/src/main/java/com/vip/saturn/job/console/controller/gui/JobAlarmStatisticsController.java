@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.controller.gui;
 
 import javax.annotation.Resource;
 
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,7 @@ public class JobAlarmStatisticsController extends AbstractGUIController {
 	private AlarmStatisticsService alarmStatisticsService;
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "不正常作业查询接口")
 	@GetMapping(value = "/jobs/{jobName}/isAbnormal")
 	public SuccessResponseEntity isAbnormalJob(@PathVariable String namespace, @PathVariable String jobName)
 			throws SaturnJobConsoleException {
