@@ -5,17 +5,17 @@
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="namespace" property="namespace" jdbcType="VARCHAR"/>
         <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
-        <result column="is_forced" property="isForced" jdbcType="BOOLEAN" />
-		<result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN" />
-	    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
-        <result column="created_by" property="createdBy" jdbcType="VARCHAR" />
-	    <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP" />
-	    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR" />
+        <result column="is_forced" property="isForced" jdbcType="BOOLEAN"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="BOOLEAN"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
         id,namespace,version_number,is_forced,is_deleted, create_time, created_by, last_update_time, last_updated_by
     </sql>
-    
+
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping">
         insert into namespace_version_mapping(namespace,version_number,is_forced,create_time, created_by, last_update_time, last_updated_by) values
         (
@@ -48,5 +48,10 @@
         from namespace_version_mapping
         where is_deleted = false
     </select>
+
+    <delete id="deleteByNamespaceAndVersionNumber" parameterType="map">
+        delete from namespace_version_mapping
+        where namespace = #{namespace} and version_number = #{versionNumber}
+    </delete>
 
 </mapper>

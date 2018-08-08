@@ -6,12 +6,6 @@ Shell作业实际上不局限于Shell脚本，还可以是一切能在Executor�
 
 ![shell原理](_media/saturn_shell_原理.jpg)
 
-如果你的作业以Java开发，请跳过本节，进入下一节“Saturn作业开发指引之Java作业”。
-
-## 0 前置条件
-
-确保你已经部署好Saturn Console。如果没有，请参见“部署Saturn Console”一节。
-
 ## 1 开发第一个Shell作业 ##
 
 开发Shell作业有两种形式：
@@ -37,8 +31,6 @@ chmod +x /apps/sh/demojob.sh
 ## 2 启动Executor
 
 下载并启动一个Executor。详情参见[Saturn Executor部署指南](zh-cn/2.x/saturn-executor-deployment.md).
-
-对于Shell作业，Executor的部署比Java作业要简单，只要下载并解压，执行脚本的启动命令即可。
 
 ## 3 在Console添加Shell作业，并启动
 

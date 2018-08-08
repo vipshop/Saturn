@@ -2,21 +2,30 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.ExecutionInfo;
 import com.vip.saturn.job.console.domain.ExecutionInfo.ExecutionStatus;
+import com.vip.saturn.job.console.domain.JobStatus;
+import com.vip.saturn.job.console.domain.JobType;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -33,6 +42,55 @@ public class JobServiceImplTest {
 
 	@InjectMocks
 	private JobServiceImpl jobService;
+
+	@Test
+	public void testGetUnSystemJobsWithCondition() throws SaturnJobConsoleException {
+		String namespace = "ns1";
+		String jobName = "testJob";
+		int count = 4;
+		Map<String, Object> condition = buildCondition(null);
+		when(currentJobConfigService.findConfigsByNamespaceWithCondition(eq(namespace), eq(condition),
+				Matchers.<Pageable> anyObject())).thenReturn(buildJobConfig4DBList(namespace, jobName, count));
+		assertTrue(jobService.getUnSystemJobsWithCondition(namespace, condition, 1, 25).size() == count);
+	}
+
+	@Test
+	public void testGetUnSystemJobWithConditionAndStatus() throws SaturnJobConsoleException {
+		String namespace = "ns1";
+		String jobName = "testJob";
+		int count = 4;
+		List<JobConfig4DB> jobConfig4DBList = buildJobConfig4DBList(namespace, jobName, count);
+		Map<String, Object> condition = buildCondition(JobStatus.READY);
+		when(currentJobConfigService.findConfigsByNamespaceWithCondition(eq(namespace), eq(condition),
+				Matchers.<Pageable> anyObject())).thenReturn(jobConfig4DBList);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		for (int i = 0; i < count; i++) {
+			JobConfig4DB jobConfig4DB = jobConfig4DBList.get(i);
+			// 设置 index 为单数的job enabled 为 true
+			jobConfig4DB.setEnabled(i % 2 == 1);
+			when(currentJobConfigService.findConfigByNamespaceAndJobName(eq(namespace), eq(jobConfig4DB.getJobName())))
+					.thenReturn(jobConfig4DB);
+			when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobConfig4DB.getJobName())))
+					.thenReturn(null);
+		}
+		assertTrue(jobService.getUnSystemJobsWithCondition(namespace, condition, 1, 25).size() == (count / 2));
+	}
+
+
+
+
+	@Test
+	public void testIsJobShardingAllocatedExecutor() throws SaturnJobConsoleException {
+		String namespace = "ns1";
+		String jobName = "testJob";
+		String executor = "executor1";
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList(executor));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "sharding")))
+				.thenReturn("true");
+		assertTrue(jobService.isJobShardingAllocatedExecutor(namespace, jobName));
+	}
 
 	@Test
 	public void testGetExecutionStatusSuccessfully() throws Exception {
@@ -57,6 +115,7 @@ public class JobServiceImplTest {
 				.thenReturn(true);
 		when(curatorFrameworkOp.getData(JobNodePath.getEnabledReportNodePath(jobName)))
 				.thenReturn("true");
+
 		// 0号分片running
 		mockExecutionStatusNode(true, false, false, false, false, executorName, jobName, "0");
 		// 1号分片completed
@@ -208,6 +267,29 @@ public class JobServiceImplTest {
 		config.setNamespace(namespace);
 		config.setJobName(jobName);
 		config.setEnabled(true);
+		config.setEnabledReport(true);
+		config.setJobType(JobType.JAVA_JOB.toString());
 		return config;
 	}
+
+	private List<JobConfig4DB> buildJobConfig4DBList(String namespace, String jobName, int count) {
+		List<JobConfig4DB> config4DBList = new ArrayList<>();
+		for (int i = 0; i < count; i++) {
+			JobConfig4DB config = new JobConfig4DB();
+			config.setNamespace(namespace);
+			config.setJobName(jobName + i);
+			config.setEnabled(true);
+			config.setEnabledReport(true);
+			config.setJobType(JobType.JAVA_JOB.toString());
+			config4DBList.add(config);
+		}
+		return config4DBList;
+	}
+
+	private Map<String, Object> buildCondition(JobStatus jobStatus) {
+		Map<String, Object> condition = new HashMap<>();
+		condition.put("jobStatus", jobStatus);
+		return condition;
+	}
+
 }

@@ -1,7 +1,5 @@
 # Saturn Console部署
 
-这一节会介绍如何安装和部署Saturn Console。
-
 ## 1 部署前准备
 
 ### 1.1 硬件准备
@@ -106,8 +104,6 @@ INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','cons
 
 从<https://github.com/vipshop/Saturn/releases> 中点击最新版本的“Console Zip File”，下载得到saturn-console-{version}-exec.jar，将之放到合适的目录。
 
-> 2.x版本为稳定版本。本教程以2.x为例。
-
 #### 2.4.2 启动Console
 
 ```shell
@@ -144,10 +140,3 @@ JDK 1.8:
 | VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE | 都支持            | Dashboard后台刷新频率，单位是分钟。默认值是1。      | N    |
 | server.port | JVM参数           | 启动端口，默认9088      | N    |
 
-使用浏览器访问 http://localhost:9088 即可看到你的Saturn Console！
-
-下面的章节会介绍如何开发你的第一个作业。
-
-### 2.5 关于Console的集群部署
-
-为了实现Console的高可用性，我们都希望Console有多台服务器所组成。我们只需要在多台不同的服务器的环境变量中指定相同的VIP_SATURN_CONSOLE_CLUSTER即可，至于VIP_SATURN_CONSOLE_CLUSTER的值，由你自行指定，只是一个集群标识而已。

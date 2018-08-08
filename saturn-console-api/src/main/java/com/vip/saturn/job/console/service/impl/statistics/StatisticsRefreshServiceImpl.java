@@ -58,8 +58,9 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	private Timer cleanAbnormalShardingCacheTimer;
 
 	private Map<String/** domainName_jobName_shardingItemStr **/
-			, AbnormalShardingState /** abnormal sharding state */
-	> abnormalShardingStateCache = new ConcurrentHashMap<>();
+			, AbnormalShardingState /** abnormal sharding state */> abnormalShardingStateCache = new ConcurrentHashMap<>();
+
+	private List<Object> analyzeStatisticsObserver = new ArrayList<>();
 
 	@Resource
 	private SaturnStatisticsService saturnStatisticsService;
@@ -86,6 +87,11 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		initStatExecutorService();
 		startRefreshStatisticsTimer();
 		startCleanAbnormalShardingCacheTimer();
+		addReportAlarmObserver();
+	}
+
+	private void addReportAlarmObserver() {
+		this.analyzeStatisticsObserver.add(this.reportAlarmService);
 	}
 
 	@PreDestroy
@@ -141,8 +147,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			}
 		};
 		refreshStatisticsTimer = new Timer("refresh-statistics-to-db-timer", true);
-		refreshStatisticsTimer.scheduleAtFixedRate(timerTask, 1000L * 15,
-				1000L * 60 * DashboardConstants.REFRESH_INTERVAL_IN_MINUTE);
+		refreshStatisticsTimer
+				.scheduleAtFixedRate(timerTask, 1000L * 15, 1000L * 60 * DashboardConstants.REFRESH_INTERVAL_IN_MINUTE);
 	}
 
 	private void startCleanAbnormalShardingCacheTimer() {
@@ -165,8 +171,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			}
 		};
 		cleanAbnormalShardingCacheTimer = new Timer("clean-abnormalShardingCache-timer", true);
-		cleanAbnormalShardingCacheTimer.scheduleAtFixedRate(timerTask, 0,
-				DashboardConstants.ALLOW_DELAY_MILLIONSECONDS);
+		cleanAbnormalShardingCacheTimer
+				.scheduleAtFixedRate(timerTask, 0, DashboardConstants.ALLOW_DELAY_MILLIONSECONDS);
 	}
 
 	@Override
@@ -198,7 +204,9 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		} else {
 			throw new SaturnJobConsoleException("zk cluster not found by zkClusterKey:" + zkClusterKey);
 		}
+	}
 
+	public void postRefreshStatistics2DB(StatisticsModel statisticsModel) {
 	}
 
 	private void forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
@@ -265,6 +273,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 				statExecutorService.invokeAll(callableList);
 			}
 			statisticsPersistence.persist(statisticsModel, zkCluster);
+			postRefreshStatistics2DB(statisticsModel);
 		} catch (InterruptedException e) {
 			log.warn("the refreshStatistics2DB thread is interrupted", e);
 			Thread.currentThread().interrupt();
@@ -311,16 +320,16 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 				try {
 					Boolean localMode = Boolean
 							.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "localMode")));
-					JobStatistics jobStatistics = statisticsModel.analyzeJobStatistics(curatorFrameworkOp, job,
-							localMode, config);
+					JobStatistics jobStatistics = statisticsModel
+							.analyzeJobStatistics(curatorFrameworkOp, job, localMode, config);
 					String jobDegree = String.valueOf(jobStatistics.getJobDegree());
 					statisticsModel.analyzeShardingCount(curatorFrameworkOp, domain);
 					if (!localMode) {// 非本地作业才参与判断
 						statisticsModel.analyzeOutdatedNoRunningJob(curatorFrameworkOp, oldAbnormalJobs, job, jobDegree,
 								config);
 					}
-					statisticsModel.analyzeTimeout4AlarmJob(curatorFrameworkOp, oldTimeout4AlarmJobs, job, jobDegree,
-							config);
+					statisticsModel
+							.analyzeTimeout4AlarmJob(curatorFrameworkOp, oldTimeout4AlarmJobs, job, jobDegree, config);
 					statisticsModel.analyzeUnableFailoverJob(curatorFrameworkOp, job, jobDegree, config);
 				} catch (Exception e) {
 					log.info(String.format("analyzeStatistics namespace(%s) jobName(%s) error", namespace, job), e);

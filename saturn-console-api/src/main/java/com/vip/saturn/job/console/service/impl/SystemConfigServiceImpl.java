@@ -6,21 +6,16 @@ import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.mybatis.service.SystemConfig4SqlService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.utils.SaturnConstants;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author xiaopeng.he
@@ -142,10 +137,15 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	}
 
 	@Override
+	public List<SystemConfig> getAllSystemConfigs() {
+		return systemConfig4SqlService.selectAllConfig();
+	}
+
+	@Override
 	public List<SystemConfig> getSystemConfigsDirectly(List<String> properties) throws SaturnJobConsoleException {
-		return properties != null && !properties.isEmpty()
-				? systemConfig4SqlService.selectByPropertiesAndLastly(properties)
-				: systemConfig4SqlService.selectByLastly();
+		return properties != null && !properties.isEmpty() ?
+				systemConfig4SqlService.selectByPropertiesAndLastly(properties) :
+				systemConfig4SqlService.selectByLastly();
 	}
 
 	@Override
@@ -180,7 +180,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 		List<String> properties = new ArrayList<>();
 		properties.add(systemConfig.getProperty());
 		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
-		if (systemConfigs != null && systemConfigs.size() == 1) {
+		if (systemConfigs != null && systemConfigs.size() > 0) {
 			SystemConfig systemConfig1 = systemConfigs.get(0);
 			if (systemConfig1 != null) {
 				systemConfig1.setProperty(systemConfig.getProperty());
@@ -191,6 +191,52 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 			}
 		}
 		int result = systemConfig4SqlService.insert(systemConfig);
+		updateCacheIfNeed(systemConfig, result);
+		return result;
+	}
+
+	@Override
+	public Integer createConfig(SystemConfig systemConfig) throws SaturnJobConsoleException {
+		List<String> properties = new ArrayList<>();
+		properties.add(systemConfig.getProperty());
+		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByProperty(systemConfig.getProperty());
+
+		boolean found = false;
+		if (systemConfigs != null) {
+			for (int i = 0; i < systemConfigs.size(); i++) {
+				SystemConfig config = systemConfigs.get(i);
+				if (StringUtils.equals(config.getProperty(), systemConfig.getProperty())) {
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if (found) {
+			throw new SaturnJobConsoleException(
+					String.format("systemConfig %s already existed", systemConfig.getProperty()));
+		}
+
+		int result = systemConfig4SqlService.insert(systemConfig);
+		updateCacheIfNeed(systemConfig, result);
+		return result;
+	}
+
+	@Override
+	public Integer updateConfig(SystemConfig systemConfig) throws SaturnJobConsoleException {
+		List<String> properties = new ArrayList<>();
+		properties.add(systemConfig.getProperty());
+		List<SystemConfig> systemConfigs = systemConfig4SqlService.selectByPropertiesAndLastly(properties);
+
+		if (systemConfigs == null || systemConfigs.isEmpty()) {
+			throw new SaturnJobConsoleException(
+					String.format("systemConfig %s not existed, update fail", systemConfig.getProperty()));
+		}
+
+		SystemConfig config = systemConfigs.get(0);
+		config.setProperty(systemConfig.getProperty());
+		config.setValue(systemConfig.getValue());
+		int result = systemConfig4SqlService.updateById(config);
 		updateCacheIfNeed(systemConfig, result);
 		return result;
 	}

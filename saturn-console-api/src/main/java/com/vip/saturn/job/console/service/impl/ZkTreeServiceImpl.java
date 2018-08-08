@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.google.gson.Gson;
+import com.vip.saturn.job.console.domain.Constant;
 import com.vip.saturn.job.console.domain.ZkTree;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
@@ -78,7 +79,7 @@ public class ZkTreeServiceImpl implements ZkTreeService {
 	@Override
 	public ZkTree convertFileToZkTree(File file) throws SaturnJobConsoleException {
 		try {
-			String content = FileUtils.readFileToString(file, "UTF-8");
+			String content = FileUtils.readFileToString(file, Constant.CHARSET_UTF8);
 			return gson.fromJson(content, ZkTree.class);
 		} catch (Exception e) {
 			throw new SaturnJobConsoleException(e);
@@ -88,7 +89,7 @@ public class ZkTreeServiceImpl implements ZkTreeService {
 	@Override
 	public ZkTree convertInputStreamToZkTree(InputStream inputStream) throws SaturnJobConsoleException {
 		try {
-			return gson.fromJson(new InputStreamReader(inputStream, "UTF-8"), ZkTree.class);
+			return gson.fromJson(new InputStreamReader(inputStream, Constant.CHARSET_UTF8), ZkTree.class);
 		} catch (Exception e) {
 			throw new SaturnJobConsoleException(e);
 		}
@@ -103,7 +104,7 @@ public class ZkTreeServiceImpl implements ZkTreeService {
 				FileUtils.forceMkdir(tmp.getParentFile());
 				tmp.createNewFile();
 			}
-			FileUtils.writeStringToFile(tmp, gson.toJson(zkTree), "UTF-8", false);
+			FileUtils.writeStringToFile(tmp, gson.toJson(zkTree), Constant.CHARSET_UTF8, false);
 			return tmp;
 		} catch (Exception e) {
 			throw new SaturnJobConsoleException(e);

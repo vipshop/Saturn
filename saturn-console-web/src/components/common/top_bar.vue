@@ -38,12 +38,14 @@ export default {
     return {
       jobNameSelect: '',
       loading: false,
+      jobNameList: [],
     };
   },
   methods: {
     querySearchAsync(queryString, cb) {
-      const jobList = this.jobList;
-      const results = queryString ? jobList.filter(this.createStateFilter(queryString)) : jobList;
+      const jobNameList = this.jobNameList;
+      const results = queryString ?
+      jobNameList.filter(this.createStateFilter(queryString)) : jobNameList;
       cb(results);
     },
     createStateFilter(queryString) {
@@ -57,28 +59,24 @@ export default {
       this.jobNameSelect = '';
       this.$router.push({ name: 'job_setting', params: { domain: this.domain, jobName } });
     },
-    getJobList() {
-      const params = {
-        domainName: this.domain,
-      };
-      return this.$store.dispatch('setJobListInfo', params).then(() => {})
-      .catch(() => this.$http.buildErrorHandler('获取作业列表请求失败！'));
+    getJobNameList() {
+      return this.$http.get(`/console/namespaces/${this.domain}/jobs/names`).then((data) => {
+        this.jobNameList = data.map((obj) => {
+          const rObj = {};
+          rObj.value = obj;
+          return rObj;
+        });
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取作业名列表失败！'); });
     },
     init() {
       this.loading = true;
-      Promise.all([this.getJobList()]).then(() => {
+      Promise.all([this.getJobNameList()]).then(() => {
         this.loading = false;
       });
     },
   },
   computed: {
-    jobList() {
-      return this.$store.state.global.jobListInfo.jobList.map((obj) => {
-        const rObj = {};
-        rObj.value = obj.jobName;
-        return rObj;
-      });
-    },
     isShowBarSearch() {
       let flag = false;
       const pathArr = this.$route.path.split('/');

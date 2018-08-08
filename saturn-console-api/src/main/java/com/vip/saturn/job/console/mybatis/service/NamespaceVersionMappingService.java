@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.service;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceVersionMapping;
+
 import java.util.List;
 
 /**
@@ -13,5 +14,14 @@ public interface NamespaceVersionMappingService {
 	List<NamespaceVersionMapping> selectAllWithNotDeleted();
 
 	NamespaceVersionMapping selectByNamespace(String namespace);
+
+
+	/**
+	 * 删除绑定
+	 * @param namespace
+	 * @param versionNumber
+	 * @return
+	 */
+	int deleteMapping(String namespace, String versionNumber);
 
 }

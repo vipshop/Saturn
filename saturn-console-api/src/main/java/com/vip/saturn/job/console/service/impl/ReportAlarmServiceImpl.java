@@ -3,11 +3,13 @@ package com.vip.saturn.job.console.service.impl;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * @author hebelala
@@ -37,6 +39,12 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 		String shouldFiredTimeFormatted = timeZone + " " + format.format(shouldFiredTime);
 		log.error("dashboardAbnormalJob, namespace is {}, jobName is {}, timeZone is {}, shouldFiredTime is {}",
 				namespace, jobName, timeZone, shouldFiredTimeFormatted);
+	}
+
+	@Override
+	public void dashboardAbnormalBatchJobs(String namespace, List<Map<String, String>> jobList)
+			throws ReportAlarmException {
+		//do nothing
 	}
 
 	@Override

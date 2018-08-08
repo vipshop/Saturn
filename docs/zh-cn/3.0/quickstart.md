@@ -17,6 +17,7 @@ Saturn Executor是执行任务的Worker：按照作业配置的要求去执行�
 * Maven 3.0.4+
 * node.js 8.7.0+
 * npm 5.4.2+
+* docker (版本不限)
 
 然后，git clone本仓库到本地，checkout对应版本分支，进入`quickstart`目录。如果是Windows系统，请运行`quickstart.bat`，如果是Linux/Unix/MacOS系统，请运行`quickstart.sh`。
 

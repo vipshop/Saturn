@@ -291,7 +291,6 @@ public class JobScheduler {
 			try {
 				if (job != null) {
 					job.shutdown();
-					Thread.sleep(500);// NOSONAR
 				}
 			} catch (final Exception e) {
 				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
@@ -310,12 +309,13 @@ public class JobScheduler {
 			limitMaxJobsService.shutdown();
 
 			zkCacheManager.shutdown();
-			try {
-				Thread.sleep(500);// NOSONAR
-			} catch (InterruptedException ignore) {
-				log.warn(ignore.getMessage());
-			}
+
 			if (removejob) {
+				try {
+					Thread.sleep(500);// NOSONAR
+				} catch (InterruptedException ignore) {
+					log.warn(ignore.getMessage());
+				}
 				jobNodeStorage.deleteJobNode();
 				saturnExecutorService.removeJobName(jobName);
 			}
