@@ -75,7 +75,7 @@
                                     <el-tooltip content="恢复流量" placement="top" v-if="$common.hasPerm('executor:extractOrRecoverTraffic', domainName) && scope.row.noTraffic">
                                         <el-button type="text" @click="handleTraffic(scope.row, 'recover')"><i class="fa fa-play-circle"></i></el-button>
                                     </el-tooltip>
-                                    <el-tooltip content="一键DUMP" placement="top" v-if="$common.hasPerm('executor:dump', domainName) && scope.row.status === 'ONLINE'">
+                                    <el-tooltip content="一键DUMP" placement="top" v-if="scope.row.status === 'ONLINE'">
                                         <el-button type="text" @click="$common.handleDump(scope.row, domainName, dumpNext.bind(this))"><i class="fa fa-database"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('executor:remove', domainName) && scope.row.status === 'OFFLINE'">
@@ -158,7 +158,8 @@ export default {
           const params = {
             executorNames: this.getExecutorNameArray(offlineExecutors).join(','),
           };
-          this.$message.confirmMessage(`确定删除Executor ${params.executorNames} 吗?`, () => {
+          const confirmText = offlineExecutors.length < 10 ? `确定删除Executor ${params.executorNames} 吗?` : `确认删除已选的 ${offlineExecutors.length} 条Executor吗?`;
+          this.$message.confirmMessage(confirmText, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/executors`, params).then(() => {
               this.getExecutorList();
               this.$message.successNotify('批量删除Executor操作成功');

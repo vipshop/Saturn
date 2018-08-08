@@ -1,28 +1,71 @@
 package com.vip.saturn.job.console.controller.gui;
 
 import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.utils.PageableUtil;
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class JobOverviewControllerTest {
 
-    @Test(expected = SaturnJobConsoleException.class)
-    public void test_assertJobConfigIsValid_invalidShardingParameter() throws Throwable {
-        String invalidParameter = "0=1,a=xx";
-        JobConfig jobConfig = new JobConfig();
-        jobConfig.setShardingItemParameters(invalidParameter);
-        JobOverviewController jobOverviewController = new JobOverviewController();
-        Method method = JobOverviewController.class.getDeclaredMethod("assertJobConfigIsValid", JobConfig.class);
-        method.setAccessible(true);
-        try {
-            method.invoke(jobOverviewController, new Object[]{jobConfig});
-        } catch (InvocationTargetException ex) {
-            if ((ex.getCause().getClass().equals(SaturnJobConsoleException.class))) {
-                throw ex.getCause();
-            }
-        }
-    }
+	private TestJobOverviewController controller = new TestJobOverviewController();
+
+	@Test
+	public void getJobSubListByPage() {
+		List<JobConfig> configs = Lists
+				.newArrayList(buildJobConfig("job1"), buildJobConfig("job2"), buildJobConfig("job3"));
+
+		List<JobConfig> result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(1, 2));
+		assertEquals(2, result.size());
+		assertEquals("job1", result.get(0).getJobName());
+		assertEquals("job2", result.get(1).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(2, 2));
+		assertEquals(1, result.size());
+		assertEquals("job3", result.get(0).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(3, 2));
+		assertEquals(0, result.size());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(0, 2));
+		assertEquals(2, result.size());
+		assertEquals("job1", result.get(0).getJobName());
+		assertEquals("job2", result.get(1).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(-1, 2));
+		assertEquals(2, result.size());
+		assertEquals("job1", result.get(0).getJobName());
+		assertEquals("job2", result.get(1).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(1, 5));
+		assertEquals(3, result.size());
+		assertEquals("job1", result.get(0).getJobName());
+		assertEquals("job2", result.get(1).getJobName());
+		assertEquals("job3", result.get(2).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(1, 1));
+		assertEquals(1, result.size());
+		assertEquals("job1", result.get(0).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(2, 1));
+		assertEquals(1, result.size());
+		assertEquals("job2", result.get(0).getJobName());
+
+		result = controller.getJobSubListByPage(configs, PageableUtil.generatePageble(1, -1));
+		assertEquals(3, result.size());
+	}
+
+	private JobConfig buildJobConfig(String name) {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(name);
+		return jobConfig;
+	}
+
+	static final class TestJobOverviewController extends JobOverviewController {
+
+	}
+
 }

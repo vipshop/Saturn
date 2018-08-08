@@ -154,21 +154,21 @@ export default {
     },
     jobStatusJudge() {
       return this.jobShardings.some((ele) => {
-        if (ele.status === 'ONLINE') {
+        if (ele.serverStatus === 'ONLINE') {
           return true;
         }
         return false;
       });
     },
-    getJobExecutors() {
-      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/sharding/status`).then((data) => {
+    getJobStatus() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/servers/status`).then((data) => {
         this.jobShardings = data;
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业运行状态请求失败！'); });
     },
     init() {
       this.loading = true;
-      Promise.all([this.getDomainInfo(), this.getJobInfo(), this.getJobExecutors()]).then(() => {
+      Promise.all([this.getDomainInfo(), this.getJobInfo(), this.getJobStatus()]).then(() => {
         this.loading = false;
       });
     },

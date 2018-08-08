@@ -11,12 +11,14 @@
   "dependencies": {
     "@cloudux/noah-theme": "^2.0.2",
     "axios": "^0.16.2",
+    "babel-polyfill": "^6.26.0",
     "brace": "^0.10.0",
     "element-ui": "^2.0.5",
     "font-awesome": "^4.7.0",
     "highcharts": "^6.0.3",
     "moment": "^2.18.1",
     "opn": "^4.0.2",
+    "url-search-params-polyfill": "^4.0.0",
     "vue": "2.5.2",
     "vue-router": "^2.3.1",
     "vuex": "^3.0.1"

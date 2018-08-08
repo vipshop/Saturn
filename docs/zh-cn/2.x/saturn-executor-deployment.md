@@ -1,16 +1,10 @@
 # Saturn Executor部署
 
-Executor是作业的执行器。这一节将介绍如何将调试好的作业部署到Executor上面运行。关于如何开发调试作业，见“入门”一章。
-
-Executor启动时，需要指定所属的域。启动后，Executor会自动拉取域下的作业配置信息，然后根据Saturn Console scheudler的调度安排，以及作业的Cron表达式去执行作业调度。
-
 ## 1 部署前准备 ##
 
 ### 1.1 硬件准备
 
 Linux服务器1台
-
-> 这里只介绍Linux OS的方式。其他OS差别不大。
 
 ### 1.2 软件准备
 
@@ -19,7 +13,7 @@ JDK  >= 1.7
 ### 1.3 检查
 
 - [ ] 检查是否能访问Saturn Console (参见Saturn Console部署指南)
-- [ ] 检查Saturn Console上是否有指定的namespace（可以在Console的注册中心搜索一下namespace名字）
+- [ ] 检查Saturn Console上是否有指定的namespace（可以从左侧树看到）
 - [ ] 检查是否能访问ZooKeeper (参见Saturn Console部署指南)。可以通过telnet 对应zk的端口，默认是（2181）
 - [ ] 如果你要部署的是Java作业，检查是否已经打包了一个*-app.zip的包。详情参见[Saturn作业开发指引之Java作业](zh-cn/2.x/saturn-dev-java.md)
 
@@ -47,7 +41,7 @@ export VIP_SATURN_CONSOLE_URI=http://localhost:9088
         -/logs
         -saturn-executor.jar
 
-/bin： 存放executor的启动脚本(saturn-executor.sh)
+
 /bin： 存放executor的启动脚本(saturn-executor.sh)
 
 /demo_script： 一些演示用的脚本(4个php脚本)
@@ -85,16 +79,6 @@ app
       - xyz.jar
 ```
 
-### 2.3 网卡名字的修改
-
-确保你的网卡名字包含bond0或者eth0上。否则在启动时报一下错误：
-
-```java
-getCachedAddressException:java.lang.Exception: wrong with get ip cause by could not read any info from local host, bond0 and eth0
-```
-
-如果没有bond0或者eth0，你需要修改一下你的网卡名字。
-
 ### 2.4 启动executor ###
 
 ```shell
@@ -131,24 +115,4 @@ Saturn executor start successfully, running as process:18332.
 ```
 
 如果启动失败，根据console提示的路径查看saturn-executor.log。
-
-### 2.5 单台物理机启动多个executor ###
-
-建议在一台物理机启动一个executor。 如果想在单台物理机启动多个executor，建议采用以下步骤：
-
-1. 将saturn-executor-{version} copy到多个
-
-2. 在启动这些executor时，分别指定不同executorname和JMX端口，命令如下：
-
-   ```Shell
-   $ ./saturn-executor.sh start -n www.abc.com -e executor-001 -jmx 24502
-   ```
-
-   注意：executor name，默认是hostname；jmx端口默认是24501
-
-### 2.6 FAQ
-
-Q：新作业部署时，流程是怎么样？
-
-A：参见“灰度发布”一章。
 

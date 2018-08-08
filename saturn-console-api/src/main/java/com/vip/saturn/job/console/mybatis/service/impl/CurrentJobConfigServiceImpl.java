@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -88,13 +89,11 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		}
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception {
 		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -116,10 +115,30 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		historyJobConfigService.create(oldJobConfig);
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
+	}
+
+	@Override
+	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition,
+			Pageable pageable) {
+		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, pageable);
+	}
+
+	@Override
+    public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition) {
+	    return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
+    }
+
+    @Override
+    public int countEnabledUnSystemJobsByNamespace(String namespace) {
+        return currentJobConfigRepo.countEnabledUnSystemJobsByNamespace(namespace, 1);
+    }
+
+    @Override
+	public List<String> findConfigNamesByNamespace(String namespace) {
+		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}
 
 	@Transactional(rollbackFor = Exception.class)

@@ -11,6 +11,7 @@ package com.vip.saturn.job.reg.zookeeper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.vip.saturn.job.constant.Constant;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 import com.vip.saturn.job.sharding.utils.CuratorUtils;
@@ -129,7 +130,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		builder.connectionTimeoutMs(connectionTimeout);
 
 		if (!Strings.isNullOrEmpty(zkConfig.getDigest())) {
-			builder.authorization("digest", zkConfig.getDigest().getBytes(Charset.forName("UTF-8")))
+			builder.authorization("digest", zkConfig.getDigest().getBytes(Charset.forName(Constant.CHARSET_UTF8)))
 					.aclProvider(new ACLProvider() {
 
 						@Override
@@ -202,7 +203,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			if (getZnodeData == null) {
 				return "";
 			}
-			return new String(getZnodeData, Charset.forName("UTF-8"));
+			return new String(getZnodeData, Charset.forName(Constant.CHARSET_UTF8));
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON
@@ -264,7 +265,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 	public void update(final String key, final String value) {
 		try {
 			client.inTransaction().check().forPath(key).and().setData()
-					.forPath(key, value.getBytes(Charset.forName("UTF-8"))).and().commit();
+					.forPath(key, value.getBytes(Charset.forName(Constant.CHARSET_UTF8))).and().commit();
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON
@@ -279,7 +280,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 				client.delete().deletingChildrenIfNeeded().forPath(key);
 			}
 			client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
-					.forPath(key, value.getBytes(Charset.forName("UTF-8")));
+					.forPath(key, value.getBytes(Charset.forName(Constant.CHARSET_UTF8)));
 			// CHECKSTYLE:OFF
 		} catch (final Exception ex) {
 			// CHECKSTYLE:ON

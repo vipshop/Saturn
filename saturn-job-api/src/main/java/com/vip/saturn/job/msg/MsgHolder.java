@@ -16,19 +16,19 @@ public class MsgHolder implements Serializable {
 	private String payload;
 
 	/** 来自消息服务器的Context信息 */
-	private Set<Entry<String, Object>> prop;
+	private Set<Entry<String, String>> prop;
 
 	/** 消息id */
 	private String messageId;
 
 	@Deprecated
-	public MsgHolder(String payload, Set<Entry<String, Object>> prop, String messageId) {
+	public MsgHolder(String payload, Set<Entry<String, String>> prop, String messageId) {
 		this.payload = payload;
 		this.prop = prop;
 		this.messageId = messageId;
 	}
 
-	public MsgHolder(byte[] payloadBytes, Set<Entry<String, Object>> prop, String messageId) {// NOSONAR
+	public MsgHolder(byte[] payloadBytes, Set<Entry<String, String>> prop, String messageId) {// NOSONAR
 		this.payloadBytes = payloadBytes;
 		this.prop = prop;
 		this.messageId = messageId;
@@ -96,15 +96,15 @@ public class MsgHolder implements Serializable {
 		return payload;
 	}
 
-	public Set<Entry<String, Object>> getProp() {
+	public Set<Entry<String, String>> getProp() {
 		return prop;
 	}
 
 	public Object getProp(String key) {
 		if (prop != null) {
-			Iterator<Entry<String, Object>> iterator = prop.iterator();
+			Iterator<Entry<String, String>> iterator = prop.iterator();
 			while (iterator.hasNext()) {
-				Entry<String, Object> next = iterator.next();
+				Entry<String, String> next = iterator.next();
 				if ((key != null && key.equals(next.getKey())) || (key == null && next.getKey() == null)) {
 					return next.getValue();
 				}

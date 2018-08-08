@@ -14,38 +14,36 @@
 </template>
 <script>
 export default {
-  props: ['data', 'total', 'orderBy', 'filters'],
+  props: ['getData', 'data', 'total', 'orderBy', 'filters'],
   data() {
     return {
       pageSize: 25,
       currentPage: 1,
       orderby: this.orderBy,
+      orderKey: undefined,
+      order: undefined,
       pageData: [],
       filtered: [],
     };
   },
   computed: {
-    filter() {
-      const ret = [];
-      if (this.filters) {
-        Object.entries(this.filters).forEach((item) => {
-          if (item[1] !== '' && item[1] !== undefined) {
-            ret.push(`${item[0]}:${item[1]}`);
-          }
-        });
-      }
-      return (ret.length ? ret.join(',') : undefined);
-    },
     offset() {
       return (this.currentPage - 1) * this.pageSize;
     },
     params() {
-      return {
-        pagesize: this.pageSize,
-        orderby: this.orderby,
-        offset: this.offset,
-        filter: this.filter,
-      };
+      const paramsResult = Object.create(null);
+      paramsResult.size = this.pageSize;
+      paramsResult.page = this.currentPage;
+      paramsResult.orderKey = this.orderKey;
+      paramsResult.order = this.order;
+      if (this.filters) {
+        Object.entries(this.filters).forEach((item) => {
+          if (item[1] !== '' && item[1] !== undefined) {
+            paramsResult[item[0]] = item[1];
+          }
+        });
+      }
+      return paramsResult;
     },
     totalRecords() {
       if (this.data) {
@@ -68,6 +66,8 @@ export default {
     getDataByParams() {
       if (this.data) {
         this.buildCurrentPage();
+      } else if (this.getData) {
+        this.getData(this.params);
       }
     },
     buildCurrentPage() {
@@ -119,6 +119,8 @@ export default {
       } else {
         this.orderby = `${sort.prop}`;
       }
+      // this.orderKey = sort.prop;
+      this.order = sort.order;
       this.getDataByParams();
     },
     onCurrentChange(page) {

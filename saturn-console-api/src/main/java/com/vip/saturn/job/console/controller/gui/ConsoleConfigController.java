@@ -46,15 +46,15 @@ public class ConsoleConfigController extends AbstractGUIController {
 	private org.springframework.core.io.Resource configYaml;
 
 	/**
-	 * 创建或者更新配置项。
+	 * 创建配置项。
 	 *
 	 * @param key 配置key
 	 * @param value 配置值
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
-	@PostMapping
-	public SuccessResponseEntity createOrUpdateConfig(@AuditParam(value = "key") @RequestParam String key,
+	@PostMapping("/create")
+	public SuccessResponseEntity createConfig(@AuditParam(value = "key") @RequestParam String key,
 			@AuditParam(value = "value") @RequestParam String value) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.systemConfig);
 		//不能更新EXECUTOR_CONFIGS
@@ -64,10 +64,35 @@ public class ConsoleConfigController extends AbstractGUIController {
 		SystemConfig systemConfig = new SystemConfig();
 		systemConfig.setProperty(key);
 		systemConfig.setValue(value);
-		systemConfigService.insertOrUpdate(systemConfig);
 
+		systemConfigService.createConfig(systemConfig);
 		return new SuccessResponseEntity();
 	}
+
+	/**
+	 * 更新配置项。
+	 *
+	 * @param key 配置key
+	 * @param value 配置值
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping("/update")
+	public SuccessResponseEntity updateConfig(@AuditParam(value = "key") @RequestParam String key,
+			@AuditParam(value = "value") @RequestParam String value) throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.systemConfig);
+		//不能更新EXECUTOR_CONFIGS
+		if (SystemConfigProperties.EXECUTOR_CONFIGS.equals(key)) {
+			throw new SaturnJobConsoleException(String.format("配置项不能为%s", key));
+		}
+		SystemConfig systemConfig = new SystemConfig();
+		systemConfig.setProperty(key);
+		systemConfig.setValue(value);
+
+		systemConfigService.updateConfig(systemConfig);
+		return new SuccessResponseEntity();
+	}
+
 
 	/**
 	 * 获取所有系统配置信息。

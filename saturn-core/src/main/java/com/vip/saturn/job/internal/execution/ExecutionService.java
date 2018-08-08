@@ -102,7 +102,7 @@ public class ExecutionService extends AbstractSaturnService {
 		}
 		boolean isEnabledReport = configService.isEnabledReport();
 		if (isEnabledReport) {
-			getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getCompletedNode(item));
+			getJobNodeStorage().removeJobNode(ExecutionNode.getCompletedNode(item));
 			getJobNodeStorage().fillEphemeralJobNode(ExecutionNode.getRunningNode(item), executorName);
 			// 清除完成状态timeout等信息
 			cleanSaturnNode(item);
@@ -170,7 +170,7 @@ public class ExecutionService extends AbstractSaturnService {
 		// create completed node
 		createCompletedNode(item);
 		// remove running node
-		getJobNodeStorage().removeJobNodeIfExisted(ExecutionNode.getRunningNode(item));
+		getJobNodeStorage().removeJobNode(ExecutionNode.getRunningNode(item));
 	}
 
 	private void createCompletedNode(int item) {

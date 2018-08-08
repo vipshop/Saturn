@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -14,29 +14,20 @@
 
 package com.vip.saturn.job.internal.server;
 
-import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.utils.LocalHostService;
-import com.vip.saturn.job.utils.ResourceUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 作业服务器节点服务.
  * @author dylan.xue
  */
 public class ServerService extends AbstractSaturnService {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(ServerService.class);
 
 	private LeaderElectionService leaderElectionService;
 
@@ -64,16 +55,9 @@ public class ServerService extends AbstractSaturnService {
 	}
 
 	public void persistVersion() {
-		try {
-			Properties props = ResourceUtils.getResource("properties/saturn-core.properties");
-			if (props != null) {
-				String version = props.getProperty("build.version");
-				if (!Strings.isNullOrEmpty(version)) {
-					getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getVersionNode(executorName), version);
-				}
-			}
-		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+		String executorVersion = jobScheduler.getSaturnExecutorService().getExecutorVersion();
+		if (executorVersion != null) {
+			getJobNodeStorage().fillJobNodeIfNullOrOverwrite(ServerNode.getVersionNode(executorName), executorVersion);
 		}
 	}
 
@@ -113,7 +97,7 @@ public class ServerService extends AbstractSaturnService {
 
 	/**
 	 * 获取该作业的所有服务器列表.
-	 * 
+	 *
 	 * @return 所有的作业服务器列表
 	 */
 	public List<String> getAllServers() {
@@ -124,7 +108,7 @@ public class ServerService extends AbstractSaturnService {
 
 	/**
 	 * 持久化统计处理数据成功的数量的数据.
-	 * 
+	 *
 	 * @param processSuccessCount 成功数
 	 */
 	public void persistProcessSuccessCount(final int processSuccessCount) {
@@ -133,7 +117,7 @@ public class ServerService extends AbstractSaturnService {
 
 	/**
 	 * 持久化统计处理数据失败的数量的数据.
-	 * 
+	 *
 	 * @param processFailureCount 失败数
 	 */
 	public void persistProcessFailureCount(final int processFailureCount) {

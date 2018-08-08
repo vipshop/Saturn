@@ -38,7 +38,7 @@ public class RestApiServiceImpl implements RestApiService {
 
 	private static final long OPERATION_FORBIDDEN_INTERVAL_AFTER_CREATION_IN_MILL_SECONDS = 10 * 1000L;
 
-	private static final String JOB_STATUS_NOT_CORRECT_TEMPATE = "job' status is not {%s}";
+	private static final String JOB_STATUS_NOT_CORRECT_TEMPATE = "job's status is not {%s}";
 
 	private static final String ALL_EXECUTORS_ARE_OFFLINE = "all executors are offline";
 
@@ -464,17 +464,17 @@ public class RestApiServiceImpl implements RestApiService {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 									String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.READY.name()));
 						}
-						List<JobServer> jobServers = jobService.getJobServers(namespace, jobName);
+						List<JobServerStatus> jobServersStatus = jobService.getJobServersStatus(namespace, jobName);
 
-						if (CollectionUtils.isEmpty(jobServers)) {
+						if (CollectionUtils.isEmpty(jobServersStatus)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
 						}
 
 						boolean everExecute = false;
-						for (JobServer server : jobServers) {
-							if (ServerStatus.ONLINE.equals(server.getStatus())) {
+						for (JobServerStatus jobServerStatus : jobServersStatus) {
+							if (ServerStatus.ONLINE.equals(jobServerStatus.getServerStatus())) {
 								everExecute = true;
-								String executorName = server.getExecutorName();
+								String executorName = jobServerStatus.getExecutorName();
 								String path = JobNodePath.getRunOneTimePath(jobName, executorName);
 								if (curatorFrameworkOp.checkExists(path)) {
 									curatorFrameworkOp.delete(path);
@@ -515,14 +515,13 @@ public class RestApiServiceImpl implements RestApiService {
 									"job cannot be stopped while its status is READY or RUNNING");
 						}
 
-						List<JobServer> jobServers = jobService.getJobServers(namespace, jobName);
+						List<String> jobServerList = jobService.getJobServerList(namespace, jobName);
 
-						if (CollectionUtils.isEmpty(jobServers)) {
+						if (CollectionUtils.isEmpty(jobServerList)) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), NO_EXECUTOR_FOUND);
 						}
 
-						for (JobServer server : jobServers) {
-							String executorName = server.getExecutorName();
+						for (String executorName : jobServerList) {
 							String path = JobNodePath.getStopOneTimePath(jobName, executorName);
 							if (curatorFrameworkOp.checkExists(path)) {
 								curatorFrameworkOp.delete(path);
@@ -632,6 +631,26 @@ public class RestApiServiceImpl implements RestApiService {
 			log.warn(errMsg);
 			throw new SaturnJobConsoleHttpException(HttpStatus.FORBIDDEN.value(), errMsg);
 		}
+	}
+
+	@Override
+	public void updateJob(final String namespace, final String jobName, final JobConfig jobConfig)
+			throws SaturnJobConsoleException {
+		ReuseUtils
+				.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
+					@Override
+					public void call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+							throws SaturnJobConsoleException {
+						JobStatus js = jobService.getJobStatus(namespace, jobName);
+
+						if (!JobStatus.STOPPED.equals(js)) {
+							throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+									String.format(JOB_STATUS_NOT_CORRECT_TEMPATE, JobStatus.STOPPED.name()));
+						}
+						jobService.updateJobConfig(namespace, jobConfig, "");
+						log.info("job {} update done", jobName);
+					}
+				});
 	}
 
 }

@@ -1,13 +1,11 @@
 # 快速开始
 Saturn包括两大部分，**Saturn Console**和**Saturn Executor**。
 
-Saturn Console是一个GUI，用于作业/Executor管理，统计报表展现，系统配置等功能。它同时也是整个调度系统的大脑：将作业任务分配到各Executor。
+Saturn Console是一个Web UI，用于作业/Executor管理，统计报表展现，系统配置等功能。它同时也是整个调度系统的大脑：将作业任务分配到各Executor。
 
 Saturn Executor是执行任务的Worker：按照作业配置的要求去执行部署于Executor所在容器或物理机当中的作业脚本和代码。
 
-为了能让用户对Saturn有一个感性认识，我们提供了两种快速启动Console和Executor的方法。
-
-至于生产环境的部署，请参见后面的部署指南。
+为了能让用户对Saturn有一个感性认识，我们提供了两种快速启动Console和Executor的方法。至于生产环境的部署，请参见后面的部署指南。
 
 ## 1 一键启动
 

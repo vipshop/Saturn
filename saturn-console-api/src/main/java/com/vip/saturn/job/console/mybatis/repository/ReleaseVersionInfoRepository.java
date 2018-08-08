@@ -1,8 +1,9 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.ReleaseVersionInfo;
-import java.util.List;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @author timmy.hu
@@ -21,4 +22,11 @@ public interface ReleaseVersionInfoRepository {
 	int selectInUsingNamespaceCount(String versionNumber);
 
 	int deleteByVersionNumber(String versionNumber);
+
+	/**
+	 * 根据版本号更新
+	 * @param releaseVersionInfo
+	 * @return
+	 */
+	int updateByVersionNumber(ReleaseVersionInfo releaseVersionInfo);
 }

@@ -206,7 +206,6 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity dump(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("executorName") @PathVariable String executorName) throws SaturnJobConsoleException {
-		assertIsPermitted(PermissionKeys.executorDump, namespace);
 		// check executor is existed and online.
 		checkExecutorStatus(namespace, executorName, ServerStatus.ONLINE, "Executor必须在线才可以dump");
 		executorService.dump(namespace, executorName);

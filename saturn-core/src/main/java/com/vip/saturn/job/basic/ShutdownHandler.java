@@ -1,18 +1,16 @@
 package com.vip.saturn.job.basic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
 /**
  * Saturn优雅退出: 退出时清理信息
@@ -119,9 +117,6 @@ public class ShutdownHandler implements SignalHandler {
 	}
 
 	private void exit() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		loggerContext.stop();
-
 		try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {

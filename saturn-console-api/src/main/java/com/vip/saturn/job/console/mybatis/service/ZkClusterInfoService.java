@@ -1,6 +1,5 @@
 package com.vip.saturn.job.console.mybatis.service;
 
-import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 
 import java.util.List;

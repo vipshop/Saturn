@@ -45,10 +45,7 @@ export default {
           break;
         case 'POST':
         case 'PUT':
-          const formData = new URLSearchParams();
-          Object.entries(dataObj).forEach((ele) => {
-            formData.append(ele[0], ele[1]);
-          });
+          const formData = new URLSearchParams(dataObj);
           config.data = formData;
           break;
         default:

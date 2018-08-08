@@ -181,10 +181,7 @@ public class ConfigurationService extends AbstractSaturnService {
 				try {
 					result.put(Integer.valueOf(item), exec);
 				} catch (final NumberFormatException ex) {
-					if (LOGGER.isWarnEnabled()) {
-						LOGGER.warn("Sharding item key '%s' is invalid, it should be an integer, key '%s' will be dropped", item, item, ex);
-					}
-					continue;
+					LOGGER.warn("Sharding item key '%s' is invalid, it should be an integer, key '%s' will be dropped", item, item, ex);
 				}
 			}
 		}

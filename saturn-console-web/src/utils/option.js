@@ -7,16 +7,16 @@ export default {
     label: 'Shell定时作业',
   }],
   jobStatusTypes: [{
-    value: 'READY',
+    value: 0,
+    label: '已停止',
+  }, {
+    value: 1,
     label: '已就绪',
   }, {
-    value: 'RUNNING',
+    value: 2,
     label: '运行中',
   }, {
-    value: 'STOPPING',
+    value: 3,
     label: '停止中',
-  }, {
-    value: 'STOPPED',
-    label: '已停止',
   }],
 };

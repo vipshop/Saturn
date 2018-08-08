@@ -3,6 +3,8 @@ package com.vip.saturn.job.console.service.impl;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
+import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
@@ -39,6 +41,9 @@ public class RestApiServiceImplTest {
 
 	@Mock
 	private JobService jobService;
+	
+	@Mock
+	private CurrentJobConfigService currentJobConfigService;
 
 	@Mock
 	private CuratorRepository.CuratorFrameworkOp curatorFrameworkOp;
@@ -63,11 +68,6 @@ public class RestApiServiceImplTest {
 	}
 
 	@Test
-	public void testCreateJobSuccessfully() {
-
-	}
-
-	@Test
 	public void testRunAtOnceSuccessfully() throws SaturnJobConsoleException {
 		// prepare
 		String jobName = "testJob";
@@ -78,8 +78,23 @@ public class RestApiServiceImplTest {
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
+		List<JobServerStatus> jobServerStatusList = getJobServerStatus(servers);
+		when(jobService.getJobServersStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(jobServerStatusList);
 		// run
 		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
+	}
+
+	private List<JobServerStatus> getJobServerStatus(List<JobServer> servers) {
+		List<JobServerStatus> result = Lists.newArrayList();
+		for (JobServer server : servers) {
+			JobServerStatus jobServerStatus = new JobServerStatus();
+			jobServerStatus.setJobName(server.getJobName());
+			jobServerStatus.setExecutorName(server.getExecutorName());
+			jobServerStatus.setServerStatus(ServerStatus.ONLINE);
+
+			result.add(jobServerStatus);
+		}
+		return result;
 	}
 
 	@Test
@@ -93,7 +108,7 @@ public class RestApiServiceImplTest {
 			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
-			assertEquals("error message is not equals", "job' status is not {READY}", e.getMessage());
+			assertEquals("error message is not equals", "job's status is not {READY}", e.getMessage());
 		}
 	}
 
@@ -135,7 +150,8 @@ public class RestApiServiceImplTest {
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
-
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
 	}
@@ -150,6 +166,8 @@ public class RestApiServiceImplTest {
 		JobServer jobServer = createJobServer("job1");
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
 
 		// run
 		restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
@@ -166,6 +184,9 @@ public class RestApiServiceImplTest {
 		servers.add(jobServer);
 		when(jobService.getJobServers(TEST_NAME_SPACE_NAME, jobName)).thenReturn(servers);
 
+		List<String> serverNameList = getJobServerNameList(servers);
+		when(jobService.getJobServerList(TEST_NAME_SPACE_NAME, jobName)).thenReturn(serverNameList);
+
 		// run
 		try {
 			restApiService.stopJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
@@ -173,6 +194,15 @@ public class RestApiServiceImplTest {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "job cannot be stopped while it is enable", e.getMessage());
 		}
+	}
+
+	private List<String> getJobServerNameList(List<JobServer> servers) {
+		List<String> result = Lists.newArrayList();
+		for (JobServer jobServer : servers) {
+			result.add(jobServer.getExecutorName());
+		}
+
+		return result;
 	}
 
 	@Test
@@ -236,11 +266,37 @@ public class RestApiServiceImplTest {
 			restApiService.deleteJob(TEST_NAME_SPACE_NAME, jobName);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
-			assertEquals("error message is not equals", "job' status is not {STOPPED}", e.getMessage());
+			assertEquals("error message is not equals", "job's status is not {STOPPED}", e.getMessage());
 		}
 
 		// verify
 		verify(jobService, times(0)).removeJob(TEST_NAME_SPACE_NAME, jobName);
+	}
+
+	@Test
+	public void testUpdateJobSuccessfully() throws SaturnJobConsoleException {
+		String jobName = "testJob";
+		JobConfig jobConfig = buildUpdateJobConfig(jobName);
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPED);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(TEST_NAME_SPACE_NAME, jobName))
+				.thenReturn(buildJobConfig4DB(TEST_NAME_SPACE_NAME, jobName));
+
+		// run
+		restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, jobConfig);
+	}
+
+	@Test
+	public void testUpdateJobFailAsSaturnsIsNotStopped() throws SaturnJobConsoleException {
+		String jobName = "testJob";
+		when(jobService.getJobStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(JobStatus.STOPPING);
+
+		// run
+		try {
+			restApiService.updateJob(TEST_NAME_SPACE_NAME, jobName, buildUpdateJobConfig(jobName));
+		} catch (SaturnJobConsoleHttpException e) {
+			assertEquals("status code is not 400", 400, e.getStatusCode());
+			assertEquals("error message is not equals", "job's status is not {STOPPED}", e.getMessage());
+		}
 	}
 
 	private JobServer createJobServer(String name) {
@@ -252,4 +308,21 @@ public class RestApiServiceImplTest {
 		return jobServer;
 	}
 
+	private JobConfig buildUpdateJobConfig(String name) {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("name");
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setShardingTotalCount(2);
+		return jobConfig;
+	}
+
+	private JobConfig4DB buildJobConfig4DB(String namespace, String jobName) {
+		JobConfig4DB config = new JobConfig4DB();
+		config.setNamespace(namespace);
+		config.setJobName(jobName);
+		config.setEnabled(false);
+		config.setEnabledReport(true);
+		config.setJobType(JobType.JAVA_JOB.toString());
+		return config;
+	}
 }

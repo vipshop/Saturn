@@ -39,6 +39,8 @@
           class="com.vip.saturn.job.console.controller.gui.JobOverviewController"/>
     <bean id="jobShardingController"
           class="com.vip.saturn.job.console.controller.gui.JobShardingController"/>
+    <bean id="jobServerController"
+          class="com.vip.saturn.job.console.controller.gui.JobServerController"/>
     <bean id="marathonController"
           class="com.vip.saturn.job.console.controller.gui.MarathonController"/>
     <bean id="namespaceAlramStatController"
@@ -71,6 +73,10 @@
     <bean id="zkDiscoveryRestApiController"
           class="com.vip.saturn.job.console.controller.rest.ZkDiscoveryRestApiController"/>
     <!-- Rest API Controller End -->
+    <!-- Other Controller Begin -->
+    <bean id="healthCheckController"
+          class="com.vip.saturn.job.console.controller.HealthCheckController"/>
+    <!-- Other Controller End -->
 
     <mvc:annotation-driven>
         <mvc:message-converters>
