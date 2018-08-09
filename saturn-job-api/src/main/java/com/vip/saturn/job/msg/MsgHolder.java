@@ -21,11 +21,21 @@ public class MsgHolder implements Serializable {
 	/** 消息id */
 	private String messageId;
 
+	/** Kafka offset */
+	private long offset;
+
 	@Deprecated
 	public MsgHolder(String payload, Set<Entry<String, String>> prop, String messageId) {
 		this.payload = payload;
 		this.prop = prop;
 		this.messageId = messageId;
+	}
+
+	public MsgHolder(byte[] payloadBytes, Set<Entry<String, String>> prop, String messageId, long offset) {// NOSONAR
+		this.payloadBytes = payloadBytes;
+		this.prop = prop;
+		this.messageId = messageId;
+		this.offset = offset;
 	}
 
 	public MsgHolder(byte[] payloadBytes, Set<Entry<String, String>> prop, String messageId) {// NOSONAR
@@ -75,6 +85,13 @@ public class MsgHolder implements Serializable {
 				this.messageId = (String) res;
 			}
 
+			field = clazz.getDeclaredField("offset");
+			field.setAccessible(true);
+			res = field.get(source);
+			if (res != null) {
+				this.offset = (long) res;
+			}
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -117,4 +134,7 @@ public class MsgHolder implements Serializable {
 		return messageId;
 	}
 
+	public long getOffset() {
+		return offset;
+	}
 }
