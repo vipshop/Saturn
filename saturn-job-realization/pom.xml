@@ -11,11 +11,17 @@
 
     <artifactId>saturn-job-realization</artifactId>
     <dependencies>
+        <!--直接依赖saturn-executor，相当于继承executor，直接将业务代码和executor分离（后面可以直接启动本项目，而无需启动executor）-->
+        <dependency>
+            <groupId>com.vip.saturn</groupId>
+            <artifactId>saturn-executor</artifactId>
+            <version>master-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>com.vip.saturn</groupId>
             <artifactId>saturn-job-api</artifactId>
             <!-- 修改成指定版本 -->
-            <version>3.0.1</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -38,7 +44,7 @@
                 <groupId>com.vip.saturn</groupId>
                 <artifactId>saturn-plugin</artifactId>
                 <!-- 版本与saturn-job-api一致 -->
-                <version>3.0.1</version>
+                <version>master-SNAPSHOT</version>
             </plugin>
 
             <!--用于打包成zip文件-->

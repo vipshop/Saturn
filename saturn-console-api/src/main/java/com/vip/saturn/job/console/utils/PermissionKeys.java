@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.utils;
 
 /**
+ * 验证参数的key
  * @author hebelala
  */
 public class PermissionKeys {

@@ -29,6 +29,8 @@
 
 	<build>
 		<plugins>
+			<!--todo 需要了解一下executor主要做了那些操作-->
+			<!--com.vip.saturn.job.executor.Main 方式打包 executor.jar-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>

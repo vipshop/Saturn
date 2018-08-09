@@ -328,6 +328,7 @@ public class JobOverviewController extends AbstractGUIController {
     public SuccessResponseEntity enableJob(final HttpServletRequest request,
                                            @AuditParam("namespace") @PathVariable String namespace,
                                            @AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+        //验证眼熟
         assertIsPermitted(PermissionKeys.jobEnable, namespace);
         jobService.enableJob(namespace, jobName, getCurrentLoginUserName());
         return new SuccessResponseEntity();
