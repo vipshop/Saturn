@@ -117,7 +117,7 @@ public class MsgHolder implements Serializable {
 		return prop;
 	}
 
-	public Object getProp(String key) {
+	public String getProp(String key) {
 		if (prop != null) {
 			Iterator<Entry<String, String>> iterator = prop.iterator();
 			while (iterator.hasNext()) {
