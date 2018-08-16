@@ -117,6 +117,13 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 	}
 
 	/**
+	 * 是否成功
+	 */
+	public boolean isSuccess() {
+		return status.get() == SUCCESS;
+	}
+
+	/**
 	 * 重新初始化
 	 */
 	public void reset() {
