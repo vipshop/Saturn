@@ -16,9 +16,4 @@ public final class SaturnSystemReturnCode {
 	/** 作业执行不参与计数 */
 	public static final int JOB_NO_COUNT = 9999;
 
-	public static boolean include(int returnCode) {
-		return returnCode == SUCCESS || returnCode == SYSTEM_FAIL || returnCode == USER_FAIL
-				|| returnCode == JOB_NO_COUNT;
-	}
-
 }
