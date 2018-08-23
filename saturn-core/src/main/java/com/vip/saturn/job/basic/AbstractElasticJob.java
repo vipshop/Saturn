@@ -150,7 +150,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			log.trace("Saturn finish to execute job [{}], sharding context:{}.", jobName, shardingContext);
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		} finally {
 			running = false;
 		}

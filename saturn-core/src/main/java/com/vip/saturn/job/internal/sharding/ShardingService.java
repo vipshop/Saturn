@@ -178,7 +178,10 @@ public class ShardingService extends AbstractSaturnService {
 					needRetry = true;
 					retryCount--;
 				} catch (Exception e) {
-					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
+					// 可能多个sharding task导致计算结果有滞后，但是server机器已经被删除，导致commit失败
+					// 实际上可能不影响最终结果，仍然能正常分配分片，因为还会有resharding事件被响应
+					// 修改日志级别为warn级别，避免不必要的告警
+					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
 				}
 				if (needRetry) {
 					if (retryCount >= 0) {
