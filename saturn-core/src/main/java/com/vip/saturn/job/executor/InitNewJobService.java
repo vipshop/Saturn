@@ -1,11 +1,13 @@
 package com.vip.saturn.job.executor;
 
+import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.AlarmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -17,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -126,12 +130,36 @@ public class InitNewJobService {
 						log.info("the job {} initialize successfully", jobName);
 					} else {
 						log.warn("the job {} initialize fail", jobName);
+						String alarmMessage = "job:" + jobName + " init fail";
+						String namespace = regCenter.getNamespace();
+						AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, alarmMessage),
+								namespace);
+						log.info("alarm raised for job:[{}] at namespace:[{}] init fail", jobName, namespace);
 					}
 				} else {
 					log.warn("the job {} is unnecessary to initialize, because it's already existing", jobName);
 				}
 				break;
 			}
+		}
+
+		public Map<String, Object> constructAlarmInfo(String namespace, String jobName, String executorName,
+				String alarmMessage) {
+			Map<String, Object> alarmInfo = new HashMap<>();
+
+			alarmInfo.put("jobName", jobName);
+			alarmInfo.put("executorName", executorName);
+			alarmInfo.put("name", "Saturn Event");
+			alarmInfo.put("title", String.format("JOB_INIT_FAIL:%s", jobName));
+			alarmInfo.put("level", "CRITICAL");
+			alarmInfo.put("message", alarmMessage);
+
+			Map<String, String> customFields = Maps.newHashMap();
+			customFields.put("sourceType", "saturn");
+			customFields.put("domain", namespace);
+			alarmInfo.put("additionalInfo", customFields);
+
+			return alarmInfo;
 		}
 
 		private boolean initJobScheduler(String jobName) {
