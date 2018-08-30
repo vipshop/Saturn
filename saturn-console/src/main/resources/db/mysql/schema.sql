@@ -52,6 +52,7 @@ CREATE TABLE `job_config` (
   `is_enabled` tinyint(1) DEFAULT '0' COMMENT '是否启用标志',
   `job_mode` varchar(255) DEFAULT NULL COMMENT '作业模式',
   `custom_context` varchar(8192) DEFAULT NULL COMMENT '自定义语境参数',
+  `rerun` tinyint(1) DEFAULT '0' COMMENT '是否重跑标志',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace_job_name` (`namespace`,`job_name`),
   KEY `idx_namespace` (`namespace`),

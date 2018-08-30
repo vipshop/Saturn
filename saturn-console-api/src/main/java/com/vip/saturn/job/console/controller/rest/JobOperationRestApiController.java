@@ -35,8 +35,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> create(@PathVariable("namespace") String namespace, @RequestBody Map<String, Object> reqParams)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> create(@PathVariable("namespace") String namespace,
+			@RequestBody Map<String, Object> reqParams) throws SaturnJobConsoleException {
 		try {
 			JobConfig jobConfig = constructJobConfigOfCreate(namespace, reqParams);
 			restApiService.createJob(namespace, jobConfig);
@@ -49,8 +49,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 	}
 
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
@@ -63,7 +63,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 	}
 
 	@RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> queryAll(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
+	public ResponseEntity<Object> queryAll(@PathVariable("namespace") String namespace)
+			throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			List<RestApiJobInfo> restApiJobInfos = restApiService.getRestApiJobInfos(namespace);
@@ -78,8 +79,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = {"/{namespace}/{jobName}/enable",
 			"/{namespace}/jobs/{jobName}/enable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> enable(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			restApiService.enableJob(namespace, jobName);
@@ -94,8 +95,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = {"/{namespace}/{jobName}/disable",
 			"/{namespace}/jobs/{jobName}/disable"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> disable(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			restApiService.disableJob(namespace, jobName);
@@ -110,8 +111,9 @@ public class JobOperationRestApiController extends AbstractRestController {
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = {"/{namespace}/{jobName}/cron",
 			"/{namespace}/jobs/{jobName}/cron"}, method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName,
-			@RequestBody Map<String, String> params, HttpServletRequest request) throws SaturnJobConsoleException {
+	public ResponseEntity<Object> updateJobCron(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName, @RequestBody Map<String, String> params,
+			HttpServletRequest request) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			String cron = params.remove("cron");
@@ -127,8 +129,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/run", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
 			restApiService.runJobAtOnce(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -141,8 +143,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/stop", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> stop(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
 			restApiService.stopJobAtOnce(namespace, jobName);
 
@@ -156,8 +158,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName)
-			throws SaturnJobConsoleException {
+	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
 			restApiService.deleteJob(namespace, jobName);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -183,7 +185,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
-	private JobConfig constructJobConfigOfCreate(String namespace, Map<String, Object> reqParams) throws SaturnJobConsoleException {
+	private JobConfig constructJobConfigOfCreate(String namespace, Map<String, Object> reqParams)
+			throws SaturnJobConsoleException {
 		checkMissingParameter("namespace", namespace);
 		if (!reqParams.containsKey("jobConfig")) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
@@ -207,7 +210,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		String jobType = checkAndGetParametersValueAsString(configParams, "jobType", true);
 		if (JobType.UNKOWN_JOB.equals(JobType.getJobType(jobType))) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
 		}
 		jobConfig.setJobType(jobType);
 
@@ -223,11 +227,13 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setQueueName(checkAndGetParametersValueAsString(configParams, "queueName", false));
 
-		jobConfig.setShardingItemParameters(checkAndGetParametersValueAsString(configParams, "shardingItemParameters", true));
+		jobConfig.setShardingItemParameters(
+				checkAndGetParametersValueAsString(configParams, "shardingItemParameters", true));
 
 		jobConfig.setShardingTotalCount(checkAndGetParametersValueAsInteger(configParams, "shardingTotalCount", true));
 
-		jobConfig.setTimeout4AlarmSeconds(checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
+		jobConfig.setTimeout4AlarmSeconds(
+				checkAndGetParametersValueAsInteger(configParams, "timeout4AlarmSeconds", false));
 
 		jobConfig.setUseDispreferList(checkAndGetParametersValueAsBoolean(configParams, "useDispreferList", false));
 
@@ -241,11 +247,14 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setTimeoutSeconds(checkAndGetParametersValueAsInteger(configParams, "timeoutSeconds", false));
 
-		jobConfig.setProcessCountIntervalSeconds(checkAndGetParametersValueAsInteger(configParams, "processCountIntervalSeconds", false));
+		jobConfig.setProcessCountIntervalSeconds(
+				checkAndGetParametersValueAsInteger(configParams, "processCountIntervalSeconds", false));
 
 		jobConfig.setGroups(checkAndGetParametersValueAsString(configParams, "groups", false));
 
 		jobConfig.setShowNormalLog(checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
+
+		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		return jobConfig;
 	}
@@ -310,6 +319,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setGroups(checkAndGetParametersValueAsString(configParams, "groups", false));
 
 		jobConfig.setShowNormalLog(checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
+
+		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		return jobConfig;
 	}

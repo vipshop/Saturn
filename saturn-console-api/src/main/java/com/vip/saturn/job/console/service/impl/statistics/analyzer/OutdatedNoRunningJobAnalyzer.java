@@ -21,13 +21,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.vip.saturn.job.console.service.impl.JobServiceImpl.CONFIG_ITEM_RERUN;
+
 public class OutdatedNoRunningJobAnalyzer {
 
 	private static final Logger log = LoggerFactory.getLogger(OutdatedNoRunningJobAnalyzer.class);
 
 	private Map<String/** domainName_jobName_shardingItemStr **/
-			, AbnormalShardingState /** abnormal sharding state */
-			> abnormalShardingStateCache = new ConcurrentHashMap<>();
+			, AbnormalShardingState /** abnormal sharding state */> abnormalShardingStateCache = new ConcurrentHashMap<>();
 
 	private ReportAlarmService reportAlarmService;
 
@@ -182,8 +183,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	public void analyze(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, List<AbnormalJob> oldAbnormalJobs,
-			String jobName,
-			String jobDegree, RegistryCenterConfiguration config) {
+			String jobName, String jobDegree, RegistryCenterConfiguration config) {
 		AbnormalJob unnormalJob = new AbnormalJob(jobName, config.getNamespace(), config.getNameAndNamespace(),
 				config.getDegree());
 		unnormalJob.setJobDegree(jobDegree);
@@ -199,8 +199,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private void checkOutdatedNoRunningJob(List<AbnormalJob> oldAbnormalJobs,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob) {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
 		try {
 			if (!isCronJob(curatorFrameworkOp, abnormalJob.getJobName())) {
 				return;
@@ -257,9 +256,8 @@ public class OutdatedNoRunningJobAnalyzer {
 		if (abnormalShardingStateCache.containsKey(key)) {
 			AbnormalShardingState abnormalShardingState = abnormalShardingStateCache.get(key);
 			if (abnormalShardingState != null
-					&& abnormalShardingState.getAlertTime()
-					+ DashboardConstants.ALLOW_DELAY_MILLIONSECONDS * 1.5 > nowTime
-					&& abnormalShardingState.getZkNodeCVersion() == zkNodeCVersion) {
+					&& abnormalShardingState.getAlertTime() + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS * 1.5
+					> nowTime && abnormalShardingState.getZkNodeCVersion() == zkNodeCVersion) {
 				abnormalShardingStateCache.put(key, new AbnormalShardingState(nowTime, zkNodeCVersion));// 更新告警
 				return true;
 			} else {
@@ -273,8 +271,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private void doCheckAndHandleOutdatedNoRunningJob(List<AbnormalJob> oldAbnormalJobs,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob) throws Exception {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) throws Exception {
 		String jobName = abnormalJob.getJobName();
 		String enabledPath = JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "enabled");
 		List<String> items = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(abnormalJob.getJobName()));
@@ -291,11 +288,11 @@ public class OutdatedNoRunningJobAnalyzer {
 		} else { // 无分片。还没有开始第一次的作业执行。
 			abnormalJob.setCause(AbnormalJob.Cause.NO_SHARDS.name());
 			long nextFireTimeAfterThis = curatorFrameworkOp.getMtime(enabledPath);
-			Long nextFireTime = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(
-					nextFireTimeAfterThis, jobName, curatorFrameworkOp);
+			Long nextFireTime = getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(nextFireTimeAfterThis, jobName,
+					curatorFrameworkOp);
 			// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
-			if (nextFireTime != null
-					&& nextFireTime + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < System.currentTimeMillis()) {
+			if (nextFireTime != null && nextFireTime + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < System
+					.currentTimeMillis()) {
 				handleOutdatedNoRunningJob(oldAbnormalJobs, curatorFrameworkOp, abnormalJob, nextFireTime);
 			}
 		}
@@ -320,11 +317,19 @@ public class OutdatedNoRunningJobAnalyzer {
 			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
 		}
 		abnormalJob.setCause(cause);
+		boolean rerun = getRerunConfig(curatorFrameworkOp, abnormalJob);
+		abnormalJob.setRerun(rerun);
 		abnormalJob.setTimeZone(timeZone);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
 		abnormalJob.setNextFireTimeWithTimeZoneFormat(sdf.format(nextFireTimeExcludePausePeriod));
 		abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
+	}
+
+	private boolean getRerunConfig(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
+		String rerun = curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(abnormalJob.getJobName(), CONFIG_ITEM_RERUN));
+		return Boolean.valueOf(rerun);
 	}
 
 	private boolean executorNotReady(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
@@ -415,8 +420,8 @@ public class OutdatedNoRunningJobAnalyzer {
 		}
 		Long nextFireTime = abnormalJob.getNextFireTimeAfterEnabledMtimeOrLastCompleteTime();
 		// 下次触发时间是否小于当前时间+延时, 是则为过时未跑有异常
-		if (nextFireTime != null
-				&& nextFireTime + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < System.currentTimeMillis()) {
+		if (nextFireTime != null && nextFireTime + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < System
+				.currentTimeMillis()) {
 			return nextFireTime;
 		}
 		return -1;
@@ -466,8 +471,8 @@ public class OutdatedNoRunningJobAnalyzer {
 				curatorFrameworkOp);
 
 		if (nextFireTimeExcludePausePeriod.equals(nextFireTimeExcludePausePeriodWithDelta)
-				|| nextFireTimeExcludePausePeriodWithDelta
-						+ DashboardConstants.ALLOW_DELAY_MILLIONSECONDS < currentTime) {
+				|| nextFireTimeExcludePausePeriodWithDelta + DashboardConstants.ALLOW_DELAY_MILLIONSECONDS
+				< currentTime) {
 			log.debug("still not work after adding delta interval");
 			return false;
 		}

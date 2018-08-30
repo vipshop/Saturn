@@ -39,22 +39,23 @@
     <result column="is_enabled" property="enabled" jdbcType="BIT" />
     <result column="job_mode" property="jobMode" jdbcType="VARCHAR" />
     <result column="custom_context" property="customContext" jdbcType="VARCHAR" />
+    <result column="rerun" property="rerun" jdbcType="BIT" />
   </resultMap>
   <sql id="Base_Column_List" >
     id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
     failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
-    namespace, zk_list,is_enabled,job_mode,custom_context
+    namespace, zk_list,is_enabled,job_mode,custom_context,rerun
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from job_config
     where id = #{id,jdbcType=BIGINT}
   </select>
   <select id="findConfigsByNamespace" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from job_config
     where namespace = #{namespace,jdbcType=VARCHAR}
@@ -136,7 +137,7 @@
     where namespace = #{namespace,jdbcType=VARCHAR}
   </select>
   <select id="findConfigByNamespaceAndJobName" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from job_config
     where namespace = #{namespace,jdbcType=VARCHAR}
@@ -155,7 +156,8 @@
       timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
       job_type, queue_name, create_by, 
       create_time, last_update_by, last_update_time,
-      namespace, zk_list,is_enabled,job_mode,custom_context
+      namespace, zk_list,is_enabled,job_mode,custom_context,
+      rerun
       )
     values (#{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR}, 
       #{shardingTotalCount,jdbcType=INTEGER}, #{loadLevel,jdbcType=INTEGER}, #{jobDegree,jdbcType=INTEGER}, #{enabledReport,jdbcType=BIT},
@@ -168,7 +170,7 @@
       #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
       #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR},#{enabled,jdbcType=BIT},#{jobMode,jdbcType=VARCHAR},
-      #{customContext,jdbcType=VARCHAR}
+      #{customContext,jdbcType=VARCHAR}, #{rerun, jdbcType=BIT}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
@@ -285,6 +287,9 @@
        <if test="customContext != null" >
         custom_context,
       </if>
+      <if test="rerun != null" >
+        rerun,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -397,6 +402,9 @@
       </if>
       <if test="customContext != null" >
         #{custom_context,jdbcType=VARCHAR},
+      </if>
+      <if test="rerun != null" >
+        #{rerun,jdbcType=BIT},
       </if>
     </trim>
   </insert>
@@ -511,6 +519,9 @@
       <if test="customContext != null" >
         custom_context = #{customContext,jdbcType=VARCHAR},
       </if>
+      <if test="rerun != null" >
+          rerun = #{rerun,jdbcType=BIT},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -551,15 +562,16 @@
       namespace = #{namespace,jdbcType=VARCHAR},
       is_enabled = #{enabled,jdbcType=BIT},
       job_mode = #{jobMode,jdbcType=VARCHAR},
-      custom_context = #{customContext,jdbcType=VARCHAR}
+      custom_context = #{customContext,jdbcType=VARCHAR},
+      rerun = #{rerun,jdbcType=BIT}
     where id = #{id,jdbcType=BIGINT}
   </update>
-  
+
   <update id="updatePreferList" parameterType="java.util.List">
      update job_config set prefer_list = #{preferList,jdbcType=VARCHAR}
      where namespace = #{namespace,jdbcType=VARCHAR} and job_name = #{jobName,jdbcType=VARCHAR}
   </update>
-  
+
   <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
     select count(*) from job_config
     <where >
@@ -674,12 +686,15 @@
       <if test="customContext != null" >
         and custom_context = #{customContext,jdbcType=VARCHAR}
       </if>
+      <if test="rerun != null" >
+        and rerun = #{rerun,jdbcType=BIT}
+      </if>
     </where>
   </select>
   <select id="selectPage" resultMap="BaseResultMap" >
-    select 
+    select
     <include refid="Base_Column_List" />
-    from job_config where 1 = 1 
+    from job_config where 1 = 1
     <if test="currentJobConfig.jobName != null" >
       and job_name = #{currentJobConfig.jobName,jdbcType=VARCHAR}
     </if>
@@ -785,11 +800,14 @@
     <if test="currentJobConfig.jobMode != null" >
       and job_mode = #{currentJobConfig.jobMode,jdbcType=VARCHAR}
     </if>
+    <if test="rerun != null">
+      and rerun = #{currentJobConfig.rerun, jdbcType=BIT}
+    </if>
     <if test="currentJobConfig.customContext != null" >
       and custom_context = #{currentJobConfig.customContext,jdbcType=VARCHAR}
     </if>
     <if test="pageable.sort != null" >
-      order by 
+      order by
       <foreach collection="pageable.sort" item="order" separator="," >
         ${order.property} ${order.direction}
       </foreach>
@@ -798,7 +816,7 @@
       limit ${pageable.offset}, ${pageable.pageSize}
     </if>
   </select>
-  
+
   <delete id="deleteAll" parameterType="java.lang.Integer" >
   	delete from  job_config limit #{limitNum,jdbcType=INTEGER}
   </delete>

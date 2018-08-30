@@ -44,6 +44,8 @@ public class JobConfig implements Serializable {
 
 	private Boolean isCopyJob = Boolean.FALSE;
 
+	private Boolean rerun;
+
 	private <T> T getDefaultIfNull(T val, T def) {
 		return val == null ? def : val;
 	}
@@ -81,6 +83,7 @@ public class JobConfig implements Serializable {
 		jobMode = getDefaultIfNull(jobMode, "");
 		dependencies = getDefaultIfNull(dependencies, "");
 		groups = getDefaultIfNull(groups, "");
+		rerun = getDefaultIfNull(rerun, Boolean.FALSE);
 	}
 
 	public String getJobName() {
@@ -331,6 +334,14 @@ public class JobConfig implements Serializable {
 		this.groups = groups;
 	}
 
+	public Boolean getRerun() {
+		return rerun;
+	}
+
+	public void setRerun(Boolean rerun) {
+		this.rerun = rerun;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)
@@ -416,6 +427,8 @@ public class JobConfig implements Serializable {
 			return false;
 		if (dependencies != null ? !dependencies.equals(jobConfig.dependencies) : jobConfig.dependencies != null)
 			return false;
+		if (rerun != null ? !dependencies.equals(jobConfig.rerun) : jobConfig.rerun != null)
+			return false;
 		return groups != null ? groups.equals(jobConfig.groups) : jobConfig.groups == null;
 	}
 
@@ -452,6 +465,7 @@ public class JobConfig implements Serializable {
 		result = 31 * result + (customContext != null ? customContext.hashCode() : 0);
 		result = 31 * result + (dependencies != null ? dependencies.hashCode() : 0);
 		result = 31 * result + (groups != null ? groups.hashCode() : 0);
+		result = 31 * result + (rerun != null ? rerun.hashCode() : 0);
 		return result;
 	}
 }
