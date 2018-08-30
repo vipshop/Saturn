@@ -115,7 +115,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 	 * 移除Executor全局配置，该配置在单独的页面管理
 	 * @param systemConfigs 全量的系统配置数据
 	 */
-	private void removeExecutorConfigs(List<SystemConfig> systemConfigs) {
+	public void removeExecutorConfigs(List<SystemConfig> systemConfigs) {
 		if (systemConfigs == null) {
 			return;
 		}
@@ -135,7 +135,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 	 * @param systemConfigs 数据库的系统配置项
 	 * @return 配置分组与配置信息map
 	 */
-	private Map<String, List<SystemConfigVo>> genSystemConfigInfo(Map<String, List<JobConfigMeta>> jobConfigGroups,
+	public Map<String, List<SystemConfigVo>> genSystemConfigInfo(Map<String, List<JobConfigMeta>> jobConfigGroups,
 			List<SystemConfig> systemConfigs) {
 		Map<String, SystemConfig> systemConfigMap = convertList2Map(systemConfigs);
 		Map<String, List<SystemConfigVo>> jobConfigDisplayInfoMap = Maps.newHashMap();
@@ -165,7 +165,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 		return jobConfigDisplayInfoMap;
 	}
 
-	private List<SystemConfigVo> getUncategorizedSystemConfigs(List<SystemConfig> systemConfigList,
+	public List<SystemConfigVo> getUncategorizedSystemConfigs(List<SystemConfig> systemConfigList,
 			Set<String> configKeySet) {
 		List<SystemConfigVo> unCategorizedJobConfigVos = Lists.newArrayList();
 		for (SystemConfig systemConfig : systemConfigList) {
@@ -179,14 +179,14 @@ public class ConsoleConfigController extends AbstractGUIController {
 		return unCategorizedJobConfigVos;
 	}
 
-	protected Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
+	public Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
 		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef = new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
 		};
 
 		return YAML_OBJ_MAPPER.readValue(configYaml.getInputStream(), typeRef);
 	}
 
-	Map<String, SystemConfig> convertList2Map(List<SystemConfig> configList) {
+	public Map<String, SystemConfig> convertList2Map(List<SystemConfig> configList) {
 		Map<String, SystemConfig> configMap = Maps.newHashMap();
 		for (SystemConfig config : configList) {
 			if (configMap.containsKey(config.getProperty())) {
