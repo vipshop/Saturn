@@ -56,7 +56,7 @@ public class DiscoveryRestApiController extends AbstractRestController {
 		String namespace = request.getParameter("namespace");
 		Map<String, String> response = new HashMap<>(2);
 		response.put("zkConnStr", getZkConnStr(namespace));
-		response.put("vmEnv", getVmsEnv());
+		response.put("vmsEnv", getVmsEnv());
 		return ResponseEntity.ok(response);
 	}
 
