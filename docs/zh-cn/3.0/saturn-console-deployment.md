@@ -92,11 +92,11 @@ JDK 1.8:
 | SATURN_CONSOLE_DB_URL                    | 都支持            | DB 连接url                          | Y    |
 | SATURN_CONSOLE_DB_USERNAME               | 都支持            | DB用户名                             | Y    |
 | SATURN_CONSOLE_DB_PASSWORD               | 都支持            | 密码                                | Y    |
-| SATURN_CONSOLE_LOG                       | 都支持            | 日志目录。默认是/apps/logs/saturn_console | N    |
+| saturn.console.log     | JVM参数(-D)   | 日志目录。默认是/apps/logs/saturn_console | N    |
 | VIP_SATURN_DASHBOARD_REFRESH_INTERVAL_MINUTE | 都支持            | Dashboard后台刷新频率，单位是分钟。默认值是1。      | N    |
-| server.port | JVM参数           | 启动端口，默认9088      | N    |
-| authentication.enabled | JVM参数 | 是否启用用户认证。默认为false。详情参阅认证和授权一节 | N |
-| authorization.enabled.default | JVM参数 | 是否默认启用用户鉴权。默认为false。详情参阅认证和授权一节 | N |
+| server.port | JVM参数(-D)       | 启动端口，默认9088      | N    |
+| authentication.enabled | JVM参数(-D) | 是否启用用户认证。默认为false。详情参阅认证和授权一节 | N |
+| authorization.enabled.default | JVM参数(-D) | 是否默认启用用户鉴权。默认为false。详情参阅认证和授权一节 | N |
 
 使用浏览器访问 http://localhost:9088 即可看到你的Saturn Console！
 
