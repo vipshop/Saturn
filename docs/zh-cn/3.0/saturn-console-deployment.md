@@ -61,7 +61,6 @@ CREATE DATABASE saturn CHARACTER SET utf8 COLLATE utf8_general_ci;
 #### 2.4.2 启动Console
 
 ```shell
-# 可通过参数SATURN_CONSOLE_LOG指定日志路径
 nohup java -DSATURN_CONSOLE_DB_URL=jdbc:mysql://localhost:3306/saturn -DSATURN_CONSOLE_DB_USERNAME=your_username -DSATURN_CONSOLE_DB_PASSWORD=your_password -jar saturn-console-{version}-exec.jar &
 ```
 
