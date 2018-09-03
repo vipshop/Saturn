@@ -157,18 +157,30 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row :gutter="20">
-                            <el-col :span="7">
+                        <el-row :gutter="10">
+                            <el-col :span="5">
+                                <el-form-item prop="failover" label="failover">
+                                    <el-switch v-model="jobSettingInfo.failover"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="6">
+                                <el-form-item prop="rerun" label="超时重跑">
+                                    <el-switch v-model="jobSettingInfo.rerun"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="5">
                                 <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="7">
+                            <el-col :span="6">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="7" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                        </el-row>
+                        <el-row :gutter="20">
+                            <el-col v-if="jobSettingInfo.jobType === 'MSG_JOB'">
                                 <el-form-item prop="useSerial" label="串行消费">
                                     <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
                                 </el-form-item>
