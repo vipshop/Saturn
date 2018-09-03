@@ -254,6 +254,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setShowNormalLog(checkAndGetParametersValueAsBoolean(configParams, "showNormalLog", false));
 
+		jobConfig.setFailover(checkAndGetParametersValueAsBoolean(configParams, "failover", false));
+
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		return jobConfig;
