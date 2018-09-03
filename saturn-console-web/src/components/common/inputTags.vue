@@ -35,7 +35,21 @@ export default {
     handleInputConfirm() {
       const inputValue = this.inputValue;
       if (inputValue) {
-        this.dynamicTags.push(inputValue);
+        if (this.title === '日期段') {
+          const dateParten = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])$/;
+          if (dateParten.test(inputValue)) {
+            this.dynamicTags.push(inputValue);
+          } else {
+            this.$message.errorMessage('请输入正确的日期格式，例如03/10-03/20');
+          }
+        } else {
+          const timeParten = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])-(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/;
+          if (timeParten.test(inputValue)) {
+            this.dynamicTags.push(inputValue);
+          } else {
+            this.$message.errorMessage('请输入正确的时间格式，例如10:00-11:00');
+          }
+        }
       }
       this.inputVisible = false;
       this.inputValue = '';
