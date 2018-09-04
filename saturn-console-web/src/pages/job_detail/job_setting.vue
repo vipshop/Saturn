@@ -41,7 +41,7 @@
                             </el-col>
                             <el-col :span="11">
                                 <el-form-item prop="localMode" label="本地模式">
-                                    <el-switch v-model="jobSettingInfo.localMode"></el-switch>
+                                    <el-switch v-model="jobSettingInfo.localMode" @change="localModeChange"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -158,29 +158,27 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="10">
-                            <el-col :span="5">
-                                <el-form-item prop="failover" label="failover">
-                                    <el-switch v-model="jobSettingInfo.failover"></el-switch>
-                                </el-form-item>
-                            </el-col>
                             <el-col :span="6">
-                                <el-form-item prop="rerun" label="超时重跑">
-                                    <el-switch v-model="jobSettingInfo.rerun"></el-switch>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="5">
                                 <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="6">
+                            <el-col :span="5">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
-                            <el-col v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                            <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                                <el-form-item prop="failover" label="failover">
+                                    <el-switch v-model="jobSettingInfo.failover" title="本地模式不可编辑" :disabled="jobSettingInfo.localMode"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                                <el-form-item prop="rerun" label="超时重跑">
+                                    <el-switch v-model="jobSettingInfo.rerun"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="6" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
                                 <el-form-item prop="useSerial" label="串行消费">
                                     <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
                                 </el-form-item>
@@ -250,6 +248,11 @@ export default {
     };
   },
   methods: {
+    localModeChange(value) {
+      if (value) {
+        this.jobSettingInfo.failover = false;
+      }
+    },
     checkAndForecastCron() {
       const cronData = {
         timeZone: this.jobSettingInfo.timeZone,
