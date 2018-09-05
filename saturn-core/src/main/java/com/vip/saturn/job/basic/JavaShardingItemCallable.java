@@ -182,9 +182,12 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 				saturnJobReturn = temp;
 			}
 
-			String jobLog = SaturnSystemOutputStream.clearAndGetLog();
-
 			if (saturnJob != null && saturnJob.getConfigService().showNormalLog()) {
+				String jobLog = SaturnSystemOutputStream.clearAndGetLog();
+				if (jobLog != null && jobLog.length() > SaturnConstant.MAX_ZNODE_DATA_LENGTH) {
+					jobLog = jobLog.substring(0, SaturnConstant.MAX_ZNODE_DATA_LENGTH);
+				}
+
 				this.shardingContext.putJobLog(this.item, jobLog);
 			}
 		}

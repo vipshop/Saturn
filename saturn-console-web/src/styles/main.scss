@@ -30,6 +30,12 @@ a {
     }
 }
 
+sub, sup {
+    position: relative;
+    line-height: 0;
+    vertical-align: top;
+}
+
 pre {
     font: 14px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
