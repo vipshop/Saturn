@@ -49,7 +49,6 @@ CREATE TABLE `job_config` (
   `is_enabled` tinyint(1) DEFAULT '0' COMMENT '是否启用标志',
   `job_mode` varchar(255) DEFAULT NULL COMMENT '作业模式',
   `custom_context` varchar(8192) DEFAULT NULL COMMENT '自定义语境参数',
-  `rerun` tinyint(1) DEFAULT '0' COMMENT '是否重跑标志',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_namespace_job_name` (`namespace`,`job_name`),
   KEY `idx_namespace` (`namespace`),
@@ -309,3 +308,6 @@ ALTER TABLE `user_role` ADD KEY `idx_user_role_u_r_n_n_i` (`user_name`, `role_ke
 ALTER TABLE `user_role` ADD KEY `idx_user_role_r_n_n_i` (`role_key`, `namespace`, `need_approval`, `is_deleted`);
 ALTER TABLE `user_role` ADD KEY `idx_user_role_n_n_i` (`namespace`, `need_approval`, `is_deleted`);
 ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_deleted`);
+
+-- 3.1.2 update
+ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否重跑标志';
