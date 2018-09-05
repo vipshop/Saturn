@@ -5,6 +5,7 @@ import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.AbstractSaturnJob;
+import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -193,6 +194,11 @@ public class ScriptJobRunner {
 	}
 
 	private void handleJobLog(String jobLog) {
+		// 出于系统保护考虑，jobLog不能超过1M
+		if (jobLog != null && jobLog.length() > SaturnConstant.MAX_ZNODE_DATA_LENGTH) {
+			jobLog = jobLog.substring(0, SaturnConstant.MAX_ZNODE_DATA_LENGTH);
+		}
+
 		saturnExecutionContext.putJobLog(item, jobLog);
 
 		// 提供给saturn-job-executor.log日志输出shell命令jobLog，以后若改为重定向到日志，则可删除此输出
