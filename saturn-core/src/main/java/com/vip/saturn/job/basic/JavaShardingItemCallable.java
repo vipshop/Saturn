@@ -161,7 +161,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 
 			beforeExecution();
-
+			//todo ：学习入口 执行业务逻辑的入口 linj
 			temp = saturnJob.doExecution(jobName, item, itemValue, shardingContext, this);
 
 			// 在此之后，不能再强制停止本线程

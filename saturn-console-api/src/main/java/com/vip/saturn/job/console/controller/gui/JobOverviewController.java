@@ -10,8 +10,7 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.*;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +30,10 @@ import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERR
 
 /**
  * Job overview related operations.
- *
+ * job作业操作控制
  * @author hebelala
  */
+@Api(description = "job作业操作相关接口")
 @RequestMapping("/console/namespaces/{namespace:.+}/jobs")
 public class JobOverviewController extends AbstractGUIController {
 
@@ -55,10 +55,11 @@ public class JobOverviewController extends AbstractGUIController {
 	 * @return 作业细节
 	 */
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+    @ApiOperation(value = "作业列表接口")
 	@GetMapping
 	public SuccessResponseEntity getJobsWithCondition(final HttpServletRequest request, @PathVariable String namespace,
-			@RequestParam Map<String, Object> condition, @RequestParam(required = false, defaultValue = "1") int page,
-			@RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
+                                                      @ApiParam(value = "查询参数") @RequestParam Map<String, Object> condition, @RequestParam(required = false, defaultValue = "1") int page,
+                                                      @RequestParam(required = false, defaultValue = "25") int size) throws SaturnJobConsoleException {
 		if (condition.containsKey(QUERY_CONDITION_STATUS)) {
 			String statusStr = checkAndGetParametersValueAsString(condition, QUERY_CONDITION_STATUS, false);
 			JobStatus jobStatus = JobStatus.getJobStatus(statusStr);
@@ -76,6 +77,7 @@ public class JobOverviewController extends AbstractGUIController {
      * @return 总作业数、启用作业数和异常作业数总数
      */
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+    @ApiOperation(value = "获取域下的总作业数、启用作业数和异常作业数")
     @GetMapping(value = "/counts")
 	public SuccessResponseEntity countJobsStatus(final HttpServletRequest request, @PathVariable String namespace) {
         return new SuccessResponseEntity(countJobOverviewVo(namespace));
@@ -87,12 +89,15 @@ public class JobOverviewController extends AbstractGUIController {
 	 * @return 全域作业名字
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "获取域下所有作业的名字")
 	@GetMapping(value = "/names")
 	public SuccessResponseEntity getJobNames(@PathVariable String namespace) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(jobService.getJobNames(namespace));
 	}
 
+
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class) })
+    @ApiOperation(value = "获取任务的分片状态")
 	@GetMapping(value = "/sharding/status")
 	public SuccessResponseEntity getJobsShardingStatus(@PathVariable String namespace,
 			@RequestParam(required = false) List<String> jobNames) throws SaturnJobConsoleException {
@@ -259,6 +264,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "获取域名下的分组信息")
     @GetMapping(value = "/groups")
     public SuccessResponseEntity getGroups(final HttpServletRequest request, @PathVariable String namespace)
             throws SaturnJobConsoleException {
@@ -269,6 +275,7 @@ public class JobOverviewController extends AbstractGUIController {
      * 获取该作业依赖的所有作业
      */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "获取该作业依赖的所有作业")
     @GetMapping(value = "/{jobName}/dependency")
     public SuccessResponseEntity getDependingJobs(final HttpServletRequest request, @PathVariable String namespace,
                                                   @PathVariable String jobName) throws SaturnJobConsoleException {
@@ -277,6 +284,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "批量获取作业集合的依赖的所有作业")
     @GetMapping(value = "/dependency")
     public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request, @PathVariable String namespace,
                                                       @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
@@ -293,6 +301,7 @@ public class JobOverviewController extends AbstractGUIController {
      */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
     @GetMapping(value = "/{jobName}/beDependedJobs")
+    @ApiOperation(value = "获取依赖该作业的所有作业")
     public SuccessResponseEntity getDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
                                                  @PathVariable String jobName) throws SaturnJobConsoleException {
         List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
@@ -300,6 +309,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "批量获取依赖该作业的所有作业")
     @GetMapping(value = "/beDependedJobs")
     public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
                                                       @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
@@ -312,17 +322,20 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "启动作业接口")
     @Audit
     @PostMapping(value = "/{jobName}/enable")
     public SuccessResponseEntity enableJob(final HttpServletRequest request,
                                            @AuditParam("namespace") @PathVariable String namespace,
                                            @AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
+        //验证眼熟
         assertIsPermitted(PermissionKeys.jobEnable, namespace);
         jobService.enableJob(namespace, jobName, getCurrentLoginUserName());
         return new SuccessResponseEntity();
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "批量启动作业接口")
     @Audit
     @PostMapping(value = "/enable")
     public SuccessResponseEntity batchEnableJob(final HttpServletRequest request,
@@ -337,6 +350,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "禁用(关闭)作业接口")
     @Audit
     @PostMapping(value = "/{jobName}/disable")
     public SuccessResponseEntity disableJob(final HttpServletRequest request,
@@ -348,6 +362,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "批量禁用(关闭)作业接口")
     @Audit
     @PostMapping(value = "/disable")
     public SuccessResponseEntity batchDisableJob(final HttpServletRequest request,
@@ -361,7 +376,16 @@ public class JobOverviewController extends AbstractGUIController {
         return new SuccessResponseEntity();
     }
 
+    /**
+     * 定时任务删除接口
+     * @param request
+     * @param namespace 域名
+     * @param jobName 任务名称
+     * @return
+     * @throws SaturnJobConsoleException
+     */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "定时作业删除接口")
     @Audit
     @DeleteMapping(value = "/{jobName}")
     public SuccessResponseEntity removeJob(final HttpServletRequest request,
@@ -373,6 +397,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "批量定时作业删除接口")
     @Audit
     @DeleteMapping
     public SuccessResponseEntity batchRemoveJob(final HttpServletRequest request,
@@ -402,6 +427,7 @@ public class JobOverviewController extends AbstractGUIController {
      * 批量设置作业的优先Executor
      */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value="批量设置作业的优先Executor")
     @Audit
     @PostMapping(value = "/preferExecutors")
     public SuccessResponseEntity batchSetPreferExecutors(final HttpServletRequest request,
@@ -417,6 +443,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "新增作业接口")
     @Audit
     @PostMapping(value = "/jobs")
     public SuccessResponseEntity createJob(final HttpServletRequest request,
@@ -428,6 +455,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "作业复制接口")
     @Audit
     @PostMapping(value = "/{jobNameCopied}/copy")
     public SuccessResponseEntity copyJob(final HttpServletRequest request,
@@ -440,6 +468,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "作业导入接口（仅支持.xls文件导入）")
     @Audit
     @PostMapping(value = "/import")
     public SuccessResponseEntity importJobs(final HttpServletRequest request,
@@ -458,6 +487,7 @@ public class JobOverviewController extends AbstractGUIController {
     }
 
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "作业导出接口")
     @Audit
     @GetMapping(value = "/export")
     public void exportJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
@@ -472,6 +502,7 @@ public class JobOverviewController extends AbstractGUIController {
      * 获取该作业可选择的优先Executor
      */
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+    @ApiOperation(value = "获取该作业可选择的优先Executor")
     @GetMapping(value = "/{jobName}/executors")
     public SuccessResponseEntity getExecutors(final HttpServletRequest request, @PathVariable String namespace,
                                               @PathVariable String jobName) throws SaturnJobConsoleException {

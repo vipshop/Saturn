@@ -430,3 +430,6 @@ ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_delete
 UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHERE `role_key`='system_admin';
 UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
 UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
+
+
+INSERT INTO `sys_config`(property,value) VALUES ('CONSOLE_ZK_CLUSTER_MAPPING', 'zkdefault:zkdefault');

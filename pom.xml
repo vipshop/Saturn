@@ -29,7 +29,10 @@
 		<module>saturn-console-core</module>
 		<module>saturn-console-old</module>
 		<module>saturn-it</module>
-	</modules>
+       <!-- <module>../../../work/java/Saturn</module>-->
+       <!-- <module>../Saturn-app</module>-->
+        <module>saturn-job-realization</module>
+    </modules>
 
 	<properties>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
@@ -54,7 +57,7 @@
 		<spring.data.commons.version>1.12.1.RELEASE</spring.data.commons.version>
 		<druid.version>0.2.9</druid.version>
 
-		<lombok.version>1.16.6</lombok.version>
+		<lombok.version>1.16.14</lombok.version>
 		<gson.version>2.5</gson.version>
 		<fastjson.version>1.2.29</fastjson.version>
 
@@ -493,7 +496,7 @@
 						<locales>${project.build.locale}</locales>
 					</configuration>
 				</plugin>
-				<plugin>
+				<!--<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
 					<version>${lifecycle-mapping.version}</version>
@@ -529,7 +532,7 @@
 							</pluginExecutions>
 						</lifecycleMappingMetadata>
 					</configuration>
-				</plugin>
+				</plugin>-->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-plugin-plugin</artifactId>
@@ -600,14 +603,15 @@
 
 	<reporting>
 		<plugins>
-			<plugin>
+			<!--项目总报告插件-->
+			<!--<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
 				<version>${maven-project-info-reports-plugin.version}</version>
 				<configuration>
 					<dependencyLocationsEnabled>false</dependencyLocationsEnabled>
 				</configuration>
-			</plugin>
+			</plugin>-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -618,22 +622,24 @@
 					<docencoding>${project.build.sourceEncoding}</docencoding>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!--生成java代码交叉引用和源代码的html格式-->
+			<!--<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
 				<version>${maven-jxr-plugin.version}</version>
 				<configuration>
 					<aggregate>true</aggregate>
 				</configuration>
-			</plugin>
-			<plugin>
+			</plugin>-->
+			<!--TODO检查报告插件-->
+			<!--<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>taglist-maven-plugin</artifactId>
 				<version>${taglist-maven-plugin.version}</version>
 				<configuration>
 					<aggregate>true</aggregate>
 				</configuration>
-			</plugin>
+			</plugin>-->
 		</plugins>
 	</reporting>
 

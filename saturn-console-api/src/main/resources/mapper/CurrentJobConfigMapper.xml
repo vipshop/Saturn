@@ -98,7 +98,7 @@
     </if>
   </select>
 
-  <select id="countConfigsByNamespaceWithCondition" resultType="Integer">
+  <select id="countConfigsByNamespaceWithCondition" resultType="java.lang.Integer">
     select
     count(*)
     from job_config
@@ -126,11 +126,11 @@
     </where>
   </select>
 
-  <select id="countEnabledUnSystemJobsByNamespace" resultType="Integer">
+  <select id="countEnabledUnSystemJobsByNamespace" resultType="java.lang.Integer">
     select count(*) from job_config where namespace = #{namespace} and is_enabled = #{isEnabled}
   </select>
 
-  <select id="findConfigNamesByNamespace" resultType="String">
+  <select id="findConfigNamesByNamespace" resultType="java.lang.String">
     select
     job_name
     from job_config

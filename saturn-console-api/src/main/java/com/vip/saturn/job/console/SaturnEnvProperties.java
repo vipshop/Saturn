@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *	配置文件，以java文件的方式代替properties文件
  * @author xiaopeng.he
  */
 public final class SaturnEnvProperties {

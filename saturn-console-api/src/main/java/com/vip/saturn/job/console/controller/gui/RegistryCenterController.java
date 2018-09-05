@@ -9,6 +9,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+@Api(description = "注册中心相关操作接口")
 @RequestMapping("/console")
 public class RegistryCenterController extends AbstractGUIController {
 
@@ -32,6 +35,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 创建域
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "新增域名接口")
 	@Audit
 	@PostMapping(value = "/namespaces")
 	public SuccessResponseEntity createNamespace(@AuditParam("namespace") @RequestParam String namespace,
@@ -54,6 +58,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 获取所有域列表
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = " 获取所有域列表接口")
 	@GetMapping(value = "/namespaces/detail")
 	public SuccessResponseEntity queryAllNamespaceInfo() {
 		List<RegistryCenterConfiguration> namespaceInfoList = Lists.newLinkedList();
@@ -76,6 +81,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 导出指定的namespce
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "导出域名接口")
 	@GetMapping(value = "/namespaces/export")
 	public void exportNamespaceInfo(@RequestParam(required = false) List<String> namespaceList,
 			final HttpServletResponse response) throws SaturnJobConsoleException {
@@ -88,6 +94,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 刷新注册中心
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = " 刷新注册中心接口")
 	@Audit
 	@RequestMapping(value = "/registryCenter/refresh", method = {RequestMethod.GET, RequestMethod.POST})
 	public SuccessResponseEntity notifyRefreshRegCenter() throws SaturnJobConsoleException {
@@ -112,6 +119,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "新增zk集群接口")
 	@Audit
 	@PostMapping(value = "/zkClusters")
 	public SuccessResponseEntity createZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey,
@@ -123,6 +131,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "修改zk集群接口")
 	@Audit
 	@PutMapping(value = "/zkClusters")
 	public SuccessResponseEntity updateZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey,
@@ -136,6 +145,7 @@ public class RegistryCenterController extends AbstractGUIController {
 	 * 获取单个或所有zk集群信息
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "获取单个或所有zk集群信息接口")
 	@GetMapping(value = "/zkClusters")
 	public SuccessResponseEntity getZkClusters(@RequestParam(required = false) String status,
 			@RequestParam(required = false) String zkClusterKey) throws SaturnJobConsoleException {
@@ -159,6 +169,7 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	// 域迁移
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "域名迁移接口")
 	@Audit
 	@PostMapping(value = "/namespaces/zkCluster/migrate")
 	public SuccessResponseEntity migrateZkCluster(@AuditParam("namespaces") @RequestParam String namespaces,
@@ -173,6 +184,7 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	// 获取域迁移信息
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "获取域迁移信息接口")
 	@GetMapping(value = "/namespaces/zkCluster/migrationStatus")
 	public SuccessResponseEntity getZkClusterMigrationStatus() throws SaturnJobConsoleException {
 		NamespaceMigrationOverallStatus namespaceMigrationOverallStatus = namespaceZkClusterMappingService

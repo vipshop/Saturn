@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>saturn-job</artifactId>
+        <groupId>com.vip.saturn</groupId>
+        <version>master-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>saturn-job-realization</artifactId>
+    <dependencies>
+        <!--直接依赖saturn-executor，相当于继承executor，直接将业务代码和executor分离（后面可以直接启动本项目，而无需启动executor）-->
+        <dependency>
+            <groupId>com.vip.saturn</groupId>
+            <artifactId>saturn-executor</artifactId>
+            <version>master-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vip.saturn</groupId>
+            <artifactId>saturn-job-api</artifactId>
+            <!-- 修改成指定版本 -->
+            <version>master-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <!--rocketMq 测试-->
+
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vip.saturn</groupId>
+                <artifactId>saturn-plugin</artifactId>
+                <!-- 版本与saturn-job-api一致 -->
+                <version>master-SNAPSHOT</version>
+            </plugin>
+
+            <!--用于打包成zip文件-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/zip.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

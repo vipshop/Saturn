@@ -11,6 +11,8 @@ import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.utils.PermissionKeys;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
@@ -26,9 +28,10 @@ import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERR
 
 /**
  * Executor overview related operations.
- *
+ * Executor
  * @author kfchu
  */
+@Api(description = "Executor的相关操作接口")
 @RequestMapping("/console/namespaces/{namespace:.+}/executors")
 public class ExecutorOverviewController extends AbstractGUIController {
 
@@ -45,6 +48,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 获取域下所有executor基本信息
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "获取域下所有executor list总览信息接口")
 	@GetMapping
 	public SuccessResponseEntity getExecutors(final HttpServletRequest request, @PathVariable String namespace,
 			@RequestParam(required = false) String status) throws SaturnJobConsoleException {
@@ -59,6 +63,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 获取executor被分配的作业分片信息
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "获取executor被分配的作业分片详细信息")
 	@GetMapping(value = "/{executorName}/allocation")
 	public SuccessResponseEntity getExecutorAllocation(final HttpServletRequest request, @PathVariable String namespace,
 			@PathVariable String executorName) throws SaturnJobConsoleException {
@@ -69,6 +74,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键重排
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "一键重排(没卵用)")
 	@Audit
 	@PostMapping(value = "/shardAll")
 	public SuccessResponseEntity shardAll(final HttpServletRequest request,
@@ -82,6 +88,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "摘流量与流量恢复(有待验证作用)")
 	@Audit
 	@PostMapping(value = "/{executorName}/traffic")
 	public SuccessResponseEntity extractOrRecoverTraffic(final HttpServletRequest request,
@@ -97,6 +104,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 批量摘流量与流量恢复
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "批量摘流量与流量恢复(有待验证作用)")
 	@Audit
 	@PostMapping(value = "/traffic")
 	public SuccessResponseEntity batchExtractOrRecoverTraffic(final HttpServletRequest request,
@@ -141,6 +149,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 移除executor
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "移除executor接口")
 	@Audit
 	@DeleteMapping(value = "/{executorName}")
 	public SuccessResponseEntity removeExecutor(final HttpServletRequest request,
@@ -157,6 +166,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 批量移除executor
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "批量移除executor接口")
 	@Audit
 	@DeleteMapping
 	public SuccessResponseEntity batchRemoveExecutors(final HttpServletRequest request,
@@ -201,6 +211,7 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键Dump，包括threadump和gc.log。
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@ApiOperation(value = "一键Dump，包括threadump和gc.log。(有待验证作用)")
 	@Audit
 	@PostMapping(value = "/{executorName}/dump")
 	public SuccessResponseEntity dump(final HttpServletRequest request,
@@ -216,6 +227,8 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 一键重启。
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	// TODO: 2018/8/8  需要学习一下重启executor做了那些操作
+	@ApiOperation(value = "一键重启接口")
 	@Audit
 	@PostMapping(value = "/{executorName}/restart")
 	public SuccessResponseEntity restart(final HttpServletRequest request,
