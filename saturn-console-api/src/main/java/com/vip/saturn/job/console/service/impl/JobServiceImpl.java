@@ -1227,6 +1227,26 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setTimeZone(timeZone);
 
+		boolean failover = false;
+		String failoverStr = getContents(rowCells, 27);
+		if (failoverStr != null && !failoverStr.trim().isEmpty()) {
+			failover = Boolean.valueOf(failoverStr);
+		}
+		if (jobConfig.getLocalMode() && failover == true) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+					createExceptionMessage(sheetNumber, rowNumber, 27, "本地模式不支持failover"));
+		}
+		jobConfig.setFailover(failover);
+
+
+		boolean rerun = false;
+		String rerunStr = getContents(rowCells, 28);
+		if (rerunStr != null && !rerunStr.trim().isEmpty()) {
+			rerun = Boolean.valueOf(rerunStr);
+		}
+		jobConfig.setRerun(rerun);
+
+
 		return jobConfig;
 	}
 
@@ -1328,6 +1348,10 @@ public class JobServiceImpl implements JobService {
 						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS))));
 				sheet1.addCell(new Label(26, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE))));
+				sheet1.addCell(new Label(27, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER))));
+				sheet1.addCell(new Label(28, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN))));
 			}
 		}
 	}
