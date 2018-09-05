@@ -37,6 +37,7 @@ public class UpdateJobConfigVo {
 	private String jobMode;
 	private String dependencies;
 	private String groups;
+	private Boolean rerun;
 
 	public JobConfig toJobConfig() {
 		JobConfig jobConfig = new JobConfig();
@@ -277,5 +278,13 @@ public class UpdateJobConfigVo {
 
 	public void setGroups(String groups) {
 		this.groups = groups;
+	}
+
+	public Boolean getRerun() {
+		return rerun;
+	}
+
+	public void setRerun(Boolean rerun) {
+		this.rerun = rerun;
 	}
 }

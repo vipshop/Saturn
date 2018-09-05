@@ -43,6 +43,7 @@ public class GetJobConfigVo {
 	private String jobMode;
 	private List<String> dependencies;
 	private String groups;
+	private Boolean rerun;
 
 	private List<String> timeZonesProvided;
 	private List<ExecutorProvided> preferListProvided;
@@ -336,5 +337,13 @@ public class GetJobConfigVo {
 
 	public void setStatus(JobStatus status) {
 		this.status = status;
+	}
+
+	public Boolean getRerun() {
+		return rerun;
+	}
+
+	public void setRerun(Boolean rerun) {
+		this.rerun = rerun;
 	}
 }
