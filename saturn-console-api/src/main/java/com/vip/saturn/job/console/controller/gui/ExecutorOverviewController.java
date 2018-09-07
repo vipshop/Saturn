@@ -10,7 +10,6 @@ import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.utils.PermissionKeys;
-
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
@@ -63,6 +62,16 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	public SuccessResponseEntity getExecutorAllocation(final HttpServletRequest request, @PathVariable String namespace,
 			@PathVariable String executorName) throws SaturnJobConsoleException {
 		return new SuccessResponseEntity(executorService.getExecutorAllocation(namespace, executorName));
+	}
+
+	/**
+	 * 获取executor被分配的作业分片信息
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/{executorName}/allocationWithStatus")
+	public SuccessResponseEntity getExecutorAllocationWithStatus(final HttpServletRequest request,
+			@PathVariable String namespace, @PathVariable String executorName) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(executorService.getExecutorAllocationWithStat(namespace, executorName));
 	}
 
 	/**
