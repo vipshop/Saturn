@@ -800,7 +800,9 @@ public class JobServiceImpl implements JobService {
 	private void correctConfigValueIfNeeded(JobConfig jobConfig) {
 		jobConfig.setDefaultValues();
 		jobConfig.setEnabled(false);
-		jobConfig.setFailover(!jobConfig.getLocalMode());
+		if (jobConfig.getLocalMode()) {
+			jobConfig.setFailover(false);
+		}
 		if (JobType.SHELL_JOB.name().equals(jobConfig.getJobType())) {
 			jobConfig.setJobClass("");
 		}
@@ -1352,8 +1354,8 @@ public class JobServiceImpl implements JobService {
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE))));
 				sheet1.addCell(new Label(27, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER))));
-				sheet1.addCell(new Label(28, i + 1,
-						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN))));
+				String rerun = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN));
+				sheet1.addCell(new Label(28, i + 1, rerun == null ? "false" : rerun));
 			}
 		}
 	}
@@ -1427,6 +1429,14 @@ public class JobServiceImpl implements JobService {
 		Label timeZoneLabel = new Label(26, 0, "时区");
 		setCellComment(timeZoneLabel, "作业运行时区");
 		sheet1.addCell(timeZoneLabel);
+
+		Label failover = new Label(27, 0, "failover");
+		setCellComment(failover, "failover");
+		sheet1.addCell(failover);
+
+		Label rerun = new Label(28, 0, "失败重跑");
+		setCellComment(rerun, "失败重跑");
+		sheet1.addCell(rerun);
 	}
 
 	protected void setCellComment(WritableCell cell, String comment) {
