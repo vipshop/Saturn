@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -77,6 +78,8 @@ public class SaturnExecutor {
 
 	private ExecutorService raiseAlarmExecutorService;
 
+	private ExecutorService shutdownJobsExecutorService;
+
 	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
@@ -87,6 +90,7 @@ public class SaturnExecutor {
 		this.jobClassLoader = jobClassLoader;
 		this.raiseAlarmExecutorService = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
+		this.shutdownJobsExecutorService = Executors.newCachedThreadPool(new SaturnThreadFactory(executorName + "-shutdownJobs-thread", true));
 		initRestartThread();
 		registerShutdownHandler();
 	}
@@ -143,6 +147,7 @@ public class SaturnExecutor {
 						shutdownGracefully0();
 						restartThread.interrupt();
 						raiseAlarmExecutorService.shutdownNow();
+						shutdownJobsExecutorService.shutdownNow();
 						isShutdown = true;
 					} finally {
 						shutdownLock.unlock();
@@ -379,7 +384,7 @@ public class SaturnExecutor {
 			};
 			regCenter.addConnectionStateListener(connectionLostListener);
 
-			//  创建SaturnExecutorService
+			// 创建SaturnExecutorService
 			saturnExecutorService = new SaturnExecutorService(regCenter, executorName, saturnExecutorExtension);
 			saturnExecutorService.setJobClassLoader(jobClassLoader);
 			saturnExecutorService.setExecutorClassLoader(executorClassLoader);
@@ -461,16 +466,33 @@ public class SaturnExecutor {
 	private void shutdownUnfinishJob() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (schdMap != null) {
+			List<Future<?>> futures = new ArrayList<>();
 			Iterator<String> it = schdMap.keySet().iterator();
 			while (it.hasNext()) {
-				String jobName = it.next();
-				JobScheduler jobScheduler = schdMap.get(jobName);
+				final String jobName = it.next();
+				final JobScheduler jobScheduler = schdMap.get(jobName);
 				if (jobScheduler != null) {
-					if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-						log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
-						jobScheduler.stopJob(true);
-					}
-					jobScheduler.shutdown(false);
+					futures.add(shutdownJobsExecutorService.submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
+									log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
+									jobScheduler.stopJob(true);
+								}
+								jobScheduler.shutdown(false);
+							} catch (Throwable t) {
+								log.error("shutdown job error", t);
+							}
+						}
+					}));
+				}
+			}
+			for (Future<?> future : futures) {
+				try {
+					future.get();
+				} catch (Exception e) {
+					log.error("wait shutdown job error", e);
 				}
 			}
 		}
@@ -632,6 +654,7 @@ public class SaturnExecutor {
 			shutdownGracefully0();
 			restartThread.interrupt();
 			raiseAlarmExecutorService.shutdownNow();
+			shutdownJobsExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {

@@ -38,7 +38,7 @@
         collapse: false,
         activeMenu,
         sidebarHeight: {
-          height: document.body.clientHeight - this.headerHeight,
+          height: document.documentElement.clientHeight - this.headerHeight,
         },
       };
     },
@@ -79,10 +79,10 @@
       },
     },
     mounted() {
-      this.sidebarHeight.height = document.documentElement.clientHeight - this.headerHeight;
+      this.sidebarHeight = { height: document.documentElement.clientHeight - this.headerHeight };
       const that = this;
       window.onresize = function temp() {
-        that.sidebarHeight.height = document.documentElement.clientHeight - that.headerHeight;
+        that.sidebarHeight = { height: document.documentElement.clientHeight - that.headerHeight };
       };
     },
   };
