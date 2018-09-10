@@ -19,7 +19,10 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Default implementation of ExecutorService.
@@ -188,35 +191,16 @@ public class ExecutorServiceImpl implements ExecutorService {
 			String sharding = curatorFrameworkOp
 					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
+				JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
+
 				// 作业状态为STOPPED的即使有残留分片也不显示该分片
-				if (JobStatus.STOPPED.equals(jobService.getJobStatus(namespace, jobName))) {
+				if (JobStatus.STOPPED.equals(jobStatus)) {
 					continue;
 				}
 
-				String[] shardingItems = sharding.split(",");
-				List<String> shardingList = Arrays.asList(shardingItems);
-
-				List<ExecutionInfo> executionInfos = jobService.getExecutionStatus(namespace, jobName);
-				Map<String, String> shardingItemAndStatue = new HashMap<>(5);
-				for (ExecutionInfo info : executionInfos) {
-					if (shardingList.contains(String.valueOf(info.getItem()))) {
-						shardingItemAndStatue.put(String.valueOf(info.getItem()), info.getStatus().name());
-					}
-				}
-
-				// concat executorSharding
-				serverAllocationInfoWithStatus.getAllocationMap().put(jobName, shardingItemAndStatue);
-				// calculate totalLoad
-				String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
-				Integer loadLevel = 1;
-				if (StringUtils.isNotBlank(loadLevelNode)) {
-					loadLevel = Integer.valueOf(loadLevelNode);
-				}
-
-				int shardingItemNum = sharding.split(",").length;
-				int curJobLoad = shardingItemNum * loadLevel;
-				int totalLoad = serverAllocationInfoWithStatus.getTotalLoadLevel();
-				serverAllocationInfoWithStatus.setTotalLoadLevel(totalLoad + curJobLoad);
+				Map<String, String> jobNameAndStatus = new HashMap<>();
+				jobNameAndStatus.put(jobName, jobStatus.name());
+				serverAllocationInfoWithStatus.getJobStatus().add(jobNameAndStatus);
 			}
 		}
 

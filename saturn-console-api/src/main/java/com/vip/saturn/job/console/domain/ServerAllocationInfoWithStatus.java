@@ -1,33 +1,22 @@
 package com.vip.saturn.job.console.domain;
 
-import com.google.common.collect.Maps;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Job allocation information for the executor.
  *
- * @author kfchu
+ * @author ray.leung
  */
 public class ServerAllocationInfoWithStatus {
 
 	private String executorName;
 
-	private int totalLoadLevel;
-
-	// key为jobName，value是分片item号列表
-	private Map<String, Map<String, String>> allocationMap = Maps.newHashMap();
+	private List<Map<String, String>> jobStatus = new ArrayList<>();
 
 	public ServerAllocationInfoWithStatus(String executorName) {
 		this.executorName = executorName;
-	}
-
-	public int getTotalLoadLevel() {
-		return totalLoadLevel;
-	}
-
-	public void setTotalLoadLevel(int totalLoadLevel) {
-		this.totalLoadLevel = totalLoadLevel;
 	}
 
 	public String getExecutorName() {
@@ -38,11 +27,11 @@ public class ServerAllocationInfoWithStatus {
 		this.executorName = executorName;
 	}
 
-	public Map<String, Map<String, String>> getAllocationMap() {
-		return allocationMap;
+	public List<Map<String, String>> getJobStatus() {
+		return jobStatus;
 	}
 
-	public void setAllocationMap(Map<String, Map<String, String>> allocationMap) {
-		this.allocationMap = allocationMap;
+	public void setJobStatus(List<Map<String, String>> jobStatus) {
+		this.jobStatus = jobStatus;
 	}
 }
