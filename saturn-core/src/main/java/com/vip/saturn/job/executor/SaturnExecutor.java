@@ -1,6 +1,5 @@
 package com.vip.saturn.job.executor;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.JobRegistry;
@@ -82,6 +81,8 @@ public class SaturnExecutor {
 
 	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
 
+	private static Object discoveryApiDelegate;
+
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
 		this.executorName = executorName;
@@ -90,7 +91,8 @@ public class SaturnExecutor {
 		this.jobClassLoader = jobClassLoader;
 		this.raiseAlarmExecutorService = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
-		this.shutdownJobsExecutorService = Executors.newCachedThreadPool(new SaturnThreadFactory(executorName + "-shutdownJobs-thread", true));
+		this.shutdownJobsExecutorService = Executors
+				.newCachedThreadPool(new SaturnThreadFactory(executorName + "-shutdownJobs-thread", true));
 		initRestartThread();
 		registerShutdownHandler();
 	}
@@ -223,7 +225,7 @@ public class SaturnExecutor {
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
 		for (int i = 0; i < size; i++) {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
-			String url = consoleUri + "/rest/v1/discoverZk?namespace=" + namespace;
+			String url = consoleUri + "/rest/v1/discovery?namespace=" + namespace;
 			CloseableHttpClient httpClient = null;
 			try {
 				httpClient = HttpClientBuilder.create().build();
@@ -236,7 +238,8 @@ public class SaturnExecutor {
 				String responseBody = EntityUtils.toString(httpResponse.getEntity());
 				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
 				if (statusLine != null && statusCode.intValue() == HttpStatus.SC_OK) {
-					String connectionString = JSON.parseObject(responseBody, String.class);
+					Map<String, String> configMap = JSONObject.parseObject(responseBody, Map.class);
+					String connectionString = configMap.get("zkConnStr");
 					if (StringUtils.isBlank(connectionString)) {
 						log.warn("ZK connection string is blank！");
 						continue;
@@ -244,6 +247,27 @@ public class SaturnExecutor {
 
 					log.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url,
 							connectionString);
+
+					String env = configMap.get("env");
+					if (StringUtils.isNotBlank(env)) {
+						System.setProperty("ENV", env);
+						log.info("Discover ENV successfully, value is : {}", env);
+					} else {
+						log.info("Discover ENV fail, it will using default config");
+					}
+
+					/**
+					 * 利用回调模式通知zk集群发现结束
+					 */
+					if (discoveryApiDelegate != null) {
+						try {
+							discoveryApiDelegate.getClass().getMethod("afterDiscoverZK", String.class)
+									.invoke(discoveryApiDelegate, env);
+						} catch (NoSuchMethodException e) {
+							log.info("No method [afterDiscoverZK] found, ignore it");
+						}
+					}
+
 					return connectionString;
 				} else {
 					handleDiscoverException(responseBody, statusCode);
@@ -684,5 +708,13 @@ public class SaturnExecutor {
 
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
+	}
+
+	public static Object getDiscoveryApiDelegate() {
+		return discoveryApiDelegate;
+	}
+
+	public static void setDiscoveryApiDelegate(Object discoveryApiDelegate) {
+		SaturnExecutor.discoveryApiDelegate = discoveryApiDelegate;
 	}
 }
