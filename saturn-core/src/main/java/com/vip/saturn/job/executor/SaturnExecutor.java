@@ -253,7 +253,8 @@ public class SaturnExecutor {
 						System.setProperty("ENV", env);
 						log.info("Discover ENV successfully, value is : {}", env);
 					} else {
-						log.info("Discover ENV fail, it will using default config");
+						System.setProperty("ENV", "PRODUCTION");
+						log.info("Discover ENV fail, set default value to PRODUCTION");
 					}
 
 					/**
