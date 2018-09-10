@@ -45,7 +45,7 @@ public class SaturnScheduler {
 		});
 	}
 
-	public void start() throws SchedulerException {
+	public void start() {
 		saturnQuartzWorker = new SaturnWorker(job, trigger);
 		executor.submit(saturnQuartzWorker);
 	}
@@ -72,7 +72,7 @@ public class SaturnScheduler {
 		return saturnQuartzWorker.isShutDown();
 	}
 
-	public void rescheduleJob(Trigger createTrigger) throws SchedulerException {
+	public void rescheduleJob(Trigger createTrigger) {
 		this.trigger = createTrigger;
 		saturnQuartzWorker.reInitTrigger(createTrigger);
 	}
