@@ -4,22 +4,17 @@ import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
-import com.vip.saturn.job.exception.JobInitException;
+import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.utils.SaturnUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import static com.vip.saturn.job.basic.SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL;
 
 public class SaturnJavaJob extends CrondJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
@@ -63,60 +58,36 @@ public class SaturnJavaJob extends CrondJob {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			throw new JobInitException(String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, "", "job class is not set"));
+			throw new JobInitAlarmException(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "jobClass is not set");
 		}
-
+		log.info(SaturnConstant.LOG_FORMAT, jobName,
+				String.format("start to create job business instance, jobClass is %s", jobClassStr));
 		if (jobBusinessInstance == null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 			Thread.currentThread().setContextClassLoader(jobClassLoader);
 			try {
-				reflectionInvokeInitMethodsOfJobBusinessInstance(currentConf, jobClassStr, jobClassLoader);
-			} catch (JobInitException e) {
-				throw e;
+				Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
+				try {
+					jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
+				} catch (NoSuchMethodException e) {
+					log.info(SaturnConstant.LOG_FORMAT, jobName,
+							"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
+				}
+				// 业务没有重写getObject方法，BaseSaturnJob会默认返回null
+				if (jobBusinessInstance == null) {
+					jobBusinessInstance = jobClass.newInstance();
+				}
+				SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
+				jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 			} catch (Throwable t) {
-				String errMsg = String.format(SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr,
-						SaturnUtils.getErrorMessage(t));
-				log.error(errMsg, t);
-				throw new JobInitException(errMsg, t);
+				throw new JobInitAlarmException(logBusinessExceptionIfNecessary(jobName, t));
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
 		}
 		if (jobBusinessInstance == null) {
-			throw new JobInitException(
-					String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr, "job instance is null"));
-		}
-	}
-
-	private void reflectionInvokeInitMethodsOfJobBusinessInstance(JobConfiguration currentConf, String jobClassStr,
-			ClassLoader jobClassLoader)
-			throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException,
-			NoSuchMethodException {
-		Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
-		try {
-			Method getObject = jobClass.getMethod("getObject");
-			if (getObject != null) {
-				reflectionInvokeGetObjectMethod(jobClassStr, getObject);
-			}
-		} catch (NoSuchMethodException ex) {// NOSONAR
-		}
-
-		if (jobBusinessInstance == null) {
-			jobBusinessInstance = jobClass.newInstance();
-		}
-		SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
-		jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
-	}
-
-	private void reflectionInvokeGetObjectMethod(String jobClassStr, Method getObject) {
-		try {
-			jobBusinessInstance = getObject.invoke(null);
-		} catch (Throwable t) {
-			String errMsg = String.format(SaturnConstant.ERR_MSG_INVOKE_METHOD_FAIL, jobName, "getObject", jobClassStr,
-					SaturnUtils.getErrorMessage(t));
-			log.error(errMsg, t);
-			throw new JobInitException(errMsg, t);
+			throw new JobInitAlarmException(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "job instance is null");
 		}
 	}
 
