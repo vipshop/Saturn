@@ -131,7 +131,7 @@ export default {
       });
     },
     getExecutorAllocation(row) {
-      this.$http.get(`/console/namespaces/${this.domainName}/executors/${row.executorName}/allocation`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/executors/${row.executorName}/allocationWithStatus`).then((data) => {
         this.isExecutorAllocationVisible = true;
         this.executorAllocationInfo = JSON.parse(JSON.stringify(data));
       })

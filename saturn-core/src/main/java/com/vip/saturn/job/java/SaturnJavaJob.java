@@ -4,9 +4,10 @@ import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
+import com.vip.saturn.job.exception.JobInitException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.utils.SaturnUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
+import static com.vip.saturn.job.basic.SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL;
 
 public class SaturnJavaJob extends CrondJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
@@ -31,13 +34,13 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	@Override
-	public void init() throws SchedulerException {
+	public void init() {
 		super.init();
 		createJobBusinessInstanceIfNecessary();
 		getJobVersionIfNecessary();
 	}
 
-	private void getJobVersionIfNecessary() throws SchedulerException {
+	private void getJobVersionIfNecessary() {
 		if (jobBusinessInstance != null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			Thread.currentThread().setContextClassLoader(saturnExecutorService.getJobClassLoader());
@@ -46,20 +49,21 @@ public class SaturnJavaJob extends CrondJob {
 						.invoke(jobBusinessInstance);
 				setJobVersion(version);
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-						"error throws during get job version"), t);
-				throw new SchedulerException(t);
+				// only log the error message as getJobVersion should not block the init process
+				String errMsg = String
+						.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "error throws during get job version");
+				log.error(errMsg, t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
 		}
 	}
 
-	private void createJobBusinessInstanceIfNecessary() throws SchedulerException {
+	private void createJobBusinessInstanceIfNecessary() {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
+			throw new JobInitException(String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, "", "job class is not set"));
 		}
 
 		if (jobBusinessInstance == null) {
@@ -68,16 +72,20 @@ public class SaturnJavaJob extends CrondJob {
 			Thread.currentThread().setContextClassLoader(jobClassLoader);
 			try {
 				reflectionInvokeInitMethodsOfJobBusinessInstance(currentConf, jobClassStr, jobClassLoader);
+			} catch (JobInitException e) {
+				throw e;
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-						"create job business instance error"), t);
-				throw new SchedulerException(t);
+				String errMsg = String.format(SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr,
+						SaturnUtils.getErrorMessage(t));
+				log.error(errMsg, t);
+				throw new JobInitException(errMsg, t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
 		}
 		if (jobBusinessInstance == null) {
-			throw new SchedulerException("init job business instance failed, the job class is " + jobClassStr);
+			throw new JobInitException(
+					String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr, "job instance is null"));
 		}
 	}
 
@@ -91,7 +99,7 @@ public class SaturnJavaJob extends CrondJob {
 			if (getObject != null) {
 				reflectionInvokeGetObjectMethod(jobClassStr, getObject);
 			}
-		} catch (Exception ex) {// NOSONAR
+		} catch (NoSuchMethodException ex) {// NOSONAR
 		}
 
 		if (jobBusinessInstance == null) {
@@ -105,8 +113,10 @@ public class SaturnJavaJob extends CrondJob {
 		try {
 			jobBusinessInstance = getObject.invoke(null);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, jobClassStr + " getObject error"),
-					t);
+			String errMsg = String.format(SaturnConstant.ERR_MSG_INVOKE_METHOD_FAIL, jobName, "getObject", jobClassStr,
+					SaturnUtils.getErrorMessage(t));
+			log.error(errMsg, t);
+			throw new JobInitException(errMsg, t);
 		}
 	}
 

@@ -1,7 +1,5 @@
 package com.vip.saturn.job.trigger;
 
-import org.quartz.SchedulerException;
-
 import com.vip.saturn.job.basic.AbstractElasticJob;
 
 public class OnetimeTrigger implements SaturnTrigger {
@@ -11,7 +9,7 @@ public class OnetimeTrigger implements SaturnTrigger {
 	}
 
 	@Override
-	public SaturnScheduler build(AbstractElasticJob job) throws SchedulerException {
+	public SaturnScheduler build(AbstractElasticJob job) {
 		SaturnScheduler scheduler = new SaturnScheduler(job, null);
 		scheduler.start();
 		scheduler.triggerJob();

@@ -6,16 +6,11 @@
                     {{executorAllocationInfo.executorName}}
                 </el-col>
             </el-form-item>
-            <el-form-item label="负荷">
-                <el-col :span="18">
-                    {{executorAllocationInfo.totalLoadLevel}}
-                </el-col>
-            </el-form-item>
             <el-form-item label="分片分布">
                 <el-col :span="18">
-                    <div v-if="Object.entries(executorAllocationInfo.allocationMap).length === 0">无</div>
+                    <div v-if="executorAllocationInfo.jobStatus.length === 0">无</div>
                     <div v-else>
-                        <el-tag type="success" class="form-tags" v-for="item in Object.entries(executorAllocationInfo.allocationMap)" :key="item[0]">{{item[0]}}:{{item[1]}}</el-tag>
+                        <el-tag :type="statusTag[item.status]" class="form-tags" v-for="item in executorAllocationInfo.jobStatus" :key="item.jobName">{{item.jobName}} : {{translateStatus[item.status]}}</el-tag>
                     </div>
                 </el-col>
             </el-form-item>
@@ -32,6 +27,18 @@ export default {
   data() {
     return {
       isVisible: true,
+      statusTag: {
+        READY: 'primary',
+        RUNNING: 'success',
+        STOPPING: 'warning',
+        STOPPED: '',
+      },
+      translateStatus: {
+        READY: '已就绪',
+        RUNNING: '运行中',
+        STOPPING: '停止中',
+        STOPPED: '已停止',
+      },
     };
   },
   methods: {

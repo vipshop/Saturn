@@ -16,6 +16,7 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.*;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -488,39 +489,44 @@ public class SaturnExecutor {
 		}
 	}
 
-	private void shutdownUnfinishJob() {
+	private void shutdownUnfinishJobs() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
-		if (schdMap != null) {
-			List<Future<?>> futures = new ArrayList<>();
-			Iterator<String> it = schdMap.keySet().iterator();
-			while (it.hasNext()) {
-				final String jobName = it.next();
-				final JobScheduler jobScheduler = schdMap.get(jobName);
-				if (jobScheduler != null) {
-					futures.add(shutdownJobsExecutorService.submit(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-									log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
-									jobScheduler.stopJob(true);
-								}
-								jobScheduler.shutdown(false);
-							} catch (Throwable t) {
-								log.error("shutdown job error", t);
+		if (MapUtils.isEmpty(schdMap)) {
+			return;
+		}
+
+		long startTime = System.currentTimeMillis();
+		List<Future<?>> futures = new ArrayList<>();
+		Iterator<String> it = schdMap.keySet().iterator();
+		while (it.hasNext()) {
+			final String jobName = it.next();
+			final JobScheduler jobScheduler = schdMap.get(jobName);
+			if (jobScheduler != null) {
+				futures.add(shutdownJobsExecutorService.submit(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
+								log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
+								jobScheduler.stopJob(true);
 							}
+							jobScheduler.shutdown(false);
+						} catch (Throwable t) {
+							log.error(String.format("[%s] msg=job %s fail to shutdown", jobName, jobName), t);
 						}
-					}));
-				}
-			}
-			for (Future<?> future : futures) {
-				try {
-					future.get();
-				} catch (Exception e) {
-					log.error("wait shutdown job error", e);
-				}
+					}
+				}));
 			}
 		}
+		for (Future<?> future : futures) {
+			try {
+				future.get();
+			} catch (Exception e) {
+				log.error("wait shutdown job error", e);
+			}
+		}
+
+		log.info("Shutdown phase [shutdownUnfinishJobs] took {}ms", System.currentTimeMillis() - startTime);
 	}
 
 	/**
@@ -533,7 +539,7 @@ public class SaturnExecutor {
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterJobsWatcher();
 			}
-			shutdownUnfinishJob();
+			shutdownUnfinishJobs();
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterExecutor();
 			}
@@ -580,7 +586,7 @@ public class SaturnExecutor {
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
 			try {
 				blockUntilJobCompletedIfNotTimeout();
-				shutdownUnfinishJob();
+				shutdownUnfinishJobs();
 				JobRegistry.clearExecutor(executorName);
 			} finally {
 				if (connectionLostListener != null) {
@@ -609,7 +615,7 @@ public class SaturnExecutor {
 		if (CollectionUtils.isEmpty(entries)) {
 			return;
 		}
-		long start = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 
 		boolean hasRunning = false;
 		do {
@@ -633,8 +639,9 @@ public class SaturnExecutor {
 				}
 			}
 		} while (hasRunning
-				&& System.currentTimeMillis() - start < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
+				&& System.currentTimeMillis() - startTime < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
 
+		log.info("Shutdown phase [blockUntilJobCompletedIfNotTimeout] took {}ms", System.currentTimeMillis() - startTime);
 	}
 
 	protected boolean isAllowedToBeGracefulShutdown(JobConfiguration currentConf) {

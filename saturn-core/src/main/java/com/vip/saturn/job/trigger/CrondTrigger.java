@@ -5,7 +5,6 @@ import java.text.ParseException;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
-import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.triggers.AbstractTrigger;
@@ -47,15 +46,14 @@ public class CrondTrigger implements SaturnTrigger {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SaturnScheduler build(AbstractElasticJob job) throws SchedulerException {
+	public SaturnScheduler build(AbstractElasticJob job) {
 		SaturnScheduler scheduler = new SaturnScheduler(job, createTrigger(job));
 		scheduler.start();
 		return scheduler;
 	}
 
 	@Override
-	public void retrigger(SaturnScheduler scheduler, AbstractElasticJob job) throws SchedulerException {
+	public void retrigger(SaturnScheduler scheduler, AbstractElasticJob job) {
 		scheduler.rescheduleJob(createTrigger(job));
 	}
 }

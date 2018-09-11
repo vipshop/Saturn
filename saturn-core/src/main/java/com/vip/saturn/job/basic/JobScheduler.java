@@ -14,7 +14,7 @@
 
 package com.vip.saturn.job.basic;
 
-import com.vip.saturn.job.exception.JobException;
+import com.vip.saturn.job.exception.JobInitException;
 import com.vip.saturn.job.executor.LimitMaxJobsService;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.analyse.AnalyseService;
@@ -37,7 +37,6 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import org.apache.curator.framework.CuratorFramework;
-import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
@@ -139,9 +138,8 @@ public class JobScheduler {
 
 	/**
 	 * 初始化作业.
-	 * @return true初始化成功，false初始化失败
 	 */
-	public boolean init() {
+	public void init() {
 		try {
 			String currentConfJobName = currentConf.getJobName();
 			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
@@ -151,11 +149,9 @@ public class JobScheduler {
 			serverService.persistServerOnline(job);
 			// Notify job enabled or disabled after that all are ready, include job was initialized.
 			configService.notifyJobEnabledOrNot();
-			return true;
-		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+		} catch (Throwable e) {
 			shutdown(false);
-			return false;
+			throw e;
 		}
 	}
 
@@ -181,13 +177,15 @@ public class JobScheduler {
 		statisticsService.startProcessCountJob();
 	}
 
-	private void createJob() throws SchedulerException {
+	private void createJob() {
 		Class<?> jobClass = currentConf.getSaturnJobClass();
 		try {
 			job = (AbstractElasticJob) jobClass.newInstance();
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "createJobException:"), e);
-			throw new RuntimeException("can not create job with job type " + currentConf.getJobType());
+			String errMsg = String
+					.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "createJobException:" + e.getMessage());
+			log.error(errMsg, e);
+			throw new JobInitException(errMsg, e);
 		}
 		job.setJobScheduler(this);
 		job.setConfigService(configService);
@@ -333,14 +331,10 @@ public class JobScheduler {
 	 * @param cronExpression crom表达式
 	 */
 	public void rescheduleJob(final String cronExpression) {
-		try {
-			if (job.getScheduler().isShutdown()) {
-				return;
-			}
-			job.getTrigger().retrigger(job.getScheduler(), job);
-		} catch (final SchedulerException ex) {
-			throw new JobException(ex);
+		if (job.getScheduler().isShutdown()) {
+			return;
 		}
+		job.getTrigger().retrigger(job.getScheduler(), job);
 	}
 
 	/**
