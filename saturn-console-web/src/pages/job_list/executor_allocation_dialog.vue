@@ -1,16 +1,21 @@
 <template>
     <el-dialog title="作业分片分配详情" :visible.sync="isVisible" :before-close="closeDialog">
-        <el-form label-width="140px">
+        <el-form label-width="130px">
             <el-form-item label="Executor">
-                <el-col :span="18">
-                    {{executorAllocationInfo.executorName}}
+                <el-col :span="22">
+                    <b>{{executorAllocationInfo.executorName}}</b>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="负荷">
+                <el-col :span="22">
+                    <b>{{executorAllocationInfo.totalLoadLevel}}</b>
                 </el-col>
             </el-form-item>
             <el-form-item label="分片分布">
-                <el-col :span="18">
+                <el-col :span="22">
                     <div v-if="executorAllocationInfo.jobStatus.length === 0">无</div>
                     <div v-else>
-                        <el-tag :type="statusTag[item.status]" class="form-tags" v-for="item in executorAllocationInfo.jobStatus" :key="item.jobName">{{item.jobName}} : {{translateStatus[item.status]}}</el-tag>
+                        <el-tag :type="statusTag[item.status]" class="form-tags" v-for="item in executorAllocationInfo.jobStatus" :key="item.jobName">{{item.jobName}}({{translateStatus[item.status]}}) : {{item.sharding}}</el-tag>
                     </div>
                 </el-col>
             </el-form-item>
