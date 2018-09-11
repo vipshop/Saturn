@@ -199,7 +199,8 @@ public class ExecutorServiceImpl implements ExecutorService {
 				}
 
 				Map<String, String> jobNameAndStatus = new HashMap<>();
-				jobNameAndStatus.put(jobName, jobStatus.name());
+				jobNameAndStatus.put("jobName", jobName);
+				jobNameAndStatus.put("status", jobStatus.name());
 				serverAllocationInfoWithStatus.getJobStatus().add(jobNameAndStatus);
 			}
 		}
