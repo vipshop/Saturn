@@ -14,7 +14,7 @@
 
 package com.vip.saturn.job.basic;
 
-import com.vip.saturn.job.exception.JobInitException;
+import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.LimitMaxJobsService;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.analyse.AnalyseService;
@@ -141,17 +141,14 @@ public class JobScheduler {
 	 */
 	public void init() {
 		try {
-			String currentConfJobName = currentConf.getJobName();
-			log.info("[{}] msg=Elastic job: job controller init, job name is: {}.", jobName, currentConfJobName);
-
 			startAll();
 			createJob();
 			serverService.persistServerOnline(job);
 			// Notify job enabled or disabled after that all are ready, include job was initialized.
 			configService.notifyJobEnabledOrNot();
-		} catch (Throwable e) {
+		} catch (Throwable t) {
 			shutdown(false);
-			throw e;
+			throw t;
 		}
 	}
 
@@ -182,10 +179,8 @@ public class JobScheduler {
 		try {
 			job = (AbstractElasticJob) jobClass.newInstance();
 		} catch (Exception e) {
-			String errMsg = String
-					.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "createJobException:" + e.getMessage());
-			log.error(errMsg, e);
-			throw new JobInitException(errMsg, e);
+			log.error("unexptected error", e);
+			throw new JobException(e);
 		}
 		job.setJobScheduler(this);
 		job.setConfigService(configService);

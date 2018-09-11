@@ -2,10 +2,10 @@ package com.vip.saturn.job.executor;
 
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.basic.SaturnExecutorContext;
 import com.vip.saturn.job.exception.JobException;
-import com.vip.saturn.job.exception.JobInitException;
-import com.vip.saturn.job.exception.SaturnJobException;
+import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.storage.JobNodePath;
@@ -38,7 +38,6 @@ import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_AD
 public class InitNewJobService {
 
 	private static final Logger log = LoggerFactory.getLogger(InitNewJobService.class);
-	private static final String ERR_MSG_JOB_IS_ON_DELETING = "the job is on deleting";
 
 	private SaturnExecutorService saturnExecutorService;
 	private String executorName;
@@ -160,37 +159,47 @@ public class InitNewJobService {
 			return alarmInfo;
 		}
 
-		private boolean initJobScheduler(String jobName) throws SaturnJobException {
+		private void alarmJobInitFailed(String jobName, String message) {
 			try {
-				log.info("[{}] msg=add new job {} - {}", jobName, executorName, jobName);
+				String namespace = regCenter.getNamespace();
+				AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, message), namespace);
+			} catch (Exception e) {
+				log.error("alarmJobInitFailed error", e);
+			}
+		}
+
+		private boolean initJobScheduler(String jobName) {
+			try {
+				log.info(SaturnConstant.LOG_FORMAT, jobName, "start to initialize the new job");
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 				if (jobConfig.getSaturnJobClass() == null) {
-					throw new JobInitException("the saturnJobClass is null, jobType is {}", jobConfig.getJobType());
+					throw new JobException(
+							"unexpected error, the saturnJobClass cannot be null, jobName is %s, jobType is %s",
+							jobName, jobConfig.getJobType());
 				}
 				if (jobConfig.isDeleting()) {
 					String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 					regCenter.remove(serverNodePath);
-					log.warn(ERR_MSG_JOB_IS_ON_DELETING);
+					log.warn(SaturnConstant.LOG_FORMAT, jobName, "the job is on deleting");
 					return false;
 				}
 				JobScheduler scheduler = new JobScheduler(regCenter, jobConfig);
 				scheduler.setSaturnExecutorService(saturnExecutorService);
 				scheduler.init();
 				return true;
-			} catch (JobInitException e) {
+			} catch (JobInitAlarmException e) {
 				// no need to log exception stack as it should be logged in the original happen place
-				if (!SaturnExecutorContext.containsJobInitExceptionMessage(jobName, e.getMessage())) {
-					String namespace = regCenter.getNamespace();
-					AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, e.getMessage()),
-							namespace);
-					SaturnExecutorContext.putJobInitExceptionMessage(jobName, e.getMessage());
+				String message = e.getMessage();
+				if (!SaturnExecutorContext.containsJobInitExceptionMessage(jobName, message)) {
+					alarmJobInitFailed(jobName, message);
+					SaturnExecutorContext.putJobInitExceptionMessage(jobName, message);
 				} else {
-					log.info(
-							"job {} init fail but will not raise alarm as such kind of alarm already been raise before",
-							jobName);
+					log.info(SaturnConstant.LOG_FORMAT, jobName,
+							"job initialize failed but will not raise alarm as such kind of alarm already been raise before");
 				}
-			} catch (Throwable e) {
-				log.warn(String.format("job {} initialize fail, but will not stop the init process", jobName), e);
+			} catch (Throwable t) {
+				log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
+						"job initialize failed, but will not stop the init process"), t);
 			}
 
 			return false;

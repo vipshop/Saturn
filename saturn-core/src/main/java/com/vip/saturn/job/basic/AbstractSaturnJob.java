@@ -8,13 +8,14 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.PropertyPlaceholderHelper;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.PropertyPlaceholderHelper;
 
 /**
  * Saturn抽象父类
@@ -163,19 +164,18 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		return itemVal.replaceAll("!!", "\"").replaceAll("@@", "=").replaceAll("##", ",");
 	}
 
-	public String logBusinessExceptionIfNecessary(String jobName, Exception e) {
+	public String logBusinessExceptionIfNecessary(String jobName, Throwable t) {
 		String message = null;
-		if (e instanceof ReflectiveOperationException) {
-			Throwable cause = e.getCause();
+		if (t instanceof ReflectiveOperationException) {
+			Throwable cause = t.getCause();
 			if (cause != null) {
-				message = cause.getMessage();
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, message), e);
+				message = cause.toString();
 			}
 		}
-		log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		if (message == null) {
-			message = e.getMessage();
+			message = t.toString();
 		}
+		log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, message), t);
 		return message;
 	}
 
