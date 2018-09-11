@@ -159,12 +159,12 @@ public class InitNewJobService {
 			return alarmInfo;
 		}
 
-		private void alarmJobInitFailed(String jobName, String message) {
+		private void raiseAlarmForJobInitFailed(String jobName, String message) {
 			try {
 				String namespace = regCenter.getNamespace();
 				AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, message), namespace);
 			} catch (Exception e) {
-				log.error("alarmJobInitFailed error", e);
+				log.error("exception throws during raise alarm for job init fail", e);
 			}
 		}
 
@@ -191,7 +191,7 @@ public class InitNewJobService {
 				// no need to log exception stack as it should be logged in the original happen place
 				String message = e.getMessage();
 				if (!SaturnExecutorContext.containsJobInitExceptionMessage(jobName, message)) {
-					alarmJobInitFailed(jobName, message);
+					raiseAlarmForJobInitFailed(jobName, message);
 					SaturnExecutorContext.putJobInitExceptionMessage(jobName, message);
 				} else {
 					log.info(SaturnConstant.LOG_FORMAT, jobName,

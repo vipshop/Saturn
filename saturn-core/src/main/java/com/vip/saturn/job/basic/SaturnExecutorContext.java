@@ -1,7 +1,6 @@
 package com.vip.saturn.job.basic;
 
 import com.google.common.collect.Maps;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 

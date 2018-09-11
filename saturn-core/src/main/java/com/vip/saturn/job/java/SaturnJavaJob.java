@@ -58,7 +58,8 @@ public class SaturnJavaJob extends CrondJob {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			throw new JobInitAlarmException(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "jobClass is not set");
+			log.error(SaturnConstant.LOG_FORMAT, jobName, "jobClass is not set");
+			throw new JobInitAlarmException("jobClass is not set");
 		}
 		log.info(SaturnConstant.LOG_FORMAT, jobName,
 				String.format("start to create job business instance, jobClass is %s", jobClassStr));
@@ -87,7 +88,8 @@ public class SaturnJavaJob extends CrondJob {
 			}
 		}
 		if (jobBusinessInstance == null) {
-			throw new JobInitAlarmException(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "job instance is null");
+			log.error(SaturnConstant.LOG_FORMAT, jobName, "job instance is null");
+			throw new JobInitAlarmException("job instance is null");
 		}
 	}
 
