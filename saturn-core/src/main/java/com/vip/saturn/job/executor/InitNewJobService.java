@@ -2,6 +2,7 @@ package com.vip.saturn.job.executor;
 
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.SaturnExecutorContext;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.exception.JobInitException;
 import com.vip.saturn.job.exception.SaturnJobException;
@@ -177,11 +178,17 @@ public class InitNewJobService {
 				scheduler.init();
 				return true;
 			} catch (JobInitException e) {
-				String alarmMessage = String.format("job [%s] initialize fail: %s", jobName, e.getMessage());
 				// no need to log exception stack as it should be logged in the original happen place
-				log.error(alarmMessage);
-				String namespace = regCenter.getNamespace();
-				AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, alarmMessage), namespace);
+				if (!SaturnExecutorContext.containsJobInitExceptionMessage(jobName, e.getMessage())) {
+					String namespace = regCenter.getNamespace();
+					AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, e.getMessage()),
+							namespace);
+					SaturnExecutorContext.putJobInitExceptionMessage(jobName, e.getMessage());
+				} else {
+					log.info(
+							"job {} init fail but will not raise alarm as such kind of alarm already been raise before",
+							jobName);
+				}
 			} catch (Throwable e) {
 				log.warn(String.format("job {} initialize fail, but will not stop the init process", jobName), e);
 			}

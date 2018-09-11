@@ -11,4 +11,16 @@ public class SaturnUtils {
 		return sdf.format(date);
 	}
 
+	public static String getErrorMessage(Throwable t) {
+		if (t == null) {
+			return "";
+		}
+
+		if (t.getCause() != null) {
+			return t.getCause().toString();
+		}
+
+		return t.toString();
+	}
+
 }

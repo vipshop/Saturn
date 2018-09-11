@@ -6,6 +6,7 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobInitException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.utils.SaturnUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,7 @@ public class SaturnJavaJob extends CrondJob {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			throw new JobInitException(String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, "job class is not set", ""));
+			throw new JobInitException(String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, "", "job class is not set"));
 		}
 
 		if (jobBusinessInstance == null) {
@@ -74,8 +75,8 @@ public class SaturnJavaJob extends CrondJob {
 			} catch (JobInitException e) {
 				throw e;
 			} catch (Throwable t) {
-				String errMsg = String
-						.format(SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL, jobName, t.getMessage(), jobClassStr);
+				String errMsg = String.format(SaturnConstant.ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr,
+						SaturnUtils.getErrorMessage(t));
 				log.error(errMsg, t);
 				throw new JobInitException(errMsg, t);
 			} finally {
@@ -84,7 +85,7 @@ public class SaturnJavaJob extends CrondJob {
 		}
 		if (jobBusinessInstance == null) {
 			throw new JobInitException(
-					String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, "job instance is null", jobClassStr));
+					String.format(ERR_MSG_TEMPLATE_INIT_FAIL, jobName, jobClassStr, "job instance is null"));
 		}
 	}
 
@@ -113,7 +114,7 @@ public class SaturnJavaJob extends CrondJob {
 			jobBusinessInstance = getObject.invoke(null);
 		} catch (Throwable t) {
 			String errMsg = String.format(SaturnConstant.ERR_MSG_INVOKE_METHOD_FAIL, jobName, "getObject", jobClassStr,
-					t.getMessage());
+					SaturnUtils.getErrorMessage(t));
 			log.error(errMsg, t);
 			throw new JobInitException(errMsg, t);
 		}

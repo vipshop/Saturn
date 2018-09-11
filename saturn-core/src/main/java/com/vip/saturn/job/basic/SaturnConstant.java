@@ -13,7 +13,7 @@ public class SaturnConstant {
 	// max datalength 1MB
 	public static final int MAX_ZNODE_DATA_LENGTH = 1048576;
 
-	public static final String ERR_MSG_TEMPLATE_INIT_FAIL = "[%s] msg=init job business instance fail for reason %s. The job class is [%s]";
+	public static final String ERR_MSG_TEMPLATE_INIT_FAIL = "Job [%s] init business instance fail, jobClass=[%s], caused by:%s";
 
-	public static final String ERR_MSG_INVOKE_METHOD_FAIL = "[%s] msg=invoke method %s of class %s fail for reason %s";
+	public static final String ERR_MSG_INVOKE_METHOD_FAIL = "Job [%s] init business instance fail during call method=[%s] of jobClass=[%s], caused by:%s";
 }
