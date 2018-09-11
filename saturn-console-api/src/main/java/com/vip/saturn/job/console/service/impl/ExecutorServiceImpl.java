@@ -198,10 +198,22 @@ public class ExecutorServiceImpl implements ExecutorService {
 					continue;
 				}
 
-				Map<String, String> jobNameAndStatus = new HashMap<>();
+				String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
+				Integer loadLevel = 1;
+				if (StringUtils.isNotBlank(loadLevelNode)) {
+					loadLevel = Integer.valueOf(loadLevelNode);
+				}
+
+				int shardingItemNum = sharding.split(",").length;
+				int curJobLoad = shardingItemNum * loadLevel;
+				int totalLoad = serverAllocationInfoWithStatus.getTotalLoadLevel();
+
+				Map<String, Object> jobNameAndStatus = new HashMap<>();
 				jobNameAndStatus.put("jobName", jobName);
 				jobNameAndStatus.put("status", jobStatus.name());
+				jobNameAndStatus.put("sharding", sharding);
 				serverAllocationInfoWithStatus.getJobStatus().add(jobNameAndStatus);
+				serverAllocationInfoWithStatus.setTotalLoadLevel(totalLoad + curJobLoad);
 			}
 		}
 

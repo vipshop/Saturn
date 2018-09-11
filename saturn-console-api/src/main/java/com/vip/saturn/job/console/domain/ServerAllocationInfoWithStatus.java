@@ -13,7 +13,9 @@ public class ServerAllocationInfoWithStatus {
 
 	private String executorName;
 
-	private List<Map<String, String>> jobStatus = new ArrayList<>();
+	private List<Map<String, Object>> jobStatus = new ArrayList<>();
+
+	private int totalLoadLevel;
 
 	public ServerAllocationInfoWithStatus(String executorName) {
 		this.executorName = executorName;
@@ -27,11 +29,19 @@ public class ServerAllocationInfoWithStatus {
 		this.executorName = executorName;
 	}
 
-	public List<Map<String, String>> getJobStatus() {
+	public List<Map<String, Object>> getJobStatus() {
 		return jobStatus;
 	}
 
-	public void setJobStatus(List<Map<String, String>> jobStatus) {
+	public void setJobStatus(List<Map<String, Object>> jobStatus) {
 		this.jobStatus = jobStatus;
+	}
+
+	public int getTotalLoadLevel() {
+		return totalLoadLevel;
+	}
+
+	public void setTotalLoadLevel(int totalLoadLevel) {
+		this.totalLoadLevel = totalLoadLevel;
 	}
 }
