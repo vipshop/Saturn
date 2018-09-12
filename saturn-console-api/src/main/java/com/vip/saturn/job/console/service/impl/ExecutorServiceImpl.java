@@ -148,49 +148,6 @@ public class ExecutorServiceImpl implements ExecutorService {
 			String sharding = curatorFrameworkOp
 					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
-				// 作业状态为STOPPED的即使有残留分片也不显示该分片
-				if (JobStatus.STOPPED.equals(jobService.getJobStatus(namespace, jobName))) {
-					continue;
-				}
-				// concat executorSharding
-				serverAllocationInfo.getAllocationMap().put(jobName, sharding);
-				// calculate totalLoad
-				String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
-				Integer loadLevel = 1;
-				if (StringUtils.isNotBlank(loadLevelNode)) {
-					loadLevel = Integer.valueOf(loadLevelNode);
-				}
-
-				int shardingItemNum = sharding.split(",").length;
-				int curJobLoad = shardingItemNum * loadLevel;
-				int totalLoad = serverAllocationInfo.getTotalLoadLevel();
-				serverAllocationInfo.setTotalLoadLevel(totalLoad + curJobLoad);
-			}
-		}
-
-		return serverAllocationInfo;
-	}
-
-	@Override
-	public ServerAllocationInfoWithStatus getExecutorAllocationWithStat(String namespace, String executorName)
-			throws SaturnJobConsoleException {
-		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
-
-		List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
-
-		ServerAllocationInfoWithStatus serverAllocationInfoWithStatus = new ServerAllocationInfoWithStatus(
-				executorName);
-
-		for (JobConfig jobConfig : unSystemJobs) {
-			String jobName = jobConfig.getJobName();
-			String serverNodePath = JobNodePath.getServerNodePath(jobName);
-			if (!curatorFrameworkOp.checkExists(serverNodePath)) {
-				continue;
-			}
-
-			String sharding = curatorFrameworkOp
-					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
-			if (StringUtils.isNotBlank(sharding)) {
 				JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
 
 				// 作业状态为STOPPED的即使有残留分片也不显示该分片
@@ -206,18 +163,18 @@ public class ExecutorServiceImpl implements ExecutorService {
 
 				int shardingItemNum = sharding.split(",").length;
 				int curJobLoad = shardingItemNum * loadLevel;
-				int totalLoad = serverAllocationInfoWithStatus.getTotalLoadLevel();
+				int totalLoad = serverAllocationInfo.getTotalLoadLevel();
 
-				Map<String, Object> jobNameAndStatus = new HashMap<>();
+				Map<String, String> jobNameAndStatus = new HashMap<>();
 				jobNameAndStatus.put("jobName", jobName);
 				jobNameAndStatus.put("status", jobStatus.name());
 				jobNameAndStatus.put("sharding", sharding);
-				serverAllocationInfoWithStatus.getJobStatus().add(jobNameAndStatus);
-				serverAllocationInfoWithStatus.setTotalLoadLevel(totalLoad + curJobLoad);
+				serverAllocationInfo.getJobStatus().add(jobNameAndStatus);
+				serverAllocationInfo.setTotalLoadLevel(totalLoad + curJobLoad);
 			}
 		}
 
-		return serverAllocationInfoWithStatus;
+		return serverAllocationInfo;
 	}
 
 	@Override
