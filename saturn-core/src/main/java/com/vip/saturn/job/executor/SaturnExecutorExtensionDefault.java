@@ -8,6 +8,8 @@ import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 /**
  *
  * @author hebelala
@@ -88,5 +90,10 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 	@Override
 	public Class getExecutorConfigClass() {
 		return ExecutorConfig.class;
+	}
+
+	@Override
+	public void postDiscover(Map<String, String> discoveryInfo) {
+		// do nothing
 	}
 }

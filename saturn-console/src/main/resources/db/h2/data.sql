@@ -7,6 +7,7 @@ VALUES
 	('demoJavaJob', 'mydomain', NULL, 'demo.DemoJavaJob', 5, 1, '0/5 * * * * ?', '', '', '0=0,1=1,2=2,3=3,4=4', '', 1, 300, NULL, NULL, NULL, NULL, 1, NULL, NULL, '', 0, 0, '', 'JAVA_JOB', '', 'admin', '2017-10-13 19:06:24', 'Unkown User', '2017-10-18 18:11:27', '', 0, 1, 0, NULL, NULL, NULL, 0, 1, '', '', 0, 'Asia/Shanghai', 1, '', NULL);
 
 INSERT INTO sys_config(property,value) values('CONSOLE_ZK_CLUSTER_MAPPING','CONSOLE-IT:it_cluster;default:cluster1,it_cluster');
+INSERT INTO sys_config(property,value) values('ENV','dev');
 
 INSERT INTO `user`(`user_name`,`password`) VALUES('admin','admin');
 INSERT INTO `user`(`user_name`,`password`) VALUES('guest','guest');

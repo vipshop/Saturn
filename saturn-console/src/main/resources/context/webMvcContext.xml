@@ -56,8 +56,6 @@
           class="com.vip.saturn.job.console.controller.gui.ExecutorConfigController"/>
     <bean id="utilsController"
           class="com.vip.saturn.job.console.controller.gui.UtilsController"/>
-    <bean id="discoveryController"
-          class="com.vip.saturn.job.console.controller.gui.DiscoveryController"/>
     <!-- GUI Controller End -->
 
     <!-- Rest API Controller Begin -->
