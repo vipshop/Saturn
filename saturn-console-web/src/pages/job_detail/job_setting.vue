@@ -169,7 +169,7 @@
                                 </el-form-item>
                             </el-col>
                             <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
-                                <el-form-item prop="failover" label="failover">
+                                <el-form-item prop="failover" label="故障转移">
                                     <el-switch v-model="jobSettingInfo.failover" title="本地模式不可编辑" :disabled="jobSettingInfo.localMode"></el-switch>
                                 </el-form-item>
                             </el-col>
