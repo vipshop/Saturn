@@ -144,7 +144,7 @@ CREATE TABLE `namespace_info` (
 -- ----------------------------
 CREATE TABLE `sys_config` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `property` varchar(255) NOT NULL COMMENT '属性名',
+  `property` varchar(255) NOT NULL COMMENT '属性schema名',
   `value` varchar(2000) NOT NULL COMMENT '属性值',
   PRIMARY KEY (`id`),
   KEY `property_idx` (`property`)

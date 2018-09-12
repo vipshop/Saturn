@@ -82,7 +82,6 @@ public class JobServiceImpl implements JobService {
 	public static final String CONFIG_ITEM_GROUPS = "groups";
 	public static final String CONFIG_ITEM_JOB_CLASS = "jobClass";
 	public static final String CONFIG_ITEM_RERUN = "rerun";
-	public static final String CONFIG_ITEM_HAS_RERUN = "hasRerun";
 	private static final Logger log = LoggerFactory.getLogger(JobServiceImpl.class);
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
@@ -953,7 +952,6 @@ public class JobServiceImpl implements JobService {
 		//hasRerun代表是否已经重跑过
 		curatorFrameworkOp
 				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN), jobConfig.getRerun());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_HAS_RERUN), false);
 		//For失败重跑机制 END
 	}
 
@@ -1715,11 +1713,6 @@ public class JobServiceImpl implements JobService {
 				if (curatorFrameworkOp.checkExists(executionNodePath)) {
 					curatorFrameworkOp.deleteRecursive(executionNodePath);
 				}
-			}
-			//当关闭重跑功能情况下，把过往的hasRerun记录设置为false(清楚掉记录)
-			if (newJobConfig4DB.getRerun() == false) {
-				log.info("the rerun function has closed, thus set hasReun to false");
-				curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_HAS_RERUN), false);
 			}
 		} catch (Exception e) {
 			log.error("update settings to zk failed: {}", e);
