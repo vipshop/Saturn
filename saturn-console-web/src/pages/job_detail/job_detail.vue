@@ -1,7 +1,7 @@
 <template>
     <div>
         <Top-bar :domain="domainName" :domain-info="domainInfo"></Top-bar>
-        <Aside :sidebar-menus="sidebarMenus" headerHeight="90">
+        <VAside :sidebar-menus="sidebarMenus" headerHeight="90">
             <div v-loading="loading" element-loading-text="请稍等···">
               <div class="job-detail-header">
                   <div class="pull-left job-detail-title">
@@ -23,7 +23,7 @@
               </div>
               <router-view></router-view>
             </div>
-        </Aside>
+        </VAside>
     </div>
 </template>
 

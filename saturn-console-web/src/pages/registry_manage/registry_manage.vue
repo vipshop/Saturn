@@ -1,8 +1,8 @@
 <template>
     <div>
-        <Aside :sidebar-menus="sidebarMenus" headerHeight="50">
+        <VAside :sidebar-menus="sidebarMenus" headerHeight="50">
             <router-view></router-view>
-        </Aside>
+        </VAside>
     </div>
 </template>
 
