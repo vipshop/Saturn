@@ -1,0 +1,9 @@
+server:
+  port: 10000
+  
+## log
+logging:
+  file: logger.log
+  level:
+    org.mockito.internal.debugging: debug
+    
