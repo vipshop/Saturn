@@ -49,7 +49,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 	/**
 	 * 创建配置项。
 	 *
-	 * @param key 配置keyremoveExecutorConfigs
+	 * @param key 配置key
 	 * @param value 配置值
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
