@@ -9,6 +9,7 @@ import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 import com.vip.saturn.job.console.service.SystemConfigService;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * System config related operations.
+ * API for executor discover namespace info.<br>
+ * Executor >= 3.1.2 will call this API to discover.
  *
  * @author ray.leung
  */
@@ -39,22 +40,21 @@ public class DiscoveryRestApiController extends AbstractGUIController {
 	private NamespaceZkClusterMapping4SqlService namespaceZkclusterMapping4SqlService;
 
 	/**
-	 * 获取所有系统配置信息。
+	 * 发现namespace相关注册信息.
 	 */
 	@Audit(type = AuditType.REST)
 	@RequestMapping(method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity getConfigs(HttpServletRequest request) throws SaturnJobConsoleException {
-		String namespace = request.getParameter("namespace");
+	public ResponseEntity discover(String namespace) throws SaturnJobConsoleException {
+		checkMissingParameter("namespace", namespace);
 		Map<String, String> response = new HashMap<>(2);
-		if (StringUtils.isBlank(namespace)) {
-			response.put("env", getVmsEnv());
-		} else {
-			response.put("env", getVmsEnv());
-			response.put("zkConnStr", getZkConnStr(namespace));
-		}
+		response.put("zkConnStr", getZkConnStr(namespace));
+		response.put("env", getEnvConfig());
 		return ResponseEntity.ok(response);
 	}
 
+	/**
+	 * 返回ZK连接串
+	 */
 	private String getZkConnStr(String namespace) throws SaturnJobConsoleHttpException {
 		if (StringUtils.isBlank(namespace)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
@@ -63,8 +63,7 @@ public class DiscoveryRestApiController extends AbstractGUIController {
 		String zkClusterKey = namespaceZkclusterMapping4SqlService.getZkClusterKey(namespace);
 
 		if (zkClusterKey == null) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
-					"The namespace：[" + namespace + "] is not registered in Saturn.");
+			throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(), "The namespace：[" + namespace + "] is not registered in Saturn.");
 		}
 		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 		if (zkClusterInfo == null) {
@@ -74,7 +73,10 @@ public class DiscoveryRestApiController extends AbstractGUIController {
 		return zkClusterInfo.getConnectString();
 	}
 
-	private String getVmsEnv() {
-		return systemConfigService.getValueDirectly("ENV");
+	/**
+	 * 返回console所在环境信息
+	 */
+	private String getEnvConfig() {
+		return systemConfigService.getValueDirectly(SaturnConstants.SYSTEM_CONFIG_ENV);
 	}
 }

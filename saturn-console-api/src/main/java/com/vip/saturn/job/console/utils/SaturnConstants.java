@@ -40,4 +40,6 @@ public class SaturnConstants {
 
 	public static final int JOB_IS_DISABLE = 0;
 
+	public static final String SYSTEM_CONFIG_ENV = "ENV";
+
 }

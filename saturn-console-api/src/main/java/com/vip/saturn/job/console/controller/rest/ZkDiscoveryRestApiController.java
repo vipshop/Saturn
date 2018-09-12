@@ -21,8 +21,11 @@ import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
 /**
  * Discover zk connection string by namespace.
  *
+ * It is deprecated as it is replaced by DiscoveryRestAPIController. Executor >= 3.1.2 will not call this API.
+ *
  * @author hebelala
  */
+@Deprecated
 @RequestMapping("/rest/v1")
 public class ZkDiscoveryRestApiController extends AbstractRestController {
 
