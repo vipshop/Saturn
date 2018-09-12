@@ -117,8 +117,10 @@ public class ShutdownHandler implements SignalHandler {
 	}
 
 	private void exit() {
+		// try to wait job's postForceStop executing completely
+		// maybe do it in the other right place
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			e.printStackTrace(); // NOSONAR
 			Thread.currentThread().interrupt();
