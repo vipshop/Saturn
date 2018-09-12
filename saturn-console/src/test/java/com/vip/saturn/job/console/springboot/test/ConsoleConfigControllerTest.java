@@ -45,4 +45,13 @@ public class ConsoleConfigControllerTest extends AbstractSaturnConsoleTest {
 		metas = (List<JobConfigMeta>) objValue.get("other_configs");
 		assertTrue(metas.size() > 0);
 	}
+
+	@Test
+	public void testGetEnvConfig() throws Exception {
+		MvcResult result = mvc.perform(get("/console/configs/console/env")).andExpect(status().isOk()).andReturn();
+		String body = result.getResponse().getContentAsString();
+		Map<String, Object> resultMap = JSONObject.parseObject(body, Map.class);
+		String objValue = (String) resultMap.get("obj");
+		assertEquals("dev", objValue);
+	}
 }

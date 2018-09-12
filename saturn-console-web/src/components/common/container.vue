@@ -1,7 +1,7 @@
 <template>
     <el-container class="my-container">
         <el-header height="50px">
-            <Header></Header>
+            <VHeader></VHeader>
         </el-header>
         <router-view></router-view>
     </el-container>

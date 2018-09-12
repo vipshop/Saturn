@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Container from './common/container';
-import Header from './common/header';
+import VHeader from './common/header';
 import topBar from './common/top_bar';
 import Breadcrumb from './common/breadcrumb';
-import Aside from './common/aside';
+import VAside from './common/aside';
 import Timeline from './common/timeline';
 import TimelineItem from './common/timeline_item';
 import ChartContainer from './common/charts/chart_container';
@@ -25,10 +25,10 @@ import MigrateStatusDialog from './common/dialog/migrate_status_dialog';
 import AddConfigDialog from './common/dialog/add_config_dialog';
 
 Vue.component('Container', Container);
-Vue.component('Header', Header);
+Vue.component('VHeader', VHeader);
 Vue.component('Top-bar', topBar);
 Vue.component('Breadcrumb', Breadcrumb);
-Vue.component('Aside', Aside);
+Vue.component('VAside', VAside);
 Vue.component('Timeline', Timeline);
 Vue.component('Timeline-item', TimelineItem);
 Vue.component('Chart-container', ChartContainer);

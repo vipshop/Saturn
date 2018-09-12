@@ -44,6 +44,10 @@ import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
 
 public class SaturnExecutor {
 
+	private static final String DISCOVER_INFO_ZK_CONN_STR = "zkConnStr";
+
+	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
+
 	private static Logger log;
 
 	private static AtomicBoolean inited = new AtomicBoolean(false);
@@ -79,10 +83,6 @@ public class SaturnExecutor {
 	private ExecutorService raiseAlarmExecutorService;
 
 	private ExecutorService shutdownJobsExecutorService;
-
-	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
-
-	private static Object discoveryApiDelegate;
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
@@ -217,7 +217,7 @@ public class SaturnExecutor {
 		}
 	}
 
-	private String discoverZK() throws Exception {
+	private Map<String, String> discover() throws Exception {
 		if (SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.isEmpty()) {
 			throw new Exception("Please configure the parameter " + SystemEnvProperties.NAME_VIP_SATURN_CONSOLE_URI
 					+ " with env or -D");
@@ -239,38 +239,15 @@ public class SaturnExecutor {
 				String responseBody = EntityUtils.toString(httpResponse.getEntity());
 				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
 				if (statusLine != null && statusCode.intValue() == HttpStatus.SC_OK) {
-					Map<String, String> configMap = JSONObject.parseObject(responseBody, Map.class);
-					String connectionString = configMap.get("zkConnStr");
+					Map<String, String> discoveryInfo = JSONObject.parseObject(responseBody, Map.class);
+					String connectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
 					if (StringUtils.isBlank(connectionString)) {
-						log.warn("ZK connection string is blank！");
+						log.warn("ZK connection string is blank!");
 						continue;
 					}
 
-					log.info("Discover zk connection string successfully. Url: {}, zk connection string: {}", url,
-							connectionString);
-
-					String env = configMap.get("env");
-					if (StringUtils.isNotBlank(env)) {
-						System.setProperty("ENV", env);
-						log.info("Discover ENV successfully, value is : {}", env);
-					} else {
-						System.setProperty("ENV", "PRODUCTION");
-						log.info("Discover ENV fail, set default value to PRODUCTION");
-					}
-
-					/**
-					 * 利用回调模式通知zk集群发现结束
-					 */
-					if (discoveryApiDelegate != null) {
-						try {
-							discoveryApiDelegate.getClass().getMethod("afterDiscoverZK", String.class)
-									.invoke(discoveryApiDelegate, env);
-						} catch (NoSuchMethodException e) {
-							log.info("No method [afterDiscoverZK] found, ignore it");
-						}
-					}
-
-					return connectionString;
+					log.info("Discover successfully. Url: {}, discovery info: {}", url, discoveryInfo);
+					return discoveryInfo;
 				} else {
 					handleDiscoverException(responseBody, statusCode);
 				}
@@ -279,8 +256,8 @@ public class SaturnExecutor {
 				if (e.getCode() != SaturnExecutorExceptionCode.UNEXPECTED_EXCEPTION) {
 					throw e;
 				}
-			} catch (Exception e) {
-				log.error("Fail to discover zk connection. Url: " + url, e);
+			} catch (Throwable t) {
+				log.error("Fail to discover from Saturn Console. Url: " + url, t);
 			} finally {
 				if (httpClient != null) {
 					try {
@@ -293,13 +270,13 @@ public class SaturnExecutor {
 		}
 
 		throw new Exception(
-				"Fail to discover zk connection string! Please make sure that you have added your namespace on Saturn Console.");
+				"Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console.");
 	}
 
 	private void handleDiscoverException(String responseBody, Integer statusCode) throws SaturnExecutorException {
 		String errMsgInResponse = obtainErrorResponseMsg(responseBody);
 
-		StringBuilder sb = new StringBuilder("Fail to discover zk connection string. ");
+		StringBuilder sb = new StringBuilder("Fail to discover from saturn console. ");
 		if (StringUtils.isNotBlank(errMsgInResponse)) {
 			sb.append(errMsgInResponse);
 		}
@@ -342,17 +319,18 @@ public class SaturnExecutor {
 			try {
 				StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
 
-				log.info("start to discover zk connection string.");
-				String serverLists = discoverZK();
-				if (StringUtils.isBlank(serverLists)) {
+				log.info("start to discover from saturn console");
+				Map<String, String> discoveryInfo = discover();
+				String zkConnectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
+				if (StringUtils.isBlank(zkConnectionString)) {
 					log.error("zk connection string is blank!");
 					throw new RuntimeException("zk connection string is blank!");
 				}
 
-				serverLists = serverLists.trim();
+				saturnExecutorExtension.postDiscover(discoveryInfo);
 
 				// 初始化注册中心
-				initRegistryCenter(serverLists);
+				initRegistryCenter(zkConnectionString.trim());
 
 				// 检测是否存在仍然有正在运行的SHELL作业
 				log.info("start to check all exist jobs.");
@@ -718,11 +696,4 @@ public class SaturnExecutor {
 		this.namespace = namespace;
 	}
 
-	public static Object getDiscoveryApiDelegate() {
-		return discoveryApiDelegate;
-	}
-
-	public static void setDiscoveryApiDelegate(Object discoveryApiDelegate) {
-		SaturnExecutor.discoveryApiDelegate = discoveryApiDelegate;
-	}
 }

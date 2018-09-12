@@ -1,5 +1,7 @@
 package com.vip.saturn.job.executor;
 
+import java.util.Map;
+
 /**
  *
  * @author hebelala
@@ -35,5 +37,7 @@ public abstract class SaturnExecutorExtension {
 	public abstract void init();
 
 	public abstract Class getExecutorConfigClass();
+
+	public abstract void postDiscover(Map<String, String> discoveryInfo);
 
 }

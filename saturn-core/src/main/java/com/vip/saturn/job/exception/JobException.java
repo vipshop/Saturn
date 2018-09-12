@@ -14,6 +14,8 @@
 
 package com.vip.saturn.job.exception;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * 分布式作业抛出的异常基类
  */
@@ -22,11 +24,11 @@ public class JobException extends RuntimeException {
 	private static final long serialVersionUID = -5323792555332165319L;
 
 	/**
-	 * @param errorMessage the format of error message
+	 * @param errorMessage if the args array are not empty then should be the format of error message; otherwise, it is the error message.
 	 * @param args Arguments referenced by the format specifiers in the format string
 	 */
 	public JobException(final String errorMessage, final Object... args) {
-		super(String.format(errorMessage, args));
+		super(ArrayUtils.isEmpty(args) ? errorMessage : String.format(errorMessage, args));
 	}
 
 	public JobException(final Exception cause) {

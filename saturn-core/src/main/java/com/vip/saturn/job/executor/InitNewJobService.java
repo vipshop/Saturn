@@ -3,7 +3,6 @@ package com.vip.saturn.job.executor;
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnConstant;
-import com.vip.saturn.job.basic.SaturnExecutorContext;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -22,13 +21,8 @@ import org.apache.curator.utils.CloseableExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_ADDED_COUNT;
 
@@ -38,20 +32,22 @@ import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_AD
 public class InitNewJobService {
 
 	private static final Logger log = LoggerFactory.getLogger(InitNewJobService.class);
-
+	/**
+	 * record the alarm message hashcode, permanently saved, used for just raising alarm one time for one type exception
+	 */
+	private static final ConcurrentMap<String, ConcurrentMap<String, Set<Integer>>> JOB_INIT_FAILED_RECORDS = new ConcurrentHashMap<>();
 	private SaturnExecutorService saturnExecutorService;
 	private String executorName;
 	private CoordinatorRegistryCenter regCenter;
-
 	private TreeCache treeCache;
 	private ExecutorService executorService;
-
 	private List<String> jobNames = new ArrayList<>();
 
 	public InitNewJobService(SaturnExecutorService saturnExecutorService) {
 		this.saturnExecutorService = saturnExecutorService;
 		this.executorName = saturnExecutorService.getExecutorName();
 		this.regCenter = saturnExecutorService.getCoordinatorRegistryCenter();
+		JOB_INIT_FAILED_RECORDS.putIfAbsent(executorName, new ConcurrentHashMap<String, Set<Integer>>());
 	}
 
 	public void start() throws Exception {
@@ -159,18 +155,10 @@ public class InitNewJobService {
 			return alarmInfo;
 		}
 
-		private void alarmJobInitFailed(String jobName, String message) {
-			try {
-				String namespace = regCenter.getNamespace();
-				AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, message), namespace);
-			} catch (Exception e) {
-				log.error("alarmJobInitFailed error", e);
-			}
-		}
-
 		private boolean initJobScheduler(String jobName) {
 			try {
 				log.info(SaturnConstant.LOG_FORMAT, jobName, "start to initialize the new job");
+				JOB_INIT_FAILED_RECORDS.get(executorName).putIfAbsent(jobName, new HashSet<Integer>());
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 				if (jobConfig.getSaturnJobClass() == null) {
 					throw new JobException(
@@ -186,17 +174,12 @@ public class InitNewJobService {
 				JobScheduler scheduler = new JobScheduler(regCenter, jobConfig);
 				scheduler.setSaturnExecutorService(saturnExecutorService);
 				scheduler.init();
+				// clear previous records when initialize job successfully
+				JOB_INIT_FAILED_RECORDS.get(executorName).get(jobName).clear();
 				return true;
 			} catch (JobInitAlarmException e) {
 				// no need to log exception stack as it should be logged in the original happen place
-				String message = e.getMessage();
-				if (!SaturnExecutorContext.containsJobInitExceptionMessage(jobName, message)) {
-					alarmJobInitFailed(jobName, message);
-					SaturnExecutorContext.putJobInitExceptionMessage(jobName, message);
-				} else {
-					log.info(SaturnConstant.LOG_FORMAT, jobName,
-							"job initialize failed but will not raise alarm as such kind of alarm already been raise before");
-				}
+				raiseAlarmForJobInitFailed(jobName, e);
 			} catch (Throwable t) {
 				log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
 						"job initialize failed, but will not stop the init process"), t);
@@ -205,6 +188,27 @@ public class InitNewJobService {
 			return false;
 		}
 
+		private void raiseAlarmForJobInitFailed(String jobName, JobInitAlarmException jobInitAlarmException) {
+			String message = jobInitAlarmException.getMessage();
+			int messageHashCode = message.hashCode();
+			Set<Integer> records = JOB_INIT_FAILED_RECORDS.get(executorName).get(jobName);
+			if (!records.contains(messageHashCode)) {
+				try {
+					String namespace = regCenter.getNamespace();
+					AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, message), namespace);
+					records.add(messageHashCode);
+				} catch (Exception e) {
+					log.error("exception throws during raise alarm for job init fail", e);
+				}
+			} else {
+				log.info(SaturnConstant.LOG_FORMAT, jobName,
+						"job initialize failed but will not raise alarm as such kind of alarm already been raise before");
+			}
+		}
+	}
+
+	public static boolean containsJobInitFailedRecord(String executorName, String jobName, String message) {
+		return JOB_INIT_FAILED_RECORDS.get(executorName).get(jobName).contains(message.hashCode());
 	}
 
 }

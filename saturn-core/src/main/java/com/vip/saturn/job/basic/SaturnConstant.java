@@ -10,7 +10,7 @@ public class SaturnConstant {
 	public static final String LOG_FORMAT_FOR_STRING = "[%s] msg=%s";
 
 	public static final String TIME_ZONE_ID_DEFAULT = "Asia/Shanghai";
-	// max datalength 1MB
-	public static final int MAX_ZNODE_DATA_LENGTH = 1048576;
+	// max datalength 800K
+	public static final int MAX_ZNODE_DATA_LENGTH = 819200;
 
 }

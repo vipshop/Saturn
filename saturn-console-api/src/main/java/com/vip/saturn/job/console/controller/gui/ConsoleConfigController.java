@@ -17,6 +17,7 @@ import com.vip.saturn.job.console.mybatis.entity.SystemConfig;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.PermissionKeys;
+import com.vip.saturn.job.console.utils.SaturnConstants;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Value;
@@ -112,10 +113,19 @@ public class ConsoleConfigController extends AbstractGUIController {
 	}
 
 	/**
+	 * 获取系统环境信息。该接口不检查权限.
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping("/env")
+	public SuccessResponseEntity getEnvConfig() {
+		return new SuccessResponseEntity(systemConfigService.getValueDirectly(SaturnConstants.SYSTEM_CONFIG_ENV));
+	}
+
+	/**
 	 * 移除Executor全局配置，该配置在单独的页面管理
 	 * @param systemConfigs 全量的系统配置数据
 	 */
-	public void removeExecutorConfigs(List<SystemConfig> systemConfigs) {
+	private void removeExecutorConfigs(List<SystemConfig> systemConfigs) {
 		if (systemConfigs == null) {
 			return;
 		}
@@ -135,7 +145,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 	 * @param systemConfigs 数据库的系统配置项
 	 * @return 配置分组与配置信息map
 	 */
-	public Map<String, List<SystemConfigVo>> genSystemConfigInfo(Map<String, List<JobConfigMeta>> jobConfigGroups,
+	private Map<String, List<SystemConfigVo>> genSystemConfigInfo(Map<String, List<JobConfigMeta>> jobConfigGroups,
 			List<SystemConfig> systemConfigs) {
 		Map<String, SystemConfig> systemConfigMap = convertList2Map(systemConfigs);
 		Map<String, List<SystemConfigVo>> jobConfigDisplayInfoMap = Maps.newHashMap();
@@ -165,7 +175,7 @@ public class ConsoleConfigController extends AbstractGUIController {
 		return jobConfigDisplayInfoMap;
 	}
 
-	public List<SystemConfigVo> getUncategorizedSystemConfigs(List<SystemConfig> systemConfigList,
+	private List<SystemConfigVo> getUncategorizedSystemConfigs(List<SystemConfig> systemConfigList,
 			Set<String> configKeySet) {
 		List<SystemConfigVo> unCategorizedJobConfigVos = Lists.newArrayList();
 		for (SystemConfig systemConfig : systemConfigList) {
@@ -179,14 +189,14 @@ public class ConsoleConfigController extends AbstractGUIController {
 		return unCategorizedJobConfigVos;
 	}
 
-	public Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
+	private Map<String, List<JobConfigMeta>> getSystemConfigMeta() throws IOException {
 		TypeReference<HashMap<String, List<JobConfigMeta>>> typeRef = new TypeReference<HashMap<String, List<JobConfigMeta>>>() {
 		};
 
 		return YAML_OBJ_MAPPER.readValue(configYaml.getInputStream(), typeRef);
 	}
 
-	public Map<String, SystemConfig> convertList2Map(List<SystemConfig> configList) {
+	private Map<String, SystemConfig> convertList2Map(List<SystemConfig> configList) {
 		Map<String, SystemConfig> configMap = Maps.newHashMap();
 		for (SystemConfig config : configList) {
 			if (configMap.containsKey(config.getProperty())) {
