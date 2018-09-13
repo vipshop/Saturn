@@ -24,6 +24,10 @@ public class AbstractAlarmJob {
 
 	protected boolean rerun;
 
+	protected boolean hasRerun;
+
+	protected boolean needAlarm;
+
 	public AbstractAlarmJob() {
 	}
 
@@ -82,5 +86,21 @@ public class AbstractAlarmJob {
 
 	public void setRerun(boolean rerun) {
 		this.rerun = rerun;
+	}
+
+	public boolean isHasRerun() {
+		return hasRerun;
+	}
+
+	public void setHasRerun(boolean hasRerun) {
+		this.hasRerun = hasRerun;
+	}
+
+	public boolean isNeedAlarm() {
+		return needAlarm;
+	}
+
+	public void setNeedAlarm(boolean needAlarm) {
+		this.needAlarm = needAlarm;
 	}
 }

@@ -304,11 +304,27 @@ public class OutdatedNoRunningJobAnalyzer {
 		String timeZone = getTimeZone(jobName, curatorFrameworkOp);
 		// 补充异常信息
 		fillAbnormalJobInfo(curatorFrameworkOp, abnormalJob, abnormalJob.getCause(), timeZone, nextFireTime);
+		fillRerunJobInfo(oldAbnormalJobs, abnormalJob);
 		// 如果有必要，上报hermes
 		registerAbnormalJobIfNecessary(oldAbnormalJobs, abnormalJob, timeZone, nextFireTime);
 		addAbnormalJob(abnormalJob);
 		log.info("Job sharding alert with DomainName: {}, JobName: {}, ShardingItem: {}, Cause: {}",
 				abnormalJob.getDomainName(), jobName, 0, abnormalJob.getCause());
+	}
+
+	/**
+	 * 补充作业重跑相关信息
+	 * @param oldAbnormalJobs
+	 * @param abnormalJob
+	 */
+	private void fillRerunJobInfo(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob) {
+		for (AbnormalJob job : oldAbnormalJobs) {
+			if (StringUtils.equals(job.getJobName(), abnormalJob.getJobName()) && StringUtils
+					.equals(job.getDomainName(), abnormalJob.getDomainName())) {
+				abnormalJob.setHasRerun(job.isHasRerun());
+				abnormalJob.setNeedAlarm(job.isNeedAlarm());
+			}
+		}
 	}
 
 	private void fillAbnormalJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob,

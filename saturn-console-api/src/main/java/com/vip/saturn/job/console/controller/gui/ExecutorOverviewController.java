@@ -58,20 +58,10 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	 * 获取executor被分配的作业分片信息
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/{executorName}/allocation")
-	public SuccessResponseEntity getExecutorAllocation(final HttpServletRequest request, @PathVariable String namespace,
-			@PathVariable String executorName) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(executorService.getExecutorAllocation(namespace, executorName));
-	}
-
-	/**
-	 * 获取executor被分配的作业分片信息
-	 */
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/{executorName}/allocationWithStatus")
 	public SuccessResponseEntity getExecutorAllocationWithStatus(final HttpServletRequest request,
 			@PathVariable String namespace, @PathVariable String executorName) throws SaturnJobConsoleException {
-		return new SuccessResponseEntity(executorService.getExecutorAllocationWithStat(namespace, executorName));
+		return new SuccessResponseEntity(executorService.getExecutorAllocation(namespace, executorName));
 	}
 
 	/**

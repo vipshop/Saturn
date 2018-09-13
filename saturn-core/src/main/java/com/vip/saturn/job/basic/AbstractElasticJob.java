@@ -147,6 +147,10 @@ public abstract class AbstractElasticJob implements Stopable {
 				failoverService.failoverIfNecessary();
 			}
 
+//			if (!runAtOnce()) {
+//
+//			}
+
 			log.trace("Saturn finish to execute job [{}], sharding context:{}.", jobName, shardingContext);
 		} catch (Exception e) {
 			log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);

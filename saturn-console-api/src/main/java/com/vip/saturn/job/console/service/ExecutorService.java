@@ -1,7 +1,6 @@
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.ServerAllocationInfo;
-import com.vip.saturn.job.console.domain.ServerAllocationInfoWithStatus;
 import com.vip.saturn.job.console.domain.ServerBriefInfo;
 import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
@@ -49,16 +48,7 @@ public interface ExecutorService {
 	 * @param executorName 目标executor
 	 * @return executor分配信息
 	 */
-	ServerAllocationInfo getExecutorAllocation(String namespace, String executorName) throws SaturnJobConsoleException;
-
-	/**
-	 * 获取Executor所分配的分片信息；
-	 *
-	 * @param namespace 域
-	 * @param executorName 目标executor
-	 * @return executor分配信息
-	 */
-	ServerAllocationInfoWithStatus getExecutorAllocationWithStat(String namespace, String executorName)
+	ServerAllocationInfo getExecutorAllocation(String namespace, String executorName)
 			throws SaturnJobConsoleException;
 
 	/**

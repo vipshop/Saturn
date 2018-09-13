@@ -12,6 +12,7 @@
 import Vue from 'vue';
 import Login from './Login';
 import Favorites from './components/common/favorites/';
+import History from './plugins/history';
 
 export default {
   data() {
@@ -44,6 +45,7 @@ export default {
     getLoginUser() {
       return this.$store.dispatch('setUserAuthority').then((resp) => {
         Vue.use(Favorites, { key: resp.userName });
+        Vue.use(History, { key: `history_${resp.userName}` });
       })
       .catch(() => this.$http.buildErrorHandler('获取用户请求失败！'));
     },
