@@ -165,12 +165,12 @@
                             </el-col>
                             <el-col :span="5">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
-                                    <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
+                                    <el-switch v-model="jobSettingInfo.enabledReport" @change="enabledReportChange"></el-switch>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
                                 <el-form-item prop="failover" label="故障转移">
-                                    <el-switch v-model="jobSettingInfo.failover" title="本地模式不可编辑" :disabled="jobSettingInfo.localMode"></el-switch>
+                                    <el-switch v-model="jobSettingInfo.failover" title="本地模式或非上报运行状态不可编辑" :disabled="jobSettingInfo.localMode || !jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
@@ -249,7 +249,24 @@ export default {
   },
   methods: {
     localModeChange(value) {
+      if (!value) {
+        if (this.jobSettingInfo.enabledReport) {
+          this.jobSettingInfo.failover = true;
+        } else {
+          this.jobSettingInfo.failover = false;
+        }
+      } else {
+        this.jobSettingInfo.failover = false;
+      }
+    },
+    enabledReportChange(value) {
       if (value) {
+        if (this.jobSettingInfo.localMode) {
+          this.jobSettingInfo.failover = false;
+        } else {
+          this.jobSettingInfo.failover = true;
+        }
+      } else {
         this.jobSettingInfo.failover = false;
       }
     },
