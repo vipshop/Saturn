@@ -158,29 +158,31 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="10">
-                            <el-col :span="6">
+                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11">
                                 <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="5">
+                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport" @change="enabledReportChange"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                                <el-form-item prop="useSerial" label="串行消费">
+                                    <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row :gutter="10" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                            <el-col :span="11">
                                 <el-form-item prop="failover" label="故障转移">
                                     <el-switch v-model="jobSettingInfo.failover" title="本地模式或非上报运行状态不可编辑" :disabled="jobSettingInfo.localMode || !jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="5" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
-                                <el-form-item prop="rerun" label="超时重跑">
-                                    <el-switch v-model="jobSettingInfo.rerun"></el-switch>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="6" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
-                                <el-form-item prop="useSerial" label="串行消费">
-                                    <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
+                            <el-col :span="11">
+                                <el-form-item prop="rerun" label="过时未跑重试">
+                                    <el-switch v-model="jobSettingInfo.rerun" title="非上报运行状态不可编辑" :disabled="!jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -268,6 +270,7 @@ export default {
         }
       } else {
         this.jobSettingInfo.failover = false;
+        this.jobSettingInfo.rerun = false;
       }
     },
     checkAndForecastCron() {
