@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="height: 100%">
         <el-main>
             <div class="page-home">
                 <div class="page-home-container">
