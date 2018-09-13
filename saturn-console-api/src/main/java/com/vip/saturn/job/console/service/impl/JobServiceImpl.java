@@ -576,6 +576,23 @@ public class JobServiceImpl implements JobService {
 		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业模式有误，不能添加系统作业");
 		}
+
+		validateFailoverConstraintWhenCreateJob(jobConfig);
+
+	}
+
+	protected void validateFailoverConstraintWhenCreateJob(JobConfig jobConfig) {
+		jobConfig.setFailover(true);
+	}
+
+	protected void validateFailoverConstraintWhenUpdateJob(JobConfig jobConfig) {
+		if (jobConfig.getLocalMode()) {
+			jobConfig.setFailover(false);
+		} else {
+			if (!jobConfig.getEnabledReport()) {
+				jobConfig.setFailover(false);
+			}
+		}
 	}
 
 	private void validateCronFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -1633,6 +1650,7 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy)
 			throws SaturnJobConsoleException {
+		validateFailoverConstraintWhenUpdateJob(jobConfig);
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {
