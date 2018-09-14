@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * API for executor discover namespace info.<br>
- * Executor >= 3.1.2 will call this API to discover.
+ * Executor &gt;= 3.1.2 will call this API to discover.
  *
  * @author ray.leung
  */
