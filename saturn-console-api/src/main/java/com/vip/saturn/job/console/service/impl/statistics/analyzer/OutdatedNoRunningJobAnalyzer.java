@@ -5,11 +5,13 @@ import com.vip.saturn.job.console.domain.AbnormalShardingState;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.RestApiService;
 import com.vip.saturn.job.console.service.helper.DashboardConstants;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
 import com.vip.saturn.job.console.utils.CronExpression;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
+import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.data.Stat;
@@ -32,7 +34,11 @@ public class OutdatedNoRunningJobAnalyzer {
 
 	private ReportAlarmService reportAlarmService;
 
+	private RestApiService restApiService;
+
 	private List<AbnormalJob> outdatedNoRunningJobs = new ArrayList<>();
+
+	private List<AbnormalJob> needReportAlarmJobs = new ArrayList<>();
 
 	private static boolean isCronJob(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
@@ -45,7 +51,7 @@ public class OutdatedNoRunningJobAnalyzer {
 		return Boolean.parseBoolean(curatorFrameworkOp.getData(enabledPath));
 	}
 
-	public static boolean isEnabledReport(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
+	private static boolean isEnabledReport(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String enabledReportPath = JobNodePath.getConfigNodePath(jobName, "enabledReport");
 		String enabledReportVal = curatorFrameworkOp.getData(enabledReportPath);
 		return enabledReportVal == null || "true".equals(enabledReportVal);
@@ -198,6 +204,10 @@ public class OutdatedNoRunningJobAnalyzer {
 		outdatedNoRunningJobs.add(abnormalJob);
 	}
 
+	private synchronized void addNeedReportAlarmJob(AbnormalJob abnormalJob) {
+		needReportAlarmJobs.add(abnormalJob);
+	}
+
 	private void checkOutdatedNoRunningJob(List<AbnormalJob> oldAbnormalJobs,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
 		try {
@@ -303,49 +313,38 @@ public class OutdatedNoRunningJobAnalyzer {
 		String jobName = abnormalJob.getJobName();
 		String timeZone = getTimeZone(jobName, curatorFrameworkOp);
 		// 补充异常信息
-		fillAbnormalJobInfo(curatorFrameworkOp, abnormalJob, abnormalJob.getCause(), timeZone, nextFireTime);
-		fillRerunJobInfo(oldAbnormalJobs, abnormalJob);
-		// 如果有必要，上报hermes
-		registerAbnormalJobIfNecessary(oldAbnormalJobs, abnormalJob, timeZone, nextFireTime);
+		fillAbnormalJobInfo(curatorFrameworkOp, oldAbnormalJobs, abnormalJob, abnormalJob.getCause(), timeZone,
+				nextFireTime);
+		// 如果有必要，告警
+		reportAlarmAbnormalJobIfNecessary(curatorFrameworkOp, abnormalJob);
 		addAbnormalJob(abnormalJob);
-		log.info("Job sharding alert with DomainName: {}, JobName: {}, ShardingItem: {}, Cause: {}",
-				abnormalJob.getDomainName(), jobName, 0, abnormalJob.getCause());
 	}
 
-	/**
-	 * 补充作业重跑相关信息
-	 * @param oldAbnormalJobs
-	 * @param abnormalJob
-	 */
-	private void fillRerunJobInfo(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob) {
-		for (AbnormalJob job : oldAbnormalJobs) {
-			if (StringUtils.equals(job.getJobName(), abnormalJob.getJobName()) && StringUtils
-					.equals(job.getDomainName(), abnormalJob.getDomainName())) {
-				abnormalJob.setHasRerun(job.isHasRerun());
-				abnormalJob.setNeedAlarm(job.isNeedAlarm());
-			}
-		}
-	}
-
-	private void fillAbnormalJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob,
-			String cause, String timeZone, long nextFireTimeExcludePausePeriod) {
+	private void fillAbnormalJobInfo(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob, String cause, String timeZone,
+			long nextFireTime) {
 		if (executorNotReady(curatorFrameworkOp, abnormalJob)) {
 			cause = AbnormalJob.Cause.EXECUTORS_NOT_READY.name();
 		}
 		abnormalJob.setCause(cause);
-		boolean rerun = getRerunConfig(curatorFrameworkOp, abnormalJob);
-		abnormalJob.setRerun(rerun);
 		abnormalJob.setTimeZone(timeZone);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
-		abnormalJob.setNextFireTimeWithTimeZoneFormat(sdf.format(nextFireTimeExcludePausePeriod));
-		abnormalJob.setNextFireTime(nextFireTimeExcludePausePeriod);
-	}
-
-	private boolean getRerunConfig(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
-		String rerun = curatorFrameworkOp
-				.getData(JobNodePath.getConfigNodePath(abnormalJob.getJobName(), CONFIG_ITEM_RERUN));
-		return Boolean.valueOf(rerun);
+		abnormalJob.setNextFireTimeWithTimeZoneFormat(sdf.format(nextFireTime));
+		abnormalJob.setNextFireTime(nextFireTime);
+		// 对比数据库中的数据，更新相关字段
+		AbnormalJob oldAbnormalJob = DashboardServiceHelper.findEqualAbnormalJob(abnormalJob, oldAbnormalJobs);
+		if (oldAbnormalJob != null) {
+			abnormalJob.setRead(oldAbnormalJob.isRead());
+			if (oldAbnormalJob.getUuid() != null) {
+				abnormalJob.setUuid(oldAbnormalJob.getUuid());
+			} else {
+				abnormalJob.setUuid(UUID.randomUUID().toString());
+			}
+			abnormalJob.setHasRerun(oldAbnormalJob.isHasRerun());
+		} else {
+			abnormalJob.setUuid(UUID.randomUUID().toString());
+		}
 	}
 
 	private boolean executorNotReady(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
@@ -364,25 +363,42 @@ public class OutdatedNoRunningJobAnalyzer {
 		return true;
 	}
 
-	private void registerAbnormalJobIfNecessary(List<AbnormalJob> oldAbnormalJobs, AbnormalJob abnormalJob,
-			String timeZone, Long nextFireTime) {
-		AbnormalJob oldAbnormalJob = DashboardServiceHelper.findEqualAbnormalJob(abnormalJob, oldAbnormalJobs);
-		if (oldAbnormalJob != null) {
-			abnormalJob.setRead(oldAbnormalJob.isRead());
-			if (oldAbnormalJob.getUuid() != null) {
-				abnormalJob.setUuid(oldAbnormalJob.getUuid());
+	private void reportAlarmAbnormalJobIfNecessary(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			AbnormalJob abnormalJob) {
+		boolean rerun = getRerun(abnormalJob.getJobName(), curatorFrameworkOp);
+		if (rerun) {
+			if (abnormalJob.isHasRerun()) {
+				reportAlarmIfNotRead(abnormalJob);
 			} else {
-				abnormalJob.setUuid(UUID.randomUUID().toString());
+				runAtOnce(abnormalJob.getDomainName(), abnormalJob.getJobName());
+				abnormalJob.setHasRerun(true);
 			}
 		} else {
-			abnormalJob.setUuid(UUID.randomUUID().toString());
+			reportAlarmIfNotRead(abnormalJob);
 		}
+	}
+
+	private void runAtOnce(String namespace, String jobName) {
+		try {
+			restApiService.runJobAtOnce(namespace, jobName);
+		} catch (Exception e) {
+			log.warn(String.format("rerun job error, namespace:{}, jobName:{}", namespace, jobName), e);
+		}
+	}
+
+	private void reportAlarmIfNotRead(AbnormalJob abnormalJob) {
 		if (!abnormalJob.isRead()) {
+			addNeedReportAlarmJob(abnormalJob);
+			// 兼容低版本，仍然可以使用单个作业告警
+			String namespace = abnormalJob.getDomainName();
+			String jobName = abnormalJob.getJobName();
 			try {
-				reportAlarmService.dashboardAbnormalJob(abnormalJob.getDomainName(), abnormalJob.getJobName(), timeZone,
-						nextFireTime);
+				reportAlarmService.dashboardAbnormalJob(namespace, jobName, abnormalJob.getTimeZone(),
+						abnormalJob.getNextFireTime());
 			} catch (Throwable t) {
-				log.error(t.getMessage(), t);
+				log.error(
+						String.format("report alarm abnormal job error, namespace:{}, jobName:{}", namespace, jobName),
+						t);
 			}
 		}
 	}
@@ -496,7 +512,7 @@ public class OutdatedNoRunningJobAnalyzer {
 		return true;
 	}
 
-	public Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
+	private Long getNextFireTimeAfterSpecifiedTimeExcludePausePeriod(long nextFireTimeAfterThis, String jobName,
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		String cronPath = JobNodePath.getConfigNodePath(jobName, "cron");
 		String cronVal = curatorFrameworkOp.getData(cronPath);
@@ -534,6 +550,46 @@ public class OutdatedNoRunningJobAnalyzer {
 		return timeZoneStr;
 	}
 
+	private boolean getRerun(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+		String rerun = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN));
+		return Boolean.valueOf(rerun);
+	}
+
+	/**
+	 * 批量告警
+	 */
+	public void reportAlarmOutdatedNoRunningJobs() {
+		Map<String, List<Map<String, String>>> abnormalJobMap = new HashMap<>();
+		for (AbnormalJob abnormalJob : needReportAlarmJobs) {
+			String namespace = abnormalJob.getDomainName();
+			if (!abnormalJobMap.containsKey(namespace)) {
+				abnormalJobMap.put(namespace, new ArrayList<Map<String, String>>());
+			}
+			Map<String, String> customMap = new HashMap<>();
+			customMap.put("job", abnormalJob.getJobName());
+			customMap.put("timeZone", abnormalJob.getTimeZone());
+			customMap.put("shouldFiredTime", String.valueOf(abnormalJob.getNextFireTime()));
+			abnormalJobMap.get(abnormalJob.getDomainName()).add(customMap);
+		}
+		for (String namespace : abnormalJobMap.keySet()) {
+			List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
+			try {
+				reportAlarmService.dashboardAbnormalBatchJobs(namespace, jobs);
+			} catch (ReportAlarmException e) {
+				StringBuilder jobNames = new StringBuilder();
+				for (int i = 0, size = jobs.size(); i < size; i++) {
+					Map<String, String> job = jobs.get(i);
+					jobNames.append(job.get("job"));
+					if (i < size - 1) {
+						jobNames.append(',');
+					}
+				}
+				log.error(String.format("batch report alarm abnormal job error, namespace:{}, jobs:{}", namespace,
+						jobNames), e);
+			}
+		}
+	}
+
 	public List<AbnormalJob> getOutdatedNoRunningJobs() {
 		return new ArrayList<AbnormalJob>(outdatedNoRunningJobs);
 	}
@@ -544,5 +600,9 @@ public class OutdatedNoRunningJobAnalyzer {
 
 	public void setReportAlarmService(ReportAlarmService reportAlarmService) {
 		this.reportAlarmService = reportAlarmService;
+	}
+
+	public void setRestApiService(RestApiService restApiService) {
+		this.restApiService = restApiService;
 	}
 }

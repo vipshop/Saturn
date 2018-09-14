@@ -41,10 +41,10 @@ public class JobConfig implements Serializable {
 	private String customContext;
 	private String dependencies;
 	private String groups;
+	private Boolean rerun;
 
 	private Boolean isCopyJob = Boolean.FALSE;
 
-	private Boolean rerun;
 
 	private <T> T getDefaultIfNull(T val, T def) {
 		return val == null ? def : val;
@@ -427,9 +427,9 @@ public class JobConfig implements Serializable {
 			return false;
 		if (dependencies != null ? !dependencies.equals(jobConfig.dependencies) : jobConfig.dependencies != null)
 			return false;
-		if (rerun != null ? !dependencies.equals(jobConfig.rerun) : jobConfig.rerun != null)
+		if (groups != null ? !groups.equals(jobConfig.groups) : jobConfig.groups != null)
 			return false;
-		return groups != null ? groups.equals(jobConfig.groups) : jobConfig.groups == null;
+		return rerun != null ? rerun.equals(jobConfig.rerun) : jobConfig.rerun == null;
 	}
 
 	@Override

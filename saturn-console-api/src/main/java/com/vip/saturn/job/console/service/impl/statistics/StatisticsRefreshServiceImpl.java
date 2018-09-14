@@ -15,7 +15,6 @@ import com.vip.saturn.job.console.service.impl.statistics.analyzer.*;
 import com.vip.saturn.job.console.utils.ConsoleThreadFactory;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
-import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +33,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -61,8 +59,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private Map<String/** domainName_jobName_shardingItemStr **/
 			, AbnormalShardingState /** abnormal sharding state */> abnormalShardingStateCache = new ConcurrentHashMap<>();
-
-	private List<Object> analyzeStatisticsObserver = new ArrayList<>();
 
 	@Resource
 	private SaturnStatisticsService saturnStatisticsService;
@@ -92,11 +88,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		initStatExecutorService();
 		startRefreshStatisticsTimer();
 		startCleanAbnormalShardingCacheTimer();
-		addReportAlarmObserver();
-	}
-
-	private void addReportAlarmObserver() {
-		this.analyzeStatisticsObserver.add(this.reportAlarmService);
 	}
 
 	@PreDestroy
@@ -211,116 +202,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		}
 	}
 
-	public void preRefreshStatistics2DB(StatisticsModel statisticsModel, ZkCluster zkCluster) {
-		List<AbnormalJob> oldAbnormalJobs = getOldAbnormalJobs(zkCluster);
-		List<AbnormalJob> abnormalJobs = statisticsModel.getOutdatedNoRunningJobAnalyzer().getOutdatedNoRunningJobs();
-
-		/**
-		 * 提取旧作业和当前作业的作业名，方便接下来的取集操作
-		 */
-		List<String> oldAbnormalJobNames = new ArrayList<>();
-		List<String> curAbnormalJobNames = new ArrayList<>();
-		for (AbnormalJob oldAbnormalJob : oldAbnormalJobs) {
-			oldAbnormalJobNames.add(oldAbnormalJob.getJobName() + "-" + oldAbnormalJob.getDomainName());
-		}
-		for (AbnormalJob curAbnormalJob : abnormalJobs) {
-			curAbnormalJobNames.add(curAbnormalJob.getJobName() + "-" + curAbnormalJob.getDomainName());
-		}
-
-		/**
-		 * 通过差集找出新增的异常作业
-		 */
-		List<String> newAbnormalJobNames = new ArrayList<>(curAbnormalJobNames.size());
-		deepClone(curAbnormalJobNames, newAbnormalJobNames);
-		newAbnormalJobNames.removeAll(oldAbnormalJobNames);
-
-		/**
-		 * 通过交集找出旧的异常作业
-		 */
-		List<String> showUpAgainAbnormalJobs = new ArrayList<>(oldAbnormalJobNames.size());
-		deepClone(oldAbnormalJobNames, showUpAgainAbnormalJobs);
-		showUpAgainAbnormalJobs.retainAll(curAbnormalJobNames);
-
-		for (AbnormalJob curAbnormalJob : abnormalJobs) {
-			/**
-			 * 如果是新增的异常作业，马上执行重跑
-			 */
-			if (newAbnormalJobNames.contains(curAbnormalJob.getJobName() + "-" + curAbnormalJob.getDomainName())) {
-				runAtOnce(curAbnormalJob.getDomainName(), curAbnormalJob.getJobName());
-				curAbnormalJob.setHasRerun(true);
-				curAbnormalJob.setNeedAlarm(false);
-				log.info("found new Abnormal job - {}, domain - {}, has rerun", curAbnormalJob.getJobName(),
-						curAbnormalJob.getDomainName());
-			}
-			/**
-			 * 如果是旧的异常作业，未重跑过就重跑，反正则不重跑
-			 */
-			if (showUpAgainAbnormalJobs.contains(curAbnormalJob.getJobName() + "-" + curAbnormalJob.getDomainName())) {
-				if (curAbnormalJob.isRerun() && !curAbnormalJob.isHasRerun()) {
-					runAtOnce(curAbnormalJob.getDomainName(), curAbnormalJob.getJobName());
-					curAbnormalJob.setHasRerun(true);
-					curAbnormalJob.setNeedAlarm(false);
-					log.info("found old Abnormal job - {}, domain - {}, has rerun", curAbnormalJob.getJobName(),
-							curAbnormalJob.getDomainName());
-				} else {
-					curAbnormalJob.setNeedAlarm(true);
-					log.info("found old Abnormal job - {}, domain - {}, do not need to rerun",
-							curAbnormalJob.getJobName(), curAbnormalJob.getDomainName());
-				}
-			}
-		}
-	}
-
-	private void deepClone(List<String> src, List<String> dest) {
-		for (int i = 0; i < src.size(); i++) {
-			dest.add("");
-		}
-		Collections.copy(dest, src);
-	}
-
-	public void postRefreshStatistics2DB(StatisticsModel statisticsModel, ZkCluster zkCluster) {
-
-		Map<String, List<Map<String, String>>> abnormalJobMap = new HashMap<>();
-		List<AbnormalJob> abnormalJobs = statisticsModel.getOutdatedNoRunningJobAnalyzer().getOutdatedNoRunningJobs();
-
-		for (AbnormalJob job : abnormalJobs) {
-			if (job.isRead()) {
-				continue;
-			}
-			if (job.isRerun() && job.isHasRerun() && !job.isNeedAlarm()) {
-				continue;
-			}
-			if (!abnormalJobMap.containsKey(job.getDomainName())) {
-				abnormalJobMap.put(job.getDomainName(), new ArrayList<Map<String, String>>());
-			}
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			format.setTimeZone(TimeZone.getTimeZone(job.getTimeZone()));
-			String shouldFiredTimeFormatted = job.getTimeZone() + " " + format.format(job.getNextFireTime());
-			Map<String, String> customMap = new HashMap<>(4);
-			customMap.put("sourceType", SOURCE_TYPE);
-			customMap.put("domain", job.getDomainName());
-			customMap.put("job", job.getJobName());
-			customMap.put("shouldFiredTime", shouldFiredTimeFormatted);
-			abnormalJobMap.get(job.getDomainName()).add(customMap);
-		}
-
-		for (String namespace : abnormalJobMap.keySet()) {
-			List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
-			try {
-				reportAlarmService.dashboardAbnormalBatchJobs(namespace, jobs);
-			} catch (ReportAlarmException e) {
-				log.error(e.getMessage(), e);
-			}
-		}
-
-	}
-
-	private void runAtOnce(String namespace, String jobName) {
-		try {
-			restApiService.runJobAtOnce(namespace, jobName);
-		} catch (SaturnJobConsoleException e) {
-			log.warn("rerun job:{} fail", jobName, e);
-		}
+	protected void postRefreshStatistics2DB(StatisticsModel statisticsModel, ZkCluster zkCluster) {
+		statisticsModel.getOutdatedNoRunningJobAnalyzer().reportAlarmOutdatedNoRunningJobs();
 	}
 
 	private void forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
@@ -386,7 +269,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			if (callableList != null && !callableList.isEmpty()) {
 				statExecutorService.invokeAll(callableList);
 			}
-			preRefreshStatistics2DB(statisticsModel, zkCluster);
 			statisticsPersistence.persist(statisticsModel, zkCluster);
 			postRefreshStatistics2DB(statisticsModel, zkCluster);
 		} catch (InterruptedException e) {
@@ -492,6 +374,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		OutdatedNoRunningJobAnalyzer outdatedNoRunningJobAnalyzer = new OutdatedNoRunningJobAnalyzer();
 		outdatedNoRunningJobAnalyzer.setAbnormalShardingStateCache(abnormalShardingStateCache);
 		outdatedNoRunningJobAnalyzer.setReportAlarmService(reportAlarmService);
+		outdatedNoRunningJobAnalyzer.setRestApiService(restApiService);
 		statisticsModel.setOutdatedNoRunningJobAnalyzer(outdatedNoRunningJobAnalyzer);
 
 		UnableFailoverJobAnalyzer unableFailoverJobAnalyzer = new UnableFailoverJobAnalyzer();

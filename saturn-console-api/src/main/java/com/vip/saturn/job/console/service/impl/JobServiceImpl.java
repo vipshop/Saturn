@@ -577,22 +577,6 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业模式有误，不能添加系统作业");
 		}
 
-		validateFailoverConstraintWhenCreateJob(jobConfig);
-
-	}
-
-	protected void validateFailoverConstraintWhenCreateJob(JobConfig jobConfig) {
-		jobConfig.setFailover(true);
-	}
-
-	protected void validateFailoverConstraintWhenUpdateJob(JobConfig jobConfig) {
-		if (jobConfig.getLocalMode()) {
-			jobConfig.setFailover(false);
-		} else {
-			if (!jobConfig.getEnabledReport()) {
-				jobConfig.setFailover(false);
-			}
-		}
 	}
 
 	private void validateCronFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -692,6 +676,30 @@ public class JobServiceImpl implements JobService {
 		correctConfigValueIfNeeded(jobConfig);
 		saveJobConfigToDb(namespace, jobConfig, createdBy);
 		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
+	}
+
+	/**
+	 * 对作业配置的一些属性进行矫正
+	 */
+	private void correctConfigValueIfNeeded(JobConfig jobConfig) {
+		jobConfig.setDefaultValues();
+		jobConfig.setEnabled(false);
+		if (JobType.SHELL_JOB.name().equals(jobConfig.getJobType())) {
+			jobConfig.setJobClass("");
+		}
+		if (JobType.MSG_JOB.name().equals(jobConfig.getJobType())) {
+			jobConfig.setFailover(false);
+			jobConfig.setRerun(false);
+		}
+		if (jobConfig.getLocalMode()) {
+			jobConfig.setFailover(false);
+		}
+		boolean enabledReport = getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone());
+		jobConfig.setEnabledReport(enabledReport);
+		if (!enabledReport) {
+			jobConfig.setFailover(false);
+			jobConfig.setRerun(false);
+		}
 	}
 
 	@Override
@@ -808,22 +816,6 @@ public class JobServiceImpl implements JobService {
 	public void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) {
 		jobConfig.setDefaultValues();
 		saveJobConfigToZk(jobConfig, curatorFrameworkOp);
-	}
-
-	/**
-	 * 对作业配置的一些属性进行矫正
-	 */
-	private void correctConfigValueIfNeeded(JobConfig jobConfig) {
-		jobConfig.setDefaultValues();
-		jobConfig.setEnabled(false);
-		if (jobConfig.getLocalMode()) {
-			jobConfig.setFailover(false);
-		}
-		if (JobType.SHELL_JOB.name().equals(jobConfig.getJobType())) {
-			jobConfig.setJobClass("");
-		}
-		jobConfig.setEnabledReport(
-				getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone()));
 	}
 
 	/**
@@ -964,12 +956,8 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getGroups());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS),
 				jobConfig.getJobClass());
-		//For失败重跑机制，往作业的config节点添加两个子节点
-		//rerun代表是否配置了重跑功能
-		//hasRerun代表是否已经重跑过
 		curatorFrameworkOp
 				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN), jobConfig.getRerun());
-		//For失败重跑机制 END
 	}
 
 	@Override
@@ -1246,25 +1234,39 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setTimeZone(timeZone);
 
-		boolean failover = false;
+		Boolean failover = null;
 		String failoverStr = getContents(rowCells, 27);
-		if (failoverStr != null && !failoverStr.trim().isEmpty()) {
-			failover = Boolean.valueOf(failoverStr);
-		}
-		if (jobConfig.getLocalMode() && failover == true) {
-			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-					createExceptionMessage(sheetNumber, rowNumber, 27, "本地模式不支持failover"));
+		if (StringUtils.isNotBlank(failoverStr)) {
+			failover = Boolean.valueOf(failoverStr.trim());
+			if (failover) {
+				if (jobConfig.getLocalMode()) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+							createExceptionMessage(sheetNumber, rowNumber, 28, "本地模式不支持failover"));
+				}
+				if (jobType.equals(JobType.MSG_JOB.name())) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+							createExceptionMessage(sheetNumber, rowNumber, 28, "消息作业不支持failover"));
+				}
+				// 如果不上报运行状态，则强制设置为false
+				// 上报运行状态失效，由算法决定是否上报，看下面setEnabledReport时的逻辑，看addJob
+			}
 		}
 		jobConfig.setFailover(failover);
 
-
-		boolean rerun = false;
+		Boolean rerun = null;
 		String rerunStr = getContents(rowCells, 28);
-		if (rerunStr != null && !rerunStr.trim().isEmpty()) {
-			rerun = Boolean.valueOf(rerunStr);
+		if (StringUtils.isNotBlank(rerunStr)) {
+			rerun = Boolean.valueOf(rerunStr.trim());
+			if (rerun) {
+				if (jobType.equals(JobType.MSG_JOB.name())) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+							createExceptionMessage(sheetNumber, rowNumber, 29, "消息作业不支持rerun"));
+				}
+				// 如果不上报运行状态，则强制设置为false
+				// 上报运行状态失效，由算法决定是否上报，看下面setEnabledReport时的逻辑，看addJob
+			}
 		}
 		jobConfig.setRerun(rerun);
-
 
 		return jobConfig;
 	}
@@ -1369,8 +1371,8 @@ public class JobServiceImpl implements JobService {
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE))));
 				sheet1.addCell(new Label(27, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER))));
-				String rerun = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN));
-				sheet1.addCell(new Label(28, i + 1, rerun == null ? "false" : rerun));
+				sheet1.addCell(new Label(28, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN))));
 			}
 		}
 	}
@@ -1449,8 +1451,8 @@ public class JobServiceImpl implements JobService {
 		setCellComment(failover, "failover");
 		sheet1.addCell(failover);
 
-		Label rerun = new Label(28, 0, "失败重跑");
-		setCellComment(rerun, "失败重跑");
+		Label rerun = new Label(28, 0, "rerun");
+		setCellComment(rerun, "rerun");
 		sheet1.addCell(rerun);
 	}
 
@@ -1650,7 +1652,6 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy)
 			throws SaturnJobConsoleException {
-		validateFailoverConstraintWhenUpdateJob(jobConfig);
 		JobConfig4DB jobConfig4DB = currentJobConfigService
 				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
 		if (jobConfig4DB == null) {
@@ -1663,6 +1664,13 @@ public class JobServiceImpl implements JobService {
 		SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
 		// 对不符合要求的字段重新设置为默认值
 		newJobConfig4DB.setDefaultValues();
+		if (JobType.MSG_JOB.name().equals(newJobConfig4DB.getJobType())) {
+			newJobConfig4DB.setFailover(false);
+			newJobConfig4DB.setRerun(false);
+		}
+		if (newJobConfig4DB.getLocalMode()) {
+			newJobConfig4DB.setFailover(false);
+		}
 
 		// 和zk数据对比，如果有更新，则更新数据库和zk
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService

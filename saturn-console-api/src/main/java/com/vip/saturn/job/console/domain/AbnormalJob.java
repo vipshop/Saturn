@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.vip.saturn.job.console.domain;
 
 /**
@@ -17,6 +14,8 @@ public class AbnormalJob extends AbstractAlarmJob {
 	private String cause;
 
 	private long nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
+
+	private boolean hasRerun;
 
 	public AbnormalJob() {
 	}
@@ -66,13 +65,20 @@ public class AbnormalJob extends AbstractAlarmJob {
 		this.nextFireTimeAfterEnabledMtimeOrLastCompleteTime = nextFireTimeAfterEnabledMtimeOrLastCompleteTime;
 	}
 
+	public boolean isHasRerun() {
+		return hasRerun;
+	}
+
+	public void setHasRerun(boolean hasRerun) {
+		this.hasRerun = hasRerun;
+	}
+
 	@Override
 	public int hashCode() {
 		int result = jobName.hashCode();
 		result = 31 * result + domainName.hashCode();
 		result = 31 * result + cause.hashCode();
-		result = 31 * result + (int) (nextFireTimeAfterEnabledMtimeOrLastCompleteTime
-				^ (nextFireTimeAfterEnabledMtimeOrLastCompleteTime >>> 32));
+		result = 31 * result + (int) (nextFireTime ^ (nextFireTime >>> 32));
 		return result;
 	}
 

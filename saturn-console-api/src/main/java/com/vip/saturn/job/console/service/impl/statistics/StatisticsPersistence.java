@@ -346,6 +346,7 @@ public class StatisticsPersistence {
 			} else {
 				List<AbnormalJob> oldUnnormalJobList = JSON
 						.parseArray(unnormalJobFromDB.getResult(), AbnormalJob.class);
+				// 再次同步数据库中最新的read状态
 				dealWithReadStatus(unnormalJobList, oldUnnormalJobList);
 				unnormalJobFromDB.setResult(JSON.toJSONString(unnormalJobList));
 				saturnStatisticsService.updateByPrimaryKey(unnormalJobFromDB);
@@ -379,6 +380,7 @@ public class StatisticsPersistence {
 			} else {
 				List<Timeout4AlarmJob> oldTimeout4AlarmJobs = JSON
 						.parseArray(timeout4AlarmJobFromDB.getResult(), Timeout4AlarmJob.class);
+				// 再次同步数据库中最新的read状态
 				dealWithReadStatus4Timeout4AlarmJob(timeout4AlarmJobList, oldTimeout4AlarmJobs);
 				timeout4AlarmJobFromDB.setResult(JSON.toJSONString(timeout4AlarmJobList));
 				saturnStatisticsService.updateByPrimaryKey(timeout4AlarmJobFromDB);
