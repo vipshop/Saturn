@@ -370,19 +370,19 @@ public class OutdatedNoRunningJobAnalyzer {
 			if (abnormalJob.isHasRerun()) {
 				reportAlarmIfNotRead(abnormalJob);
 			} else {
-				runAtOnce(abnormalJob.getDomainName(), abnormalJob.getJobName());
-				abnormalJob.setHasRerun(true);
+				String namespace = abnormalJob.getDomainName();
+				String jobName = abnormalJob.getJobName();
+				try {
+					restApiService.runJobAtOnce(namespace, jobName);
+				} catch (Throwable t) {
+					log.warn(String.format("rerun job error, namespace:{}, jobName:{}", namespace, jobName), t);
+					reportAlarmIfNotRead(abnormalJob);
+				} finally {
+					abnormalJob.setHasRerun(true);
+				}
 			}
 		} else {
 			reportAlarmIfNotRead(abnormalJob);
-		}
-	}
-
-	private void runAtOnce(String namespace, String jobName) {
-		try {
-			restApiService.runJobAtOnce(namespace, jobName);
-		} catch (Exception e) {
-			log.warn(String.format("rerun job error, namespace:{}, jobName:{}", namespace, jobName), e);
 		}
 	}
 
