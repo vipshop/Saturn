@@ -572,12 +572,11 @@ public class OutdatedNoRunningJobAnalyzer {
 			abnormalJobMap.get(namespace).add(customMap);
 		}
 		for (String namespace : abnormalJobMap.keySet()) {
-			raiseAlarmPerNamespace(abnormalJobMap, namespace);
+			raiseAlarmPerNamespace(abnormalJobMap.get(namespace), namespace);
 		}
 	}
 
-	private void raiseAlarmPerNamespace(Map<String, List<Map<String, String>>> abnormalJobMap, String namespace) {
-		List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
+	private void raiseAlarmPerNamespace(List<Map<String, String>> jobs, String namespace) {
 		try {
 			reportAlarmService.dashboardAbnormalBatchJobs(namespace, jobs);
 		} catch (ReportAlarmException e) {
