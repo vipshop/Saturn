@@ -569,7 +569,7 @@ public class OutdatedNoRunningJobAnalyzer {
 			customMap.put("job", abnormalJob.getJobName());
 			customMap.put("timeZone", abnormalJob.getTimeZone());
 			customMap.put("shouldFiredTime", String.valueOf(abnormalJob.getNextFireTime()));
-			abnormalJobMap.get(abnormalJob.getDomainName()).add(customMap);
+			abnormalJobMap.get(namespace).add(customMap);
 		}
 		for (String namespace : abnormalJobMap.keySet()) {
 			List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
