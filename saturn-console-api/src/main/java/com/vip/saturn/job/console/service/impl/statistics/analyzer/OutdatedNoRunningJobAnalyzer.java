@@ -5,7 +5,7 @@ import com.vip.saturn.job.console.domain.AbnormalShardingState;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.RestApiService;
+import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.helper.DashboardConstants;
 import com.vip.saturn.job.console.service.helper.DashboardServiceHelper;
 import com.vip.saturn.job.console.utils.CronExpression;
@@ -34,7 +34,7 @@ public class OutdatedNoRunningJobAnalyzer {
 
 	private ReportAlarmService reportAlarmService;
 
-	private RestApiService restApiService;
+	private JobService jobService;
 
 	private List<AbnormalJob> outdatedNoRunningJobs = new ArrayList<>();
 
@@ -281,7 +281,7 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	private void doCheckAndHandleOutdatedNoRunningJob(List<AbnormalJob> oldAbnormalJobs,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) throws Exception {
+			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, AbnormalJob abnormalJob) {
 		String jobName = abnormalJob.getJobName();
 		String enabledPath = JobNodePath.getConfigNodePath(abnormalJob.getJobName(), "enabled");
 		List<String> items = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(abnormalJob.getJobName()));
@@ -373,9 +373,9 @@ public class OutdatedNoRunningJobAnalyzer {
 				String namespace = abnormalJob.getDomainName();
 				String jobName = abnormalJob.getJobName();
 				try {
-					restApiService.runJobAtOnce(namespace, jobName);
+					jobService.runAtOnce(namespace, jobName);
 				} catch (Throwable t) {
-					log.warn(String.format("rerun job error, namespace:{}, jobName:{}", namespace, jobName), t);
+					log.warn(String.format("rerun job error, namespace:%s, jobName:%s", namespace, jobName), t);
 					reportAlarmIfNotRead(abnormalJob);
 				} finally {
 					abnormalJob.setHasRerun(true);
@@ -397,7 +397,7 @@ public class OutdatedNoRunningJobAnalyzer {
 						abnormalJob.getNextFireTime());
 			} catch (Throwable t) {
 				log.error(
-						String.format("report alarm abnormal job error, namespace:{}, jobName:{}", namespace, jobName),
+						String.format("report alarm abnormal job error, namespace:%s, jobName:%s", namespace, jobName),
 						t);
 			}
 		}
@@ -572,26 +572,34 @@ public class OutdatedNoRunningJobAnalyzer {
 			abnormalJobMap.get(namespace).add(customMap);
 		}
 		for (String namespace : abnormalJobMap.keySet()) {
-			List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
-			try {
-				reportAlarmService.dashboardAbnormalBatchJobs(namespace, jobs);
-			} catch (ReportAlarmException e) {
-				StringBuilder jobNames = new StringBuilder();
-				for (int i = 0, size = jobs.size(); i < size; i++) {
-					Map<String, String> job = jobs.get(i);
-					jobNames.append(job.get("job"));
-					if (i < size - 1) {
-						jobNames.append(',');
-					}
-				}
-				log.error(String.format("batch report alarm abnormal job error, namespace:{}, jobs:{}", namespace,
-						jobNames), e);
-			}
+			raiseAlarmPerNamespace(abnormalJobMap, namespace);
 		}
 	}
 
+	private void raiseAlarmPerNamespace(Map<String, List<Map<String, String>>> abnormalJobMap, String namespace) {
+		List<Map<String, String>> jobs = abnormalJobMap.get(namespace);
+		try {
+			reportAlarmService.dashboardAbnormalBatchJobs(namespace, jobs);
+		} catch (ReportAlarmException e) {
+			log.error(String.format("batch report alarm abnormal job error, namespace:%s, jobs:%s", namespace,
+					getJobNamesString(jobs)), e);
+		}
+	}
+
+	private String getJobNamesString(List<Map<String, String>> jobs) {
+		StringBuilder jobNames = new StringBuilder();
+		for (int i = 0, size = jobs.size(); i < size; i++) {
+			Map<String, String> job = jobs.get(i);
+			jobNames.append(job.get("job"));
+			if (i < size - 1) {
+				jobNames.append(',');
+			}
+		}
+		return jobNames.toString();
+	}
+
 	public List<AbnormalJob> getOutdatedNoRunningJobs() {
-		return new ArrayList<AbnormalJob>(outdatedNoRunningJobs);
+		return new ArrayList<>(outdatedNoRunningJobs);
 	}
 
 	public void setAbnormalShardingStateCache(Map<String, AbnormalShardingState> abnormalShardingStateCache) {
@@ -602,7 +610,7 @@ public class OutdatedNoRunningJobAnalyzer {
 		this.reportAlarmService = reportAlarmService;
 	}
 
-	public void setRestApiService(RestApiService restApiService) {
-		this.restApiService = restApiService;
+	public void setJobService(JobService jobService) {
+		this.jobService = jobService;
 	}
 }

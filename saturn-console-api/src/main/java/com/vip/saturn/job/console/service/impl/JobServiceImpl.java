@@ -140,6 +140,7 @@ public class JobServiceImpl implements JobService {
 		return isAllShardsFinished;
 	}
 
+
 	@Override
 	public List<String> getGroups(String namespace) {
 		List<String> groups = new ArrayList<>();
@@ -1664,12 +1665,19 @@ public class JobServiceImpl implements JobService {
 		SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
 		// 对不符合要求的字段重新设置为默认值
 		newJobConfig4DB.setDefaultValues();
+		// 消息作业不failover不rerun
 		if (JobType.MSG_JOB.name().equals(newJobConfig4DB.getJobType())) {
 			newJobConfig4DB.setFailover(false);
 			newJobConfig4DB.setRerun(false);
 		}
+		// 本地模式不failover
 		if (newJobConfig4DB.getLocalMode()) {
 			newJobConfig4DB.setFailover(false);
+		}
+		// 不上报作业不failover不rerun
+		if (!newJobConfig4DB.getEnabledReport()) {
+			newJobConfig4DB.setFailover(false);
+			newJobConfig4DB.setRerun(false);
 		}
 
 		// 和zk数据对比，如果有更新，则更新数据库和zk

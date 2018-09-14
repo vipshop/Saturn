@@ -45,8 +45,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	private static final Logger log = LoggerFactory.getLogger(StatisticsRefreshServiceImpl.class);
 
-	private static final String SOURCE_TYPE = "saturn";
-
 	private static final int CONNECT_TIMEOUT_MS = 10000;
 
 	private static final int SO_TIMEOUT_MS = 180_000;
@@ -79,9 +77,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	private ReportAlarmService reportAlarmService;
 
 	private ExecutorService statExecutorService;
-
-	@Resource
-	private RestApiService restApiService;
 
 	@PostConstruct
 	public void init() {
@@ -374,7 +369,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		OutdatedNoRunningJobAnalyzer outdatedNoRunningJobAnalyzer = new OutdatedNoRunningJobAnalyzer();
 		outdatedNoRunningJobAnalyzer.setAbnormalShardingStateCache(abnormalShardingStateCache);
 		outdatedNoRunningJobAnalyzer.setReportAlarmService(reportAlarmService);
-		outdatedNoRunningJobAnalyzer.setRestApiService(restApiService);
+		outdatedNoRunningJobAnalyzer.setJobService(jobService);
 		statisticsModel.setOutdatedNoRunningJobAnalyzer(outdatedNoRunningJobAnalyzer);
 
 		UnableFailoverJobAnalyzer unableFailoverJobAnalyzer = new UnableFailoverJobAnalyzer();
