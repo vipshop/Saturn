@@ -612,9 +612,8 @@ public class SaturnExecutor {
 					} else {
 						hasRunning = false;
 					}
-				} else {
-					jobScheduler.stopJob(false);
 				}
+				// 其他作业（消息作业）不等，因为在接下来的forceStop是优雅强杀的，即等待一定时间让业务执行再强杀
 			}
 		} while (hasRunning
 				&& System.currentTimeMillis() - startTime < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
