@@ -86,7 +86,7 @@ public class JobServiceImpl implements JobService {
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 	// 最大允许显示的job log为zk默认的max jute buffer size
-	private static final int MAX_ZNODE_DATA_LENGTH = 1048576;
+	private static final int DEFAULT_MAX_ZNODE_DATA_LENGTH = 1048576;
 	private static final String ERR_MSG_PENDING_STATUS = "job:[{}] item:[{}] on executor:[{}] execution status is PENDING as {}";
 	private static final String ERR_MSG_TOO_LONG_TO_DISPLAY = "Not display the log as the length is out of max length";
 
@@ -708,6 +708,12 @@ public class JobServiceImpl implements JobService {
 	public int getMaxJobNum() {
 		int result = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, DEFAULT_MAX_JOB_NUM);
 		return result <= 0 ? DEFAULT_MAX_JOB_NUM : result;
+	}
+
+	private int getMaxZnodeDataLength() {
+		int result = systemConfigService
+				.getIntegerValue(SystemConfigProperties.MAX_ZNODE_DATA_LENGTH, DEFAULT_MAX_ZNODE_DATA_LENGTH);
+		return result <= 0 ? DEFAULT_MAX_ZNODE_DATA_LENGTH : result;
 	}
 
 	@Override
@@ -2077,7 +2083,7 @@ public class JobServiceImpl implements JobService {
 		CuratorFrameworkOp curatorFrameworkOp = registryCenterService.getCuratorFrameworkOp(namespace);
 		String jobLogNodePath = JobNodePath.getExecutionNodePath(jobName, jobItem, "jobLog");
 		Stat stat = curatorFrameworkOp.getStat(jobLogNodePath);
-		if (stat.getDataLength() > MAX_ZNODE_DATA_LENGTH) {
+		if (stat.getDataLength() > getMaxZnodeDataLength()) {
 			log.warn("job log of job={} item={} exceed max length, will not display the original log", jobName,
 					jobItem);
 			return ERR_MSG_TOO_LONG_TO_DISPLAY;

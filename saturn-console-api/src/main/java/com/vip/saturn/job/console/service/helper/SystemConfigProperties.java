@@ -11,6 +11,8 @@ public class SystemConfigProperties {
 
 	public static final String MAX_SECONDS_FORCE_KILL_EXECUTOR = "MAX_SECONDS_FORCE_KILL_EXECUTOR";
 
+	public static final String MAX_ZNODE_DATA_LENGTH = "MAX_ZNODE_DATA_LENGTH";
+
 	public static final String CONSOLE_ZK_CLUSTER_MAPPING = "CONSOLE_ZK_CLUSTER_MAPPING";
 
 	public static final String IDC_CONSOLE_DOMAIN_MAPPING = "IDC_CONSOLE_DOMAIN_MAPPING";
