@@ -184,10 +184,10 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 			if (saturnJob != null && saturnJob.getConfigService().showNormalLog()) {
 				String jobLog = SaturnSystemOutputStream.clearAndGetLog();
-				if (jobLog != null && jobLog.length() > SaturnConstant.MAX_ZNODE_DATA_LENGTH) {
-					log.info("As the job log exceed max length, only the previous {} will be reported",
-							SaturnConstant.MAX_ZNODE_DATA_LENGTH);
-					jobLog = jobLog.substring(0, SaturnConstant.MAX_ZNODE_DATA_LENGTH);
+				if (jobLog != null && jobLog.length() > SaturnConstant.MAX_JOB_LOG_DATA_LENGTH) {
+					log.info("As the job log exceed max length, only the previous {} characters will be reported",
+							SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
+					jobLog = jobLog.substring(0, SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 				}
 
 				this.shardingContext.putJobLog(this.item, jobLog);

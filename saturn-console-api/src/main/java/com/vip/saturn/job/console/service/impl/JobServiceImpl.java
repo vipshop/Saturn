@@ -85,7 +85,8 @@ public class JobServiceImpl implements JobService {
 	private static final Logger log = LoggerFactory.getLogger(JobServiceImpl.class);
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
-	private static final int MAX_ZNODE_DATA_LENGTH = 819200;
+	// 最大允许显示的job log为zk默认的max jute buffer size
+	private static final int MAX_ZNODE_DATA_LENGTH = 1048576;
 	private static final String ERR_MSG_PENDING_STATUS = "job:[{}] item:[{}] on executor:[{}] execution status is PENDING as {}";
 	private static final String ERR_MSG_TOO_LONG_TO_DISPLAY = "Not display the log as the length is out of max length";
 
