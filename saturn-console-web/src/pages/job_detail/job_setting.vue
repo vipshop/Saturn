@@ -307,7 +307,7 @@ export default {
               this.$message.errorMessage('分片参数不能小于作业分片总数!');
             }
           } else {
-            this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。');
+            this.$message.errorMessage('作业分片参数有误，对于本地模式的作业，只需要输入如：*=a 即可。非本地模式请参考:0=a,1=b');
           }
         }
       });
@@ -334,6 +334,8 @@ export default {
         if (!this.jobSettingInfo.shardingItemParameters.startsWith('*=')) {
           flag = false;
         }
+      } else if (this.jobSettingInfo.shardingItemParameters.startsWith('*=')) {
+        flag = false;
       }
       return flag;
     },
