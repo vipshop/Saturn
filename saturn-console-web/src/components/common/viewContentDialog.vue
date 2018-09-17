@@ -1,10 +1,8 @@
 <template>
-    <el-dialog :title="title" :visible.sync="isVisible" :before-close="closeDialog">
-        <fieldset class="fieldset-border">
-            <div class="view-content">
-                <pre>{{content}}</pre>
-            </div>
-        </fieldset>
+    <el-dialog :title="title" :visible.sync="isVisible" :before-close="closeDialog" custom-class="view-content">
+        <div class="view-content-body">
+            <pre>{{content}}</pre>
+        </div>
     </el-dialog>
 </template>
 
@@ -23,12 +21,14 @@ export default {
   },
 };
 </script>
-<style lang="sass" scoped>
-.fieldset-border {
-    border: 1px solid #ccc;
-}
+<style lang="sass">
 .view-content {
-    height: 350px;
-    overflow-y: auto;
+    .el-dialog__body {
+        padding: 0px;
+    }
+    .view-content-body {
+        height: 350px;
+        overflow-y: auto;
+    }
 }
 </style>
