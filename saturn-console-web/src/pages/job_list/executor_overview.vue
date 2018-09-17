@@ -48,23 +48,23 @@
                                     <el-tag type="warning" v-if="scope.row.restarting">重启中</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="serverIp" label="IP" width="120"></el-table-column>
+                            <el-table-column prop="serverIp" label="IP" width="125px"></el-table-column>
                             <el-table-column prop="groupName" label="分组" show-overflow-tooltip sortable>
                                 <template slot-scope="scope">
                                     {{scope.row.groupName || '--'}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="分片分配" header-align="left" width="80px" align="center">
+                            <el-table-column label="运行中分片" header-align="left" width="95px" align="center">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.status === 'OFFLINE'">--</span>
                                     <el-tooltip content="查看" placement="top" v-else>
-                                        <el-button type="text" @click="getExecutorAllocation(scope.row)"><i class="fa fa-search-plus"></i></el-button>
+                                        <el-button type="text" @click="getRunningAllocation(scope.row)"><i class="fa fa-search-plus"></i></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="version" label="版本" sortable></el-table-column>
                             <el-table-column prop="lastBeginTime" label="最近启动时间" width="160px"></el-table-column>
-                            <el-table-column label="操作" width="120px" align="center">
+                            <el-table-column label="操作" width="150px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="重启" placement="top" v-if="$common.hasPerm('executor:restart', domainName) && (scope.row.status === 'ONLINE' && !scope.row.restarting && isAbledDump(scope.row.version))">
                                         <el-button type="text" @click="handleRestart(scope.row)"><i class="fa fa-power-off"></i></el-button>
@@ -81,6 +81,9 @@
                                     <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('executor:remove', domainName) && scope.row.status === 'OFFLINE'">
                                         <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
                                     </el-tooltip>
+                                    <el-tooltip content="分片分配查看" placement="top">
+                                        <el-button type="text" @click="getExecutorAllocation(scope.row)"><i class="fa fa-arrows-alt"></i></el-button>
+                                    </el-tooltip>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -90,12 +93,16 @@
             <div v-if="isExecutorAllocationVisible">
                 <executor-allocation-dialog :executor-allocation-info="executorAllocationInfo" @close-dialog="closeExecutorAllocationDialog"></executor-allocation-dialog>
             </div>
+            <div v-if="isRunningAllocationVisible">
+                <running-allocation-dialog :running-allocation-info="runningAllocationInfo" @close-dialog="closeRunningAllocationDialog"></running-allocation-dialog>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import executorAllocationDialog from './executor_allocation_dialog';
+import runningAllocationDialog from './running_allocation_dialog';
 
 export default {
   data() {
@@ -113,10 +120,22 @@ export default {
       total: 0,
       multipleSelection: [],
       isExecutorAllocationVisible: false,
+      isRunningAllocationVisible: false,
       executorAllocationInfo: {},
+      runningAllocationInfo: {},
     };
   },
   methods: {
+    getRunningAllocation(row) {
+      this.$http.get(`/console/namespaces/${this.domainName}/executors/${row.executorName}/runningInfo`).then((data) => {
+        this.runningAllocationInfo = JSON.parse(JSON.stringify(data));
+        this.isRunningAllocationVisible = true;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取分片分配失败！'); });
+    },
+    closeRunningAllocationDialog() {
+      this.isRunningAllocationVisible = false;
+    },
     dumpNext() {
       this.getExecutorList();
       this.$message.successNotify('一键DUMP操作成功');
@@ -135,7 +154,7 @@ export default {
         this.isExecutorAllocationVisible = true;
         this.executorAllocationInfo = JSON.parse(JSON.stringify(data));
       })
-      .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('获取分片分配失败！'); });
     },
     closeExecutorAllocationDialog() {
       this.isExecutorAllocationVisible = false;
@@ -274,6 +293,7 @@ export default {
   },
   components: {
     'executor-allocation-dialog': executorAllocationDialog,
+    'running-allocation-dialog': runningAllocationDialog,
   },
   watch: {
     $route: 'getExecutorList',
