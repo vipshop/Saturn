@@ -1672,6 +1672,7 @@ public class JobServiceImpl implements JobService {
 		SaturnBeanUtils.copyPropertiesIgnoreNull(jobConfig, newJobConfig4DB);
 		// 对不符合要求的字段重新设置为默认值
 		newJobConfig4DB.setDefaultValues();
+		newJobConfig4DB.setFailover(jobConfig.getFailover());
 		// 消息作业不failover不rerun
 		if (JobType.MSG_JOB.name().equals(newJobConfig4DB.getJobType())) {
 			newJobConfig4DB.setFailover(false);
