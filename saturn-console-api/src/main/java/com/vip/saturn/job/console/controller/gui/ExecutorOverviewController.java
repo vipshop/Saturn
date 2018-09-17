@@ -65,6 +65,16 @@ public class ExecutorOverviewController extends AbstractGUIController {
 	}
 
 	/**
+	 * 获取executor运行中的作业分片信息
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/{executorName}/runningInfo")
+	public SuccessResponseEntity getExecutorRunningInfo(final HttpServletRequest request,
+			@PathVariable String namespace, @PathVariable String executorName) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(executorService.getExecutorRunningInfo(namespace, executorName));
+	}
+
+	/**
 	 * 一键重排
 	 */
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

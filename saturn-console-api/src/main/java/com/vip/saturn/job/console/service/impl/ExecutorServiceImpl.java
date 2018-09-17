@@ -19,9 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -148,13 +146,13 @@ public class ExecutorServiceImpl implements ExecutorService {
 			String sharding = curatorFrameworkOp
 					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
 			if (StringUtils.isNotBlank(sharding)) {
-				JobStatus jobStatus = jobService.getJobStatus(namespace, jobName);
-
 				// 作业状态为STOPPED的即使有残留分片也不显示该分片
-				if (JobStatus.STOPPED.equals(jobStatus)) {
+				if (JobStatus.STOPPED.equals(jobService.getJobStatus(namespace, jobName))) {
 					continue;
 				}
-
+				// concat executorSharding
+				serverAllocationInfo.getAllocationMap().put(jobName, sharding);
+				// calculate totalLoad
 				String loadLevelNode = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "loadLevel"));
 				Integer loadLevel = 1;
 				if (StringUtils.isNotBlank(loadLevelNode)) {
@@ -164,17 +162,136 @@ public class ExecutorServiceImpl implements ExecutorService {
 				int shardingItemNum = sharding.split(",").length;
 				int curJobLoad = shardingItemNum * loadLevel;
 				int totalLoad = serverAllocationInfo.getTotalLoadLevel();
-
-				Map<String, String> jobNameAndStatus = new HashMap<>();
-				jobNameAndStatus.put("jobName", jobName);
-				jobNameAndStatus.put("status", jobStatus.name());
-				jobNameAndStatus.put("sharding", sharding);
-				serverAllocationInfo.getJobStatus().add(jobNameAndStatus);
 				serverAllocationInfo.setTotalLoadLevel(totalLoad + curJobLoad);
 			}
 		}
 
 		return serverAllocationInfo;
+	}
+
+	@Override
+	public ServerRunningInfo getExecutorRunningInfo(String namespace, String executorName)
+			throws SaturnJobConsoleException {
+		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = getCuratorFrameworkOp(namespace);
+		List<JobConfig> unSystemJobs = jobService.getUnSystemJobs(namespace);
+		ServerRunningInfo serverRunningInfo = new ServerRunningInfo(executorName);
+
+		for (JobConfig jobConfig : unSystemJobs) {
+			boolean needToCheckFailover = needToCheckFailover(jobConfig);
+
+			String jobName = jobConfig.getJobName();
+			String serverNodePath = JobNodePath.getServerNodePath(jobName);
+			if (!curatorFrameworkOp.checkExists(serverNodePath)) {
+				continue;
+			}
+
+			String sharding = curatorFrameworkOp
+					.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding"));
+			Set<String> shardingItems = getShardingItems(sharding);
+
+			if (needToCheckFailover) {
+				obtainServerRunningInfoWhileNeedToCheckFailover(executorName, curatorFrameworkOp, jobName,
+						shardingItems, serverRunningInfo);
+			} else if (!shardingItems.isEmpty()) {
+				obtainServerRunningInfoWhileNoNeedToCheckFailover(curatorFrameworkOp, jobConfig, shardingItems,
+						serverRunningInfo);
+			}
+
+		}
+
+		return serverRunningInfo;
+	}
+
+	private void obtainServerRunningInfoWhileNoNeedToCheckFailover(CuratorFrameworkOp curatorFrameworkOp,
+			JobConfig jobConfig, Set<String> shardingItems, ServerRunningInfo serverRunningInfo) {
+		String jobName = jobConfig.getJobName();
+		// 对于不上报运行状态的作业，所有分配的分片均作为潜在运行中的作业
+		if (!jobConfig.getEnabledReport()) {
+			serverRunningInfo.getPotentialRunningJobItems().put(jobName, StringUtils.join(shardingItems, ','));
+		}
+
+		List<String> runningItems = Lists.newArrayList();
+		for (String item : shardingItems) {
+			if (curatorFrameworkOp
+					.checkExists(JobNodePath.getExecutionNodePath(jobConfig.getJobName(), item, "running"))) {
+				runningItems.add(item);
+			}
+		}
+
+		if (!runningItems.isEmpty()) {
+			serverRunningInfo.getRunningJobItems().put(jobConfig.getJobName(), StringUtils.join(runningItems, ','));
+		}
+	}
+
+	/**
+	 * 不需要检查潜在运行的作业，因为这类作业不可能failover;
+	 * 遍历所有作业的所有分片，如果存在failover节点，则要看看有没有running节点，如果有running节点则要看看是否自己正在执行failover，如果是加入到runningInfo中，否则continue；
+	 */
+	private void obtainServerRunningInfoWhileNeedToCheckFailover(String executorName,
+			CuratorFrameworkOp curatorFrameworkOp, String jobName, Set<String> shardingItems,
+			ServerRunningInfo serverRunningInfo) {
+		List<String> executionItems = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName));
+		if (CollectionUtils.isEmpty(executionItems)) {
+			return;
+		}
+
+		List<String> runningItems = Lists.newArrayList();
+		for (String item : executionItems) {
+			boolean isItemRunning = curatorFrameworkOp
+					.checkExists(JobNodePath.getExecutionNodePath(jobName, item, "running"));
+			if (!isItemRunning) {
+				continue;
+			}
+			// 属于已经分配的分片
+			if (shardingItems != null && shardingItems.contains(item)) {
+				runningItems.add(item);
+				continue;
+			}
+			// 不属于自己分配的分片，则看看是否有failover
+			String failoverValue = curatorFrameworkOp
+					.getData(JobNodePath.getExecutionNodePath(jobName, item, "failover"));
+			if (StringUtils.isNotBlank(failoverValue) && failoverValue.equals(executorName)) {
+				runningItems.add(item);
+			}
+		}
+
+		if (!runningItems.isEmpty()) {
+			serverRunningInfo.getRunningJobItems().put(jobName, StringUtils.join(runningItems, ','));
+		}
+	}
+
+	private Set<String> getShardingItems(String sharding) {
+		if (StringUtils.isBlank(sharding)) {
+			return Sets.newHashSet();
+		}
+
+		String items[] = sharding.split(",");
+		Set<String> result = Sets.newTreeSet();
+		for (String item : items) {
+			if (StringUtils.isBlank(item)) {
+				continue;
+			}
+			result.add(item.trim());
+		}
+		return result;
+	}
+
+	private boolean needToCheckFailover(JobConfig jobConfig) {
+		if (!jobConfig.getFailover()) {
+			return false;
+		}
+		//下面的检查是避免脏数据
+		if (JobType.MSG_JOB.name().equals(jobConfig.getJobType())) {
+			return false;
+		}
+		if (jobConfig.getLocalMode()) {
+			return false;
+		}
+		if (!jobConfig.getEnabledReport()) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
