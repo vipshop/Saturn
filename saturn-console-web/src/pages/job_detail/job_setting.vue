@@ -181,7 +181,13 @@
                                 </el-form-item>
                             </el-col>
                             <el-col :span="11">
-                                <el-form-item prop="rerun" label="过时未跑重试">
+                                <el-form-item prop="rerun">
+                                    <div slot="label">
+                                        <span>过时未跑重试</span>
+                                        <el-tooltip placement="top" content="不建议高频作业启动超时重跑" effect="light" popper-class="allocation-popper">
+                                            <i class="fa fa-question-circle"></i>
+                                        </el-tooltip>
+                                    </div>
                                     <el-switch v-model="jobSettingInfo.rerun" title="非上报运行状态不可编辑" :disabled="!jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
