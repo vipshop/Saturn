@@ -1945,8 +1945,8 @@ public class JobServiceImpl implements JobService {
 		JobServerStatus result = new JobServerStatus();
 		result.setExecutorName(executorName);
 		result.setJobName(jobName);
-		String ip = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "ip"));
-		result.setServerStatus(ServerStatus.getServerStatus(ip));
+		String status = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "status"));
+		result.setServerStatus(ServerStatus.getServerStatus(status));
 
 		return result;
 	}
