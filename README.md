@@ -4,7 +4,7 @@
 [![GitHub release](https://img.shields.io/github/release/vipshop/Saturn.svg)](https://github.com/vipshop/Saturn/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-Saturn is a platform created by VIP.com(唯品会) to provIde a distributed, fault tolerant and high available job scheduling service.
+Saturn is a platform created by VIP.com(唯品会) to provide a distributed, fault tolerant and high available job scheduling service.
 
 ## Why Saturn?
 
@@ -40,6 +40,8 @@ For the document of 2.x, please come [here](https://vipshop.github.io/Saturn/#/z
 ## Cases 使用案例
 
 [Organizations using Saturn](https://github.com/vipshop/Saturn/wiki/Organizations-using-Saturn)
+
+使用Saturn的公司如果方便请在[这里](https://github.com/vipshop/Saturn/issues/506)留下公司+网址，方便我们宣传，感谢
 
 ## Getting help, and helping out 社区互助
 
