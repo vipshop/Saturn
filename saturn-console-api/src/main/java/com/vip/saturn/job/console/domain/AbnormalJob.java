@@ -98,6 +98,12 @@ public class AbnormalJob extends AbstractAlarmJob {
 				&& this.getCause().equals(other.getCause()) && this.getNextFireTime() == other.getNextFireTime();
 	}
 
+	@Override
+	public String toString() {
+		return "AbnormalJob{" + "nextFireTimeWithTimeZoneFormat='" + nextFireTimeWithTimeZoneFormat + '\'' + ", cause='"
+				+ cause + '\'' + ", jobName='" + jobName + '\'' + ", domainName='" + domainName + '\'' + '}';
+	}
+
 	public enum Cause {
 		NO_SHARDS, NOT_RUN, EXECUTORS_NOT_READY
 	}

@@ -373,6 +373,7 @@ public class OutdatedNoRunningJobAnalyzer {
 				String namespace = abnormalJob.getDomainName();
 				String jobName = abnormalJob.getJobName();
 				try {
+					log.warn("found abnormal job:{}, will runAtOnce", abnormalJob);
 					jobService.runAtOnce(namespace, jobName);
 				} catch (Throwable t) {
 					log.warn(String.format("rerun job error, namespace:%s, jobName:%s", namespace, jobName), t);
