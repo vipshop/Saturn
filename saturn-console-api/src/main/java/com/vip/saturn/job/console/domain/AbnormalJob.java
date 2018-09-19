@@ -100,8 +100,9 @@ public class AbnormalJob extends AbstractAlarmJob {
 
 	@Override
 	public String toString() {
-		return "AbnormalJob{" + "nextFireTimeWithTimeZoneFormat='" + nextFireTimeWithTimeZoneFormat + '\'' + ", cause='"
-				+ cause + '\'' + ", jobName='" + jobName + '\'' + ", domainName='" + domainName + '\'' + '}';
+		return "AbnormalJob{" + "timeZone='" + timeZone + '\'' + ", nextFireTimeWithTimeZoneFormat='"
+				+ nextFireTimeWithTimeZoneFormat + '\'' + ", cause='" + cause + '\'' + ", jobName='" + jobName + '\''
+				+ ", domainName='" + domainName + '\'' + '}';
 	}
 
 	public enum Cause {
