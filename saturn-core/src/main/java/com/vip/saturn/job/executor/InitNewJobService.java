@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_ADDED_COUNT;
+import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_EXIT_ON_JOB_INIT_FAIL;
 
 /**
  * @author hebelala
@@ -180,6 +181,10 @@ public class InitNewJobService {
 			} catch (JobInitAlarmException e) {
 				// no need to log exception stack as it should be logged in the original happen place
 				raiseAlarmForJobInitFailed(jobName, e);
+				if (VIP_SATURN_EXIT_ON_JOB_INIT_FAIL) {
+					log.error(SaturnConstant.LOG_FORMAT, jobName, "job init fail and JVM is going to exit!!");
+					System.exit(-1);
+				}
 			} catch (Throwable t) {
 				log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
 						"job initialize failed, but will not stop the init process"), t);
