@@ -1,0 +1,2 @@
+1. use `mvn saturn:run` to start executor
+2. use `mvn clean install` or `mvn saturn:zip` to pack the project
