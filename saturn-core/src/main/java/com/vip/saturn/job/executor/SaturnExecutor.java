@@ -26,6 +26,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.pattern.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,13 +117,14 @@ public class SaturnExecutor {
 								throw e;
 							} catch (Throwable t) {
 								needRestart = true;
-								log.error("The executor " + executorName + " restart failed, will retry again.", t);
+								LogUtils.error(log, LogEvents.ExecutorEvent.REINIT,
+										"Executor {} reinitialize failed, will retry again", executorName, t);
 							}
 						}
 						Thread.sleep(1000L);
 					}
 				} catch (InterruptedException e) {
-					log.info("{} is interrupted", restartThreadName);
+					LogUtils.info(log, LogEvents.ExecutorEvent.REINIT, "{} is interrupted", restartThreadName);
 					Thread.currentThread().interrupt();
 				}
 			}
@@ -156,7 +158,7 @@ public class SaturnExecutor {
 						shutdownLock.unlock();
 					}
 				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+					LogUtils.error(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, e.getMessage(), e);
 				}
 			}
 
@@ -242,28 +244,30 @@ public class SaturnExecutor {
 					Map<String, String> discoveryInfo = JSONObject.parseObject(responseBody, Map.class);
 					String connectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
 					if (StringUtils.isBlank(connectionString)) {
-						log.warn("ZK connection string is blank!");
+						LogUtils.warn(log, LogEvents.ExecutorEvent.INIT, "ZK connection string is blank!");
 						continue;
 					}
 
-					log.info("Discover successfully. Url: {}, discovery info: {}", url, discoveryInfo);
+					LogUtils.info(log, LogEvents.ExecutorEvent.INIT,
+							"Discover successfully. Url: {}, discovery info: {}", url, discoveryInfo);
 					return discoveryInfo;
 				} else {
 					handleDiscoverException(responseBody, statusCode);
 				}
 			} catch (SaturnExecutorException e) {
-				log.error(e.getMessage());
+				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, e.toString(), e);
 				if (e.getCode() != SaturnExecutorExceptionCode.UNEXPECTED_EXCEPTION) {
 					throw e;
 				}
 			} catch (Throwable t) {
-				log.error("Fail to discover from Saturn Console. Url: " + url, t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to discover from Saturn Console. Url: {}", url,
+						t);
 			} finally {
 				if (httpClient != null) {
 					try {
 						httpClient.close();
 					} catch (IOException e) {
-						log.error("Fail to close httpclient.", e);
+						LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to close httpclient", e);
 					}
 				}
 			}
@@ -319,11 +323,12 @@ public class SaturnExecutor {
 			try {
 				StartCheckUtil.add2CheckList(StartCheckItem.ZK, StartCheckItem.UNIQUE, StartCheckItem.JOBKILL);
 
-				log.info("start to discover from saturn console");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start to discover from saturn console");
+
 				Map<String, String> discoveryInfo = discover();
 				String zkConnectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
 				if (StringUtils.isBlank(zkConnectionString)) {
-					log.error("zk connection string is blank!");
+					LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "zk connection string is blank!");
 					throw new RuntimeException("zk connection string is blank!");
 				}
 
@@ -333,34 +338,37 @@ public class SaturnExecutor {
 				initRegistryCenter(zkConnectionString.trim());
 
 				// 检测是否存在仍然有正在运行的SHELL作业
-				log.info("start to check all exist jobs.");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start to check all exist jobs");
 				checkAndKillExistedShellJobs();
 
 				// 初始化timeout scheduler
-				log.info("start to create timeout scheduler.");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start to create timeout scheduler");
 				TimeoutSchedulerExecutor.createScheduler(executorName);
 
 				// 先注册Executor再启动作业，防止Executor因为一些配置限制而抛异常了，而作业线程已启动，导致作业还运行了一会
 				registerExecutor();
 
 				// 启动定时清空nohup文件的线程
-				log.info("start to register periodic truncate nohup out service.");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT,
+						"start to register periodic truncate nohup out service");
 				periodicTruncateNohupOutService = new PeriodicTruncateNohupOutService(executorName);
 				periodicTruncateNohupOutService.start();
 
 				// 启动零点清0成功数错误数的线程
-				log.info("start the ResetCountService");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start ResetCountService");
 				resetCountService = new ResetCountService(executorName);
 				resetCountService.startRestCountTimer();
 
 				// 添加新增作业时的回调方法，启动已经存在的作业
-				log.info("start to register newJobCallback, and async start existing jobs.");
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT,
+						"start to register newJobCallback, and async start existing jobs");
 				saturnExecutorService.registerJobsWatcher();
 
-				log.info("The executor {} start successfully which used {} ms", executorName,
+				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "The executor {} start successfully which used {} ms",
+						executorName,
 						System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
-				log.error("Fail to start executor {}", executorName);
+				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to start executor {}", executorName, t);
 				shutdown0();
 				throw t;
 			}
@@ -375,7 +383,7 @@ public class SaturnExecutor {
 			saturnExecutorExtension.validateNamespaceExisting(serverLists);
 
 			// 初始化注册中心
-			log.info("start to init reg center.");
+			LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start to init reg center");
 			ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(serverLists, namespace, 1000, 3000);
 			regCenter = new ZookeeperRegistryCenter(zkConfig);
 			regCenter.init();
@@ -402,7 +410,7 @@ public class SaturnExecutor {
 
 	private void registerExecutor() throws Exception {
 		try {
-			log.info("start to register executor.");
+			LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start to register executor");
 			saturnExecutorService.registerExecutor();
 			StartCheckUtil.setOk(StartCheckItem.UNIQUE);
 		} catch (Exception e) {
@@ -422,7 +430,7 @@ public class SaturnExecutor {
 	}
 
 	private void raiseAlarm() {
-		log.info("raise alarm to console for restarting event.");
+		LogUtils.warn(log, LogEvents.ExecutorEvent.REINIT, "raise alarm to console for executor reinitialization");
 		raiseAlarmExecutorService.submit(new Runnable() {
 			@Override
 			public void run() {
@@ -436,7 +444,7 @@ public class SaturnExecutor {
 		try {
 			AlarmUtils.raiseAlarm(alarmInfo, namespace);
 		} catch (Throwable t) {
-			log.warn("cannot raise alarm", t);
+			LogUtils.warn(log, LogEvents.ExecutorEvent.REINIT, "cannot raise alarm", t);
 		}
 	}
 
@@ -485,12 +493,12 @@ public class SaturnExecutor {
 					public void run() {
 						try {
 							if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-								log.info("[{}] msg=job {} is enabled, force shutdown.", jobName, jobName);
+								LogUtils.info(log, jobName, "job {} is enabled, start to force shutdown");
 								jobScheduler.stopJob(true);
 							}
 							jobScheduler.shutdown(false);
 						} catch (Throwable t) {
-							log.error(String.format("[%s] msg=job %s fail to shutdown", jobName, jobName), t);
+							LogUtils.error(log, jobName, "job {} fail to shutdown", jobName, t);
 						}
 					}
 				}));
@@ -500,11 +508,12 @@ public class SaturnExecutor {
 			try {
 				future.get();
 			} catch (Exception e) {
-				log.error("wait shutdown job error", e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.SHUTDOWN, "wait shutdown job error", e);
 			}
 		}
 
-		log.info("Shutdown phase [shutdownUnfinishJobs] took {}ms", System.currentTimeMillis() - startTime);
+		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Shutdown phase [shutdownUnfinishJobs] took {}ms",
+				System.currentTimeMillis() - startTime);
 	}
 
 	/**
@@ -513,7 +522,7 @@ public class SaturnExecutor {
 	private void shutdown0() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
-			log.info("Try to stop executor {}", executorName);
+			LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Try to stop executor {}", executorName);
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterJobsWatcher();
 			}
@@ -535,7 +544,7 @@ public class SaturnExecutor {
 				periodicTruncateNohupOutService.shutdown();
 			}
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
-			log.info("The executor {} is stopped", executorName);
+			LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "The executor {} is stopped", executorName);
 		} finally {
 			shutdownLock.unlock();
 		}
@@ -547,7 +556,8 @@ public class SaturnExecutor {
 	private void shutdownGracefully0() throws Exception {
 		shutdownLock.lockInterruptibly();
 		try {
-			log.info("Try to stop executor {} gracefully", executorName);
+			LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "Try to stop executor {} gracefully",
+					executorName);
 			shutdownAllCountThread();
 
 			if (saturnExecutorService != null) {
@@ -574,7 +584,9 @@ public class SaturnExecutor {
 					regCenter.close();
 				}
 			}
-			log.info("The executor {} is stopped gracefully", executorName);
+
+			LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "executor {} is stopped gracefully",
+					executorName);
 		} finally {
 			shutdownLock.unlock();
 		}
@@ -600,7 +612,7 @@ public class SaturnExecutor {
 			try {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
-				log.error(e.getMessage(), e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, e.getMessage(), e);
 				Thread.currentThread().interrupt();
 			}
 			for (Entry<String, JobScheduler> entry : entries) {
@@ -618,7 +630,9 @@ public class SaturnExecutor {
 		} while (hasRunning
 				&& System.currentTimeMillis() - startTime < SystemEnvProperties.VIP_SATURN_SHUTDOWN_TIMEOUT * 1000);
 
-		log.info("Shutdown phase [blockUntilJobCompletedIfNotTimeout] took {}ms", System.currentTimeMillis() - startTime);
+		LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN,
+				"Shutdown phase [blockUntilJobCompletedIfNotTimeout] took {}ms",
+				System.currentTimeMillis() - startTime);
 	}
 
 	protected boolean isAllowedToBeGracefulShutdown(JobConfiguration currentConf) {
@@ -627,7 +641,7 @@ public class SaturnExecutor {
 			JobType jobType = JobType.valueOf(jobTypeValue);
 			return ALLOWED_GRACEFUL_SHUTDOWN_TYPES.contains(jobType);
 		} catch (Exception e) {
-			log.warn("no such job type:" + jobTypeValue, e);
+			LogUtils.warn(log, currentConf.getJobName(), "no such job type:{}", jobTypeValue);
 			return false;
 		}
 	}
