@@ -98,9 +98,6 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_SESSION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
 	public static int VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
 	public static int VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK = 9;
-	// exit when job init fail
-	public static boolean VIP_SATURN_EXIT_ON_JOB_INIT_FAIL = false;
-	private static final String NAME_VIP_SATURN_EXIT_ON_JOB_INIT_FAIL = "VIP_SATURN_EXIT_ON_JOB_INIT_FAIL";
 
 	static {
 		loadProperties();
@@ -198,12 +195,6 @@ public class SystemEnvProperties {
 			} catch (Throwable t) {
 				log.error("msg=" + t.getMessage(), t);
 			}
-		}
-
-		String isExitOnJobInitFail = System.getProperty(NAME_VIP_SATURN_EXIT_ON_JOB_INIT_FAIL,
-				System.getenv(NAME_VIP_SATURN_EXIT_ON_JOB_INIT_FAIL));
-		if (!Strings.isNullOrEmpty(isExitOnJobInitFail)) {
-			VIP_SATURN_EXIT_ON_JOB_INIT_FAIL = Boolean.parseBoolean(isExitOnJobInitFail);
 		}
 	}
 
