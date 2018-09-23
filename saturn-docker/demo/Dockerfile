@@ -10,15 +10,18 @@ RUN wget ${SATURN_EXECUTOR_DOWNLOAD_URL} -O saturn-executor.zip \
  && mkdir -p /saturn-executor/apps/ \
  && cp /saturn-executor/lib/*.jar /saturn-executor/apps/
 
-COPY ./InitSaturnJob.class /saturn-executor/demo/InitSaturnJob.class
 COPY ./demo-java-job.jar /saturn-executor/apps/demo-java-job.jar 
-COPY ./demo-init.sh /saturn-executor/demo-init.sh
 
-RUN chmod a+x /saturn-executor/demo-init.sh
+ADD ./saturn.sh /saturn-executor/saturn.sh
 
 ENV TZ "Asia/Shanghai"
 ENV LIB_JARS=/saturn-executor/lib/*:$CLASSPATH
 
 WORKDIR /saturn-executor
 
-CMD ["/saturn-executor/demo-init.sh"]
+RUN ["chmod", "+x", "/saturn-executor/saturn.sh"]
+
+CMD ["/saturn-executor/saturn.sh"]
+
+
+

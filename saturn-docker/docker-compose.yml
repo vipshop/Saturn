@@ -1,17 +1,11 @@
 version: '2'
 services:
-  zookeeper:
-    image: zookeeper:3.4.9
-    container_name: zookeeper
-    restart: always
-    ports:
-      - 2181:2181
   db:
     image: saturn/saturn-db
     container_name: saturn_db
     restart: always
     ports:
-      - 3306:3306
+      - 3308:3306
     environment:
         - MYSQL_ROOT_PASSWORD=defaultpass
   console:
@@ -19,32 +13,14 @@ services:
     container_name: saturn_console 
     restart: always
     links:
-      - zookeeper
       - db
     ports:
       - 9088:9088
+      - 2181:2181
   demo-init:
     image: saturn/demo-init
     container_name: demo-init
     volumes: 
       - /saturn-executor/apps
     links:
-      - zookeeper
-    depends_on:
-      - console            
-  executor-a:
-    image: saturn/saturn-executor
-    container_name: saturn_executor_a
-    restart: always
-    links:
-      - zookeeper
-    volumes_from:
-      - demo-init
-  executor-b:
-    image: saturn/saturn-executor
-    container_name: saturn_executor_b
-    restart: always
-    links:
-      - zookeeper
-    volumes_from:
-      - demo-init
+      - console
