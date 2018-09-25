@@ -5,13 +5,6 @@ import org.slf4j.Logger;
 public class LogUtils {
 
 	private static final String FORMAT_FOR_LOG = "[{}] msg={}";
-	private static final String FORMAT_FOR_STRING = "[%s] msg=%s";
-
-	private static String constructFormatOrMsg(String eventName, String formatOrMsg) {
-		return String.format(FORMAT_FOR_STRING, eventName, formatOrMsg);
-	}
-
-	// debug begin
 
 	/**
 	 * @param logger slf4j logger
@@ -75,8 +68,6 @@ public class LogUtils {
 		}
 	}
 
-	// info begin
-
 	/**
 	 * @param logger slf4j logger
 	 * @param eventName 事件名
@@ -126,8 +117,6 @@ public class LogUtils {
 	public static void info(Logger logger, String eventName, String msg, Throwable t) {
 		logger.info(constructFormatOrMsg(eventName, msg), t);
 	}
-
-	// warn begin
 
 	/**
 	 * @param logger slf4j logger
@@ -179,8 +168,6 @@ public class LogUtils {
 		logger.warn(constructFormatOrMsg(eventName, msg), t);
 	}
 
-	// error begin
-
 	/**
 	 * @param logger slf4j logger
 	 * @param eventName 事件名
@@ -231,4 +218,7 @@ public class LogUtils {
 		logger.error(constructFormatOrMsg(eventName, msg), t);
 	}
 
+	private static String constructFormatOrMsg(String eventName, String formatOrMsg) {
+		return new StringBuilder("[").append(eventName).append("] msg=").append(formatOrMsg).toString();
+	}
 }
