@@ -3,6 +3,9 @@ package com.vip.saturn.job.utils;
 public class LogEvents {
 
 	public static class ExecutorEvent {
+
+		public static final String VERSION_UPGRADE = "VERSION_UPGRADE";
+
 		public static final String INIT = "EXECUTOR_INIT";
 
 		public static final String GRACEFUL_SHUTDOWN = "EXECUTOR_SHUTDOWN_GRACEFULLY";
