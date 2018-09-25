@@ -6,6 +6,9 @@ public class LogUtils {
 
 	private static final String FORMAT_FOR_LOG = "[{}] msg={}";
 
+	private LogUtils() {
+	}
+
 	/**
 	 * @param logger slf4j logger
 	 * @param eventName 事件名

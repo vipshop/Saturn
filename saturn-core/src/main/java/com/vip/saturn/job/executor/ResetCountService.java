@@ -4,6 +4,8 @@
 package com.vip.saturn.job.executor;
 
 import com.vip.saturn.job.internal.statistics.ProcessCountResetTask;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,7 @@ public class ResetCountService {
 			date = startDT.getTime();
 		}
 		countResetTimer.schedule(countResetTask, date, 24 * 60 * 60 * 1000L); // 时间间隔(一天)
-		log.info("msg=start the task of resetting statistics data");
+		LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start the task of resetting statistics data");
 	}
 
 	public void shutdownRestCountTimer() {

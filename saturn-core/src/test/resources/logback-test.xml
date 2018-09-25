@@ -12,6 +12,10 @@
             <pattern>${log.pattern}</pattern>
         </encoder>
     </appender>
+
+    <logger name="com.vip.saturn.job.utils" additivity="false">
+        <level value="ALL"/>
+    </logger>
     
     <root>
         <level value="WARN" />
