@@ -492,12 +492,12 @@ public class SaturnExecutor {
 					public void run() {
 						try {
 							if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-								LogUtils.info(log, jobName, "job {} is enabled, start to force shutdown");
+								LogUtils.info(log, jobName, "job is enabled, start to force shutdown");
 								jobScheduler.stopJob(true);
 							}
 							jobScheduler.shutdown(false);
 						} catch (Throwable t) {
-							LogUtils.error(log, jobName, "job {} fail to shutdown", jobName, t);
+							LogUtils.error(log, jobName, "job fail to shutdown", t);
 						}
 					}
 				}));
@@ -640,7 +640,7 @@ public class SaturnExecutor {
 			JobType jobType = JobType.valueOf(jobTypeValue);
 			return ALLOWED_GRACEFUL_SHUTDOWN_TYPES.contains(jobType);
 		} catch (Exception e) {
-			LogUtils.warn(log, currentConf.getJobName(), "no such job type:{}", jobTypeValue);
+			LogUtils.warn(log, currentConf.getJobName(), "no such job type:{}", jobTypeValue, e);
 			return false;
 		}
 	}
