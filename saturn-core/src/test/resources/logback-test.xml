@@ -13,7 +13,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.vip.saturn.job.utils" additivity="false">
+    <logger name="com.vip.saturn.job.utils.LogUtilsTest" additivity="false">
         <level value="ALL"/>
     </logger>
     

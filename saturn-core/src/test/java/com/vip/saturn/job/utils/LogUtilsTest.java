@@ -43,18 +43,22 @@ public class LogUtilsTest {
 		LogUtils.info(log, "event", "this is info");
 		assertEquals("[event] msg=this is info", testLogAppender.getLastMessage());
 
-		LogUtils.info(log, "event", "this is info {}", "info1");
-		assertEquals("[event] msg=this is info info1", testLogAppender.getLastMessage());
+		LogUtils.info(log, "event", "this is info {}", "arg1");
+		assertEquals("[event] msg=this is info arg1", testLogAppender.getLastMessage());
 
-		LogUtils.info(log, "event", "this is info {} {}", "info1", "info2");
-		assertEquals("[event] msg=this is info info1 info2", testLogAppender.getLastMessage());
+		LogUtils.info(log, "event", "this is info {} {}", "arg1", "arg2");
+		assertEquals("[event] msg=this is info arg1 arg2", testLogAppender.getLastMessage());
 
-		LogUtils.info(log, "event", "this is info {} {}", "info1", "info2", new ClassNotFoundException("com.abc"));
-		assertEquals("[event] msg=this is info info1 info2", testLogAppender.getLastMessage());
+		LogUtils.info(log, "event", "this is info {} {}", "arg1", "arg2", new ClassNotFoundException("com.abc"));
+		assertEquals("[event] msg=this is info arg1 arg2", testLogAppender.getLastMessage());
 		assertEquals("com.abc", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 
-		LogUtils.info(log, "event", "this is error {}", "error1", new Error("com.def"));
-		assertEquals("[event] msg=this is error error1", testLogAppender.getLastMessage());
+		LogUtils.info(log, "event", "this is info {}", "arg1", new Error("com.def"));
+		assertEquals("[event] msg=this is info arg1", testLogAppender.getLastMessage());
+		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
+
+		LogUtils.info(log, "event", "this is info", new Exception("com.def"));
+		assertEquals("[event] msg=this is info", testLogAppender.getLastMessage());
 		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 	}
 
@@ -63,18 +67,22 @@ public class LogUtilsTest {
 		LogUtils.debug(log, "event", "this is debug");
 		assertEquals("[event] msg=this is debug", testLogAppender.getLastMessage());
 
-		LogUtils.debug(log, "event", "this is debug {}", "info1");
-		assertEquals("[event] msg=this is debug info1", testLogAppender.getLastMessage());
+		LogUtils.debug(log, "event", "this is debug {}", "arg1");
+		assertEquals("[event] msg=this is debug arg1", testLogAppender.getLastMessage());
 
-		LogUtils.debug(log, "event", "this is debug {} {}", "info1", "info2");
-		assertEquals("[event] msg=this is debug info1 info2", testLogAppender.getLastMessage());
+		LogUtils.debug(log, "event", "this is debug {} {}", "arg1", "arg2");
+		assertEquals("[event] msg=this is debug arg1 arg2", testLogAppender.getLastMessage());
 
-		LogUtils.debug(log, "event", "this is debug {} {}", "info1", "info2", new ClassNotFoundException("com.abc"));
-		assertEquals("[event] msg=this is debug info1 info2", testLogAppender.getLastMessage());
+		LogUtils.debug(log, "event", "this is debug {} {}", "arg1", "arg2", new ClassNotFoundException("com.abc"));
+		assertEquals("[event] msg=this is debug arg1 arg2", testLogAppender.getLastMessage());
 		assertEquals("com.abc", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 
-		LogUtils.debug(log, "event", "this is error {}", "error1", new Error("com.def"));
-		assertEquals("[event] msg=this is error error1", testLogAppender.getLastMessage());
+		LogUtils.debug(log, "event", "this is debug {}", "arg1", new Error("com.def"));
+		assertEquals("[event] msg=this is debug arg1", testLogAppender.getLastMessage());
+		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
+
+		LogUtils.debug(log, "event", "this is debug", new Exception("com.def"));
+		assertEquals("[event] msg=this is debug", testLogAppender.getLastMessage());
 		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 	}
 
@@ -83,18 +91,22 @@ public class LogUtilsTest {
 		LogUtils.error(log, "event", "this is error");
 		assertEquals("[event] msg=this is error", testLogAppender.getLastMessage());
 
-		LogUtils.error(log, "event", "this is error {}", "info1");
-		assertEquals("[event] msg=this is error info1", testLogAppender.getLastMessage());
+		LogUtils.error(log, "event", "this is error {}", "arg1");
+		assertEquals("[event] msg=this is error arg1", testLogAppender.getLastMessage());
 
-		LogUtils.error(log, "event", "this is error {} {}", "info1", "info2");
-		assertEquals("[event] msg=this is error info1 info2", testLogAppender.getLastMessage());
+		LogUtils.error(log, "event", "this is error {} {}", "arg1", "arg2");
+		assertEquals("[event] msg=this is error arg1 arg2", testLogAppender.getLastMessage());
 
-		LogUtils.error(log, "event", "this is error {} {}", "info1", "info2", new ClassNotFoundException("com.abc"));
-		assertEquals("[event] msg=this is error info1 info2", testLogAppender.getLastMessage());
+		LogUtils.error(log, "event", "this is error {} {}", "arg1", "arg2", new ClassNotFoundException("com.abc"));
+		assertEquals("[event] msg=this is error arg1 arg2", testLogAppender.getLastMessage());
 		assertEquals("com.abc", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 
-		LogUtils.error(log, "event", "this is error {}", "error1", new Error("com.def"));
-		assertEquals("[event] msg=this is error error1", testLogAppender.getLastMessage());
+		LogUtils.error(log, "event", "this is error {}", "arg1", new Error("com.def"));
+		assertEquals("[event] msg=this is error arg1", testLogAppender.getLastMessage());
+		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
+
+		LogUtils.error(log, "event", "this is error", new Exception("com.def"));
+		assertEquals("[event] msg=this is error", testLogAppender.getLastMessage());
 		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 	}
 
@@ -103,18 +115,22 @@ public class LogUtilsTest {
 		LogUtils.warn(log, "event", "this is warn");
 		assertEquals("[event] msg=this is warn", testLogAppender.getLastMessage());
 
-		LogUtils.warn(log, "event", "this is warn {}", "info1");
-		assertEquals("[event] msg=this is warn info1", testLogAppender.getLastMessage());
+		LogUtils.warn(log, "event", "this is warn {}", "arg1");
+		assertEquals("[event] msg=this is warn arg1", testLogAppender.getLastMessage());
 
-		LogUtils.warn(log, "event", "this is warn {} {}", "info1", "info2");
-		assertEquals("[event] msg=this is warn info1 info2", testLogAppender.getLastMessage());
+		LogUtils.warn(log, "event", "this is warn {} {}", "arg1", "arg2");
+		assertEquals("[event] msg=this is warn arg1 arg2", testLogAppender.getLastMessage());
 
-		LogUtils.warn(log, "event", "this is warn {} {}", "info1", "info2", new ClassNotFoundException("com.abc"));
-		assertEquals("[event] msg=this is warn info1 info2", testLogAppender.getLastMessage());
+		LogUtils.warn(log, "event", "this is warn {} {}", "arg1", "arg2", new ClassNotFoundException("com.abc"));
+		assertEquals("[event] msg=this is warn arg1 arg2", testLogAppender.getLastMessage());
 		assertEquals("com.abc", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 
-		LogUtils.warn(log, "event", "this is warn {}", "error1", new Error("com.def"));
-		assertEquals("[event] msg=this is warn error1", testLogAppender.getLastMessage());
+		LogUtils.warn(log, "event", "this is warn {}", "arg1", new Error("com.def"));
+		assertEquals("[event] msg=this is warn arg1", testLogAppender.getLastMessage());
+		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
+
+		LogUtils.warn(log, "event", "this is warn", new Exception("com.def"));
+		assertEquals("[event] msg=this is warn", testLogAppender.getLastMessage());
 		assertEquals("com.def", testLogAppender.getLastEvent().getThrowableProxy().getMessage());
 	}
 
