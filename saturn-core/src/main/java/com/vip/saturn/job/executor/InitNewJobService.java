@@ -11,6 +11,7 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.AlarmUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -178,8 +179,10 @@ public class InitNewJobService {
 				JOB_INIT_FAILED_RECORDS.get(executorName).get(jobName).clear();
 				return true;
 			} catch (JobInitAlarmException e) {
-				// no need to log exception stack as it should be logged in the original happen place
-				raiseAlarmForJobInitFailed(jobName, e);
+				if (!SystemEnvProperties.VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM) {
+					// no need to log exception stack as it should be logged in the original happen place
+					raiseAlarmForJobInitFailed(jobName, e);
+				}
 			} catch (Throwable t) {
 				log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
 						"job initialize failed, but will not stop the init process"), t);

@@ -99,6 +99,12 @@ public class SystemEnvProperties {
 	public static int VIP_SATURN_CONNECTION_TIMEOUT_IN_SECONDS_IN_UNSTABLE_NETWORK = 40;
 	public static int VIP_SATURN_RETRY_TIMES_IN_UNSTABLE_NETWORK = 9;
 
+	// switch for disable job init failed alarm, false by default
+	private static final String NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM = "VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM";
+	public static boolean VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM = Boolean.parseBoolean(
+			System.getProperty(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM,
+					System.getenv(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM)));
+
 	static {
 		loadProperties();
 	}
