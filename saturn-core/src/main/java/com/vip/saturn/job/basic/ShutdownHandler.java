@@ -1,5 +1,7 @@
 package com.vip.saturn.job.basic;
 
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Signal;
@@ -71,15 +73,15 @@ public class ShutdownHandler implements SignalHandler {
 				isHandling.set(false);
 			}
 		} else {
-			log.info("shutdown is handling");
+			LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "shutdown is handling");
 		}
 	}
 
 	private void doHandle() {
-		log.info("msg=Received the kill command");
+		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Received the kill command");
 		callExecutorListeners();
 		callGlobalListeners();
-		log.info("msg=Saturn executor is closed");
+		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Saturn executor is closed");
 		if (isExit) {
 			exit();
 		}
@@ -96,7 +98,7 @@ public class ShutdownHandler implements SignalHandler {
 						runnable.run();
 					}
 				} catch (Exception e) {
-					log.error("msg=" + e.getMessage(), e);
+					LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, e.toString(), e);
 				}
 			}
 		}
@@ -110,7 +112,7 @@ public class ShutdownHandler implements SignalHandler {
 					runnable.run();
 				}
 			} catch (Exception e) {
-				log.error("msg=" + e.getMessage(), e);
+				LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, e.toString(), e);
 			}
 		}
 		globalListeners.clear();

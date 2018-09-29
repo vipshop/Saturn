@@ -36,6 +36,7 @@ import com.vip.saturn.job.threads.ExtendableThreadPoolExecutor;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
@@ -179,7 +180,7 @@ public class JobScheduler {
 		try {
 			job = (AbstractElasticJob) jobClass.newInstance();
 		} catch (Exception e) {
-			log.error("unexptected error", e);
+			LogUtils.error(log, jobName, "unexptected error", e);
 			throw new JobException(e);
 		}
 		job.setJobScheduler(this);
@@ -205,8 +206,7 @@ public class JobScheduler {
 	public void reCreateExecutorService() {
 		synchronized (isShutdownFlag) {
 			if (isShutdownFlag.get()) {
-				log.warn(SaturnConstant.LOG_FORMAT, jobName,
-						"the jobScheduler was shutdown, cannot re-create business thread pool");
+				LogUtils.warn(log, jobName, "the jobScheduler was shutdown, cannot re-create business thread pool");
 				return;
 			}
 			executionService.shutdown();
@@ -241,7 +241,7 @@ public class JobScheduler {
 			}
 			return nextFireTime;
 		} catch (Throwable t) {
-			log.error("fail to get next fire time", t);
+			LogUtils.error(log, jobName, "fail to get next fire time", t);
 			return null;
 		}
 	}
@@ -307,7 +307,7 @@ public class JobScheduler {
 				try {
 					Thread.sleep(500);// NOSONAR
 				} catch (InterruptedException ignore) {
-					log.warn(ignore.getMessage());
+					LogUtils.warn(log, jobName, ignore.getMessage());
 				}
 				jobNodeStorage.deleteJobNode();
 				saturnExecutorService.removeJobName(jobName);

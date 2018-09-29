@@ -11,6 +11,8 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.AlarmUtils;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -68,7 +70,7 @@ public class InitNewJobService {
 				treeCache.close();
 			}
 		} catch (Throwable t) {
-			log.error(t.getMessage(), t);
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT_OR_SHUTDOWN, t.toString(), t);
 		}
 		try {
 			if (executorService != null && !executorService.isTerminated()) {
@@ -76,14 +78,15 @@ public class InitNewJobService {
 				int count = 0;
 				while (!executorService.awaitTermination(50, TimeUnit.MILLISECONDS)) {
 					if (++count == 4) {
-						log.info("InitNewJob executorService try to shutdown now");
+						LogUtils.info(log, LogEvents.ExecutorEvent.INIT_OR_SHUTDOWN,
+								"InitNewJob executorService try to shutdown now");
 						count = 0;
 					}
 					executorService.shutdownNow();
 				}
 			}
 		} catch (Throwable t) {
-			log.error(t.getMessage(), t);
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT_OR_SHUTDOWN, t.toString(), t);
 		}
 	}
 
@@ -123,15 +126,16 @@ public class InitNewJobService {
 					continue;
 				}
 
-				log.info("new job: {} 's jobClass created event received", jobName);
+				LogUtils.info(log, jobName, "new job: {} 's jobClass created event received", jobName);
 
 				if (!jobNames.contains(jobName)) {
 					if (initJobScheduler(jobName)) {
 						jobNames.add(jobName);
-						log.info("the job {} initialize successfully", jobName);
+						LogUtils.info(log, jobName, "the job {} initialize successfully", jobName);
 					}
 				} else {
-					log.warn("the job {} is unnecessary to initialize, because it's already existing", jobName);
+					LogUtils.warn(log, jobName,
+							"the job {} is unnecessary to initialize, because it's already existing", jobName);
 				}
 				break;
 			}
@@ -158,7 +162,7 @@ public class InitNewJobService {
 
 		private boolean initJobScheduler(String jobName) {
 			try {
-				log.info(SaturnConstant.LOG_FORMAT, jobName, "start to initialize the new job");
+				LogUtils.info(log, jobName, "start to initialize the new job");
 				JOB_INIT_FAILED_RECORDS.get(executorName).putIfAbsent(jobName, new HashSet<Integer>());
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
 				if (jobConfig.getSaturnJobClass() == null) {
@@ -169,7 +173,7 @@ public class InitNewJobService {
 				if (jobConfig.isDeleting()) {
 					String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);
 					regCenter.remove(serverNodePath);
-					log.warn(SaturnConstant.LOG_FORMAT, jobName, "the job is on deleting");
+					LogUtils.warn(log, jobName, "the job is on deleting");
 					return false;
 				}
 				JobScheduler scheduler = new JobScheduler(regCenter, jobConfig);
@@ -184,8 +188,7 @@ public class InitNewJobService {
 					raiseAlarmForJobInitFailed(jobName, e);
 				}
 			} catch (Throwable t) {
-				log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-						"job initialize failed, but will not stop the init process"), t);
+				LogUtils.warn(log, jobName, "job initialize failed, but will not stop the init process", t);
 			}
 
 			return false;
@@ -201,10 +204,10 @@ public class InitNewJobService {
 					AlarmUtils.raiseAlarm(constructAlarmInfo(namespace, jobName, executorName, message), namespace);
 					records.add(messageHashCode);
 				} catch (Exception e) {
-					log.error("exception throws during raise alarm for job init fail", e);
+					LogUtils.error(log, jobName, "exception throws during raise alarm for job init fail", e);
 				}
 			} else {
-				log.info(SaturnConstant.LOG_FORMAT, jobName,
+				LogUtils.info(log, jobName,
 						"job initialize failed but will not raise alarm as such kind of alarm already been raise before");
 			}
 		}

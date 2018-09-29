@@ -3,6 +3,8 @@ package com.vip.saturn.job.executor;
 import com.vip.saturn.job.exception.SaturnJobException;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -39,7 +41,7 @@ public class RestartAndDumpService {
 
     public void start() throws Exception {
         if (!SystemEnvProperties.VIP_SATURN_ENABLE_EXEC_SCRIPT) {
-            log.info("The RestartAndDumpService is disabled");
+			LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "The RestartAndDumpService is disabled");
             return;
         }
         validateFile(SystemEnvProperties.NAME_VIP_SATURN_PRG, SystemEnvProperties.VIP_SATURN_PRG);
@@ -65,7 +67,7 @@ public class RestartAndDumpService {
         if (StringUtils.isBlank(value)) {
             throw new SaturnJobException(name + " is not configured");
         }
-        log.info("The {} is configured as {}", name, value);
+		LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "The {} is configured as {}", name, value);
     }
 
     private void initRestart() throws Exception {
@@ -80,11 +82,12 @@ public class RestartAndDumpService {
             public void nodeChanged() throws Exception {
                 // Watch create, update event
                 if (restartNC.getCurrentData() != null) {
-                    log.info("The executor {} restart event is received", executorName);
+					LogUtils.info(log, LogEvents.ExecutorEvent.RESTART, "The executor {} restart event is received",
+							executorName);
                     restartES.execute(new Runnable() {
                         @Override
                         public void run() {
-                            executeRestartOrDumpCmd("restart");
+							executeRestartOrDumpCmd("restart", LogEvents.ExecutorEvent.RESTART);
                         }
                     });
                 }
@@ -107,11 +110,12 @@ public class RestartAndDumpService {
             public void nodeChanged() throws Exception {
                 // Watch create, update event
                 if (dumpNC.getCurrentData() != null) {
-                    log.info("The executor {} dump event is received", executorName);
+					LogUtils.info(log, LogEvents.ExecutorEvent.DUMP, "The executor {} dump event is received",
+							executorName);
                     dumpES.execute(new Runnable() {
                         @Override
                         public void run() {
-                            executeRestartOrDumpCmd("dump");
+							executeRestartOrDumpCmd("dump", LogEvents.ExecutorEvent.DUMP);
                             coordinatorRegistryCenter.remove(nodePath);
                         }
                     });
@@ -125,9 +129,9 @@ public class RestartAndDumpService {
     // The apache's Executor maybe destroy process on some conditions,
     // and don't provide the api for redirect process's streams to file.
     // It's not expected, so I use the original way.
-    private void executeRestartOrDumpCmd(String cmd) {
+	private void executeRestartOrDumpCmd(String cmd, String eventName) {
         try {
-            log.info("Begin to execute {} script", cmd);
+			LogUtils.info(log, eventName, "Begin to execute {} script", cmd);
             String command = "chmod +x " + SystemEnvProperties.VIP_SATURN_PRG + ";" + SystemEnvProperties.VIP_SATURN_PRG
                     + " " + cmd;
             Process process = new ProcessBuilder()
@@ -139,12 +143,12 @@ public class RestartAndDumpService {
                             ProcessBuilder.Redirect.appendTo(new File(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)))
                     .start();
             int exit = process.waitFor();
-            log.info("Executed {} script, the exit value {} is returned", cmd, exit);
+			LogUtils.info(log, eventName, "Executed {} script, the exit value {} is returned", cmd, exit);
         } catch (InterruptedException e) {
-            log.warn("{} thread is interrupted", cmd);
+			LogUtils.warn(log, eventName, "{} thread is interrupted", cmd);
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            log.error("Execute {} script error", cmd, e);
+			LogUtils.error(log, eventName, "Execute {} script error", cmd, e);
         }
     }
 
@@ -166,7 +170,7 @@ public class RestartAndDumpService {
                 nodeCache.close();
             }
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT_OR_SHUTDOWN, e.toString(), e);
         }
     }
 

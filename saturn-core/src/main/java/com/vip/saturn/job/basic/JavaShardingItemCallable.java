@@ -5,6 +5,7 @@ import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.java.SaturnJavaJob;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SaturnSystemOutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
@@ -172,7 +173,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 			// 不是超时，不是强制停止。 打印错误日志，设置SaturnJobReturn。
 			if (status.get() != TIMEOUT && status.get() != FORCE_STOP) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+				LogUtils.error(log, jobName, t.toString(), t);
 				temp = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
 						SaturnSystemErrorGroup.FAIL);
 			}
@@ -185,7 +186,8 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 			if (saturnJob != null && saturnJob.getConfigService().showNormalLog()) {
 				String jobLog = SaturnSystemOutputStream.clearAndGetLog();
 				if (jobLog != null && jobLog.length() > SaturnConstant.MAX_JOB_LOG_DATA_LENGTH) {
-					log.info("As the job log exceed max length, only the previous {} characters will be reported",
+					LogUtils.info(log, jobName,
+							"As the job log exceed max length, only the previous {} characters will be reported",
 							SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 					jobLog = jobLog.substring(0, SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 				}
@@ -224,7 +226,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).beforeTimeout(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.toString(), t);
 		}
 	}
 
@@ -232,7 +234,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).postTimeout(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.toString(), t);
 		}
 	}
 
@@ -240,7 +242,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).beforeForceStop(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.toString(), t);
 		}
 	}
 
@@ -248,7 +250,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 		try {
 			((SaturnJavaJob) saturnJob).postForceStop(jobName, item, itemValue, shardingContext, this);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.toString(), t);
 		}
 	}
 

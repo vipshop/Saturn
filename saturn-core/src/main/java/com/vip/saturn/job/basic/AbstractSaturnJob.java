@@ -8,6 +8,7 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.PropertyPlaceholderHelper;
@@ -31,7 +32,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 	@Override
 	protected final void executeJob(final JobExecutionMultipleShardingContext shardingContext) {
 		if (!(shardingContext instanceof SaturnExecutionContext)) {
-			log.error("[{}] msg=!!! The context must be instance of SaturnJobExecutionContext !!!", jobName);
+			LogUtils.error(log, jobName, "!!! The context must be instance of SaturnJobExecutionContext !!!");
 			return;
 		}
 		long start = System.currentTimeMillis();
@@ -48,14 +49,14 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		// items为需要处理的作业分片
 		List<Integer> items = shardingContext.getShardingItems();
 
-		log.info("[{}] msg=Job {} handle items: {}", jobName, jobName, items);
+		LogUtils.info(log, jobName, "Job {} handle items: {}", jobName, items);
 
 		for (Integer item : items) {
 			// 兼容配置错误，如配置3个分片, 参数表配置为0=*, 2=*, 则1分片不会执行
 			if (!shardingItemParameters.containsKey(item)) {
-				log.error(
+				LogUtils.error(log, jobName,
 						"The {} item's parameter is not valid, will not execute the business code, please check shardingItemParameters",
-						item);
+						items);
 				SaturnJobReturn errRet = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
 						"Config of parameter is not valid, check shardingItemParameters", SaturnSystemErrorGroup.FAIL);
 				retMap.put(item, errRet);
@@ -75,7 +76,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 			}
 		}
 		long end = System.currentTimeMillis();
-		log.info("[{}] msg={} finished, totalCost={}ms, return={}", jobName, jobName, (end - start), retMap);
+		LogUtils.info(log, jobName, "{} finished, totalCost={}ms, return={}", jobName, (end - start), retMap);
 	}
 
 	protected void updateExecuteResult(SaturnJobReturn saturnJobReturn, SaturnExecutionContext saturnContext,
@@ -175,7 +176,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		if (message == null) {
 			message = t.toString();
 		}
-		log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, message), t);
+		LogUtils.error(log, jobName, message, t);
 		return message;
 	}
 

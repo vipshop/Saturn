@@ -2,6 +2,8 @@ package com.vip.saturn.job.executor;
 
 import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.exception.SaturnExecutorException;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -54,7 +56,8 @@ public class ExecutorConfigService {
 						configStr = new String(data, "UTF-8");
 					}
 
-					log.info("The path {} created or updated event is received by {}, the data is {}",
+					LogUtils.info(log, LogEvents.ExecutorEvent.INIT,
+							"The path {} created or updated event is received by {}, the data is {}",
 							EXECUTOR_CONFIG_PATH, executorName, configStr);
 					if (StringUtils.isBlank(configStr)) {
 						executorConfig = executorConfigClass.newInstance();
@@ -62,7 +65,7 @@ public class ExecutorConfigService {
 						executorConfig = JSON.parseObject(configStr, executorConfigClass);
 					}
 				} catch (Throwable t) {
-					log.error(t.getMessage(), t);
+					LogUtils.error(log, LogEvents.ExecutorEvent.INIT, t.toString(), t);
 				}
 			}
 
@@ -92,7 +95,7 @@ public class ExecutorConfigService {
 				nodeCache.close();
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT_OR_SHUTDOWN, e.toString(), e);
 		}
 	}
 

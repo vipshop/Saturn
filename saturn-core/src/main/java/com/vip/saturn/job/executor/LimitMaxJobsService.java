@@ -2,6 +2,7 @@ package com.vip.saturn.job.executor;
 
 import java.util.List;
 
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ public class LimitMaxJobsService extends AbstractSaturnService {
 		List<String> childrenKeys = coordinatorRegistryCenter.getChildrenKeys(SaturnExecutorsNode.JOBSNODE_PATH);
 		if (childrenKeys != null && !childrenKeys.isEmpty() && !childrenKeys.contains(jobName)
 				&& childrenKeys.size() >= SystemEnvProperties.VIP_SATURN_MAX_NUMBER_OF_JOBS) {
-			log.warn("The jobs that are under the namespace exceed {}",
+			LogUtils.warn(log, jobName, "The jobs that are under the namespace exceed {}",
 					SystemEnvProperties.VIP_SATURN_MAX_NUMBER_OF_JOBS);
 			return false;
 		}

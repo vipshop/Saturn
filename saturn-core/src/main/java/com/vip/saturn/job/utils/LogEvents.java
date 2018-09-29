@@ -12,6 +12,12 @@ public class LogEvents {
 
 		public static final String SHUTDOWN = "EXECUTOR_SHUTDOWN";
 
+		public static final String INIT_OR_SHUTDOWN = "EXECUTOR_INIT_OR_SHUTDOWN";
+
 		public static final String REINIT = "EXECUTOR_REINIT";
+
+		public static final String RESTART = "EXECUTOR_RESTART";
+
+		public static final String DUMP = "EXECUTOR_DUMP";
 	}
 }

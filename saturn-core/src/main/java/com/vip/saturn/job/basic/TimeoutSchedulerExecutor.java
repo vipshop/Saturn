@@ -1,6 +1,8 @@
 package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +78,12 @@ public class TimeoutSchedulerExecutor {
 					ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 				}
 			} catch (Throwable t) {
-				log.warn("Failed to force stop timeout job", t);
+				JavaShardingItemCallable javaShardingItemCallable = shardingItemFutureTask.getCallable();
+				if (javaShardingItemCallable != null) {
+					LogUtils.warn(log, javaShardingItemCallable.getJobName(), "Failed to force stop timeout job", t);
+				} else {
+					LogUtils.warn(log, "unknown job", "Failed to force stop timeout job", t);
+				}
 			}
 		}
 

@@ -26,6 +26,7 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.SaturnTrigger;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -105,12 +106,12 @@ public abstract class AbstractElasticJob implements Stopable {
 	}
 
 	public final void execute() {
-		log.trace("Saturn start to execute job [{}].", jobName);
+		LogUtils.debug(log, jobName, "Saturn start to execute job [{}]", jobName);
 		// 对每一个jobScheduler，作业对象只有一份，多次使用，所以每次开始执行前先要reset
 		reset();
 
 		if (configService == null) {
-			log.warn("configService is null");
+			LogUtils.warn(log, jobName, "configService is null");
 			return;
 		}
 
@@ -121,23 +122,22 @@ public abstract class AbstractElasticJob implements Stopable {
 			}
 
 			if (!configService.isJobEnabled()) {
-				if (log.isDebugEnabled()) {
-					log.debug("{} is disabled, cannot be continued, do nothing about business.", jobName);
-				}
+				LogUtils.debug(log, jobName, "{} is disabled, cannot be continued, do nothing about business.",
+						jobName);
 				return;
 			}
 
 			shardingContext = executionContextService.getJobExecutionShardingContext();
 			if (shardingContext.getShardingItems() == null || shardingContext.getShardingItems().isEmpty()) {
-				if (log.isDebugEnabled()) {
-					log.debug("{} 's items of the executor is empty, do nothing about business.", jobName);
-				}
+				LogUtils.debug(log, jobName, "{} 's items of the executor is empty, do nothing about business.",
+						jobName);
 				callbackWhenShardingItemIsEmpty(shardingContext);
 				return;
 			}
 
 			if (configService.isInPausePeriod()) {
-				log.info("the job {} current running time is in pausePeriod, do nothing about business.", jobName);
+				LogUtils.info(log, jobName,
+						"the job {} current running time is in pausePeriod, do nothing about business.", jobName);
 				return;
 			}
 
@@ -147,7 +147,8 @@ public abstract class AbstractElasticJob implements Stopable {
 				failoverService.failoverIfNecessary();
 			}
 
-			log.trace("Saturn finish to execute job [{}], sharding context:{}.", jobName, shardingContext);
+			LogUtils.debug(log, jobName, "Saturn finish to execute job [{}], sharding context:{}.", jobName,
+					shardingContext);
 		} catch (Exception e) {
 			log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 		} finally {
@@ -198,15 +199,17 @@ public abstract class AbstractElasticJob implements Stopable {
 			if (itemStat != null) {
 				long ephemeralOwner = itemStat.getEphemeralOwner();
 				if (ephemeralOwner != sessionId) {
-					log.info("[{}] msg=item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}",
-							jobName, item, ephemeralOwner, sessionId);
+					LogUtils.info(log, jobName,
+							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}",
+							item, ephemeralOwner, sessionId);
 					return false;
 				} else {
 					return true;
 				}
 			}
 			// 如果itemStat是空，要么是已经failover完了，要么是没有节点failover；两种情况都返回false
-			log.info("[{}] msg=item={} 's running node is not exists, zk sessionid={} ", jobName, item, sessionId);
+			LogUtils.info(log, jobName, "item={} 's running node is not exists, zk sessionid={} ", item, sessionId);
+
 			return false;
 		} catch (Throwable e) {
 			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);

@@ -1,6 +1,8 @@
 package com.vip.saturn.job.executor;
 
 import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,9 +33,9 @@ public class PeriodicTruncateNohupOutService {
 	}
 
 	public void start() {
-		log.info("start PeriodicTruncateNohupOutService");
+		LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "start PeriodicTruncateNohupOutService");
 		if (StringUtils.isBlank(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE)) {
-			log.warn("File path of saturn-nohup.out is not set, please check.");
+			LogUtils.warn(log, LogEvents.ExecutorEvent.INIT, "File path of saturn-nohup.out is not set, please check.");
 			return;
 		}
 
@@ -43,7 +45,7 @@ public class PeriodicTruncateNohupOutService {
 	}
 
 	public void shutdown() {
-		log.info("shutdown PeriodicTruncateNohupOutService");
+		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "shutdown PeriodicTruncateNohupOutService");
 		if (truncateLogService != null) {
 			truncateLogService.shutdownNow();
 		}
@@ -56,14 +58,17 @@ public class PeriodicTruncateNohupOutService {
 			try (RandomAccessFile file = new RandomAccessFile(SystemEnvProperties.VIP_SATURN_LOG_OUTFILE,
 					"rw"); FileChannel fc = file.getChannel()) {
 				if (fc.size() > SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES) {
-					log.info("truncate {} as size over {} bytes", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE,
+					LogUtils.info(log, TruncateLogRunnable.class.getCanonicalName(),
+							"truncate {} as size over {} bytes", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE,
 							SystemEnvProperties.VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES);
 					fc.truncate(TRUNCATE_SIZE);
 				}
 			} catch (FileNotFoundException e) {
-				log.debug("saturn-nohup.out is not found:", SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, e);
+				LogUtils.debug(log, TruncateLogRunnable.class.getCanonicalName(), "saturn-nohup.out is not found:",
+						SystemEnvProperties.VIP_SATURN_LOG_OUTFILE, e);
 			} catch (Exception e) {
-				log.debug("exception throws during handle saturn-nohup.out", e);
+				LogUtils.debug(log, TruncateLogRunnable.class.getCanonicalName(),
+						"exception throws during handle saturn-nohup.out", e);
 			}
 		}
 	}

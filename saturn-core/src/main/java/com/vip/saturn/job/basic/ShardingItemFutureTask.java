@@ -1,6 +1,7 @@
 package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.SaturnJobReturn;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,12 +73,11 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
 				if (e instanceof IllegalMonitorStateException || e instanceof ThreadDeath) {
-					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(),
-							"business thread pool maybe crashed"), e);
+					LogUtils.warn(log, callable.getJobName(), "business thread pool maybe crashed", e);
 					if (callFuture != null) {
 						callFuture.cancel(false);
 					}
-					log.warn(SaturnConstant.LOG_FORMAT, callable.getJobName(),
+					LogUtils.warn(log, callable.getJobName(),
 							"close the old business thread pool, and re-create new one");
 					callable.getSaturnJob().getJobScheduler().reCreateExecutorService();
 				}
@@ -89,8 +89,8 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			return ret;
 		} finally {
 			done();
-			log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", callable.getJobName(),
-					callable.getItem(), callable.getExecutionTime());
+			LogUtils.debug(log, callable.getJobName(), "job:[{}] item:[{}] finish execution, which takes {}ms",
+					callable.getJobName(), callable.getItem(), callable.getExecutionTime());
 		}
 	}
 
@@ -110,8 +110,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.onTimeout();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()),
-						t);
+				LogUtils.error(log, callable.getJobName(), t.toString(), t);
 			}
 
 			try {
@@ -119,8 +118,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					callable.postForceStop();
 				}
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), t.getMessage()),
-						t);
+				LogUtils.error(log, callable.getJobName(), t.toString(), t);
 			}
 
 			callable.checkAndSetSaturnJobReturn();
@@ -133,8 +131,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 					doneFinallyCallback.call();
 				}
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, callable.getJobName(), e.getMessage()),
-						e);
+				LogUtils.error(log, callable.getJobName(), e.toString(), e);
 			}
 		}
 	}
@@ -146,11 +143,11 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			try {
 				// interrupt thread one time, wait business thread to break, wait 2000ms at most
 				if (!isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-					log.info("try to interrupt business thread");
+					LogUtils.info(log, shardingItemCallable.getJobName(), "try to interrupt business thread");
 					businessThread.interrupt();
 					for (int i = 0; i < 20; i++) {
 						if (isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-							log.info("interrupt business thread done");
+							LogUtils.info(log, shardingItemCallable.getJobName(), "interrupt business thread done");
 							return;
 						}
 						Thread.sleep(100L);
@@ -158,19 +155,19 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 				}
 				// stop thread
 				while (!isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-					log.info("try to force stop business thread");
+					LogUtils.info(log, shardingItemCallable.getJobName(), "try to force stop business thread");
 					businessThread.stop();
 					if (isBusinessBreak(shardingItemFutureTask, shardingItemCallable)) {
-						log.info("force stop business thread done");
+						LogUtils.info(log, shardingItemCallable.getJobName(), "force stop business thread done");
 						return;
 					}
 					Thread.sleep(50L);
 				}
-				log.info("kill business thread done");
+				LogUtils.info(log, shardingItemCallable.getJobName(), "kill business thread done");
 			} catch (InterruptedException e) {// NOSONAR
 			}
 		} else {
-			log.warn("business thread is null while killing it");
+			LogUtils.warn(log, shardingItemCallable.getJobName(), "business thread is null while killing it");
 		}
 	}
 
