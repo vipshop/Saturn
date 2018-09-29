@@ -19,5 +19,7 @@ public class LogEvents {
 		public static final String RESTART = "EXECUTOR_RESTART";
 
 		public static final String DUMP = "EXECUTOR_DUMP";
+
+		public static final String COMMON = "COMMON";
 	}
 }
