@@ -15,6 +15,8 @@ import com.vip.saturn.job.constant.Constant;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 import com.vip.saturn.job.sharding.utils.CuratorUtils;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -101,7 +103,7 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			throw new RuntimeException("zk connect fail, zkList is " + zkConfig.getServerLists(), ex);
 		}
 
-		log.info("zkClient is created successfully.");
+		LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, "zkClient is created successfully.");
 	}
 
 	private CuratorFramework buildZkClient() {
@@ -145,8 +147,8 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 					});
 		}
 
-		log.info(
-				"msg=Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}, retry_times: {}",
+		LogUtils.info(log, LogEvents.ExecutorEvent.COMMON,
+				"Saturn job: zookeeper registry center init, server lists is: {}, connection_timeout: {}, session_timeout: {}, retry_times: {}",
 				zkConfig.getServerLists(), connectionTimeout, sessionTimeout, zkConfig.getMaxRetries());
 		return builder.build();
 	}
@@ -304,10 +306,12 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		try {
 			client.delete().guaranteed().forPath(key);
 		} catch (KeeperException.NotEmptyException e) {
-			log.debug("try to delete path:" + key + " but fail for NotEmptyException", e);
+			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON,
+					"try to delete path:" + key + " but fail for NotEmptyException", e);
 			deleteChildrenIfNeeded(key);
 		} catch (KeeperException.NoNodeException e) {
-			log.debug("try to delete path:" + key + " but fail for NoNodeException", e);
+			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON,
+					"try to delete path:" + key + " but fail for NoNodeException", e);
 		} catch (final Exception ex) {
 			RegExceptionHandler.handleException(ex);
 		}

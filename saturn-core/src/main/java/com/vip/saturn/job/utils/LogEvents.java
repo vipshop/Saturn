@@ -21,5 +21,8 @@ public class LogEvents {
 		public static final String DUMP = "EXECUTOR_DUMP";
 
 		public static final String COMMON = "COMMON";
+
+		public static final String FORCE_STOP = "FORCE_STOP";
+
 	}
 }

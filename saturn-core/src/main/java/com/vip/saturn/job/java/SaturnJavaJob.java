@@ -6,6 +6,8 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +47,7 @@ public class SaturnJavaJob extends CrondJob {
 				setJobVersion(version);
 			} catch (Throwable t) {
 				// only log the error message as getJobVersion should not block the init process
-				String errMsg = String
-						.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "error throws during get job version");
-				log.error(errMsg, t);
+				LogUtils.error(log, jobName, "error throws during get job version", t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
@@ -58,11 +58,10 @@ public class SaturnJavaJob extends CrondJob {
 		JobConfiguration currentConf = configService.getJobConfiguration();
 		String jobClassStr = currentConf.getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			log.error(SaturnConstant.LOG_FORMAT, jobName, "jobClass is not set");
+			LogUtils.error(log, jobName, "jobClass is not set");
 			throw new JobInitAlarmException("jobClass is not set");
 		}
-		log.info(SaturnConstant.LOG_FORMAT, jobName,
-				String.format("start to create job business instance, jobClass is %s", jobClassStr));
+		LogUtils.info(log, jobName, "start to create job business instance, jobClass is {}", jobClassStr);
 		if (jobBusinessInstance == null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
@@ -72,7 +71,7 @@ public class SaturnJavaJob extends CrondJob {
 				try {
 					jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
 				} catch (NoSuchMethodException e) {
-					log.info(SaturnConstant.LOG_FORMAT, jobName,
+					LogUtils.info(log, jobName,
 							"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
 				}
 				// 业务没有重写getObject方法，BaseSaturnJob会默认返回null
@@ -88,7 +87,7 @@ public class SaturnJavaJob extends CrondJob {
 			}
 		}
 		if (jobBusinessInstance == null) {
-			log.error(SaturnConstant.LOG_FORMAT, jobName, "job instance is null");
+			LogUtils.info(log, jobName, "job instance is null");
 			throw new JobInitAlarmException("job instance is null");
 		}
 	}
@@ -126,7 +125,7 @@ public class SaturnJavaJob extends CrondJob {
 				shardingItemFutureTask.setCallFuture(callFuture);
 				futureTaskMap.put(key, shardingItemFutureTask);
 			} catch (Throwable t) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+				LogUtils.error(log, jobName, t.getMessage(), t);
 				retMap.put(key, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
 						SaturnSystemErrorGroup.FAIL));
 			}
@@ -138,7 +137,7 @@ public class SaturnJavaJob extends CrondJob {
 			try {
 				futureTask.getCallFuture().get();
 			} catch (Exception e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+				LogUtils.error(log, jobName, e.getMessage(), e);
 				retMap.put(item, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, e.getMessage(),
 						SaturnSystemErrorGroup.FAIL));
 				continue;
@@ -169,13 +168,13 @@ public class SaturnJavaJob extends CrondJob {
 			if (currentThread != null) {
 				try {
 					if (shardingItemCallable.forceStop()) {
-						log.info("[{}] msg=Force stop job, jobName:{}, item:{}", jobName, jobName,
-								shardingItemCallable.getItem());
+						LogUtils.info(log, LogEvents.ExecutorEvent.FORCE_STOP, "Force stop job, jobName:{}, item:{}",
+								jobName, shardingItemCallable.getItem());
 						shardingItemCallable.beforeForceStop();
 						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
 					}
 				} catch (Throwable t) {
-					log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+					LogUtils.error(log, jobName, t.getMessage(), t);
 				}
 			}
 		}
@@ -191,7 +190,7 @@ public class SaturnJavaJob extends CrondJob {
 			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) throws Throwable {
 
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=Running SaturnJavaJob,  jobClass [{}], item [{}]", jobName, jobClass, key);
+		LogUtils.info(log, jobName, "Running SaturnJavaJob,  jobClass [{}], item [{}]", jobClass, key);
 
 		try {
 			Object ret = new JobBusinessClassMethodCaller() {
@@ -254,7 +253,7 @@ public class SaturnJavaJob extends CrondJob {
 			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable, final String methodName,
 			final Integer key, final String value) {
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob {},  jobClass is {}", jobName, methodName, jobClass);
+		LogUtils.info(log, jobName, "SaturnJavaJob {},  jobClass is {}", methodName, jobClass);
 
 		try {
 			new JobBusinessClassMethodCaller() {
@@ -274,7 +273,7 @@ public class SaturnJavaJob extends CrondJob {
 
 	private void callJobBusinessClassMethodEnableOrDisable(final String methodName) {
 		String jobClass = configService.getJobConfiguration().getJobClass();
-		log.info("[{}] msg=SaturnJavaJob {},  jobClass is {}", jobName, methodName, jobClass);
+		LogUtils.info(log, jobName, "SaturnJavaJob {},  jobClass is {}", methodName, jobClass);
 		try {
 			new JobBusinessClassMethodCaller() {
 				@Override

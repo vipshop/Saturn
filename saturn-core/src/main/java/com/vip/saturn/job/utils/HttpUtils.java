@@ -44,7 +44,7 @@ public class HttpUtils {
 			try {
 				httpClient.close();
 			} catch (IOException e) {
-				log.error("Exception during httpclient closed.", e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Exception during httpclient closed.", e);
 			}
 		}
 	}

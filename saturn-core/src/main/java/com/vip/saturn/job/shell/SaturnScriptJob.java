@@ -3,7 +3,11 @@ package com.vip.saturn.job.shell;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
-import com.vip.saturn.job.basic.*;
+import com.vip.saturn.job.basic.CrondJob;
+import com.vip.saturn.job.basic.JavaShardingItemCallable;
+import com.vip.saturn.job.basic.SaturnExecutionContext;
+import com.vip.saturn.job.basic.ShardingItemCallable;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.slf4j.Logger;
@@ -58,7 +62,7 @@ public class SaturnScriptJob extends CrondJob {
 
 			final String execParameter = getRealItemValue(jobParameter, jobValue); // 作业分片的对应值
 
-			log.debug("jobname={}, key= {}, jobParameter={}", jobName, key, execParameter);
+			LogUtils.debug(log, jobName, "jobname={}, key= {}, jobParameter={}", jobName, key, execParameter);
 			executorService.submit(new Runnable() {
 				@Override
 				public void run() {
@@ -66,7 +70,7 @@ public class SaturnScriptJob extends CrondJob {
 					try {
 						jobReturn = innerHandleWithListener(jobName, key, execParameter, shardingContext);
 					} catch (Throwable e) {
-						log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+						LogUtils.error(log, jobName, e.getMessage(), e);
 						jobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Error: " + e.getMessage(),
 								SaturnSystemErrorGroup.FAIL);
 					} finally {
@@ -80,7 +84,7 @@ public class SaturnScriptJob extends CrondJob {
 		try {
 			latch.await();
 		} catch (final InterruptedException ex) {
-			log.error("[{}] msg=SaturnScriptJob: Job {} is interrupted", jobName, jobName);
+			LogUtils.error(log, jobName, "SaturnScriptJob: Job {} is interrupted", jobName);
 			Thread.currentThread().interrupt();
 		}
 
@@ -114,7 +118,7 @@ public class SaturnScriptJob extends CrondJob {
 		try {
 			saturnJobReturn = innerHandle(callable);
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.getMessage(), t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, t.getMessage(),
 					SaturnSystemErrorGroup.FAIL);
 		}
@@ -122,7 +126,8 @@ public class SaturnScriptJob extends CrondJob {
 		callable.setSaturnJobReturn(saturnJobReturn);
 		afterExecution(callable);
 
-		log.debug("job:[{}] item:[{}] finish execution, which takes {}ms", jobName, item, callable.getExecutionTime());
+		LogUtils.debug(log, jobName, "job:[{}] item:[{}] finish execution, which takes {}ms", jobName, item,
+				callable.getExecutionTime());
 
 		return saturnJobReturn;
 	}
@@ -130,9 +135,9 @@ public class SaturnScriptJob extends CrondJob {
 	protected SaturnJobReturn innerHandle(ShardingItemCallable callable) {
 		SaturnJobReturn saturnJobReturn = null;
 		try {
-			String saturnOutputPath = String.format(ScriptPidUtils.JOBITEMOUTPUTPATH,
-					callable.getShardingContext().getExecutorName(), jobName, callable.getItem(), random.nextInt(10000),
-					System.currentTimeMillis());
+			String saturnOutputPath = String
+					.format(ScriptPidUtils.JOBITEMOUTPUTPATH, callable.getShardingContext().getExecutorName(), jobName,
+							callable.getItem(), random.nextInt(10000), System.currentTimeMillis());
 			callable.getEnvMap().put(SystemEnvProperties.NAME_VIP_SATURN_OUTPUT_PATH, saturnOutputPath);
 
 			ScriptJobRunner scriptJobRunner = new ScriptJobRunner(callable.getEnvMap(), this, callable.getItem(),
@@ -145,7 +150,7 @@ public class SaturnScriptJob extends CrondJob {
 			}
 			callable.setBusinessReturned(scriptJobRunner.isBusinessReturned());
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, t.getMessage()), t);
+			LogUtils.error(log, jobName, t.getMessage(), t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, t.getMessage(),
 					SaturnSystemErrorGroup.FAIL);
 		}
@@ -155,7 +160,7 @@ public class SaturnScriptJob extends CrondJob {
 	@Override
 	public void forceStop() {
 		super.forceStop();
-		log.info("[{}] msg=shell executor invoked forceStop, watchDogList = {}", jobName, watchDogList);
+		LogUtils.info(log, jobName, "shell executor invoked forceStop, watchDogList = {}", watchDogList);
 		if (watchDogList == null || watchDogList.isEmpty()) {
 			ScriptPidUtils.forceStopRunningShellJob(executorName, jobName);
 		} else {
@@ -165,7 +170,7 @@ public class SaturnScriptJob extends CrondJob {
 			}
 
 			for (SaturnExecuteWatchdog watchDog : tmp) {
-				log.info("[{}] msg=Job {}-{} is stopped, force the script {} to exit.", jobName, watchDog.getJobName(),
+				LogUtils.info(log, jobName, "Job {}-{} is stopped, force the script {} to exit.", watchDog.getJobName(),
 						watchDog.getJobItem(), watchDog.getExecParam());
 				// kill process and stop watchdog, mark forceStop
 				// it will use kill, but not kill -9.

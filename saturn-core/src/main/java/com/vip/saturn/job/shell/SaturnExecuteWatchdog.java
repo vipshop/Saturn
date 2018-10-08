@@ -1,14 +1,16 @@
 package com.vip.saturn.job.shell;
 
-import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
-import java.lang.reflect.Field;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.OS;
 import org.apache.commons.exec.Watchdog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Watchdog for shell job process, provide this function that kill process when timeout or forceStop.
@@ -112,7 +114,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 				monitoringProcess.exitValue();
 			}
 		} catch (final IllegalThreadStateException itse) { // NOSONAR
-			log.debug("the monitoring process is not stopped");
+			LogUtils.debug(log, jobName, "the monitoring process is not stopped");
 			if (isWatching()) {
 				hasKilledProcess = true;
 				// not use process.destroy(), should kill children firstly, then kill the process
@@ -121,7 +123,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 				}
 			}
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 		} finally {
 			cleanUp();
 		}
@@ -150,10 +152,10 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 			Field field = cls.getDeclaredField("pid");
 			field.setAccessible(true);
 			Object pid = field.get(p);
-			log.debug("Get Process Id: {}", pid);
+			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON, "Get Process Id: {}", pid);
 			return Long.parseLong(pid.toString());
 		} catch (Exception e) {
-			log.error("msg=Getting pid error: {}", e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Getting pid error: " + e.getMessage(), e);
 			return INVALID_PID;
 		}
 	}
