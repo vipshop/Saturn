@@ -11,6 +11,7 @@
 
 package com.vip.saturn.job.internal.analyse;
 
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
@@ -52,10 +53,10 @@ public class AnalyseResetListenerManager extends AbstractListenerManager {
 			if (JobNodePath.getNodeFullPath(jobName, AnalyseNode.RESET).equals(path)
 					&& (Type.NODE_UPDATED == event.getType() || Type.NODE_ADDED == event.getType())) {
 				if (ResetCountType.RESET_ANALYSE.equals(new String(event.getData().getData()))) {
-					log.info("[{}] msg=job:{} reset anaylse count.", jobName, jobName);
+					LogUtils.info(log, jobName, "job:{} reset anaylse count.", jobName);
 					ProcessCountStatistics.resetAnalyseCount(executorName, jobName);
 				} else if (ResetCountType.RESET_SERVERS.equals(new String(event.getData().getData()))) {
-					log.info("[{}] msg=job:{} reset success/failure count.", jobName, jobName);
+					LogUtils.info(log, jobName, "job:{} reset success/failure count", jobName);
 					ProcessCountStatistics.resetSuccessFailureCount(executorName, jobName);
 				}
 			}
