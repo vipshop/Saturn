@@ -5,7 +5,6 @@ import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
 import com.vip.saturn.job.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.log4j.pattern.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,8 @@ public class SaturnExecutorService {
 	private InitNewJobService initNewJobService;
 	private ExecutorConfigService executorConfigService;
 	private RestartAndDumpService restartExecutorService;
+
+	private Object saturnApplication;
 
 	public SaturnExecutorService(CoordinatorRegistryCenter coordinatorRegistryCenter, String executorName,
 			SaturnExecutorExtension saturnExecutorExtension) {
@@ -274,4 +275,11 @@ public class SaturnExecutorService {
 		return executorConfigService == null ? new ExecutorConfig() : executorConfigService.getExecutorConfig();
 	}
 
+	public Object getSaturnApplication() {
+		return saturnApplication;
+	}
+
+	public void setSaturnApplication(Object saturnApplication) {
+		this.saturnApplication = saturnApplication;
+	}
 }

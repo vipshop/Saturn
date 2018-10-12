@@ -7,7 +7,6 @@ import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.utils.ItemUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -16,7 +15,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.junit.Assert;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +32,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -51,7 +50,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 	public void A_JavaMultiJobWithLoad() throws Exception {
 		String preferList = null;
 		multiJobSharding(preferList);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	@Test
@@ -59,7 +58,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 	public void B_JavaMultiJobWithLoadWithPreferList() throws Exception {
 		String preferList = "executorName" + "0," + "executorName" + 1;
 		multiJobSharding(preferList);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	public void multiJobSharding(String preferListJob3) throws Exception {
@@ -205,7 +204,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		itemsJob3Exe1 = ItemUtils.toItemList(regCenter.getDirectly(
 				JobNodePath.getNodeFullPath(jobName3, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 
-		stopExecutor(0); // 停第1个executor
+		stopExecutorGracefully(0); // 停第1个executor
 		Thread.sleep(1000);
 		runAtOnce(jobName1);
 		runAtOnce(jobName2);
@@ -266,7 +265,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		removeJob(jobName3);
 
 		Thread.sleep(1000);
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(2000);
 		forceRemoveJob(jobName1);
 		forceRemoveJob(jobName2);

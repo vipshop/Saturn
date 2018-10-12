@@ -522,11 +522,13 @@ public class ScriptPidUtils {
 	 */
 
 	public static boolean isPidRunning(long pid) {
+		// not support mac os
 		String path = "/proc/" + pid;
 		return new File(path).exists();
 	}
 
 	public static boolean isPidRunning(String pid) {
+		// not support mac os
 		String path = "/proc/" + pid;
 		return new File(path).exists();
 	}

@@ -5,7 +5,6 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobInitAlarmException;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,12 +54,12 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	private void createJobBusinessInstanceIfNecessary() {
-		JobConfiguration currentConf = configService.getJobConfiguration();
-		String jobClassStr = currentConf.getJobClass();
+		String jobClassStr = configService.getJobConfiguration().getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
 			log.error(SaturnConstant.LOG_FORMAT, jobName, "jobClass is not set");
 			throw new JobInitAlarmException("jobClass is not set");
 		}
+		jobClassStr = jobClassStr.trim();
 		log.info(SaturnConstant.LOG_FORMAT, jobName,
 				String.format("start to create job business instance, jobClass is %s", jobClassStr));
 		if (jobBusinessInstance == null) {
@@ -68,16 +67,42 @@ public class SaturnJavaJob extends CrondJob {
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 			Thread.currentThread().setContextClassLoader(jobClassLoader);
 			try {
-				Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
+				Class<?> jobClass = jobClassLoader.loadClass(jobClassStr);
+
 				try {
-					jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
-				} catch (NoSuchMethodException e) {
-					log.info(SaturnConstant.LOG_FORMAT, jobName,
-							"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
+					Object saturnApplication = saturnExecutorService.getSaturnApplication();
+					if (saturnApplication != null) {
+						Class<?> ssaClazz = jobClassLoader
+								.loadClass("com.vip.saturn.job.spring.SpringSaturnApplication");
+						if (ssaClazz.isInstance(saturnApplication)) {
+							jobBusinessInstance = saturnApplication.getClass().getMethod("getJobInstance", Class.class)
+									.invoke(saturnApplication, jobClass);
+							if (jobBusinessInstance != null) {
+								log.info(SaturnConstant.LOG_FORMAT, jobName, "get job instance from spring");
+							}
+						}
+					}
+				} catch (ClassNotFoundException e) {
+					log.debug(SaturnConstant.LOG_FORMAT, jobName, "didn't use SpringSaturnApplication");
+				} catch (Throwable t) {
+					log.error(SaturnConstant.LOG_FORMAT, jobName, "get job instance from spring error", t);
+				}
+
+				if (jobBusinessInstance == null) {
+					try {
+						jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
+						if (jobBusinessInstance != null) {
+							log.info(SaturnConstant.LOG_FORMAT, jobName, "get job instance from getObject");
+						}
+					} catch (NoSuchMethodException e) {
+						log.info(SaturnConstant.LOG_FORMAT, jobName,
+								"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
+					}
 				}
 				// 业务没有重写getObject方法，BaseSaturnJob会默认返回null
 				if (jobBusinessInstance == null) {
 					jobBusinessInstance = jobClass.newInstance();
+					log.info(SaturnConstant.LOG_FORMAT, jobName, "get job instance from newInstance");
 				}
 				SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 				jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);

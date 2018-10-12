@@ -200,13 +200,13 @@ public class SaturnAutoBasic {
 
 	public static Main startExecutor(int index) throws Exception {
 		assertThat(nestedZkUtils.isStarted());
-		Main saturnContainer = saturnExecutorList.get(index);
-		if (saturnContainer != null) {
+		Main main = saturnExecutorList.get(index);
+		if (main != null) {
 			// 如果节点正在运行则退出
 			log.warn("the executor{} already exist.", index);
-			return saturnContainer;
+			return main;
 		} else {
-			Main main = new Main();
+			main = new Main();
 			String executorName = "executorName" + index;
 			String[] args = {"-namespace", NAMESPACE, "-executorName", executorName};
 			main.launchInner(args, Main.class.getClassLoader(), Main.class.getClassLoader());
@@ -218,11 +218,28 @@ public class SaturnAutoBasic {
 
 	public static void stopExecutor(int index) throws Exception {
 		assertThat(saturnExecutorList.size()).isGreaterThan(index);
-		Main saturnContainer = saturnExecutorList.get(index);
-		if (saturnContainer != null) {
-			saturnContainer.shutdown();
+		Main main = saturnExecutorList.get(index);
+		if (main != null) {
+			main.shutdown();
 		} else {
-			log.warn("the {} SaturnContainer has stopped", index);
+			log.warn("the {} Executor has stopped", index);
+		}
+		saturnExecutorList.set(index, null);
+		for (Main tmp : saturnExecutorList) {
+			if (tmp != null) {
+				return;
+			}
+		}
+		saturnExecutorList.clear();
+	}
+
+	public static void stopExecutorGracefully(int index) throws Exception {
+		assertThat(saturnExecutorList.size()).isGreaterThan(index);
+		Main main = saturnExecutorList.get(index);
+		if (main != null) {
+			main.shutdownGracefully();
+		} else {
+			log.warn("the {} Executor has stopped", index);
 		}
 		saturnExecutorList.set(index, null);
 		for (Main tmp : saturnExecutorList) {
@@ -235,9 +252,19 @@ public class SaturnAutoBasic {
 
 	public static void stopExecutorList() throws Exception {
 		for (int i = 0; i < saturnExecutorList.size(); i++) {
-			Main saturnContainer = saturnExecutorList.get(i);
-			if (saturnContainer != null) {
-				saturnContainer.shutdown();
+			Main main = saturnExecutorList.get(i);
+			if (main != null) {
+				main.shutdown();
+			}
+		}
+		saturnExecutorList.clear();
+	}
+
+	public static void stopExecutorListGracefully() throws Exception {
+		for (int i = 0; i < saturnExecutorList.size(); i++) {
+			Main main = saturnExecutorList.get(i);
+			if (main != null) {
+				main.shutdownGracefully();
 			}
 		}
 		saturnExecutorList.clear();
@@ -245,8 +272,8 @@ public class SaturnAutoBasic {
 
 	public static ExecutorConfig getExecutorConfig(int index) {
 		assertThat(saturnExecutorList.size()).isGreaterThan(index);
-		Main saturnContainer = saturnExecutorList.get(index);
-		SaturnExecutor saturnExecutor = (SaturnExecutor) saturnContainer.getSaturnExecutor();
+		Main main = saturnExecutorList.get(index);
+		SaturnExecutor saturnExecutor = (SaturnExecutor) main.getSaturnExecutor();
 		return saturnExecutor.getSaturnExecutorService().getExecutorConfig();
 	}
 
@@ -330,12 +357,12 @@ public class SaturnAutoBasic {
 
 	public static void runAtOnce(String jobName) {
 		for (int i = 0; i < saturnExecutorList.size(); i++) {
-			Main saturnContainer = saturnExecutorList.get(i);
-			if (saturnContainer == null) {
+			Main main = saturnExecutorList.get(i);
+			if (main == null) {
 				continue;
 			}
 			String path = JobNodePath
-					.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, saturnContainer.getExecutorName()));
+					.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, main.getExecutorName()));
 
 			if (regCenter.isExisted(path)) {
 				regCenter.remove(path);
@@ -346,12 +373,12 @@ public class SaturnAutoBasic {
 
 	public static void forceStopJob(String jobName) {
 		for (int i = 0; i < saturnExecutorList.size(); i++) {
-			Main saturnContainer = saturnExecutorList.get(i);
-			if (saturnContainer == null) {
+			Main main = saturnExecutorList.get(i);
+			if (main == null) {
 				continue;
 			}
 			String path = JobNodePath
-					.getNodeFullPath(jobName, String.format(ServerNode.STOPONETIME, saturnContainer.getExecutorName()));
+					.getNodeFullPath(jobName, String.format(ServerNode.STOPONETIME, main.getExecutorName()));
 
 			if (regCenter.isExisted(path)) {
 				regCenter.remove(path);
@@ -599,10 +626,10 @@ public class SaturnAutoBasic {
 				public boolean docheck() {
 
 					for (int i = 0; i < saturnExecutorList.size(); i++) {
-						Main saturnContainer = saturnExecutorList.get(i);
+						Main main = saturnExecutorList.get(i);
 						for (int j = 0; j < shardCount; j++) {
 							long pid = ScriptPidUtils
-									.getFirstPidFromFile(saturnContainer.getExecutorName(), jobName, "" + j);
+									.getFirstPidFromFile(main.getExecutorName(), jobName, "" + j);
 							if (pid > 0 && ScriptPidUtils.isPidRunning(pid)) {
 								return false;
 							}

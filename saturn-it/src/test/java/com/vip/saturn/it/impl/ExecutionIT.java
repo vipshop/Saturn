@@ -25,7 +25,7 @@ public class ExecutionIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -105,7 +105,7 @@ public class ExecutionIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		removeJob(jobConfiguration.getJobName());
 		Thread.sleep(1000);
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(1000);
 		forceRemoveJob(jobConfiguration.getJobName());
 	}
@@ -178,7 +178,7 @@ public class ExecutionIT extends AbstractSaturnIT {
 
 		LongtimeJavaJob.statusMap.clear();
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(1000);
 		forceRemoveJob(jobName);
 	}

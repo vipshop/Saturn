@@ -31,7 +31,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -113,7 +113,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		System.out.println(items);
 		assertThat(items).hasSize(1);
 
-		stopExecutor(0); // 停第1个executor
+		stopExecutorGracefully(0); // 停第1个executor
 
 		Thread.sleep(1000);
 		assertThat(regCenter.getDirectly(SaturnExecutorsNode.SHARDING_COUNT_PATH)).isEqualTo("10");
@@ -137,7 +137,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		System.out.println(items);
 		assertThat(items).isEmpty();
 
-		stopExecutor(1); // 停第2个executor
+		stopExecutorGracefully(1); // 停第2个executor
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(1000);
@@ -166,7 +166,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		removeJob(jobName);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(2000);
 		forceRemoveJob(jobName);
 	}
@@ -236,7 +236,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		System.out.println(items);
 		assertThat(items).isEmpty();
 
-		stopExecutor(0); // 停第1个executor
+		stopExecutorGracefully(0); // 停第1个executor
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(1000);
@@ -294,7 +294,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		Thread.sleep(1000);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName);
 	}
 
@@ -365,7 +365,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		System.out.println(items);
 		assertThat(items).isEmpty();
 
-		stopExecutor(0); // 停第1个executor
+		stopExecutorGracefully(0); // 停第1个executor
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(1000);
@@ -396,7 +396,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		Thread.sleep(1000);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName);
 	}
 
@@ -450,7 +450,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 		// executor2下线
 		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-		stopExecutor(1);
+		stopExecutorGracefully(1);
 		Thread.sleep(1000L);
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
@@ -464,7 +464,7 @@ public class ShardingIT extends AbstractSaturnIT {
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName);
 	}
 
@@ -519,7 +519,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 		// executor2下线
 		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-		stopExecutor(1);
+		stopExecutorGracefully(1);
 		Thread.sleep(1000L);
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
@@ -541,7 +541,7 @@ public class ShardingIT extends AbstractSaturnIT {
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName);
 	}
 
@@ -604,7 +604,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-			stopExecutor(1);
+			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
@@ -634,7 +634,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -701,7 +701,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-			stopExecutor(1);
+			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
@@ -723,7 +723,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -790,7 +790,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-			stopExecutor(1);
+			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
@@ -812,7 +812,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -879,7 +879,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 			// executor2下线
 			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
-			stopExecutor(1);
+			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
@@ -901,7 +901,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -967,7 +967,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
-			stopExecutor(1);
+			stopExecutorGracefully(1);
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -987,7 +987,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -1060,7 +1060,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
-			stopExecutor(0);
+			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -1080,7 +1080,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -1153,7 +1153,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
-			stopExecutor(0);
+			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
@@ -1173,7 +1173,7 @@ public class ShardingIT extends AbstractSaturnIT {
 					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
-			stopExecutorList();
+			stopExecutorListGracefully();
 			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
@@ -1247,7 +1247,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			}
 		}, 10);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName1);
 		forceRemoveJob(jobName2);
 	}
@@ -1309,7 +1309,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			}
 		}, 10);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName1);
 	}
 
@@ -1371,7 +1371,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		assertThat(mtime).isEqualTo(mtime2);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName1);
 	}
 
@@ -1443,7 +1443,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		}, 10);
 
 		// offline executor2
-		stopExecutor(1);
+		stopExecutorGracefully(1);
 		Thread.sleep(1000);
 
 		waitForFinish(new FinishCheck() {
@@ -1458,7 +1458,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		assertThat(data3.contains(executor2.getExecutorName())).isFalse();
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		forceRemoveJob(jobName1);
 	}
 

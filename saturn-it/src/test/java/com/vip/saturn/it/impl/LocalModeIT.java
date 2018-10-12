@@ -32,13 +32,13 @@ public class LocalModeIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
 	@After
 	public void after() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		SimpleJavaJob.statusMap.clear();
 	}
 
@@ -254,9 +254,9 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 30);
 
 		// 下线0,1,2
-		stopExecutor(0);
-		stopExecutor(1);
-		stopExecutor(2);
+		stopExecutorGracefully(0);
+		stopExecutorGracefully(1);
+		stopExecutorGracefully(2);
 
 		// 上线一个executor
 		startOneNewExecutorList();

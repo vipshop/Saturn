@@ -35,8 +35,8 @@ public class ExecutorConfigIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
-		stopExecutorList();
 	}
 
 	private void addOrUpdateConfig(String key, String value) throws IOException {

@@ -30,7 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -66,6 +68,8 @@ public class SaturnExecutor {
 
 	private ClassLoader jobClassLoader;
 
+	private Object saturnApplication;
+
 	private SaturnExecutorService saturnExecutorService;
 
 	private ResetCountService resetCountService;
@@ -85,11 +89,12 @@ public class SaturnExecutor {
 	private ExecutorService shutdownJobsExecutorService;
 
 	private SaturnExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
-			ClassLoader jobClassLoader) {
+			ClassLoader jobClassLoader, Object saturnApplication) {
 		this.executorName = executorName;
 		this.namespace = namespace;
 		this.executorClassLoader = executorClassLoader;
 		this.jobClassLoader = jobClassLoader;
+		this.saturnApplication = saturnApplication;
 		this.raiseAlarmExecutorService = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
 		this.shutdownJobsExecutorService = Executors
@@ -169,7 +174,7 @@ public class SaturnExecutor {
 	 * SaturnExecutor工厂入口
 	 */
 	public static SaturnExecutor buildExecutor(String namespace, String executorName, ClassLoader executorClassLoader,
-			ClassLoader jobClassLoader) {
+			ClassLoader jobClassLoader, Object saturnApplication) {
 		if ("$SaturnSelf".equals(namespace)) {
 			throw new RuntimeException("The namespace cannot be $SaturnSelf");
 		}
@@ -181,8 +186,72 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
+		if (saturnApplication == null) {
+			saturnApplication = validateAndLoadSaturnApplication(jobClassLoader);
+		}
 		init(executorName, namespace, executorClassLoader, jobClassLoader);
-		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader);
+		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader, saturnApplication);
+	}
+
+	private static Object validateAndLoadSaturnApplication(ClassLoader jobClassLoader) {
+		try {
+			String saturnProperties = "saturn.properties";
+			int count = 0;
+			Enumeration<URL> resources = jobClassLoader.getResources(saturnProperties);
+			if (resources == null || !resources.hasMoreElements()) {
+				count = 0;
+			} else {
+				while (resources.hasMoreElements()) {
+					resources.nextElement();
+					count++;
+				}
+			}
+			if (count == 0) {
+				return null;
+			}
+			if (count > 1) {
+				throw new RuntimeException("the file [" + saturnProperties + "] shouldn't exceed one");
+			}
+
+			// load SaturnApplication, and init it
+			Properties properties = new Properties();
+			InputStream is = null;
+			try {
+				is = jobClassLoader.getResourceAsStream(saturnProperties);
+				properties.load(is);
+			} finally {
+				if (is != null) {
+					is.close();
+				}
+			}
+			String appClassStr = properties.getProperty("app.class");
+			if (StringUtils.isNotBlank(appClassStr)) {
+				appClassStr = appClassStr.trim();
+				ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+				try {
+					Thread.currentThread().setContextClassLoader(jobClassLoader);
+					Class<?> appClass = jobClassLoader.loadClass(appClassStr);
+					String saturnApplicationClassStr = "com.vip.saturn.job.application.SaturnApplication";
+					Class<?> saturnApplicationClass = jobClassLoader.loadClass(saturnApplicationClassStr);
+					if (saturnApplicationClass.isAssignableFrom(appClass)) {
+						Object saturnApplication = appClass.newInstance();
+						appClass.getMethod("init").invoke(saturnApplication);
+						return saturnApplication;
+					} else {
+						throw new RuntimeException(
+								"the app.class " + appClassStr + " must implement " + saturnApplicationClassStr);
+					}
+				} finally {
+					Thread.currentThread().setContextClassLoader(oldCL);
+				}
+			}
+			return null;
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static void init(String executorName, String namespace, ClassLoader executorClassLoader,
@@ -364,8 +433,7 @@ public class SaturnExecutor {
 				saturnExecutorService.registerJobsWatcher();
 
 				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "The executor {} start successfully which used {} ms",
-						executorName,
-						System.currentTimeMillis() - startTime);
+						executorName, System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
 				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to start executor {}", executorName, t);
 				shutdown0();
@@ -399,6 +467,7 @@ public class SaturnExecutor {
 			saturnExecutorService = new SaturnExecutorService(regCenter, executorName, saturnExecutorExtension);
 			saturnExecutorService.setJobClassLoader(jobClassLoader);
 			saturnExecutorService.setExecutorClassLoader(executorClassLoader);
+			saturnExecutorService.setSaturnApplication(saturnApplication);
 
 			StartCheckUtil.setOk(StartCheckItem.ZK);
 		} catch (Exception e) {
@@ -584,6 +653,19 @@ public class SaturnExecutor {
 				}
 			}
 
+			if (saturnApplication != null) {
+				ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+				try {
+					Thread.currentThread().setContextClassLoader(jobClassLoader);
+					saturnApplication.getClass().getMethod("destroy").invoke(saturnApplication);
+				} catch (Throwable t) {
+					LogUtils.error(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "SaturnApplication destroy error",
+							t);
+				} finally {
+					Thread.currentThread().setContextClassLoader(oldCL);
+				}
+			}
+
 			LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "executor {} is stopped gracefully",
 					executorName);
 		} finally {
@@ -657,6 +739,7 @@ public class SaturnExecutor {
 			shutdown0();
 			restartThread.interrupt();
 			raiseAlarmExecutorService.shutdownNow();
+			shutdownJobsExecutorService.shutdownNow();
 			ShutdownHandler.removeShutdownCallback(executorName);
 			isShutdown = true;
 		} finally {

@@ -20,13 +20,13 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
-		stopExecutorList();
 	}
 
 	@After
 	public void after() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	@Test

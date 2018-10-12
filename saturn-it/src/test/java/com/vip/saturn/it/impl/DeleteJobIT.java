@@ -29,7 +29,7 @@ public class DeleteJobIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -100,8 +100,8 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
-		stopExecutor(0);
-		stopExecutor(1);
+		stopExecutorGracefully(0);
+		stopExecutorGracefully(1);
 		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("0/2 * * * * ?");
 		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
@@ -194,7 +194,7 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(1000);
 		configJob(jobName, ConfigurationNode.TO_DELETE, 1);
 

@@ -1,10 +1,8 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.fail;
-
-import java.io.File;
-import java.util.Random;
-
+import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.JobType;
+import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ScriptPidUtils;
@@ -12,9 +10,10 @@ import org.apache.commons.exec.OS;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import java.io.File;
+import java.util.Random;
+
+import static org.assertj.core.api.Assertions.fail;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ScriptJobIT extends AbstractSaturnIT {
@@ -31,13 +30,13 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
 	@After
 	public void after() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	@Test
@@ -45,7 +44,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		if (!OS.isFamilyUnix()) {
 			return;
 		}
-		startExecutorList(1);
+		startOneNewExecutorList();
+
 		String jobName = "test_A_Normalsh";
 		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
 		jobConfiguration.setCron("*/4 * * * * ?");
@@ -89,7 +89,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_B_ForceStop() throws Exception {
-		if (!OS.isFamilyUnix()) {
+		// bacause ScriptPidUtils.isPidRunning don't support mac
+		if (!OS.isFamilyUnix() || OS.isFamilyMac()) {
 			return;
 		}
 
@@ -105,13 +106,17 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
+
 		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
 		Thread.sleep(1000);
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
+
 		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(2000);
+
+		// 不优雅退出，直接关闭
 		stopExecutor(0);
 
 		try {
@@ -148,7 +153,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 	 */
 	@Test
 	public void test_C_ReuseItem() throws Exception {
-		if (!OS.isFamilyUnix()) {
+		// because ScriptPidUtils.isPidRunning don't supoort mac
+		if (!OS.isFamilyUnix() || OS.isFamilyMac()) {
 			return;
 		}
 
@@ -164,15 +170,19 @@ public class ScriptJobIT extends AbstractSaturnIT {
 
 		addJob(jobConfiguration);
 		Thread.sleep(1000);
+
 		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
 		Thread.sleep(1000);
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
+
 		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(1000);
 		disableJob(jobName);
 		Thread.sleep(1000);
+
+		// 不优雅退出，直接关闭
 		stopExecutor(0);
 
 		try {

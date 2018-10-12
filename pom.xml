@@ -21,15 +21,18 @@
 		<module>saturn-core</module>
 		<module>saturn-executor</module>
 		<module>saturn-plugin</module>
-		<module>saturn-embed</module>
-		<module>saturn-console-api</module>
-		<module>saturn-console-web</module>
-		<module>saturn-console</module>
-		<!-- saturn-console-core and saturn-console-old will be deprecated after 3.0.0 -->
-		<module>saturn-console-core</module>
-		<module>saturn-console-old</module>
-		<module>saturn-it</module>
-	</modules>
+        <module>saturn-spring</module>
+        <module>saturn-springboot</module>
+        <module>saturn-embed</module>
+        <module>saturn-embed-spring</module>
+        <module>saturn-console-api</module>
+        <module>saturn-console-web</module>
+        <module>saturn-console</module>
+        <!-- saturn-console-core and saturn-console-old will be deprecated after 3.0.0 -->
+        <module>saturn-console-core</module>
+        <module>saturn-console-old</module>
+        <module>saturn-it</module>
+    </modules>
 
 	<properties>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
