@@ -2,8 +2,6 @@ package com.vip.saturn.job.utils;
 
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.exception.SaturnJobException;
-import java.net.ConnectException;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.config.RequestConfig;
@@ -14,6 +12,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.ConnectException;
+import java.util.Map;
 
 /**
  * Util for handling update job cron .
@@ -34,7 +35,8 @@ public class UpdateJobCronUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
 
-			log.info("update job cron of domain {} to url {}: {}, retry count: {}", namespace, targetUrl, cron, i);
+			LogUtils.error(log, jobName, "update job cron of domain {} to url {}: {}, retry count: {}", namespace,
+					targetUrl, cron, i);
 
 			CloseableHttpClient httpClient = null;
 			try {
@@ -59,15 +61,16 @@ public class UpdateJobCronUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				log.error("SaturnJobException throws: {}", se);
+				LogUtils.error(log, jobName, "SaturnJobException throws: ", se);
 				throw se;
 			} catch (ConnectException e) {
-				log.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
+				String template = "Fail to connect to url:%s, throws: ";
+				LogUtils.error(log, jobName, String.format(template, targetUrl), e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				log.error("Other exception throws: {}", e);
+				LogUtils.error(log, jobName, "Other exception throws: ", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuietly(httpClient);

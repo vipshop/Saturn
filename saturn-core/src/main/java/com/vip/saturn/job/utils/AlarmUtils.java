@@ -35,8 +35,9 @@ public class AlarmUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/alarms/raise";
 
-			log.info("raise alarm of domain {} to url {}: {}, retry count: {}", namespace, targetUrl, alarmInfo.toString(), i);
-
+			LogUtils.info(log, LogEvents.ExecutorEvent.COMMON,
+					"raise alarm of domain {} to url {}: {}, retry count: {}", namespace, targetUrl,
+					alarmInfo.toString(), i);
 			CloseableHttpClient httpClient = null;
 			try {
 				checkParameters(alarmInfo);
@@ -57,15 +58,16 @@ public class AlarmUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				log.error("SaturnJobException throws: {}", se);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "SaturnJobException throws: ", se);
 				throw se;
 			} catch (ConnectException e) {
-				log.error("Fail to connect to url:{}, throws: {}", targetUrl, e);
+				String template = "Fail to connect to url:%s, throws: ";
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, String.format(template, targetUrl), e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				log.error("Other exception throws: {}", e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Other exception throws", e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuietly(httpClient);

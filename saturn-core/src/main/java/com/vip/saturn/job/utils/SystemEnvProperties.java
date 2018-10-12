@@ -116,7 +116,7 @@ public class SystemEnvProperties {
 			try {
 				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.parseInt(maxNumberOfJobs);
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 
@@ -126,7 +126,7 @@ public class SystemEnvProperties {
 			try {
 				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.parseInt(shutdownTimeout);
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 		if (VIP_SATURN_SHUTDOWN_TIMEOUT > VIP_SATURN_SHUTDOWN_TIMEOUT_MAX) {
@@ -147,7 +147,7 @@ public class SystemEnvProperties {
 			try {
 				VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientSessionTimeoutStr);
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 
@@ -158,7 +158,7 @@ public class SystemEnvProperties {
 			try {
 				VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientConnectionTimeoutStr);
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 
@@ -167,7 +167,7 @@ public class SystemEnvProperties {
 			try {
 				VIP_SATURN_ZK_CLIENT_RETRY_TIMES = Integer.parseInt(zkClientRetryTimes);
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 
@@ -186,7 +186,7 @@ public class SystemEnvProperties {
 					VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC = interval_in_sec;
 				}
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 
@@ -199,7 +199,7 @@ public class SystemEnvProperties {
 					VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES = sizeLimit;
 				}
 			} catch (Throwable t) {
-				log.error("msg=" + t.getMessage(), t);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
 	}

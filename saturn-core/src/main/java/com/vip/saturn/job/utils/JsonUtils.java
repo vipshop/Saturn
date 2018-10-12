@@ -38,7 +38,7 @@ public class JsonUtils {
 			String value = getObjectMapper().writeValueAsString(obj);
 			return value;
 		} catch (Exception e) {
-			log.error("msg=Fail at toJSON: ", e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Fail at toJSON: ", e);
 		}
 		return "";
 	}
@@ -55,7 +55,7 @@ public class JsonUtils {
 		try {
 			result = getObjectMapper().readValue(jsonStr, type);
 		} catch (Exception e) {
-			log.error("msg=Fail at fromJSON: ", e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Fail at fromJSON: ", e);
 		}
 		return result;
 	}
@@ -71,7 +71,7 @@ public class JsonUtils {
 		try {
 			result = getObjectMapper().readValue(jsonStr, javaType);
 		} catch (Exception e) {
-			log.error("msg=Fail at fromJSON: ", e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Fail at fromJSON: ", e);
 		}
 		return result;
 	}
@@ -81,7 +81,7 @@ public class JsonUtils {
 		try {
 			result = getObjectMapper().readValue(jsonStr, type);
 		} catch (Exception e) {
-			log.error("msg=Fail at fromJSON: ", e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Fail at fromJSON: ", e);
 		}
 		return result;
 	}

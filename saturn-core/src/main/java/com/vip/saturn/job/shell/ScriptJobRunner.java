@@ -7,6 +7,7 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.commons.exec.CommandLine;
@@ -71,7 +72,7 @@ public class ScriptJobRunner {
 			if (!saturnOutputFile.exists()) {
 				FileUtils.forceMkdir(saturnOutputFile.getParentFile());
 				if (!saturnOutputFile.createNewFile()) {
-					log.warn("file {} already exsits.", saturnOutputPath);
+					LogUtils.warn(log, jobName, "file {} already exsits.", saturnOutputPath);
 				}
 			}
 		}
@@ -85,8 +86,8 @@ public class ScriptJobRunner {
 						.append(envEntrySet.getValue()).append(';');
 			}
 		}
-		String execParameter = envStringBuilder.toString() + PREFIX_COMAND
-				+ ScriptPidUtils.filterEnvInCmdStr(env, itemValue);
+		String execParameter =
+				envStringBuilder.toString() + PREFIX_COMAND + ScriptPidUtils.filterEnvInCmdStr(env, itemValue);
 		final CommandLine cmdLine = new CommandLine("/bin/sh");
 		cmdLine.addArguments(new String[]{"-c", execParameter}, false);
 		return cmdLine;
@@ -102,8 +103,9 @@ public class ScriptJobRunner {
 					businessReturned = true; // 脚本成功返回数据
 				}
 			} catch (Throwable t) {
-				log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} read SaturnJobReturn from {"
-						+ saturnOutputFile.getAbsolutePath() + "} error", t);
+				String template = "%s - %s read SaturnJobReturn from %s error";
+				LogUtils.error(log, jobName, String.format(template, jobName, item, saturnOutputFile.getAbsolutePath()),
+						t);
 				tmp = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + t,
 						SaturnSystemErrorGroup.FAIL);
 			}
@@ -117,12 +119,12 @@ public class ScriptJobRunner {
 			String executorName = job.getExecutorName();
 			if (timeoutSeconds > 0) {
 				watchdog = new SaturnExecuteWatchdog(timeoutSeconds * 1000, jobName, item, itemValue, executorName);
-				log.info("[{}] msg=Job {} enable timeout control : {} s ", jobName, jobName, timeoutSeconds);
+				LogUtils.info(log, jobName, "Job {} enable timeout control : {} s ", jobName, timeoutSeconds);
 			} else { // 需要指定超时值，才会启用watchdog: 强行指定为5年
 				watchdog = new SaturnExecuteWatchdog(5L * 365 * 24 * 3600 * 1000, jobName, item, itemValue,
 						executorName);
 				if (log.isDebugEnabled()) {
-					log.debug("[{}] msg=Job {} disable timeout control", jobName, jobName);
+					LogUtils.debug(log, jobName, "Job {} disable timeout control", jobName);
 				}
 			}
 		}
@@ -136,7 +138,8 @@ public class ScriptJobRunner {
 			createSaturnJobReturnFile();
 			saturnJobReturn = execute(timeoutSeconds);
 		} catch (Throwable t) {
-			log.error("[{" + jobName + "}] msg={" + jobName + "}-{" + item + "} Exception", t);
+			String template = "%s - %s Exception";
+			LogUtils.error(log, jobName, String.format(template, jobName, item), t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t,
 					SaturnSystemErrorGroup.FAIL);
 		} finally {
@@ -165,10 +168,10 @@ public class ScriptJobRunner {
 
 		try {
 			long start = System.currentTimeMillis();
-			log.info("[{}] msg=Begin executing {}-{} {}", jobName, jobName, item, commandLine);
+			LogUtils.info(log, jobName, "Begin executing {}-{} {}", jobName, item, commandLine);
 			int exitValue = executor.execute(commandLine, env);
 			long end = System.currentTimeMillis();
-			log.info("[{}] msg=Finish executing {}-{} {}, the exit value is {}, cost={}ms", jobName, jobName, item,
+			LogUtils.info(log, jobName, "Finish executing {}-{} {}, the exit value is {}, cost={}ms", jobName, item,
 					commandLine, exitValue, (end - start));
 
 			SaturnJobReturn tmp = readSaturnJobReturn();
@@ -184,8 +187,8 @@ public class ScriptJobRunner {
 				handleJobLog(processOutputStream.getJobLog());
 				processOutputStream.close();
 			} catch (Exception ex) {
-				log.error("[{}] msg={}-{} Error at closing output stream. Should not be concern: {}", jobName,
-						jobName, item, ex);
+				String template = "%s-%s Error at closing output stream. Should not be concern: ";
+				LogUtils.error(log, jobName, String.format(template, jobName, item), ex);
 			}
 			stopStreamHandler(streamHandler);
 			ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getPid());
@@ -196,7 +199,8 @@ public class ScriptJobRunner {
 	private void handleJobLog(String jobLog) {
 		// 出于系统保护考虑，jobLog不能超过1M
 		if (jobLog != null && jobLog.length() > SaturnConstant.MAX_JOB_LOG_DATA_LENGTH) {
-			log.info("As the job log exceed max length, only the previous {} characters will be reported",
+			LogUtils.info(log, jobName,
+					"As the job log exceed max length, only the previous {} characters will be reported",
 					SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 			jobLog = jobLog.substring(0, SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 		}
@@ -206,15 +210,15 @@ public class ScriptJobRunner {
 		// 提供给saturn-job-executor.log日志输出shell命令jobLog，以后若改为重定向到日志，则可删除此输出
 		System.out.println("[" + jobName + "] msg=" + jobName + "-" + item + ":" + jobLog);// NOSONAR
 
-		log.info("[{}] msg={}-{}: {}", jobName, jobName, item, jobLog);
+		LogUtils.info(log, jobName, "{}-{}: {}", jobName, item, jobLog);
 	}
 
 	private void stopStreamHandler(PumpStreamHandler streamHandler) {
 		try {
 			streamHandler.stop();
 		} catch (IOException ex) {
-			log.debug("[{}] msg={}-{} Error at closing log stream. Should not be concern: {}", jobName, jobName,
-					item, ex);
+			String template = "%s-%s Error at closing log stream. Should not be concern: ";
+			LogUtils.debug(log, jobName, String.format(template, jobName, item), ex);
 		}
 	}
 
@@ -225,21 +229,21 @@ public class ScriptJobRunner {
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
 					String.format("execute job timeout(%sms), %s", timeoutSeconds * 1000, errMsg),
 					SaturnSystemErrorGroup.TIMEOUT);
-			log.error("[{}] msg={}-{} timeout, {}", jobName, jobName, item, errMsg);
+			LogUtils.error(log, jobName, "{}-{} timeout, {}", jobName, item, errMsg);
 			return saturnJobReturn;
 		}
 
 		if (watchdog.isForceStop()) {
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-					"the job was forced to stop, " + errMsg,
-					SaturnSystemErrorGroup.FAIL);
-			log.error("[{}] msg={}-{} force stopped, {}", jobName, jobName, item, errMsg);
+					"the job was forced to stop, " + errMsg, SaturnSystemErrorGroup.FAIL);
+			LogUtils.error(log, jobName, "{}-{} force stopped, {}", jobName, item, errMsg);
 			return saturnJobReturn;
 		}
 
 		saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 				SaturnSystemErrorGroup.FAIL);
-		log.error("[{}] msg={}-{} Exception: {}", jobName, jobName, errMsg, e);
+		String template = "%s-%s Exception: ";
+		LogUtils.error(log, jobName, String.format(template, jobName), e);
 		return saturnJobReturn;
 	}
 }

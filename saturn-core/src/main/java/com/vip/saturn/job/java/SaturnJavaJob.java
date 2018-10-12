@@ -5,6 +5,9 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobInitAlarmException;
+import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +47,7 @@ public class SaturnJavaJob extends CrondJob {
 				setJobVersion(version);
 			} catch (Throwable t) {
 				// only log the error message as getJobVersion should not block the init process
-				String errMsg = String
-						.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "error throws during get job version");
-				log.error(errMsg, t);
+				LogUtils.error(log, jobName, "error throws during get job version", t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
@@ -56,12 +57,11 @@ public class SaturnJavaJob extends CrondJob {
 	private void createJobBusinessInstanceIfNecessary() {
 		String jobClassStr = configService.getJobConfiguration().getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
-			log.error(SaturnConstant.LOG_FORMAT, jobName, "jobClass is not set");
+			LogUtils.error(log, jobName, "jobClass is not set");
 			throw new JobInitAlarmException("jobClass is not set");
 		}
 		jobClassStr = jobClassStr.trim();
-		log.info(SaturnConstant.LOG_FORMAT, jobName,
-				String.format("start to create job business instance, jobClass is %s", jobClassStr));
+		LogUtils.info(log, jobName, "start to create job business instance, jobClass is {}", jobClassStr);
 		if (jobBusinessInstance == null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();

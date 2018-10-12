@@ -4,13 +4,15 @@
 package com.vip.saturn.job.trigger;
 
 import com.vip.saturn.job.basic.AbstractElasticJob;
-import com.vip.saturn.job.basic.SaturnConstant;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.quartz.Trigger;
 import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author chembo.huang
@@ -45,8 +47,9 @@ public class SaturnWorker implements Runnable {
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
 		if (ft == null) {
-			log.warn("[{}] msg=Based on configured schedule, the given trigger '" + trigger.getKey()
-					+ "' will never fire.", job.getJobName());
+			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON,
+					"Based on configured schedule, the given trigger {} will never fire.", trigger.getKey(),
+					job.getJobName());
 		}
 	}
 
@@ -154,7 +157,7 @@ public class SaturnWorker implements Runnable {
 				}
 
 			} catch (RuntimeException e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, job.getJobName(), e.getMessage()), e);
+				LogUtils.error(log, job.getJobName(), e.getMessage(), e);
 			}
 		}
 
