@@ -1,8 +1,7 @@
 - 入门
   - [快速开始](zh-cn/3.0/quickstart.md)
-  - [安装Saturn Console](zh-cn/3.0/saturn-console-deployment.md)
-  - [开发Shell作业](zh-cn/3.0/saturn-dev-shell.md)
-  - [开发Java作业](zh-cn/3.0/saturn-dev-java.md)
+  - [部署Saturn Console](zh-cn/3.0/saturn-console-deployment.md)
+  - [开发你的作业](zh-cn/3.0/saturn-dev-job.md)
   - [部署Saturn Executor](zh-cn/3.0/saturn-executor-deployment.md)
 
 - Console操作手册  

@@ -1,14 +1,12 @@
 ## Saturn
 
-> 一个分布式作业调度平台
+> 唯品会开源分布式作业调度平台
 
 ## 简介
 
-Saturn (任务调度系统)是唯品会开源的一个分布式任务调度平台，取代传统的Linux Cron/Spring Batch Job的方式，做到全域统一配置，统一监控，任务高可用以及分片并发处理。
+Saturn (任务调度系统)是唯品会开源的分布式作业调度平台，取代传统的Linux Cron/Spring Batch Job的方式，做到统一配置，统一监控，任务高可用以及分片并发处理。Saturn基于当当Elastic Job代码基础上自主研发的任务调度系统。
 
-Saturn是在当当开源的Elastic Job基础上，结合各方需求和我们的实践见解改良而成。
-
-本文档针适用于3.0版本
+本文档针对版本3.x版本。
 
 ## 重要特性
 
@@ -32,7 +30,7 @@ Saturn是在当当开源的Elastic Job基础上，结合各方需求和我们的
 * 支持失败率最高、最活跃和负荷最重的各域各节点TOP10的作业统计
 * 经受住唯品会生产800多个节点，每日10亿级别的调度考验
 
-## 开发团队
+## 贡献者
 
 * Dylan Xue <dylan_xueke@hotmail.com>
 * Chembo Huang <chemboking@qq.com>
