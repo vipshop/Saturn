@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -74,7 +73,7 @@ public class CommonUtils {
 		 */
 
 		for (File file : runtimeLibFiles) {
-			zip(file, "app" + FILE_SEPARATOR + "lib", zos);
+			zip(file, "app/lib", zos);
 		}
 		zos.close();
 	}
@@ -83,7 +82,7 @@ public class CommonUtils {
 		if (file == null || !file.exists())
 			return;
 		if (file.isFile()) {
-			String entryName = parent == null ? file.getName() : parent + FILE_SEPARATOR + file.getName();
+			String entryName = parent == null ? file.getName() : parent + "/" + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName));
 			try(FileInputStream fis = new FileInputStream(file)) {
 				int len = -1;
@@ -93,7 +92,7 @@ public class CommonUtils {
 				}
 			}
 		} else if (file.isDirectory()) {
-			String entryName = parent == null ? file.getName() : parent + FILE_SEPARATOR + file.getName();
+			String entryName = parent == null ? file.getName() : parent + "/" + file.getName();
 			zos.putNextEntry(new ZipEntry(entryName + "/"));
 			File[] listFiles = file.listFiles();
 			if (listFiles != null) {

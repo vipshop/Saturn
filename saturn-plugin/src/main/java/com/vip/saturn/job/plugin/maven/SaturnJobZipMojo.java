@@ -76,7 +76,7 @@ public class SaturnJobZipMojo extends AbstractMojo {
 				}
 			}
 		}
-		throw new MojoExecutionException("cannot read the saturn-job-core dependency.");
+		throw new MojoExecutionException("cannot read the saturn-job-api dependency.");
 	}
 
 }
