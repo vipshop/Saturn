@@ -618,6 +618,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				zkCluster.setZkClusterKey(zkClusterInfo.getZkClusterKey());
 				zkCluster.setZkAlias(zkClusterInfo.getAlias());
 				zkCluster.setZkAddr(zkClusterInfo.getConnectString());
+				zkCluster.setDescription(zkClusterInfo.getDescription());
 				newClusterMap.put(zkClusterInfo.getZkClusterKey(), zkCluster);
 			}
 		}
@@ -1082,27 +1083,29 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void createZkCluster(String zkClusterKey, String alias, String connectString)
+	public void createZkCluster(String zkClusterKey, String alias, String connectString, String description)
 			throws SaturnJobConsoleException {
 		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 		if (zkClusterInfo != null) {
 			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST,
 					String.format("ZK cluster[%s]已经存在", zkClusterKey));
 		}
-		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, "");
+		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, description, "");
 		notifyRefreshRegCenter();
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public void updateZkCluster(String zkClusterKey, String connectString) throws SaturnJobConsoleException {
+	public void updateZkCluster(String zkClusterKey, String connectString, String description)
+			throws SaturnJobConsoleException {
 		ZkClusterInfo zkClusterInfo = zkClusterInfoService.getByClusterKey(zkClusterKey);
 		if (zkClusterInfo == null) {
 			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
 					String.format("ZK cluster[%s]不存在", zkClusterKey));
 		}
-		// cannot change alias but only connection string
+		// cannot change alias but connectString and description
 		zkClusterInfo.setConnectString(connectString);
+		zkClusterInfo.setDescription(description);
 		zkClusterInfo.setLastUpdateTime(new Date());
 		zkClusterInfoService.updateZkCluster(zkClusterInfo);
 		notifyRefreshRegCenter();

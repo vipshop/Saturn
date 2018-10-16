@@ -116,9 +116,11 @@ public class RegistryCenterController extends AbstractGUIController {
 	@PostMapping(value = "/zkClusters")
 	public SuccessResponseEntity createZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey,
 			@AuditParam("alias") @RequestParam String alias,
-			@AuditParam("connectString") @RequestParam String connectString) throws SaturnJobConsoleException {
+			@AuditParam("connectString") @RequestParam String connectString,
+			@AuditParam("description") @RequestParam(required = false) String description)
+			throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
-		registryCenterService.createZkCluster(zkClusterKey, alias, connectString.trim());
+		registryCenterService.createZkCluster(zkClusterKey, alias, connectString.trim(), description);
 		return new SuccessResponseEntity();
 	}
 
@@ -126,9 +128,11 @@ public class RegistryCenterController extends AbstractGUIController {
 	@Audit
 	@PutMapping(value = "/zkClusters")
 	public SuccessResponseEntity updateZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey,
-			@AuditParam("newConnectString") @RequestParam String connectString) throws SaturnJobConsoleException {
+			@AuditParam("newConnectString") @RequestParam String connectString,
+			@AuditParam("description") @RequestParam(required = false) String description)
+			throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.registryCenterAddZkCluster);
-		registryCenterService.updateZkCluster(zkClusterKey, connectString.trim());
+		registryCenterService.updateZkCluster(zkClusterKey, connectString.trim(), description);
 		return new SuccessResponseEntity();
 	}
 

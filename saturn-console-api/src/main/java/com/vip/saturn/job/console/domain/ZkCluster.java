@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.vip.saturn.job.console.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,6 +19,8 @@ public class ZkCluster implements Serializable {
 	private String zkAlias;
 
 	private String zkAddr;
+
+	private String description;
 
 	private String digest;
 
@@ -60,6 +59,14 @@ public class ZkCluster implements Serializable {
 
 	public void setZkAddr(String zkAddr) {
 		this.zkAddr = zkAddr;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public String getDigest() {

@@ -13,7 +13,7 @@ public interface ZkClusterInfoService {
 
 	ZkClusterInfo getByClusterKey(String clusterKey);
 
-	int createZkCluster(String clusterKey, String alias, String connectString, String createdBy);
+	int createZkCluster(String clusterKey, String alias, String connectString, String description, String createdBy);
 
 	int updateZkCluster(ZkClusterInfo zkClusterInfo);
 

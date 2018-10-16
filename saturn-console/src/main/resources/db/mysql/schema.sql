@@ -430,5 +430,8 @@ UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHE
 UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
 UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
 
--- 3.1.2 update
+-- 3.2.0 update
 ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否重跑标志';
+
+-- 3.3.0 update
+ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';

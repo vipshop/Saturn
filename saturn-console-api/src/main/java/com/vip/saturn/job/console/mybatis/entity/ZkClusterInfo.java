@@ -16,6 +16,7 @@ public class ZkClusterInfo {
 	private String zkClusterKey;
 	private String alias;
 	private String connectString;
+	private String description;
 
 	public long getId() {
 		return id;
@@ -89,4 +90,11 @@ public class ZkClusterInfo {
 		this.connectString = connectString;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }
