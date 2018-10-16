@@ -32,6 +32,7 @@ public class ZkCluster implements Serializable {
 	@JsonIgnore
 	private transient AbstractConnectionListener connectionListener;
 
+	@JsonIgnore
 	private ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
 
 	public ZkCluster() {
