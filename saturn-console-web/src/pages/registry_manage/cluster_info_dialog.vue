@@ -11,6 +11,11 @@
                     <el-input v-model="clusterInfo.alias" :disabled="!isEditable"></el-input>
                 </el-col>
             </el-form-item>
+            <el-form-item label="集群描述" prop="description">
+                <el-col :span="20">
+                    <el-input type="textarea" v-model="clusterInfo.description" placeholder="请输入机房信息"></el-input>
+                </el-col>
+            </el-form-item>
             <el-form-item label="连接串" prop="connectString">
                 <el-col :span="20">
                     <el-input type="textarea" v-model="clusterInfo.connectString" placeholder="连接串用','分隔"></el-input>
@@ -58,9 +63,9 @@ export default {
             this.$emit('cluster-info-success');
           }, 3000);
         })
-        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); })
-        .finally(() => {
+        .catch(() => {
           this.loading = false;
+          this.$http.buildErrorHandler(`${url}请求失败！`);
         });
       } else {
         this.loading = true;
@@ -70,8 +75,8 @@ export default {
             this.$emit('cluster-info-success');
           }, 3000);
         })
-        .catch(() => { this.$http.buildErrorHandler(`${url}请求失败！`); })
-        .finally(() => {
+        .catch(() => {
+          this.$http.buildErrorHandler(`${url}请求失败！`);
           this.loading = false;
         });
       }
