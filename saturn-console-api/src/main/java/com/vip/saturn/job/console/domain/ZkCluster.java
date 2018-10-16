@@ -130,6 +130,9 @@ public class ZkCluster implements Serializable {
 		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) {
 			return false;
 		}
+		if (description != null ? !description.equals(zkCluster.description) : zkCluster.description != null) {
+			return false;
+		}
 		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
 
 	}
@@ -139,6 +142,7 @@ public class ZkCluster implements Serializable {
 		int result = zkClusterKey != null ? zkClusterKey.hashCode() : 0;
 		result = 31 * result + (zkAlias != null ? zkAlias.hashCode() : 0);
 		result = 31 * result + (zkAddr != null ? zkAddr.hashCode() : 0);
+		result = 31 * result + (description != null ? description.hashCode() : 0);
 		result = 31 * result + (digest != null ? digest.hashCode() : 0);
 		return result;
 	}
