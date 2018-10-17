@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -35,25 +36,47 @@ public class AuthorizationManageController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping("/addUserRoles")
-	public SuccessResponseEntity addUserRoles(@AuditParam("userName") @RequestParam String userName,
+	public SuccessResponseEntity addUserRoles(@AuditParam("userNames") @RequestParam String userNames,
 			@AuditParam("roleKey") @RequestParam String roleKey,
-			@AuditParam("namespace") @RequestParam String namespace,
+			@AuditParam("namespaces") @RequestParam String namespaces,
 			@AuditParam("needApproval") @RequestParam Boolean needApproval) throws SaturnJobConsoleException {
 		assertIsSystemAdmin();
 		String currentLoginUserName = getCurrentLoginUserName();
-		Date now = new Date();
-		UserRole userRole = new UserRole();
-		userRole.setUserName(userName);
-		userRole.setRoleKey(roleKey);
-		userRole.setNamespace(namespace);
-		userRole.setNeedApproval(needApproval);
-		userRole.setIsDeleted(false);
-		userRole.setCreatedBy(currentLoginUserName);
-		userRole.setCreateTime(now);
-		userRole.setLastUpdatedBy(currentLoginUserName);
-		userRole.setLastUpdateTime(now);
-		authorizationManageService.addUserRole(userRole);
+		List<String> userNameList = strSplitToList(userNames);
+		List<String> namespaceList = strSplitToList(namespaces);
+		// if add user to global role, the namespaces is empty
+		if (namespaceList.isEmpty()) {
+			namespaceList.add("");
+		}
+		for (String userName : userNameList) {
+			for (String namespace : namespaceList) {
+				Date now = new Date();
+				UserRole userRole = new UserRole();
+				userRole.setUserName(userName);
+				userRole.setRoleKey(roleKey);
+				userRole.setNamespace(namespace);
+				userRole.setNeedApproval(needApproval);
+				userRole.setIsDeleted(false);
+				userRole.setCreatedBy(currentLoginUserName);
+				userRole.setCreateTime(now);
+				userRole.setLastUpdatedBy(currentLoginUserName);
+				userRole.setLastUpdateTime(now);
+				authorizationManageService.addUserRole(userRole);
+			}
+		}
 		return new SuccessResponseEntity();
+	}
+
+	private List<String> strSplitToList(String str) {
+		List<String> list = new ArrayList<>();
+		String[] split = str.split(",");
+		for (String temp : split) {
+			temp = temp.trim();
+			if (!temp.isEmpty()) {
+				list.add(temp);
+			}
+		}
+		return list;
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
