@@ -16,6 +16,7 @@ import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
@@ -70,13 +71,13 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if (isShutdown) {
 				return;
 			}
-			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())
-					&& ServerNode.isRunOneTimePath(jobName, path, executorName)) {
+			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) && ServerNode
+					.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
-					log.info("[{}] msg=job run-at-once triggered.", jobName);
+					LogUtils.info(log, jobName, "[{}] msg=job run-at-once triggered.", jobName);
 					jobScheduler.triggerJob();
 				} else {
-					log.info("[{}] msg=job is running, run-at-once ignored.", jobName);
+					LogUtils.info(log, jobName, "[{}] msg=job is running, run-at-once ignored.", jobName);
 				}
 				coordinatorRegistryCenter.remove(path);
 			}
@@ -95,9 +96,9 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if (isShutdown) {
 				return;
 			}
-			if (ConfigurationNode.isToDeletePath(jobName, path)
-					&& (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())) {
-				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
+			if (ConfigurationNode.isToDeletePath(jobName, path) && (Type.NODE_ADDED == event.getType()
+					|| Type.NODE_UPDATED == event.getType())) {
+				LogUtils.info(log, jobName, "[{}] msg={} is going to be deleted.", jobName, jobName);
 				jobScheduler.shutdown(true);
 			}
 		}
@@ -117,7 +118,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			}
 			if (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
 				try {
-					log.info("[{}] msg={} is going to be stopped at once.", jobName, jobName);
+					LogUtils.info(log, jobName, "[{}] msg={} is going to be stopped at once.", jobName, jobName);
 					jobScheduler.getJob().forceStop();
 				} finally {
 					coordinatorRegistryCenter.remove(path);

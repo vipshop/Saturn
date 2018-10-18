@@ -18,7 +18,8 @@ public class TimeoutSchedulerExecutor {
 
 	private static Logger log = LoggerFactory.getLogger(TimeoutSchedulerExecutor.class);
 
-	private static ConcurrentHashMap<String, ScheduledThreadPoolExecutor> scheduledThreadPoolExecutorMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, ScheduledThreadPoolExecutor> scheduledThreadPoolExecutorMap =
+			new ConcurrentHashMap<>();
 
 	private TimeoutSchedulerExecutor() {
 
@@ -71,7 +72,8 @@ public class TimeoutSchedulerExecutor {
 				if (!shardingItemFutureTask.isDone() && javaShardingItemCallable.setTimeout()) {
 					String jobName = javaShardingItemCallable.getJobName();
 					Integer item = javaShardingItemCallable.getItem();
-					log.info("[{}] msg=Force stop timeout job, jobName:{}, item:{}", jobName, jobName, item);
+					LogUtils.info(log, jobName, "[{}] msg=Force stop timeout job, jobName:{}, item:{}", jobName,
+							jobName, item);
 					// 调用beforeTimeout函数
 					javaShardingItemCallable.beforeTimeout();
 					// 强杀

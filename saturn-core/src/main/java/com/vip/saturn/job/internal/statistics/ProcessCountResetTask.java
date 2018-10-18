@@ -2,6 +2,8 @@ package com.vip.saturn.job.internal.statistics;
 
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 执行统计信息清零的动作
- * 
+ *
  * @author linzhaoming
  *
  */
@@ -50,11 +52,11 @@ public class ProcessCountResetTask extends TimerTask {
 					// 清零zk统计值
 					jobScheduler.getServerService().persistProcessFailureCount(0);
 					jobScheduler.getServerService().persistProcessSuccessCount(0);
-					log.info("msg={} reset the job {}'s statistics data", executorName, jobName);
+					LogUtils.error(log, jobName, "msg={} reset the job {}'s statistics data", executorName, jobName);
 				}
 			}
 		} catch (Throwable t) {
-			log.error("process count reset error", t);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "process count reset error", t);
 		}
 	}
 }

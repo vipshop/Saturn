@@ -23,6 +23,8 @@ import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.JsonUtils;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.TypeFactory;
@@ -97,7 +99,7 @@ public class ConfigurationService extends AbstractSaturnService {
 				try {
 					jobScheduler.getJob().notifyJobEnabled();
 				} catch (Throwable t) {
-					LOGGER.error(t.getMessage(), t);
+					LogUtils.error(LOGGER, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 				}
 			}
 		});
@@ -110,7 +112,7 @@ public class ConfigurationService extends AbstractSaturnService {
 				try {
 					jobScheduler.getJob().notifyJobDisabled();
 				} catch (Throwable t) {
-					LOGGER.error(t.getMessage(), t);
+					LogUtils.error(LOGGER, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 				}
 			}
 		});
@@ -181,7 +183,9 @@ public class ConfigurationService extends AbstractSaturnService {
 				try {
 					result.put(Integer.valueOf(item), exec);
 				} catch (final NumberFormatException ex) {
-					LOGGER.warn("Sharding item key '%s' is invalid, it should be an integer, key '%s' will be dropped", item, item, ex);
+					LogUtils.warn(LOGGER, LogEvents.ExecutorEvent.COMMON,
+							"Sharding item key '%s' is invalid, it should be an integer, key '%s' will be dropped",
+							item, item, ex);
 				}
 			}
 		}

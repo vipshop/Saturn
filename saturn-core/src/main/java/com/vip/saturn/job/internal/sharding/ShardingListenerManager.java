@@ -3,6 +3,7 @@ package com.vip.saturn.job.internal.sharding;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.state.ConnectionState;
@@ -24,7 +25,7 @@ import com.vip.saturn.job.threads.SaturnThreadFactory;
  *
  */
 public class ShardingListenerManager extends AbstractListenerManager {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ShardingListenerManager.class);
+	private static final Logger log = LoggerFactory.getLogger(ShardingListenerManager.class);
 
 	private volatile boolean isShutdown;
 
@@ -56,7 +57,8 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				public void stateChanged(CuratorFramework client, ConnectionState newState) {
 					if ((newState == ConnectionState.CONNECTED) || (newState == ConnectionState.RECONNECTED)) {
 						// maybe node data have changed, so doBusiness whatever, it's okay for MSG job
-						LOGGER.info("state change to {}, trigger doBusiness and register necessary watcher.", newState);
+						LogUtils.info(log, jobName,
+								"state change to {}, trigger doBusiness and register necessary watcher.", newState);
 						doBusiness();
 						registerNecessaryWatcher();
 					}
@@ -72,7 +74,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 		if (executorService != null) {
 			executorService.shutdownNow();
 		}
-		if(connectionStateListener != null) {
+		if (connectionStateListener != null) {
 			removeConnectionStateListener(connectionStateListener);
 		}
 		isShutdown = true;
@@ -92,8 +94,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				if (superClassCanonicalName.equals(crondJobCanonicalName)) {
 					return true;
 				}
-				if (superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is CrondJob's
-																						// parent
+				if (superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is
+					// CrondJob's
+					// parent
 					return false;
 				}
 				superClass = superClass.getSuperclass();
@@ -127,15 +130,15 @@ public class ShardingListenerManager extends AbstractListenerManager {
 						if (jobScheduler == null || jobScheduler.getJob() == null) {
 							return;
 						}
-						LOGGER.info("[{}] msg={} trigger on-resharding", jobName, jobName);
+						LogUtils.info(log, jobName, "[{}] msg={} trigger on-resharding", jobName, jobName);
 						jobScheduler.getJob().onResharding();
 					} catch (Throwable t) {
-						LOGGER.error("Exception throws during resharding", t);
+						LogUtils.error(log, jobName, "Exception throws during resharding", t);
 					}
 				}
 			});
 		} catch (Throwable t) {
-			LOGGER.error("Exception throws during execute thread", t);
+			LogUtils.error(log, jobName, "Exception throws during execute thread", t);
 		}
 	}
 
@@ -147,17 +150,17 @@ public class ShardingListenerManager extends AbstractListenerManager {
 				return;
 			}
 			switch (event.getType()) {
-			case NodeCreated:
-			case NodeDataChanged: // NOSONAR
-				LOGGER.info("event type:{}, path:{}", event.getType(), event.getPath());
-				doBusiness();
-			default:
-				// use the thread pool to executor registerNecessaryWatcher by async,
-				// fix the problem:
-				// when zk is reconnected, this watcher thread is earlier than the notice of RECONNECTED EVENT,
-				// registerNecessaryWatcher will wait until reconnected or timeout,
-				// the drawback is that this watcher thread will block the notice of RECONNECTED EVENT.
-				registerNecessaryWatcher();
+				case NodeCreated:
+				case NodeDataChanged: // NOSONAR
+					LogUtils.info(log, jobName, "event type:{}, path:{}", event.getType(), event.getPath());
+					doBusiness();
+				default:
+					// use the thread pool to executor registerNecessaryWatcher by async,
+					// fix the problem:
+					// when zk is reconnected, this watcher thread is earlier than the notice of RECONNECTED EVENT,
+					// registerNecessaryWatcher will wait until reconnected or timeout,
+					// the drawback is that this watcher thread will block the notice of RECONNECTED EVENT.
+					registerNecessaryWatcher();
 			}
 		}
 

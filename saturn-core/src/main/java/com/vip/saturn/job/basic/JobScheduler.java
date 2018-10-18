@@ -286,7 +286,8 @@ public class JobScheduler {
 					job.shutdown();
 				}
 			} catch (final Exception e) {
-				log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+				LogUtils.error(log, jobName,
+						String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			}
 
 			listenerManager.shutdown();
