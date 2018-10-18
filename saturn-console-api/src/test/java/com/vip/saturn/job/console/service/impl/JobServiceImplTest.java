@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1434,4 +1433,83 @@ public class JobServiceImplTest {
 		condition.put("jobStatus", jobStatus);
 		return condition;
 	}
+
+	@Test
+	public void testGetJobConfigFromZK() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS)))
+				.thenReturn("100");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS)))
+				.thenReturn("100");
+		assertNotNull(jobService.getJobConfigFromZK(namespace, jobName));
+	}
+
+	@Test
+	public void testGetJobConfigFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfig(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobConfigSuccess() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName))
+				.thenReturn(new JobConfig4DB());
+		assertNotNull(jobService.getJobConfig(namespace, jobName));
+	}
+
+	@Test
+	public void testGetJobStatusFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("不能获取该作业（%s）的状态，因为该作业不存在", jobName));
+		jobService.getJobStatus(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobStatusSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		assertEquals(jobService.getJobStatus(namespace, jobName), JobStatus.READY);
+
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setEnabled(true);
+		assertEquals(jobService.getJobStatus(namespace, jobConfig), JobStatus.READY);
+	}
+
+	@Test
+	public void testGetServerList() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName))).thenReturn(null);
+		assertTrue(jobService.getJobServerList(namespace, jobName).isEmpty());
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		assertEquals(jobService.getJobServerList(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testGetJobConfigVoFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobConfigVoSuccess() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName))
+				.thenReturn(new JobConfig4DB());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		assertNotNull(jobService.getJobConfigVo(namespace, jobName));
+	}
+
 }
