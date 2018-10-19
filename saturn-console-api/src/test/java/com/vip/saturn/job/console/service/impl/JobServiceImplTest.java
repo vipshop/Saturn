@@ -15,8 +15,10 @@ import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Maps;
 import org.hamcrest.core.StringContains;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1510,6 +1512,233 @@ public class JobServiceImplTest {
 				.thenReturn(new JobConfig4DB());
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		assertNotNull(jobService.getJobConfigVo(namespace, jobName));
+	}
+
+	@Test
+	public void testUpdateJobConfigFailByJobNotExist() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName()))
+				.thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testUpdateJobConfigSuccess() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName()))
+				.thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testGetAllJobNamesFromZK() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath())).thenReturn(null);
+		assertTrue(jobService.getAllJobNamesFromZK(namespace).isEmpty());
+
+		when(curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath())).thenReturn(Lists.newArrayList(jobName));
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(true);
+		assertEquals(jobService.getAllJobNamesFromZK(namespace).size(), 1);
+	}
+
+	@Test
+	public void testUpdateJobCronFailByCronInvalid() throws SaturnJobConsoleException {
+		String cron = "error";
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("The cron expression is invalid: %s", cron));
+		jobService.updateJobCron(namespace, jobName, cron, null, userName);
+	}
+
+	@Test
+	public void testUpdateJobCronFailByJobNotExist() throws SaturnJobConsoleException {
+		String cron = "0 */2 * * * ?";
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(false);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("The job does not exists: %s", jobName));
+		jobService.updateJobCron(namespace, jobName, cron, null, userName);
+	}
+
+	@Test
+	public void testUpdateJobCronSuccess() throws SaturnJobConsoleException {
+		String cron = "0 */2 * * * ?";
+		Map<String, String> customContext = Maps.newHashMap();
+		customContext.put("test", "test");
+		CuratorFramework curatorFramework = mock(CuratorFramework.class);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(curatorFrameworkOp.getCuratorFramework()).thenReturn(curatorFramework);
+		when(curatorFramework.getNamespace()).thenReturn(namespace);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		jobService.updateJobCron(namespace, jobName, cron, customContext, userName);
+	}
+
+	@Test
+	public void testGetJobServers() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		when(curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host")))
+				.thenReturn("127.0.0.1");
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		assertEquals(jobService.getJobServers(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testGetJobServerStatus() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		assertEquals(jobService.getJobServersStatus(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testRunAtOneFailByNotReady() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceFailByNoExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName))).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceFailByNoOnlineExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("没有ONLINE的executor，不能立即执行");
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		String executor = "executor";
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList(executor));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
+				"true");
+		jobService.runAtOnce(namespace, jobName);
+		verify(curatorFrameworkOp).create(JobNodePath.getRunOneTimePath(jobName, executor));
+	}
+
+	@Test
+	public void testStopAtOneFailByNotStopping() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
+		jobService.stopAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testStopAtOnceFailByNoExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, "1", "running")))
+				.thenReturn(true);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("没有executor接管该作业(%s)，不能立即终止", jobName));
+		jobService.stopAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testStopAtOnceSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		String executor = "executor";
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, "1", "running")))
+				.thenReturn(true);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList(executor));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
+				"true");
+		jobService.stopAtOnce(namespace, jobName);
+		verify(curatorFrameworkOp).create(JobNodePath.getStopOneTimePath(jobName, executor));
+	}
+
+	@Test
+	public void testGetExecutionStatusByJobHasStopped() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		// test get execution status by job has stopped
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		assertTrue(jobService.getExecutionStatus(namespace, jobName).isEmpty());
+	}
+
+	@Test
+	public void testGetExecutionStatusByWithoutItem() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName))).thenReturn(null);
+		assertTrue(jobService.getExecutionStatus(namespace, jobName).isEmpty());
+	}
+
+	@Test
+	public void testGetExecutionStatus() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("server"));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerSharding(jobName, "server"))).thenReturn("0");
 	}
 
 }
