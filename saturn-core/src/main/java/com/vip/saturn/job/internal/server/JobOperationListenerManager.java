@@ -16,11 +16,16 @@ import com.vip.saturn.job.internal.config.ConfigurationNode;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 作业控制监听管理器.
@@ -32,12 +37,16 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 
 	private boolean isShutdown = false;
 
+	private ExecutorService jobDeleteExecutorService;
+
 	public JobOperationListenerManager(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 	}
 
 	@Override
 	public void start() {
+		jobDeleteExecutorService = Executors
+				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-" + jobName + "-jobDelete", false));
 		zkCacheManager.addTreeCacheListener(new TriggerJobRunAtOnceListener(),
 				JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, executorName)), 0);
 		zkCacheManager.addTreeCacheListener(new JobForcedToStopListener(),
@@ -50,6 +59,10 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 	public void shutdown() {
 		super.shutdown();
 		isShutdown = true;
+		if (jobDeleteExecutorService != null) {
+			// don't use shutdownNow, don't interrupt the thread
+			jobDeleteExecutorService.shutdown();
+		}
 		zkCacheManager.closeTreeCache(
 				JobNodePath.getNodeFullPath(jobName, String.format(ServerNode.RUNONETIME, executorName)), 0);
 		zkCacheManager.closeTreeCache(
@@ -70,8 +83,8 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if (isShutdown) {
 				return;
 			}
-			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())
-					&& ServerNode.isRunOneTimePath(jobName, path, executorName)) {
+			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) && ServerNode
+					.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
 					log.info("[{}] msg=job run-at-once triggered.", jobName);
 					jobScheduler.triggerJob();
@@ -95,10 +108,19 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if (isShutdown) {
 				return;
 			}
-			if (ConfigurationNode.isToDeletePath(jobName, path)
-					&& (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType())) {
+			if (ConfigurationNode.isToDeletePath(jobName, path) && (Type.NODE_ADDED == event.getType()
+					|| Type.NODE_UPDATED == event.getType())) {
 				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
-				jobScheduler.shutdown(true);
+				jobDeleteExecutorService.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							jobScheduler.shutdown(true);
+						} catch (Throwable t) {
+							LogUtils.error(log, jobName, "delete job error", t);
+						}
+					}
+				});
 			}
 		}
 	}

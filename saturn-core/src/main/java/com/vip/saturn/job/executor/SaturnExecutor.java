@@ -98,7 +98,7 @@ public class SaturnExecutor {
 		this.raiseAlarmExecutorService = Executors
 				.newSingleThreadExecutor(new SaturnThreadFactory(executorName + "-raise-alarm-thread", false));
 		this.shutdownJobsExecutorService = Executors
-				.newCachedThreadPool(new SaturnThreadFactory(executorName + "-shutdownJobs-thread", true));
+				.newCachedThreadPool(new SaturnThreadFactory(executorName + "-shutdownJobSchedulers-thread", true));
 		initRestartThread();
 		registerShutdownHandler();
 	}
@@ -543,7 +543,7 @@ public class SaturnExecutor {
 		}
 	}
 
-	private void shutdownUnfinishJobs() {
+	private void shutdownJobSchedulers() {
 		Map<String, JobScheduler> schdMap = JobRegistry.getSchedulerMap().get(executorName);
 		if (MapUtils.isEmpty(schdMap)) {
 			return;
@@ -560,13 +560,9 @@ public class SaturnExecutor {
 					@Override
 					public void run() {
 						try {
-							if (!regCenter.isConnected() || jobScheduler.getCurrentConf().isEnabled()) {
-								LogUtils.info(log, jobName, "job is enabled, start to force shutdown");
-								jobScheduler.stopJob(true);
-							}
 							jobScheduler.shutdown(false);
 						} catch (Throwable t) {
-							LogUtils.error(log, jobName, "job fail to shutdown", t);
+							LogUtils.error(log, jobName, "shutdown JobScheduler error", t);
 						}
 					}
 				}));
@@ -580,7 +576,7 @@ public class SaturnExecutor {
 			}
 		}
 
-		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Shutdown phase [shutdownUnfinishJobs] took {}ms",
+		LogUtils.info(log, LogEvents.ExecutorEvent.SHUTDOWN, "Shutdown phase [shutdownJobSchedulers] took {}ms",
 				System.currentTimeMillis() - startTime);
 	}
 
@@ -594,7 +590,7 @@ public class SaturnExecutor {
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterJobsWatcher();
 			}
-			shutdownUnfinishJobs();
+			shutdownJobSchedulers();
 			if (saturnExecutorService != null) {
 				saturnExecutorService.unregisterExecutor();
 			}
@@ -626,10 +622,13 @@ public class SaturnExecutor {
 		try {
 			LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "Try to stop executor {} gracefully",
 					executorName);
+			if (saturnExecutorService != null) {
+				saturnExecutorService.unregisterJobsWatcher();
+			}
+			// 先关闭统计信息上报，因为上报的zk结点为servers/xxx/xxx，如果放在下线后再关闭，则导致ExecutorCleanService执行后，仍然在上报统计信息，垃圾结点由此而生
 			shutdownAllCountThread();
 
 			if (saturnExecutorService != null) {
-				saturnExecutorService.unregisterJobsWatcher();
 				saturnExecutorService.unregisterExecutor();
 			}
 			if (resetCountService != null) {
@@ -642,7 +641,7 @@ public class SaturnExecutor {
 			TimeoutSchedulerExecutor.shutdownScheduler(executorName);
 			try {
 				blockUntilJobCompletedIfNotTimeout();
-				shutdownUnfinishJobs();
+				shutdownJobSchedulers();
 				JobRegistry.clearExecutor(executorName);
 			} finally {
 				if (connectionLostListener != null) {

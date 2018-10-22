@@ -186,7 +186,6 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 
 	@Override
 	public void close() {
-
 		CloseableUtils.closeQuietly(client);
 		if (zkConfig.isUseNestedZookeeper()) {
 			NestedZookeeperServers.getInstance().closeServer(zkConfig.getNestedPort());

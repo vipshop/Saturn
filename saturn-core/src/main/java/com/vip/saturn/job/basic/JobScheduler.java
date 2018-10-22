@@ -214,6 +214,12 @@ public class JobScheduler {
 		}
 	}
 
+	public void shutdownExecutorService() {
+		if (executorService != null && !executorService.isShutdown()) {
+			executorService.shutdown();
+		}
+	}
+
 	/**
 	 * 获取下次作业触发时间.可能被暂停时间段所影响。
 	 *
@@ -247,18 +253,6 @@ public class JobScheduler {
 	}
 
 	/**
-	 * 停止作业.
-	 * @param stopJob 是否强制停止作业
-	 */
-	public void stopJob(boolean stopJob) {
-		if (stopJob) {
-			job.abort();
-		} else {
-			job.stop();
-		}
-	}
-
-	/**
 	 * 立刻启动作业.
 	 */
 	public void triggerJob() {
@@ -275,21 +269,19 @@ public class JobScheduler {
 		statisticsService.shutdown();
 	}
 
-	/**
-	 * 关闭调度器.
-	 */
-	public void shutdown(boolean removejob) {
+	public void shutdown(boolean removeJob) {
 		synchronized (isShutdownFlag) {
 			isShutdownFlag.set(true);
-			try {
-				if (job != null) {
-					job.shutdown();
-				}
-			} catch (final Exception e) {
-				LogUtils.error(log, jobName, e.getMessage(), e);
+
+			// 关闭Listener
+			listenerManager.shutdown();
+
+			// 关闭作业：关闭调度器，强杀业务
+			if (job != null) {
+				job.shutdown();
 			}
 
-			listenerManager.shutdown();
+			// 关闭服务
 			shardingService.shutdown();
 			configService.shutdown();
 			leaderElectionService.shutdown();
@@ -301,22 +293,17 @@ public class JobScheduler {
 			analyseService.shutdown();
 			limitMaxJobsService.shutdown();
 
+			// 关闭TreeCache
 			zkCacheManager.shutdown();
 
-			if (removejob) {
-				try {
-					Thread.sleep(500);// NOSONAR
-				} catch (InterruptedException ignore) {
-					LogUtils.warn(log, jobName, ignore.getMessage());
-				}
+			// 删除作业
+			if (removeJob) {
 				jobNodeStorage.deleteJobNode();
 				saturnExecutorService.removeJobName(jobName);
 			}
 
+			// 移除作业注册表
 			JobRegistry.clearJob(executorName, jobName);
-			if (executorService != null && !executorService.isShutdown()) {
-				executorService.shutdown();
-			}
 		}
 	}
 
