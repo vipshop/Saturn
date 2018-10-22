@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -17,6 +17,7 @@ package com.vip.saturn.job.internal.election;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.vip.saturn.job.internal.storage.JobNodeStorage;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +27,8 @@ import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 
 /**
  * 选举主节点的服务.
- * 
- * 
+ *
+ *
  */
 public class LeaderElectionService extends AbstractSaturnService {
 	static Logger log = LoggerFactory.getLogger(LeaderElectionService.class);
@@ -44,13 +45,14 @@ public class LeaderElectionService extends AbstractSaturnService {
 			if (isShutdown.compareAndSet(false, true)) {
 				try { // Release my leader position
 					JobNodeStorage jobNodeStorage = getJobNodeStorage();
-					if (jobNodeStorage.isConnected()
-							&& executorName.equals(jobNodeStorage.getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
+					if (jobNodeStorage.isConnected() && executorName
+							.equals(jobNodeStorage.getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
 						jobNodeStorage.removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
-						log.info("[{}] msg={} that was {}'s leader, released itself", jobName, executorName, jobName);
+						LogUtils.info(log, jobName, "[{}] msg={} that was {}'s leader, released itself", jobName,
+								executorName, jobName);
 					}
 				} catch (Throwable t) {
-					log.error(t.getMessage(), t);
+					LogUtils.error(log, jobName, t.getMessage(), t);
 				}
 			}
 		}
@@ -70,7 +72,7 @@ public class LeaderElectionService extends AbstractSaturnService {
 	 */
 	public Boolean isLeader() {
 		while (!isShutdown.get() && !hasLeader()) {
-			log.info("[{}] msg=No leader, try to election", jobName);
+			LogUtils.info(log, jobName, "[{}] msg=No leader, try to election", jobName);
 			leaderElection();
 		}
 		return executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST));
@@ -78,7 +80,7 @@ public class LeaderElectionService extends AbstractSaturnService {
 
 	/**
 	 * 判断是否已经有主节点
-	 * 
+	 *
 	 * @return 是否已经有主节点
 	 */
 	public boolean hasLeader() {
@@ -95,7 +97,8 @@ public class LeaderElectionService extends AbstractSaturnService {
 				}
 				if (!getJobNodeStorage().isJobNodeExisted(ElectionNode.LEADER_HOST)) {
 					getJobNodeStorage().fillEphemeralJobNode(ElectionNode.LEADER_HOST, executorName);
-					log.info("[{}] msg=executor {} become job {}'s leader", jobName, executorName, jobName);
+					LogUtils.info(log, jobName, "[{}] msg=executor {} become job {}'s leader", jobName, executorName,
+							jobName);
 				}
 			}
 		}

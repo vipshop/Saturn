@@ -86,10 +86,10 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) && ServerNode
 					.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
-					log.info("[{}] msg=job run-at-once triggered.", jobName);
+					LogUtils.info(log, jobName, "job run-at-once triggered.");
 					jobScheduler.triggerJob();
 				} else {
-					log.info("[{}] msg=job is running, run-at-once ignored.", jobName);
+					LogUtils.info(log, jobName, "job is running, run-at-once ignored.");
 				}
 				coordinatorRegistryCenter.remove(path);
 			}
@@ -110,7 +110,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			}
 			if (ConfigurationNode.isToDeletePath(jobName, path) && (Type.NODE_ADDED == event.getType()
 					|| Type.NODE_UPDATED == event.getType())) {
-				log.info("[{}] msg={} is going to be deleted.", jobName, jobName);
+				LogUtils.info(log, jobName, "job is going to be deleted.");
 				jobDeleteExecutorService.execute(new Runnable() {
 					@Override
 					public void run() {
@@ -139,7 +139,7 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			}
 			if (Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) {
 				try {
-					log.info("[{}] msg={} is going to be stopped at once.", jobName, jobName);
+					LogUtils.info(log, jobName, "job is going to be stopped at once.");
 					jobScheduler.getJob().forceStop();
 				} finally {
 					coordinatorRegistryCenter.remove(path);

@@ -108,9 +108,9 @@ export default {
       this.userInfoTitle = '添加用户';
       this.userInfoOperate = 'add';
       const userAddInfo = {
-        userName: '',
+        userNames: '',
         roleKey: '',
-        namespace: '',
+        namespaces: '',
         needApproval: false,
       };
       this.userInfo = JSON.parse(JSON.stringify(userAddInfo));

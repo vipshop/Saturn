@@ -12,8 +12,14 @@ import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Maps;
+import org.hamcrest.core.StringContains;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -23,14 +29,18 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.vip.saturn.job.console.service.impl.JobServiceImpl.CONFIG_ITEM_ENABLED;
-import static com.vip.saturn.job.console.service.impl.JobServiceImpl.CONFIG_ITEM_PREFER_LIST;
+import static com.vip.saturn.job.console.service.impl.JobServiceImpl.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -623,6 +633,24 @@ public class JobServiceImplTest {
 	}
 
 	@Test
+	public void testGetMaxJobNum() {
+		assertEquals(jobService.getMaxJobNum(), 100);
+	}
+
+	@Test
+	public void testJobIncExceeds() throws SaturnJobConsoleException {
+		assertFalse(jobService.jobIncExceeds(namespace, 0, 1));
+		assertFalse(jobService.jobIncExceeds(namespace, 100, 1));
+	}
+
+	@Test
+	public void testGetUnSystemJob() {
+		when(currentJobConfigService.findConfigsByNamespace(namespace))
+				.thenReturn(Lists.newArrayList(new JobConfig4DB()));
+		assertEquals(jobService.getUnSystemJobs(namespace).size(), 1);
+	}
+
+	@Test
 	public void testGetUnSystemJobWithConditionAndStatus() throws SaturnJobConsoleException {
 		String namespace = "ns1";
 		String jobName = "testJob";
@@ -645,6 +673,565 @@ public class JobServiceImplTest {
 		assertTrue(jobService.getUnSystemJobsWithCondition(namespace, condition, 1, 25).size() == (count / 2));
 	}
 
+	@Test
+	public void testGetUnSystemJobNames() {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		assertEquals(jobService.getUnSystemJobs(namespace).size(), 1);
+	}
+
+	@Test
+	public void testGetJobName() {
+		when(currentJobConfigService.findConfigNamesByNamespace(namespace)).thenReturn(null);
+		assertTrue(jobService.getJobNames(namespace).isEmpty());
+		when(currentJobConfigService.findConfigNamesByNamespace(namespace)).thenReturn(Lists.newArrayList(jobName));
+		assertEquals(jobService.getJobNames(namespace).size(), 1);
+	}
+
+	@Test
+	public void testPersistJobFromDb() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		jobService.persistJobFromDB(namespace, jobConfig);
+		jobService.persistJobFromDB(jobConfig, curatorFrameworkOp);
+	}
+
+	@Test
+	public void testImportFailByWithoutJobName() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业名必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByJobNameInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName("!@avb");
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业名只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByWithoutJobType() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业类型必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByUnknownJobType() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn("xxx");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业类型未知。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByJavaJobWithoutClass() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.JAVA_JOB.name());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于JAVA或者消息作业，作业实现类必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByShellJobWithoutCron() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于JAVA/SHELL作业，cron表达式必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByShellJobCronInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON))).thenReturn("xxxx");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("cron表达式语法有误，"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByWithoutShardingCount() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("分片数必填"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByShardingCountInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("xxx");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("分片数有误"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+
+	@Test
+	public void testImportFailByShardingCountLess4One() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("0");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("分片数不能小于1"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByTimeoutSecondsInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("超时（Kill线程/进程）时间有误，"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByLocalJobWithoutShardingParam() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE)))
+				.thenReturn("true");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于本地模式作业，分片参数必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByLocalJobShardingParamInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE)))
+				.thenReturn("true");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于本地模式作业，分片参数必须包含如*=xx。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByShardingParamLess4Count() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("2");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("分片参数不能小于分片总数。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByProcessCountIntervalSecondsInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("统计处理数据量的间隔秒数有误，"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByLoadLevelInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("负荷有误"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByJobDegreeInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_DEGREE)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业重要等级有误，"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByJobModeInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE)))
+				.thenReturn(JobMode.SYSTEM_PREFIX);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("作业模式有误，不能添加系统作业"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByDependenciesInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES)))
+				.thenReturn("!@error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("依赖的作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByTimeout4AlarmSecondsInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("超时（告警）时间有误，"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByTimeZoneInvalid() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE)))
+				.thenReturn("error");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("时区有误"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByLocalJobNotSupportFailover() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("*=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE)))
+				.thenReturn("true");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER)))
+				.thenReturn("true");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("本地模式不支持failover"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByVMSJobNotSupportFailover() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("*=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE)))
+				.thenReturn("false");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER)))
+				.thenReturn("true");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("消息作业不支持failover"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByVMSJobNotSupportRerun() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN))).thenReturn("true");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("消息作业不支持rerun"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailTotalCountLimit() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		when(systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, 100)).thenReturn(1);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("总作业数超过最大限制(%d)，导入失败", 1));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportSuccess() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
+				.thenReturn("vip");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS)))
+				.thenReturn("0=1");
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		when(systemConfigService.getIntegerValue(SystemConfigProperties.MAX_JOB_NUM, 100)).thenReturn(100);
+		jobService.importJobs(namespace, data, userName);
+	}
+
+
+	@Test
+	public void testExport() throws SaturnJobConsoleException, IOException, BiffException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		Workbook workbook = Workbook.getWorkbook(data.getInputStream());
+		assertNotNull(workbook);
+		Sheet[] sheets = workbook.getSheets();
+		assertEquals(sheets.length, 1);
+	}
 
 	@Test
 	public void testIsJobShardingAllocatedExecutor() throws SaturnJobConsoleException {
@@ -848,4 +1435,310 @@ public class JobServiceImplTest {
 		condition.put("jobStatus", jobStatus);
 		return condition;
 	}
+
+	@Test
+	public void testGetJobConfigFromZK() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
+				.thenReturn("1");
+		when(curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS)))
+				.thenReturn("100");
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS)))
+				.thenReturn("100");
+		assertNotNull(jobService.getJobConfigFromZK(namespace, jobName));
+	}
+
+	@Test
+	public void testGetJobConfigFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfig(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobConfigSuccess() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName))
+				.thenReturn(new JobConfig4DB());
+		assertNotNull(jobService.getJobConfig(namespace, jobName));
+	}
+
+	@Test
+	public void testGetJobStatusFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("不能获取该作业（%s）的状态，因为该作业不存在", jobName));
+		jobService.getJobStatus(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobStatusSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		assertEquals(jobService.getJobStatus(namespace, jobName), JobStatus.READY);
+
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setEnabled(true);
+		assertEquals(jobService.getJobStatus(namespace, jobConfig), JobStatus.READY);
+	}
+
+	@Test
+	public void testGetServerList() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName))).thenReturn(null);
+		assertTrue(jobService.getJobServerList(namespace, jobName).isEmpty());
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		assertEquals(jobService.getJobServerList(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testGetJobConfigVoFailByJobNotExist() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testGetJobConfigVoSuccess() throws SaturnJobConsoleException {
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName))
+				.thenReturn(new JobConfig4DB());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		assertNotNull(jobService.getJobConfigVo(namespace, jobName));
+	}
+
+	@Test
+	public void testUpdateJobConfigFailByJobNotExist() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName()))
+				.thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不存在", jobName));
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testUpdateJobConfigSuccess() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName()))
+				.thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		jobService.getJobConfigVo(namespace, jobName);
+	}
+
+	@Test
+	public void testGetAllJobNamesFromZK() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath())).thenReturn(null);
+		assertTrue(jobService.getAllJobNamesFromZK(namespace).isEmpty());
+
+		when(curatorFrameworkOp.getChildren(JobNodePath.get$JobsNodePath())).thenReturn(Lists.newArrayList(jobName));
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(true);
+		assertEquals(jobService.getAllJobNamesFromZK(namespace).size(), 1);
+	}
+
+	@Test
+	public void testUpdateJobCronFailByCronInvalid() throws SaturnJobConsoleException {
+		String cron = "error";
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("The cron expression is invalid: %s", cron));
+		jobService.updateJobCron(namespace, jobName, cron, null, userName);
+	}
+
+	@Test
+	public void testUpdateJobCronFailByJobNotExist() throws SaturnJobConsoleException {
+		String cron = "0 */2 * * * ?";
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(false);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("The job does not exists: %s", jobName));
+		jobService.updateJobCron(namespace, jobName, cron, null, userName);
+	}
+
+	@Test
+	public void testUpdateJobCronSuccess() throws SaturnJobConsoleException {
+		String cron = "0 */2 * * * ?";
+		Map<String, String> customContext = Maps.newHashMap();
+		customContext.put("test", "test");
+		CuratorFramework curatorFramework = mock(CuratorFramework.class);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(curatorFrameworkOp.getCuratorFramework()).thenReturn(curatorFramework);
+		when(curatorFramework.getNamespace()).thenReturn(namespace);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getConfigNodePath(jobName))).thenReturn(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		jobService.updateJobCron(namespace, jobName, cron, customContext, userName);
+	}
+
+	@Test
+	public void testGetJobServers() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		when(curatorFrameworkOp.getData(JobNodePath.getLeaderNodePath(jobName, "election/host")))
+				.thenReturn("127.0.0.1");
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		assertEquals(jobService.getJobServers(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testGetJobServerStatus() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		assertEquals(jobService.getJobServersStatus(namespace, jobName).size(), 1);
+	}
+
+	@Test
+	public void testRunAtOneFailByNotReady() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceFailByNoExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName))).thenReturn(null);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceFailByNoOnlineExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("executor"));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("没有ONLINE的executor，不能立即执行");
+		jobService.runAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testRunAtOnceSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		String executor = "executor";
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList(executor));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
+				"true");
+		jobService.runAtOnce(namespace, jobName);
+		verify(curatorFrameworkOp).create(JobNodePath.getRunOneTimePath(jobName, executor));
+	}
+
+	@Test
+	public void testStopAtOneFailByNotStopping() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)不处于STOPPING状态，不能立即终止", jobName));
+		jobService.stopAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testStopAtOnceFailByNoExecutor() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, "1", "running")))
+				.thenReturn(true);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("没有executor接管该作业(%s)，不能立即终止", jobName));
+		jobService.stopAtOnce(namespace, jobName);
+	}
+
+	@Test
+	public void testStopAtOnceSuccess() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		String executor = "executor";
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(JobNodePath.getExecutionNodePath(jobName, "1", "running")))
+				.thenReturn(true);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList(executor));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
+				"true");
+		jobService.stopAtOnce(namespace, jobName);
+		verify(curatorFrameworkOp).create(JobNodePath.getStopOneTimePath(jobName, executor));
+	}
+
+	@Test
+	public void testGetExecutionStatusByJobHasStopped() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		// test get execution status by job has stopped
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setEnabled(false);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		assertTrue(jobService.getExecutionStatus(namespace, jobName).isEmpty());
+	}
+
+	@Test
+	public void testGetExecutionStatusByWithoutItem() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName))).thenReturn(null);
+		assertTrue(jobService.getExecutionStatus(namespace, jobName).isEmpty());
+	}
+
+	@Test
+	public void testGetExecutionStatus() throws SaturnJobConsoleException {
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setEnabled(true);
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("1"));
+		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
+				.thenReturn(Lists.newArrayList("server"));
+		when(curatorFrameworkOp.getData(JobNodePath.getServerSharding(jobName, "server"))).thenReturn("0");
+	}
+
 }

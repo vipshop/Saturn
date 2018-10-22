@@ -23,6 +23,7 @@ import com.vip.saturn.job.reg.exception.RegExceptionHandler;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.utils.BlockUtils;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -173,7 +174,7 @@ public class JobNodeStorage {
 	 */
 	public void fillJobNodeIfNullOrOverwrite(final String node, final Object value) {
 		if (null == value) {
-			log.info("[{}] msg=job node value is null, node:{}", jobName, node);
+			LogUtils.info(log, jobName, "[{}] msg=job node value is null, node:{}", jobName, node);
 			return;
 		}
 		if (!isJobNodeExisted(node) || (!value.toString().equals(getJobNodeDataDirectly(node)))) {
@@ -268,7 +269,8 @@ public class JobNodeStorage {
 			callback.execute();
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
+					e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -292,7 +294,8 @@ public class JobNodeStorage {
 			}
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
+					e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -338,7 +341,7 @@ public class JobNodeStorage {
 				BlockUtils.waitingShortTime();
 			}
 		} catch (Throwable t) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "delete job node error"), t);
+			LogUtils.error(log, jobName, "delete job node error", t);
 		} finally {
 			newZk.close();
 		}
@@ -349,7 +352,8 @@ public class JobNodeStorage {
 			newZk.remove(fullPath);
 			return true;
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
+					e);
 		}
 		return false;
 	}
