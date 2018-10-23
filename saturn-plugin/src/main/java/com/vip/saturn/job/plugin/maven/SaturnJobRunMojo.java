@@ -153,7 +153,7 @@ public class SaturnJobRunMojo extends AbstractMojo {
 				}
 			}
 		}
-		throw new MojoExecutionException("cannot read the saturn-job-core dependency.");
+		throw new MojoExecutionException("cannot read the saturn-job-api dependency.");
 	}
 
 	private IvyGetArtifact getIvyGetArtifact(MavenProjectUtils mavenProjectUtils) throws MojoExecutionException {

@@ -40,14 +40,13 @@ import java.util.concurrent.ExecutorService;
  * 弹性化分布式作业的基类.
  * @author dylan.xue
  */
-public abstract class AbstractElasticJob implements Stopable {
+public abstract class AbstractElasticJob implements Stoppable {
 	private static Logger log = LoggerFactory.getLogger(AbstractElasticJob.class);
 
-	private boolean stopped = false;
-
-	private boolean forceStopped = false;
-
-	private boolean aborted = false;
+	private volatile boolean stopped = false;
+	private volatile boolean forceStopped = false;
+	private volatile boolean aborted = false;
+	private volatile boolean running = false;
 
 	protected ConfigurationService configService;
 
@@ -78,10 +77,8 @@ public abstract class AbstractElasticJob implements Stopable {
 	protected String jobVersion;
 
 	/**
-	 * vms job这个状态无效。
+	 * 重置作业调用一次的生命周期内的变量
 	 */
-	protected boolean running;
-
 	private void reset() {
 		stopped = false;
 		forceStopped = false;
@@ -92,7 +89,14 @@ public abstract class AbstractElasticJob implements Stopable {
 	@Override
 	public void shutdown() {
 		if (scheduler != null) {
+			// 关闭调度器
 			scheduler.shutdown();
+			// 关闭执行业务的线程池，使得不能再提交新的业务任务
+			jobScheduler.shutdownExecutorService();
+			// 检查调度器任务是否完成，如果没有，中止业务
+			if (!scheduler.isTerminated()) {
+				abort();
+			}
 		}
 	}
 
@@ -150,7 +154,8 @@ public abstract class AbstractElasticJob implements Stopable {
 			LogUtils.debug(log, jobName, "Saturn finish to execute job [{}], sharding context:{}.", jobName,
 					shardingContext);
 		} catch (Exception e) {
-			log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.warn(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
+					e);
 		} finally {
 			running = false;
 		}
@@ -190,7 +195,8 @@ public abstract class AbstractElasticJob implements Stopable {
 	 * @return 是否继续执行完complete节点，清空failover信息
 	 */
 	private boolean checkIfZkLostAfterExecution(final Integer item) {
-		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter().getRawClient();
+		CuratorFramework curatorFramework = (CuratorFramework) executionService.getCoordinatorRegistryCenter()
+				.getRawClient();
 		try {
 			String runningPath = JobNodePath.getNodeFullPath(jobName, ExecutionNode.getRunningNode(item));
 			Stat itemStat = curatorFramework.checkExists().forPath(runningPath);
@@ -200,7 +206,8 @@ public abstract class AbstractElasticJob implements Stopable {
 				long ephemeralOwner = itemStat.getEphemeralOwner();
 				if (ephemeralOwner != sessionId) {
 					LogUtils.info(log, jobName,
-							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}",
+							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk "
+									+ "sessionid is {}",
 							item, ephemeralOwner, sessionId);
 					return false;
 				} else {
@@ -212,7 +219,7 @@ public abstract class AbstractElasticJob implements Stopable {
 
 			return false;
 		} catch (Throwable e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
 			return false;
 		}
 	}
@@ -270,10 +277,6 @@ public abstract class AbstractElasticJob implements Stopable {
 	public void notifyJobDisabled() {
 	}
 
-	/**
-	 * 设置shardingService
-	 * @param shardingService
-	 */
 	protected void setShardingService(ShardingService shardingService) {
 		this.shardingService = shardingService;
 	}
@@ -298,10 +301,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.reportService = reportService;
 	}
 
-	/**
-	 * 获取executorName
-	 * @return
-	 */
 	public String getExecutorName() {
 		return executorName;
 	}
@@ -310,10 +309,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.executorName = executorName;
 	}
 
-	/**
-	 * 获取jobName
-	 * @return
-	 */
 	public String getJobName() {
 		return jobName;
 	}
@@ -322,10 +317,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.jobName = jobName;
 	}
 
-	/**
-	 * 获取namespace
-	 * @return
-	 */
 	public String getNamespace() {
 		return namespace;
 	}
@@ -350,10 +341,6 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.jobScheduler = jobScheduler;
 	}
 
-	/**
-	 * 获取 saturnExecutorService
-	 * @return
-	 */
 	public SaturnExecutorService getSaturnExecutorService() {
 		return saturnExecutorService;
 	}
@@ -362,22 +349,10 @@ public abstract class AbstractElasticJob implements Stopable {
 		this.saturnExecutorService = saturnExecutorService;
 	}
 
-	/**
-	 * 作业是否running
-	 * @return
-	 */
 	public boolean isRunning() {
 		return running;
 	}
 
-	protected void setRunning(boolean running) {
-		this.running = running;
-	}
-
-	/**
-	 * 获取configService
-	 * @return
-	 */
 	public ConfigurationService getConfigService() {
 		return configService;
 	}

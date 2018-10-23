@@ -14,9 +14,9 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import java.io.File;
 import org.apache.curator.framework.CuratorFramework;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,9 +44,11 @@ public interface RegistryCenterService {
 
 	ZkCluster getZkCluster(String key);
 
-	void createZkCluster(String zkClusterKey, String alias, String connectString) throws SaturnJobConsoleException;
+	void createZkCluster(String zkClusterKey, String alias, String connectString, String description)
+			throws SaturnJobConsoleException;
 
-	void updateZkCluster(String zkClusterKey, String connectString) throws SaturnJobConsoleException;
+	void updateZkCluster(String zkClusterKey, String connectString, String description)
+			throws SaturnJobConsoleException;
 
 	Collection<ZkCluster> getZkClusterList();
 
@@ -78,7 +80,8 @@ public interface RegistryCenterService {
 	/**
 	 * Bind the namespace and zkCluster. Namespace should be ensured existed.
 	 */
-	void bindNamespaceAndZkCluster(String namespace, String zkClusterKey, String updatedBy) throws SaturnJobConsoleException;
+	void bindNamespaceAndZkCluster(String namespace, String zkClusterKey, String updatedBy)
+			throws SaturnJobConsoleException;
 
 	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
 

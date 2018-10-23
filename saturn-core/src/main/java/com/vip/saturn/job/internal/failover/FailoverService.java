@@ -20,6 +20,7 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
@@ -57,12 +58,13 @@ public class FailoverService extends AbstractSaturnService {
 			try {
 				getJobNodeStorage().getClient().create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT)
 						.forPath(JobNodePath.getNodeFullPath(jobName, FailoverNode.getItemsNode(item)));
-				log.info("{} - {} create failover flag of item {}", executorName, jobName, item);
+				LogUtils.info(log, jobName, "{} - {} create failover flag of item {}", executorName, jobName, item);
 			} catch (KeeperException.NodeExistsException e) { // NOSONAR
-				log.debug("{} - {} create failover flag of item {} failed, because it is already existing",
-						executorName, jobName, item);
+				LogUtils.debug(log, jobName,
+						"{} - {} create failover flag of item {} failed, because it is already existing", executorName,
+						jobName, item);
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				LogUtils.error(log, jobName, e.getMessage(), e);
 			}
 		}
 	}
@@ -78,15 +80,16 @@ public class FailoverService extends AbstractSaturnService {
 		if (!needFailover()) {
 			return;
 		}
-		getJobNodeStorage().executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1,
-				TimeUnit.MINUTES, new FailoverTimeoutLeaderExecutionCallback());
+		getJobNodeStorage()
+				.executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1, TimeUnit.MINUTES,
+						new FailoverTimeoutLeaderExecutionCallback());
 	}
 
 	private boolean needFailover() {
-		return getJobNodeStorage().isJobNodeExisted(FailoverNode.ITEMS_ROOT)
-				&& !getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).isEmpty()
-				&& getJobNodeStorage().isJobNodeExisted(ConfigurationNode.ENABLED)
-				&& Boolean.parseBoolean(getJobNodeStorage().getJobNodeData(ConfigurationNode.ENABLED));
+		return getJobNodeStorage().isJobNodeExisted(FailoverNode.ITEMS_ROOT) && !getJobNodeStorage()
+				.getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).isEmpty() && getJobNodeStorage()
+				.isJobNodeExisted(ConfigurationNode.ENABLED) && Boolean
+				.parseBoolean(getJobNodeStorage().getJobNodeData(ConfigurationNode.ENABLED));
 	}
 
 	/**
@@ -109,8 +112,8 @@ public class FailoverService extends AbstractSaturnService {
 		for (String each : items) {
 			int item = Integer.parseInt(each);
 			String node = FailoverNode.getExecutionFailoverNode(item);
-			if (getJobNodeStorage().isJobNodeExisted(node)
-					&& executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(node))) {
+			if (getJobNodeStorage().isJobNodeExisted(node) && executorName
+					.equals(getJobNodeStorage().getJobNodeDataDirectly(node))) {
 				result.add(item);
 			}
 		}
@@ -157,17 +160,18 @@ public class FailoverService extends AbstractSaturnService {
 			if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executorName))) {
 				return;
 			}
-			if (!jobScheduler.getConfigService().getPreferList().contains(executorName)
-					&& !jobScheduler.getConfigService().isUseDispreferList()) {
+			if (!jobScheduler.getConfigService().getPreferList().contains(executorName) && !jobScheduler
+					.getConfigService().isUseDispreferList()) {
 				return;
 			}
 			List<String> items = getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT);
 			if (items != null && !items.isEmpty()) {
 				int crashedItem = Integer
 						.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
-				log.info("[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName, crashedItem);
-				getJobNodeStorage().fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem),
-						executorName);
+				LogUtils.debug(log, jobName, "[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName,
+						crashedItem);
+				getJobNodeStorage()
+						.fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
 				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
 				jobScheduler.triggerJob();
 			}
@@ -178,7 +182,7 @@ public class FailoverService extends AbstractSaturnService {
 
 		@Override
 		public void execute() {
-			log.warn("Failover leader election timeout with a minute");
+			LogUtils.warn(log, jobName, "Failover leader election timeout with a minute");
 		}
 	}
 }

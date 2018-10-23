@@ -8,6 +8,7 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
+import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +130,7 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 				if (tmps != null && tmps.length == 2) {
 					kv.put(tmps[0].trim(), tmps[1].trim());
 				} else {
-					log.warn("msg=Param is not valid {}", p);
+					LogUtils.warn(log, jobName, "msg=Param is not valid {}", p);
 				}
 			}
 		}

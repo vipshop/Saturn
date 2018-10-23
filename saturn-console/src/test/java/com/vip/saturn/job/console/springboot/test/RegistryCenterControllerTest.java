@@ -32,10 +32,9 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 	public void testCreateAndUpdateZkClusterInfo() throws Exception {
 		String clusterName = "/clusterx";
 		// craete a new zkCluster
-		ZkClusterInfoForTest zkClusterInfo = new ZkClusterInfoForTest(clusterName, "alias1", "127.0.0.1:2181");
-		MvcResult result = mvc
-				.perform(post("/console/zkClusters").contentType(MediaType.APPLICATION_FORM_URLENCODED).content(zkClusterInfo.toContent()))
-				.andExpect(status().isOk()).andReturn();
+		ZkClusterInfoForTest zkClusterInfo = new ZkClusterInfoForTest(clusterName, "alias1", "127.0.0.1:12345", "A机房");
+		MvcResult result = mvc.perform(post("/console/zkClusters").contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.content(zkClusterInfo.toContent())).andExpect(status().isOk()).andReturn();
 		String responseBody = result.getResponse().getContentAsString();
 		Map<String, Object> resultMap = JSONObject.parseObject(responseBody, Map.class);
 		assertEquals(0, resultMap.get("status"));
@@ -58,15 +57,18 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 		assertEquals(2, size);
 
 		String connectionString = "";
+		String description = "";
 		for (Map<String, String> clusterInfo : objValue) {
 			String clusterKey = clusterInfo.get("zkClusterKey");
 			if (clusterKey.equals(clusterName)) {
 				connectionString = clusterInfo.get("zkAddr");
+				description = clusterInfo.get("description");
 				break;
 			}
 		}
 
-		assertEquals("127.0.0.1:2181", connectionString);
+		assertEquals("127.0.0.1:12345", connectionString);
+		assertEquals("A机房", description);
 
 		// get 单个zkcluster
 		result = mvc.perform(get("/console/zkClusters?zkClusterKey=" + clusterName)).andExpect(status().isOk())
@@ -75,7 +77,8 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 		resultMap = JSONObject.parseObject(responseBody, Map.class);
 		Map<String, Object> zkClusterMap = (Map<String, Object>) resultMap.get("obj");
 		assertEquals(clusterName, zkClusterMap.get("zkClusterKey"));
-		assertEquals("127.0.0.1:2181", zkClusterMap.get("zkAddr"));
+		assertEquals("127.0.0.1:12345", zkClusterMap.get("zkAddr"));
+		assertEquals("A机房", zkClusterMap.get("description"));
 		assertTrue((Boolean) zkClusterMap.get("offline"));
 	}
 
@@ -86,14 +89,18 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 
 		private String connectString;
 
-		public ZkClusterInfoForTest(String zkClusterKey, String alias, String connectString) {
+		private String description;
+
+		public ZkClusterInfoForTest(String zkClusterKey, String alias, String connectString, String description) {
 			this.zkClusterKey = zkClusterKey;
 			this.alias = alias;
 			this.connectString = connectString;
+			this.description = description;
 		}
 
 		public String toContent() {
-			return String.format("zkClusterKey=%s&alias=%s&connectString=%s", zkClusterKey, alias, connectString);
+			return String.format("zkClusterKey=%s&alias=%s&connectString=%s&description=%s", zkClusterKey, alias,
+					connectString, description);
 		}
 
 		public String getZkClusterKey() {
@@ -118,6 +125,14 @@ public class RegistryCenterControllerTest extends AbstractSaturnConsoleTest {
 
 		public void setConnectString(String connectString) {
 			this.connectString = connectString;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
 		}
 	}
 }

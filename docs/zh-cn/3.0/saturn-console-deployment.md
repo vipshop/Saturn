@@ -10,9 +10,11 @@ Linux服务器至少1台，服务器数量视乎计划的Saturn Console的集群
 
 ### 1.2 软件准备
 
-JDK  >= 1.7
+JDK : 1.7+
 
-ZooKeeper >= 3.4.6 （建议使用ZooKeeper 3.4.6 ([官网下载链接](https://archive.apache.org/dist/zookeeper/zookeeper-3.4.6/))，更高版本未经验证）
+ZooKeeper: 3.4.6+ （建议使用ZooKeeper 3.4.6 ([官网下载链接](https://archive.apache.org/dist/zookeeper/zookeeper-3.4.6/))，更高版本未经验证）
+
+nodejs: 7.8.0+
 
 ## 2 开始部署
 
@@ -116,6 +118,8 @@ Executor会从ZK获取相应域的作业信息，并上报作业的运行状态�
 ![create_zkcluster](_media/create_zkcluster.jpg)
 
 添加完成后，会看到zk在线。
+
+*Note: 集群ID要用英文，不要使用中文或特殊符号*
 
 ![zk_list](_media/zk_list.jpg)
 

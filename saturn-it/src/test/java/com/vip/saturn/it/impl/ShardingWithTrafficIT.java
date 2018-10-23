@@ -35,7 +35,7 @@ public class ShardingWithTrafficIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -91,7 +91,7 @@ public class ShardingWithTrafficIT extends AbstractSaturnIT {
 		runAtOnceAndWaitShardingCompleted(jobConfiguration2);
 		isItemsToExecutor1(jobName, jobName2, executorName1, executorName2);
 
-		stopExecutor(1);
+		stopExecutorGracefully(1);
 		Thread.sleep(1000L);
 
 		runAtOnceAndWaitShardingCompleted(jobConfiguration);
@@ -119,7 +119,7 @@ public class ShardingWithTrafficIT extends AbstractSaturnIT {
 		removeJob(jobName);
 		removeJob(jobName2);
 		Thread.sleep(1000L);
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(2000L);
 		forceRemoveJob(jobName);
 		forceRemoveJob(jobName2);
@@ -255,7 +255,7 @@ public class ShardingWithTrafficIT extends AbstractSaturnIT {
 		Thread.sleep(1000L);
 		removeJob(jobName);
 		Thread.sleep(1000L);
-		stopExecutorList();
+		stopExecutorListGracefully();
 		Thread.sleep(2000L);
 		forceRemoveJob(jobName);
 	}

@@ -5,8 +5,6 @@ import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.JobInitAlarmException;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,7 +19,7 @@ import java.util.concurrent.Future;
 public class SaturnJavaJob extends CrondJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
 
-	private Map<Integer, ShardingItemFutureTask> futureTaskMap;
+	private Map<Integer, ShardingItemFutureTask> futureTaskMap = new HashMap<>();
 
 	private Object jobBusinessInstance = null;
 
@@ -55,28 +53,54 @@ public class SaturnJavaJob extends CrondJob {
 	}
 
 	private void createJobBusinessInstanceIfNecessary() {
-		JobConfiguration currentConf = configService.getJobConfiguration();
-		String jobClassStr = currentConf.getJobClass();
+		String jobClassStr = configService.getJobConfiguration().getJobClass();
 		if (StringUtils.isBlank(jobClassStr)) {
 			LogUtils.error(log, jobName, "jobClass is not set");
 			throw new JobInitAlarmException("jobClass is not set");
 		}
+		jobClassStr = jobClassStr.trim();
 		LogUtils.info(log, jobName, "start to create job business instance, jobClass is {}", jobClassStr);
 		if (jobBusinessInstance == null) {
 			ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
 			ClassLoader jobClassLoader = saturnExecutorService.getJobClassLoader();
 			Thread.currentThread().setContextClassLoader(jobClassLoader);
 			try {
-				Class<?> jobClass = jobClassLoader.loadClass(currentConf.getJobClass());
+				Class<?> jobClass = jobClassLoader.loadClass(jobClassStr);
+
 				try {
-					jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
-				} catch (NoSuchMethodException e) {
-					LogUtils.info(log, jobName,
-							"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
+					Object saturnApplication = saturnExecutorService.getSaturnApplication();
+					if (saturnApplication != null) {
+						Class<?> ssaClazz = jobClassLoader
+								.loadClass("com.vip.saturn.job.spring.SpringSaturnApplication");
+						if (ssaClazz.isInstance(saturnApplication)) {
+							jobBusinessInstance = saturnApplication.getClass().getMethod("getJobInstance", Class.class)
+									.invoke(saturnApplication, jobClass);
+							if (jobBusinessInstance != null) {
+								LogUtils.info(log, jobName, "get job instance from spring");
+							}
+						}
+					}
+				} catch (ClassNotFoundException e) {
+					LogUtils.debug(log, jobName, "didn't use SpringSaturnApplication");
+				} catch (Throwable t) {
+					LogUtils.error(log, jobName, "get job instance from spring error", t);
+				}
+
+				if (jobBusinessInstance == null) {
+					try {
+						jobBusinessInstance = jobClass.getMethod("getObject").invoke(null);
+						if (jobBusinessInstance != null) {
+							LogUtils.info(log, jobName, "get job instance from getObject");
+						}
+					} catch (NoSuchMethodException e) {
+						LogUtils.info(log, jobName,
+								"the jobClass hasn't the static getObject method, will initialize job by default no arguments constructor method");
+					}
 				}
 				// 业务没有重写getObject方法，BaseSaturnJob会默认返回null
 				if (jobBusinessInstance == null) {
 					jobBusinessInstance = jobClass.newInstance();
+					LogUtils.info(log, jobName, "get job instance from newInstance");
 				}
 				SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 				jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
@@ -87,7 +111,7 @@ public class SaturnJavaJob extends CrondJob {
 			}
 		}
 		if (jobBusinessInstance == null) {
-			LogUtils.info(log, jobName, "job instance is null");
+			LogUtils.error(log, jobName, "job instance is null");
 			throw new JobInitAlarmException("job instance is null");
 		}
 	}
@@ -96,38 +120,40 @@ public class SaturnJavaJob extends CrondJob {
 	protected Map<Integer, SaturnJobReturn> handleJob(final SaturnExecutionContext shardingContext) {
 		final Map<Integer, SaturnJobReturn> retMap = new HashMap<Integer, SaturnJobReturn>();
 
-		final String jobName = shardingContext.getJobName();
-		final int timeoutSeconds = getTimeoutSeconds();
+		synchronized (futureTaskMap) {
+			futureTaskMap.clear();
 
-		ExecutorService executorService = getExecutorService();
+			final String jobName = shardingContext.getJobName();
+			final int timeoutSeconds = getTimeoutSeconds();
 
-		futureTaskMap = new HashMap<Integer, ShardingItemFutureTask>();
+			ExecutorService executorService = getExecutorService();
 
-		// 处理自定义参数
-		String jobParameter = shardingContext.getJobParameter();
+			// 处理自定义参数
+			String jobParameter = shardingContext.getJobParameter();
 
-		// shardingItemParameters为参数表解析出来的Key/Value值
-		Map<Integer, String> shardingItemParameters = shardingContext.getShardingItemParameters();
+			// shardingItemParameters为参数表解析出来的Key/Value值
+			Map<Integer, String> shardingItemParameters = shardingContext.getShardingItemParameters();
 
-		for (final Entry<Integer, String> shardingItem : shardingItemParameters.entrySet()) {
-			final Integer key = shardingItem.getKey();
-			try {
-				String jobValue = shardingItem.getValue();
-				final String itemVal = getRealItemValue(jobParameter, jobValue); // 作业分片的对应值
+			for (final Entry<Integer, String> shardingItem : shardingItemParameters.entrySet()) {
+				final Integer key = shardingItem.getKey();
+				try {
+					String jobValue = shardingItem.getValue();
+					final String itemVal = getRealItemValue(jobParameter, jobValue); // 作业分片的对应值
 
-				ShardingItemFutureTask shardingItemFutureTask = new ShardingItemFutureTask(
-						createCallable(jobName, key, itemVal, timeoutSeconds, shardingContext, this), null);
-				Future<?> callFuture = executorService.submit(shardingItemFutureTask);
-				if (timeoutSeconds > 0) {
-					TimeoutSchedulerExecutor.scheduleTimeoutJob(shardingContext.getExecutorName(), timeoutSeconds,
-							shardingItemFutureTask);
+					ShardingItemFutureTask shardingItemFutureTask = new ShardingItemFutureTask(
+							createCallable(jobName, key, itemVal, timeoutSeconds, shardingContext, this), null);
+					Future<?> callFuture = executorService.submit(shardingItemFutureTask);
+					if (timeoutSeconds > 0) {
+						TimeoutSchedulerExecutor.scheduleTimeoutJob(shardingContext.getExecutorName(), timeoutSeconds,
+								shardingItemFutureTask);
+					}
+					shardingItemFutureTask.setCallFuture(callFuture);
+					futureTaskMap.put(key, shardingItemFutureTask);
+				} catch (Throwable t) {
+					LogUtils.error(log, jobName, t.getMessage(), t);
+					retMap.put(key, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
+							SaturnSystemErrorGroup.FAIL));
 				}
-				shardingItemFutureTask.setCallFuture(callFuture);
-				futureTaskMap.put(key, shardingItemFutureTask);
-			} catch (Throwable t) {
-				LogUtils.error(log, jobName, t.getMessage(), t);
-				retMap.put(key, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
-						SaturnSystemErrorGroup.FAIL));
 			}
 		}
 
@@ -145,6 +171,10 @@ public class SaturnJavaJob extends CrondJob {
 			retMap.put(item, futureTask.getCallable().getSaturnJobReturn());
 		}
 
+		synchronized (futureTaskMap) {
+			futureTaskMap.clear();
+		}
+
 		return retMap;
 	}
 
@@ -157,24 +187,21 @@ public class SaturnJavaJob extends CrondJob {
 	@Override
 	public void forceStop() {
 		super.forceStop();
-
-		if (futureTaskMap == null) {
-			return;
-		}
-
-		for (ShardingItemFutureTask shardingItemFutureTask : futureTaskMap.values()) {
-			JavaShardingItemCallable shardingItemCallable = shardingItemFutureTask.getCallable();
-			Thread currentThread = shardingItemCallable.getCurrentThread();
-			if (currentThread != null) {
-				try {
-					if (shardingItemCallable.forceStop()) {
-						LogUtils.info(log, LogEvents.ExecutorEvent.FORCE_STOP, "Force stop job, jobName:{}, item:{}",
-								jobName, shardingItemCallable.getItem());
-						shardingItemCallable.beforeForceStop();
-						ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
+		synchronized (futureTaskMap) {
+			for (ShardingItemFutureTask shardingItemFutureTask : futureTaskMap.values()) {
+				JavaShardingItemCallable shardingItemCallable = shardingItemFutureTask.getCallable();
+				Thread currentThread = shardingItemCallable.getCurrentThread();
+				if (currentThread != null) {
+					try {
+						if (shardingItemCallable.forceStop()) {
+							LogUtils.info(log, jobName, "Force stop job, jobName:{}, item:{}", jobName,
+									shardingItemCallable.getItem());
+							shardingItemCallable.beforeForceStop();
+							ShardingItemFutureTask.killRunningBusinessThread(shardingItemFutureTask);
+						}
+					} catch (Throwable t) {
+						LogUtils.error(log, jobName, t.getMessage(), t);
 					}
-				} catch (Throwable t) {
-					LogUtils.error(log, jobName, t.getMessage(), t);
 				}
 			}
 		}

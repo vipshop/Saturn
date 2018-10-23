@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -25,6 +25,7 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.BlockUtils;
 import com.vip.saturn.job.utils.ItemUtils;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
@@ -40,8 +41,8 @@ import java.util.Map.Entry;
 
 /**
  * 作业分片服务.
- * 
- * 
+ *
+ *
  */
 public class ShardingService extends AbstractSaturnService {
 	public static final String SHARDING_UN_NECESSARY = "0";
@@ -79,8 +80,8 @@ public class ShardingService extends AbstractSaturnService {
 	 * @return 是否需要重分片
 	 */
 	public boolean isNeedSharding() {
-		return getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)
-				&& !SHARDING_UN_NECESSARY.equals(getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY));
+		return getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY) && !SHARDING_UN_NECESSARY
+				.equals(getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.NECESSARY));
 	}
 
 	public void registerNecessaryWatcher(CuratorWatcher necessaryWatcher) {
@@ -95,7 +96,7 @@ public class ShardingService extends AbstractSaturnService {
 						.forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY));
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 		}
 	}
 
@@ -117,7 +118,7 @@ public class ShardingService extends AbstractSaturnService {
 			}
 			version = stat.getVersion();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 		}
 		return new GetDataStat(data, version);
 	}
@@ -155,42 +156,41 @@ public class ShardingService extends AbstractSaturnService {
 				int version = getDataStat.getVersion();
 				// 首先尝试从job/leader/sharding/neccessary节点获取，如果失败，会从$SaturnExecutors/sharding/content下面获取
 				// key is executor, value is sharding items
-				Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardContent(jobName,
-						getDataStat.getData());
+				Map<String, List<Integer>> shardingItems = namespaceShardingContentService
+						.getShardContent(jobName, getDataStat.getData());
 				try {
 					// 所有jobserver的（检查+创建），加上设置sharding necessary内容为0，都是一个事务
 					CuratorTransactionFinal curatorTransactionFinal = getJobNodeStorage().getClient().inTransaction()
 							.check().forPath("/").and();
 					for (Entry<String, List<Integer>> entry : shardingItems.entrySet()) {
-						curatorTransactionFinal.create()
-								.forPath(
-										JobNodePath.getNodeFullPath(jobName,
-												ShardingNode.getShardingNode(entry.getKey())),
+						curatorTransactionFinal.create().forPath(
+								JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(entry.getKey())),
 								ItemUtils.toItemsString(entry.getValue()).getBytes(StandardCharsets.UTF_8)).and();
 					}
 					curatorTransactionFinal.setData().withVersion(version)
 							.forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY),
-									SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8))
-							.and();
+									SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
 					curatorTransactionFinal.commit();
 				} catch (BadVersionException e) {
-					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "zookeeper bad version exception happens."), e);
+					LogUtils.warn(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
+							"zookeeper bad version exception happens."), e);
 					needRetry = true;
 					retryCount--;
 				} catch (Exception e) {
 					// 可能多个sharding task导致计算结果有滞后，但是server机器已经被删除，导致commit失败
 					// 实际上可能不影响最终结果，仍然能正常分配分片，因为还会有resharding事件被响应
 					// 修改日志级别为warn级别，避免不必要的告警
-					log.warn(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
+					LogUtils.warn(log, jobName,
+							String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
 				}
 				if (needRetry) {
 					if (retryCount >= 0) {
-						log.info(SaturnConstant.LOG_FORMAT, jobName,
+						LogUtils.info(log, jobName, SaturnConstant.LOG_FORMAT, jobName,
 								"Bad version because of concurrency, will retry to get shards later");
 						Thread.sleep(200L); // NOSONAR
 						getDataStat = getNecessaryDataStat();
 					} else {
-						log.warn(SaturnConstant.LOG_FORMAT, jobName,
+						LogUtils.warn(log, jobName, SaturnConstant.LOG_FORMAT, jobName,
 								"Bad version because of concurrency, give up to retry");
 						break;
 					}
@@ -199,7 +199,8 @@ public class ShardingService extends AbstractSaturnService {
 				}
 			}
 		} catch (Exception e) {
-			log.error(String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
+					e);
 		} finally {
 			getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.PROCESSING);
 		}
@@ -211,7 +212,7 @@ public class ShardingService extends AbstractSaturnService {
 	 * @throws JobShuttingDownException
 	 */
 	private boolean blockUntilShardingComplatedIfNotLeader() throws JobShuttingDownException {
-		for (;;) {
+		for (; ; ) {
 			if (isShutdown) {
 				throw new JobShuttingDownException();
 			}
@@ -221,14 +222,14 @@ public class ShardingService extends AbstractSaturnService {
 			if (!(isNeedSharding() || getJobNodeStorage().isJobNodeExisted(ShardingNode.PROCESSING))) {
 				return true;
 			}
-			log.debug("[{}] msg=Sleep short time until sharding completed", jobName);
+			LogUtils.debug(log, jobName, "[{}] msg=Sleep short time until sharding completed", jobName);
 			BlockUtils.waitingShortTime();
 		}
 	}
 
 	private void waitingOtherJobCompleted() {
 		while (!isShutdown && executionService.hasRunningItems()) {
-			log.info("[{}] msg=Sleep short time until other job completed.", jobName);
+			LogUtils.info(log, jobName, "[{}] msg=Sleep short time until other job completed.", jobName);
 			BlockUtils.waitingShortTime();
 		}
 	}
@@ -241,7 +242,7 @@ public class ShardingService extends AbstractSaturnService {
 
 	/**
 	 * 获取运行在本作业服务器的分片序列号.
-	 * 
+	 *
 	 * @return 运行在本作业服务器的分片序列号
 	 */
 	public List<Integer> getLocalHostShardingItems() {

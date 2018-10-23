@@ -20,14 +20,15 @@
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
-                            <el-table-column prop="zkClusterKey" label="ID" sortable></el-table-column>
-                            <el-table-column prop="zkAlias" label="名称"></el-table-column>
-                            <el-table-column prop="offline" label="状态">
+                            <el-table-column prop="zkClusterKey" label="ID" width="150px" sortable></el-table-column>
+                            <el-table-column prop="zkAlias" label="名称" width="150px"></el-table-column>
+                            <el-table-column prop="offline" label="状态" width="100px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="scope.row.offline ? '' : 'success'" close-transition>{{statusMap[scope.row.offline]}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="zkAddr" label="连接串" width="500px" :show-overflow-tooltip="true"></el-table-column>
+                            <el-table-column prop="description" label="描述" :show-overflow-tooltip="true"></el-table-column>
+                            <el-table-column prop="zkAddr" label="连接串" :show-overflow-tooltip="true"></el-table-column>
                             <el-table-column label="操作" width="80px" align="center">
                                 <template slot-scope="scope">
                                     <el-tooltip content="编辑" placement="top" v-if="$common.hasPerm('registryCenter:addZkCluster')">
@@ -74,6 +75,7 @@ export default {
         zkClusterKey: '',
         alias: '',
         connectString: '',
+        description: '',
       };
       this.clusterInfoTitle = '添加ZK集群';
       this.clusterInfoOperate = 'add';
@@ -95,6 +97,7 @@ export default {
           zkClusterKey: data.zkClusterKey,
           alias: data.zkAlias,
           connectString: data.zkAddr,
+          description: data.description,
         };
         this.clusterInfoTitle = '编辑ZK集群';
         this.clusterInfoOperate = 'edit';

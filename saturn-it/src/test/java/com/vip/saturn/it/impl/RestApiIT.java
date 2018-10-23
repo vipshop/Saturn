@@ -39,6 +39,7 @@ public class RestApiIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 

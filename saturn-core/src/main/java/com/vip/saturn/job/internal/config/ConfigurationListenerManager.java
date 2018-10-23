@@ -21,6 +21,7 @@ import com.vip.saturn.job.internal.failover.FailoverService;
 import com.vip.saturn.job.internal.listener.AbstractJobListener;
 import com.vip.saturn.job.internal.listener.AbstractListenerManager;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
@@ -79,7 +80,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			}
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
-				log.info("[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
+				LogUtils.info(log, jobName, "[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
 					if (!isJobNotNull()) {
@@ -120,7 +121,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				return;
 			}
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
-				log.info("[{}] msg={} 's cron update", jobName, jobName);
+				LogUtils.info(log, jobName, "[{}] msg={} 's cron update", jobName, jobName);
 
 				String cronFromZk = jobConfiguration.getCronFromZk();
 				if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {

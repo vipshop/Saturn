@@ -38,7 +38,7 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -139,7 +139,8 @@ public class TimeoutJobIT extends AbstractSaturnIT {
 
 	@Test
 	public void test_B_shJob() throws InterruptedException {
-		if (!OS.isFamilyUnix()) {
+		// bacause ScriptPidUtils.isPidRunning don't support mac
+		if (!OS.isFamilyUnix() || OS.isFamilyMac()) {
 			return;
 		}
 		final int shardCount = 3;

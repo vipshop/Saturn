@@ -11,6 +11,7 @@
 
 package com.vip.saturn.job.internal.election;
 
+import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,20 +59,22 @@ public class ElectionListenerManager extends AbstractListenerManager {
 				@Override
 				public void run() {
 					try {
-						log.debug("[{}] msg=Leader host nodeChanged", jobName);
+						LogUtils.debug(log, jobName, "[{}] msg=Leader host nodeChanged", jobName);
 						if (isShutdown) {
-							log.debug("[{}] msg=ElectionListenerManager has been shutdown", jobName);
+							LogUtils.debug(log, jobName, "[{}] msg=ElectionListenerManager has been shutdown",
+									jobName);
 							return;
 						}
 						if (!leaderElectionService.hasLeader()) {
-							log.info("[{}] msg=Leader crashed, elect a new leader now", jobName);
+							LogUtils.info(log, jobName, "[{}] msg=Leader crashed, elect a new leader now", jobName);
 							leaderElectionService.leaderElection();
-							log.info("[{}] msg=Leader election completed", jobName);
+							LogUtils.info(log, jobName, "[{}] msg=Leader election completed", jobName);
 						} else {
-							log.debug("[{}] msg=Leader is already existing, unnecessary to election", jobName);
+							LogUtils.debug(log, jobName,
+									"[{}] msg=Leader is already existing, unnecessary to " + "election", jobName);
 						}
 					} catch (Throwable t) {
-						log.error(t.getMessage(), t);
+						LogUtils.error(log, jobName, t.getMessage(), t);
 					}
 				}
 			});

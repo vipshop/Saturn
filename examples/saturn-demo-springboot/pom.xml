@@ -6,7 +6,6 @@
     <artifactId>saturn-demo-springboot</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>saturn-demo-springboot</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -15,24 +14,18 @@
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <saturn.version>3.1.0</saturn.version>
+        <saturn.version>master-SNAPSHOT</saturn.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.vip.saturn</groupId>
-            <artifactId>saturn-job-api</artifactId>
+            <artifactId>saturn-springboot</artifactId>
             <version>${saturn.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

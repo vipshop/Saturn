@@ -40,7 +40,9 @@ public class SaturnScriptJob extends CrondJob {
 
 	@Override
 	public Map<Integer, SaturnJobReturn> handleJob(final SaturnExecutionContext shardingContext) {
-		watchDogList.clear();
+		synchronized (watchDogList) {
+			watchDogList.clear();
+		}
 		shardingItemCallableList.clear();
 
 		final Map<Integer, SaturnJobReturn> retMap = new ConcurrentHashMap<Integer, SaturnJobReturn>();
@@ -143,7 +145,9 @@ public class SaturnScriptJob extends CrondJob {
 			ScriptJobRunner scriptJobRunner = new ScriptJobRunner(callable.getEnvMap(), this, callable.getItem(),
 					callable.getItemValue(), callable.getShardingContext());
 			SaturnExecuteWatchdog watchDog = scriptJobRunner.getWatchdog();
-			watchDogList.add(watchDog);
+			synchronized (watchDogList) {
+				watchDogList.add(watchDog);
+			}
 			saturnJobReturn = scriptJobRunner.runJob();
 			synchronized (watchDogLock) {
 				watchDogList.remove(watchDog);

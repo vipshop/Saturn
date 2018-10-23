@@ -24,6 +24,7 @@ import com.vip.saturn.job.internal.control.ExecutionInfo;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.failover.FailoverNode;
 import com.vip.saturn.job.reg.exception.RegException;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,8 +74,9 @@ public class ExecutionService extends AbstractSaturnService {
 		}
 		Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
 		if (null != nextFireTimePausePeriodEffected) {
-			getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item),
-					nextFireTimePausePeriodEffected.getTime());
+			getJobNodeStorage()
+					.replaceJobNode(ExecutionNode.getNextFireTimeNode(item),
+							nextFireTimePausePeriodEffected.getTime());
 		}
 	}
 
@@ -88,8 +90,8 @@ public class ExecutionService extends AbstractSaturnService {
 		if (!shardingItems.isEmpty()) {
 			reportService.clearInfoMap();
 			Date nextFireTimePausePeriodEffected = jobScheduler.getNextFireTimePausePeriodEffected();
-			Long nextFireTime = nextFireTimePausePeriodEffected == null ? null
-					: nextFireTimePausePeriodEffected.getTime();
+			Long nextFireTime =
+					nextFireTimePausePeriodEffected == null ? null : nextFireTimePausePeriodEffected.getTime();
 			for (int item : shardingItems) {
 				registerJobBeginByItem(item, nextFireTime);
 			}
@@ -98,7 +100,7 @@ public class ExecutionService extends AbstractSaturnService {
 
 	public void registerJobBeginByItem(int item, Long nextFireTime) {
 		if (log.isDebugEnabled()) {
-			log.debug("registerJobBeginByItem: " + item);
+			LogUtils.debug(log, jobName, "registerJobBeginByItem: " + item);
 		}
 		boolean isEnabledReport = configService.isEnabledReport();
 		if (isEnabledReport) {
@@ -111,8 +113,8 @@ public class ExecutionService extends AbstractSaturnService {
 		reportService.initInfoOnBegin(item, nextFireTime);
 	}
 
-	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext, int item,
-			Date nextFireTimePausePeriodEffected) throws Exception {
+	public void registerJobCompletedByItem(final JobExecutionMultipleShardingContext jobExecutionShardingContext,
+			int item, Date nextFireTimePausePeriodEffected) throws Exception {
 		registerJobCompletedControlInfoByItem(jobExecutionShardingContext, item);
 		registerJobCompletedReportInfoByItem(jobExecutionShardingContext, item, nextFireTimePausePeriodEffected);
 	}
@@ -177,11 +179,12 @@ public class ExecutionService extends AbstractSaturnService {
 		try {
 			getJobNodeStorage().createOrUpdateJobNodeWithValue(ExecutionNode.getCompletedNode(item), executorName);
 		} catch (RegException e) {
-			log.warn("update job complete node fail.", e);
+			LogUtils.warn(log, jobName, "update job complete node fail.", e);
 		}
 	}
 
-	private void updateErrorJobReturnIfPossible(JobExecutionMultipleShardingContext jobExecutionShardingContext, int item) {
+	private void updateErrorJobReturnIfPossible(JobExecutionMultipleShardingContext jobExecutionShardingContext,
+			int item) {
 		if (jobExecutionShardingContext instanceof SaturnExecutionContext) {
 			// 为了展现分片处理失败的状态
 			SaturnExecutionContext saturnContext = (SaturnExecutionContext) jobExecutionShardingContext;
@@ -202,7 +205,7 @@ public class ExecutionService extends AbstractSaturnService {
 					getJobNodeStorage().createJobNodeIfNeeded(ExecutionNode.getFailedNode(item));
 				}
 			} catch (RegException e) {
-				log.warn("update job return fail.", e);
+				LogUtils.warn(log, jobName, "update job return fail.", e);
 			}
 		}
 	}
@@ -277,13 +280,14 @@ public class ExecutionService extends AbstractSaturnService {
 	}
 
 	private List<Integer> getAllItems() {
-		return Lists.transform(getJobNodeStorage().getJobNodeChildrenKeys(ExecutionNode.ROOT), new Function<String, Integer>() {
+		return Lists.transform(getJobNodeStorage().getJobNodeChildrenKeys(ExecutionNode.ROOT),
+				new Function<String, Integer>() {
 
-			@Override
-			public Integer apply(final String input) {
-				return Integer.valueOf(input);
-			}
-		});
+					@Override
+					public Integer apply(final String input) {
+						return Integer.valueOf(input);
+					}
+				});
 	}
 
 	/**

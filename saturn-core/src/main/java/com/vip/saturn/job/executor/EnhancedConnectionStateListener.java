@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.vip.saturn.job.utils.LogEvents.ExecutorEvent.COMMON;
+
 /**
  * @author hebelala
  */
@@ -47,7 +49,7 @@ public abstract class EnhancedConnectionStateListener implements ConnectionState
         final String clientStr = client.toString();
         if (ConnectionState.SUSPENDED == newState) {
             connected = false;
-			LogUtils.warn(log, EnhancedConnectionStateListener.class.getCanonicalName(),
+			LogUtils.warn(log, COMMON,
 					"The executor {} found zk is SUSPENDED, client is {}", executorName, clientStr);
             final long sessionId = getSessionId(client);
             if (!closed) {
@@ -78,7 +80,7 @@ public abstract class EnhancedConnectionStateListener implements ConnectionState
                 });
             }
         } else if (ConnectionState.RECONNECTED == newState) {
-			LogUtils.warn(log, EnhancedConnectionStateListener.class.getCanonicalName(),
+			LogUtils.warn(log, COMMON,
 					"The executor {} found zk is RECONNECTED, client is {}", executorName, clientStr);
             connected = true;
         }

@@ -30,7 +30,7 @@ public class RestartAndDumpIT extends AbstractSaturnIT {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        stopExecutorList();
+        stopExecutorListGracefully();
         stopSaturnConsoleList();
     }
 

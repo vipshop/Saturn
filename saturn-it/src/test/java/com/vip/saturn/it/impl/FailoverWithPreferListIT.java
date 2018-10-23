@@ -31,7 +31,7 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 

@@ -309,5 +309,8 @@ ALTER TABLE `user_role` ADD KEY `idx_user_role_r_n_n_i` (`role_key`, `namespace`
 ALTER TABLE `user_role` ADD KEY `idx_user_role_n_n_i` (`namespace`, `need_approval`, `is_deleted`);
 ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_deleted`);
 
--- 3.1.2 update
+-- 3.2.0 update
 ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否重跑标志';
+
+-- 3.3.0 update
+ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';

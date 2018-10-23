@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.vip.saturn.job.console.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,6 +20,8 @@ public class ZkCluster implements Serializable {
 
 	private String zkAddr;
 
+	private String description;
+
 	private String digest;
 
 	private boolean offline = false;
@@ -33,6 +32,7 @@ public class ZkCluster implements Serializable {
 	@JsonIgnore
 	private transient AbstractConnectionListener connectionListener;
 
+	@JsonIgnore
 	private ArrayList<RegistryCenterConfiguration> regCenterConfList = new ArrayList<>();
 
 	public ZkCluster() {
@@ -60,6 +60,14 @@ public class ZkCluster implements Serializable {
 
 	public void setZkAddr(String zkAddr) {
 		this.zkAddr = zkAddr;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public String getDigest() {
@@ -122,6 +130,9 @@ public class ZkCluster implements Serializable {
 		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) {
 			return false;
 		}
+		if (description != null ? !description.equals(zkCluster.description) : zkCluster.description != null) {
+			return false;
+		}
 		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
 
 	}
@@ -131,6 +142,7 @@ public class ZkCluster implements Serializable {
 		int result = zkClusterKey != null ? zkClusterKey.hashCode() : 0;
 		result = 31 * result + (zkAlias != null ? zkAlias.hashCode() : 0);
 		result = 31 * result + (zkAddr != null ? zkAddr.hashCode() : 0);
+		result = 31 * result + (description != null ? description.hashCode() : 0);
 		result = 31 * result + (digest != null ? digest.hashCode() : 0);
 		return result;
 	}

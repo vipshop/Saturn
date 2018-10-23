@@ -40,4 +40,4 @@ if [ $? -ne 0 ];then
   exit -1
 fi
 
-echo "[Step 5] Done, visit ${CONSOLR_URI} for more,and you can visit %CONSOLR_URI%/h2-console to connect to the in-memory db."
+echo "[Step 5] Done, visit ${CONSOLR_URI} for more,and you can visit ${CONSOLR_URI}/h2-console to connect to the in-memory db."

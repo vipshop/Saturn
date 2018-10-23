@@ -23,9 +23,9 @@ public class SaturnLogOutputStream extends LogOutputStream {
 	@Override
 	protected void processLine(String line, int logLevel) {
 		if (logLevel == LEVEL_INFO) {
-			log.info(line);
+			LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, line);
 		} else if (logLevel == LEVEL_ERROR) {
-			log.error(line);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, line);
 		}
 	}
 }

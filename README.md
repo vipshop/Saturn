@@ -21,6 +21,14 @@ Saturn is a platform created by VIP.com(唯品会) to provide a distributed, fau
 - Stand the test of billion times scheduling per day
 - and more
 
+## Quick Start 快速安装
+
+[Via Maven](https://vipshop.github.io/Saturn/#/zh-cn/3.0/quickstart?id=_1-%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8)
+
+[Via Docker compose](https://vipshop.github.io/Saturn/#/zh-cn/3.0/quickstart?id=_2-docker%E5%90%AF%E5%8A%A8)
+
+For production environement, please follow this [instruction](https://vipshop.github.io/Saturn/#/zh-cn/3.0/saturn-console-deployment).
+
 ## Releases 发布历史
 
 [Release notes](https://github.com/vipshop/Saturn/releases)
@@ -35,7 +43,7 @@ For the document of 2.x, please come [here](https://vipshop.github.io/Saturn/#/z
 
 ## The team 开发团队
 
-[The Saturn Wow Team](https://github.com/vipshop/Saturn/wiki/Saturn's-Wow-Team)
+[About us](https://github.com/vipshop/Saturn/wiki/Saturn's-Wow-Team)
 
 ## Cases 使用案例
 

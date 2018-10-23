@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,28 +53,28 @@ public class ReportService extends AbstractSaturnService {
 					Integer item = next.getKey();
 					ExecutionInfo info = next.getValue();
 					if (!shardingItems.contains(item)) {
-						log.info(
-								"sharding items don't have such item: {}, reporter is going to ignore this executionInfo: {}",
-								item, info);
+						LogUtils.info(log, LogEvents.ExecutorEvent.COMMON,
+								"sharding items don't have such item: {}, reporter is going to ignore this "
+										+ "executionInfo: {}", item, info);
 						continue;
 					}
 					if (info.getLastBeginTime() != null) {
-						jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastBeginTimeNode(item),
-								info.getLastBeginTime());
+						jobScheduler.getJobNodeStorage()
+								.replaceJobNode(ExecutionNode.getLastBeginTimeNode(item), info.getLastBeginTime());
 					}
 					if (info.getLastCompleteTime() != null) {
 						jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getLastCompleteTimeNode(item),
 								info.getLastCompleteTime());
 					}
 					if (info.getNextFireTime() != null) {
-						jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getNextFireTimeNode(item),
-								info.getNextFireTime());
+						jobScheduler.getJobNodeStorage()
+								.replaceJobNode(ExecutionNode.getNextFireTimeNode(item), info.getNextFireTime());
 					}
 					jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobLog(item),
 							(info.getJobLog() == null ? "" : info.getJobLog()));
 					jobScheduler.getJobNodeStorage().replaceJobNode(ExecutionNode.getJobMsg(item),
 							(info.getJobMsg() == null ? "" : info.getJobMsg()));
-					log.info("done flushed {} to zk.", info);
+					LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, "done flushed {} to zk.", info);
 				}
 				infoMap.clear();
 			}

@@ -22,13 +22,13 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
 	@BeforeClass
 	public static void setUp() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		startSaturnConsoleList(1);
 	}
 
 	@AfterClass
 	public static void tearDown() throws Exception {
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 		SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = false;
 	}
@@ -104,7 +104,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 		enableJob(job.getJobName());
 		Thread.sleep(3 * 1000);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 
 		Thread.sleep(2000);
 
@@ -132,7 +132,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 		enableJob(job.getJobName());
 		Thread.sleep(3 * 1000);
 
-		stopExecutorList();
+		stopExecutorListGracefully();
 
 		Thread.sleep(1000);
 
@@ -168,7 +168,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
 		assertNoDelete2(job.getJobName(), executorName);
 
-		// stopExecutorList();
+		// stopExecutorListGracefully();
 	}
 
 }

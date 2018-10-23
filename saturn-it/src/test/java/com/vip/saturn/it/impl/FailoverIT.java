@@ -29,6 +29,7 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -53,7 +54,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		final int shardCount = 2;// 设置2个分片
 		final String jobName = "failoverITJobJava1";
 		failover(shardCount, jobName);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	/**
@@ -67,7 +68,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		final int shardCount = 2;// 设置2个分片
 		final String jobName = "failoverITJobJava2";
 		failover(shardCount, jobName);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	/**
@@ -81,7 +82,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		final int shardCount = 2;// 设置2个分片
 		final String jobName = "failoverITJobJava3";
 		failoverWithDisabled(shardCount, jobName);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	/**

@@ -28,6 +28,7 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
@@ -81,7 +82,7 @@ public class ShardingWithChangingLeaderIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		removeJob(jobName);
 		Thread.sleep(1000);
-		stopExecutorList();
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 		Thread.sleep(2000);
 		forceRemoveJob(jobName);

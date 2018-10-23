@@ -22,13 +22,14 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		stopExecutorListGracefully();
 		stopSaturnConsoleList();
 	}
 
 	@After
 	public void after() throws Exception {
 		SimpleJavaJob.lock.set(false);
-		stopExecutorList();
+		stopExecutorListGracefully();
 	}
 
 	@Test
@@ -71,7 +72,7 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
 
-		stopExecutor(0);
+		stopExecutorGracefully(0);
 		Thread.sleep(1000);
 
 		enableJob(jobConfiguration.getJobName());

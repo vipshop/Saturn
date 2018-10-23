@@ -33,7 +33,7 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 
 	@Transactional
 	@Override
-	public int createZkCluster(String clusterKey, String alias, String connectString, String createdBy) {
+	public int createZkCluster(String clusterKey, String alias, String connectString, String description, String createdBy) {
 		ZkClusterInfo zkClusterInfo = new ZkClusterInfo();
 		Date now = new Date();
 		zkClusterInfo.setCreateTime(now);
@@ -43,6 +43,7 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 		zkClusterInfo.setZkClusterKey(clusterKey);
 		zkClusterInfo.setAlias(alias);
 		zkClusterInfo.setConnectString(connectString);
+		zkClusterInfo.setDescription(description);
 		return zkClusterInfoRepository.insert(zkClusterInfo);
 	}
 

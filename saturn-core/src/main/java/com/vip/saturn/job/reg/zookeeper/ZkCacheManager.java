@@ -165,12 +165,11 @@ public class ZkCacheManager {
 	}
 
 	public void shutdown() {
+		// close TreeCache, CloseableExecutorService will be closed, although the pool will not be shutdownNow, but their listeners will accept the interrupt signal
+		// so be careful, such as JobDeleteListener, delete job thread cannot be interrupted
 		closeAllTreeCache();
 		closeAllNodeCache();
 		if (executorService != null && !executorService.isShutdown()) {
-			// Cannot use shutdownNow, because the current thread maybe is running in the pool, and there are codes
-			// after this.
-			// Such as JobDeleteListener
 			executorService.shutdown();
 		}
 	}

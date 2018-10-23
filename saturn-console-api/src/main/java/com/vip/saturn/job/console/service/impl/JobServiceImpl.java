@@ -1092,7 +1092,7 @@ public class JobServiceImpl implements JobService {
 			jobConfig.setShardingTotalCount(shardingTotalCount);
 		} else {
 			String tmp = getContents(rowCells, 6);
-			if (tmp != null) {
+			if (tmp != null && !tmp.trim().isEmpty()) {
 				try {
 					shardingTotalCount = Integer.parseInt(tmp);
 				} catch (NumberFormatException e) {
@@ -1126,7 +1126,7 @@ public class JobServiceImpl implements JobService {
 
 		String shardingItemParameters = getContents(rowCells, 9);
 		if (jobConfig.getLocalMode()) {
-			if (shardingItemParameters == null) {
+			if (shardingItemParameters == null || shardingItemParameters.trim().isEmpty()) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 						createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必填。"));
 			} else {
