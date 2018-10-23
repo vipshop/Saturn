@@ -32,8 +32,12 @@ public class StatisticsPersistence {
 		// 全域当天处理总数，失败总数
 		saveOrUpdateDomainProcessCount(
 				new ZkStatistics(statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount(),
-						statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount()),
-				zkCluster.getZkAddr());
+						statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount()), zkCluster.getZkAddr());
+
+		saveOrUpdateDomainProcessCountHistory(
+				new ZkStatistics(statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount(),
+						statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount()), zkCluster.getZkAddr());
+
 
 		// 失败率Top10的域列表
 		saveOrUpdateTop10FailDomain(statisticsModel.getDomainStatisticsAnalyzer().getDomainList(),
@@ -91,6 +95,15 @@ public class StatisticsPersistence {
 
 		// 作业数量
 		saveOrUpdateJobCount(jobList.size(), zkCluster.getZkAddr());
+	}
+
+	private void saveOrUpdateDomainProcessCountHistory(ZkStatistics zkStatistics, String zkAddr) {
+
+		int successCount = zkStatistics.getCount();
+		int failCount = zkStatistics.getError();
+
+//		saturnStatisticsService.
+
 	}
 
 	private void saveOrUpdateJobCount(int jobCount, String zkAddr) {
@@ -174,8 +187,8 @@ public class StatisticsPersistence {
 	private void saveOrUpdateTop10FailExecutor(List<ExecutorStatistics> executorList, String zkAddr) {
 		try {
 			executorList = DashboardServiceHelper.sortExecutorByFailureRate(executorList);
-			List<ExecutorStatistics> top10FailExecutor = executorList.subList(0,
-					executorList.size() > 9 ? 10 : executorList.size());
+			List<ExecutorStatistics> top10FailExecutor = executorList
+					.subList(0, executorList.size() > 9 ? 10 : executorList.size());
 			String top10FailExecutorJsonString = JSON.toJSONString(top10FailExecutor);
 			SaturnStatistics top10FailExecutorFromDB = saturnStatisticsService
 					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_EXECUTOR, zkAddr);
@@ -196,8 +209,8 @@ public class StatisticsPersistence {
 	private void saveOrUpdateTop10FailDomain(List<DomainStatistics> domainList, String zkAddr) {
 		try {
 			domainList = DashboardServiceHelper.sortDomainByAllTimeFailureRate(domainList);
-			List<DomainStatistics> top10FailDomainList = domainList.subList(0,
-					domainList.size() > 9 ? 10 : domainList.size());
+			List<DomainStatistics> top10FailDomainList = domainList
+					.subList(0, domainList.size() > 9 ? 10 : domainList.size());
 			String top10FailDomainJsonString = JSON.toJSONString(top10FailDomainList);
 			SaturnStatistics top10FailDomainFromDB = saturnStatisticsService
 					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_DOMAIN, zkAddr);
@@ -217,8 +230,8 @@ public class StatisticsPersistence {
 	private void saveOrUpdateTop10UnstableDomain(List<DomainStatistics> domainList, String zkAddr) {
 		try {
 			domainList = DashboardServiceHelper.sortDomainByShardingCount(domainList);
-			List<DomainStatistics> top10UnstableDomain = domainList.subList(0,
-					domainList.size() > 9 ? 10 : domainList.size());
+			List<DomainStatistics> top10UnstableDomain = domainList
+					.subList(0, domainList.size() > 9 ? 10 : domainList.size());
 			String top10UnstableDomainJsonString = JSON.toJSONString(top10UnstableDomain);
 			SaturnStatistics top10UnstableDomainFromDB = saturnStatisticsService
 					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_UNSTABLE_DOMAIN, zkAddr);
@@ -298,8 +311,8 @@ public class StatisticsPersistence {
 	private void saveOrUpdateTop10LoadExecutor(List<ExecutorStatistics> executorList, String zkAddr) {
 		try {
 			executorList = DashboardServiceHelper.sortExecutorByLoadLevel(executorList);
-			List<ExecutorStatistics> top10LoadExecutor = executorList.subList(0,
-					executorList.size() > 9 ? 10 : executorList.size());
+			List<ExecutorStatistics> top10LoadExecutor = executorList
+					.subList(0, executorList.size() > 9 ? 10 : executorList.size());
 			String top10LoadExecutorJsonString = JSON.toJSONString(top10LoadExecutor);
 			SaturnStatistics top10LoadExecutorFromDB = saturnStatisticsService
 					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_LOAD_EXECUTOR, zkAddr);
