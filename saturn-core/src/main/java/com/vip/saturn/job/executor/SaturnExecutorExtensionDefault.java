@@ -1,6 +1,7 @@
 package com.vip.saturn.job.executor;
 
 import com.vip.saturn.job.basic.JobTypeManager;
+import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.java.SaturnJavaJob;
 import com.vip.saturn.job.shell.SaturnScriptJob;
 import com.vip.saturn.job.utils.LocalHostService;
@@ -69,8 +70,8 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void registerJobType() {
-		JobTypeManager.getInstance().registerHandler("JAVA_JOB", SaturnJavaJob.class);
-		JobTypeManager.getInstance().registerHandler("SHELL_JOB", SaturnScriptJob.class);
+		JobTypeManager.getInstance().registerHandler(JobType.JAVA_JOB.name(), SaturnJavaJob.class);
+		JobTypeManager.getInstance().registerHandler(JobType.SHELL_JOB.name(), SaturnScriptJob.class);
 	}
 
 	@Override

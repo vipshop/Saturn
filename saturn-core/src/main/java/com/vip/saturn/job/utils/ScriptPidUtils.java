@@ -3,6 +3,7 @@ package com.vip.saturn.job.utils;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.executor.SaturnExecutorsNode;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
+import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
@@ -396,7 +397,7 @@ public class ScriptPidUtils {
 		String jobTypePath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_TYPE);
 		String jobType = regCenter.get(jobTypePath);
 		// 只检查Shell作业
-		if (!"SHELL_JOB".equals(jobType)) {
+		if (!JobType.SHELL_JOB.name().equals(jobType)) {
 			LogUtils.info(log, jobName, "{} is not shell job ,igore checking ", jobName);
 			return;
 		}
