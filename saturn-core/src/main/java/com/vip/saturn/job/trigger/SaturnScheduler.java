@@ -6,6 +6,7 @@ import org.quartz.Trigger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author chembo.huang
@@ -55,6 +56,14 @@ public class SaturnScheduler {
 
 	public boolean isTerminated() {
 		return executor.isTerminated();
+	}
+
+	public void awaitTermination(long timeout) {
+		try {
+			executor.awaitTermination(timeout, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	public void triggerJob() {

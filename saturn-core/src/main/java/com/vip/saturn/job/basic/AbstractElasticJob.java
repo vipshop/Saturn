@@ -104,6 +104,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 							JobType.SHELL_JOB.name());
 				} else {
 					abort();
+					scheduler.awaitTermination(500L);
 				}
 			}
 		}
