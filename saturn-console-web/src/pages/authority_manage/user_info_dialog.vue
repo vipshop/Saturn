@@ -66,29 +66,21 @@ export default {
             this.$set(this.userInfo, 'needApproval', false);
           }
           if (this.userInfoOperate === 'add') {
-            if (!this.isShowNamespace) {
-              this.$set(this.userInfo, 'namespaces', '');
-            } else {
-              this.$set(this.userInfo, 'namespaces', this.userInfo.namespaces.join(','));
-            }
             const addParams = {
               userNames: this.userInfo.userNames,
               roleKey: this.userInfo.roleKey,
-              namespaces: this.userInfo.namespaces,
+              namespaces: this.isShowNamespace ? this.userInfo.namespaces.join(',') : '',
               needApproval: this.userInfo.needApproval,
             };
             this.userInfoRequest('/console/authorizationManage/addUserRoles', addParams);
           } else if (this.userInfoOperate === 'edit') {
-            if (!this.isShowNamespace) {
-              this.$set(this.userInfo, 'namespace', '');
-            }
             const editParams = {
               preUserName: this.userInfo.preUserName,
               preRoleKey: this.userInfo.preRoleKey,
               preNamespace: this.userInfo.preNamespace,
               userName: this.userInfo.userName,
               roleKey: this.userInfo.roleKey,
-              namespace: this.userInfo.namespace,
+              namespace: this.isShowNamespace ? this.userInfo.namespace : '',
               needApproval: this.userInfo.needApproval,
             };
             this.userInfoRequest('/console/authorizationManage/updateUserRole', editParams);
