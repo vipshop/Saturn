@@ -45,13 +45,11 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景1：如果有空闲的Executor，failover就会立即执行，不需要等到主节点sharding完成 Executor个数 > 分片个数的情况
-	 *
-	 * @throws Exception
 	 */
 	@Test
 	public void test_A_JavaJob() throws Exception {
-		startExecutorList(3);// 设置3个Executor
-		final int shardCount = 2;// 设置2个分片
+		startExecutorList(3);
+		final int shardCount = 2;
 		final String jobName = "failoverITJobJava1";
 		failover(shardCount, jobName);
 		stopExecutorListGracefully();
@@ -59,13 +57,11 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景2：普通的failover场景 Executor个数 = 分片个数的情况
-	 *
-	 * @throws Exception
 	 */
 	@Test
 	public void test_B_JavaJob() throws Exception {
-		startExecutorList(2);// 设置2个Executor
-		final int shardCount = 2;// 设置2个分片
+		startExecutorList(2);
+		final int shardCount = 2;
 		final String jobName = "failoverITJobJava2";
 		failover(shardCount, jobName);
 		stopExecutorListGracefully();
@@ -73,26 +69,29 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 场景3：在failover执行之前禁用的作业重新启用后不应该继续上次的failover流程
-	 *
-	 * @throws Exception
 	 */
 	@Test
 	public void test_C_JavaJob() throws Exception {
-		startExecutorList(2);// 设置2个Executor
-		final int shardCount = 2;// 设置2个分片
+		startExecutorList(2);
+		final int shardCount = 2;
 		final String jobName = "failoverITJobJava3";
-		failoverWithDisabled(shardCount, jobName);
+		failoverWithDisabled(shardCount, jobName, 2);
 		stopExecutorListGracefully();
 	}
 
 	/**
-	 *
-	 * @param shardCount
-	 * @param jobName
-	 * @throws InterruptedException
-	 * @throws Exception
+	 * 禁用作业，停止executor，业务正在运行，java作业仍将被强杀
 	 */
-	private void failover(final int shardCount, final String jobName) throws InterruptedException, Exception {
+	@Test
+	public void test_D_disabledJavaJobStillBeAborted() throws Exception {
+		startExecutorList(2);
+		final int shardCount = 2;
+		final String jobName = "failoverITJobJava4";
+		failoverWithDisabled(shardCount, jobName, 1);
+		stopExecutorListGracefully();
+	}
+
+	private void failover(final int shardCount, final String jobName) throws Exception {
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			LongtimeJavaJob.JobStatus status = new LongtimeJavaJob.JobStatus();
@@ -207,14 +206,9 @@ public class FailoverIT extends AbstractSaturnIT {
 
 	/**
 	 * 在failover执行之前禁用的作业重新启用后不应该继续上次的failover流程
-	 *
-	 * @param shardCount
-	 * @param jobName
-	 * @throws InterruptedException
-	 * @throws Exception
 	 */
-	private void failoverWithDisabled(final int shardCount, final String jobName)
-			throws InterruptedException, Exception {
+	private void failoverWithDisabled(final int shardCount, final String jobName, final int disableTime)
+			throws Exception {
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			LongtimeJavaJob.JobStatus status = new LongtimeJavaJob.JobStatus();
@@ -270,6 +264,10 @@ public class FailoverIT extends AbstractSaturnIT {
 		final List<Integer> items2 = ItemUtils.toItemList(regCenter
 				.getDirectly(JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(secondExecutorName))));
 
+		if (disableTime == 1) {
+			disableJob(jobName);
+		}
+
 		// 4 停止第一个executor，在该executor上运行的分片会失败转移
 		stopExecutor(0);
 		System.out.println("items:" + items);
@@ -314,7 +312,9 @@ public class FailoverIT extends AbstractSaturnIT {
 		}
 
 		// 8 禁用作业
-		disableJob(jobName);
+		if (disableTime == 2) {
+			disableJob(jobName);
+		}
 
 		// 9 等待executor2分片运行完
 		try {

@@ -16,6 +16,7 @@ package com.vip.saturn.job.basic;
 
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
+import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
@@ -95,7 +96,16 @@ public abstract class AbstractElasticJob implements Stoppable {
 			jobScheduler.shutdownExecutorService();
 			// 检查调度器任务是否完成，如果没有，中止业务
 			if (!scheduler.isTerminated()) {
-				abort();
+				if (configService.isShellJob() && !configService.isJobEnabled()) {
+					// 如果Shell作业业务进程有子进程，我们可能不能完全中止其子进程。
+					// 所以，对于禁用的Shell作业，不中止业务。因为，作业处于禁用状态，说明是人为介入的可控状态。
+					// 另外，在该Executor再次启动该作业前，会检查该作业是否正在运行，如果正在运行并且仍然处于禁用状态，则会相应的持久化相关状态到zk，防止重入；如果正在运行并且已经处于启用状态，则会中止其进程。
+					LogUtils.warn(log, jobName, "the job is the disabled {}, will not be aborted",
+							JobType.SHELL_JOB.name());
+				} else {
+					abort();
+					scheduler.awaitTermination(500L);
+				}
 			}
 		}
 	}
