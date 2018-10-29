@@ -52,7 +52,7 @@ public class ProcessCountResetTask extends TimerTask {
 					// 清零zk统计值
 					jobScheduler.getServerService().persistProcessFailureCount(0);
 					jobScheduler.getServerService().persistProcessSuccessCount(0);
-					LogUtils.error(log, jobName, "msg={} reset the job {}'s statistics data", executorName, jobName);
+					LogUtils.error(log, jobName, "{} reset the job {}'s statistics data", executorName, jobName);
 				}
 			}
 		} catch (Throwable t) {

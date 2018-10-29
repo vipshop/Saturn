@@ -80,7 +80,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			}
 			if (ConfigurationNode.isEnabledPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				Boolean isJobEnabled = Boolean.valueOf(new String(event.getData().getData()));
-				LogUtils.info(log, jobName, "[{}] msg={} 's enabled change to {}", jobName, jobName, isJobEnabled);
+				LogUtils.info(log, jobName, "{} 's enabled change to {}", jobName, isJobEnabled);
 				jobConfiguration.reloadConfig();
 				if (isJobEnabled) {
 					if (!isJobNotNull()) {
@@ -121,7 +121,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				return;
 			}
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
-				LogUtils.info(log, jobName, "[{}] msg={} 's cron update", jobName, jobName);
+				LogUtils.info(log, jobName, "{} 's cron update", jobName);
 
 				String cronFromZk = jobConfiguration.getCronFromZk();
 				if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {

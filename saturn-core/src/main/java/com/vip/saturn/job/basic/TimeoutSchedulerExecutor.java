@@ -72,8 +72,7 @@ public class TimeoutSchedulerExecutor {
 				if (!shardingItemFutureTask.isDone() && javaShardingItemCallable.setTimeout()) {
 					String jobName = javaShardingItemCallable.getJobName();
 					Integer item = javaShardingItemCallable.getItem();
-					LogUtils.info(log, jobName, "[{}] msg=Force stop timeout job, jobName:{}, item:{}", jobName,
-							jobName, item);
+					LogUtils.info(log, jobName, "Force stop timeout job, jobName:{}, item:{}", jobName, item);
 					// 调用beforeTimeout函数
 					javaShardingItemCallable.beforeTimeout();
 					// 强杀

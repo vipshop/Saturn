@@ -154,8 +154,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 			LogUtils.debug(log, jobName, "Saturn finish to execute job [{}], sharding context:{}.", jobName,
 					shardingContext);
 		} catch (Exception e) {
-			LogUtils.warn(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
-					e);
+			LogUtils.warn(log, jobName, e.getMessage(), e);
 		} finally {
 			running = false;
 		}
@@ -207,8 +206,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 				if (ephemeralOwner != sessionId) {
 					LogUtils.info(log, jobName,
 							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk "
-									+ "sessionid is {}",
-							item, ephemeralOwner, sessionId);
+									+ "sessionid is {}", item, ephemeralOwner, sessionId);
 					return false;
 				} else {
 					return true;
@@ -219,7 +217,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 
 			return false;
 		} catch (Throwable e) {
-			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()), e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 			return false;
 		}
 	}

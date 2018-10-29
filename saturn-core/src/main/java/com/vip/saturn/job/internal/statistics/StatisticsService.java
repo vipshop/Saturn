@@ -82,8 +82,8 @@ public class StatisticsService extends AbstractSaturnService {
 			if (processCountJobFuture != null) {
 				processCountJobFuture.cancel(true);
 				LogUtils.info(log, jobName,
-						"[{}] msg=Reschedule ProcessCountJob of the {} job, the processCountIntervalSeconds is {}",
-						jobName, jobConfiguration.getJobName(), processCountIntervalSeconds);
+						"Reschedule ProcessCountJob of the {} job, the processCountIntervalSeconds is {}",
+						jobConfiguration.getJobName(), processCountIntervalSeconds);
 			}
 			processCountJobFuture = processCountExecutor
 					.scheduleAtFixedRate(new ProcessCountJob(jobScheduler), new Random().nextInt(10),
@@ -91,7 +91,7 @@ public class StatisticsService extends AbstractSaturnService {
 
 		} else { // don't count, reset to zero.
 			if (processCountJobFuture != null) {
-				LogUtils.info(log, jobName, "[{}] msg=shutdown the task of reporting statistics data");
+				LogUtils.info(log, jobName, "shutdown the task of reporting statistics data");
 				processCountJobFuture.cancel(true);
 				processCountJobFuture = null;
 			}

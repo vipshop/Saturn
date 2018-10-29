@@ -92,7 +92,7 @@ public class ScriptPidUtils {
 		try {
 			FileUtils.forceMkdir(executingHome);
 		} catch (Exception ex) {
-			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "msg=Creating directory error", ex);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Creating directory error", ex);
 		}
 
 		if (executingHome.exists() && executingHome.isDirectory()) {
@@ -118,8 +118,7 @@ public class ScriptPidUtils {
 			File itemFile = new File(path);
 			FileUtils.writeStringToFile(itemFile, String.valueOf(pid));
 		} catch (IOException e) {
-			LogUtils.error(log, jobName,
-					String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Writing the pid file error"), e);
+			LogUtils.error(log, jobName, "Writing the pid file error", e);
 		}
 	}
 
@@ -139,13 +138,11 @@ public class ScriptPidUtils {
 			try {
 				return Long.parseLong(pid);
 			} catch (NumberFormatException e) {
-				LogUtils.error(log, jobName,
-						String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
+				LogUtils.error(log, jobName, "Parsing the pid file error", e);
 				return UNKNOWN_PID;
 			}
 		} catch (IOException e) {
-			LogUtils.error(log, jobName,
-					String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Reading the pid file error"), e);
+			LogUtils.error(log, jobName, "Reading the pid file error", e);
 			return UNKNOWN_PID;
 		}
 	}
@@ -190,8 +187,7 @@ public class ScriptPidUtils {
 			try {
 				pids.add(Long.valueOf(file.getName()));
 			} catch (Exception e) {
-				LogUtils.error(log, jobName,
-						String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Parsing the pid file error"), e);
+				LogUtils.error(log, jobName, "Parsing the pid file error", e);
 			}
 		}
 
@@ -338,7 +334,7 @@ public class ScriptPidUtils {
 			SaturnLogOutputStream errorOS = new SaturnLogOutputStream(log, SaturnLogOutputStream.LEVEL_ERROR);
 			PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorOS, input);
 			executor.setStreamHandler(streamHandler);
-			LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, "msg=exec command: {}", cmdLine);
+			LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, "exec command: {}", cmdLine);
 			int value = executor.execute(cmdLine, env);
 			if (value == 0) {
 				String out = outputStream.toString();
@@ -347,7 +343,7 @@ public class ScriptPidUtils {
 				return null;
 			}
 		} catch (Exception e) {
-			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "msg=" + e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, e.getMessage(), e);
 			return null;
 		}
 	}
@@ -368,7 +364,7 @@ public class ScriptPidUtils {
 	public static void forceStopRunningShellJob(final String executorName, final String jobName) {
 		String[] itemPaths = ScriptPidUtils.getItemsPaths(executorName, jobName);
 		if (itemPaths.length == 0) {
-			LogUtils.info(log, jobName, "[{}] msg={} no pids to kill", jobName, jobName);
+			LogUtils.info(log, jobName, "{} no pids to kill", jobName);
 			return;
 		}
 		for (String path : itemPaths) {
@@ -402,8 +398,8 @@ public class ScriptPidUtils {
 		}
 		String enabledPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED);
 		String isEnabledStr = regCenter.get(enabledPath);
-		LogUtils.info(log, jobName, "[{}] msg={} pidFromFile size :{};isEnabledStr:{}", jobName, jobName,
-				itemPaths.length, isEnabledStr);
+		LogUtils.info(log, jobName, "{} pidFromFile size :{};isEnabledStr:{}", jobName, itemPaths.length,
+				isEnabledStr);
 
 		// null means new job, if there are pid files, kill -9.
 		// if it's true, means it's an enabled job, there shouldn't exist the pid files. kill them with no mercy.
@@ -427,17 +423,15 @@ public class ScriptPidUtils {
 						String runningPath = JobNodePath.getNodeFullPath(jobName,
 								String.format(ExecutionNode.RUNNING, Integer.valueOf(itemStr)));
 						regCenter.persistEphemeral(runningPath, "");
-						LogUtils.info(log, jobName, "[{}] msg={}-{} restores running status, path={}", jobName,
-								jobName,
-								path, runningPath);
+						LogUtils.info(log, jobName, "{}-{} restores running status, path={}", jobName, path,
+								runningPath);
 						System.out.println(
 								jobName + "-" + path + " restores running status, path=" + runningPath);// NOSONAR
 						shardItems.add(itemStr);
-						LogUtils.info(log, jobName, "[{}] msg={}-{} is running, pid={}", jobName, jobName, path, pid);
+						LogUtils.info(log, jobName, "{}-{} is running, pid={}", jobName, path, pid);
 					} else {
 						ScriptPidUtils.removeAllPidFile(executorName, jobName, itemStr);
-						LogUtils.info(log, jobName, "[{}] msg={}-{} is not running, pid={}", jobName, jobName, path,
-								pid);
+						LogUtils.info(log, jobName, "{}-{} is not running, pid={}", jobName, path, pid);
 					}
 				}
 
@@ -481,14 +475,13 @@ public class ScriptPidUtils {
 							String runningPath = JobNodePath
 									.getNodeFullPath(jobName, String.format(ExecutionNode.RUNNING, shardItem));
 							regCenter.remove(runningPath);
-							LogUtils.info(log, jobName, "[{}] msg={} - {} is done, write complete node path {}",
-									jobName, jobName, shardItem, completedPath);
+							LogUtils.info(log, jobName, "{} - {} is done, write complete node path {}", jobName,
+									shardItem, completedPath);
 							System.out.println(jobName + "-" + shardItem + " is done.");// NOSONAR
 						}
 					}
 					if (finished) {
-						LogUtils.info(log, jobName,
-								"[{}] msg=all running shell processes are done. now quit the thread.");
+						LogUtils.info(log, jobName, "all running shell processes are done. now quit the thread.");
 						System.out.println("all running shell processes are done. now quit the thread.");// NOSONAR
 						break;
 					}
@@ -576,7 +569,7 @@ public class ScriptPidUtils {
 			}
 			env = parseString2Map(output);
 		} catch (Exception e) {
-			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "msg=" + e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, e.getMessage(), e);
 		}
 		return env;
 	}
