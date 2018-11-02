@@ -174,7 +174,7 @@ public class JobNodeStorage {
 	 */
 	public void fillJobNodeIfNullOrOverwrite(final String node, final Object value) {
 		if (null == value) {
-			LogUtils.info(log, jobName, "[{}] msg=job node value is null, node:{}", jobName, node);
+			LogUtils.info(log, jobName, "job node value is null, node:{}", node);
 			return;
 		}
 		if (!isJobNodeExisted(node) || (!value.toString().equals(getJobNodeDataDirectly(node)))) {
@@ -269,8 +269,7 @@ public class JobNodeStorage {
 			callback.execute();
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
-					e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -294,8 +293,7 @@ public class JobNodeStorage {
 			}
 			// CHECKSTYLE:OFF
 		} catch (final Exception e) {
-			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
-					e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 			// CHECKSTYLE:ON
 			if (e instanceof InterruptedException) {// NOSONAR
 				Thread.currentThread().interrupt();
@@ -352,8 +350,7 @@ public class JobNodeStorage {
 			newZk.remove(fullPath);
 			return true;
 		} catch (Exception e) {
-			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
-					e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 		}
 		return false;
 	}

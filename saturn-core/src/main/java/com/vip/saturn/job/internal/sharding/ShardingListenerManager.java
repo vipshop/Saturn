@@ -130,7 +130,7 @@ public class ShardingListenerManager extends AbstractListenerManager {
 						if (jobScheduler == null || jobScheduler.getJob() == null) {
 							return;
 						}
-						LogUtils.info(log, jobName, "[{}] msg={} trigger on-resharding", jobName, jobName);
+						LogUtils.info(log, jobName, "{} trigger on-resharding", jobName);
 						jobScheduler.getJob().onResharding();
 					} catch (Throwable t) {
 						LogUtils.error(log, jobName, "Exception throws during resharding", t);

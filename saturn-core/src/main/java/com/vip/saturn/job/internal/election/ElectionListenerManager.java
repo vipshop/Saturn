@@ -59,19 +59,17 @@ public class ElectionListenerManager extends AbstractListenerManager {
 				@Override
 				public void run() {
 					try {
-						LogUtils.debug(log, jobName, "[{}] msg=Leader host nodeChanged", jobName);
+						LogUtils.debug(log, jobName, "Leader host nodeChanged", jobName);
 						if (isShutdown) {
-							LogUtils.debug(log, jobName, "[{}] msg=ElectionListenerManager has been shutdown",
-									jobName);
+							LogUtils.debug(log, jobName, "ElectionListenerManager has been shutdown", jobName);
 							return;
 						}
 						if (!leaderElectionService.hasLeader()) {
-							LogUtils.info(log, jobName, "[{}] msg=Leader crashed, elect a new leader now", jobName);
+							LogUtils.info(log, jobName, "Leader crashed, elect a new leader now");
 							leaderElectionService.leaderElection();
-							LogUtils.info(log, jobName, "[{}] msg=Leader election completed", jobName);
+							LogUtils.info(log, jobName, "Leader election completed");
 						} else {
-							LogUtils.debug(log, jobName,
-									"[{}] msg=Leader is already existing, unnecessary to " + "election", jobName);
+							LogUtils.debug(log, jobName, "Leader is already existing, unnecessary to " + "election");
 						}
 					} catch (Throwable t) {
 						LogUtils.error(log, jobName, t.getMessage(), t);

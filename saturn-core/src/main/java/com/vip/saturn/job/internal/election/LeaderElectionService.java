@@ -48,8 +48,7 @@ public class LeaderElectionService extends AbstractSaturnService {
 					if (jobNodeStorage.isConnected() && executorName
 							.equals(jobNodeStorage.getJobNodeDataDirectly(ElectionNode.LEADER_HOST))) {
 						jobNodeStorage.removeJobNodeIfExisted(ElectionNode.LEADER_HOST);
-						LogUtils.info(log, jobName, "[{}] msg={} that was {}'s leader, released itself", jobName,
-								executorName, jobName);
+						LogUtils.info(log, jobName, "{} that was {}'s leader, released itself", executorName, jobName);
 					}
 				} catch (Throwable t) {
 					LogUtils.error(log, jobName, t.getMessage(), t);
@@ -72,7 +71,7 @@ public class LeaderElectionService extends AbstractSaturnService {
 	 */
 	public Boolean isLeader() {
 		while (!isShutdown.get() && !hasLeader()) {
-			LogUtils.info(log, jobName, "[{}] msg=No leader, try to election", jobName);
+			LogUtils.info(log, jobName, "No leader, try to election");
 			leaderElection();
 		}
 		return executorName.equals(getJobNodeStorage().getJobNodeDataDirectly(ElectionNode.LEADER_HOST));
@@ -97,8 +96,7 @@ public class LeaderElectionService extends AbstractSaturnService {
 				}
 				if (!getJobNodeStorage().isJobNodeExisted(ElectionNode.LEADER_HOST)) {
 					getJobNodeStorage().fillEphemeralJobNode(ElectionNode.LEADER_HOST, executorName);
-					LogUtils.info(log, jobName, "[{}] msg=executor {} become job {}'s leader", jobName, executorName,
-							jobName);
+					LogUtils.info(log, jobName, "executor {} become job {}'s leader", executorName, jobName);
 				}
 			}
 		}

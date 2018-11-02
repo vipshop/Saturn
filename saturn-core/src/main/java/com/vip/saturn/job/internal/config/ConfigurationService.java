@@ -368,7 +368,8 @@ public class ConfigurationService extends AbstractSaturnService {
 			return isEnabledReportInJobConfig;
 		}
 		// if isEnabledReportInJobConfig == null, 如果作业类型是JAVA或者Shell，默认上报
-		if ("JAVA_JOB".equals(jobConfiguration.getJobType()) || "SHELL_JOB".equals(jobConfiguration.getJobType())) {
+		if (JobType.JAVA_JOB.name().equals(jobConfiguration.getJobType()) || JobType.SHELL_JOB.name()
+				.equals(jobConfiguration.getJobType())) {
 			return true;
 		}
 
@@ -416,8 +417,8 @@ public class ConfigurationService extends AbstractSaturnService {
 		return Maps.newHashMap();
 	}
 
-	public String getRawJobType() {
-		return jobConfiguration.getJobType();
+	public boolean isShellJob() {
+		return JobType.SHELL_JOB.name().equals(jobConfiguration.getJobType());
 	}
 
 	/**

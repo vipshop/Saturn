@@ -172,26 +172,23 @@ public class ShardingService extends AbstractSaturnService {
 									SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
 					curatorTransactionFinal.commit();
 				} catch (BadVersionException e) {
-					LogUtils.warn(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName,
-							"zookeeper bad version exception happens."), e);
+					LogUtils.warn(log, jobName, "zookeeper bad version exception happens.", e);
 					needRetry = true;
 					retryCount--;
 				} catch (Exception e) {
 					// 可能多个sharding task导致计算结果有滞后，但是server机器已经被删除，导致commit失败
 					// 实际上可能不影响最终结果，仍然能正常分配分片，因为还会有resharding事件被响应
 					// 修改日志级别为warn级别，避免不必要的告警
-					LogUtils.warn(log, jobName,
-							String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, "Commit shards failed"), e);
+					LogUtils.warn(log, jobName, "Commit shards failed", e);
 				}
 				if (needRetry) {
 					if (retryCount >= 0) {
-						LogUtils.info(log, jobName, SaturnConstant.LOG_FORMAT, jobName,
+						LogUtils.info(log, jobName,
 								"Bad version because of concurrency, will retry to get shards later");
 						Thread.sleep(200L); // NOSONAR
 						getDataStat = getNecessaryDataStat();
 					} else {
-						LogUtils.warn(log, jobName, SaturnConstant.LOG_FORMAT, jobName,
-								"Bad version because of concurrency, give up to retry");
+						LogUtils.warn(log, jobName, "Bad version because of concurrency, give up to retry");
 						break;
 					}
 				} else {
@@ -199,8 +196,7 @@ public class ShardingService extends AbstractSaturnService {
 				}
 			}
 		} catch (Exception e) {
-			LogUtils.error(log, jobName, String.format(SaturnConstant.LOG_FORMAT_FOR_STRING, jobName, e.getMessage()),
-					e);
+			LogUtils.error(log, jobName, e.getMessage(), e);
 		} finally {
 			getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.PROCESSING);
 		}
@@ -222,14 +218,14 @@ public class ShardingService extends AbstractSaturnService {
 			if (!(isNeedSharding() || getJobNodeStorage().isJobNodeExisted(ShardingNode.PROCESSING))) {
 				return true;
 			}
-			LogUtils.debug(log, jobName, "[{}] msg=Sleep short time until sharding completed", jobName);
+			LogUtils.debug(log, jobName, "Sleep short time until sharding completed");
 			BlockUtils.waitingShortTime();
 		}
 	}
 
 	private void waitingOtherJobCompleted() {
 		while (!isShutdown && executionService.hasRunningItems()) {
-			LogUtils.info(log, jobName, "[{}] msg=Sleep short time until other job completed.", jobName);
+			LogUtils.info(log, jobName, "Sleep short time until other job completed.");
 			BlockUtils.waitingShortTime();
 		}
 	}

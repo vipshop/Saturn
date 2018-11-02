@@ -168,8 +168,7 @@ public class FailoverService extends AbstractSaturnService {
 			if (items != null && !items.isEmpty()) {
 				int crashedItem = Integer
 						.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
-				LogUtils.debug(log, jobName, "[{}] msg=Elastic job: failover job begin, crashed item:{}.", jobName,
-						crashedItem);
+				LogUtils.debug(log, jobName, "Elastic job: failover job begin, crashed item:{}.", crashedItem);
 				getJobNodeStorage()
 						.fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
 				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));

@@ -63,8 +63,7 @@ public class ControlListenerManager extends AbstractListenerManager {
 			}
 			if (ControlNode.isReportPath(jobName, path) && (Type.NODE_UPDATED == event.getType()
 					|| Type.NODE_ADDED == event.getType())) {
-				LogUtils.info(log, jobName,
-						"[{}] msg={} received report event from console, start to flush data to zk.", jobName,
+				LogUtils.info(log, jobName, "{} received report event from console, start to flush data to zk.",
 						jobName);
 				reportService.reportData2Zk();
 			}
