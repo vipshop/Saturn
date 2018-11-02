@@ -34,11 +34,6 @@ public class StatisticsPersistence {
 				new ZkStatistics(statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount(),
 						statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount()), zkCluster.getZkAddr());
 
-		saveOrUpdateDomainProcessCountHistory(
-				new ZkStatistics(statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount(),
-						statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount()), zkCluster.getZkAddr());
-
-
 		// 失败率Top10的域列表
 		saveOrUpdateTop10FailDomain(statisticsModel.getDomainStatisticsAnalyzer().getDomainList(),
 				zkCluster.getZkAddr());
@@ -95,15 +90,6 @@ public class StatisticsPersistence {
 
 		// 作业数量
 		saveOrUpdateJobCount(jobList.size(), zkCluster.getZkAddr());
-	}
-
-	private void saveOrUpdateDomainProcessCountHistory(ZkStatistics zkStatistics, String zkAddr) {
-
-		int successCount = zkStatistics.getCount();
-		int failCount = zkStatistics.getError();
-
-//		saturnStatisticsService.
-
 	}
 
 	private void saveOrUpdateJobCount(int jobCount, String zkAddr) {

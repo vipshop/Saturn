@@ -1,8 +1,11 @@
 package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.DashboardHistory;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -97,5 +100,37 @@ public interface DashboardService {
 	Map<String, Long> versionExecutorNumber(String key) throws SaturnJobConsoleException;
 
 	Map<String, Long> versionExecutorNumberByAllZkCluster() throws SaturnJobConsoleException;
+
+	/**
+	 * 保存dashboard历史
+	 * @param zkCluster
+	 * @param type
+	 * @param topic
+	 * @param content
+	 */
+	void saveDashboardHistory(String zkCluster, String type, String topic, String content);
+
+	/**
+	 * 批量保存dashboard历史
+	 * @param dashboardHistories
+	 */
+	void batchSaveDashboardHistory(List<DashboardHistory> dashboardHistories);
+
+	/**
+	 * 获取domain历史
+	 */
+	List<DashboardHistory> getDashboardDomainHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate) throws SaturnJobConsoleException;
+
+
+	/**
+	 * 获取全域历史
+	 * @param type
+	 * @param topic
+	 * @param fromDate
+	 * @param toDate
+	 * @return
+	 */
+	Map<String, List> getAllDashboardDomainHistory(String type, String topic, Date fromDate, Date toDate);
 
 }
