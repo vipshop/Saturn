@@ -20,6 +20,13 @@
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="全域历史执行数据">
+                            <div slot="chart">
+                                <MyLine id="domainProcessHistory" :data-option="allDomainHistoryOption.optionInfo"></MyLine>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="失败率最高的Top10域">
                             <div slot="chart">
                                 <Column id="top10FailDomain" :option-info="top10FailDomainOption.optionInfo"></Column>
@@ -58,6 +65,12 @@ export default {
       },
       top10UnstableDomainOption: {
         optionInfo: {},
+      },
+      allDomainHistoryOption: {
+        optionInfo: {
+          xAxis: [],
+          yAxis: [],
+        },
       },
     };
   },
@@ -157,11 +170,21 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取域版本分布请求失败！'); });
     },
+    getAllDomainHistory() {
+      return this.$http.get('/console/dashboard/domainHistoryCount', { zkClusterKey: this.zkClusterKey }).then((data) => {
+        const optionInfo = {
+          xAxis: data.xAxis,
+          yAxis: [{ name: '历史记录', data: data.yAxis }],
+        };
+        this.$set(this.allDomainHistoryOption, 'optionInfo', optionInfo);
+      }).catch(() => { this.$http.buildErrorHandler('获取历史全域数据请求失败！'); });
+    },
     init() {
       this.loading = true;
       Promise.all(
         [this.getDomainProcessCount(), this.getTop10FailDomain(),
-          this.getTop10UnstableDomain(), this.getDomainExecutorVersionNumber()]).then(() => {
+          this.getTop10UnstableDomain(), this.getDomainExecutorVersionNumber(),
+          this.getAllDomainHistory()]).then(() => {
             this.loading = false;
           });
     },

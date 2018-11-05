@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.vip.saturn.job.console.mybatis.repository.DashboardHistoryRepository">
+    <resultMap id="BaseResultMap" type="com.vip.saturn.job.console.mybatis.entity.DashboardHistory">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="zk_cluster" property="zkCluster" jdbcType="VARCHAR"/>
+        <result column="record_type" property="type" jdbcType="VARCHAR"/>
+        <result column="topic" property="topic" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+        <result column="record_date" property="recordDate" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+    id, zk_cluster, record_type, topic, content, record_date
+    </sql>
+
+    <select id="selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from saturn_dashboard_history
+        where 1=1
+        <if test="zkClusters != null">
+            and zk_cluster in
+            <foreach collection="zkClusters" item="item" index="index" open="(" close=")" separator=",">
+                '${item}'
+            </foreach>
+        </if>
+        <if test="type != null">
+            and record_type = #{type}
+        </if>
+        <if test="topic != null">
+            and topic = #{topic}
+        </if>
+        <if test="startDate != null">
+            and DATE_FORMAT(#{startDate}, '%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(record_date, '%Y-%m-%d')
+        </if>
+        <if test="endDate != null">
+            and DATE_FORMAT(record_date, '%Y-%m-%d') <![CDATA[<=]]>  DATE_FORMAT(#{endDate}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <insert id="createOrUpdateHistory" parameterType="map">
+    insert into saturn_dashboard_history(
+      zk_cluster, record_type , topic, content, record_date
+    ) values (
+      #{zkCluster}, #{type}, #{topic}, #{content}, #{recordDate}
+    ) on duplicate key update
+      content = #{content}
+    </insert>
+
+    <insert id="batchCreateOrUpdateHistory" parameterType="java.util.List">
+        insert into saturn_dashboard_history(
+        zk_cluster, record_type , topic, content, record_date
+        ) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.zkCluster}, #{item.type}, #{item.topic}, #{item.content}, #{item.recordDate}
+            )
+        </foreach>
+        on duplicate key update
+        content = values(content)
+    </insert>
+
+</mapper>

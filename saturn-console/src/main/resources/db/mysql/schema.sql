@@ -203,10 +203,10 @@ CREATE TABLE `release_version_info` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_rvi_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Saturn发布版本信息表';
- 
+
 
 CREATE TABLE `namespace_version_mapping` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主 键',
   `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
   `version_number` varchar(255) NOT NULL DEFAULT '' COMMENT '版本号',
   `is_forced` tinyint(1) DEFAULT '0' COMMENT '当前版本已经不低于该版本时，是否强制使用该配置版本：0，不强制；1，强制',
@@ -435,3 +435,14 @@ ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '�
 
 -- 3.3.0 update
 ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';
+
+CREATE TABLE `saturn_dashboard_history` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `zk_cluster` varchar(255) NOT NULL DEFAULT '' COMMENT '所属zk集群',
+  `record_type` varchar(255) NOT NULL DEFAULT '' COMMENT '类型',
+  `topic` varchar(255) NOT NULL DEFAULT '' COMMENT '主题',
+  `content` longtext NOT NULL COMMENT '内容',
+  `record_date` date NOT NULL COMMENT '记录日期',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';

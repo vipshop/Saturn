@@ -2,14 +2,11 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.vip.saturn.job.console.domain.DomainStatistics;
-import com.vip.saturn.job.console.domain.ExecutorStatistics;
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ZkCluster;
-import com.vip.saturn.job.console.domain.ZkStatistics;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.DashboardHistory;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
+import com.vip.saturn.job.console.mybatis.repository.DashboardHistoryRepository;
 import com.vip.saturn.job.console.mybatis.service.SaturnStatisticsService;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.service.DashboardService;
@@ -21,22 +18,19 @@ import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.ResetCountType;
 import com.vip.saturn.job.console.utils.StatisticsTableKeyConstant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author chembo.huang
@@ -59,6 +53,9 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private ExecutorService updateStatisticsThreadPool;
 
+	@Autowired
+	private DashboardHistoryRepository dashboardHistoryRepository;
+
 	@PostConstruct
 	public void init() {
 		initUpdateStatisticsThreadPool();
@@ -69,6 +66,14 @@ public class DashboardServiceImpl implements DashboardService {
 		if (updateStatisticsThreadPool != null) {
 			updateStatisticsThreadPool.shutdownNow();
 		}
+	}
+
+	public enum DashboardType {
+		DOMAIN, EXECUTOR, JOB
+	}
+
+	public enum DashboardTopic {
+		DOMAIN_OVERALL_COUNT, DOMAIN_COUNT, EXECUTOR_COUNT, JOB_COUNT
 	}
 
 	private void initUpdateStatisticsThreadPool() {
@@ -122,8 +127,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public SaturnStatistics top10FailureJob(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_JOB,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_JOB, zklist);
 	}
 
 	@Override
@@ -141,15 +146,15 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		jobStatisticsList = DashboardServiceHelper.sortJobByAllTimeFailureRate(jobStatisticsList);
-		List<JobStatistics> top10FailJob = jobStatisticsList.subList(0,
-				jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
+		List<JobStatistics> top10FailJob = jobStatisticsList
+				.subList(0, jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
 		return JSON.toJSONString(top10FailJob);
 	}
 
 	@Override
 	public SaturnStatistics top10FailureExecutor(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_EXECUTOR,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_EXECUTOR, zklist);
 	}
 
 	@Override
@@ -167,15 +172,15 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		executorStatisticsList = DashboardServiceHelper.sortExecutorByFailureRate(executorStatisticsList);
-		List<ExecutorStatistics> top10FailureExecutor = executorStatisticsList.subList(0,
-				executorStatisticsList.size() > 9 ? 10 : executorStatisticsList.size());
+		List<ExecutorStatistics> top10FailureExecutor = executorStatisticsList
+				.subList(0, executorStatisticsList.size() > 9 ? 10 : executorStatisticsList.size());
 		return JSON.toJSONString(top10FailureExecutor);
 	}
 
 	@Override
 	public SaturnStatistics top10AactiveJob(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_ACTIVE_JOB,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_ACTIVE_JOB, zklist);
 	}
 
 	@Override
@@ -193,15 +198,15 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		jobStatisticsList = DashboardServiceHelper.sortJobByDayProcessCount(jobStatisticsList);
-		List<JobStatistics> top10AactiveJob = jobStatisticsList.subList(0,
-				jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
+		List<JobStatistics> top10AactiveJob = jobStatisticsList
+				.subList(0, jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
 		return JSON.toJSONString(top10AactiveJob);
 	}
 
 	@Override
 	public SaturnStatistics top10LoadExecutor(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_LOAD_EXECUTOR,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_LOAD_EXECUTOR, zklist);
 	}
 
 	@Override
@@ -219,15 +224,15 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		executorStatisticsList = DashboardServiceHelper.sortExecutorByLoadLevel(executorStatisticsList);
-		List<ExecutorStatistics> top10LoadExecutor = executorStatisticsList.subList(0,
-				executorStatisticsList.size() > 9 ? 10 : executorStatisticsList.size());
+		List<ExecutorStatistics> top10LoadExecutor = executorStatisticsList
+				.subList(0, executorStatisticsList.size() > 9 ? 10 : executorStatisticsList.size());
 		return JSON.toJSONString(top10LoadExecutor);
 	}
 
 	@Override
 	public SaturnStatistics top10LoadJob(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_LOAD_JOB,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_LOAD_JOB, zklist);
 	}
 
 	@Override
@@ -245,15 +250,15 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		jobStatisticsList = DashboardServiceHelper.sortJobByLoadLevel(jobStatisticsList);
-		List<JobStatistics> top10LoadJob = jobStatisticsList.subList(0,
-				jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
+		List<JobStatistics> top10LoadJob = jobStatisticsList
+				.subList(0, jobStatisticsList.size() > 9 ? 10 : jobStatisticsList.size());
 		return JSON.toJSONString(top10LoadJob);
 	}
 
 	@Override
 	public SaturnStatistics top10UnstableDomain(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_UNSTABLE_DOMAIN,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_UNSTABLE_DOMAIN, zklist);
 	}
 
 	@Override
@@ -271,8 +276,8 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		domainStatisticsList = DashboardServiceHelper.sortDomainByShardingCount(domainStatisticsList);
-		List<DomainStatistics> top10UnstableDomain = domainStatisticsList.subList(0,
-				domainStatisticsList.size() > 9 ? 10 : domainStatisticsList.size());
+		List<DomainStatistics> top10UnstableDomain = domainStatisticsList
+				.subList(0, domainStatisticsList.size() > 9 ? 10 : domainStatisticsList.size());
 		return JSON.toJSONString(top10UnstableDomain);
 	}
 
@@ -303,8 +308,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public SaturnStatistics top10FailureDomain(String zklist) throws SaturnJobConsoleException {
-		return saturnStatisticsService.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_DOMAIN,
-				zklist);
+		return saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.TOP_10_FAIL_DOMAIN, zklist);
 	}
 
 	@Override
@@ -322,8 +327,8 @@ public class DashboardServiceImpl implements DashboardService {
 			}
 		}
 		domainStatisticsList = DashboardServiceHelper.sortDomainByAllTimeFailureRate(domainStatisticsList);
-		List<DomainStatistics> top10FailureDomain = domainStatisticsList.subList(0,
-				domainStatisticsList.size() > 9 ? 10 : domainStatisticsList.size());
+		List<DomainStatistics> top10FailureDomain = domainStatisticsList
+				.subList(0, domainStatisticsList.size() > 9 ? 10 : domainStatisticsList.size());
 		return JSON.toJSONString(top10FailureDomain);
 	}
 
@@ -555,8 +560,7 @@ public class DashboardServiceImpl implements DashboardService {
 				Long executorNumber = next.getValue();
 				if (version != null && executorNumber != null) {
 					if (versionExecutorNumberMap.containsKey(version)) {
-						versionExecutorNumberMap.put(version,
-								versionExecutorNumberMap.get(version) + executorNumber);
+						versionExecutorNumberMap.put(version, versionExecutorNumberMap.get(version) + executorNumber);
 					} else {
 						versionExecutorNumberMap.put(version, executorNumber);
 					}
@@ -566,4 +570,92 @@ public class DashboardServiceImpl implements DashboardService {
 		return versionExecutorNumberMap;
 	}
 
+
+	//	@Override
+	//	public List<DomainCount> domainCountHistory(String zkCluster, String fromDateStr, String toDateStr)
+	//			throws SaturnJobConsoleException {
+	//		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	//		try {
+	//			Date fromDate = simpleDateFormat.parse(fromDateStr);
+	//			Date toDate = simpleDateFormat.parse(toDateStr);
+	//			return domainCountRepository.selectByZkClusterAndFromStartDateToEndDate(zkCluster, fromDate, toDate);
+	//		} catch (Exception ex) {
+	//			log.error("get domain count error, zkCluster:{}, fromDate:{}, toDate:{}", zkCluster, fromDateStr, toDateStr,
+	//					ex);
+	//			throw new SaturnJobConsoleException(ex);
+	//		}
+	//	}
+
+	@Override
+	public void saveDashboardHistory(String zkCluster, String type, String topic, String content) {
+		dashboardHistoryRepository.createOrUpdateHistory(zkCluster, type, topic, content, new Date());
+	}
+
+	@Override
+	public void batchSaveDashboardHistory(List<DashboardHistory> dashboardHistories) {
+		dashboardHistoryRepository.batchCreateOrUpdateHistory(dashboardHistories);
+	}
+
+	@Override
+	public List<DashboardHistory> getDashboardDomainHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate) throws SaturnJobConsoleException {
+		List<String> zkClusters = new ArrayList<>();
+		zkClusters.add(zkCluster);
+		return dashboardHistoryRepository
+				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
+	}
+
+	@Override
+	public Map<String, List> getAllDashboardDomainHistory(String type, String topic, Date fromDate, Date toDate) {
+		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
+
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
+		List<String> zkClusters = new ArrayList<>();
+		Iterator<ZkCluster> iter = zkClusterList.iterator();
+		while (iter.hasNext()) {
+			ZkCluster zkCluster = iter.next();
+			zkClusters.add(zkCluster.getZkClusterKey());
+		}
+
+		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
+				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
+
+		Calendar tmpCalendar = Calendar.getInstance();
+		tmpCalendar.setTime(fromDate);
+		Date tmpDate = tmpCalendar.getTime();
+
+		List<String> resultDate = new ArrayList<>();
+		List<Integer> resultCount = new ArrayList<>();
+		while (tmpDate.getTime() <= toDate.getTime()) {
+			List<DashboardHistory> tmpHistories = new ArrayList<>();
+			for (DashboardHistory history : dashboardHistories) {
+
+				String d1 = sdf.format(history.getRecordDate().getTime());
+				String d2 = sdf.format(tmpDate.getTime());
+
+				if (StringUtils.equals(d1, d2)) {
+					tmpHistories.add(history);
+				}
+			}
+			int count = 0;
+			for (DashboardHistory sumHistory : tmpHistories) {
+				Map content = JSON.parseObject(sumHistory.getContent(), Map.class);
+				Integer tmpCount = (Integer) content.get("count");
+				count += tmpCount;
+			}
+			resultDate.add(sdf.format(tmpDate));
+			resultCount.add(count);
+
+			tmpCalendar.add(Calendar.DATE, 1);
+			tmpDate = tmpCalendar.getTime();
+		}
+
+		Map<String, List> result = new HashMap<>();
+		result.put("xAxis", resultDate);
+		result.put("yAxis", resultCount);
+
+		return result;
+
+
+	}
 }
