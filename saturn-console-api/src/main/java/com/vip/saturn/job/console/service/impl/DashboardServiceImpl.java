@@ -570,22 +570,6 @@ public class DashboardServiceImpl implements DashboardService {
 		return versionExecutorNumberMap;
 	}
 
-
-	//	@Override
-	//	public List<DomainCount> domainCountHistory(String zkCluster, String fromDateStr, String toDateStr)
-	//			throws SaturnJobConsoleException {
-	//		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-	//		try {
-	//			Date fromDate = simpleDateFormat.parse(fromDateStr);
-	//			Date toDate = simpleDateFormat.parse(toDateStr);
-	//			return domainCountRepository.selectByZkClusterAndFromStartDateToEndDate(zkCluster, fromDate, toDate);
-	//		} catch (Exception ex) {
-	//			log.error("get domain count error, zkCluster:{}, fromDate:{}, toDate:{}", zkCluster, fromDateStr, toDateStr,
-	//					ex);
-	//			throw new SaturnJobConsoleException(ex);
-	//		}
-	//	}
-
 	@Override
 	public void saveDashboardHistory(String zkCluster, String type, String topic, String content) {
 		dashboardHistoryRepository.createOrUpdateHistory(zkCluster, type, topic, content, new Date());
@@ -606,16 +590,10 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	@Override
-	public Map<String, List> getAllDashboardDomainHistory(String type, String topic, Date fromDate, Date toDate) {
+	public Map<String, List> getDomainOperationHistory(String type, String topic, Date fromDate, Date toDate) {
 		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
 
-		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
-		List<String> zkClusters = new ArrayList<>();
-		Iterator<ZkCluster> iter = zkClusterList.iterator();
-		while (iter.hasNext()) {
-			ZkCluster zkCluster = iter.next();
-			zkClusters.add(zkCluster.getZkClusterKey());
-		}
+		List<String> zkClusters = getAvailableZkClusterKey();
 
 		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
 				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
@@ -650,12 +628,201 @@ public class DashboardServiceImpl implements DashboardService {
 			tmpDate = tmpCalendar.getTime();
 		}
 
-		Map<String, List> result = new HashMap<>();
+		Map<String, List> result = new HashMap<>(2);
 		result.put("xAxis", resultDate);
 		result.put("yAxis", resultCount);
 
 		return result;
 
 
+	}
+
+	@Override
+	public Map<String, List> getDomainCountHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate) {
+		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
+
+		List<String> zkClusters = new ArrayList<>();
+
+		if (StringUtils.isEmpty(zkCluster)) {
+			zkClusters.addAll(getAvailableZkClusterKey());
+		} else {
+			zkClusters.add(zkCluster);
+		}
+
+		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
+				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
+
+		Calendar tmpCalendar = Calendar.getInstance();
+		tmpCalendar.setTime(fromDate);
+		Date tmpDate = tmpCalendar.getTime();
+
+		List<String> resultDate = new ArrayList<>();
+		List<Integer> resultCount = new ArrayList<>();
+
+		while (tmpDate.getTime() <= toDate.getTime()) {
+			List<DashboardHistory> tmpHistories = new ArrayList<>();
+			for (DashboardHistory history : dashboardHistories) {
+
+				String d1 = sdf.format(history.getRecordDate().getTime());
+				String d2 = sdf.format(tmpDate.getTime());
+
+				if (StringUtils.equals(d1, d2)) {
+					tmpHistories.add(history);
+				}
+			}
+			int count = 0;
+			for (DashboardHistory sumHistory : tmpHistories) {
+				Map content = JSON.parseObject(sumHistory.getContent(), Map.class);
+				Integer tmpCount = (Integer) content.get("domainCount");
+				count += tmpCount;
+			}
+			resultDate.add(sdf.format(tmpDate));
+			resultCount.add(count);
+
+			tmpCalendar.add(Calendar.DATE, 1);
+			tmpDate = tmpCalendar.getTime();
+		}
+
+		Map<String, List> result = new HashMap<>(2);
+		result.put("xAxis", resultDate);
+		result.put("yAxis", resultCount);
+
+		return result;
+	}
+
+	@Override
+	public Map<String, List> getExecutorHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate) {
+
+		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
+
+		List<String> zkClusters = new ArrayList<>();
+
+		if (StringUtils.isEmpty(zkCluster)) {
+			zkClusters.addAll(getAvailableZkClusterKey());
+		} else {
+			zkClusters.add(zkCluster);
+		}
+
+		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
+				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
+
+		Calendar tmpCalendar = Calendar.getInstance();
+		tmpCalendar.setTime(fromDate);
+		Date tmpDate = tmpCalendar.getTime();
+
+		List<String> resultDate = new ArrayList<>();
+		List<Integer> otherCountList = new ArrayList<>();
+		List<Integer> dockerCountList = new ArrayList<>();
+		List<Integer> totalCountList = new ArrayList<>();
+
+		while (tmpDate.getTime() <= toDate.getTime()) {
+			List<DashboardHistory> tmpHistories = new ArrayList<>();
+			for (DashboardHistory history : dashboardHistories) {
+
+				String d1 = sdf.format(history.getRecordDate().getTime());
+				String d2 = sdf.format(tmpDate.getTime());
+
+				if (StringUtils.equals(d1, d2)) {
+					tmpHistories.add(history);
+				}
+			}
+			int otherCount = 0;
+			int dockerCount = 0;
+			int totalCount = 0;
+			for (DashboardHistory sumHistory : tmpHistories) {
+				Map content = JSON.parseObject(sumHistory.getContent(), Map.class);
+				Integer other = (Integer) content.get("otherCount");
+				otherCount += other;
+				Integer docker = (Integer) content.get("dockerCount");
+				dockerCount += docker;
+				Integer total = other + docker;
+				totalCount += total;
+			}
+			resultDate.add(sdf.format(tmpDate));
+
+
+			otherCountList.add(otherCount);
+			dockerCountList.add(dockerCount);
+			totalCountList.add(totalCount);
+
+			tmpCalendar.add(Calendar.DATE, 1);
+			tmpDate = tmpCalendar.getTime();
+		}
+
+
+		Map<String, List> resultData = new HashMap<>(4);
+		resultData.put("date", resultDate);
+		resultData.put("dockerCount", dockerCountList);
+		resultData.put("otherCount", otherCountList);
+		resultData.put("totalCount", totalCountList);
+
+		return resultData;
+	}
+
+	@Override
+	public Map<String, List> getJobCountHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate) {
+		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
+
+		List<String> zkClusters = new ArrayList<>();
+
+		if (StringUtils.isEmpty(zkCluster)) {
+			zkClusters.addAll(getAvailableZkClusterKey());
+		} else {
+			zkClusters.add(zkCluster);
+		}
+
+		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
+				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
+
+		Calendar tmpCalendar = Calendar.getInstance();
+		tmpCalendar.setTime(fromDate);
+		Date tmpDate = tmpCalendar.getTime();
+
+		List<String> resultDate = new ArrayList<>();
+		List<Integer> resultCount = new ArrayList<>();
+
+		while (tmpDate.getTime() <= toDate.getTime()) {
+			List<DashboardHistory> tmpHistories = new ArrayList<>();
+			for (DashboardHistory history : dashboardHistories) {
+
+				String d1 = sdf.format(history.getRecordDate().getTime());
+				String d2 = sdf.format(tmpDate.getTime());
+
+				if (StringUtils.equals(d1, d2)) {
+					tmpHistories.add(history);
+				}
+			}
+			int count = 0;
+			for (DashboardHistory sumHistory : tmpHistories) {
+				Map content = JSON.parseObject(sumHistory.getContent(), Map.class);
+				Integer tmpCount = (Integer) content.get("jobCount");
+				count += tmpCount;
+			}
+			resultDate.add(sdf.format(tmpDate));
+			resultCount.add(count);
+
+			tmpCalendar.add(Calendar.DATE, 1);
+			tmpDate = tmpCalendar.getTime();
+		}
+
+		Map<String, List> result = new HashMap<>(2);
+		result.put("xAxis", resultDate);
+		result.put("yAxis", resultCount);
+
+		return result;
+	}
+
+	private List<String> getAvailableZkClusterKey() {
+		List<String> zkClusters = new ArrayList<>();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
+		Iterator<ZkCluster> iter = zkClusterList.iterator();
+		while (iter.hasNext()) {
+			ZkCluster tmpCluster = iter.next();
+			zkClusters.add(tmpCluster.getZkClusterKey());
+		}
+		return zkClusters;
 	}
 }
