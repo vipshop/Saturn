@@ -450,7 +450,7 @@ public class JobServiceImplTest {
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.JAVA_JOB.name());
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage("对于JAVA或消息作业，作业实现类必填");
+		expectedException.expectMessage("对于java作业，作业实现类必填");
 		jobService.addJob(namespace, jobConfig, userName);
 	}
 
