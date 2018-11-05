@@ -82,4 +82,10 @@ public interface ReportAlarmService {
 	void raise(String namespace, String jobName, String executorName, Integer shardItem, AlarmInfo alarmInfo)
 			throws ReportAlarmException;
 
+	/**
+	 * alarm for saturn console exception
+	 * @param errorMsg
+	 * @throws ReportAlarmException
+	 */
+	void consoleException(String errorMsg) throws ReportAlarmException;
 }

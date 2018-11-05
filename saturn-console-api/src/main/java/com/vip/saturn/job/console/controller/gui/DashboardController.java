@@ -264,16 +264,58 @@ public class DashboardController extends AbstractGUIController {
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/domainHistoryCount")
-	public SuccessResponseEntity domainHistoryCount(@RequestParam(required = false) String zkClusterKey) {
+	@GetMapping(value = "/domainOperationCount")
+	public SuccessResponseEntity domainOperationCount(@RequestParam(required = false) String zkClusterKey) {
 		Date today = new Date();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(today);
 		calendar.add(Calendar.DATE, -30);
 		Date startDate = calendar.getTime();
 		Map<String, List> histories = dashboardService
-				.getAllDashboardDomainHistory(DashboardServiceImpl.DashboardType.DOMAIN.name(),
+				.getDomainOperationHistory(DashboardServiceImpl.DashboardType.DOMAIN.name(),
 						DashboardServiceImpl.DashboardTopic.DOMAIN_OVERALL_COUNT.name(), startDate, today);
+		return new SuccessResponseEntity(histories);
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/domainCount")
+	public SuccessResponseEntity domainCount(@RequestParam(required = false) String zkClusterKey) {
+		Date today = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(today);
+		calendar.add(Calendar.DATE, -30);
+		Date startDate = calendar.getTime();
+		Map<String, List> histories = dashboardService
+				.getDomainCountHistory(zkClusterKey, DashboardServiceImpl.DashboardType.DOMAIN.name(),
+						DashboardServiceImpl.DashboardTopic.DOMAIN_COUNT.name(), startDate, today);
+		return new SuccessResponseEntity(histories);
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/executorCount")
+	public SuccessResponseEntity executorCount(@RequestParam(required = false) String zkClusterKey) {
+		Date today = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(today);
+		calendar.add(Calendar.DATE, -30);
+		Date startDate = calendar.getTime();
+		Map<String, List> histories = dashboardService
+				.getExecutorHistory(zkClusterKey, DashboardServiceImpl.DashboardType.EXECUTOR.name(),
+						DashboardServiceImpl.DashboardTopic.EXECUTOR_COUNT.name(), startDate, today);
+		return new SuccessResponseEntity(histories);
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/jobCount")
+	public SuccessResponseEntity jobCount(@RequestParam(required = false) String zkClusterKey) {
+		Date today = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(today);
+		calendar.add(Calendar.DATE, -30);
+		Date startDate = calendar.getTime();
+		Map<String, List> histories = dashboardService
+				.getJobCountHistory(zkClusterKey, DashboardServiceImpl.DashboardType.JOB.name(),
+						DashboardServiceImpl.DashboardTopic.JOB_COUNT.name(), startDate, today);
 		return new SuccessResponseEntity(histories);
 	}
 

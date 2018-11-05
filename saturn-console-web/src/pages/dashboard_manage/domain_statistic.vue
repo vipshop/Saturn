@@ -171,7 +171,7 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取域版本分布请求失败！'); });
     },
     getAllDomainHistory() {
-      return this.$http.get('/console/dashboard/domainHistoryCount', { zkClusterKey: this.zkClusterKey }).then((data) => {
+      return this.$http.get('/console/dashboard/domainOperationCount', { zkClusterKey: this.zkClusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
           yAxis: [{ name: '历史记录', data: data.yAxis }],

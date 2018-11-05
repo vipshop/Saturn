@@ -124,13 +124,49 @@ public interface DashboardService {
 
 
 	/**
-	 * 获取全域历史
+	 * 获取全域执行历史数据
 	 * @param type
 	 * @param topic
 	 * @param fromDate
 	 * @param toDate
 	 * @return
 	 */
-	Map<String, List> getAllDashboardDomainHistory(String type, String topic, Date fromDate, Date toDate);
+	Map<String, List> getDomainOperationHistory(String type, String topic, Date fromDate, Date toDate);
+
+	/**
+	 * 获取某个集群域历史个数
+	 * @param zkCluster
+	 * @param type
+	 * @param topic
+	 * @param fromDate
+	 * @param toDate
+	 * @return
+	 */
+	Map<String, List> getDomainCountHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate);
+
+	/**
+	 * 获取Executor历史个数
+	 * @param zkCluster
+	 * @param type
+	 * @param topic
+	 * @param fromDate
+	 * @param toDate
+	 * @return
+	 */
+	Map<String, List> getExecutorHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate);
+
+	/**
+	 * 获取作业历史个数
+	 * @param zkCluster
+	 * @param type
+	 * @param topic
+	 * @param fromDate
+	 * @param toDate
+	 * @return
+	 */
+	Map<String, List> getJobCountHistory(String zkCluster, String type, String topic, Date fromDate,
+			Date toDate);
 
 }
