@@ -68,11 +68,8 @@ public class JobConfig implements Serializable {
 		loadLevel = getDefaultIfNull(loadLevel, 1);
 		jobDegree = getDefaultIfNull(jobDegree, 0);
 		if (enabledReport == null) {
-			if (JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType)) {
-				enabledReport = Boolean.TRUE;
-			} else {
-				enabledReport = Boolean.FALSE;
-			}
+			JobType jobTypeObj = JobType.getJobType(this.jobType);
+			enabledReport = JobType.isCron(jobTypeObj) || JobType.isPassive(jobTypeObj);
 		}
 		enabled = getDefaultIfNull(enabled, Boolean.FALSE);
 		preferList = getDefaultIfNull(preferList, "");

@@ -16,9 +16,7 @@ package com.vip.saturn.job.internal.config;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.vip.saturn.job.basic.AbstractSaturnService;
-import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
@@ -367,9 +365,9 @@ public class ConfigurationService extends AbstractSaturnService {
 		if (isEnabledReportInJobConfig != null) {
 			return isEnabledReportInJobConfig;
 		}
-		// if isEnabledReportInJobConfig == null, 如果作业类型是JAVA或者Shell，默认上报
-		if (JobType.JAVA_JOB.name().equals(jobConfiguration.getJobType()) || JobType.SHELL_JOB.name()
-				.equals(jobConfiguration.getJobType())) {
+		// cron和passive作业默认上报
+		JobType jobType = JobTypeManager.get(jobConfiguration.getJobType());
+		if (jobType.isCron() || jobType.isPassive()) {
 			return true;
 		}
 
@@ -417,8 +415,8 @@ public class ConfigurationService extends AbstractSaturnService {
 		return Maps.newHashMap();
 	}
 
-	public boolean isShellJob() {
-		return JobType.SHELL_JOB.name().equals(jobConfiguration.getJobType());
+	public JobType getJobType() {
+		return JobTypeManager.get(jobConfiguration.getJobType());
 	}
 
 	/**

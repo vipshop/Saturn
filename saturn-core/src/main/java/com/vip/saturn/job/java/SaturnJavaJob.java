@@ -3,7 +3,9 @@ package com.vip.saturn.job.java;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
-import com.vip.saturn.job.basic.*;
+import com.vip.saturn.job.basic.AbstractSaturnJob;
+import com.vip.saturn.job.basic.SaturnApi;
+import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +18,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-public class SaturnJavaJob extends CrondJob {
+public class SaturnJavaJob extends AbstractSaturnJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
 
 	private Map<Integer, ShardingItemFutureTask> futureTaskMap = new HashMap<>();
@@ -207,13 +209,7 @@ public class SaturnJavaJob extends CrondJob {
 		}
 	}
 
-	@Override
-	public SaturnJobReturn doExecution(String jobName, Integer key, String value,
-			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable {
-		return handleJavaJob(jobName, key, value, shardingContext, callable);
-	}
-
-	public SaturnJobReturn handleJavaJob(final String jobName, final Integer key, final String value,
+	public SaturnJobReturn doExecution(final String jobName, final Integer key, final String value,
 			SaturnExecutionContext shardingContext, final JavaShardingItemCallable callable) throws Throwable {
 
 		String jobClass = shardingContext.getJobConfiguration().getJobClass();

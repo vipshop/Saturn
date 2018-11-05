@@ -42,7 +42,7 @@ public class OutdatedNoRunningJobAnalyzer {
 
 	private static boolean isCronJob(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String jobName) {
 		String jobType = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, "jobType"));
-		return JobType.JAVA_JOB.name().equals(jobType) || JobType.SHELL_JOB.name().equals(jobType);
+		return JobType.isCron(JobType.getJobType(jobType));
 	}
 
 	private static boolean isEnabledPath(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,

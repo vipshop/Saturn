@@ -1,12 +1,20 @@
 package com.vip.saturn.job.utils;
 
-import com.vip.saturn.job.basic.SaturnConstant;
+import com.vip.saturn.job.basic.JobType;
+import com.vip.saturn.job.basic.JobTypeManager;
 import com.vip.saturn.job.executor.SaturnExecutorsNode;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
-import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,15 +28,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 用于处理Shell的相关pid功能
@@ -393,14 +392,14 @@ public class ScriptPidUtils {
 		String jobTypePath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.JOB_TYPE);
 		String jobType = regCenter.get(jobTypePath);
 		// 只检查Shell作业
-		if (!JobType.SHELL_JOB.name().equals(jobType)) {
-			LogUtils.info(log, jobName, "{} is not shell job ,igore checking ", jobName);
+		JobType jobTypeObj = JobTypeManager.get(jobType);
+		if (jobTypeObj == null || !jobTypeObj.isShell()) {
+			LogUtils.info(log, jobName, "{} is not shell job, ignore checking ", jobName);
 			return;
 		}
 		String enabledPath = JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED);
 		String isEnabledStr = regCenter.get(enabledPath);
-		LogUtils.info(log, jobName, "{} pidFromFile size :{};isEnabledStr:{}", jobName, itemPaths.length,
-				isEnabledStr);
+		LogUtils.info(log, jobName, "{} pidFromFile size :{};isEnabledStr:{}", jobName, itemPaths.length, isEnabledStr);
 
 		// null means new job, if there are pid files, kill -9.
 		// if it's true, means it's an enabled job, there shouldn't exist the pid files. kill them with no mercy.

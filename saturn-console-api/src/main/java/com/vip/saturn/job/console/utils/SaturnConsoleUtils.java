@@ -56,10 +56,10 @@ public class SaturnConsoleUtils {
 
 		String jobTypeNodePath = JobNodePath.getConfigNodePath(jobName, "jobType");
 
-		// if enabledReportNodePath不存在, 如果作业类型是JAVA或者Shell，默认上报
+		// if enabledReportNodePath不存在, 如果作业类型是cron或passive，默认上报
 		JobType jobType = JobType.getJobType(curatorFrameworkOp.getData(jobTypeNodePath));
 
-		return jobType == JobType.JAVA_JOB || jobType == JobType.SHELL_JOB;
+		return JobType.isCron(jobType) || JobType.isPassive(jobType);
 	}
 
 	public static File createTmpFile() throws SaturnJobConsoleException, IOException {

@@ -3,8 +3,7 @@ package com.vip.saturn.job.shell;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
-import com.vip.saturn.job.basic.CrondJob;
-import com.vip.saturn.job.basic.JavaShardingItemCallable;
+import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.basic.ShardingItemCallable;
 import com.vip.saturn.job.utils.LogUtils;
@@ -27,7 +26,7 @@ import java.util.concurrent.ExecutorService;
  *
  * @author linzhaoming
  */
-public class SaturnScriptJob extends CrondJob {
+public class SaturnScriptJob extends AbstractSaturnJob {
 
 	private static Logger log = LoggerFactory.getLogger(SaturnScriptJob.class);
 
@@ -215,9 +214,4 @@ public class SaturnScriptJob extends CrondJob {
 	public void onNeedRaiseAlarm(int item, String alarmMessage) {
 	}
 
-	@Override
-	public SaturnJobReturn doExecution(String jobName, Integer key, String value,
-			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable {
-		return null;
-	}
 }

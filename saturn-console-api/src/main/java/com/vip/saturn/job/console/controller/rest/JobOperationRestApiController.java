@@ -209,7 +209,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setJobParameter(checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
 		String jobType = checkAndGetParametersValueAsString(configParams, "jobType", true);
-		if (JobType.UNKOWN_JOB.equals(JobType.getJobType(jobType))) {
+		if (JobType.UNKNOWN_JOB.equals(JobType.getJobType(jobType))) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
 		}

@@ -1,9 +1,11 @@
 package com.vip.saturn.job.executor;
 
+import com.vip.saturn.job.basic.JobTypeBuilder;
 import com.vip.saturn.job.basic.JobTypeManager;
-import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.java.SaturnJavaJob;
 import com.vip.saturn.job.shell.SaturnScriptJob;
+import com.vip.saturn.job.trigger.CronTrigger;
+import com.vip.saturn.job.trigger.PassiveTrigger;
 import com.vip.saturn.job.utils.LocalHostService;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.slf4j.Logger;
@@ -70,8 +72,18 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	@Override
 	public void registerJobType() {
-		JobTypeManager.getInstance().registerHandler(JobType.JAVA_JOB.name(), SaturnJavaJob.class);
-		JobTypeManager.getInstance().registerHandler(JobType.SHELL_JOB.name(), SaturnScriptJob.class);
+		JobTypeManager.register( //
+				JobTypeBuilder.newBuilder().name("JAVA_JOB").cron().java().allowedShutdownGracefully()
+						.triggerClass(CronTrigger.class).handlerClass(SaturnJavaJob.class).build());
+		JobTypeManager.register( //
+				JobTypeBuilder.newBuilder().name("SHELL_JOB").cron().shell().allowedShutdownGracefully()
+						.triggerClass(CronTrigger.class).handlerClass(SaturnScriptJob.class).build());
+		JobTypeManager.register( //
+				JobTypeBuilder.newBuilder().name("PASSIVE_JAVA_JOB").passive().java().allowedShutdownGracefully()
+						.triggerClass(PassiveTrigger.class).handlerClass(SaturnJavaJob.class).build());
+		JobTypeManager.register( //
+				JobTypeBuilder.newBuilder().name("PASSIVE_SHELL_JOB").passive().shell().allowedShutdownGracefully()
+						.triggerClass(PassiveTrigger.class).handlerClass(SaturnScriptJob.class).build());
 	}
 
 	@Override
