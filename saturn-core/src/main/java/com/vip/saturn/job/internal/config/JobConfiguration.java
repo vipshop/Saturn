@@ -250,8 +250,12 @@ public class JobConfiguration {
 		return regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.TO_DELETE));
 	}
 
+	/**
+	 * update cron cache and return it
+	 */
 	public String getCronFromZk() {
-		return regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON));
+		cron = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON));
+		return cron;
 	}
 
 	public CoordinatorRegistryCenter getRegCenter() {
