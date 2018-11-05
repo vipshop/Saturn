@@ -226,7 +226,7 @@ public class JobOverviewController extends AbstractGUIController {
 
     private void updateJobTypesInOverview(JobConfig jobConfig, JobOverviewJobVo jobOverviewJobVo) {
         JobType jobType = JobType.getJobType(jobConfig.getJobType());
-        if (JobType.UNKOWN_JOB.equals(jobType)) {
+		if (JobType.UNKNOWN_JOB == jobType) {
             if (jobOverviewJobVo.getJobClass() != null
                     && jobOverviewJobVo.getJobClass().indexOf("SaturnScriptJob") != -1) {
                 jobOverviewJobVo.setJobType(JobType.SHELL_JOB.name());

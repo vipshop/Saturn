@@ -14,9 +14,9 @@
 
 package com.vip.saturn.job.basic;
 
+import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.config.ConfigurationService;
-import com.vip.saturn.job.internal.config.JobType;
 import com.vip.saturn.job.internal.control.ReportService;
 import com.vip.saturn.job.internal.execution.ExecutionContextService;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
@@ -26,7 +26,7 @@ import com.vip.saturn.job.internal.server.ServerService;
 import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
-import com.vip.saturn.job.trigger.SaturnTrigger;
+import com.vip.saturn.job.trigger.Trigger;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
@@ -96,12 +96,11 @@ public abstract class AbstractElasticJob implements Stoppable {
 			jobScheduler.shutdownExecutorService();
 			// 检查调度器任务是否完成，如果没有，中止业务
 			if (!scheduler.isTerminated()) {
-				if (configService.isShellJob() && !configService.isJobEnabled()) {
+				if (configService.getJobType().isShell() && !configService.isJobEnabled()) {
 					// 如果Shell作业业务进程有子进程，我们可能不能完全中止其子进程。
 					// 所以，对于禁用的Shell作业，不中止业务。因为，作业处于禁用状态，说明是人为介入的可控状态。
 					// 另外，在该Executor再次启动该作业前，会检查该作业是否正在运行，如果正在运行并且仍然处于禁用状态，则会相应的持久化相关状态到zk，防止重入；如果正在运行并且已经处于启用状态，则会中止其进程。
-					LogUtils.warn(log, jobName, "the job is the disabled {}, will not be aborted",
-							JobType.SHELL_JOB.name());
+					LogUtils.warn(log, jobName, "the job is the disabled shell job, will not be aborted");
 				} else {
 					abort();
 					scheduler.awaitTermination(500L);
@@ -115,7 +114,17 @@ public abstract class AbstractElasticJob implements Stoppable {
 	}
 
 	protected void init() {
-		scheduler = getTrigger().build(this);
+		Class<? extends Trigger> triggerClass = configService.getJobType().getTriggerClass();
+		Trigger trigger = null;
+		try {
+			trigger = triggerClass.newInstance();
+			trigger.init(this);
+		} catch (Exception e) {
+			LogUtils.error(log, jobName, "Trigger init failed", e);
+			throw new JobException(e);
+		}
+		scheduler = new SaturnScheduler(this, trigger);
+		scheduler.start();
 		getExecutorService();
 	}
 
@@ -243,8 +252,6 @@ public abstract class AbstractElasticJob implements Stoppable {
 	public void callbackWhenShardingItemIsEmpty(final JobExecutionMultipleShardingContext shardingContext) {
 	}
 
-	public abstract boolean isFailoverSupported();
-
 	@Override
 	public void stop() {
 		stopped = true;
@@ -265,13 +272,21 @@ public abstract class AbstractElasticJob implements Stoppable {
 		stopped = false;
 	}
 
-	public abstract SaturnTrigger getTrigger();
+	public void enableJob() {
+		scheduler.getTrigger().enableJob();
+	}
 
-	public abstract void enableJob();
+	public void disableJob() {
+		scheduler.getTrigger().disableJob();
+	}
 
-	public abstract void disableJob();
+	public void onResharding() {
+		scheduler.getTrigger().onResharding();
+	}
 
-	public abstract void onResharding();
+	public boolean isFailoverSupported() {
+		return scheduler.getTrigger().isFailoverSupported();
+	}
 
 	public abstract void onForceStop(int item);
 
@@ -285,35 +300,75 @@ public abstract class AbstractElasticJob implements Stoppable {
 	public void notifyJobDisabled() {
 	}
 
-	protected void setShardingService(ShardingService shardingService) {
+	public boolean isStopped() {
+		return stopped;
+	}
+
+	public boolean isForceStopped() {
+		return forceStopped;
+	}
+
+	public boolean isAborted() {
+		return aborted;
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
+	public ConfigurationService getConfigService() {
+		return configService;
+	}
+
+	public void setConfigService(ConfigurationService configService) {
+		this.configService = configService;
+	}
+
+	public ShardingService getShardingService() {
+		return shardingService;
+	}
+
+	public void setShardingService(ShardingService shardingService) {
 		this.shardingService = shardingService;
 	}
 
-	protected void setExecutionContextService(ExecutionContextService executionContextService) {
+	public ExecutionContextService getExecutionContextService() {
+		return executionContextService;
+	}
+
+	public void setExecutionContextService(ExecutionContextService executionContextService) {
 		this.executionContextService = executionContextService;
 	}
 
-	protected void setExecutionService(ExecutionService executionService) {
+	public ExecutionService getExecutionService() {
+		return executionService;
+	}
+
+	public void setExecutionService(ExecutionService executionService) {
 		this.executionService = executionService;
 	}
 
-	protected void setFailoverService(FailoverService failoverService) {
+	public FailoverService getFailoverService() {
+		return failoverService;
+	}
+
+	public void setFailoverService(FailoverService failoverService) {
 		this.failoverService = failoverService;
 	}
 
-	protected void setServerService(ServerService serverService) {
-		this.serverService = serverService;
+	public ServerService getServerService() {
+		return serverService;
 	}
 
-	protected void setReportService(ReportService reportService) {
-		this.reportService = reportService;
+	public void setServerService(ServerService serverService) {
+		this.serverService = serverService;
 	}
 
 	public String getExecutorName() {
 		return executorName;
 	}
 
-	protected void setExecutorName(String executorName) {
+	public void setExecutorName(String executorName) {
 		this.executorName = executorName;
 	}
 
@@ -321,7 +376,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 		return jobName;
 	}
 
-	protected void setJobName(String jobName) {
+	public void setJobName(String jobName) {
 		this.jobName = jobName;
 	}
 
@@ -329,19 +384,19 @@ public abstract class AbstractElasticJob implements Stoppable {
 		return namespace;
 	}
 
-	protected void setNamespace(String namespace) {
+	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
 
-	protected SaturnScheduler getScheduler() {
+	public SaturnScheduler getScheduler() {
 		return scheduler;
 	}
 
-	protected void setScheduler(SaturnScheduler scheduler) {
+	public void setScheduler(SaturnScheduler scheduler) {
 		this.scheduler = scheduler;
 	}
 
-	protected JobScheduler getJobScheduler() {
+	public JobScheduler getJobScheduler() {
 		return jobScheduler;
 	}
 
@@ -353,20 +408,16 @@ public abstract class AbstractElasticJob implements Stoppable {
 		return saturnExecutorService;
 	}
 
-	protected void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
+	public void setSaturnExecutorService(SaturnExecutorService saturnExecutorService) {
 		this.saturnExecutorService = saturnExecutorService;
 	}
 
-	public boolean isRunning() {
-		return running;
+	public ReportService getReportService() {
+		return reportService;
 	}
 
-	public ConfigurationService getConfigService() {
-		return configService;
-	}
-
-	public final void setConfigService(final ConfigurationService configService) {
-		this.configService = configService;
+	public void setReportService(ReportService reportService) {
+		this.reportService = reportService;
 	}
 
 	public String getJobVersion() {

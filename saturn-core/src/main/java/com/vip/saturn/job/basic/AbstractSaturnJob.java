@@ -8,7 +8,6 @@ import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.executor.SaturnExecutorService;
 import com.vip.saturn.job.internal.statistics.ProcessCountStatistics;
-import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,9 +187,6 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 	 * @return 每个分片返回一个SaturnJobReturn. 若为null，表示执行失败
 	 */
 	protected abstract Map<Integer, SaturnJobReturn> handleJob(SaturnExecutionContext shardingContext);
-
-	public abstract SaturnJobReturn doExecution(String jobName, Integer key, String value,
-			SaturnExecutionContext shardingContext, JavaShardingItemCallable callable) throws Throwable;
 
 	protected abstract static class JobBusinessClassMethodCaller {
 

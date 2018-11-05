@@ -1,26 +1,18 @@
 package com.vip.saturn.job.basic;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class JobTypeManager {
 
-	private static JobTypeManager instance = new JobTypeManager();
-	
-	private Map<String, Class<? extends AbstractElasticJob>> handlerMap = new HashMap<String, Class<? extends AbstractElasticJob>>();
+	private static final ConcurrentMap<String, JobType> jobTypeMap = new ConcurrentHashMap<>();
 
-	private JobTypeManager() {
+	public static void register(JobType jobType) {
+		jobTypeMap.put(jobType.getName(), jobType);
 	}
 
-	public static JobTypeManager getInstance() {
-		return instance;
+	public static JobType get(String name) {
+		return jobTypeMap.get(name);
 	}
 
-	public void registerHandler(String jobType, Class<? extends AbstractElasticJob> jobClazz) {
-		handlerMap.put(jobType, jobClazz);
-	}
-
-	public Class<? extends AbstractElasticJob> getHandler(String jobType) {
-		return handlerMap.get(jobType);
-	}
 }

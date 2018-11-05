@@ -5,11 +5,9 @@ import com.google.common.base.Strings;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
-import com.vip.saturn.job.basic.TimeoutSchedulerExecutor;
 import com.vip.saturn.job.exception.SaturnExecutorException;
 import com.vip.saturn.job.exception.SaturnExecutorExceptionCode;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.internal.config.JobType;
+import com.vip.saturn.job.java.TimeoutSchedulerExecutor;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperConfiguration;
 import com.vip.saturn.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.vip.saturn.job.threads.SaturnThreadFactory;
@@ -41,14 +39,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.vip.saturn.job.internal.config.JobType.JAVA_JOB;
-import static com.vip.saturn.job.internal.config.JobType.SHELL_JOB;
-
 public class SaturnExecutor {
 
 	private static final String DISCOVER_INFO_ZK_CONN_STR = "zkConnStr";
-
-	private static final Set<JobType> ALLOWED_GRACEFUL_SHUTDOWN_TYPES = EnumSet.of(JAVA_JOB, SHELL_JOB);
 
 	private static Logger log;
 
@@ -697,7 +690,7 @@ public class SaturnExecutor {
 			}
 			for (Entry<String, JobScheduler> entry : entries) {
 				JobScheduler jobScheduler = entry.getValue();
-				if (isAllowedToBeGracefulShutdown(jobScheduler.getCurrentConf())) {
+				if (jobScheduler.isAllowedShutdownGracefully()) {
 					if (jobScheduler.getJob().isRunning()) {
 						hasRunning = true;
 						break;
@@ -713,17 +706,6 @@ public class SaturnExecutor {
 		LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN,
 				"Shutdown phase [blockUntilJobCompletedIfNotTimeout] took {}ms",
 				System.currentTimeMillis() - startTime);
-	}
-
-	protected boolean isAllowedToBeGracefulShutdown(JobConfiguration currentConf) {
-		String jobTypeValue = currentConf.getJobType();
-		try {
-			JobType jobType = JobType.valueOf(jobTypeValue);
-			return ALLOWED_GRACEFUL_SHUTDOWN_TYPES.contains(jobType);
-		} catch (Exception e) {
-			LogUtils.warn(log, currentConf.getJobName(), "no such job type:{}", jobTypeValue, e);
-			return false;
-		}
 	}
 
 	public void shutdown() throws Exception {

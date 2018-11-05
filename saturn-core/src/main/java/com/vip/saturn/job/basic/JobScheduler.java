@@ -38,8 +38,6 @@ import com.vip.saturn.job.threads.TaskQueue;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.quartz.Trigger;
-import org.quartz.spi.OperableTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -228,24 +226,7 @@ public class JobScheduler {
 	public Date getNextFireTimePausePeriodEffected() {
 		try {
 			SaturnScheduler saturnScheduler = job.getScheduler();
-			if (saturnScheduler == null) {
-				return null;
-			}
-			Trigger trigger = saturnScheduler.getTrigger();
-
-			if (trigger == null) {
-				return null;
-			}
-
-			((OperableTrigger) trigger).updateAfterMisfire(null);
-			Date nextFireTime = trigger.getNextFireTime();
-			while (nextFireTime != null && configService.isInPausePeriod(nextFireTime)) {
-				nextFireTime = trigger.getFireTimeAfter(nextFireTime);
-			}
-			if (null == nextFireTime) {
-				return null;
-			}
-			return nextFireTime;
+			return saturnScheduler == null ? null : saturnScheduler.getNextFireTimePausePeriodEffected();
 		} catch (Throwable t) {
 			LogUtils.error(log, jobName, "fail to get next fire time", t);
 			return null;
@@ -259,7 +240,7 @@ public class JobScheduler {
 		if (job.getScheduler().isShutdown()) {
 			return;
 		}
-		job.getScheduler().triggerJob();
+		job.getScheduler().trigger();
 	}
 
 	/**
@@ -308,15 +289,10 @@ public class JobScheduler {
 	}
 
 	/**
-	 * 重新调度作业.
-	 *
-	 * @param cronExpression crom表达式
+	 * 重新初始化Trigger
 	 */
-	public void rescheduleJob(final String cronExpression) {
-		if (job.getScheduler().isShutdown()) {
-			return;
-		}
-		job.getTrigger().retrigger(job.getScheduler(), job);
+	public void reInitializeTrigger() {
+		job.getScheduler().reInitializeTrigger();
 	}
 
 	/**
@@ -324,6 +300,10 @@ public class JobScheduler {
 	 */
 	public void rescheduleProcessCountJob() {
 		statisticsService.startProcessCountJob();
+	}
+
+	public boolean isAllowedShutdownGracefully() {
+		return JobTypeManager.get(currentConf.getJobType()).isAllowedShutdownGracefully();
 	}
 
 	public String getJobName() {

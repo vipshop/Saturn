@@ -126,7 +126,8 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				String cronFromZk = jobConfiguration.getCronFromZk();
 				if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
 					jobScheduler.getPreviousConf().setCron(cronFromZk);
-					jobScheduler.rescheduleJob(cronFromZk);
+					//TODO maybe should update currentConf cron
+					jobScheduler.reInitializeTrigger();
 					executionService.updateNextFireTime(executionContextService.getShardingItems());
 				}
 			}

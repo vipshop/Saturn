@@ -762,7 +762,7 @@ public class JobServiceImplTest {
 		File file = jobService.exportJobs(namespace);
 		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(StringContains.containsString("对于JAVA或者消息作业，作业实现类必填。"));
+		expectedException.expectMessage(StringContains.containsString("对于java作业，作业实现类必填。"));
 		jobService.importJobs(namespace, data, userName);
 	}
 
@@ -777,7 +777,7 @@ public class JobServiceImplTest {
 		File file = jobService.exportJobs(namespace);
 		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(StringContains.containsString("对于JAVA/SHELL作业，cron表达式必填。"));
+		expectedException.expectMessage(StringContains.containsString("对于cron作业，cron表达式必填。"));
 		jobService.importJobs(namespace, data, userName);
 	}
 
@@ -1653,8 +1653,7 @@ public class JobServiceImplTest {
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
 				.thenReturn(Lists.newArrayList(executor));
-		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
-				"true");
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn("true");
 		jobService.runAtOnce(namespace, jobName);
 		verify(curatorFrameworkOp).create(JobNodePath.getRunOneTimePath(jobName, executor));
 	}
@@ -1701,8 +1700,7 @@ public class JobServiceImplTest {
 				.thenReturn(true);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getServerNodePath(jobName)))
 				.thenReturn(Lists.newArrayList(executor));
-		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn(
-				"true");
+		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn("true");
 		jobService.stopAtOnce(namespace, jobName);
 		verify(curatorFrameworkOp).create(JobNodePath.getStopOneTimePath(jobName, executor));
 	}

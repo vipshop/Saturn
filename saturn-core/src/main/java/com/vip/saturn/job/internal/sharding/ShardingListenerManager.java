@@ -1,8 +1,9 @@
 package com.vip.saturn.job.internal.sharding;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.JobType;
+import com.vip.saturn.job.internal.listener.AbstractListenerManager;
+import com.vip.saturn.job.threads.SaturnThreadFactory;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -12,11 +13,8 @@ import org.apache.zookeeper.WatchedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vip.saturn.job.basic.AbstractSaturnJob;
-import com.vip.saturn.job.basic.CrondJob;
-import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.internal.listener.AbstractListenerManager;
-import com.vip.saturn.job.threads.SaturnThreadFactory;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 分片监听管理器.
@@ -40,8 +38,9 @@ public class ShardingListenerManager extends AbstractListenerManager {
 	public ShardingListenerManager(final JobScheduler jobScheduler) {
 		super(jobScheduler);
 		shardingService = jobScheduler.getShardingService();
-		// because crondJob do nothing in onResharding method, no need this watcher.
-		if (!isCrondJob(jobScheduler.getCurrentConf().getSaturnJobClass())) {
+		// because cron/passive job do nothing in onResharding method, no need this watcher.
+		JobType jobType = jobScheduler.getConfigService().getJobType();
+		if (!jobType.isCron() && !jobType.isPassive()) {
 			necessaryWatcher = new NecessaryWatcher();
 		}
 	}
@@ -78,31 +77,6 @@ public class ShardingListenerManager extends AbstractListenerManager {
 			removeConnectionStateListener(connectionStateListener);
 		}
 		isShutdown = true;
-	}
-
-	/**
-	 * If saturnJobClass is null, then return false; Otherwise, check the superclass canonical name recursively to see
-	 * if is subclass of CronJob
-	 */
-	private boolean isCrondJob(Class<?> saturnJobClass) {
-		if (saturnJobClass != null) {
-			Class<?> superClass = saturnJobClass.getSuperclass();
-			String crondJobCanonicalName = CrondJob.class.getCanonicalName();
-			String abstractSaturnJobCanonicalName = AbstractSaturnJob.class.getCanonicalName();
-			while (superClass != null) {
-				String superClassCanonicalName = superClass.getCanonicalName();
-				if (superClassCanonicalName.equals(crondJobCanonicalName)) {
-					return true;
-				}
-				if (superClassCanonicalName.equals(abstractSaturnJobCanonicalName)) { // AbstractSaturnJob is
-					// CrondJob's
-					// parent
-					return false;
-				}
-				superClass = superClass.getSuperclass();
-			}
-		}
-		return false;
 	}
 
 	private void registerNecessaryWatcher() {

@@ -1,8 +1,8 @@
 package com.vip.saturn.job.trigger;
 
 import com.vip.saturn.job.basic.AbstractElasticJob;
-import org.quartz.Trigger;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -13,12 +13,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class SaturnScheduler {
 
-	private static final String SATURN_QUARTZ_WORKER = "-saturnQuartz-worker";
+	private static final String SATURN_QUARTZ_WORKER = "-saturnWorker";
 	private final AbstractElasticJob job;
 
 	private Trigger trigger;
 	private final ExecutorService executor;
-	private SaturnWorker saturnQuartzWorker;
+	private SaturnWorker saturnWorker;
 
 	public SaturnScheduler(final AbstractElasticJob job, final Trigger trigger) {
 		this.job = job;
@@ -41,8 +41,11 @@ public class SaturnScheduler {
 	}
 
 	public void start() {
-		saturnQuartzWorker = new SaturnWorker(job, trigger);
-		executor.submit(saturnQuartzWorker);
+		saturnWorker = new SaturnWorker(job, trigger.createQuartzTrigger());
+		if (trigger.isInitialTriggered()) {
+			saturnWorker.trigger();
+		}
+		executor.submit(saturnWorker);
 	}
 
 	public Trigger getTrigger() {
@@ -50,7 +53,7 @@ public class SaturnScheduler {
 	}
 
 	public void shutdown() {
-		saturnQuartzWorker.halt();
+		saturnWorker.halt();
 		executor.shutdown();
 	}
 
@@ -66,16 +69,19 @@ public class SaturnScheduler {
 		}
 	}
 
-	public void triggerJob() {
-		saturnQuartzWorker.trigger();
+	public void trigger() {
+		saturnWorker.trigger();
 	}
 
 	public boolean isShutdown() {
-		return saturnQuartzWorker.isShutDown();
+		return saturnWorker.isShutDown();
 	}
 
-	public void rescheduleJob(Trigger createTrigger) {
-		this.trigger = createTrigger;
-		saturnQuartzWorker.reInitTrigger(createTrigger);
+	public void reInitializeTrigger() {
+		saturnWorker.reInitTrigger(trigger.createQuartzTrigger());
+	}
+
+	public Date getNextFireTimePausePeriodEffected() {
+		return saturnWorker.getNextFireTimePausePeriodEffected();
 	}
 }

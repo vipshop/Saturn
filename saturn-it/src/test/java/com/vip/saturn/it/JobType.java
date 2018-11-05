@@ -7,7 +7,7 @@ package com.vip.saturn.it;
  *
  */
 public enum JobType {
-	JAVA_JOB, MSG_JOB, SHELL_JOB, VSHELL, UNKOWN_JOB;
+	JAVA_JOB, MSG_JOB, SHELL_JOB, VSHELL, UNKNOWN_JOB;
 
 	public static JobType getJobType(String typeName) {
 		if (JAVA_JOB.toString().equalsIgnoreCase(typeName)) {
@@ -22,7 +22,7 @@ public enum JobType {
 		if (VSHELL.toString().equalsIgnoreCase(typeName)) {
 			return VSHELL;
 		}
-		return UNKOWN_JOB;
+		return UNKNOWN_JOB;
 	}
 
 }

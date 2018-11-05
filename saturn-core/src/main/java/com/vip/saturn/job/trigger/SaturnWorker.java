@@ -1,9 +1,7 @@
-/**
- *
- */
 package com.vip.saturn.job.trigger;
 
 import com.vip.saturn.job.basic.AbstractElasticJob;
+import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.quartz.Trigger;
@@ -32,7 +30,7 @@ public class SaturnWorker implements Runnable {
 		initTrigger(trigger);
 	}
 
-	public void reInitTrigger(Trigger trigger) {
+	void reInitTrigger(Trigger trigger) {
 		initTrigger(trigger);
 		synchronized (sigLock) {
 			sigLock.notifyAll();
@@ -43,7 +41,9 @@ public class SaturnWorker implements Runnable {
 		if (trigger == null) {
 			return;
 		}
-
+		if (!(trigger instanceof OperableTrigger)) {
+			throw new JobException("the trigger should be the instance of OperableTrigger");
+		}
 		this.triggerObj = (OperableTrigger) trigger;
 		Date ft = this.triggerObj.computeFirstFireTime(null);
 		if (ft == null) {
@@ -53,7 +53,7 @@ public class SaturnWorker implements Runnable {
 		}
 	}
 
-	public boolean isShutDown() {
+	boolean isShutDown() {
 		return halted.get();
 	}
 
@@ -76,6 +76,18 @@ public class SaturnWorker implements Runnable {
 			triggered = true;
 			sigLock.notifyAll();
 		}
+	}
+
+	Date getNextFireTimePausePeriodEffected() {
+		if (triggerObj == null) {
+			return null;
+		}
+		triggerObj.updateAfterMisfire(null);
+		Date nextFireTime = triggerObj.getNextFireTime();
+		while (nextFireTime != null && job.getConfigService().isInPausePeriod(nextFireTime)) {
+			nextFireTime = triggerObj.getFireTimeAfter(nextFireTime);
+		}
+		return nextFireTime;
 	}
 
 	@Override

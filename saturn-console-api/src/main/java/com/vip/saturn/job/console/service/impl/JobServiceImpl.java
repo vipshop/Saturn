@@ -560,15 +560,13 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业类型必填");
 		}
 		// 验证作业类型
-		if (JobType.getJobType(jobConfig.getJobType()).equals(JobType.UNKOWN_JOB)) {
+		JobType jobType = JobType.getJobType(jobConfig.getJobType());
+		if (jobType == JobType.UNKNOWN_JOB) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业类型未知");
 		}
-		// 如果是JAVA作业
-		if ((jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
-				.equals(JobType.MSG_JOB.name())) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim()
-				.isEmpty())) {
-			// 作业实现类必填
-			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于JAVA或消息作业，作业实现类必填");
+		// 如果是JAVA作业，作业实现类必填
+		if (JobType.isJava(jobType) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty())) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于java作业，作业实现类必填");
 		}
 		validateCronFieldOfJobConfig(jobConfig);
 
@@ -582,9 +580,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void validateCronFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
-		// 如果是JAVA/SHELL作业
-		if (jobConfig.getJobType().equals(JobType.JAVA_JOB.name()) || jobConfig.getJobType()
-				.equals(JobType.SHELL_JOB.name())) {
+		if (JobType.isCron(JobType.getJobType(jobConfig.getJobType()))) {
 			// cron表达式必填
 			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于JAVA/SHELL作业，cron表达式必填");
@@ -827,10 +823,16 @@ public class JobServiceImpl implements JobService {
 	}
 
 	/**
+	 * 对于passive作业，返回true；<br>
 	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
 	 */
 	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
-		if (!jobType.equals(JobType.JAVA_JOB.name()) && !jobType.equals(JobType.SHELL_JOB.name())) {
+		JobType jobTypeObj = JobType.getJobType(jobType);
+		if (JobType.isPassive(jobTypeObj)) {
+			return true;
+		}
+
+		if (!JobType.isCron(jobTypeObj)) {
 			return false;
 		}
 
@@ -1050,25 +1052,25 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型必填。"));
 		}
-		if (JobType.getJobType(jobType).equals(JobType.UNKOWN_JOB)) {
+		JobType jobTypeObj = JobType.getJobType(jobType);
+		if (jobTypeObj == JobType.UNKNOWN_JOB) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 2, "作业类型未知。"));
 		}
 		jobConfig.setJobType(jobType);
 
 		String jobClass = getContents(rowCells, 2);
-		if ((jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.MSG_JOB.name())) && (jobClass == null
-				|| jobClass.trim().isEmpty())) {
+		if (JobType.isJava(jobTypeObj) && (jobClass == null || jobClass.trim().isEmpty())) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-					createExceptionMessage(sheetNumber, rowNumber, 3, "对于JAVA或者消息作业，作业实现类必填。"));
+					createExceptionMessage(sheetNumber, rowNumber, 3, "对于java作业，作业实现类必填。"));
 		}
 		jobConfig.setJobClass(jobClass);
 
 		String cron = getContents(rowCells, 3);
-		if (jobType.equals(JobType.JAVA_JOB.name()) || jobType.equals(JobType.SHELL_JOB.name())) {
+		if (JobType.isCron(jobTypeObj)) {
 			if (cron == null || cron.trim().isEmpty()) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-						createExceptionMessage(sheetNumber, rowNumber, 4, "对于JAVA/SHELL作业，cron表达式必填。"));
+						createExceptionMessage(sheetNumber, rowNumber, 4, "对于cron作业，cron表达式必填。"));
 			}
 			cron = cron.trim();
 			try {
@@ -2126,7 +2128,7 @@ public class JobServiceImpl implements JobService {
 		executionInfo.setLastBeginTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(lastBeginTime, timeZone));
 		// next fire time, ignore if jobType is Msg
 		JobType jobType = JobType.getJobType(jobConfig.getJobType());
-		if (jobType == JobType.JAVA_JOB || jobType == JobType.SHELL_JOB) {
+		if (JobType.isCron(jobType)) {
 			String nextFireTime = curatorFrameworkOp
 					.getData(JobNodePath.getExecutionNodePath(jobName, shardItem, "nextFireTime"));
 			executionInfo.setNextFireTime(SaturnConsoleUtils.parseMillisecond2DisplayTime(nextFireTime, timeZone));

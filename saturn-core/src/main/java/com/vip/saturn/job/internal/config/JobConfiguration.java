@@ -35,7 +35,7 @@ public class JobConfiguration {
 	 * 如果regCenter!=null, 取值从zk取
 	 */
 	private CoordinatorRegistryCenter regCenter = null;
-	
+
 	private String jobClass = "";
 	/**
 	 * 作业分片总数.
@@ -167,7 +167,7 @@ public class JobConfiguration {
 			return saturnJobClass;
 		}
 
-		return JobTypeManager.getInstance().getHandler(getJobType());
+		return JobTypeManager.get(getJobType()).getHandlerClass();
 	}
 
 	public void setSaturnJobClass(Class<? extends AbstractElasticJob> saturnJobClass) {
@@ -238,12 +238,10 @@ public class JobConfiguration {
 			enabledReport = Boolean.valueOf(enabledReportStr);
 		}
 
-		localMode = Boolean
-				.parseBoolean(
-						regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
-		useSerial = Boolean
-				.parseBoolean(
-						regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
+		localMode = Boolean.parseBoolean(
+				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.LOCAL_MODE)));
+		useSerial = Boolean.parseBoolean(
+				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
 		useDispreferList = Boolean.parseBoolean(
 				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
 	}
@@ -253,8 +251,7 @@ public class JobConfiguration {
 	}
 
 	public String getCronFromZk() {
-		cron = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON));
-		return cron;
+		return regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON));
 	}
 
 	public CoordinatorRegistryCenter getRegCenter() {
