@@ -18,15 +18,14 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.SaturnStatistics;
 import com.vip.saturn.job.console.service.DashboardService;
-
+import com.vip.saturn.job.console.service.impl.DashboardServiceImpl;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
 
@@ -262,6 +261,20 @@ public class DashboardController extends AbstractGUIController {
 		assertIsSystemAdmin();
 		dashboardService.cleanOneJobExecutorCount(namespace, jobName);
 		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/domainHistoryCount")
+	public SuccessResponseEntity domainHistoryCount(@RequestParam(required = false) String zkClusterKey) {
+		Date today = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(today);
+		calendar.add(Calendar.DATE, -30);
+		Date startDate = calendar.getTime();
+		Map<String, List> histories = dashboardService
+				.getAllDashboardDomainHistory(DashboardServiceImpl.DashboardType.DOMAIN.name(),
+						DashboardServiceImpl.DashboardTopic.DOMAIN_OVERALL_COUNT.name(), startDate, today);
+		return new SuccessResponseEntity(histories);
 	}
 
 }
