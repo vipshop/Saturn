@@ -314,3 +314,14 @@ ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '�
 
 -- 3.3.0 update
 ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';
+
+CREATE TABLE `saturn_dashboard_history` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `zk_cluster` varchar(255) NOT NULL DEFAULT '' COMMENT '所属zk集群',
+  `record_type` varchar(255) NOT NULL DEFAULT '' COMMENT '类型',
+  `topic` varchar(255) NOT NULL DEFAULT '' COMMENT '主题',
+  `content` longtext NOT NULL COMMENT '内容',
+  `record_date` date NOT NULL COMMENT '记录日期',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+)ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
