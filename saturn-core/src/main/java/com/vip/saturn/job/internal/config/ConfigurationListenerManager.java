@@ -123,10 +123,9 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 			if (ConfigurationNode.isCronPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
 				LogUtils.info(log, jobName, "{} 's cron update", jobName);
 
-				String cronFromZk = jobConfiguration.getCronFromZk();
+				String cronFromZk = jobConfiguration.getCronFromZk(); // will update local cron cache
 				if (!jobScheduler.getPreviousConf().getCron().equals(cronFromZk)) {
 					jobScheduler.getPreviousConf().setCron(cronFromZk);
-					//TODO maybe should update currentConf cron
 					jobScheduler.reInitializeTrigger();
 					executionService.updateNextFireTime(executionContextService.getShardingItems());
 				}

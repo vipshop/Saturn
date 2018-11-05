@@ -107,7 +107,7 @@ public class RestApiIT extends AbstractSaturnIT {
 				jobEntity.toJSON());
 		assertEquals(400, responseEntity.getStatusCode());
 		Map<String, String> responseMap = gson.fromJson(responseEntity.getEntity(), Map.class);
-		assertEquals("对于JAVA/SHELL作业，cron表达式必填", responseMap.get("message"));
+		assertEquals("对于cron作业，cron表达式必填", responseMap.get("message"));
 	}
 
 	@Test

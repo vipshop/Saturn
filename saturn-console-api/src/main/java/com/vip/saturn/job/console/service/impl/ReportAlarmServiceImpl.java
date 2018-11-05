@@ -68,4 +68,9 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 				namespace, jobName, executorName, shardItem, alarmInfo);
 	}
 
+	@Override
+	public void consoleException(String errorMsg) throws ReportAlarmException {
+		log.error(errorMsg);
+	}
+
 }
