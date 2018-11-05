@@ -455,17 +455,37 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testAddJobFailByShellJobWithoutCorn() throws SaturnJobConsoleException {
+	public void testAddJobFailByPassiveJavaJobWithoutClass() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.SHELL_JOB.name());
+		jobConfig.setJobType(JobType.PASSIVE_JAVA_JOB.name());
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage("对于JAVA/SHELL作业，cron表达式必填");
+		expectedException.expectMessage("对于java作业，作业实现类必填");
 		jobService.addJob(namespace, jobConfig, userName);
 	}
 
 	@Test
-	public void testAddJobFailByShellJobCornInvalid() throws SaturnJobConsoleException {
+	public void testAddJobFailByVMSJobWithoutClass() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("对于java作业，作业实现类必填");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByShellJobWithoutCron() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.SHELL_JOB.name());
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("对于cron作业，cron表达式必填");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByShellJobCronInvalid() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.SHELL_JOB.name());
@@ -758,6 +778,36 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
 				.thenReturn(JobType.JAVA_JOB.name());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于java作业，作业实现类必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByPassiveJavaJobWithoutClass() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.PASSIVE_JAVA_JOB.name());
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		File file = jobService.exportJobs(namespace);
+		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(StringContains.containsString("对于java作业，作业实现类必填。"));
+		jobService.importJobs(namespace, data, userName);
+	}
+
+	@Test
+	public void testImportFailByVMSJobWithoutClass() throws SaturnJobConsoleException, IOException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
+				.thenReturn(JobType.MSG_JOB.name());
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		File file = jobService.exportJobs(namespace);
 		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));

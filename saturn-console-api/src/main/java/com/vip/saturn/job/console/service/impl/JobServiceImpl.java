@@ -584,7 +584,7 @@ public class JobServiceImpl implements JobService {
 		if (JobType.isCron(JobType.getJobType(jobConfig.getJobType()))) {
 			// cron表达式必填
 			if (jobConfig.getCron() == null || jobConfig.getCron().trim().isEmpty()) {
-				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于JAVA/SHELL作业，cron表达式必填");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于cron作业，cron表达式必填");
 			}
 			// cron表达式语法验证
 			try {
