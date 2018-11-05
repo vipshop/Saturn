@@ -131,9 +131,7 @@
 </template>
 
 <script>
-import jobInfoDialog from './job_info_dialog';
-import batchPriorityDialog from './batch_priority_dialog';
-import importResultDialog from './import_result_dialog';
+
 
 export default {
   data() {
@@ -531,11 +529,6 @@ export default {
       this.$refs.pageListRef.search();
       this.init();
     },
-  },
-  components: {
-    'job-info-dialog': jobInfoDialog,
-    'batch-priority-dialog': batchPriorityDialog,
-    'import-result-dialog': importResultDialog,
   },
   created() {
     this.init();
