@@ -43,7 +43,7 @@
 
 		<quartz.version>2.2.1</quartz.version>
 		<curator.version>2.10.0</curator.version>
-        <springframework.version>4.3.20.RELEASE</springframework.version>
+        <springframework.version>4.3.2.RELEASE</springframework.version>
 		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
         <!-- could be removed, when saturn-console-old is removed -->
 		<cas.client.version>3.2.1</cas.client.version>
