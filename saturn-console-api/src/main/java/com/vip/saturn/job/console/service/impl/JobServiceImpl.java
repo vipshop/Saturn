@@ -122,8 +122,7 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	private boolean isAllShardsFinished(final String jobName,
-			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
+	private boolean isAllShardsFinished(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
 		List<String> executionItems = curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName));
 		boolean isAllShardsFinished = true;
 		if (executionItems != null && !executionItems.isEmpty()) {
@@ -683,17 +682,18 @@ public class JobServiceImpl implements JobService {
 	private void correctConfigValueIfNeeded(JobConfig jobConfig) {
 		jobConfig.setDefaultValues();
 		jobConfig.setEnabled(false);
-		if (JobType.SHELL_JOB.name().equals(jobConfig.getJobType())) {
+		JobType jobType = JobType.getJobType(jobConfig.getJobType());
+		if (JobType.isShell(jobType)) {
 			jobConfig.setJobClass("");
 		}
-		if (JobType.MSG_JOB.name().equals(jobConfig.getJobType())) {
+		if (JobType.isMsg(jobType)) {
 			jobConfig.setFailover(false);
 			jobConfig.setRerun(false);
 		}
 		if (jobConfig.getLocalMode()) {
 			jobConfig.setFailover(false);
 		}
-		boolean enabledReport = getEnabledReport(jobConfig.getJobType(), jobConfig.getCron(), jobConfig.getTimeZone());
+		boolean enabledReport = getEnabledReport(jobType, jobConfig.getCron(), jobConfig.getTimeZone());
 		jobConfig.setEnabledReport(enabledReport);
 		if (!enabledReport) {
 			jobConfig.setFailover(false);
@@ -827,13 +827,12 @@ public class JobServiceImpl implements JobService {
 	 * 对于passive作业，返回true；<br>
 	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
 	 */
-	private boolean getEnabledReport(String jobType, String cron, String timeZone) {
-		JobType jobTypeObj = JobType.getJobType(jobType);
-		if (JobType.isPassive(jobTypeObj)) {
+	private boolean getEnabledReport(JobType jobType, String cron, String timeZone) {
+		if (JobType.isPassive(jobType)) {
 			return true;
 		}
 
-		if (!JobType.isCron(jobTypeObj)) {
+		if (!JobType.isCron(jobType)) {
 			return false;
 		}
 
@@ -954,8 +953,7 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getEnabledReport());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PREFER_LIST),
 				jobConfig.getPreferList());
-		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName,
-				CONFIG_ITEM_USE_DISPREFER_LIST),
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_USE_DISPREFER_LIST),
 				jobConfig.getUseDispreferList());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE),
 				jobConfig.getLocalMode());
@@ -968,8 +966,7 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS),
 				jobConfig.getJobClass());
 		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN),
-						jobConfig.getRerun());
+				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN), jobConfig.getRerun());
 	}
 
 	@Override
@@ -1036,7 +1033,6 @@ public class JobServiceImpl implements JobService {
 
 	private JobConfig convertJobConfig(int sheetNumber, int rowNumber, Cell[] rowCells)
 			throws SaturnJobConsoleException {
-
 		String jobName = getContents(rowCells, 0);
 		if (jobName == null || jobName.trim().isEmpty()) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
@@ -1255,7 +1251,7 @@ public class JobServiceImpl implements JobService {
 					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 28, "本地模式不支持failover"));
 				}
-				if (jobType.equals(JobType.MSG_JOB.name())) {
+				if (JobType.isMsg(jobTypeObj)) {
 					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 28, "消息作业不支持failover"));
 				}
@@ -1270,7 +1266,7 @@ public class JobServiceImpl implements JobService {
 		if (StringUtils.isNotBlank(rerunStr)) {
 			rerun = Boolean.valueOf(rerunStr.trim());
 			if (rerun) {
-				if (jobType.equals(JobType.MSG_JOB.name())) {
+				if (JobType.isMsg(jobTypeObj)) {
 					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 29, "消息作业不支持rerun"));
 				}
@@ -1552,8 +1548,7 @@ public class JobServiceImpl implements JobService {
 				.getData(JobNodePath.getConfigNodePath(jobName, JobServiceImpl.CONFIG_ITEM_JOB_MODE)));
 		result.setUseSerial(Boolean.valueOf(curatorFrameworkOp
 				.getData(JobNodePath.getConfigNodePath(jobName, JobServiceImpl.CONFIG_ITEM_USE_SERIAL))));
-		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName,
-				CONFIG_ITEM_QUEUE_NAME)));
+		result.setQueueName(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME)));
 		result.setChannelName(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CHANNEL_NAME)));
 		if (!curatorFrameworkOp
@@ -1678,7 +1673,7 @@ public class JobServiceImpl implements JobService {
 		// 对不符合要求的字段重新设置为默认值
 		newJobConfig4DB.setDefaultValues();
 		// 消息作业不failover不rerun
-		if (JobType.MSG_JOB.name().equals(newJobConfig4DB.getJobType())) {
+		if (JobType.isMsg(JobType.getJobType(newJobConfig4DB.getJobType()))) {
 			newJobConfig4DB.setFailover(false);
 			newJobConfig4DB.setRerun(false);
 		}
@@ -2285,8 +2280,7 @@ public class JobServiceImpl implements JobService {
 		for (int i = 0; i < kvs.length; i++) {
 			String keyAndValue = kvs[i];
 			if (!keyAndValue.contains("=")) {
-				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("分片参数'%s'格式有误",
-						keyAndValue));
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, String.format("分片参数'%s'格式有误", keyAndValue));
 			}
 			String key = keyAndValue.trim().split("=")[0].trim();
 			boolean isNumeric = StringUtils.isNumeric(key);
