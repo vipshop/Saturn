@@ -2296,11 +2296,4 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 	}
-
-	@Override
-	public String checkJobQueueConfigAvailable(String queueConfig, int shardItemCount)
-			throws SaturnJobConsoleException {
-		throw new UnsupportedOperationException("不支持该功能");
-	}
-
 }
