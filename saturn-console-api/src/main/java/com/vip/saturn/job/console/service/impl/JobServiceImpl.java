@@ -570,6 +570,11 @@ public class JobServiceImpl implements JobService {
 		if (JobType.isJava(jobType) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty())) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于java作业，作业实现类必填");
 		}
+
+		// 如果是消息作业，queue必填
+		if (JobType.isMsg(jobType) && (jobConfig.getQueueName() == null || jobConfig.getQueueName().trim().isEmpty())) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于消息作业，queue必填");
+		}
 		validateCronFieldOfJobConfig(jobConfig);
 		validateShardingItemFieldOfJobConfig(jobConfig);
 
@@ -998,31 +1003,35 @@ public class JobServiceImpl implements JobService {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 						String.format("总作业数超过最大限制(%d)，导入失败", maxJobNum));
 			}
-			// 再进行添加
-			List<ImportJobResult> results = new ArrayList<>();
-			for (JobConfig jobConfig : jobConfigList) {
-				ImportJobResult importJobResult = new ImportJobResult();
-				importJobResult.setJobName(jobConfig.getJobName());
-				try {
-					addJob(namespace, jobConfig, createdBy);
-					importJobResult.setSuccess(true);
-				} catch (SaturnJobConsoleException e) {
-					importJobResult.setSuccess(false);
-					importJobResult.setMessage(e.getMessage());
-					log.warn("exception: {}", e);
-				} catch (Exception e) {
-					importJobResult.setSuccess(false);
-					importJobResult.setMessage(e.toString());
-					log.warn("exception: {}", e);
-				}
-				results.add(importJobResult);
-			}
-			return results;
+			return doCreateJobFromImportFile(namespace, jobConfigList, createdBy);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new SaturnJobConsoleException(e);
 		}
+	}
+
+	protected List<ImportJobResult> doCreateJobFromImportFile(String namespace, List<JobConfig> jobConfigList,
+			String createdBy) {
+		List<ImportJobResult> results = new ArrayList<>();
+		for (JobConfig jobConfig : jobConfigList) {
+			ImportJobResult importJobResult = new ImportJobResult();
+			importJobResult.setJobName(jobConfig.getJobName());
+			try {
+				addJob(namespace, jobConfig, createdBy);
+				importJobResult.setSuccess(true);
+			} catch (SaturnJobConsoleException e) {
+				importJobResult.setSuccess(false);
+				importJobResult.setMessage(e.getMessage());
+				log.warn("exception: {}", e);
+			} catch (Exception e) {
+				importJobResult.setSuccess(false);
+				importJobResult.setMessage(e.toString());
+				log.warn("exception: {}", e);
+			}
+			results.add(importJobResult);
+		}
+		return results;
 	}
 
 	private boolean isBlankRow(Cell[] rowCells) {
@@ -2296,11 +2305,4 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 	}
-
-	@Override
-	public String checkJobQueueConfigAvailable(String queueConfig, int shardItemCount)
-			throws SaturnJobConsoleException {
-		throw new UnsupportedOperationException("不支持该功能");
-	}
-
 }
