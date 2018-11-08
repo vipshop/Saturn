@@ -493,10 +493,22 @@ public class JobServiceImplTest {
 	}
 
 	@Test
+	public void testAddJobFailByMsgJobWithoutQueue() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("对于消息作业，queue必填");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
 	public void testAddJobFailByLocalModeJobWithoutShardingItem() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		expectedException.expect(SaturnJobConsoleException.class);
@@ -509,6 +521,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		expectedException.expect(SaturnJobConsoleException.class);
@@ -521,6 +534,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(1);
@@ -535,6 +549,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(1);
@@ -603,6 +618,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(1);
@@ -615,6 +631,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(2);
@@ -629,6 +646,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		jobConfig.setShardingItemParameters("test");

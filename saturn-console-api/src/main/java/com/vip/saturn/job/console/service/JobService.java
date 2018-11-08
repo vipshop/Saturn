@@ -121,9 +121,4 @@ public interface JobService {
 	 * 获取运行日志
 	 */
 	String getExecutionLog(String namespace, String jobName, String jobItem) throws SaturnJobConsoleException;
-
-	/**
-	 * 判断queue配置是否可用
-	 */
-	String checkJobQueueConfigAvailable(String queueConfig, int shardItemCount) throws SaturnJobConsoleException;
 }

@@ -251,6 +251,7 @@ export default {
       rules: {
         cron: [{ required: true, message: 'cron表达式不能为空', trigger: 'blur' }],
         shardingItemParameters: [{ required: true, message: '分片序列号/参数对照表不能为空', trigger: 'blur' }],
+        queueName: [{ required: true, message: 'queue不能为空', trigger: 'blur' }],
       },
       preferListProvidedArray: [],
     };
