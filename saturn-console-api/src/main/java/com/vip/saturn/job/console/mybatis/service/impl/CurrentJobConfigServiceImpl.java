@@ -5,7 +5,6 @@ import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.CurrentJobConfigService;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -18,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
@@ -38,39 +38,14 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int createSelective(JobConfig4DB currentJobConfig) throws Exception {
-		return currentJobConfigRepo.insertSelective(currentJobConfig);
-	}
-
-	@Transactional(rollbackFor = Exception.class)
-	@Override
 	public int deleteByPrimaryKey(Long id) throws Exception {
 		return currentJobConfigRepo.deleteByPrimaryKey(id);
-	}
-
-	@Transactional(readOnly = true)
-	@Override
-	public JobConfig4DB findByPrimaryKey(Long id) throws Exception {
-		JobConfig4DB currentJobConfig = currentJobConfigRepo.selectByPrimaryKey(id);
-		return currentJobConfig;
-	}
-
-	@Transactional(readOnly = true)
-	@Override
-	public int selectCount(JobConfig4DB currentJobConfig) throws Exception {
-		return currentJobConfigRepo.selectCount(currentJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws Exception {
 		return currentJobConfigRepo.updateByPrimaryKey(currentJobConfig);
-	}
-
-	@Transactional(rollbackFor = Exception.class)
-	@Override
-	public int updateByPrimaryKeySelective(JobConfig4DB currentJobConfig) throws Exception {
-		return currentJobConfigRepo.updateByPrimaryKeySelective(currentJobConfig);
 	}
 
 	@Override
@@ -87,11 +62,6 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		} finally {
 			IOUtils.closeQuietly(batchSqlSession);
 		}
-	}
-
-	@Override
-	public List<JobConfig4DB> selectPage(JobConfig4DB currentJobConfig, Pageable pageable) throws Exception {
-		return currentJobConfigRepo.selectPage(currentJobConfig, pageable);
 	}
 
 	@Override
@@ -127,24 +97,18 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-    public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition) {
-	    return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
-    }
-
-    @Override
-    public int countEnabledUnSystemJobsByNamespace(String namespace) {
-        return currentJobConfigRepo.countEnabledUnSystemJobsByNamespace(namespace, 1);
-    }
-
-    @Override
-	public List<String> findConfigNamesByNamespace(String namespace) {
-		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
+	public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition) {
+		return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
 	}
 
-	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int deleteAll(int limitNum) {
-		return currentJobConfigRepo.deleteAll(limitNum);
+	public int countEnabledUnSystemJobsByNamespace(String namespace) {
+		return currentJobConfigRepo.countEnabledUnSystemJobsByNamespace(namespace, 1);
+	}
+
+	@Override
+	public List<String> findConfigNamesByNamespace(String namespace) {
+		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}
 
 }

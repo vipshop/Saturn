@@ -265,6 +265,7 @@ public class JobOverviewController extends AbstractGUIController {
         return new SuccessResponseEntity(jobService.getGroups(namespace));
     }
 
+    // TODO dependency beDependedJobs可以删除，等前台同步删除
     /**
      * 获取该作业依赖的所有作业
      */

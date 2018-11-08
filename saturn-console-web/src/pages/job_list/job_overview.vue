@@ -35,7 +35,7 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model="filters[selectColumn]" @keyup.enter.native="scope.search">
+                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>

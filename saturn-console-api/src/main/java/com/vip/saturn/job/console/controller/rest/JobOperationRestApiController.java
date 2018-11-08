@@ -209,7 +209,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setJobParameter(checkAndGetParametersValueAsString(configParams, "jobParameter", false));
 
 		String jobType = checkAndGetParametersValueAsString(configParams, "jobType", true);
-		if (JobType.UNKNOWN_JOB.equals(JobType.getJobType(jobType))) {
+		if (JobType.UNKNOWN_JOB == JobType.getJobType(jobType)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					String.format(INVALID_REQUEST_MSG, "jobType", "is malformed"));
 		}
@@ -257,6 +257,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setFailover(checkAndGetParametersValueAsBoolean(configParams, "failover", false));
 
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
+
+		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
 
 		return jobConfig;
 	}
@@ -325,6 +327,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		jobConfig.setFailover(checkAndGetParametersValueAsBoolean(configParams, "failover", false));
+
+		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
 
 		return jobConfig;
 	}

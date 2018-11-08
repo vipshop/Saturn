@@ -281,7 +281,7 @@ public class ExecutorServiceImpl implements ExecutorService {
 			return false;
 		}
 		//下面的检查是避免脏数据
-		if (JobType.MSG_JOB.name().equals(jobConfig.getJobType())) {
+		if (JobType.isMsg(JobType.getJobType(jobConfig.getJobType()))) {
 			return false;
 		}
 		if (jobConfig.getLocalMode()) {
