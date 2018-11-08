@@ -660,6 +660,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		jobConfig.setShardingItemParameters("*=xx");
@@ -674,6 +675,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(2);
 		jobConfig.setShardingItemParameters("0=0,1=1");
@@ -688,6 +690,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -702,6 +705,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -716,6 +720,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -734,6 +739,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -751,6 +757,7 @@ public class JobServiceImplTest {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
 		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setQueueName("queue");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
