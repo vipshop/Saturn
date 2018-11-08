@@ -82,6 +82,7 @@ public class JobServiceImpl implements JobService {
 	public static final String CONFIG_ITEM_GROUPS = "groups";
 	public static final String CONFIG_ITEM_JOB_CLASS = "jobClass";
 	public static final String CONFIG_ITEM_RERUN = "rerun";
+	public static final String CONFIG_ITEM_DOWNSTREAM = "downStream";
 	private static final Logger log = LoggerFactory.getLogger(JobServiceImpl.class);
 	private static final int DEFAULT_MAX_JOB_NUM = 100;
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
@@ -543,7 +544,7 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.create(jobConfigForceShardNodePath);
 	}
 
-	private void validateJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
+	private void validateJobConfig(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
 		// 作业名必填
 		if (jobConfig.getJobName() == null || jobConfig.getJobName().trim().isEmpty()) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业名必填");
@@ -569,14 +570,82 @@ public class JobServiceImpl implements JobService {
 		if (JobType.isJava(jobType) && (jobConfig.getJobClass() == null || jobConfig.getJobClass().trim().isEmpty())) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于java作业，作业实现类必填");
 		}
+		// 校验cron
 		validateCronFieldOfJobConfig(jobConfig);
+		// 校验shardingItemParameters
 		validateShardingItemFieldOfJobConfig(jobConfig);
-
 		// 不能添加系统作业
 		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业模式有误，不能添加系统作业");
 		}
+		// 校验下游作业
+		validateDownStreamFieldOfJobConfig(namespace, jobConfig);
+	}
 
+	private void validateDownStreamFieldOfJobConfig(String namespace, JobConfig jobConfig)
+			throws SaturnJobConsoleException {
+		String downStream = jobConfig.getDownStream();
+		if (StringUtils.isBlank(downStream)) {
+			return;
+		}
+		// 不能是本地模式作业，因为本地模式不能保证分片数1
+		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "非本地模式作业，才能配置下游作业");
+		}
+		// 只能只有一个分片，才能配置下游
+		if (jobConfig.getShardingTotalCount() != 1) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片数为1，才能配置下游作业");
+		}
+		// 下游不能是该作业的祖先，而且只能是存在的被动作业
+		String[] split = downStream.split(",");
+		if (split.length > 0) {
+			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
+			String jobName = jobConfig.getJobName();
+			List<String> ancestors = getAncestors(jobName, unSystemJobs);
+			for (String temp : split) {
+				if (StringUtils.isBlank(temp)) {
+					continue;
+				}
+				String childName = temp.trim();
+				if (jobName.equals(childName)) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "下游作业(" + childName + ")不能是该作业本身");
+				}
+				if (ancestors.contains(childName)) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "下游作业(" + childName + ")不能是该作业的祖先");
+				}
+				boolean found = false;
+				for (JobConfig otherJobConfig : unSystemJobs) {
+					if (childName.equals(otherJobConfig.getJobName())) {
+						if (!JobType.isPassive(JobType.getJobType(otherJobConfig.getJobType()))) {
+							throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+									"配置的下游作业(" + childName + ")不是被动作业");
+						}
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "下游作业(" + childName + ")不存在");
+				}
+			}
+		}
+	}
+
+	private List<String> getAncestors(String jobName, List<JobConfig> unSystemJobs) {
+		List<String> ancestors = new ArrayList<>();
+		for (JobConfig otherJobConfig : unSystemJobs) {
+			String downStream = otherJobConfig.getDownStream();
+			if (StringUtils.isBlank(downStream)) {
+				continue;
+			}
+			String[] split = downStream.split(",");
+			for (String temp : split) {
+				if (jobName.equals(temp.trim())) {
+					ancestors.add(otherJobConfig.getJobName());
+				}
+			}
+		}
+		return ancestors;
 	}
 
 	private void validateCronFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -643,7 +712,7 @@ public class JobServiceImpl implements JobService {
 
 	private void addOrCopyJob(String namespace, JobConfig jobConfig, String jobNameCopied, String createdBy)
 			throws SaturnJobConsoleException {
-		validateJobConfig(jobConfig);
+		validateJobConfig(namespace, jobConfig);
 		String jobName = jobConfig.getJobName();
 		JobConfig4DB oldJobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
 		if (oldJobConfig != null) {
@@ -688,6 +757,9 @@ public class JobServiceImpl implements JobService {
 		}
 		if (JobType.isMsg(jobType)) {
 			jobConfig.setFailover(false);
+			jobConfig.setRerun(false);
+		}
+		if (JobType.isPassive(jobType)) {
 			jobConfig.setRerun(false);
 		}
 		if (jobConfig.getLocalMode()) {
@@ -824,7 +896,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	/**
-	 * 对于passive作业，返回true；<br>
+	 * 对于被动作业，返回true；<br>
 	 * 对于定时作业，根据cron和INTERVAL_TIME_OF_ENABLED_REPORT来计算是否需要上报状态 see #286
 	 */
 	private boolean getEnabledReport(JobType jobType, String cron, String timeZone) {
@@ -967,6 +1039,8 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getJobClass());
 		curatorFrameworkOp
 				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN), jobConfig.getRerun());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM),
+				jobConfig.getDownStream());
 	}
 
 	@Override
@@ -1270,11 +1344,22 @@ public class JobServiceImpl implements JobService {
 					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 							createExceptionMessage(sheetNumber, rowNumber, 29, "消息作业不支持rerun"));
 				}
+				if (JobType.isPassive(jobTypeObj)) {
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+							createExceptionMessage(sheetNumber, rowNumber, 29, "被动作业不支持rerun"));
+				}
 				// 如果不上报运行状态，则强制设置为false
 				// 上报运行状态失效，由算法决定是否上报，看下面setEnabledReport时的逻辑，看addJob
 			}
 		}
 		jobConfig.setRerun(rerun);
+
+		String downStream = getContents(rowCells, 29);
+		if (downStream != null && !downStream.matches("[0-9a-zA-Z_,]*")) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+					createExceptionMessage(sheetNumber, rowNumber, 30, "下游作业只允许包含：数字0-9、小写字符a-z、大写字符A-Z、下划线_、英文逗号,"));
+		}
+		jobConfig.setDownStream(downStream);
 
 		return jobConfig;
 	}
@@ -1381,6 +1466,8 @@ public class JobServiceImpl implements JobService {
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER))));
 				sheet1.addCell(new Label(28, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN))));
+				sheet1.addCell(new Label(29, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM))));
 			}
 		}
 	}
@@ -1440,7 +1527,7 @@ public class JobServiceImpl implements JobService {
 		sheet1.addCell(jobModeLabel);
 
 		Label dependenciesLabel = new Label(23, 0, "依赖的作业");
-		setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。");
+		setCellComment(dependenciesLabel, "作业的启用、禁用会检查依赖关系的作业的状态。依赖多个作业，使用英文逗号给开。该字段已过期。");
 		sheet1.addCell(dependenciesLabel);
 
 		Label groupsLabel = new Label(24, 0, "所属分组");
@@ -1455,13 +1542,13 @@ public class JobServiceImpl implements JobService {
 		setCellComment(timeZoneLabel, "作业运行时区");
 		sheet1.addCell(timeZoneLabel);
 
-		Label failover = new Label(27, 0, "failover");
-		setCellComment(failover, "failover");
-		sheet1.addCell(failover);
+		sheet1.addCell(new Label(27, 0, "failover"));
 
-		Label rerun = new Label(28, 0, "rerun");
-		setCellComment(rerun, "rerun");
-		sheet1.addCell(rerun);
+		sheet1.addCell(new Label(28, 0, "失败重跑"));
+
+		Label downStream = new Label(29, 0, "下游作业");
+		setCellComment(downStream, "该作业执行成功后，触发下游作业执行。多个下游作业使用英文逗号隔开。");
+		sheet1.addCell(downStream);
 	}
 
 	protected void setCellComment(WritableCell cell, String comment) {
@@ -1641,12 +1728,7 @@ public class JobServiceImpl implements JobService {
 
 		getJobConfigVo.setTimeZonesProvided(Arrays.asList(TimeZone.getAvailableIDs()));
 		getJobConfigVo.setPreferListProvided(getCandidateExecutors(namespace, jobName));
-
-		List<String> unSystemJobNames = getUnSystemJobNames(namespace);
-		if (unSystemJobNames != null) {
-			unSystemJobNames.remove(jobName);
-			getJobConfigVo.setDependenciesProvided(unSystemJobNames);
-		}
+		getJobConfigVo.setDownStreamProvided(getCandidateDownStream(namespace, jobConfig));
 
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
@@ -1654,6 +1736,24 @@ public class JobServiceImpl implements JobService {
 				.setStatus(getJobStatus(getJobConfigVo.getJobName(), curatorFrameworkOp, getJobConfigVo.getEnabled()));
 
 		return getJobConfigVo;
+	}
+
+	private List<String> getCandidateDownStream(String namespace, JobConfig jobConfig) {
+		List<String> candidateDownStream = new ArrayList<>();
+		if (jobConfig.getLocalMode() == true) {
+			return candidateDownStream;
+		}
+		if (jobConfig.getShardingTotalCount() > 2) {
+			return candidateDownStream;
+		}
+		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
+		List<String> ancestors = getAncestors(jobConfig.getJobName(), unSystemJobs);
+		for (JobConfig temp : unSystemJobs) {
+			if (!ancestors.contains(temp.getJobName()) && JobType.isPassive(JobType.getJobType(temp.getJobType()))) {
+				candidateDownStream.add(temp.getJobName());
+			}
+		}
+		return candidateDownStream;
 	}
 
 	@Transactional
@@ -1673,8 +1773,13 @@ public class JobServiceImpl implements JobService {
 		// 对不符合要求的字段重新设置为默认值
 		newJobConfig4DB.setDefaultValues();
 		// 消息作业不failover不rerun
-		if (JobType.isMsg(JobType.getJobType(newJobConfig4DB.getJobType()))) {
+		JobType jobType = JobType.getJobType(newJobConfig4DB.getJobType());
+		if (JobType.isMsg(jobType)) {
 			newJobConfig4DB.setFailover(false);
+			newJobConfig4DB.setRerun(false);
+		}
+		// 被动作业不rerun
+		if (JobType.isPassive(jobType)) {
 			newJobConfig4DB.setRerun(false);
 		}
 		// 本地模式不failover
@@ -1686,6 +1791,8 @@ public class JobServiceImpl implements JobService {
 			newJobConfig4DB.setFailover(false);
 			newJobConfig4DB.setRerun(false);
 		}
+
+		// TODO it's better if validate job config
 
 		// 和zk数据对比，如果有更新，则更新数据库和zk
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -1746,7 +1853,9 @@ public class JobServiceImpl implements JobService {
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_USE_SERIAL),
 							newJobConfig4DB.getUseSerial(), changeCount)
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN),
-							newJobConfig4DB.getRerun(), changeCount);
+							newJobConfig4DB.getRerun(), changeCount)
+					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM),
+							newJobConfig4DB.getDownStream(), changeCount);
 			// 当enabledReport关闭上报时，要清理execution节点
 			if (newJobConfig4DB.getEnabledReport() != null && !newJobConfig4DB.getEnabledReport()) {
 				log.info("the switch of enabledReport set to false, now deleteJob the execution zk node");

@@ -446,3 +446,5 @@ CREATE TABLE `saturn_dashboard_history` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
+
+ALTER TABLE `job_config` ADD `down_stream` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '下游作业';

@@ -39,9 +39,11 @@ public class JobConfig implements Serializable {
 	private Boolean failover;
 	private String jobMode; // 系统作业等
 	private String customContext;
+	@Deprecated
 	private String dependencies;
 	private String groups;
 	private Boolean rerun;
+	private String downStream;
 
 	private Boolean isCopyJob = Boolean.FALSE;
 
@@ -81,6 +83,7 @@ public class JobConfig implements Serializable {
 		dependencies = getDefaultIfNull(dependencies, "");
 		groups = getDefaultIfNull(groups, "");
 		rerun = getDefaultIfNull(rerun, Boolean.FALSE);
+		downStream = getDefaultIfNull(downStream, "");
 	}
 
 	public String getJobName() {
@@ -315,10 +318,12 @@ public class JobConfig implements Serializable {
 		this.customContext = customContext;
 	}
 
+	@Deprecated
 	public String getDependencies() {
 		return dependencies;
 	}
 
+	@Deprecated
 	public void setDependencies(String dependencies) {
 		this.dependencies = dependencies;
 	}
@@ -337,6 +342,14 @@ public class JobConfig implements Serializable {
 
 	public void setRerun(Boolean rerun) {
 		this.rerun = rerun;
+	}
+
+	public String getDownStream() {
+		return downStream;
+	}
+
+	public void setDownStream(String downStream) {
+		this.downStream = downStream;
 	}
 
 	@Override
@@ -426,7 +439,9 @@ public class JobConfig implements Serializable {
 			return false;
 		if (groups != null ? !groups.equals(jobConfig.groups) : jobConfig.groups != null)
 			return false;
-		return rerun != null ? rerun.equals(jobConfig.rerun) : jobConfig.rerun == null;
+		if (rerun != null ? !rerun.equals(jobConfig.rerun) : jobConfig.rerun != null)
+			return false;
+		return downStream != null ? downStream.equals(jobConfig.downStream) : jobConfig.downStream == null;
 	}
 
 	@Override
@@ -463,6 +478,7 @@ public class JobConfig implements Serializable {
 		result = 31 * result + (dependencies != null ? dependencies.hashCode() : 0);
 		result = 31 * result + (groups != null ? groups.hashCode() : 0);
 		result = 31 * result + (rerun != null ? rerun.hashCode() : 0);
+		result = 31 * result + (downStream != null ? downStream.hashCode() : 0);
 		return result;
 	}
 }

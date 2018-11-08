@@ -41,13 +41,14 @@ public class GetJobConfigVo {
 	private Boolean localMode;
 	private Boolean useSerial;
 	private String jobMode;
-	private List<String> dependencies;
+	// 'dependencies' is deprecated, the front web is not useful, so not transport it
 	private String groups;
 	private Boolean rerun;
+	private List<String> downStream;
 
 	private List<String> timeZonesProvided;
 	private List<ExecutorProvided> preferListProvided;
-	private List<String> dependenciesProvided;
+	private List<String> downStreamProvided;
 	private JobStatus status;
 
 	public void copyFrom(JobConfig jobConfig) {
@@ -59,7 +60,7 @@ public class GetJobConfigVo {
 		if (useDispreferList != null) {
 			onlyUsePreferList = !useDispreferList;
 		}
-		dependencies = toList(jobConfig.getDependencies());
+		downStream = toList(jobConfig.getDownStream());
 	}
 
 	private List<String> toList(String str) {
@@ -291,20 +292,28 @@ public class GetJobConfigVo {
 		this.jobMode = jobMode;
 	}
 
-	public List<String> getDependencies() {
-		return dependencies;
-	}
-
-	public void setDependencies(List<String> dependencies) {
-		this.dependencies = dependencies;
-	}
-
 	public String getGroups() {
 		return groups;
 	}
 
 	public void setGroups(String groups) {
 		this.groups = groups;
+	}
+
+	public Boolean getRerun() {
+		return rerun;
+	}
+
+	public void setRerun(Boolean rerun) {
+		this.rerun = rerun;
+	}
+
+	public List<String> getDownStream() {
+		return downStream;
+	}
+
+	public void setDownStream(List<String> downStream) {
+		this.downStream = downStream;
 	}
 
 	public List<String> getTimeZonesProvided() {
@@ -323,12 +332,12 @@ public class GetJobConfigVo {
 		this.preferListProvided = preferListProvided;
 	}
 
-	public List<String> getDependenciesProvided() {
-		return dependenciesProvided;
+	public List<String> getDownStreamProvided() {
+		return downStreamProvided;
 	}
 
-	public void setDependenciesProvided(List<String> dependenciesProvided) {
-		this.dependenciesProvided = dependenciesProvided;
+	public void setDownStreamProvided(List<String> downStreamProvided) {
+		this.downStreamProvided = downStreamProvided;
 	}
 
 	public JobStatus getStatus() {
@@ -339,11 +348,4 @@ public class GetJobConfigVo {
 		this.status = status;
 	}
 
-	public Boolean getRerun() {
-		return rerun;
-	}
-
-	public void setRerun(Boolean rerun) {
-		this.rerun = rerun;
-	}
 }

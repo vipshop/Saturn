@@ -35,10 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.vip.saturn.job.console.service.impl.JobServiceImpl.*;
 import static org.junit.Assert.*;
@@ -641,6 +638,119 @@ public class JobServiceImplTest {
 	}
 
 	@Test
+	public void testAddJobFailByLocalModeJobHasDownStream() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setLocalMode(true);
+		jobConfig.setShardingItemParameters("*=xx");
+		jobConfig.setDownStream("test");
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("非本地模式作业，才能配置下游作业");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButShardingTotalCountIsNotOne() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(2);
+		jobConfig.setShardingItemParameters("0=0,1=1");
+		jobConfig.setDownStream("test");
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("分片数为1，才能配置下游作业");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButIsSelf() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setDownStream(jobName);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("下游作业(" + jobName + ")不能是该作业本身");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButNotExisting() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setDownStream("test");
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("下游作业(test)不存在");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButIsAncestor() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setDownStream("test1");
+		JobConfig4DB test1 = new JobConfig4DB();
+		test1.setJobName("test1");
+		test1.setDownStream(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("下游作业(test1)不能是该作业的祖先");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButIsNotPassive() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setDownStream("test1");
+		JobConfig4DB test1 = new JobConfig4DB();
+		test1.setJobName("test1");
+		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("下游作业(test1)不是被动作业");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButIsAncestor2() throws SaturnJobConsoleException {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobClass("testCLass");
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setDownStream("test1, test2 ");
+		JobConfig4DB test1 = new JobConfig4DB();
+		test1.setJobName("test1");
+		test1.setJobType(JobType.PASSIVE_JAVA_JOB.name());
+		JobConfig4DB test2 = new JobConfig4DB();
+		test2.setJobName("test2");
+		test2.setJobType(JobType.PASSIVE_JAVA_JOB.name());
+		test2.setDownStream(jobName);
+		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1, test2));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage("下游作业(test2)不能是该作业的祖先");
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
 	public void testGetUnSystemJobsWithCondition() throws SaturnJobConsoleException {
 		String namespace = "ns1";
 		String jobName = "testJob";
@@ -655,12 +765,6 @@ public class JobServiceImplTest {
 	@Test
 	public void testGetMaxJobNum() {
 		assertEquals(jobService.getMaxJobNum(), 100);
-	}
-
-	@Test
-	public void testJobIncExceeds() throws SaturnJobConsoleException {
-		assertFalse(jobService.jobIncExceeds(namespace, 0, 1));
-		assertFalse(jobService.jobIncExceeds(namespace, 100, 1));
 	}
 
 	@Test

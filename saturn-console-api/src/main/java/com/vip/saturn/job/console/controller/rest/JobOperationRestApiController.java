@@ -258,6 +258,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
+		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
+
 		return jobConfig;
 	}
 
@@ -325,6 +327,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		jobConfig.setFailover(checkAndGetParametersValueAsBoolean(configParams, "failover", false));
+
+		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
 
 		return jobConfig;
 	}
