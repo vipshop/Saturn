@@ -43,7 +43,7 @@
                             <div slot="content">
                                 分片序列号和参数用等号分隔，多个键值对用逗号分隔 。分片序列号从0开始，不可大于或等于作业分片总数。如：0=a,1=b,2=c;<br/>
                                 英文双引号请使用!!代替，英文等号请使用@@代替，英文逗号请使用##代替。<br/>
-                                如果作业所有分片无须参数，则只要保持值为0。例如有2个分片无须参数，则为“0=0”。<br/>
+                                如果作业所有分片无须参数，则只要保持值为0。例如有2个分片无须参数，则为“0=0,1=0”。<br/>
                                 对于本地模式的作业，格式为*=value
                             </div>
                             <el-input type="textarea" v-model="jobInfo.shardingItemParameters"></el-input>
@@ -68,7 +68,7 @@
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" placement="bottom">
                             <div slot="content">
-                                消息类型job的queue名，2.0.0版本的executor支持为每个分片配置一个queue，格式为0=queue1,1=queue2
+                                消息类型job的queue名
                             </div>
                             <el-input type="textarea" v-model="jobInfo.queueName"></el-input>
                         </el-tooltip>
@@ -201,6 +201,24 @@ export default {
   computed: {
     isEditable() {
       return this.jobInfoOperation !== 'copy';
+    },
+  },
+  watch: {
+    'jobInfo.shardingTotalCount': {
+      handler(newCount) {
+        if (newCount) {
+          const result = [];
+          if (Number(newCount) > 0 && (!this.jobInfo.shardingItemParameters || /^(\d*=)(,\d*=)*$/.test(this.jobInfo.shardingItemParameters))) {
+            const arr = new Array(Number(newCount)).fill(1).map((ele, index) => index);
+            arr.forEach((ele) => {
+              result.push(`${ele}=`);
+            });
+            this.jobInfo.shardingItemParameters = result.join(',');
+            console.info(this.jobInfo.shardingItemParameters);
+          }
+        }
+      },
+      immediate: true,
     },
   },
   created() {
