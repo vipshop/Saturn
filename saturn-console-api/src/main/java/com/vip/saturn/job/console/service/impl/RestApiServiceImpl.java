@@ -19,6 +19,7 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 import com.vip.saturn.job.integrate.exception.ReportAlarmException;
 import com.vip.saturn.job.integrate.service.ReportAlarmService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -649,6 +650,49 @@ public class RestApiServiceImpl implements RestApiService {
 						}
 						jobService.updateJobConfig(namespace, jobConfig, "");
 						log.info("job {} update done", jobName);
+					}
+				});
+	}
+
+	@Override
+	public List<RestApiRunDownStreamResult> runDownStream(final String namespace, final String jobName)
+			throws SaturnJobConsoleException {
+		return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
+				new ReuseCallBack<List<RestApiRunDownStreamResult>>() {
+					@Override
+					public List<RestApiRunDownStreamResult> call(
+							CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+						JobConfig4DB jobConfig = currentJobConfigService
+								.findConfigByNamespaceAndJobName(namespace, jobName);
+						if (jobConfig == null) {
+							throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
+									"不能触发该作业（" + jobName + "）的下游，因为该作业不存在");
+						}
+						List<RestApiRunDownStreamResult> restApiRunDownStreamResultList = new ArrayList<>();
+						String downStream = jobConfig.getDownStream();
+						if (StringUtils.isBlank(downStream)) {
+							return restApiRunDownStreamResultList;
+						}
+						// Maybe should validate downStream, but it seems unnecessary, because it's validated when add/copy/import/update job
+						String[] split = downStream.split(",");
+						for (String childName : split) {
+							String childNameTrim = childName.trim();
+							if (childNameTrim.isEmpty()) {
+								continue;
+							}
+							RestApiRunDownStreamResult restApiRunDownStreamResult = new RestApiRunDownStreamResult();
+							restApiRunDownStreamResult.setJobName(childNameTrim);
+							try {
+								runJobAtOnce(namespace, childNameTrim);
+								restApiRunDownStreamResult.setSuccess(true);
+							} catch (SaturnJobConsoleException e) {
+								restApiRunDownStreamResult.setSuccess(false);
+								restApiRunDownStreamResult.setMessage(e.getMessage());
+							} finally {
+								restApiRunDownStreamResultList.add(restApiRunDownStreamResult);
+							}
+						}
+						return restApiRunDownStreamResultList;
 					}
 				});
 	}

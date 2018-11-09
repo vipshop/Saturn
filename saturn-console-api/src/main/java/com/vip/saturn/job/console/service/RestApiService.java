@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.RestApiRunDownStreamResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 
@@ -101,4 +102,9 @@ public interface RestApiService {
 	 * update the job
 	 */
 	void updateJob(String namespace, String jobName, JobConfig jobConfig) throws SaturnJobConsoleException;
+
+	/**
+	 * Trigger the job's downStream to run
+	 */
+	List<RestApiRunDownStreamResult> runDownStream(String namespace, String jobName) throws SaturnJobConsoleException;
 }

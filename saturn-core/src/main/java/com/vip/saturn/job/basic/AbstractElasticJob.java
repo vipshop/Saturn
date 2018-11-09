@@ -28,7 +28,20 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.Trigger;
 import com.vip.saturn.job.utils.LogUtils;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,7 +216,54 @@ public abstract class AbstractElasticJob implements Stoppable {
 					}
 				}
 			}
-			afterMainThreadDone(shardingContext);
+			runDownStream(shardingContext);
+		}
+	}
+
+	private void runDownStream(final JobExecutionMultipleShardingContext shardingContext) {
+		if (configService.isLocalMode()) {
+			return;
+		}
+		if (!configService.getJobType().isCron()) {
+			return;
+		}
+		if (shardingContext.getShardingTotalCount() != 1) {
+			return;
+		}
+		List<String> downStream = configService.getDownStream();
+		if (downStream.isEmpty()) {
+			return;
+		}
+
+		String logMessagePrefix = "call runDownStream api";
+		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
+		for (int i = 0; i < size; i++) {
+			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
+			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/runDownStream";
+			LogUtils.info(log, jobName, "{}, target url is {}", logMessagePrefix, targetUrl);
+			CloseableHttpClient httpClient = null;
+			try {
+				httpClient = HttpClientBuilder.create().build();
+				HttpPost request = new HttpPost(targetUrl);
+				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
+						.setSocketTimeout(10000).build();
+				request.setConfig(requestConfig);
+				request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+				CloseableHttpResponse httpResponse = httpClient.execute(request);
+				StatusLine statusLine = httpResponse.getStatusLine();
+				if (statusLine != null && statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = httpResponse.getEntity();
+					String result = entity != null ? EntityUtils.toString(entity, "UTF-8") : null;
+					LogUtils.info(log, jobName, "{}, result is {}", logMessagePrefix, result);
+					return;
+				} else {
+					LogUtils.info(log, jobName, "{} failed, StatusLine is {}", logMessagePrefix, statusLine);
+				}
+			} catch (Exception e) {
+				LogUtils.error(log, jobName, "{} error", logMessagePrefix, e);
+			} finally {
+				HttpClientUtils.closeQuietly(httpClient);
+			}
 		}
 	}
 
@@ -242,12 +302,6 @@ public abstract class AbstractElasticJob implements Stoppable {
 	}
 
 	protected abstract void executeJob(final JobExecutionMultipleShardingContext shardingContext);
-
-	/**
-	 * 当涉及到主线程开子线程异步执行时，在主线程完成后提供的回调
-	 */
-	public void afterMainThreadDone(final JobExecutionMultipleShardingContext shardingContext) {
-	}
 
 	public void callbackWhenShardingItemIsEmpty(final JobExecutionMultipleShardingContext shardingContext) {
 	}

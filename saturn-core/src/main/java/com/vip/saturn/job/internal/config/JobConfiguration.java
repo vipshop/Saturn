@@ -141,6 +141,10 @@ public class JobConfiguration {
 	 * 是否使用非preferList
 	 */
 	private boolean useDispreferList = true;
+	/**
+	 * 下游作业
+	 */
+	private String downStream;
 
 	// Test Use Only!
 	public JobConfiguration(String jobName, Class<? extends AbstractElasticJob> jobClass, int shardingTotalCount,
@@ -244,6 +248,7 @@ public class JobConfiguration {
 				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_SERIAL)));
 		useDispreferList = Boolean.parseBoolean(
 				regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.USE_DISPREFER_LIST)));
+		downStream = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.DOWN_STREAM));
 	}
 
 	public boolean isDeleting() {
@@ -460,5 +465,13 @@ public class JobConfiguration {
 
 	public Boolean isEnabledReport() {
 		return enabledReport;
+	}
+
+	public String getDownStream() {
+		return downStream;
+	}
+
+	public void setDownStream(String downStream) {
+		this.downStream = downStream;
 	}
 }

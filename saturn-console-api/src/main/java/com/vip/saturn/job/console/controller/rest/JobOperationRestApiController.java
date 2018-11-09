@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.RestApiRunDownStreamResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
@@ -147,7 +148,6 @@ public class JobOperationRestApiController extends AbstractRestController {
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
 			restApiService.stopJobAtOnce(namespace, jobName);
-
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -178,6 +178,22 @@ public class JobOperationRestApiController extends AbstractRestController {
 			JobConfig jobConfig = constructJobConfigOfUpdate(namespace, jobName, reqParams);
 			restApiService.updateJob(namespace, jobName, jobConfig);
 			return new ResponseEntity<>(HttpStatus.OK);
+		} catch (SaturnJobConsoleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
+		}
+	}
+
+	@Audit(type = AuditType.REST)
+	@RequestMapping(value = "/{namespace}/jobs/{jobName}/runDownStream", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> runDownStream(@PathVariable("namespace") String namespace,
+			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		try {
+			List<RestApiRunDownStreamResult> restApiRunDownStreamResultList = restApiService
+					.runDownStream(namespace, jobName);
+			return new ResponseEntity<Object>(restApiRunDownStreamResultList, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {

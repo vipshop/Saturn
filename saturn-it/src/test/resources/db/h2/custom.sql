@@ -5,3 +5,5 @@ INSERT INTO job_config(job_name, namespace) VALUES ('updateCronITJob', 'it-satur
 INSERT INTO job_config(job_name, namespace) VALUES ('updateConfigITJob', 'it-saturn');
 INSERT INTO job_config(job_name, namespace) VALUES ('updatePauseDate', 'it-saturn');
 INSERT INTO job_config(job_name, namespace) VALUES ('updateShowNormalLog', 'it-saturn');
+INSERT INTO job_config(job_name, namespace, down_stream) VALUES ('downStreamITJobA', 'it-saturn', 'downStreamITJobB');
+INSERT INTO job_config(job_name, namespace, is_enabled) VALUES ('downStreamITJobB', 'it-saturn', true);

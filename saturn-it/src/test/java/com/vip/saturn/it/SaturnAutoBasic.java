@@ -440,6 +440,7 @@ public class SaturnAutoBasic {
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite("control/report", System.currentTimeMillis());
 	}
 
+	// TODO use console api to add job
 	protected static void addJob(JobConfiguration jobConfiguration) {
 		JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobConfiguration);
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_TYPE, jobConfiguration.getJobType());
@@ -472,6 +473,7 @@ public class SaturnAutoBasic {
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.LOCAL_MODE, jobConfiguration.isLocalMode());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.USE_SERIAL, jobConfiguration.isUseSerial());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.ENABLED, jobConfiguration.isEnabled());
+		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.DOWN_STREAM, jobConfiguration.getDownStream());
 		jobNodeStorage.fillJobNodeIfNullOrOverwrite(ConfigurationNode.JOB_CLASS, jobConfiguration.getJobClass());
 	}
 
@@ -628,8 +630,7 @@ public class SaturnAutoBasic {
 					for (int i = 0; i < saturnExecutorList.size(); i++) {
 						Main main = saturnExecutorList.get(i);
 						for (int j = 0; j < shardCount; j++) {
-							long pid = ScriptPidUtils
-									.getFirstPidFromFile(main.getExecutorName(), jobName, "" + j);
+							long pid = ScriptPidUtils.getFirstPidFromFile(main.getExecutorName(), jobName, "" + j);
 							if (pid > 0 && ScriptPidUtils.isPidRunning(pid)) {
 								return false;
 							}

@@ -494,4 +494,21 @@ public class ConfigurationService extends AbstractSaturnService {
 	public boolean isUseDispreferList() {
 		return jobConfiguration.isUseDispreferList();
 	}
+
+	public List<String> getDownStream() {
+		List<String> downStreamList = new ArrayList<>();
+		String downStream = jobConfiguration.getDownStream();
+		if (StringUtils.isBlank(downStream)) {
+			return downStreamList;
+		}
+		String[] split = downStream.split(",");
+		for (String childName : split) {
+			String childNameTrim = childName.trim();
+			if (!childNameTrim.isEmpty()) {
+				downStreamList.add(childNameTrim);
+			}
+		}
+		return downStreamList;
+	}
+
 }

@@ -85,6 +85,8 @@ public final class ConfigurationNode {
 	 */
 	public static final String CHANNEL_NAME = ROOT + "/channelName";
 
+	public static final String DOWN_STREAM = ROOT + "/downStream";
+
 	/**
 	 * 判断是否为作业配置路径.
 	 * 
