@@ -101,13 +101,17 @@ public class LocalHostService {
 		return InetAddress.getLocalHost();
 	}
 
-	// for test only!
+	/**
+	 * @deprecated for test only!
+	 */
 	@Deprecated
 	public static void setCachedIpAddress(String ip) {
 		cachedIpAddress = ip;
 	}
 
-	// for test only!
+	/**
+	 * @deprecated for test only!
+	 */
 	@Deprecated
 	public static void setCachedHostName(String hostName) {
 		cachedHostName = hostName;

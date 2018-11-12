@@ -11,7 +11,10 @@ public class MsgHolder implements Serializable {
 
 	private byte[] payloadBytes;
 
-	/** 消息内容 */
+	/**
+	 * 消息内容
+	 * @deprecated replaced by payloadBytes
+	 */
 	@Deprecated
 	private String payload;
 
@@ -24,6 +27,9 @@ public class MsgHolder implements Serializable {
 	/** Kafka offset */
 	private long offset;
 
+	/**
+	 * @deprecated because the String type of payload maybe is not right
+	 */
 	@Deprecated
 	public MsgHolder(String payload, Set<Entry<String, String>> prop, String messageId) {
 		this.payload = payload;

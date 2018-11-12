@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.utils;
 
 /**
+ * @deprecated useless for now
  * @author yangjuanying
  */
 @Deprecated

@@ -39,6 +39,9 @@ public class JobConfig implements Serializable {
 	private Boolean failover;
 	private String jobMode; // 系统作业等
 	private String customContext;
+	/**
+	 * @deprecated replaced by downStream
+	 */
 	@Deprecated
 	private String dependencies;
 	private String groups;
@@ -318,11 +321,17 @@ public class JobConfig implements Serializable {
 		this.customContext = customContext;
 	}
 
+	/**
+	 * @deprecated replaced by downStream
+	 */
 	@Deprecated
 	public String getDependencies() {
 		return dependencies;
 	}
 
+	/**
+	 * @deprecated replaced by downStream
+	 */
 	@Deprecated
 	public void setDependencies(String dependencies) {
 		this.dependencies = dependencies;

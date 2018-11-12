@@ -19,8 +19,6 @@ import java.util.Map;
  */
 public class AbstractController {
 
-	public static final String REQUEST_NAMESPACE_PARAM = "nns";
-
 	public static final String BAD_REQ_MSG_PREFIX = "Invalid request.";
 
 	public static final String INVALID_REQUEST_MSG = BAD_REQ_MSG_PREFIX + " Parameter: {%s} %s";
@@ -83,6 +81,7 @@ public class AbstractController {
 	/**
 	 * @deprecated session do not store zk cluster information
 	 */
+	@Deprecated
 	public void setCurrentZkClusterKey(String zkClusterKey, final HttpSession session) {
 		session.setAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY, zkClusterKey);
 	}
@@ -90,6 +89,7 @@ public class AbstractController {
 	/**
 	 * @deprecated session do not store zk cluster information
 	 */
+	@Deprecated
 	public String getCurrentZkAddr(final HttpSession session) {
 		String zkClusterKey = (String) session.getAttribute(SessionAttributeKeys.CURRENT_ZK_CLUSTER_KEY);
 		if (zkClusterKey != null) {

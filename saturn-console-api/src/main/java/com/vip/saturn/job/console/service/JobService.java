@@ -54,7 +54,7 @@ public interface JobService {
 	int countEnabledUnSystemJobs(String namespace);
 
 	/**
-	 * since 3.1.0，不再支持systemjob
+	 * @deprecated since 3.1.0，不再支持systemJob
 	 */
 	@Deprecated
 	List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException;
