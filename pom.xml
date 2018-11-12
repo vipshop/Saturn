@@ -28,9 +28,6 @@
         <module>saturn-console-api</module>
         <module>saturn-console-web</module>
         <module>saturn-console</module>
-        <!-- saturn-console-core and saturn-console-old will be deprecated after 3.0.0 -->
-        <module>saturn-console-core</module>
-        <module>saturn-console-old</module>
         <module>saturn-it</module>
     </modules>
 
@@ -45,8 +42,6 @@
 		<curator.version>2.10.0</curator.version>
         <springframework.version>4.3.2.RELEASE</springframework.version>
 		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
-        <!-- could be removed, when saturn-console-old is removed -->
-		<cas.client.version>3.2.1</cas.client.version>
 
 		<mybatis.version>3.2.7</mybatis.version>
 		<mybatis.spring.version>1.2.5</mybatis.spring.version>
@@ -128,14 +123,6 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<!-- bean mapper begin, TODO orika is just use in saturn-console-old, could be removed -->
-			<dependency>
-			    <groupId>ma.glasnost.orika</groupId>
-			    <artifactId>orika-core</artifactId>
-			    <version>${ma.glasnost.version}</version>
-			</dependency>
-			<!-- bean mapper end -->
-
 			<!-- common begin -->
 			<dependency>
 				<groupId>org.projectlombok</groupId>
