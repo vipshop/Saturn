@@ -1,22 +1,22 @@
-# maven ignore
+# maven
 target/
 *.war
 *.zip
 *.tar
 *.tar.gz
 
-# eclipse ignore
+# eclipse
 .settings/
 .project
 .classpath
 
-# idea ignore
+# idea
 .idea/
 *.ipr
 *.iml
 *.iws
 
-# temp ignore
+# temp
 saturn-job-console/logs/
 *.doc
 *.log
@@ -25,11 +25,10 @@ saturn-job-console/logs/
 *.patch
 *.tmp
 
-# system ignore
+# system
 .DS_Store
 Thumbs.db
 sh.exe.stackdump
-/saturn-job-st/info
 
-# console static ignore
+# console static
 saturn-console/src/main/resources/static
