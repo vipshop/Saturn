@@ -1048,7 +1048,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
+	public List<BatchJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
 			throws SaturnJobConsoleException {
 		try {
 			Workbook workbook = Workbook.getWorkbook(file.getInputStream());
@@ -1081,25 +1081,25 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	protected List<ImportJobResult> doCreateJobFromImportFile(String namespace, List<JobConfig> jobConfigList,
+	protected List<BatchJobResult> doCreateJobFromImportFile(String namespace, List<JobConfig> jobConfigList,
 			String createdBy) {
-		List<ImportJobResult> results = new ArrayList<>();
+		List<BatchJobResult> results = new ArrayList<>();
 		for (JobConfig jobConfig : jobConfigList) {
-			ImportJobResult importJobResult = new ImportJobResult();
-			importJobResult.setJobName(jobConfig.getJobName());
+			BatchJobResult batchJobResult = new BatchJobResult();
+			batchJobResult.setJobName(jobConfig.getJobName());
 			try {
 				addJob(namespace, jobConfig, createdBy);
-				importJobResult.setSuccess(true);
+				batchJobResult.setSuccess(true);
 			} catch (SaturnJobConsoleException e) {
-				importJobResult.setSuccess(false);
-				importJobResult.setMessage(e.getMessage());
+				batchJobResult.setSuccess(false);
+				batchJobResult.setMessage(e.getMessage());
 				log.warn("exception: {}", e);
 			} catch (Exception e) {
-				importJobResult.setSuccess(false);
-				importJobResult.setMessage(e.toString());
+				batchJobResult.setSuccess(false);
+				batchJobResult.setMessage(e.toString());
 				log.warn("exception: {}", e);
 			}
-			results.add(importJobResult);
+			results.add(batchJobResult);
 		}
 		return results;
 	}

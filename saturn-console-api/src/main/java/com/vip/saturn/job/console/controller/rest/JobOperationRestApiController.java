@@ -2,10 +2,10 @@ package com.vip.saturn.job.console.controller.rest;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
+import com.vip.saturn.job.console.domain.BatchJobResult;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiRunDownStreamResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.RestApiService;
@@ -191,9 +191,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			List<RestApiRunDownStreamResult> restApiRunDownStreamResultList = restApiService
-					.runDownStream(namespace, jobName);
-			return new ResponseEntity<Object>(restApiRunDownStreamResultList, httpHeaders, HttpStatus.OK);
+			List<BatchJobResult> batchJobResultList = restApiService.runDownStream(namespace, jobName);
+			return new ResponseEntity<Object>(batchJobResultList, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {

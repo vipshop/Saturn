@@ -655,23 +655,23 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public List<RestApiRunDownStreamResult> runDownStream(final String namespace, final String jobName)
+	public List<BatchJobResult> runDownStream(final String namespace, final String jobName)
 			throws SaturnJobConsoleException {
 		return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
-				new ReuseCallBack<List<RestApiRunDownStreamResult>>() {
+				new ReuseCallBack<List<BatchJobResult>>() {
 					@Override
-					public List<RestApiRunDownStreamResult> call(
-							CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException {
+					public List<BatchJobResult> call(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+							throws SaturnJobConsoleException {
 						JobConfig4DB jobConfig = currentJobConfigService
 								.findConfigByNamespaceAndJobName(namespace, jobName);
 						if (jobConfig == null) {
 							throw new SaturnJobConsoleHttpException(HttpStatus.NOT_FOUND.value(),
 									"不能触发该作业（" + jobName + "）的下游，因为该作业不存在");
 						}
-						List<RestApiRunDownStreamResult> restApiRunDownStreamResultList = new ArrayList<>();
+						List<BatchJobResult> batchJobResultList = new ArrayList<>();
 						String downStream = jobConfig.getDownStream();
 						if (StringUtils.isBlank(downStream)) {
-							return restApiRunDownStreamResultList;
+							return batchJobResultList;
 						}
 						// Maybe should validate downStream, but it seems unnecessary, because it's validated when add/copy/import/update job
 						String[] split = downStream.split(",");
@@ -680,19 +680,19 @@ public class RestApiServiceImpl implements RestApiService {
 							if (childNameTrim.isEmpty()) {
 								continue;
 							}
-							RestApiRunDownStreamResult restApiRunDownStreamResult = new RestApiRunDownStreamResult();
-							restApiRunDownStreamResult.setJobName(childNameTrim);
+							BatchJobResult batchJobResult = new BatchJobResult();
+							batchJobResult.setJobName(childNameTrim);
 							try {
 								runJobAtOnce(namespace, childNameTrim);
-								restApiRunDownStreamResult.setSuccess(true);
+								batchJobResult.setSuccess(true);
 							} catch (SaturnJobConsoleException e) {
-								restApiRunDownStreamResult.setSuccess(false);
-								restApiRunDownStreamResult.setMessage(e.getMessage());
+								batchJobResult.setSuccess(false);
+								batchJobResult.setMessage(e.getMessage());
 							} finally {
-								restApiRunDownStreamResultList.add(restApiRunDownStreamResult);
+								batchJobResultList.add(batchJobResult);
 							}
 						}
-						return restApiRunDownStreamResultList;
+						return batchJobResultList;
 					}
 				});
 	}

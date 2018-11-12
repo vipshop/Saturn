@@ -72,7 +72,7 @@ public interface JobService {
 	 */
 	void persistJobFromDB(JobConfig jobConfig, CuratorFrameworkOp curatorFrameworkOp) throws SaturnJobConsoleException;
 
-	List<ImportJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
+	List<BatchJobResult> importJobs(String namespace, MultipartFile file, String createdBy)
 			throws SaturnJobConsoleException;
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;

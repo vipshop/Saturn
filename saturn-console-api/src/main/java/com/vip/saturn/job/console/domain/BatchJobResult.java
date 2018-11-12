@@ -3,7 +3,7 @@ package com.vip.saturn.job.console.domain;
 /**
  * @author hebelala
  */
-public class ImportJobResult {
+public class BatchJobResult {
 
 	private String jobName;
 	private boolean success;
@@ -32,4 +32,5 @@ public class ImportJobResult {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+
 }

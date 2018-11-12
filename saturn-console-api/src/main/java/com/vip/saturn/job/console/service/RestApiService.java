@@ -1,8 +1,8 @@
 package com.vip.saturn.job.console.service;
 
+import com.vip.saturn.job.console.domain.BatchJobResult;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
-import com.vip.saturn.job.console.domain.RestApiRunDownStreamResult;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.integrate.entity.AlarmInfo;
 
@@ -106,5 +106,5 @@ public interface RestApiService {
 	/**
 	 * Trigger the job's downStream to run
 	 */
-	List<RestApiRunDownStreamResult> runDownStream(String namespace, String jobName) throws SaturnJobConsoleException;
+	List<BatchJobResult> runDownStream(String namespace, String jobName) throws SaturnJobConsoleException;
 }
