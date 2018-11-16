@@ -228,9 +228,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		disableJob(jobName);
-		Thread.sleep(1000);
-
 		forceStopJob(jobName);
 		Thread.sleep(1000);
 

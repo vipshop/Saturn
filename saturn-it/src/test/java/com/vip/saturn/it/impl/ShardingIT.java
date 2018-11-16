@@ -165,6 +165,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).contains(0, 1, 2);
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -289,6 +290,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -387,6 +389,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -457,6 +460,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -536,6 +540,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -631,6 +636,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -722,6 +728,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -813,6 +820,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -904,6 +912,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).isEmpty();
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -992,6 +1001,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -1087,6 +1097,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -1182,6 +1193,7 @@ public class ShardingIT extends AbstractSaturnIT {
 			assertThat(items).contains(0, 1);
 
 			disableJob(jobName);
+			Thread.sleep(1000);
 			removeJob(jobName);
 			stopExecutorListGracefully();
 		} finally {
@@ -1324,6 +1336,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		}, 10);
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}
@@ -1476,6 +1489,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(data3.contains(executor2.getExecutorName())).isFalse();
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 		stopExecutorListGracefully();
 	}

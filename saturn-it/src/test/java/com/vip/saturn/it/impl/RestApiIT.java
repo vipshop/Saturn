@@ -229,6 +229,7 @@ public class RestApiIT extends AbstractSaturnIT {
 				gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 	}
 
@@ -272,6 +273,7 @@ public class RestApiIT extends AbstractSaturnIT {
 		assertEquals(204, responseEntity.getStatusCode());
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 	}
 
@@ -303,6 +305,7 @@ public class RestApiIT extends AbstractSaturnIT {
 				gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 	}
 
@@ -320,6 +323,7 @@ public class RestApiIT extends AbstractSaturnIT {
 		assertEquals("job cannot be stopped while its status is READY or RUNNING",
 				gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 	}
 
@@ -426,6 +430,7 @@ public class RestApiIT extends AbstractSaturnIT {
 				gson.fromJson(responseEntity.getEntity(), Map.class).get("message"));
 
 		disableJob(jobName);
+		Thread.sleep(1000);
 		removeJob(jobName);
 	}
 
