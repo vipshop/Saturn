@@ -1,10 +1,11 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -38,23 +39,24 @@ public class ShardingIT extends AbstractSaturnIT {
 	@Test
 	public void test_A_JAVA() throws Exception {
 		int shardCount = 3;
-		String jobName = "javaITJob";
+		final String jobName = "test_A_JAVA";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("* * 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(1 * 1000);
 
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
@@ -66,8 +68,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -85,8 +87,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -124,8 +126,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -144,8 +146,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -163,12 +165,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).contains(0, 1, 2);
 
 		disableJob(jobName);
-		Thread.sleep(1000);
 		removeJob(jobName);
-
 		stopExecutorListGracefully();
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
 	}
 
 	@Test
@@ -176,32 +174,33 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
 
 		int shardCount = 3;
-		String jobName = "javaITJob";
+		final String jobName = "test_D_PreferList";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("* * 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		jobConfiguration.setPreferList(executor1.getExecutorName());
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		jobConfig.setPreferList(executor1.getExecutorName());
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
-		Thread.sleep(1 * 1000);
+		enableJob(jobName);
+		Thread.sleep(1000);
 
 		runAtOnce(jobName);
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -219,8 +218,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -243,8 +242,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -269,8 +268,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -290,12 +289,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
-		removeJob(jobConfiguration.getJobName());
-
-		Thread.sleep(1000);
-
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName);
 	}
 
 	@Test
@@ -303,34 +298,35 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
 
 		int shardCount = 3;
-		String jobName = "javaITJob";
+		final String jobName = "test_E_PreferListOnly";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("* * 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		jobConfiguration.setPreferList(executor1.getExecutorName());
-		jobConfiguration.setUseDispreferList(false);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		jobConfig.setPreferList(executor1.getExecutorName());
+		jobConfig.setUseDispreferList(false);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
-		Thread.sleep(1 * 1000);
+		enableJob(jobName);
+		Thread.sleep(1000);
 
 		runAtOnce(jobName);
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -348,8 +344,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -372,8 +368,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName)) {
 					return false;
 				}
 				return true;
@@ -391,13 +387,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		assertThat(items).isEmpty();
 
 		disableJob(jobName);
-		Thread.sleep(1000);
 		removeJob(jobName);
-
-		Thread.sleep(1000);
-
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName);
 	}
 
 	/**
@@ -409,37 +400,38 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor2 = startOneNewExecutorList();
 
 		int shardCount = 2;
-		String jobName = "test_F_LocalModeWithPreferList_job";
+		final String jobName = "test_F_LocalModeWithPreferList";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);
-		jobConfiguration.setPreferList(executor2.getExecutorName()); // 设置preferList为executor2
-		jobConfiguration.setUseDispreferList(false); // 设置useDispreferList为false
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("*=0");
+		jobConfig.setLocalMode(true);
+		jobConfig.setPreferList(executor2.getExecutorName()); // 设置preferList为executor2
+		jobConfig.setUseDispreferList(false); // 设置useDispreferList为false
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 		runAtOnce(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
@@ -455,8 +447,8 @@ public class ShardingIT extends AbstractSaturnIT {
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 		// executor1仍然获取不到分片
@@ -464,8 +456,9 @@ public class ShardingIT extends AbstractSaturnIT {
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
 
+		disableJob(jobName);
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName);
 	}
 
 	/**
@@ -477,37 +470,38 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor2 = startOneNewExecutorList();
 
 		int shardCount = 2;
-		String jobName = "test_F_LocalModeWithPreferListAndUseDispreferList_job";
+		final String jobName = "test_F_LocalModeWithPreferListAndUseDispreferList_job";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("* * 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);
-		jobConfiguration.setPreferList(executor2.getExecutorName()); // 设置preferList为executor2
-		jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("*=0");
+		jobConfig.setLocalMode(true);
+		jobConfig.setPreferList(executor2.getExecutorName()); // 设置preferList为executor2
+		jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 		runAtOnce(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 		// executor2获取到0分片，executor1获取不到分片
@@ -524,16 +518,16 @@ public class ShardingIT extends AbstractSaturnIT {
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 		runAtOnce(jobName);
 		// 等待拿走分片
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 		// executor1仍然获取不到分片
@@ -541,8 +535,9 @@ public class ShardingIT extends AbstractSaturnIT {
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
 
+		disableJob(jobName);
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName);
 	}
 
 	/**
@@ -561,37 +556,38 @@ public class ShardingIT extends AbstractSaturnIT {
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			final int shardCount = 2;
-			final String jobName = "test_G_Container";
+			final String jobName = "test_G_ContainerWithUseDispreferList";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("0=0,1=1");
-			jobConfiguration.setLocalMode(false);
-			jobConfiguration.setPreferList("@" + taskId); // 设置preferList为@taskId
-			jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setLocalMode(false);
+			jobConfig.setPreferList("@" + taskId); // 设置preferList为@taskId
+			jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -609,14 +605,14 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					return hasCompletedZnodeForAllShards(jobName, shardCount);
 				}
 			}, 10);
@@ -625,8 +621,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 等待拿走分片
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// executor1仍然获取0、1分片
@@ -634,8 +630,9 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -658,37 +655,38 @@ public class ShardingIT extends AbstractSaturnIT {
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
-			String jobName = "test_G_Container";
+			final String jobName = "test_H_ContainerWithOnlyPreferList";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("0=0,1=1");
-			jobConfiguration.setLocalMode(false);
-			jobConfiguration.setPreferList("@" + taskId); // 设置preferList为@taskId
-			jobConfiguration.setUseDispreferList(false); // 设置useDispreferList为false
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setLocalMode(false);
+			jobConfig.setPreferList("@" + taskId); // 设置preferList为@taskId
+			jobConfig.setUseDispreferList(false); // 设置useDispreferList为false
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -706,16 +704,16 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			// 等待拿走分片
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// executor1仍然获取不到分片
@@ -723,8 +721,9 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -747,37 +746,38 @@ public class ShardingIT extends AbstractSaturnIT {
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
-			String jobName = "test_I_ContainerWithLocalModeAndUseDispreferList";
+			final String jobName = "test_I_ContainerWithLocalModeAndUseDispreferList";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("*=a");
-			jobConfiguration.setLocalMode(true); // 设置localMode为true
-			jobConfiguration.setPreferList("@" + taskId); // 设置preferList为@taskId
-			jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("*=a");
+			jobConfig.setLocalMode(true); // 设置localMode为true
+			jobConfig.setPreferList("@" + taskId); // 设置preferList为@taskId
+			jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -795,16 +795,16 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			// 等待拿走分片
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// executor1仍然拿不到分片
@@ -812,8 +812,9 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -836,37 +837,38 @@ public class ShardingIT extends AbstractSaturnIT {
 			Main executor2 = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
-			String jobName = "test_J_ContainerWithLocalModeAndOnlyPreferList";
+			final String jobName = "test_J_ContainerWithLocalModeAndOnlyPreferList";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("*=a");
-			jobConfiguration.setLocalMode(true); // 设置localMode为true
-			jobConfiguration.setPreferList("@" + taskId); // 设置preferList为@taskId
-			jobConfiguration.setUseDispreferList(false); // 设置useDispreferList为false
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("*=a");
+			jobConfig.setLocalMode(true); // 设置localMode为true
+			jobConfig.setPreferList("@" + taskId); // 设置preferList为@taskId
+			jobConfig.setUseDispreferList(false); // 设置useDispreferList为false
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -884,16 +886,16 @@ public class ShardingIT extends AbstractSaturnIT {
 			// 等待sharding分片完成
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			// 等待拿走分片
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// executor1仍然获取不到分片
@@ -901,8 +903,9 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -925,70 +928,72 @@ public class ShardingIT extends AbstractSaturnIT {
 			Main vdosExecutor = startOneNewExecutorList(); // 启动一个容器executor
 
 			int shardCount = 2;
-			String jobName = "test_K_ContainerWithUseDispreferList_ButInvalidTaskId";
+			final String jobName = "test_K_ContainerWithUseDispreferList_ButInvalidTaskId";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("0=0,1=1");
-			jobConfiguration.setLocalMode(false);
-			jobConfiguration.setPreferList("@haha" + taskId); // 设置preferList为@hahataskId
-			jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setLocalMode(false);
+			jobConfig.setPreferList("@haha" + taskId); // 设置preferList为@hahataskId
+			jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
 			// vdosExecutor获取不到分片，logicExecutor获取到0、1分片
-			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
+			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
 			assertThat(items).isEmpty();
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -1004,26 +1009,27 @@ public class ShardingIT extends AbstractSaturnIT {
 		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			int shardCount = 2;
-			String jobName = "test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst";
+			final String jobName = "test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("0=0,1=1");
-			jobConfiguration.setLocalMode(false);
-			jobConfiguration.setPreferList("@haha"); // 设置preferList为@haha
-			jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setLocalMode(false);
+			jobConfig.setPreferList("@haha"); // 设置preferList为@haha
+			jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 
 			// 启动一个容器executor
 			String taskId = "test1";
@@ -1038,8 +1044,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -1047,41 +1053,42 @@ public class ShardingIT extends AbstractSaturnIT {
 
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
 			// vdosExecutor获取不到分片，logicExecutor获取到0、1分片
-			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
+			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
 			assertThat(items).isEmpty();
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -1097,26 +1104,27 @@ public class ShardingIT extends AbstractSaturnIT {
 		String taskOld = SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID;
 		try {
 			int shardCount = 2;
-			String jobName = "test_L_ContainerWithUseDispreferList_ButInvalidTaskId_ContainerFirst";
+			final String jobName = "test_M_UseDispreferList_ButInvalidLogicPreferList";
 
 			for (int i = 0; i < shardCount; i++) {
 				String key = jobName + "_" + i;
 				SimpleJavaJob.statusMap.put(key, 0);
 			}
 
-			final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-			jobConfiguration.setCron("* * 1 * * ?");
-			jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-			jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-			jobConfiguration.setShardingTotalCount(shardCount);
-			jobConfiguration.setShardingItemParameters("0=0,1=1");
-			jobConfiguration.setLocalMode(false);
-			jobConfiguration.setPreferList("haha"); // 设置preferList为@haha
-			jobConfiguration.setUseDispreferList(true); // 设置useDispreferList为true
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(jobName);
+			jobConfig.setCron("9 9 9 9 9 ? 2099");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(shardCount);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setLocalMode(false);
+			jobConfig.setPreferList("haha"); // 设置preferList为@haha
+			jobConfig.setUseDispreferList(true); // 设置useDispreferList为true
 
-			addJob(jobConfiguration);
+			addJob(jobConfig);
 			Thread.sleep(1000);
-			enableJob(jobConfiguration.getJobName());
+			enableJob(jobName);
 
 			// 启动一个容器executor
 			String taskId = "test1";
@@ -1131,8 +1139,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 
@@ -1140,41 +1148,42 @@ public class ShardingIT extends AbstractSaturnIT {
 
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 
 			// vdosExecutor获取不到分片，logicExecutor获取到0、1分片
-			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
+			List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(vdosExecutor.getExecutorName()))));
 			assertThat(items).isEmpty();
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 			// vdosExecutor下线
 			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return isNeedSharding(jobName);
 				}
 			}, 10);
 			runAtOnce(jobName);
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
-					return !isNeedSharding(jobConfiguration);
+				public boolean isOk() {
+					return !isNeedSharding(jobName);
 				}
 			}, 10);
 			// logicExecutor仍然获取0、1分片
-			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-					ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
+			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
 
+			disableJob(jobName);
+			removeJob(jobName);
 			stopExecutorListGracefully();
-			forceRemoveJob(jobName);
 		} finally {
 			SystemEnvProperties.VIP_SATURN_EXECUTOR_CLEAN = cleanOld;
 			SystemEnvProperties.VIP_SATURN_CONTAINER_DEPLOYMENT_ID = taskOld;
@@ -1192,48 +1201,50 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		// 启动第一个作业
 		Thread.sleep(1000);
-		String jobName1 = "test_M_NotifyNecessaryJobs_job1";
-		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
-		jobConfiguration1.setCron("* * 1 * * ?");
-		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration1.setShardingTotalCount(1);
-		jobConfiguration1.setShardingItemParameters("0=0");
-		addJob(jobConfiguration1);
+		final String jobName1 = "test_N_NotifyNecessaryJobs1";
+		JobConfig jobConfig1 = new JobConfig();
+		jobConfig1.setJobName(jobName1);
+		jobConfig1.setCron("9 9 9 9 9 ? 2099");
+		jobConfig1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig1.setShardingTotalCount(1);
+		jobConfig1.setShardingItemParameters("0=0");
+		addJob(jobConfig1);
 		Thread.sleep(1000);
 		enableJob(jobName1);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName1);
 			}
 		}, 10);
 		runAtOnce(jobName1);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName1);
 			}
 		}, 10);
 
 		// 启动第二个作业
 		Thread.sleep(1000);
-		String jobName2 = "test_M_NotifyNecessaryJobs_job2";
-		final JobConfiguration jobConfiguration2 = new JobConfiguration(jobName2);
-		jobConfiguration2.setCron("* * 1 * * ?");
-		jobConfiguration2.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration2.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration2.setShardingTotalCount(1);
-		jobConfiguration2.setShardingItemParameters("0=0");
+		final String jobName2 = "test_N_NotifyNecessaryJobs2";
+		JobConfig jobConfig2 = new JobConfig();
+		jobConfig2.setJobName(jobName2);
+		jobConfig2.setCron("9 9 9 9 9 ? 2099");
+		jobConfig2.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig2.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig2.setShardingTotalCount(1);
+		jobConfig2.setShardingItemParameters("0=0");
 
-		addJob(jobConfiguration2);
+		addJob(jobConfig2);
 		// job1和job2均无需re-sharding
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1) && !isNeedSharding(jobConfiguration2);
+			public boolean isOk() {
+				return !isNeedSharding(jobName1) && !isNeedSharding(jobName2);
 			}
 		}, 10);
 
@@ -1242,14 +1253,16 @@ public class ShardingIT extends AbstractSaturnIT {
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName1);
 			}
 		}, 10);
 
+		disableJob(jobName1);
+		removeJob(jobName1);
+		disableJob(jobName2);
+		removeJob(jobName2);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName1);
-		forceRemoveJob(jobName2);
 	}
 
 	/**
@@ -1264,53 +1277,55 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		// 启动第一个作业
 		Thread.sleep(1000);
-		String jobName1 = "test_M_NotifyNecessaryJobs_job1";
-		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
-		jobConfiguration1.setCron("* * 1 * * ?");
-		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration1.setShardingTotalCount(1);
-		jobConfiguration1.setShardingItemParameters("0=0");
-		addJob(jobConfiguration1);
+		final String jobName = "test_O_NotifyNecessaryJobsPrior";
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobName1);
+		enableJob(jobName);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
-		runAtOnce(jobName1);
+		runAtOnce(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 
 		// 禁用作业
 		Thread.sleep(1000);
-		disableJob(jobName1);
+		disableJob(jobName);
 
 		// 设置preferList为一个无效的executor，并且设置useDispreferList为false
-		configJob(jobName1, "config/preferList", "abc");
-		configJob(jobName1, "config/useDispreferList", "false");
+		zkUpdateJobNode(jobName, "config/preferList", "abc");
+		zkUpdateJobNode(jobName, "config/useDispreferList", "false");
 
 		// 启用作业
 		Thread.sleep(500);
-		enableJob(jobName1);
+		enableJob(jobName);
 
 		// job1需re-sharding
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 
+		disableJob(jobName);
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName1);
 	}
 
 	/**
@@ -1325,30 +1340,31 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		// 启动第一个作业
 		Thread.sleep(1000);
-		String jobName1 = "test_P_PersistShardingContentIfNecessary";
-		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
-		jobConfiguration1.setCron("* * 1 * * ?");
-		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration1.setShardingTotalCount(1);
-		jobConfiguration1.setShardingItemParameters("0=0");
-		jobConfiguration1.setPreferList("abc");
-		jobConfiguration1.setUseDispreferList(false);
-		addJob(jobConfiguration1);
+		final String jobName = "test_P_PersistShardingContentIfNecessary";
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setPreferList("abc");
+		jobConfig.setUseDispreferList(false);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobName1);
+		enableJob(jobName);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
-		runAtOnce(jobName1);
+		runAtOnce(jobName);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 		long mtime = ((CuratorFramework) regCenter.getRawClient()).checkExists()
@@ -1356,13 +1372,13 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		// 禁用作业
 		Thread.sleep(1000);
-		disableJob(jobName1);
+		disableJob(jobName);
 
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 
@@ -1371,8 +1387,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		assertThat(mtime).isEqualTo(mtime2);
 
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName1);
 	}
 
 	/**
@@ -1386,35 +1402,36 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		// 启动第一个作业
 		Thread.sleep(1000);
-		String jobName1 = "test_Q_PersistNecessaryTheRightData";
-		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
-		jobConfiguration1.setCron("* * 1 * * ?");
-		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration1.setShardingTotalCount(1);
-		jobConfiguration1.setShardingItemParameters("0=0");
-		jobConfiguration1.setUseDispreferList(false);
-		addJob(jobConfiguration1);
+		final String jobName = "test_Q_PersistNecessaryTheRightData";
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setUseDispreferList(false);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobName1);
+		enableJob(jobName);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 
-		String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName1);
+		String jobLeaderShardingNecessaryNodePath = SaturnExecutorsNode.getJobLeaderShardingNecessaryNodePath(jobName);
 		String data1 = regCenter.getDirectly(jobLeaderShardingNecessaryNodePath);
 		System.out.println("data1:" + data1);
 
-		runAtOnce(jobName1);
+		runAtOnce(jobName);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 
@@ -1424,8 +1441,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 
@@ -1433,12 +1450,12 @@ public class ShardingIT extends AbstractSaturnIT {
 		System.out.println("data2:" + data2);
 		assertThat(data2.contains(executor2.getExecutorName())).isTrue();
 
-		runAtOnce(jobName1);
+		runAtOnce(jobName);
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return !isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 
@@ -1448,8 +1465,8 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				return isNeedSharding(jobConfiguration1);
+			public boolean isOk() {
+				return isNeedSharding(jobName);
 			}
 		}, 10);
 
@@ -1458,8 +1475,9 @@ public class ShardingIT extends AbstractSaturnIT {
 
 		assertThat(data3.contains(executor2.getExecutorName())).isFalse();
 
+		disableJob(jobName);
+		removeJob(jobName);
 		stopExecutorListGracefully();
-		forceRemoveJob(jobName1);
 	}
 
 }

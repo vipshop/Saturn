@@ -1,16 +1,13 @@
-/**
- * vips Inc. Copyright (c) 2016 All Rights Reserved.
- */
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.console.domain.JobConfig;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.fail;
@@ -41,9 +38,9 @@ public class ZkStopStartIT extends AbstractSaturnIT {
 	}
 
 	@Test
-	public void test_A_JavaJob() throws InterruptedException, IOException {
+	public void test_A_zkStopStartJobJava() throws Exception {
 		final int shardCount = 3;
-		final String jobName = "zkStopStartJobJava";
+		final String jobName = "test_A_zkStopStartJobJava";
 
 		LongtimeJavaJob.statusMap.clear();
 		for (int i = 0; i < shardCount; i++) {
@@ -57,22 +54,23 @@ public class ZkStopStartIT extends AbstractSaturnIT {
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 0/1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(2000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(2000);
 		runAtOnce(jobName);
 		Thread.sleep(2000);
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
@@ -94,7 +92,7 @@ public class ZkStopStartIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {

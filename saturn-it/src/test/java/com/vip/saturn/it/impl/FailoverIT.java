@@ -1,12 +1,10 @@
-/**
- * vips Inc. Copyright (c) 2016 All Rights Reserved.
- */
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
@@ -103,17 +101,18 @@ public class FailoverIT extends AbstractSaturnIT {
 		}
 
 		// 1 新建一个执行时间为10S的作业，它只能手工触发
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 1 * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		// 2 启动作业并立刻执行一次
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(2000);
 		runAtOnce(jobName);
 
@@ -121,7 +120,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -147,10 +146,10 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (Integer item : items) {
-						if (!isFailoverAssigned(jobConfiguration, item)) {
+						if (!isFailoverAssigned(jobName, item)) {
 							return false;
 						}
 					}
@@ -179,7 +178,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						String key = jobName + "_" + j;
@@ -197,9 +196,9 @@ public class FailoverIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobName);
 		Thread.sleep(1000);
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobName);
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();
 	}
@@ -220,17 +219,18 @@ public class FailoverIT extends AbstractSaturnIT {
 		}
 
 		// 1 新建一个执行时间为10S的作业，它只能手工触发
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 1 * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		final JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		// 2 启动作业并立刻执行一次
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(2000);
 		runAtOnce(jobName);
 
@@ -238,7 +238,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -276,7 +276,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					if (isOnline(firstExecutorName)) {// 判断该Executor是否在线
 						return false;
 					}
@@ -320,7 +320,7 @@ public class FailoverIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					for (Integer item : items2) {
 						String key = jobName + "_" + item;
 						LongtimeJavaJob.JobStatus status = LongtimeJavaJob.statusMap.get(key);
@@ -338,9 +338,9 @@ public class FailoverIT extends AbstractSaturnIT {
 		}
 
 		// 10 检测无failover信息
-		assertThat(noFailoverItems(jobConfiguration));
+		assertThat(noFailoverItems(jobName));
 		for (Integer item : items) {
-			assertThat(isFailoverAssigned(jobConfiguration, item)).isEqualTo(false);
+			assertThat(isFailoverAssigned(jobName, item)).isEqualTo(false);
 		}
 
 		// 11 检测只executor2的分片只运行了一次
@@ -353,9 +353,7 @@ public class FailoverIT extends AbstractSaturnIT {
 			}
 		}
 
-		disableJob(jobConfiguration.getJobName());
-		Thread.sleep(1000);
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobName);
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();
 	}

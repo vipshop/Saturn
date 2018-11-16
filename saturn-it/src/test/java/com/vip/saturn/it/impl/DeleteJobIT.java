@@ -1,18 +1,16 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.server.ServerNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +22,6 @@ public class DeleteJobIT extends AbstractSaturnIT {
 	@BeforeClass
 	public static void setUp() throws Exception {
 		startSaturnConsoleList(1);
-		startExecutorList(3);
 	}
 
 	@AfterClass
@@ -33,31 +30,38 @@ public class DeleteJobIT extends AbstractSaturnIT {
 		stopSaturnConsoleList();
 	}
 
+	@After
+	public void after() throws Exception {
+		stopExecutorListGracefully();
+	}
+
 	/**
-	 * 全部结点存活时删除
-	 *
-	 * @throws InterruptedException
+	 * 多个Executor
 	 */
 	@Test
-	public void test_A() throws InterruptedException {
+	public void test_A_multiExecutor() throws Exception {
+		startExecutorList(3);
+
 		int shardCount = 3;
-		final String jobName = "deleteITJob";
+		final String jobName = "test_A_multiExecutor";
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableReport(jobName);
+		enableJob(jobName);
 		Thread.sleep(4 * 1000);
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobName);
 		Thread.sleep(1000);
 
 		for (int i = 0; i < shardCount; i++) {
@@ -65,57 +69,60 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			assertThat(SimpleJavaJob.statusMap.get(key)).isGreaterThanOrEqualTo(1);
 		}
 
-		removeJob(jobConfiguration.getJobName());
-		Thread.sleep(5000);
+		removeJob(jobName);
 
 		try {
 			waitForFinish(new FinishCheck() {
 
 				@Override
-				public boolean docheck() {
-					if (regCenter.isExisted(JobNodePath.getJobNameFullPath(jobName))) {
-						return false;
+				public boolean isOk() {
+					for (Main executor : saturnExecutorList) {
+						if (executor == null) {
+							continue;
+						}
+						if (regCenter.isExisted(ServerNode.getServerNode(jobName, executor.getExecutorName()))) {
+							return false;
+						}
 					}
 					return true;
 				}
 
-			}, 30);
+			}, 10);
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-
 	}
 
 	/**
-	 * 部分结点存活
-	 *
-	 * @throws Exception
+	 * 只有一个Executor
 	 */
 	@Test
-	public void test_B() throws Exception {
+	public void test_B_oneExecutor() throws Exception {
+		startOneNewExecutorList();
+
 		final int shardCount = 3;
-		final String jobName = "deleteITJob";
+		final String jobName = "test_B_oneExecutor";
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
-		stopExecutorGracefully(0);
-		stopExecutorGracefully(1);
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableReport(jobName);
+		enableJob(jobName);
 
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int i = 0; i < shardCount; i++) {
 						String key = jobName + "_" + i;
@@ -132,12 +139,12 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobName);
 
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -154,13 +161,13 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobName);
 
 		try {
 			waitForFinish(new FinishCheck() {
 
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					for (Main executor : saturnExecutorList) {
 						if (executor == null) {
 							continue;
@@ -182,41 +189,40 @@ public class DeleteJobIT extends AbstractSaturnIT {
 
 	/**
 	 * 补充删除作业时在启动Executor前有toDelete结点的IT： 如果有在启动Executor前作业有配置toDelete结点则会判断并删除$Jobs/jobName/servers/executorName
-	 *
-	 * @throws Exception
 	 */
 	@Test
-	public void test_C() throws Exception {
+	public void test_C_alreadyExistsToDelete() throws Exception {
 		final int shardCount = 3;
-		final String jobName = "deleteITJob";
+		final String jobName = "test_C_alreadyExistsToDelete";
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		stopExecutorListGracefully();
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		configJob(jobName, ConfigurationNode.TO_DELETE, 1);
+		enableReport(jobName);
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
-		Thread.sleep(1000);
+		// 使用hack的方式，直接新增toDelete结点
+		zkUpdateJobNode(jobName, ConfigurationNode.TO_DELETE, "1");
 
 		final String serverNodePath = JobNodePath.getServerNodePath(jobName, "executorName0");
 		regCenter.persist(serverNodePath, "");
 
-		startExecutorList(1);
+		startOneNewExecutorList();
 		Thread.sleep(1000);
 		try {
 			waitForFinish(new FinishCheck() {
 
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					if (regCenter.isExisted(serverNodePath)) {
 						return false;
 					}
@@ -229,5 +235,6 @@ public class DeleteJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
+		removeJob(jobName);
 	}
 }
