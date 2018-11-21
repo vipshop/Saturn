@@ -1,12 +1,12 @@
 package com.vip.saturn.it.job;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.vip.saturn.job.AbstractSaturnJavaJob;
 import com.vip.saturn.job.SaturnJobExecutionContext;
 import com.vip.saturn.job.SaturnJobReturn;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ReturnParamJavaJob extends AbstractSaturnJavaJob {
 	public static Map<String, Integer> statusMap = new HashMap<String, Integer>();
