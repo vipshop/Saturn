@@ -166,7 +166,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
 				"java.lang.ClassNotFoundException: WhoAmI")).isTrue();
 
-		zkRemoveJob(jobConfig.getJobName());
+		removeJob(jobConfig.getJobName());
 	}
 
 	@Test
@@ -194,7 +194,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isFalse();
 
-		zkRemoveJob(jobConfig.getJobName());
+		removeJob(jobConfig.getJobName());
 	}
 
 }
