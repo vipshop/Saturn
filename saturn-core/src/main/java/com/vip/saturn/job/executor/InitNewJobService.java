@@ -146,7 +146,7 @@ public class InitNewJobService {
 			alarmInfo.put("name", "Saturn Event");
 			alarmInfo.put("title", String.format("JOB_INIT_FAIL:%s", jobName));
 			alarmInfo.put("level", "CRITICAL");
-			alarmInfo.put("message", alarmMessage + " [executorName:" + executorName + "]");
+			alarmInfo.put("message", alarmMessage);
 
 			Map<String, String> customFields = Maps.newHashMap();
 			customFields.put("sourceType", "saturn");
