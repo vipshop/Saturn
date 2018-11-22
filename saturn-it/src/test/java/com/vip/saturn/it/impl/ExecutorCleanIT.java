@@ -2,9 +2,9 @@ package com.vip.saturn.it.impl;
 
 import com.vip.saturn.it.base.AbstractSaturnIT;
 import com.vip.saturn.it.base.FinishCheck;
-import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;

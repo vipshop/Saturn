@@ -1,9 +1,9 @@
 package com.vip.saturn.it.impl;
 
 import com.vip.saturn.it.base.AbstractSaturnIT;
-import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 

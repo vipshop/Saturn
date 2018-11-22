@@ -2,9 +2,9 @@ package com.vip.saturn.it.impl;
 
 import com.vip.saturn.it.base.AbstractSaturnIT;
 import com.vip.saturn.it.base.FinishCheck;
-import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.LongtimeJavaJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;

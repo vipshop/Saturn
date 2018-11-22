@@ -2,9 +2,9 @@ package com.vip.saturn.it.impl;
 
 import com.vip.saturn.it.base.AbstractSaturnIT;
 import com.vip.saturn.it.base.FinishCheck;
-import com.vip.saturn.it.base.JobType;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
@@ -57,7 +57,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		addJob(jobConfig);
 		Thread.sleep(1000);
 		enableJob(jobName);
-		Thread.sleep(1 * 1000);
+		Thread.sleep(1000);
 
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
 		runAtOnce(jobName);
@@ -443,14 +443,24 @@ public class ShardingIT extends AbstractSaturnIT {
 		items = ItemUtils.toItemList(regCenter.getDirectly(
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
+		// wait running completed
+		Thread.sleep(1000);
 		// executor2下线
 		stopExecutorGracefully(1);
-		Thread.sleep(1000L);
+		Thread.sleep(1000);
 		// 等待sharding分片完成
 		waitForFinish(new FinishCheck() {
 			@Override
 			public boolean isOk() {
 				return isNeedSharding(jobName);
+			}
+		}, 10);
+		runAtOnce(jobName);
+		// 等待拿走分片
+		waitForFinish(new FinishCheck() {
+			@Override
+			public boolean isOk() {
+				return !isNeedSharding(jobName);
 			}
 		}, 10);
 		// executor1仍然获取不到分片
@@ -473,7 +483,7 @@ public class ShardingIT extends AbstractSaturnIT {
 		Main executor2 = startOneNewExecutorList();
 
 		int shardCount = 2;
-		final String jobName = "test_F_LocalModeWithPreferListAndUseDispreferList_job";
+		final String jobName = "test_F_LocalModeWithPreferListAndUseDispreferList";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
