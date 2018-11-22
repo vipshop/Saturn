@@ -11,13 +11,13 @@ public class DomainStatistics {
 
 	private static final long serialVersionUID = 1L;
 
-	private int processCountOfAllTime;
+	private long processCountOfAllTime;
 
-	private int errorCountOfAllTime;
+	private long errorCountOfAllTime;
 
-	private int processCountOfTheDay;
+	private long processCountOfTheDay;
 
-	private int errorCountOfTheDay;
+	private long errorCountOfTheDay;
 
 	private String domainName;
 
@@ -39,35 +39,35 @@ public class DomainStatistics {
 		this.nns = nns;
 	}
 
-	public int getProcessCountOfAllTime() {
+	public long getProcessCountOfAllTime() {
 		return processCountOfAllTime;
 	}
 
-	public void setProcessCountOfAllTime(int processCountOfAllTime) {
+	public void setProcessCountOfAllTime(long processCountOfAllTime) {
 		this.processCountOfAllTime = processCountOfAllTime;
 	}
 
-	public int getErrorCountOfAllTime() {
+	public long getErrorCountOfAllTime() {
 		return errorCountOfAllTime;
 	}
 
-	public void setErrorCountOfAllTime(int errorCountOfAllTime) {
+	public void setErrorCountOfAllTime(long errorCountOfAllTime) {
 		this.errorCountOfAllTime = errorCountOfAllTime;
 	}
 
-	public int getProcessCountOfTheDay() {
+	public long getProcessCountOfTheDay() {
 		return processCountOfTheDay;
 	}
 
-	public void setProcessCountOfTheDay(int processCountOfTheDay) {
+	public void setProcessCountOfTheDay(long processCountOfTheDay) {
 		this.processCountOfTheDay = processCountOfTheDay;
 	}
 
-	public int getErrorCountOfTheDay() {
+	public long getErrorCountOfTheDay() {
 		return errorCountOfTheDay;
 	}
 
-	public void setErrorCountOfTheDay(int errorCountOfTheDay) {
+	public void setErrorCountOfTheDay(long errorCountOfTheDay) {
 		this.errorCountOfTheDay = errorCountOfTheDay;
 	}
 

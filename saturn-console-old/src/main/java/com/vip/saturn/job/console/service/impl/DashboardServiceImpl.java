@@ -228,10 +228,10 @@ public class DashboardServiceImpl implements DashboardService {
 		for (RegistryCenterConfiguration config : zkCluster.getRegCenterConfList()) {
 			// 过滤非当前zk连接
 			if (zkCluster.getZkAddr().equals(config.getZkAddressList())) {
-				int processCountOfThisDomainAllTime = 0;
-				int errorCountOfThisDomainAllTime = 0;
-				int processCountOfThisDomainThisDay = 0;
-				int errorCountOfThisDomainThisDay = 0;
+				long processCountOfThisDomainAllTime = 0;
+				long errorCountOfThisDomainAllTime = 0;
+				long processCountOfThisDomainThisDay = 0;
+				long errorCountOfThisDomainThisDay = 0;
 
 				DomainStatistics domain = new DomainStatistics(config.getNamespace(), zkCluster.getZkAddr(),
 						config.getNameAndNamespace());
