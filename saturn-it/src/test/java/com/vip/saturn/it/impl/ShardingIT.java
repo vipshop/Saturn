@@ -444,7 +444,6 @@ public class ShardingIT extends AbstractSaturnIT {
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
 		// executor2下线
-		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 		stopExecutorGracefully(1);
 		Thread.sleep(1000L);
 		// 等待sharding分片完成
@@ -515,8 +514,9 @@ public class ShardingIT extends AbstractSaturnIT {
 		items = ItemUtils.toItemList(regCenter.getDirectly(
 				JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 		assertThat(items).isEmpty();
+		// wait running completed
+		Thread.sleep(1000);
 		// executor2下线
-		final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 		stopExecutorGracefully(1);
 		Thread.sleep(1000L);
 		// 等待sharding分片完成
@@ -704,7 +704,6 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 			// executor2下线
-			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
@@ -796,7 +795,6 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 			// executor2下线
-			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
@@ -888,7 +886,6 @@ public class ShardingIT extends AbstractSaturnIT {
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
 			// executor2下线
-			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
