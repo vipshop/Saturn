@@ -603,8 +603,15 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
+
+			waitForFinish(new FinishCheck() {
+				@Override
+				public boolean isOk() {
+					return hasCompletedZnodeForAllShards(jobName, shardCount);
+				}
+			}, 10);
+
 			// executor2下线
-			final String executor2Name = saturnExecutorList.get(1).getExecutorName();
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
 			// 等待sharding分片完成
@@ -612,13 +619,6 @@ public class ShardingIT extends AbstractSaturnIT {
 				@Override
 				public boolean isOk() {
 					return isNeedSharding(jobName);
-				}
-			}, 10);
-
-			waitForFinish(new FinishCheck() {
-				@Override
-				public boolean isOk() {
-					return hasCompletedZnodeForAllShards(jobName, shardCount);
 				}
 			}, 10);
 
