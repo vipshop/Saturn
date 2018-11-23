@@ -33,10 +33,10 @@ public class DomainStatisticsAnalyzer {
 	public void analyzeProcessCount(DomainStatistics domainStatistics,
 			ZkClusterDailyCountAnalyzer zkClusterDailyCountAnalyzer, List<String> jobs,
 			Map<String, JobStatistics> jobMap, RegistryCenterConfiguration config) {
-		int processCountOfThisDomainAllTime = 0;
-		int errorCountOfThisDomainAllTime = 0;
-		int processCountOfThisDomainThisDay = 0;
-		int errorCountOfThisDomainThisDay = 0;
+		long processCountOfThisDomainAllTime = 0;
+		long errorCountOfThisDomainAllTime = 0;
+		long processCountOfThisDomainThisDay = 0;
+		long errorCountOfThisDomainThisDay = 0;
 		for (String job : jobs) {
 			String jobDomainKey = job + "-" + config.getNamespace();
 			JobStatistics jobStatistics = jobMap.get(jobDomainKey);

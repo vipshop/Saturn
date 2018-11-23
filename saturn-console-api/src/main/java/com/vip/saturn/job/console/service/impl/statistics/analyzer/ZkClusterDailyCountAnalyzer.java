@@ -1,29 +1,29 @@
 package com.vip.saturn.job.console.service.impl.statistics.analyzer;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author timmy.hu
  */
 public class ZkClusterDailyCountAnalyzer {
 
-	private AtomicInteger totalCount = new AtomicInteger(0);
+	private AtomicLong totalCount = new AtomicLong(0);
 
-	private AtomicInteger errorCount = new AtomicInteger(0);
+	private AtomicLong errorCount = new AtomicLong(0);
 
-	public void incrTotalCount(int totalCount) {
+	public void incrTotalCount(long totalCount) {
 		this.totalCount.addAndGet(totalCount);
 	}
 
-	public void incrErrorCount(int errorCount) {
+	public void incrErrorCount(long errorCount) {
 		this.errorCount.addAndGet(errorCount);
 	}
 
-	public int getTotalCount() {
+	public long getTotalCount() {
 		return totalCount.get();
 	}
 
-	public int getErrorCount() {
+	public long getErrorCount() {
 		return errorCount.get();
 	}
 }
