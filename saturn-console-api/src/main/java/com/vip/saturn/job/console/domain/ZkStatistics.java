@@ -12,30 +12,30 @@ public class ZkStatistics implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private int count;
-	private int error;
+	private long count;
+	private long error;
 
 	public ZkStatistics() {
 	}
 
-	public ZkStatistics(int count, int error) {
+	public ZkStatistics(long count, long error) {
 		this.count = count;
 		this.error = error;
 	}
 
-	public int getCount() {
+	public long getCount() {
 		return count;
 	}
 
-	public void setCount(int count) {
+	public void setCount(long count) {
 		this.count = count;
 	}
 
-	public int getError() {
+	public long getError() {
 		return error;
 	}
 
-	public void setError(int error) {
+	public void setError(long error) {
 		this.error = error;
 	}
 }

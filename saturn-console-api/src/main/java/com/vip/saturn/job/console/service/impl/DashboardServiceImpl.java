@@ -284,8 +284,8 @@ public class DashboardServiceImpl implements DashboardService {
 
 	@Override
 	public String allProcessAndErrorCountOfTheDayByAllZkCluster() throws SaturnJobConsoleException {
-		int count = 0;
-		int error = 0;
+		long count = 0;
+		long error = 0;
 		Collection<ZkCluster> zkClusterList = registryCenterService.getOnlineZkClusterList();
 		for (ZkCluster zkCluster : zkClusterList) {
 			SaturnStatistics saturnStatistics = allProcessAndErrorCountOfTheDay(zkCluster.getZkAddr());
