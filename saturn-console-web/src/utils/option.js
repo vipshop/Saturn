@@ -13,10 +13,10 @@ export default {
     label: 'Shell被动作业',
   }],
   isJava(jobType) {
-    return jobType === this.jobTypes[0].value || jobType === this.jobTypes[2].value || jobType === "MSG_JOB";
+    return jobType === this.jobTypes[0].value || jobType === this.jobTypes[2].value || jobType === 'MSG_JOB';
   },
   isShell(jobType) {
-    return jobType === this.jobTypes[1].value || jobType === this.jobTypes[3].value || jobType === "VSHELL";
+    return jobType === this.jobTypes[1].value || jobType === this.jobTypes[3].value || jobType === 'VSHELL';
   },
   isCron(jobType) {
     return jobType === this.jobTypes[0].value || jobType === this.jobTypes[1].value;
@@ -25,7 +25,7 @@ export default {
     return jobType === this.jobTypes[2].value || jobType === this.jobTypes[3].value;
   },
   isMsg(jobType) {
-    return jobType === "MSG_JOB" || jobType === "VSHELL";
+    return jobType === 'MSG_JOB' || jobType === 'VSHELL';
   },
   jobStatusTypes: [{
     value: 0,
