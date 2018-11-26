@@ -14,12 +14,12 @@
                         <el-input v-model="jobInfo.jobName" placeholder="如SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="作业实现类" prop="jobClass" v-if="jobInfo.jobType !== 'SHELL_JOB'">
+                <el-form-item label="作业实现类" prop="jobClass" v-if="$option.isJava(jobInfo.jobType)">
                     <el-col :span="18">
                         <el-input v-model="jobInfo.jobClass" placeholder="如com.vip.saturn.job.SaturnJavaJob"></el-input>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="cron表达式" prop="cron" v-if="jobInfo.jobType !== 'MSG_JOB'">
+                <el-form-item label="cron表达式" prop="cron" v-if="$option.isCron(jobInfo.jobType)">
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                             <el-input v-model="jobInfo.cron">
@@ -28,7 +28,7 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
-                <el-form-item class="form-annotation" v-if="jobInfo.jobType !== 'MSG_JOB'">
+                <el-form-item class="form-annotation" v-if="$option.isCron(jobInfo.jobType)">
                     <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
                     <span>2. 每分钟运行一次的表达式：0 * * * * ?</span>
                 </el-form-item>
@@ -64,7 +64,7 @@
                         </el-select>
                     </el-col>
                 </el-form-item>
-                <el-form-item label="Queue名" prop="queueName" v-if="jobInfo.jobType === 'MSG_JOB'">
+                <el-form-item label="Queue名" prop="queueName" v-if="$option.isMsg(jobInfo.jobType)">
                     <el-col :span="18">
                         <el-tooltip popper-class="form-tooltip" placement="bottom">
                             <div slot="content">
