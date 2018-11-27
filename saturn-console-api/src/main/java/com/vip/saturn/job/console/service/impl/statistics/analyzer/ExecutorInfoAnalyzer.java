@@ -113,7 +113,7 @@ public class ExecutorInfoAnalyzer {
 			// 如果结点存活，算两样东西：1.遍历所有servers节点里面的processSuccessCount &
 			// processFailureCount，用以统计作业每天的执行次数；2.统计executor的loadLevel;，
 			if (!curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(job, server))) {
-				return;
+				continue;
 			}
 			// 1.遍历所有servers节点里面的processSuccessCount && processFailureCount，用以统计作业每天的执行次数；
 			calcJobProcessCount(curatorFrameworkOp, nns, server, job, config.getNamespace(), jobStatistics);
