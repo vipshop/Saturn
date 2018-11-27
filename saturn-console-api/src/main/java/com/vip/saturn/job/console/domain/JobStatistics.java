@@ -12,10 +12,10 @@ public class JobStatistics implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private int processCountOfAllTime;
-	private int errorCountOfAllTime;
-	private int processCountOfTheDay;
-	private int failureCountOfTheDay;
+	private long processCountOfAllTime;
+	private long errorCountOfAllTime;
+	private long processCountOfTheDay;
+	private long failureCountOfTheDay;
 	private int totalLoadLevel;
 	private int jobDegree;
 	private String jobName;
@@ -35,43 +35,43 @@ public class JobStatistics implements Serializable {
 		this.nns = nns;
 	}
 
-	public int getProcessCountOfAllTime() {
+	public long getProcessCountOfAllTime() {
 		return processCountOfAllTime;
 	}
 
-	public void setProcessCountOfAllTime(int processCountOfAllTime) {
+	public void setProcessCountOfAllTime(long processCountOfAllTime) {
 		this.processCountOfAllTime = processCountOfAllTime;
 	}
 
-	public int getErrorCountOfAllTime() {
+	public long getErrorCountOfAllTime() {
 		return errorCountOfAllTime;
 	}
 
-	public void setErrorCountOfAllTime(int errorCountOfAllTime) {
+	public void setErrorCountOfAllTime(long errorCountOfAllTime) {
 		this.errorCountOfAllTime = errorCountOfAllTime;
 	}
 
-	public int getProcessCountOfTheDay() {
+	public long getProcessCountOfTheDay() {
 		return processCountOfTheDay;
 	}
 
-	public void setProcessCountOfTheDay(int processCountOfTheDay) {
+	public void setProcessCountOfTheDay(long processCountOfTheDay) {
 		this.processCountOfTheDay = processCountOfTheDay;
 	}
 
-	public synchronized void incrProcessCountOfTheDay(int processCount) {
+	public synchronized void incrProcessCountOfTheDay(long processCount) {
 		this.processCountOfTheDay += processCount;
 	}
 
-	public int getFailureCountOfTheDay() {
+	public long getFailureCountOfTheDay() {
 		return failureCountOfTheDay;
 	}
 
-	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
+	public void setFailureCountOfTheDay(long failureCountOfTheDay) {
 		this.failureCountOfTheDay = failureCountOfTheDay;
 	}
 
-	public synchronized void incrFailureCountOfTheDay(int failureCount) {
+	public synchronized void incrFailureCountOfTheDay(long failureCount) {
 		this.failureCountOfTheDay += failureCount;
 	}
 

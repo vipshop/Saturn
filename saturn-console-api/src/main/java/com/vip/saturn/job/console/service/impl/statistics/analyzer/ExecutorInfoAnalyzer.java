@@ -133,10 +133,10 @@ public class ExecutorInfoAnalyzer {
 					.getData(JobNodePath.getProcessSucessCount(job, server));
 			String processFailureCountOfThisExeStr = curatorFrameworkOp
 					.getData(JobNodePath.getProcessFailureCount(job, server));
-			int processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
-					: Integer.parseInt(processSuccessCountOfThisExeStr);
-			int processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
-					: Integer.parseInt(processFailureCountOfThisExeStr);
+			long processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
+					: Long.parseLong(processSuccessCountOfThisExeStr);
+			long processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
+					: Long.parseLong(processFailureCountOfThisExeStr);
 
 			// executor当天运行成功失败数
 			String executorMapKey = server + "-" + namespace;

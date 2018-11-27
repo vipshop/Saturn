@@ -24,9 +24,9 @@ public class ExecutorStatistics implements Serializable {
 
 	private boolean runInDocker = false;
 
-	private int processCountOfTheDay = 0;
+	private long processCountOfTheDay = 0L;
 
-	private int failureCountOfTheDay = 0;
+	private long failureCountOfTheDay = 0L;
 
 	/**
 	 * e.g. job1:1,3;job2:0,4,6;job3:0
@@ -91,19 +91,19 @@ public class ExecutorStatistics implements Serializable {
 		this.runInDocker = runInDocker;
 	}
 
-	public int getProcessCountOfTheDay() {
+	public long getProcessCountOfTheDay() {
 		return processCountOfTheDay;
 	}
 
-	public void setProcessCountOfTheDay(int processCountOfTheDay) {
+	public void setProcessCountOfTheDay(long processCountOfTheDay) {
 		this.processCountOfTheDay = processCountOfTheDay;
 	}
 
-	public int getFailureCountOfTheDay() {
+	public long getFailureCountOfTheDay() {
 		return failureCountOfTheDay;
 	}
 
-	public void setFailureCountOfTheDay(int failureCountOfTheDay) {
+	public void setFailureCountOfTheDay(long failureCountOfTheDay) {
 		this.failureCountOfTheDay = failureCountOfTheDay;
 	}
 
