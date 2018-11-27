@@ -199,7 +199,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;">
