@@ -208,9 +208,9 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		List<DashboardHistory> dashboardHistories = new ArrayList<>();
 		Date currentDate = new Date();
 
-		int successCount = statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount();
-		int failCount = statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount();
-		Map<String, Integer> content = new HashMap<>(2);
+		long successCount = statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount();
+		long failCount = statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount();
+		Map<String, Long> content = new HashMap<>(2);
 		content.put("count", successCount);
 		content.put("failCount", failCount);
 		DashboardHistory allDomainHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
