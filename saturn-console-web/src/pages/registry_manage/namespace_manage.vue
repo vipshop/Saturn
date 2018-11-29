@@ -13,6 +13,12 @@
                         <el-form-item label="">
                             <el-input placeholder="搜索" v-model="filters.namespace" @keyup.enter.native="scope.search"></el-input>
                         </el-form-item>
+                        <el-form-item label="">
+                            <el-select v-model="filters.container" @change="scope.search">
+                                <el-option label="全部容器/物理机" value=""></el-option>
+                                <el-option v-for="item in containerKeys" :label="item.containerAlias" :value="item.value" :key="item.value"></el-option>
+                            </el-select>
+                        </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
                             <el-button type="primary" icon="el-icon-plus" @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addNamespace')">添加域</el-button>
@@ -56,6 +62,11 @@
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
+                            <el-table-column prop="container" label="是否容器域" sortable>
+                                <template slot-scope="scope">
+                                    {{scope.row.container ? '容器': '物理机'}}
+                                </template>
+                            </el-table-column>
                         </el-table>
                     </div>
                 </template>
@@ -86,6 +97,7 @@ export default {
       namespaceList: [],
       namespaceInfo: {},
       zkClusterKeys: [],
+      containerKeys: [{ containerAlias: '物理机', value: false }, { containerAlias: '容器', value: true }],
       batchMigrateInfo: {},
       filters: {
         namespace: '',
