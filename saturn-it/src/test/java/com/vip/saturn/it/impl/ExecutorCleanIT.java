@@ -1,5 +1,12 @@
 package com.vip.saturn.it.impl;
 
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
+import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -7,15 +14,8 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
-import com.vip.saturn.job.utils.SystemEnvProperties;
-
 /**
- * Created by xiaopeng.he on 2016/8/22.
+ * @author hebelala
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ExecutorCleanIT extends AbstractSaturnIT {
@@ -36,13 +36,12 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 	private void assertDelete(final String jobName, final String executorName) throws Exception {
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				try {
-					return !regCenter.isExisted(SaturnExecutorsNode.getExecutorNodePath(executorName))
-							&& !regCenter
-									.isExisted(SaturnExecutorsNode.getJobServersExecutorNodePath(jobName, executorName))
+					return !regCenter.isExisted(SaturnExecutorsNode.getExecutorNodePath(executorName)) && !regCenter
+							.isExisted(SaturnExecutorsNode.getJobServersExecutorNodePath(jobName, executorName))
 							&& !executorName
-									.equals(regCenter.get(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)));
+							.equals(regCenter.get(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)));
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
@@ -54,13 +53,12 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 	private void assertNoDelete(final String jobName, final String executorName) throws Exception {
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				try {
-					return regCenter.isExisted(SaturnExecutorsNode.getExecutorNodePath(executorName))
-							&& regCenter
-									.isExisted(SaturnExecutorsNode.getJobServersExecutorNodePath(jobName, executorName))
+					return regCenter.isExisted(SaturnExecutorsNode.getExecutorNodePath(executorName)) && regCenter
+							.isExisted(SaturnExecutorsNode.getJobServersExecutorNodePath(jobName, executorName))
 							&& executorName
-									.equals(regCenter.get(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)));
+							.equals(regCenter.get(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)));
 				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
@@ -72,7 +70,7 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 	private void assertNoDelete2(final String jobName, final String executorName) throws Exception {
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				try {
 					return regCenter.isExisted(SaturnExecutorsNode.getExecutorNodePath(executorName)) && regCenter
 							.isExisted(SaturnExecutorsNode.getJobServersExecutorNodePath(jobName, executorName));
@@ -92,8 +90,9 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
 
-		final JobConfiguration job = new JobConfiguration("test_A_Clean");
-		job.setCron("0/2 * * * * ?");
+		final JobConfig job = new JobConfig();
+		job.setJobName("test_A_Clean");
+		job.setCron("*/2 * * * * ?");
 		job.setJobType(JobType.JAVA_JOB.toString());
 		job.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		job.setShardingTotalCount(1);
@@ -120,8 +119,9 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
 
-		final JobConfiguration job = new JobConfiguration("test_B_NoClean");
-		job.setCron("0/2 * * * * ?");
+		final JobConfig job = new JobConfig();
+		job.setJobName("test_B_NoClean");
+		job.setCron("*/2 * * * * ?");
 		job.setJobType(JobType.JAVA_JOB.toString());
 		job.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		job.setShardingTotalCount(1);
@@ -148,8 +148,9 @@ public class ExecutorCleanIT extends AbstractSaturnIT {
 
 		final String executorName = saturnExecutorList.get(0).getExecutorName();
 
-		final JobConfiguration job = new JobConfiguration("test_C_SessionTimeoutAndReconnect");
-		job.setCron("0/2 * * * * ?");
+		final JobConfig job = new JobConfig();
+		job.setJobName("test_C_SessionTimeoutAndReconnect");
+		job.setCron("*/2 * * * * ?");
 		job.setJobType(JobType.JAVA_JOB.toString());
 		job.setJobClass(SimpleJavaJob.class.getCanonicalName());
 		job.setShardingTotalCount(1);

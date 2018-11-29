@@ -1,8 +1,9 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ScriptPidUtils;
@@ -46,14 +47,15 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 		startOneNewExecutorList();
 
-		String jobName = "test_A_Normalsh";
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("*/4 * * * * ?");
-		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setShardingItemParameters("0=sh " + NORMAL_SH_PATH);
-		addJob(jobConfiguration);
+		final String jobName = "test_A_Normalsh";
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/4 * * * * ?");
+		jobConfig.setJobType(JobType.SHELL_JOB.toString());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setShardingItemParameters("0=sh " + NORMAL_SH_PATH);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 		enableJob(jobName);
 		Thread.sleep(1000);
@@ -62,8 +64,8 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			waitForFinish(new FinishCheck() {
 
 				@Override
-				public boolean docheck() {
-					String count = getJobNode(jobConfiguration,
+				public boolean isOk() {
+					String count = zkGetJobNode(jobName,
 							"servers/" + saturnExecutorList.get(0).getExecutorName() + "/processSuccessCount");
 					log.info("success count: {}", count);
 					int cc = Integer.parseInt(count);
@@ -80,8 +82,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		disableJob(jobName);
 		Thread.sleep(1000);
 		removeJob(jobName);
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
 	}
 
 	/**
@@ -97,14 +97,15 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		final int shardCount = 3;
 		final String jobName = "test_B_ForceStop_" + new Random().nextInt(100); // 避免多个IT同时跑该作业
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 * * ?");
-		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters(
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.SHELL_JOB.toString());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters(
 				"0=sh " + LONG_TIME_SH_PATH + ",1=sh " + LONG_TIME_SH_PATH + ",2=sh " + LONG_TIME_SH_PATH);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
@@ -123,7 +124,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			waitForFinish(new FinishCheck() {
 
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						long pid = ScriptPidUtils.getFirstPidFromFile(executorName, jobName, "" + j);
@@ -144,8 +145,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		disableJob(jobName);
 		Thread.sleep(1000);
 		removeJob(jobName);
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
 	}
 
 	/**
@@ -161,14 +160,15 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		final int shardCount = 3;
 		final String jobName = "test_C_ReuseItem" + new Random().nextInt(100); // 避免多个IT同时跑该作业
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 * * ?");
-		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters(
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.SHELL_JOB.toString());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters(
 				"0=sh " + LONG_TIME_SH_PATH + ",1=sh " + LONG_TIME_SH_PATH + ",2=sh " + LONG_TIME_SH_PATH);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		startOneNewExecutorList(); // 将会删除该作业的一些pid垃圾数据
@@ -188,7 +188,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 					return !isOnline(executorName);
 				}
 
@@ -211,7 +211,7 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -228,16 +228,13 @@ public class ScriptJobIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		disableJob(jobName);
-		Thread.sleep(1000);
-
 		forceStopJob(jobName);
 		Thread.sleep(1000);
 
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -255,8 +252,6 @@ public class ScriptJobIT extends AbstractSaturnIT {
 		}
 
 		removeJob(jobName);
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
 	}
 
 }

@@ -1,8 +1,11 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
 import com.vip.saturn.it.job.LongtimeJavaJob;
+import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -10,10 +13,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ExecutionIT extends AbstractSaturnIT {
@@ -33,81 +33,80 @@ public class ExecutionIT extends AbstractSaturnIT {
 	public void test_A_report() throws Exception {
 		startExecutorList(1);
 
-		final JobConfiguration jobConfiguration = new JobConfiguration("test_A_report");
-		jobConfiguration.setCron("* * * * * ? 2099");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setShardingItemParameters("0=0");
+		final JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("test_A_report");
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
 
-		addJob(jobConfiguration);
-		configJob(jobConfiguration.getJobName(), "config/enabledReport", "true");
+		addJob(jobConfig);
+		zkUpdateJobNode(jobConfig.getJobName(), "config/enabledReport", "true");
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
-		runAtOnce(jobConfiguration.getJobName());
+		runAtOnce(jobConfig.getJobName());
 		Thread.sleep(1000);
 
-		assertThat(getJobNode(jobConfiguration, "execution/0/lastBeginTime")).isNull();
-		assertThat(getJobNode(jobConfiguration, "execution/0/nextFireTime")).isNull();
-		assertThat(getJobNode(jobConfiguration, "execution/0/lastCompleteTime")).isNull();
-		assertThat(getJobNode(jobConfiguration, "execution/0/jobMsg")).isNull();
-		assertThat(getJobNode(jobConfiguration, "execution/0/jobLog")).isNull();
-		assertThat(getJobNode(jobConfiguration, "execution/0/completed")).isNotNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/lastBeginTime")).isNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/nextFireTime")).isNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/lastCompleteTime")).isNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/jobMsg")).isNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/jobLog")).isNull();
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/completed")).isNotNull();
 
-		doReport(jobConfiguration);
+		doReport(jobConfig.getJobName());
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/nextFireTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/jobMsg") != null
-						&& getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
+			public boolean isOk() {
+				if (zkGetJobNode(jobConfig.getJobName(), "execution/0/lastBeginTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/nextFireTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/lastCompleteTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/jobMsg") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/jobLog") != null) {
 					return true;
 				}
 				return false;
 			}
 		}, 3);
 
-		removeJobNode(jobConfiguration, "execution/0/lastBeginTime");
-		removeJobNode(jobConfiguration, "execution/0/nextFireTime");
-		removeJobNode(jobConfiguration, "execution/0/lastCompleteTime");
-		removeJobNode(jobConfiguration, "execution/0/jobMsg");
-		removeJobNode(jobConfiguration, "execution/0/jobLog");
-		removeJobNode(jobConfiguration, "execution/0/completed");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/lastBeginTime");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/nextFireTime");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/lastCompleteTime");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/jobMsg");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/jobLog");
+		zkRemoveJobNode(jobConfig.getJobName(), "execution/0/completed");
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
-		updateJobConfig(jobConfiguration, "enabledReport", false);
+		disableReport(jobConfig.getJobName());
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
-		runAtOnce(jobConfiguration.getJobName());
+		runAtOnce(jobConfig.getJobName());
 		Thread.sleep(1000);
-		assertThat(getJobNode(jobConfiguration, "execution/0/completed")).isNull();
-		doReport(jobConfiguration);
+		assertThat(zkGetJobNode(jobConfig.getJobName(), "execution/0/completed")).isNull();
+		doReport(jobConfig.getJobName());
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
-				if (getJobNode(jobConfiguration, "execution/0/lastBeginTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/nextFireTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/lastCompleteTime") != null
-						&& getJobNode(jobConfiguration, "execution/0/jobMsg") != null
-						&& getJobNode(jobConfiguration, "execution/0/jobLog") != null) {
+			public boolean isOk() {
+				if (zkGetJobNode(jobConfig.getJobName(), "execution/0/lastBeginTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/nextFireTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/lastCompleteTime") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/jobMsg") != null
+						&& zkGetJobNode(jobConfig.getJobName(), "execution/0/jobLog") != null) {
 					return true;
 				}
 				return false;
 			}
 		}, 3);
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		stopExecutorListGracefully();
-		Thread.sleep(1000);
-		forceRemoveJob(jobConfiguration.getJobName());
 	}
 
 	@Test
@@ -126,50 +125,50 @@ public class ExecutionIT extends AbstractSaturnIT {
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("* * * * * ? 2099");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setTimeoutSeconds(0);
-		jobConfiguration.setEnabledReport(true);
-		jobConfiguration.setShardingItemParameters("0=0");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("0 */6 * * * ? 2099"); // 间隔大于5分钟，会上报状态，failover
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setTimeoutSeconds(0);
+		jobConfig.setShardingItemParameters("0=0");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(2000);
 
-		assertThat(getJobNode(jobConfiguration, "execution/0/running")).isEqualTo("executorName0");
+		assertThat(zkGetJobNode(jobName, "execution/0/running")).isEqualTo("executorName0");
 
-		regCenter.remove(JobNodePath.getNodeFullPath(jobName, "execution/0/running"));
+		zkRemoveJobNode(jobName, "execution/0/running");
 		Thread.sleep(1000);
 
 		// itself take over 0 item
-		assertThat(getJobNode(jobConfiguration, "execution/0/failover")).isEqualTo("executorName0");
+		assertThat(zkGetJobNode(jobName, "execution/0/failover")).isEqualTo("executorName0");
 
 		// wait the last finish, until the failover lifecycle begin
 		waitForFinish(new FinishCheck() {
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				return regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, "execution/0/running"));
 			}
 		}, 30);
 
-		assertThat(getJobNode(jobConfiguration, "execution/0/running")).isEqualTo("executorName0");
+		assertThat(zkGetJobNode(jobName, "execution/0/running")).isEqualTo("executorName0");
 
 		// wait the failover lifecycle finish
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				return regCenter.isExisted(JobNodePath.getNodeFullPath(jobName, "execution/0/completed"));
 			}
 
 		}, 30);
 
-		assertThat(getJobNode(jobConfiguration, "execution/0/completed")).isEqualTo("executorName0");
+		assertThat(zkGetJobNode(jobName, "execution/0/completed")).isEqualTo("executorName0");
 
 		disableJob(jobName);
 		Thread.sleep(1000);
@@ -179,8 +178,6 @@ public class ExecutionIT extends AbstractSaturnIT {
 		LongtimeJavaJob.statusMap.clear();
 
 		stopExecutorListGracefully();
-		Thread.sleep(1000);
-		forceRemoveJob(jobName);
 	}
 
 }

@@ -2,12 +2,13 @@ package com.vip.saturn.it.impl;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.it.utils.LogbackListAppender;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.sharding.task.AbstractAsyncShardingTask;
 import org.apache.commons.exec.OS;
 import org.junit.*;
@@ -49,25 +50,27 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}
 		startExecutorList(2);
 
-		final JobConfiguration jobConfiguration = new JobConfiguration("shLocalModeJob");
-		jobConfiguration.setCron("*/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.SHELL_JOB.toString());
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setShardingItemParameters("*=sh " + NORMAL_SH_PATH);
-		jobConfiguration.setLocalMode(true);
+		final String jobName = "test_A";
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("test_A");
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.SHELL_JOB.toString());
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setShardingItemParameters("*=sh " + NORMAL_SH_PATH);
+		jobConfig.setLocalMode(true);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(1000);
 		startOneNewExecutorList();
 		Thread.sleep(1000);
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				for (Main executor : saturnExecutorList) {
-					String count = getJobNode(jobConfiguration,
+					String count = zkGetJobNode(jobName,
 							"servers/" + executor.getExecutorName() + "/processSuccessCount");
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
 					if (count == null)
@@ -82,13 +85,9 @@ public class LocalModeIT extends AbstractSaturnIT {
 
 		}, 10);
 
-		disableJob(jobConfiguration.getJobName());
-		Thread.sleep(1000L);
-		removeJob(jobConfiguration.getJobName());
-
+		disableJob(jobName);
 		Thread.sleep(1000);
-
-		forceRemoveJob(jobConfiguration.getJobName());
+		removeJob(jobName);
 	}
 
 	@Test
@@ -96,33 +95,34 @@ public class LocalModeIT extends AbstractSaturnIT {
 		startExecutorList(2);
 
 		int shardCount = 3;
-		String jobName = "javaLocalModeJob";
+		final String jobName = "test_B";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/1 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/1 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingItemParameters("*=0");
+		jobConfig.setLocalMode(true);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
-		enableJob(jobConfiguration.getJobName());
-		Thread.sleep(1 * 1000);
+		enableJob(jobName);
+		Thread.sleep(1000);
 
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				for (Main executor : saturnExecutorList) {
-					String count = getJobNode(jobConfiguration,
+					String count = zkGetJobNode(jobName,
 							"servers/" + executor.getExecutorName() + "/processSuccessCount");
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
 					if (count == null)
@@ -138,12 +138,8 @@ public class LocalModeIT extends AbstractSaturnIT {
 		}, 60);
 
 		disableJob(jobName);
-		Thread.sleep(1000L);
-		removeJob(jobConfiguration.getJobName());
-
 		Thread.sleep(1000);
-
-		forceRemoveJob(jobName);
+		removeJob(jobName);
 	}
 
 	@Test
@@ -151,7 +147,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		startExecutorList(2);
 
 		int shardCount = 3;
-		String jobName = "javaLocalModeWithPreferListJob";
+		final String jobName = "test_C_withPreferList";
 
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
@@ -160,26 +156,27 @@ public class LocalModeIT extends AbstractSaturnIT {
 
 		final Main preferExecutor = saturnExecutorList.get(0);
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/1 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);
-		jobConfiguration.setPreferList(preferExecutor.getExecutorName());
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/1 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingItemParameters("*=0");
+		jobConfig.setLocalMode(true);
+		jobConfig.setPreferList(preferExecutor.getExecutorName());
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
-		enableJob(jobConfiguration.getJobName());
-		Thread.sleep(1 * 1000);
+		enableJob(jobName);
+		Thread.sleep(1000);
 
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				String count0 = getJobNode(jobConfiguration,
+			public boolean isOk() {
+				String count0 = zkGetJobNode(jobName,
 						"servers/" + preferExecutor.getExecutorName() + "/processSuccessCount");
 				System.out.println("count:" + count0 + ";executor:" + preferExecutor.getExecutorName());
 				if (count0 == null)
@@ -190,7 +187,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 
 				for (int i = 1; i < saturnExecutorList.size(); i++) {
 					Main executor = saturnExecutorList.get(i);
-					String count = getJobNode(jobConfiguration,
+					String count = zkGetJobNode(jobName,
 							"servers/" + executor.getExecutorName() + "/processSuccessCount");
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
 					if (count != null) {
@@ -207,11 +204,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 
 		disableJob(jobName);
 		Thread.sleep(1000);
-		removeJob(jobConfiguration.getJobName());
-
-		Thread.sleep(1000);
-
-		forceRemoveJob(jobName);
+		removeJob(jobName);
 	}
 
 	@Test
@@ -223,15 +216,16 @@ public class LocalModeIT extends AbstractSaturnIT {
 		final int items = 4;
 		final String jobName = "test_D_fixIssue441";
 
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0/1 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingItemParameters("*=0");
-		jobConfiguration.setLocalMode(true);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("*/1 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingItemParameters("*=0");
+		jobConfig.setLocalMode(true);
 
-		addJob(jobConfiguration);
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		enableJob(jobName);
@@ -242,7 +236,7 @@ public class LocalModeIT extends AbstractSaturnIT {
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				for (int i = 0; i < items; i++) {
 					if (SimpleJavaJob.statusMap.get(jobName + "_" + i) <= 0) {
 						return false;
@@ -276,9 +270,5 @@ public class LocalModeIT extends AbstractSaturnIT {
 		disableJob(jobName);
 		Thread.sleep(1000);
 		removeJob(jobName);
-
-		Thread.sleep(1000);
-
-		forceRemoveJob(jobName);
 	}
 }

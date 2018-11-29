@@ -1,19 +1,16 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
 import com.vip.saturn.it.job.SimpleJavaJob;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ItemUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
-import org.junit.Assert;
 
 import java.util.List;
 
@@ -37,13 +34,13 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 	}
 
 	// 添加指定配置和分片的SimpleJavaJob
-	public void addSimpleJavaJob(String jobName, int shardCount, JobConfiguration jobConfiguration) {
+	public void addSimpleJavaJob(String jobName, int shardCount, JobConfig jobConfig) throws Exception {
 		for (int i = 0; i < shardCount; i++) {
 			String key = jobName + "_" + i;
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
-		jobConfiguration.setShardingTotalCount(shardCount);
-		addJob(jobConfiguration);
+		jobConfig.setShardingTotalCount(shardCount);
+		addJob(jobConfig);
 	}
 
 	@Test
@@ -63,38 +60,41 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	public void multiJobSharding(String preferListJob3) throws Exception {
 		// 作业1，负荷为1,分片数为2
-		String jobName1 = "JOB_LOAD1_SHARDING2";
-		final JobConfiguration jobConfiguration1 = new JobConfiguration(jobName1);
-		jobConfiguration1.setCron("* * 1 * * ?");
-		jobConfiguration1.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration1.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration1.setLoadLevel(1);
-		jobConfiguration1.setShardingItemParameters("0=0,1=1,2=2");
-		addSimpleJavaJob(jobName1, 2, jobConfiguration1);
+		final String jobName1 = "JOB_LOAD1_SHARDING2";
+		final JobConfig jobConfig1 = new JobConfig();
+		jobConfig1.setJobName(jobName1);
+		jobConfig1.setCron("9 9 9 9 9 ? 2099");
+		jobConfig1.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig1.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig1.setLoadLevel(1);
+		jobConfig1.setShardingItemParameters("0=0,1=1,2=2");
+		addSimpleJavaJob(jobName1, 2, jobConfig1);
 
 		// 作业2，负荷为2,分片数为2
-		String jobName2 = "JOB_LOAD2_SHARDING2";
-		final JobConfiguration jobConfiguration2 = new JobConfiguration(jobName2);
-		jobConfiguration2.setCron("* * 1 * * ?");
-		jobConfiguration2.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration2.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration2.setLoadLevel(2);
-		jobConfiguration2.setShardingItemParameters("0=0,1=1");
-		addSimpleJavaJob(jobName2, 2, jobConfiguration2);
+		final String jobName2 = "JOB_LOAD2_SHARDING2";
+		final JobConfig jobConfig2 = new JobConfig();
+		jobConfig2.setJobName(jobName2);
+		jobConfig2.setCron("9 9 9 9 9 ? 2099");
+		jobConfig2.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig2.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig2.setLoadLevel(2);
+		jobConfig2.setShardingItemParameters("0=0,1=1");
+		addSimpleJavaJob(jobName2, 2, jobConfig2);
 
 		// 作业3，负荷为1,分片数为3
-		String jobName3 = "JOB_LOAD1_SHARDING3";
-		final JobConfiguration jobConfiguration3 = new JobConfiguration(jobName3);
-		jobConfiguration3.setCron("* * 1 * * ?");
-		jobConfiguration3.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration3.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration3.setLoadLevel(1);
-		jobConfiguration3.setShardingItemParameters("0=0,1=1,2=2");
+		final String jobName3 = "JOB_LOAD1_SHARDING3";
+		final JobConfig jobConfig3 = new JobConfig();
+		jobConfig3.setJobName(jobName3);
+		jobConfig3.setCron("9 9 9 9 9 ? 2099");
+		jobConfig3.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig3.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig3.setLoadLevel(1);
+		jobConfig3.setShardingItemParameters("0=0,1=1,2=2");
 		// 没有preferlist or 设置preferlist1,2
 		if (null != preferListJob3) {
-			jobConfiguration3.setPreferList(preferListJob3);
+			jobConfig3.setPreferList(preferListJob3);
 		}
-		addSimpleJavaJob(jobName3, 3, jobConfiguration3);
+		addSimpleJavaJob(jobName3, 3, jobConfig3);
 
 		Thread.sleep(1 * 1000);
 		// 启用作业1,2,3
@@ -110,12 +110,11 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		runAtOnce(jobName3);
 		Thread.sleep(1000);
 
-		waitForFinish(new AbstractSaturnIT.FinishCheck() {
+		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration1) || isNeedSharding(jobConfiguration2)
-						|| isNeedSharding(jobConfiguration3)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName1) || isNeedSharding(jobName2) || isNeedSharding(jobName3)) {
 					return false;
 				}
 				return true;
@@ -140,12 +139,11 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		runAtOnce(jobName2);
 		runAtOnce(jobName3);
 		Thread.sleep(1000);
-		waitForFinish(new AbstractSaturnIT.FinishCheck() {
+		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration1) || isNeedSharding(jobConfiguration2)
-						|| isNeedSharding(jobConfiguration3)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName1) || isNeedSharding(jobName2) || isNeedSharding(jobName3)) {
 					return false;
 				}
 				return true;
@@ -210,12 +208,11 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		runAtOnce(jobName2);
 		runAtOnce(jobName3);
 		Thread.sleep(1000);
-		waitForFinish(new AbstractSaturnIT.FinishCheck() {
+		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
-				if (isNeedSharding(jobConfiguration1) || isNeedSharding(jobConfiguration2)
-						|| isNeedSharding(jobConfiguration3)) {
+			public boolean isOk() {
+				if (isNeedSharding(jobName1) || isNeedSharding(jobName2) || isNeedSharding(jobName3)) {
 					return false;
 				}
 				return true;
@@ -266,9 +263,5 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 		Thread.sleep(1000);
 		stopExecutorListGracefully();
-		Thread.sleep(2000);
-		forceRemoveJob(jobName1);
-		forceRemoveJob(jobName2);
-		forceRemoveJob(jobName3);
 	}
 }

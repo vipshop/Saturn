@@ -8,14 +8,21 @@
                         基本配置
                     </template>
                     <div class="job-setting-content">
-                        <el-row v-if="jobSettingInfo.jobType !== 'SHELL_JOB'">
+                        <el-row>
+                            <el-col :span="22">
+                                <el-form-item prop="jobType" label="作业类型">
+                                    <el-input v-model="jobSettingInfo.jobType" disabled></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row v-if="$option.isJava(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="jobClass" label="作业实现类">
                                     <el-input v-model="jobSettingInfo.jobClass" disabled></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="cron" label="Cron">
                                     <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
@@ -45,7 +52,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                        <el-row v-if="$option.isMsg(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="queueName" label="Queue名">
                                     <el-tooltip popper-class="form-tooltip" placement="bottom">
@@ -158,29 +165,29 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="10">
-                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11">
+                            <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11">
                                 <el-form-item prop="showNormalLog" label="控制台输出日志">
                                     <el-switch v-model="jobSettingInfo.showNormalLog"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11">
+                            <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport" @change="enabledReportChange"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="jobSettingInfo.jobType === 'MSG_JOB' ? 7 : 11" v-if="jobSettingInfo.jobType === 'MSG_JOB'">
+                            <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11" v-if="$option.isMsg(jobSettingInfo.jobType)">
                                 <el-form-item prop="useSerial" label="串行消费">
                                     <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row :gutter="10" v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
-                            <el-col :span="11">
+                        <el-row :gutter="10" v-if="$option.isCron(jobSettingInfo.jobType) || $option.isPassive(jobSettingInfo.jobType)">
+                            <el-col :span="$option.isCron(jobSettingInfo.jobType) ? 11: 22">
                                 <el-form-item prop="failover" label="故障转移">
                                     <el-switch v-model="jobSettingInfo.failover" title="本地模式或非上报运行状态不可编辑" :disabled="jobSettingInfo.localMode || !jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
-                            <el-col :span="11">
+                            <el-col :span="11" v-if="$option.isCron(jobSettingInfo.jobType)">
                                 <el-form-item prop="rerun">
                                     <div slot="label">
                                         <span>过时未跑重试</span>
@@ -192,11 +199,11 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
-                                <el-form-item prop="dependencies" label="依赖作业">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.dependencies" style="width: 100%;">
-                                        <el-option v-for="item in jobSettingInfo.dependenciesProvided" :label="item" :value="item" :key="item"> </el-option>
+                                <el-form-item prop="downStream" label="下游作业">
+                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;">
+                                        <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"> </el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
@@ -210,7 +217,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodDate" label="暂停日期段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个日期段。例如03/12-03/15。当日期为空，时间段不为空，表示每天那些时间段都暂停" placement="bottom">
@@ -219,7 +226,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="jobSettingInfo.jobType !== 'MSG_JOB'">
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodTime" label="暂停时间段">
                                     <el-tooltip popper-class="form-tooltip" content="日期时间段，支持多个时间段。例如12:23-13:23。当日期为不空，时间段为空，表示那些日期段24小时都暂停。针对跨日的时间段，

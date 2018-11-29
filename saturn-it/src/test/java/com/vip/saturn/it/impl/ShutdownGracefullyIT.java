@@ -1,20 +1,19 @@
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.fail;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
+import com.vip.saturn.it.job.LongtimeJavaJob;
+import com.vip.saturn.job.basic.ShutdownHandler;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
+import com.vip.saturn.job.utils.SystemEnvProperties;
+import org.junit.*;
+import org.junit.runners.MethodSorters;
+import sun.misc.Signal;
 
 import java.util.Collection;
 
-import org.junit.*;
-import org.junit.runners.MethodSorters;
-
-import sun.misc.Signal;
-
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
-import com.vip.saturn.it.job.LongtimeJavaJob;
-import com.vip.saturn.job.basic.ShutdownHandler;
-import com.vip.saturn.job.internal.config.JobConfiguration;
-import com.vip.saturn.job.utils.SystemEnvProperties;
+import static org.assertj.core.api.Assertions.fail;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShutdownGracefullyIT extends AbstractSaturnIT {
@@ -56,15 +55,16 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(50);
@@ -75,7 +75,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
@@ -91,10 +91,6 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-
-		// wait executor shutdown completely
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
 
 		stopExecutorListGracefully();
 	}
@@ -115,15 +111,16 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			LongtimeJavaJob.statusMap.put(key, status);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobName);
 		Thread.sleep(1000);
 		runAtOnce(jobName);
 		Thread.sleep(50);
@@ -134,7 +131,7 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					Collection<LongtimeJavaJob.JobStatus> values = LongtimeJavaJob.statusMap.values();
 					for (LongtimeJavaJob.JobStatus status : values) {
@@ -151,11 +148,6 @@ public class ShutdownGracefullyIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 
-		// wait executor shutdown completely
-		Thread.sleep(2000);
-		forceRemoveJob(jobName);
-
 		stopExecutorListGracefully();
-
 	}
 }

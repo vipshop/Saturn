@@ -13,7 +13,7 @@ public class SaturnConstants {
 
 	public static final String DEAL_SUCCESS = "ok";
 
-	public static final int JOB_CAN_BE_DELETE_TIME_LIMIT = 2 * 60 * 1000;// 作业可以被删除的时间限制(单位：ms)
+	public static int JOB_CAN_BE_DELETE_TIME_LIMIT = 2 * 60 * 1000;// 作业可以被删除的时间限制(单位：ms)
 
 	/**
 	 * 容器伸缩计划作业名前缀

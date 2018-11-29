@@ -1,7 +1,7 @@
 package com.vip.saturn.it.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.vip.saturn.it.AbstractSaturnIT;
+import com.vip.saturn.it.base.AbstractSaturnIT;
 import com.vip.saturn.it.utils.HttpClientUtils;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
@@ -43,12 +43,12 @@ public class ExecutorConfigIT extends AbstractSaturnIT {
 		Map<String, Object> params = new HashMap<>();
 		params.put("key", key);
 		params.put("value", value);
-		HttpClientUtils.HttpResponseEntity httpResponseEntity = HttpClientUtils
+		HttpClientUtils.ResponseEntity responseEntity = HttpClientUtils
 				.sendPostRequest(CONSOLE_HOST_URL + "/console/configs/executor", params);
-		assertThat(httpResponseEntity).isNotNull();
-		assertThat(httpResponseEntity.getStatusCode()).isEqualTo(200);
-		assertThat(httpResponseEntity.getEntity()).isNotNull();
-		Map<String, Object> responseMap = JSON.parseObject(httpResponseEntity.getEntity(), Map.class);
+		assertThat(responseEntity).isNotNull();
+		assertThat(responseEntity.getStatusCode()).isEqualTo(200);
+		assertThat(responseEntity.getEntity()).isNotNull();
+		Map<String, Object> responseMap = JSON.parseObject(responseEntity.getEntity(), Map.class);
 		assertThat(responseMap.get("status")).isEqualTo(0);
 	}
 

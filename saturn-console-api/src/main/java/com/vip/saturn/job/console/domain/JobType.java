@@ -5,7 +5,7 @@ package com.vip.saturn.job.console.domain;
  */
 public enum JobType {
 
-	JAVA_JOB, SHELL_JOB, PASSIVE_JAVA_JOB, PASSIVE_SHELL_JOB, MSG_JOB, UNKNOWN_JOB;
+	JAVA_JOB, SHELL_JOB, PASSIVE_JAVA_JOB, PASSIVE_SHELL_JOB, MSG_JOB, VSHELL, UNKNOWN_JOB;
 
 	public static final JobType getJobType(String jobType) {
 		try {
@@ -28,11 +28,11 @@ public enum JobType {
 	}
 
 	public static boolean isShell(JobType jobType) {
-		return SHELL_JOB == jobType || PASSIVE_SHELL_JOB == jobType;
+		return SHELL_JOB == jobType || PASSIVE_SHELL_JOB == jobType || VSHELL == jobType;
 	}
 
 	public static boolean isMsg(JobType jobType) {
-		return MSG_JOB == jobType;
+		return MSG_JOB == jobType || VSHELL == jobType;
 	}
 
 }

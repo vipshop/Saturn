@@ -3,22 +3,22 @@
  */
 package com.vip.saturn.it.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.List;
-
-import org.junit.*;
-
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
 import com.vip.saturn.it.job.LongtimeJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.utils.ItemUtils;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FailoverWithPreferListIT extends AbstractSaturnIT {
@@ -60,19 +60,20 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 		}
 
 		// 1 新建一个执行时间为10S的作业，它只能手工触发，它设置了preferList为executor0，并且只能使用优先结点
-		final JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("0 0 1 1 * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(LongtimeJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setPreferList(saturnExecutorList.get(0).getExecutorName());
-		jobConfiguration.setUseDispreferList(false);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		final JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(LongtimeJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setPreferList(saturnExecutorList.get(0).getExecutorName());
+		jobConfig.setUseDispreferList(false);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 
 		// 2 启动作业并立刻执行一次
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(2000);
 		runAtOnce(jobName);
 
@@ -80,7 +81,7 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (!regCenter
@@ -97,8 +98,8 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			fail(e.getMessage());
 		}
 		Thread.sleep(2000);
-		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName,
-				ShardingNode.getShardingNode(saturnExecutorList.get(0).getExecutorName()))));
+		final List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
+				.getNodeFullPath(jobName, ShardingNode.getShardingNode(saturnExecutorList.get(0).getExecutorName()))));
 
 		// 4 停止第一个executor，在该executor上运行的分片不会失败转移(因为优先结点已经全部死掉了)
 		stopExecutor(0);
@@ -107,7 +108,7 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 		try {
 			waitForFinish(new FinishCheck() {
 				@Override
-				public boolean docheck() {
+				public boolean isOk() {
 
 					for (int j = 0; j < shardCount; j++) {
 						if (regCenter
@@ -131,9 +132,9 @@ public class FailoverWithPreferListIT extends AbstractSaturnIT {
 			assertThat(status.runningCount).isEqualTo(0);
 		}
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 		Thread.sleep(2000);
 		LongtimeJavaJob.statusMap.clear();
 	}

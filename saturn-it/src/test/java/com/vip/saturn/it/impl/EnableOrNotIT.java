@@ -1,9 +1,9 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
 import com.vip.saturn.it.job.SimpleJavaJob;
-import com.vip.saturn.job.internal.config.JobConfiguration;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
@@ -37,24 +37,23 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 		startOneNewExecutorList();
 		Thread.sleep(1000);
 		SimpleJavaJob.lock.set(false);
-		JobConfiguration jobConfiguration = new JobConfiguration("testA");
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setShardingItemParameters("0=0");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("testA");
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isTrue();
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
-		removeJob(jobConfiguration.getJobName());
-		Thread.sleep(1000);
-		forceRemoveJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 	}
 
 	@Test
@@ -62,32 +61,31 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 		startOneNewExecutorList();
 		Thread.sleep(1000);
 		SimpleJavaJob.lock.set(false);
-		JobConfiguration jobConfiguration = new JobConfiguration("testB_restartExecutor");
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setShardingItemParameters("0=0");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("testB_restartExecutor");
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
 
 		stopExecutorGracefully(0);
 		Thread.sleep(1000);
 
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		startOneNewExecutorList();
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isTrue();
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
 
-		removeJob(jobConfiguration.getJobName());
-		Thread.sleep(1000);
-		forceRemoveJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 	}
 
 	@Test
@@ -95,21 +93,22 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 		startOneNewExecutorList();
 		Thread.sleep(1000);
 		SimpleJavaJob.lock.set(true);
-		JobConfiguration jobConfiguration = new JobConfiguration("testC_singleExecutor");
-		jobConfiguration.setCron("0/2 * * * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setShardingItemParameters("0=0");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("testC_singleExecutor");
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		addJob(jobConfig);
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse();
 
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isTrue();
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(1000);
 		assertThat(SimpleJavaJob.enabled.get()).isTrue(); // still true
 
@@ -119,9 +118,7 @@ public class EnableOrNotIT extends AbstractSaturnIT {
 		Thread.sleep(200);
 		assertThat(SimpleJavaJob.enabled.get()).isFalse(); // change to false
 
-		removeJob(jobConfiguration.getJobName());
-		Thread.sleep(1000);
-		forceRemoveJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 	}
 
 }

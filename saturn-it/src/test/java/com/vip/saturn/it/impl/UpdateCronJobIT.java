@@ -1,11 +1,12 @@
 package com.vip.saturn.it.impl;
 
-import com.vip.saturn.it.AbstractSaturnIT;
-import com.vip.saturn.it.JobType;
+import com.vip.saturn.it.base.AbstractSaturnIT;
+import com.vip.saturn.it.base.FinishCheck;
 import com.vip.saturn.it.job.SimpleJavaJob;
 import com.vip.saturn.it.job.UpdateCronJob;
+import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
-import com.vip.saturn.job.internal.config.JobConfiguration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -38,25 +39,27 @@ public class UpdateCronJobIT extends AbstractSaturnIT {
 			SimpleJavaJob.statusMap.put(key, 0);
 		}
 
-		JobConfiguration jobConfiguration = new JobConfiguration(jobName);
-		jobConfiguration.setCron("59 59 1 * * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(SimpleJavaJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(shardCount);
-		jobConfiguration.setTimeoutSeconds(0);
-		jobConfiguration.setShardingItemParameters("0=0,1=1,2=2");
-		addJob(jobConfiguration);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(shardCount);
+		jobConfig.setTimeoutSeconds(0);
+		jobConfig.setShardingItemParameters("0=0,1=1,2=2");
+		addJob(jobConfig);
 		Thread.sleep(2000);
 		enableJob(jobName);
 
-		jobConfiguration = new JobConfiguration("updateCronITJob");
-		jobConfiguration.setCron("0 1 1 1 * ?");
-		jobConfiguration.setJobType(JobType.JAVA_JOB.toString());
-		jobConfiguration.setJobClass(UpdateCronJob.class.getCanonicalName());
-		jobConfiguration.setShardingTotalCount(1);
-		jobConfiguration.setProcessCountIntervalSeconds(1);
-		jobConfiguration.setShardingItemParameters("0=toBeupdatedITJob");
-		addJob(jobConfiguration);
+		jobConfig = new JobConfig();
+		jobConfig.setJobName("updateCronITJob");
+		jobConfig.setCron("9 9 9 9 9 ? 2099");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(UpdateCronJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setProcessCountIntervalSeconds(1);
+		jobConfig.setShardingItemParameters("0=toBeupdatedITJob");
+		addJob(jobConfig);
 		Thread.sleep(2000);
 
 		for (int i = 0; i < shardCount; i++) {
@@ -64,17 +67,18 @@ public class UpdateCronJobIT extends AbstractSaturnIT {
 			assertThat(SimpleJavaJob.statusMap.get(key)).isEqualTo(0);
 		}
 
-		enableJob(jobConfiguration.getJobName());
+		enableJob(jobConfig.getJobName());
 		Thread.sleep(2000);
-		runAtOnce(jobConfiguration.getJobName());
+		runAtOnce(jobConfig.getJobName());
 		Thread.sleep(2000);
-		final JobConfiguration t = jobConfiguration;
+		final JobConfig t = jobConfig;
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				for (Main executor : saturnExecutorList) {
-					String count = getJobNode(t, "servers/" + executor.getExecutorName() + "/processSuccessCount");
+					String count = zkGetJobNode(t.getJobName(),
+							"servers/" + executor.getExecutorName() + "/processSuccessCount");
 					System.out.println("count:" + count + ";executor:" + executor.getExecutorName());
 					if (count == null)
 						return false;
@@ -88,14 +92,14 @@ public class UpdateCronJobIT extends AbstractSaturnIT {
 
 		}, 10);
 
-		disableJob(jobConfiguration.getJobName());
+		disableJob(jobConfig.getJobName());
 		Thread.sleep(2 * 1000);
-		removeJob(jobConfiguration.getJobName());
+		removeJob(jobConfig.getJobName());
 
 		waitForFinish(new FinishCheck() {
 
 			@Override
-			public boolean docheck() {
+			public boolean isOk() {
 				for (int i = 0; i < shardCount; i++) {
 					String key = jobName + "_" + i;
 					if (SimpleJavaJob.statusMap.get(key) < 1) {
