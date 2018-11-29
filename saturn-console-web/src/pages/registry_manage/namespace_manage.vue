@@ -5,9 +5,9 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select v-model="filters.zkClusterKey" @change="scope.search">
+                            <el-select v-model="filters.zkAlias" @change="scope.search">
                                 <el-option label="全部ZK集群" value=""></el-option>
-                                <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkClusterKey" :key="item.zkClusterKey"></el-option>
+                                <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkAlias" :key="item.zkAlias"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
@@ -89,7 +89,8 @@ export default {
       batchMigrateInfo: {},
       filters: {
         namespace: '',
-        zkClusterKey: '',
+        zkAlias: '',
+        container: '',
       },
       orderBy: 'namespace',
       total: 0,

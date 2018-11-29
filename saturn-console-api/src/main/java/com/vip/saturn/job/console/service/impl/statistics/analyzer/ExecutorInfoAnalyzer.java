@@ -113,7 +113,7 @@ public class ExecutorInfoAnalyzer {
 			// 如果结点存活，算两样东西：1.遍历所有servers节点里面的processSuccessCount &
 			// processFailureCount，用以统计作业每天的执行次数；2.统计executor的loadLevel;，
 			if (!curatorFrameworkOp.checkExists(JobNodePath.getServerStatus(job, server))) {
-				return;
+				continue;
 			}
 			// 1.遍历所有servers节点里面的processSuccessCount && processFailureCount，用以统计作业每天的执行次数；
 			calcJobProcessCount(curatorFrameworkOp, nns, server, job, config.getNamespace(), jobStatistics);
@@ -133,10 +133,10 @@ public class ExecutorInfoAnalyzer {
 					.getData(JobNodePath.getProcessSucessCount(job, server));
 			String processFailureCountOfThisExeStr = curatorFrameworkOp
 					.getData(JobNodePath.getProcessFailureCount(job, server));
-			int processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
-					: Integer.parseInt(processSuccessCountOfThisExeStr);
-			int processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
-					: Integer.parseInt(processFailureCountOfThisExeStr);
+			long processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
+					: Long.parseLong(processSuccessCountOfThisExeStr);
+			long processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
+					: Long.parseLong(processFailureCountOfThisExeStr);
 
 			// executor当天运行成功失败数
 			String executorMapKey = server + "-" + namespace;
