@@ -605,7 +605,7 @@ public class JobServiceImpl implements JobService {
 		if (split.length > 0) {
 			List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 			String jobName = jobConfig.getJobName();
-			List<String> ancestors = getAncestors(jobName, unSystemJobs);
+			Set<String> ancestors = getAncestors(namespace, jobName, unSystemJobs, new Stack<String>());
 			for (String temp : split) {
 				if (StringUtils.isBlank(temp)) {
 					continue;
@@ -635,9 +635,12 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	private List<String> getAncestors(String jobName, List<JobConfig> unSystemJobs) {
-		List<String> ancestors = new ArrayList<>();
+	private Set<String> getAncestors(String namespace, String jobName, List<JobConfig> unSystemJobs,
+			Stack<String> onePathRecords) {
+		onePathRecords.push(jobName);
+		Set<String> ancestors = new HashSet<>();
 		for (JobConfig otherJobConfig : unSystemJobs) {
+			String otherJobName = otherJobConfig.getJobName();
 			String downStream = otherJobConfig.getDownStream();
 			if (StringUtils.isBlank(downStream)) {
 				continue;
@@ -645,10 +648,21 @@ public class JobServiceImpl implements JobService {
 			String[] split = downStream.split(",");
 			for (String temp : split) {
 				if (jobName.equals(temp.trim())) {
-					ancestors.add(otherJobConfig.getJobName());
+					if (onePathRecords.search(otherJobName) != -1) {
+						onePathRecords.push(otherJobName);
+						log.error("{} job arrange error, because it includes a ring: {}", namespace, onePathRecords);
+						onePathRecords.pop();
+						continue;
+					}
+					if (ancestors.contains(otherJobName)) {
+						continue;
+					}
+					ancestors.add(otherJobName);
+					ancestors.addAll(getAncestors(namespace, otherJobName, unSystemJobs, onePathRecords));
 				}
 			}
 		}
+		onePathRecords.pop();
 		return ancestors;
 	}
 
@@ -1566,6 +1580,125 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	public ArrangeLayout getArrangeLayout(String namespace) throws SaturnJobConsoleException {
+		ArrangeLayout arrangeLayout = new ArrangeLayout();
+		// get all ArrangeNodes
+		Map<String, ArrangeNode> nodeMap = new HashMap<>();
+		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
+		for (JobConfig jobConfig : unSystemJobs) {
+			String jobName = jobConfig.getJobName();
+			ArrangeNode node = nodeMap.get(jobName);
+			if (node == null) {
+				node = new ArrangeNode();
+				node.setName(jobName);
+				nodeMap.put(jobName, node);
+			}
+			if (StringUtils.isNotBlank(jobConfig.getDownStream())) {
+				for (String split : jobConfig.getDownStream().split(",")) {
+					String temp = split.trim();
+					if (StringUtils.isNotBlank(temp)) {
+						node.getChildren().add(temp);
+					}
+				}
+			}
+		}
+		Collection<ArrangeNode> nodes = nodeMap.values();
+		// set paths
+		for (ArrangeNode node : nodes) {
+			String name = node.getName();
+			for (String child : node.getChildren()) {
+				ArrangePath path = new ArrangePath();
+				path.setSource(name);
+				path.setTarget(child);
+				path.setDirect(!hasOtherPath(node, child, nodeMap));
+				arrangeLayout.getPaths().add(path);
+			}
+		}
+		Collections.sort(arrangeLayout.getPaths(), new Comparator<ArrangePath>() {
+			@Override
+			public int compare(ArrangePath o1, ArrangePath o2) {
+				int compare1 = o1.getSource().compareTo(o2.getSource());
+				return compare1 != 0 ? compare1 : o1.getTarget().compareTo(o2.getTarget());
+			}
+		});
+		// set levels
+		for (ArrangeNode node : nodes) {
+			int maxLevel = getMaxArrangeNodeLevel(node, 0, nodes, new Stack<String>());
+			if (maxLevel > node.getLevel()) {
+				node.setLevel(maxLevel);
+			}
+		}
+		int maxLevel = 0;
+		for (ArrangeNode node : nodes) {
+			maxLevel = Math.max(maxLevel, node.getLevel());
+		}
+		for (int i = 0; i <= maxLevel; i++) {
+			arrangeLayout.getLevels().add(new ArrayList<String>());
+		}
+		for (ArrangeNode node : nodes) {
+			int level = node.getLevel();
+			if (level == 0 && node.getChildren().isEmpty()) {
+				continue;
+			}
+			arrangeLayout.getLevels().get(level).add(node.getName());
+		}
+		for (int i = 0; i <= maxLevel; i++) {
+			Collections.sort(arrangeLayout.getLevels().get(i));
+		}
+		return arrangeLayout;
+	}
+
+	private int getMaxArrangeNodeLevel(ArrangeNode currentNode, int level, Collection<ArrangeNode> nodes,
+			Stack<String> onePathRecords) throws SaturnJobConsoleException {
+		String currentName = currentNode.getName();
+		onePathRecords.push(currentName);
+		int maxLevel = level;
+		for (ArrangeNode node : nodes) {
+			if (node.getChildren().contains(currentName)) {
+				String name = node.getName();
+				if (onePathRecords.search(name) != -1) {
+					onePathRecords.push(name);
+					throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业编排不允许有环，形成环的作业有: " + onePathRecords);
+				}
+				maxLevel = Math.max(maxLevel, getMaxArrangeNodeLevel(node, level + 1, nodes, onePathRecords));
+			}
+		}
+		onePathRecords.pop();
+		return maxLevel;
+	}
+
+	private boolean hasOtherPath(ArrangeNode currentNode, String target, Map<String, ArrangeNode> nodeMap)
+			throws SaturnJobConsoleException {
+		List<String> otherChildren = new ArrayList<>();
+		String currentName = currentNode.getName();
+		for (String child : currentNode.getChildren()) {
+			if (!child.equals(target)) {
+				otherChildren.add(child);
+			}
+		}
+		return hasOnePath(currentName, otherChildren, target, nodeMap, new Stack<String>());
+	}
+
+	private boolean hasOnePath(String currentName, List<String> children, String target,
+			Map<String, ArrangeNode> nodeMap, Stack<String> onePathRecords) throws SaturnJobConsoleException {
+		onePathRecords.push(currentName);
+		for (String child : children) {
+			if (onePathRecords.search(child) != -1) {
+				onePathRecords.push(child);
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业编排不允许有环，形成环的作业有: " + onePathRecords);
+			}
+			if (child.equals(target)) {
+				return true;
+			}
+			if (hasOnePath(child, nodeMap.get(child).getChildren(), target, nodeMap, onePathRecords)) {
+				return true;
+			}
+		}
+		onePathRecords.pop();
+		return false;
+	}
+
+	@Override
 	public JobConfig getJobConfigFromZK(String namespace, String jobName) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
@@ -1755,9 +1888,11 @@ public class JobServiceImpl implements JobService {
 			return candidateDownStream;
 		}
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
-		List<String> ancestors = getAncestors(jobConfig.getJobName(), unSystemJobs);
+		Set<String> ancestors = getAncestors(namespace, jobConfig.getJobName(), unSystemJobs, new Stack<String>());
 		for (JobConfig temp : unSystemJobs) {
-			if (!ancestors.contains(temp.getJobName()) && JobType.isPassive(JobType.getJobType(temp.getJobType()))) {
+			String jobName = temp.getJobName();
+			if (!jobConfig.getJobName().equals(jobName) && !ancestors.contains(jobName) && JobType
+					.isPassive(JobType.getJobType(temp.getJobType()))) {
 				candidateDownStream.add(temp.getJobName());
 			}
 		}

@@ -469,6 +469,13 @@ public class JobOverviewController extends AbstractGUIController {
         SaturnConsoleUtils.exportFile(response, exportJobFile, exportFileName, true);
     }
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/arrangeLayout")
+	public SuccessResponseEntity getArrangeLayout(final HttpServletRequest request, @PathVariable String namespace)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getArrangeLayout(namespace));
+	}
+
     /**
      * 获取该作业可选择的优先Executor
      */
