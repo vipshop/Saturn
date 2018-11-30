@@ -62,7 +62,7 @@
                                 <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
                                 <el-button @click="handleImport()" v-if="$common.hasPerm('job:import', domainName)"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
                                 <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
-                                <el-button @click="handleArrangeLayout()"><i class="fa fa-arrows text-btn"></i>关系图</el-button>
+                                <el-button @click="handleArrangeLayout()"><i class="fa fa-arrows text-btn"></i>作业依赖图</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" :data="jobList" @sort-change="scope.onSortChange" style="width: 100%">

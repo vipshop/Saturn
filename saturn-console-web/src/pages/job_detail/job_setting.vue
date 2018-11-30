@@ -202,8 +202,14 @@
                         <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
+                                    <div slot="label">
+                                        下游作业
+                                        <el-tooltip content="查看作业依赖图" placement="top">
+                                            <el-button type="text" @click="handleArrangeLayout()"><i class="fa fa-search-plus"></i></el-button>
+                                        </el-tooltip>
+                                    </div>
                                     <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;">
-                                        <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"> </el-option>
+                                        <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"></el-option>
                                     </el-select>
                                 </el-form-item>
                             </el-col>
@@ -244,6 +250,9 @@
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
         </div>
+        <div v-if="isArrangeLayoutVisible">
+            <arrange-layout-dialog :arrange-layout-info="arrangeLayoutInfo" @job-redirect="jobRedirect" @close-dialog="closeArrangeLayoutDialog"></arrange-layout-dialog>
+        </div>
     </div>
 </template>
 <script>
@@ -261,9 +270,25 @@ export default {
         queueName: [{ required: true, message: 'queue不能为空', trigger: 'blur' }],
       },
       preferListProvidedArray: [],
+      isArrangeLayoutVisible: false,
+      arrangeLayoutInfo: {},
     };
   },
   methods: {
+    handleArrangeLayout() {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
+        this.arrangeLayoutInfo = data;
+        this.isArrangeLayoutVisible = true;
+      })
+      .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
+    },
+    jobRedirect(jobName) {
+      this.closeArrangeLayoutDialog();
+      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+    },
+    closeArrangeLayoutDialog() {
+      this.isArrangeLayoutVisible = false;
+    },
     localModeChange(value) {
       if (!value) {
         if (this.jobSettingInfo.enabledReport) {
