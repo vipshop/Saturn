@@ -62,6 +62,7 @@
                                 <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
                                 <el-button @click="handleImport()" v-if="$common.hasPerm('job:import', domainName)"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
                                 <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
+                                <el-button @click="handleArrangeLayout()"><i class="fa fa-arrows text-btn"></i>关系图</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" :data="jobList" @sort-change="scope.onSortChange" style="width: 100%">
@@ -126,6 +127,9 @@
             <div v-if="isImportResultVisible">
                 <import-result-dialog :import-result="importResult" @close-dialog="closeImportResultDialog"></import-result-dialog>
             </div>
+            <div v-if="isArrangeLayoutVisible">
+                <arrange-layout-dialog :arrange-layout-info="arrangeLayoutInfo" @job-redirect="jobRedirect" @close-dialog="closeArrangeLayoutDialog"></arrange-layout-dialog>
+            </div>
         </div>
     </div>
 </template>
@@ -150,6 +154,8 @@ export default {
         namespace: this.$route.params.domain,
       },
       importUrl: '',
+      isArrangeLayoutVisible: false,
+      arrangeLayoutInfo: {},
       jobNamesArray: [],
       jobTotalInfo: {
         totalNumber: 0,
@@ -183,6 +189,20 @@ export default {
     };
   },
   methods: {
+    handleArrangeLayout() {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
+        this.arrangeLayoutInfo = data;
+        this.isArrangeLayoutVisible = true;
+      })
+      .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
+    },
+    jobRedirect(jobName) {
+      this.closeArrangeLayoutDialog();
+      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+    },
+    closeArrangeLayoutDialog() {
+      this.isArrangeLayoutVisible = false;
+    },
     getShardings() {
       const jobNamesStr = this.getJobNameArray(this.jobList).join(',');
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/sharding/status`, { jobNames: jobNamesStr }).then((data) => {
