@@ -15,21 +15,21 @@
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="失败率最高的Top10 Executor(当天)">
                             <div slot="chart">
-                                <Column id="top10FailExecutor" :option-info="top10FailExecutorOption.optionInfo"></Column>
+                                <Column id="top10FailExecutor" :option-info="top10FailExecutorOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="负荷最重的Top10 Executor">
                             <div slot="chart">
-                                <Column id="top10LoadExecutor" :option-info="top10LoadExecutorOption.optionInfo"></Column>
+                                <Column id="top10LoadExecutor" :option-info="top10LoadExecutorOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="Executor版本分布">
                             <div slot="chart">
-                                <Pie id="executorVersionNumber" :data-option="executorVersionNumberOption"></Pie>
+                                <Pie id="executorVersionNumber" :option-info="executorVersionNumberOptionInfo"></Pie>
                             </div>
                         </Chart-container>
                     </el-col>
@@ -44,13 +44,9 @@ export default {
     return {
       loading: false,
       zkCluster: this.$route.query.zkCluster,
-      top10FailExecutorOption: {
-        optionInfo: {},
-      },
-      top10LoadExecutorOption: {
-        optionInfo: {},
-      },
-      executorVersionNumberOption: {},
+      top10FailExecutorOptionInfo: {},
+      top10LoadExecutorOptionInfo: {},
+      executorVersionNumberOptionInfo: {},
     };
   },
   methods: {
@@ -61,23 +57,27 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           executors.push(ele.executorName);
-          this.$set(ele, 'y', ele.failureRateOfTheDay);
+          this.$set(ele, 'value', ele.failureRateOfTheDay);
           this.$set(ele, 'columnType', 'executor');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
-          错误率: ${this.point.y}<br/>
-          执行总数: ${this.point.processCountOfTheDay}<br/>
-          失败总数: ${this.point.failureCountOfTheDay}<br/>`;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            return `<b>${params.name}</b><br/>
+            错误率: ${params.value}<br/>
+            执行总数: ${params.data.processCountOfTheDay}<br/>
+            失败总数: ${params.data.failureCountOfTheDay}<br/>`;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
           xCategories: executors,
           yTitle: '失败率(小数)',
           tooltip,
         };
-        this.$set(this.top10FailExecutorOption, 'optionInfo', optionInfo);
+        this.top10FailExecutorOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10 Executor请求失败！'); });
     },
@@ -88,30 +88,39 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           executors.push(ele.executorName);
-          this.$set(ele, 'y', ele.loadLevel);
+          this.$set(ele, 'value', ele.loadLevel);
           this.$set(ele, 'columnType', 'executor');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
-          所属域: ${this.point.domain}<br/>
-          总负荷: ${this.point.loadLevel}<br/>
-          作业与分片: ${this.point.jobAndShardings}<br/>`;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            return `<b>${params.name}</b><br/>
+            所属域: ${params.data.domain}<br/>
+            总负荷: ${params.data.loadLevel}<br/>
+            作业与分片: ${params.data.jobAndShardings}<br/>`;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
           xCategories: executors,
           yTitle: 'Executor总负荷',
           tooltip,
         };
-        this.$set(this.top10LoadExecutorOption, 'optionInfo', optionInfo);
+        this.top10LoadExecutorOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取负荷最重的Top10 Executor请求失败！'); });
     },
     getExecutorVersionNumber() {
       return this.$http.get('/console/dashboard/executorVersionNumber', { zkClusterKey: this.zkCluster }).then((data) => {
-        const seriesData = [{ name: '该版本Executor数量', data: Object.entries(data) }];
-        this.$set(this.executorVersionNumberOption, 'seriesData', seriesData);
+        const resultData = [];
+        Object.entries(data).forEach((ele) => {
+          const item = { name: ele[0], value: ele[1] };
+          resultData.push(item);
+        });
+        const seriesData = [{ name: '该版本Executor数量', type: 'pie', data: resultData }];
+        this.$set(this.executorVersionNumberOptionInfo, 'seriesData', seriesData);
       })
       .catch(() => { this.$http.buildErrorHandler('获取Executor版本分布请求失败！'); });
     },

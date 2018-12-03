@@ -112,9 +112,14 @@ export default {
         self.updatePosition();
       };
     },
-    init() {
+    resize() {
       window.addEventListener('resize', () => {
         this.myChart.resize();
+      });
+    },
+    handleClick() {
+      this.myChart.on('click', (handler) => {
+        this.$emit('job-redirect', handler.data.name);
       });
     },
     drawLine() {
@@ -124,11 +129,9 @@ export default {
         this.option.series[0].links = this.optionInfo.links;
         this.myChart = echarts.init(document.getElementById(this.id));
         this.myChart.setOption(this.option);
+        this.resize();
+        this.handleClick();
         // this.initInvisibleGraphic();  // 可拖拽方法
-        this.myChart.on('click', (handler) => {
-          console.log(handler.data.name);
-          this.$emit('job-redirect', handler.data.name);
-        });
       }
     },
   },
