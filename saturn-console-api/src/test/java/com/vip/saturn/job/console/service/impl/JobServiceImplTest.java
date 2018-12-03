@@ -9,6 +9,7 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -588,6 +589,24 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		expectedException.expect(SaturnJobConsoleException.class);
 		expectedException.expectMessage(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", 1, jobName));
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByDeleting() throws SaturnJobConsoleException {
+		JobConfig jobConfig = createValidJob();
+		String server = "e1";
+		when(registryCenterService.getCuratorFrameworkOp(eq(namespace))).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())))).thenReturn(true);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getServerNodePath(jobConfig.getJobName()))))
+				.thenReturn(true);
+		when(curatorFrameworkOp.getChildren(eq(JobNodePath.getServerNodePath(jobConfig.getJobName()))))
+				.thenReturn(Lists.newArrayList(server));
+		when(curatorFrameworkOp.checkExists(eq(ExecutorNodePath.getExecutorNodePath(server, "ip")))).thenReturn(true);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getServerStatus(jobConfig.getJobName(), server))))
+				.thenReturn(true);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)正在删除中，请稍后再试", jobName));
 		jobService.addJob(namespace, jobConfig, userName);
 	}
 

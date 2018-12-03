@@ -312,6 +312,15 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(e);
 		}
 		// remove job from zk
+		removeJobFromZk(jobName, curatorFrameworkOp);
+	}
+
+	/**
+	 * 删除zk上的作业结点。先持久化config/toDelete结点，让executor收到该事件，shutdown自身的该作业。如果所有executor都已经shutdown该作业，则才可以安全删除作业结点。
+	 * @return 等待executor shutdown作业，等待一定时间后，如果executor还没完全shutdown，则放弃等待，返回false。 否则，在等待时间内，executor都shutdown完全，则删除作业结点，并返回true。
+	 */
+	private boolean removeJobFromZk(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
+			throws SaturnJobConsoleException {
 		// 1.作业的executor全online的情况，添加toDelete节点，触发监听器动态删除节点
 		String toDeleteNodePath = JobNodePath.getConfigNodePath(jobName, "toDelete");
 		if (curatorFrameworkOp.checkExists(toDeleteNodePath)) {
@@ -325,13 +334,13 @@ public class JobServiceImpl implements JobService {
 			if (!curatorFrameworkOp.checkExists(jobServerPath)) {
 				// (1)如果不存在$Job/JobName/servers节点，说明该作业没有任何executor接管，可直接删除作业节点
 				curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
-				return;
+				return true;
 			}
 			// (2)如果该作业servers下没有任何executor，可直接删除作业节点
 			List<String> executors = curatorFrameworkOp.getChildren(jobServerPath);
 			if (CollectionUtils.isEmpty(executors)) {
 				curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
-				return;
+				return true;
 			}
 			// (3)只要该作业没有一个能运行的该作业的executor在线，那么直接删除作业节点
 			boolean hasOnlineExecutor = false;
@@ -345,7 +354,7 @@ public class JobServiceImpl implements JobService {
 			}
 			if (!hasOnlineExecutor) {
 				curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobName));
-				return;
+				return true;
 			}
 			try {
 				Thread.sleep(200);
@@ -353,6 +362,8 @@ public class JobServiceImpl implements JobService {
 				throw new SaturnJobConsoleException(e);
 			}
 		}
+
+		return false;
 	}
 
 	@Override
@@ -755,8 +766,12 @@ public class JobServiceImpl implements JobService {
 	private void persistJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
-		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobConfig.getJobName()))) {
-			curatorFrameworkOp.deleteRecursive(JobNodePath.getJobNodePath(jobConfig.getJobName()));
+		String jobName = jobConfig.getJobName();
+		if (curatorFrameworkOp.checkExists(JobNodePath.getJobNodePath(jobName))) {
+			if (!removeJobFromZk(jobName, curatorFrameworkOp)) {
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+						String.format("该作业(%s)正在删除中，请稍后再试", jobName));
+			}
 		}
 		correctConfigValueIfNeeded(jobConfig);
 		saveJobConfigToDb(namespace, jobConfig, createdBy);
