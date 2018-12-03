@@ -22,31 +22,29 @@
                 </el-row>
             </div>
             <div>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="历史总域数">
-                        <div slot="chart">
-                            <MyLine id="domainCountHistory" :data-option="domainCountOption.optionInfo" :yAxisTitle="domainCountOption.title"></MyLine>
-                        </div>
-                    </Chart-container>
-                </el-col>
-            </div>
-            <div>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="历史Executor数">
-                        <div slot="chart">
-                            <MyLine id="executorCountHistory" :data-option="executorCountOption.optionInfo" :yAxisTitle="executorCountOption.title"></MyLine>
-                        </div>
-                    </Chart-container>
-                </el-col>
-            </div>
-            <div>
-                <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                    <Chart-container title="历史作业数">
-                        <div slot="chart">
-                            <MyLine id="jobCountHistory" :data-option="jobCountOption.optionInfo" :yAxisTitle="jobCountOption.title"></MyLine>
-                        </div>
-                    </Chart-container>
-                </el-col>
+                <el-row :gutter="10">
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="历史总域数">
+                            <div slot="chart">
+                                <MyLine id="domainCountHistory" :option-info="domainCountOptionInfo"></MyLine>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="历史Executor数">
+                            <div slot="chart">
+                                <MyLine id="executorCountHistory" :option-info="executorCountOptionInfo"></MyLine>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                    <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
+                        <Chart-container title="历史作业数">
+                            <div slot="chart">
+                                <MyLine id="jobCountHistory" :option-info="jobCountOptionInfo"></MyLine>
+                            </div>
+                        </Chart-container>
+                    </el-col>
+                </el-row>
             </div>
         </el-card>
     </div>
@@ -62,27 +60,9 @@ export default {
       executorInDockerCount: '',
       executorNotInDockerCount: '',
       jobCount: '',
-      domainCountOption: {
-        title: '总域数',
-        optionInfo: {
-          xAxis: [],
-          yAxis: [],
-        },
-      },
-      executorCountOption: {
-        title: 'executor数',
-        optionInfo: {
-          xAxis: [],
-          yAxis: [],
-        },
-      },
-      jobCountOption: {
-        title: '作业数',
-        optionInfo: {
-          xAxis: [],
-          yAxis: [],
-        },
-      },
+      domainCountOptionInfo: {},
+      executorCountOptionInfo: {},
+      jobCountOptionInfo: {},
     };
   },
   methods: {
@@ -108,29 +88,32 @@ export default {
       return this.$http.get('/console/dashboard/domainCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '总域数', data: data.yAxis }],
+          yAxis: [{ name: '总域数', type: 'line', data: data.yAxis }],
+          yAxisName: '总域数',
         };
-        this.$set(this.domainCountOption, 'optionInfo', optionInfo);
+        this.domainCountOptionInfo = optionInfo;
       }).catch(() => { this.$http.buildErrorHandler('获取历史全域数据请求失败！'); });
     },
     getExecutorCountHistory() {
       return this.$http.get('/console/dashboard/executorCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.date,
-          yAxis: [{ name: '物理机', data: data.otherCount },
-              { name: '容器', data: data.dockerCount },
-              { name: '总数', data: data.totalCount }],
+          yAxis: [{ name: '物理机', type: 'line', data: data.otherCount },
+              { name: '容器', type: 'line', data: data.dockerCount },
+              { name: '总数', type: 'line', data: data.totalCount }],
+          yAxisName: 'executor数',
         };
-        this.$set(this.executorCountOption, 'optionInfo', optionInfo);
+        this.executorCountOptionInfo = optionInfo;
       }).catch(() => { this.$http.buildErrorHandler('获取Executor历史数据请求失败！'); });
     },
     getJobCountHistory() {
       return this.$http.get('/console/dashboard/jobCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '作业数', data: data.yAxis }],
+          yAxis: [{ name: '作业数', type: 'line', data: data.yAxis }],
+          yAxisName: '作业数',
         };
-        this.$set(this.jobCountOption, 'optionInfo', optionInfo);
+        this.jobCountOptionInfo = optionInfo;
       }).catch(() => { this.$http.buildErrorHandler('获取历史全域数据请求失败！'); });
     },
     updateHistories() {

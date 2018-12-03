@@ -15,21 +15,21 @@
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="失败率最高的Top10作业">
                             <div slot="chart">
-                                <Column id="top10FailJob" :option-info="top10FailJobOption.optionInfo"></Column>
+                                <Column id="top10FailJob" :option-info="top10FailJobOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)">
                             <div slot="chart">
-                                <Column id="top10ActiveJob" :option-info="top10ActiveJobOption.optionInfo"></Column>
+                                <Column id="top10ActiveJob" :option-info="top10ActiveJobOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
                         <Chart-container title="负荷最重的Top10作业">
                             <div slot="chart">
-                                <Column id="top10LoadJob" :option-info="top10LoadJobOption.optionInfo"></Column>
+                                <Column id="top10LoadJob" :option-info="top10LoadJobOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
@@ -44,15 +44,9 @@ export default {
     return {
       loading: false,
       zkCluster: this.$route.query.zkCluster,
-      top10FailJobOption: {
-        optionInfo: {},
-      },
-      top10ActiveJobOption: {
-        optionInfo: {},
-      },
-      top10LoadJobOption: {
-        optionInfo: {},
-      },
+      top10FailJobOptionInfo: {},
+      top10ActiveJobOptionInfo: {},
+      top10LoadJobOptionInfo: {},
     };
   },
   methods: {
@@ -64,30 +58,34 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           jobs.push(ele.jobName);
-          this.$set(ele, 'y', ele.failureRateOfAllTime);
+          this.$set(ele, 'value', ele.failureRateOfAllTime);
           this.$set(ele, 'columnType', 'job');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          let result = '';
-          const tooltipStr = `<b>${this.point.category}</b><br/>
-          所属域: ${this.point.domainName}<br/>
-          执行总数: ${this.point.processCountOfAllTime}<br/>
-          失败总数: ${this.point.errorCountOfAllTime}<br/>`;
-          if (hasAuth) {
-            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobAnalyse/clean')">清除zk</button>`;
-          } else {
-            result = tooltipStr;
-          }
-          return result;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            let result = '';
+            const tooltipStr = `<b>${params.name}</b><br/>
+            所属域: ${params.data.domainName}<br/>
+            执行总数: ${params.data.processCountOfAllTime}<br/>
+            失败总数: ${params.data.errorCountOfAllTime}<br/>`;
+            if (hasAuth) {
+              result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${params.data.domainName}/jobs/${params.data.jobName}/jobAnalyse/clean')">清除zk</button>`;
+            } else {
+              result = tooltipStr;
+            }
+            return result;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
           xCategories: jobs,
           yTitle: '失败率(小数)',
           tooltip,
         };
-        this.$set(this.top10FailJobOption, 'optionInfo', optionInfo);
+        this.top10FailJobOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10作业请求失败！'); });
     },
@@ -99,30 +97,34 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           jobs.push(ele.jobName);
-          this.$set(ele, 'y', ele.processCountOfTheDay);
+          this.$set(ele, 'value', ele.processCountOfTheDay);
           this.$set(ele, 'columnType', 'job');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          let result = '';
-          const tooltipStr = `<b>${this.point.category}</b><br/>
-          所属域: ${this.point.domainName}<br/>
-          当天执行总数: ${this.point.processCountOfTheDay}<br/>
-          当天失败数: ${this.point.failureCountOfTheDay}<br/>`;
-          if (hasAuth) {
-            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobs/${this.point.jobName}/jobExecutorCount/clean')">清除zk</button>`;
-          } else {
-            result = tooltipStr;
-          }
-          return result;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            let result = '';
+            const tooltipStr = `<b>${params.name}</b><br/>
+            所属域: ${params.data.domainName}<br/>
+            当天执行总数: ${params.data.processCountOfTheDay}<br/>
+            当天失败数: ${params.data.failureCountOfTheDay}<br/>`;
+            if (hasAuth) {
+              result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${params.data.domainName}/jobs/${params.data.jobName}/jobExecutorCount/clean')">清除zk</button>`;
+            } else {
+              result = tooltipStr;
+            }
+            return result;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
           xCategories: jobs,
           yTitle: '当天执行次数',
           tooltip,
         };
-        this.$set(this.top10ActiveJobOption, 'optionInfo', optionInfo);
+        this.top10ActiveJobOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取最活跃的Top10作业请求失败！'); });
     },
@@ -133,23 +135,27 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           jobs.push(ele.jobName);
-          this.$set(ele, 'y', ele.totalLoadLevel);
+          this.$set(ele, 'value', ele.totalLoadLevel);
           this.$set(ele, 'columnType', 'job');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          return `<b>${this.point.category}</b><br/>
-          所属域: ${this.point.domainName}<br/>
-          失败率: ${this.point.failureRateOfAllTime}<br/>
-          总负荷: ${this.point.totalLoadLevel}<br/>`;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            return `<b>${params.name}</b><br/>
+            所属域: ${params.data.domainName}<br/>
+            失败率: ${params.data.failureRateOfAllTime}<br/>
+            总负荷: ${params.data.totalLoadLevel}<br/>`;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
           xCategories: jobs,
           yTitle: '作业总负荷',
           tooltip,
         };
-        this.$set(this.top10LoadJobOption, 'optionInfo', optionInfo);
+        this.top10LoadJobOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取负荷最重的Top10作业请求失败！'); });
     },
