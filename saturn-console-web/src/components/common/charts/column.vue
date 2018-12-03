@@ -15,7 +15,7 @@ export default {
     return {
       myChart: {},
       option: {
-        color: ['#3398DB'],
+        color: ['#7CB5EC'],
         tooltip: {},
         grid: {
           top: '40',
@@ -45,7 +45,24 @@ export default {
             name: '',
           },
         ],
-        series: [],
+        series: [{
+          type: 'bar',
+          barWidth: '40%',
+          itemStyle: {
+            normal: {
+              label: {
+                show: true,
+                position: 'top',
+                textStyle: {
+                  fontWeight: 'bold',
+                  color: 'gray',
+                  fontSize: 11,
+                },
+              },
+            },
+          },
+          data: [],
+        }],
       },
     };
   },
@@ -76,7 +93,7 @@ export default {
       this.option.xAxis[0].data = this.optionInfo.xCategories;
       this.option.yAxis[0].name = this.optionInfo.yTitle;
       this.option.tooltip = this.optionInfo.tooltip;
-      this.option.series = this.optionInfo.seriesData;
+      this.option.series[0].data = this.optionInfo.seriesData;
       this.myChart = echarts.init(document.getElementById(this.id));
       this.myChart.setOption(this.option);
       this.resize();

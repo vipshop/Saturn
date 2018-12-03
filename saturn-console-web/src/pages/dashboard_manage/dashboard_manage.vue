@@ -88,7 +88,7 @@ export default {
       return this.$http.get('/console/dashboard/domainCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '总域数', type: 'line', data: data.yAxis }],
+          seriesData: [{ name: '总域数', data: data.yAxis }],
           yAxisName: '总域数',
         };
         this.domainCountOptionInfo = optionInfo;
@@ -98,9 +98,9 @@ export default {
       return this.$http.get('/console/dashboard/executorCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.date,
-          yAxis: [{ name: '物理机', type: 'line', data: data.otherCount },
-              { name: '容器', type: 'line', data: data.dockerCount },
-              { name: '总数', type: 'line', data: data.totalCount }],
+          seriesData: [{ name: '物理机', data: data.otherCount },
+              { name: '容器', data: data.dockerCount },
+              { name: '总数', data: data.totalCount }],
           yAxisName: 'executor数',
         };
         this.executorCountOptionInfo = optionInfo;
@@ -110,7 +110,7 @@ export default {
       return this.$http.get('/console/dashboard/jobCount', { zkClusterKey: this.clusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '作业数', type: 'line', data: data.yAxis }],
+          seriesData: [{ name: '作业数', data: data.yAxis }],
           yAxisName: '作业数',
         };
         this.jobCountOptionInfo = optionInfo;

@@ -107,7 +107,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: domains,
           yTitle: '失败率(小数)',
           tooltip,
@@ -144,7 +144,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: domains,
           yTitle: '分片次数',
           tooltip,
@@ -174,7 +174,7 @@ export default {
       return this.$http.get('/console/dashboard/domainOperationCount', { zkClusterKey: this.zkClusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '历史记录', type: 'line', data: data.yAxis }],
+          seriesData: [{ name: '历史记录', data: data.yAxis }],
           yAxisName: '次',
         };
         this.allDomainHistoryOptionInfo = optionInfo;

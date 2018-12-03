@@ -58,9 +58,28 @@ export default {
       });
     },
     drawLine() {
+      const seriesArray = this.optionInfo.seriesData.map((obj) => {
+        const rObj = { ...obj };
+        const itemStyle = {
+          normal: {
+            label: {
+              show: true,
+              position: 'top',
+              textStyle: {
+                fontWeight: 'bold',
+                color: 'gray',
+                fontSize: 11,
+              },
+            },
+          },
+        };
+        this.$set(rObj, 'type', 'line');
+        this.$set(rObj, 'itemStyle', itemStyle);
+        return rObj;
+      });
       this.option.xAxis.data = this.optionInfo.xAxis;
       this.option.yAxis.name = this.optionInfo.yAxisName;
-      this.option.series = this.optionInfo.yAxis;
+      this.option.series = seriesArray;
       this.myChart = echarts.init(document.getElementById(this.id));
       this.myChart.setOption(this.option);
       this.resize();

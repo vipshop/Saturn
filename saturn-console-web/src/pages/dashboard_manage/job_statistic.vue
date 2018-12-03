@@ -80,7 +80,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: jobs,
           yTitle: '失败率(小数)',
           tooltip,
@@ -119,7 +119,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: jobs,
           yTitle: '当天执行次数',
           tooltip,
@@ -150,7 +150,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: jobs,
           yTitle: '作业总负荷',
           tooltip,

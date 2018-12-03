@@ -72,7 +72,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: executors,
           yTitle: '失败率(小数)',
           tooltip,
@@ -103,7 +103,7 @@ export default {
           },
         };
         const optionInfo = {
-          seriesData: [{ type: 'bar', barWidth: '40%', data: dataArr }],
+          seriesData: dataArr,
           xCategories: executors,
           yTitle: 'Executor总负荷',
           tooltip,
