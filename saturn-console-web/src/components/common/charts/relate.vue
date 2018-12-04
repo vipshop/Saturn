@@ -17,7 +17,9 @@ export default {
       option: {
         tooltip: {
           show: true,
-          formatter: '点击跳转到作业 {b} 详情页面',
+          formatter(params) {
+            return params.dataType === 'node' ? `点击跳转到作业 ${params.name} 详情页面` : params.name;
+          },
         },
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
@@ -119,11 +121,12 @@ export default {
     },
     handleClick() {
       this.myChart.on('click', (handler) => {
-        this.$emit('job-redirect', handler.data.name);
+        if (handler.dataType === 'node') {
+          this.$emit('job-redirect', handler.data.name);
+        }
       });
     },
     drawLine() {
-      console.log(this.optionInfo);
       if (this.optionInfo) {
         this.option.series[0].data = this.optionInfo.data;
         this.option.series[0].links = this.optionInfo.links;
