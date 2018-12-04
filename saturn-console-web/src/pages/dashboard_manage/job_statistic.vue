@@ -13,21 +13,21 @@
             <div>
                 <el-row :gutter="10">
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="失败率最高的Top10作业">
+                        <Chart-container title="失败率最高的Top10作业" type="bar">
                             <div slot="chart">
                                 <Column id="top10FailJob" :option-info="top10FailJobOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)">
+                        <Chart-container title="最活跃的Top10作业(当天执行次数最多的作业)" type="bar">
                             <div slot="chart">
                                 <Column id="top10ActiveJob" :option-info="top10ActiveJobOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="负荷最重的Top10作业">
+                        <Chart-container title="负荷最重的Top10作业" type="bar">
                             <div slot="chart">
                                 <Column id="top10LoadJob" :option-info="top10LoadJobOptionInfo"></Column>
                             </div>

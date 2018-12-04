@@ -13,21 +13,21 @@
             <div>
                 <el-row :gutter="10">
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="失败率最高的Top10 Executor(当天)">
+                        <Chart-container title="失败率最高的Top10 Executor(当天)" type="bar">
                             <div slot="chart">
                                 <Column id="top10FailExecutor" :option-info="top10FailExecutorOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="负荷最重的Top10 Executor">
+                        <Chart-container title="负荷最重的Top10 Executor" type="bar">
                             <div slot="chart">
                                 <Column id="top10LoadExecutor" :option-info="top10LoadExecutorOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="Executor版本分布">
+                        <Chart-container title="Executor版本分布" type="pie">
                             <div slot="chart">
                                 <Pie id="executorVersionNumber" :option-info="executorVersionNumberOptionInfo"></Pie>
                             </div>
