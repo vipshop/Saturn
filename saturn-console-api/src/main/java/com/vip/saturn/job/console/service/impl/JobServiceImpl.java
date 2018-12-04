@@ -582,8 +582,8 @@ public class JobServiceImpl implements JobService {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于java作业，作业实现类必填");
 		}
 		// 如果是消息作业，queue必填
-		if (JobType.isMsg(jobType) && (jobConfig.getQueueName() == null || jobConfig.getQueueName().trim().isEmpty())) {
-			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于消息作业，queue必填");
+		if (JobType.isMsg(jobType)) {
+			validateQueue(jobConfig);
 		}
 		// 校验cron
 		validateCronFieldOfJobConfig(jobConfig);
@@ -595,6 +595,12 @@ public class JobServiceImpl implements JobService {
 		}
 		// 校验下游作业
 		validateDownStreamFieldOfJobConfig(namespace, jobConfig);
+	}
+
+	protected void validateQueue(JobConfig jobConfig) throws SaturnJobConsoleException {
+		if (jobConfig.getQueueName() == null || jobConfig.getQueueName().trim().isEmpty()) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于消息作业，queue必填");
+		}
 	}
 
 	private void validateDownStreamFieldOfJobConfig(String namespace, JobConfig jobConfig)
