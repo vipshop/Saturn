@@ -70,8 +70,8 @@
                             <el-table-column prop="jobName" label="作业名" sortable="custom">
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
-                                        <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB'"></i>
-                                        <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
+                                        <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB' || scope.row.jobType === 'PASSIVE_JAVA_JOB'"></i>
+                                        <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB' || scope.row.jobType === 'PASSIVE_SHELL_JOB'"></i>
                                         <i class="fa fa-envelope-o" v-if="scope.row.jobType === 'MSG_JOB'"></i>
                                         {{scope.row.jobName}}
                                     </router-link>
