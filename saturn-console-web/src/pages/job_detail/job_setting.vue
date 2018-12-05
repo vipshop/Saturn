@@ -209,7 +209,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType) || $option.isPassive(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
                                     <div slot="label">
@@ -218,7 +218,10 @@
                                             <el-button type="text" @click="handleArrangeLayout()"><i class="fa fa-search-plus"></i></el-button>
                                         </el-tooltip>
                                     </div>
-                                    <el-tooltip placement="bottom" content="配置下游作业条件：1.不能是本地模式作业；2.作业分片数为1；3.只能是cron作业">
+                                    <el-tooltip placement="bottom">
+                                        <div slot="content">
+                                            配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
+                                        </div>
                                         <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
                                             <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"></el-option>
                                         </el-select>
@@ -301,35 +304,6 @@ export default {
     closeArrangeLayoutDialog() {
       this.isArrangeLayoutVisible = false;
     },
-    // localModeChange(value) {
-    //   console.log('444', this.jobSettingInfo, this.initJobSettingInfo);
-    //   if (!value) {
-    //     if (this.jobSettingInfo.enabledReport) {
-    //       this.jobSettingInfo.failover = true;
-    //     } else {
-    //       this.jobSettingInfo.failover = false;
-    //     }
-    //     console.log('111', this.jobSettingInfo, this.initJobSettingInfo);
-    //     this.jobSettingInfo.downStream = [...this.initJobSettingInfo.downStream];
-    //   } else {
-    //     console.log('222', this.jobSettingInfo, this.initJobSettingInfo);
-    //     this.jobSettingInfo.failover = false;
-    //     this.jobSettingInfo.downStream.splice(0, this.jobSettingInfo.downStream.length);
-    //     console.log('333', this.jobSettingInfo, this.initJobSettingInfo);
-    //   }
-    // },
-    // enabledReportChange(value) {
-    //   if (value) {
-    //     if (this.jobSettingInfo.localMode) {
-    //       this.jobSettingInfo.failover = false;
-    //     } else {
-    //       this.jobSettingInfo.failover = true;
-    //     }
-    //   } else {
-    //     this.jobSettingInfo.failover = false;
-    //     this.jobSettingInfo.rerun = false;
-    //   }
-    // },
     checkAndForecastCron() {
       const cronData = {
         timeZone: this.jobSettingInfo.timeZone,
