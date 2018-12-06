@@ -77,7 +77,12 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" width="100px">
+                            <el-table-column prop="jobType" label="作业类型" width="100px">
+                                <template slot-scope="scope"> 
+                                    {{$map.jobMap[scope.row.jobType]}}
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="状态" prop="status" width="90px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
@@ -88,7 +93,7 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
                             <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.shardingList === ''">-</span>
