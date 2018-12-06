@@ -1617,6 +1617,8 @@ public class JobServiceImpl implements JobService {
 			if (node == null) {
 				node = new ArrangeNode();
 				node.setName(jobName);
+				node.setDescription(jobConfig.getDescription());
+				node.setType(jobConfig.getJobType());
 				nodeMap.put(jobName, node);
 			}
 			if (StringUtils.isNotBlank(jobConfig.getDownStream())) {
@@ -1636,7 +1638,6 @@ public class JobServiceImpl implements JobService {
 				ArrangePath path = new ArrangePath();
 				path.setSource(name);
 				path.setTarget(child);
-				path.setDirect(!hasOtherPath(node, child, nodeMap));
 				arrangeLayout.getPaths().add(path);
 			}
 		}
@@ -1659,17 +1660,24 @@ public class JobServiceImpl implements JobService {
 			maxLevel = Math.max(maxLevel, node.getLevel());
 		}
 		for (int i = 0; i <= maxLevel; i++) {
-			arrangeLayout.getLevels().add(new ArrayList<String>());
+			arrangeLayout.getLevels().add(new ArrayList<ArrangeLevel>());
 		}
 		for (ArrangeNode node : nodes) {
 			int level = node.getLevel();
 			if (level == 0 && node.getChildren().isEmpty()) {
 				continue;
 			}
-			arrangeLayout.getLevels().get(level).add(node.getName());
+			ArrangeLevel arrangeLevel = new ArrangeLevel();
+			SaturnBeanUtils.copyProperties(node, arrangeLevel);
+			arrangeLayout.getLevels().get(level).add(arrangeLevel);
 		}
 		for (int i = 0; i <= maxLevel; i++) {
-			Collections.sort(arrangeLayout.getLevels().get(i));
+			Collections.sort(arrangeLayout.getLevels().get(i), new Comparator<ArrangeLevel>() {
+				@Override
+				public int compare(ArrangeLevel o1, ArrangeLevel o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			});
 		}
 		return arrangeLayout;
 	}
@@ -1691,37 +1699,6 @@ public class JobServiceImpl implements JobService {
 		}
 		onePathRecords.pop();
 		return maxLevel;
-	}
-
-	private boolean hasOtherPath(ArrangeNode currentNode, String target, Map<String, ArrangeNode> nodeMap)
-			throws SaturnJobConsoleException {
-		List<String> otherChildren = new ArrayList<>();
-		String currentName = currentNode.getName();
-		for (String child : currentNode.getChildren()) {
-			if (!child.equals(target)) {
-				otherChildren.add(child);
-			}
-		}
-		return hasOnePath(currentName, otherChildren, target, nodeMap, new Stack<String>());
-	}
-
-	private boolean hasOnePath(String currentName, List<String> children, String target,
-			Map<String, ArrangeNode> nodeMap, Stack<String> onePathRecords) throws SaturnJobConsoleException {
-		onePathRecords.push(currentName);
-		for (String child : children) {
-			if (onePathRecords.search(child) != -1) {
-				onePathRecords.push(child);
-				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业编排不允许有环，形成环的作业有: " + onePathRecords);
-			}
-			if (child.equals(target)) {
-				return true;
-			}
-			if (hasOnePath(child, nodeMap.get(child).getChildren(), target, nodeMap, onePathRecords)) {
-				return true;
-			}
-		}
-		onePathRecords.pop();
-		return false;
 	}
 
 	@Override
