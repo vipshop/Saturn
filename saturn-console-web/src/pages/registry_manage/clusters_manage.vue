@@ -10,13 +10,15 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
-                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addZkCluster')">添加集群</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>ZK集群信息
                                 <el-button type="text" @click="getAllClusters"><i class="fa fa-refresh"></i></el-button>
+                            </div>
+                            <div class="pull-right">
+                                <el-button @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addZkCluster')"><i class="fa fa-plus-circle text-btn"></i>添加集群</el-button>
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
