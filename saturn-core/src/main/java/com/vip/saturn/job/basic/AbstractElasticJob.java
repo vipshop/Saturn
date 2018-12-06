@@ -224,7 +224,8 @@ public abstract class AbstractElasticJob implements Stoppable {
 		if (configService.isLocalMode()) {
 			return;
 		}
-		if (!configService.getJobType().isCron()) {
+		JobType jobType = configService.getJobType();
+		if (!(jobType.isCron() || jobType.isPassive())) {
 			return;
 		}
 		if (shardingContext.getShardingTotalCount() != 1) {
@@ -232,6 +233,9 @@ public abstract class AbstractElasticJob implements Stoppable {
 		}
 		List<String> downStream = configService.getDownStream();
 		if (downStream.isEmpty()) {
+			return;
+		}
+		if (!mayRunDownStream(shardingContext)) {
 			return;
 		}
 
@@ -265,6 +269,10 @@ public abstract class AbstractElasticJob implements Stoppable {
 				HttpClientUtils.closeQuietly(httpClient);
 			}
 		}
+	}
+
+	protected boolean mayRunDownStream(final JobExecutionMultipleShardingContext shardingContext) {
+		return true;
 	}
 
 	/**

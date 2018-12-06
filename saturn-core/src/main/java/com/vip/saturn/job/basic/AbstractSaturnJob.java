@@ -13,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.PropertyPlaceholderHelper;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Saturn抽象父类
@@ -40,14 +37,13 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		SaturnExecutionContext saturnContext = (SaturnExecutionContext) shardingContext;
 		saturnContext.setSaturnJob(true);
 
-		// begin
 		Map<Integer, SaturnJobReturn> retMap = new HashMap<Integer, SaturnJobReturn>();
 
 		// shardingItemParameters为参数表解析出来的Key/Value值
-		Map<Integer, String> shardingItemParameters = shardingContext.getShardingItemParameters();
+		Map<Integer, String> shardingItemParameters = saturnContext.getShardingItemParameters();
 
 		// items为需要处理的作业分片
-		List<Integer> items = shardingContext.getShardingItems();
+		List<Integer> items = saturnContext.getShardingItems();
 
 		LogUtils.info(log, jobName, "Job {} handle items: {}", jobName, items);
 
@@ -67,14 +63,21 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		if (handleJobMap != null) {
 			retMap.putAll(handleJobMap);
 		}
-		// end
 
 		// 汇总修改
-		if (retMap.size() > 0) {
-			for (int item : saturnContext.getShardingItems()) {
-				updateExecuteResult(retMap.get(item), saturnContext, item);
+		for (Integer item : items) {
+			if (item == null) {
+				continue;
 			}
+			SaturnJobReturn saturnJobReturn = retMap.get(item);
+			if (saturnJobReturn == null) {
+				saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
+						"Can not find the corresponding SaturnJobReturn", SaturnSystemErrorGroup.FAIL);
+				retMap.put(item, saturnJobReturn);
+			}
+			updateExecuteResult(saturnJobReturn, saturnContext, item);
 		}
+
 		long end = System.currentTimeMillis();
 		LogUtils.info(log, jobName, "{} finished, totalCost={}ms, return={}", jobName, (end - start), retMap);
 	}
@@ -83,29 +86,21 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 			int item) {
 		int successCount = 0;
 		int errorCount = 0;
-		SaturnJobReturn jobReturn = saturnJobReturn;
-		if (jobReturn == null) {
-			jobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL,
-					"Can not find the corresponding SaturnJobReturn", SaturnSystemErrorGroup.FAIL);
-			errorCount++;
-		} else {
-			if (SaturnSystemReturnCode.JOB_NO_COUNT != jobReturn.getReturnCode()) {
-				int errorGroup = jobReturn.getErrorGroup();
-				if (errorGroup == SaturnSystemErrorGroup.SUCCESS) {
-					successCount++;
-				} else {
-					if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
-						onTimeout(item);
-					} else if (errorGroup == SaturnSystemErrorGroup.FAIL_NEED_RAISE_ALARM) {
-						onNeedRaiseAlarm(item, jobReturn.getReturnMsg());
-					}
-
-					errorCount++;
+		if (SaturnSystemReturnCode.JOB_NO_COUNT != saturnJobReturn.getReturnCode()) {
+			int errorGroup = saturnJobReturn.getErrorGroup();
+			if (errorGroup == SaturnSystemErrorGroup.SUCCESS) {
+				successCount++;
+			} else {
+				if (errorGroup == SaturnSystemErrorGroup.TIMEOUT) {
+					onTimeout(item);
+				} else if (errorGroup == SaturnSystemErrorGroup.FAIL_NEED_RAISE_ALARM) {
+					onNeedRaiseAlarm(item, saturnJobReturn.getReturnMsg());
 				}
+				errorCount++;
 			}
 		}
 		// 为了展现分片处理失败的状态
-		saturnContext.getShardingItemResults().put(item, jobReturn);
+		saturnContext.getShardingItemResults().put(item, saturnJobReturn);
 		// 执行次数加1
 		ProcessCountStatistics.increaseTotalCountDelta(executorName, jobName);
 		// 只要有出错和失败的分片，就认为是处理失败; 否则认为处理成功
@@ -115,6 +110,31 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 			ProcessCountStatistics.increaseErrorCountDelta(executorName, jobName);
 			ProcessCountStatistics.incrementProcessFailureCount(executorName, jobName, errorCount);
 		}
+	}
+
+	@Override
+	protected boolean mayRunDownStream(JobExecutionMultipleShardingContext shardingContext) {
+		if (shardingContext instanceof SaturnExecutionContext) {
+			SaturnExecutionContext saturnContext = (SaturnExecutionContext) shardingContext;
+			Map<Integer, SaturnJobReturn> shardingItemResults = saturnContext.getShardingItemResults();
+			if (shardingItemResults != null) {
+				Iterator<Map.Entry<Integer, SaturnJobReturn>> iterator = shardingItemResults.entrySet().iterator();
+				while (iterator.hasNext()) {
+					Map.Entry<Integer, SaturnJobReturn> next = iterator.next();
+					Integer item = next.getKey();
+					SaturnJobReturn saturnJobReturn = next.getValue();
+					// 有一个失败，就不触发下游作业
+					if (saturnJobReturn.getErrorGroup() != SaturnSystemErrorGroup.SUCCESS) {
+						LogUtils.warn(log, jobName,
+								"item {} ran unsuccessfully, SaturnJobReturn is {}, wont run downStream", item,
+								saturnJobReturn);
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return super.mayRunDownStream(shardingContext);
 	}
 
 	public Properties parseKV(String path) {
