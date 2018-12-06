@@ -609,6 +609,11 @@ public class JobServiceImpl implements JobService {
 		if (StringUtils.isBlank(downStream)) {
 			return;
 		}
+		// 只能是cron/passive作业，才能配置下游
+		JobType jobType = JobType.getJobType(jobConfig.getJobType());
+		if (!JobType.isCron(jobType) && !JobType.isPassive(jobType)) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "只能是定时作业或者被动作业，才能配置下游作业");
+		}
 		// 不能是本地模式作业，因为本地模式不能保证分片数1
 		if (jobConfig.getLocalMode() != null && jobConfig.getLocalMode()) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "非本地模式作业，才能配置下游作业");
