@@ -40,6 +40,8 @@ export default {
           let count = 0;
           if (ele.length % 2 === 0) {
             dataY = this.initY - 25;
+          } else {
+            dataY = this.initY;
           }
           ele.forEach((ele2, index2) => {
             if (index2 > 0) {
@@ -65,6 +67,36 @@ export default {
     jobRedirect(jobName) {
       this.$emit('job-redirect', jobName);
     },
+    isLineCurve(allDatas, sourceData, targetData) {
+      let flag = false;
+      flag = allDatas.some((ele) => {
+        if (sourceData.y === targetData.y) {
+          if (ele.y === sourceData.y && ele.x > sourceData.x && ele.x < targetData.x) {
+            return true;
+          }
+        } else if (sourceData.x === targetData.x) {
+          if (ele.x === sourceData.x
+          && ele.y > Math.min(sourceData.y, targetData.y)
+          && ele.y < Math.max(sourceData.y, targetData.y)) {
+            return true;
+          }
+        } else {
+          console.log('line');
+          if (
+            (ele.x > Math.min(sourceData.x, targetData.x)
+            && ele.x < Math.max(sourceData.x, targetData.x)) &&
+            (ele.y > Math.min(sourceData.y, targetData.y)
+            && ele.y < Math.max(sourceData.y, targetData.y))) {
+            if (Math.abs((ele.x - sourceData.x) / (ele.y - sourceData.y)) ===
+            Math.abs((targetData.x - ele.x) / (targetData.y - ele.y))) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+      return flag;
+    },
   },
   computed: {
     optionInfo() {
@@ -72,18 +104,6 @@ export default {
         links: [],
         data: [],
       };
-      resultInfo.links = this.arrangeLayoutInfo.paths.map((item) => {
-        const lineParams = {
-          normal: {
-            curveness: 0.2,
-          },
-        };
-        const rObj = {};
-        rObj.source = item.source;
-        rObj.target = item.target;
-        rObj.lineStyle = item.direct ? {} : lineParams;
-        return rObj;
-      });
       const relateDatas = [];
       this.arrangeLayoutInfo.levels.forEach((ele) => {
         const levelItem = ele.map((obj) => {
@@ -94,6 +114,22 @@ export default {
         relateDatas.push(levelItem);
       });
       resultInfo.data = this.getRelateDataXY(relateDatas);
+      resultInfo.links = this.arrangeLayoutInfo.paths.map((item) => {
+        const lineParams = {
+          normal: {
+            curveness: 0.2,
+          },
+        };
+        const rObj = {};
+        rObj.source = item.source;
+        rObj.target = item.target;
+        const sourceData = resultInfo.data.find(v => v.name === item.source);
+        const targetData = resultInfo.data.find(v => v.name === item.target);
+        if (this.isLineCurve(resultInfo.data, sourceData, targetData)) {
+          rObj.lineStyle = lineParams;
+        }
+        return rObj;
+      });
       return resultInfo;
     },
   },

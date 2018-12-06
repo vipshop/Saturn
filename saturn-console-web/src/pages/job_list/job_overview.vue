@@ -190,9 +190,14 @@ export default {
   },
   methods: {
     handleArrangeLayout() {
-      this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
+      this.$http.get(`/console/namespaces/
+      ${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
-        this.isArrangeLayoutVisible = true;
+        if (this.arrangeLayoutInfo.paths > 0) {
+          this.isArrangeLayoutVisible = true;
+        } else {
+          this.$message.errorMessage('很抱歉！该域没有作业依赖');
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
