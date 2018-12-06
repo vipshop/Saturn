@@ -9,6 +9,7 @@ import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.Curator
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.service.SystemConfigService;
 import com.vip.saturn.job.console.service.helper.SystemConfigProperties;
+import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import com.vip.saturn.job.console.utils.SaturnConstants;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -465,7 +466,7 @@ public class JobServiceImplTest {
 	public void testAddJobFailByVMSJobWithoutClass() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
 		expectedException.expect(SaturnJobConsoleException.class);
 		expectedException.expectMessage("对于java作业，作业实现类必填");
 		jobService.addJob(namespace, jobConfig, userName);
@@ -507,8 +508,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByLocalModeJobWithoutShardingItem() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		expectedException.expect(SaturnJobConsoleException.class);
@@ -520,8 +521,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByNoLocalModeJobWithoutShardingItem() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		expectedException.expect(SaturnJobConsoleException.class);
@@ -533,8 +534,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByNoLocalModeJoShardingItemInvalid() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(1);
@@ -548,8 +549,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByNoLocalModeJoShardingItemInvalidNumber() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(1);
@@ -592,6 +593,24 @@ public class JobServiceImplTest {
 	}
 
 	@Test
+	public void testAddJobFailByDeleting() throws SaturnJobConsoleException {
+		JobConfig jobConfig = createValidJob();
+		String server = "e1";
+		when(registryCenterService.getCuratorFrameworkOp(eq(namespace))).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())))).thenReturn(true);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getServerNodePath(jobConfig.getJobName()))))
+				.thenReturn(true);
+		when(curatorFrameworkOp.getChildren(eq(JobNodePath.getServerNodePath(jobConfig.getJobName()))))
+				.thenReturn(Lists.newArrayList(server));
+		when(curatorFrameworkOp.checkExists(eq(ExecutorNodePath.getExecutorNodePath(server, "ip")))).thenReturn(true);
+		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getServerStatus(jobConfig.getJobName(), server))))
+				.thenReturn(true);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(String.format("该作业(%s)正在删除中，请稍后再试", jobName));
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
 	public void testAddJobSuccess() throws Exception {
 		JobConfig jobConfig = createValidJob();
 		when(registryCenterService.getCuratorFrameworkOp(eq(namespace))).thenReturn(curatorFrameworkOp);
@@ -630,8 +649,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByNoLocalModeJoShardingItemLess() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(false);
 		jobConfig.setShardingTotalCount(2);
@@ -645,8 +664,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByLocalModeJobShardingItemInvalid() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		jobConfig.setShardingItemParameters("test");
@@ -659,8 +678,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByLocalModeJobHasDownStream() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setLocalMode(true);
 		jobConfig.setShardingItemParameters("*=xx");
@@ -674,8 +693,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButShardingTotalCountIsNotOne() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(2);
 		jobConfig.setShardingItemParameters("0=0,1=1");
@@ -689,8 +708,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButIsSelf() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -704,8 +723,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButNotExisting() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -719,8 +738,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButIsAncestor() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -738,8 +757,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButIsNotPassive() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -756,8 +775,8 @@ public class JobServiceImplTest {
 	public void testAddJobFailByHasDownStreamButIsAncestor2() throws SaturnJobConsoleException {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.MSG_JOB.name());
-		jobConfig.setQueueName("queue");
+		jobConfig.setJobType(JobType.JAVA_JOB.name());
+		jobConfig.setCron("0 */2 * * * ?");
 		jobConfig.setJobClass("testCLass");
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
@@ -931,21 +950,6 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testImportFailByVMSJobWithoutClass() throws SaturnJobConsoleException, IOException {
-		JobConfig4DB jobConfig4DB = new JobConfig4DB();
-		jobConfig4DB.setJobName(jobName);
-		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
-		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
-		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
-		File file = jobService.exportJobs(namespace);
-		MultipartFile data = new MockMultipartFile("test.xls", new FileInputStream(file));
-		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(StringContains.containsString("对于java作业，作业实现类必填。"));
-		jobService.importJobs(namespace, data, userName);
-	}
-
-	@Test
 	public void testImportFailByShellJobWithoutCron() throws SaturnJobConsoleException, IOException {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
@@ -982,7 +986,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
@@ -999,7 +1005,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1019,7 +1027,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1038,7 +1048,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1059,7 +1071,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1080,7 +1094,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1103,7 +1119,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1124,7 +1142,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1148,7 +1168,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1171,7 +1193,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1194,7 +1218,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1217,7 +1243,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1240,7 +1268,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1263,7 +1293,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1286,7 +1318,9 @@ public class JobServiceImplTest {
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1312,6 +1346,8 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
 				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME)))
+				.thenReturn("queue");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1338,6 +1374,8 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
 				.thenReturn(JobType.MSG_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME)))
+				.thenReturn("queue");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1360,7 +1398,9 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))
@@ -1383,7 +1423,9 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_TYPE)))
-				.thenReturn(JobType.MSG_JOB.name());
+				.thenReturn(JobType.SHELL_JOB.name());
+		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON)))
+				.thenReturn("0 */2 * * * ?");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_CLASS)))
 				.thenReturn("vip");
 		when(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT)))

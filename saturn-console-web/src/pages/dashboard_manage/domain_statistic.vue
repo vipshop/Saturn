@@ -13,37 +13,37 @@
             <div>
                 <el-row :gutter="10">
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="全域当天执行数据">
+                        <Chart-container title="全域当天执行数据" type="pie">
                             <div slot="chart">
-                                <Pie id="domainProcessCount" :data-option="domainProcessCountOption"></Pie>
+                                <Pie id="domainProcessCount" :option-info="domainProcessCountOptionInfo"></Pie>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="全域历史执行数据">
+                        <Chart-container title="全域历史执行数据" type="line">
                             <div slot="chart">
-                                <MyLine id="domainProcessHistory" :data-option="allDomainHistoryOption.optionInfo"></MyLine>
+                                <MyLine id="domainProcessHistory" :option-info="allDomainHistoryOptionInfo"></MyLine>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="失败率最高的Top10域">
+                        <Chart-container title="失败率最高的Top10域" type="bar">
                             <div slot="chart">
-                                <Column id="top10FailDomain" :option-info="top10FailDomainOption.optionInfo"></Column>
+                                <Column id="top10FailDomain" :option-info="top10FailDomainOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="稳定性最差的的Top10域">
+                        <Chart-container title="稳定性最差的的Top10域" type="bar">
                             <div slot="chart">
-                                <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOption.optionInfo"></Column>
+                                <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="域版本分布">
+                        <Chart-container title="域版本分布" type="pie">
                             <div slot="chart">
-                                <Pie id="domainExecutorVersion" :data-option="domainExecutorVersionOption"></Pie>
+                                <Pie id="domainExecutorVersion" :option-info="domainExecutorVersionOptionInfo"></Pie>
                             </div>
                         </Chart-container>
                     </el-col>
@@ -58,20 +58,11 @@ export default {
     return {
       loading: false,
       zkCluster: this.$route.query.zkCluster,
-      domainProcessCountOption: {},
-      domainExecutorVersionOption: {},
-      top10FailDomainOption: {
-        optionInfo: {},
-      },
-      top10UnstableDomainOption: {
-        optionInfo: {},
-      },
-      allDomainHistoryOption: {
-        optionInfo: {
-          xAxis: [],
-          yAxis: [],
-        },
-      },
+      domainProcessCountOptionInfo: {},
+      domainExecutorVersionOptionInfo: {},
+      top10FailDomainOptionInfo: {},
+      top10UnstableDomainOptionInfo: {},
+      allDomainHistoryOptionInfo: {},
     };
   },
   methods: {
@@ -80,9 +71,9 @@ export default {
         const resultData = JSON.parse(data);
         const error = resultData.error;
         const count = resultData.count;
-        const dataArr = [['成功次数', Number.parseInt(count - error, 10)], ['失败次数', error]];
-        const seriesData = [{ name: '全域当天执行数据', data: dataArr }];
-        this.$set(this.domainProcessCountOption, 'seriesData', seriesData);
+        const dataArr = [{ name: '成功次数', value: Number.parseInt(count - error, 10) }, { name: '失败次数', value: error }];
+        const seriesData = [{ name: '全域当天执行数据', type: 'pie', data: dataArr }];
+        this.$set(this.domainProcessCountOptionInfo, 'seriesData', seriesData);
       })
       .catch(() => { this.$http.buildErrorHandler('获取全域当天执行数据请求失败！'); });
     },
@@ -94,30 +85,34 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           domains.push(ele.domainName);
-          this.$set(ele, 'y', ele.failureRateOfAllTime);
+          this.$set(ele, 'value', ele.failureRateOfAllTime);
           this.$set(ele, 'columnType', 'domain');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          let result = '';
-          const tooltipStr = `<b>${this.point.category}</b><br/>
-          错误率: ${this.point.y}<br/>
-          执行总数: ${this.point.processCountOfAllTime}<br/>
-          失败总数: ${this.point.errorCountOfAllTime}<br/>`;
-          if (hasAuth) {
-            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/jobAnalyse/clean')">清除zk</button>`;
-          } else {
-            result = tooltipStr;
-          }
-          return result;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            let result = '';
+            const tooltipStr = `<b>${params.name}</b><br/>
+            错误率: ${params.value}<br/>
+            执行总数: ${params.data.processCountOfAllTime}<br/>
+            失败总数: ${params.data.errorCountOfAllTime}<br/>`;
+            if (hasAuth) {
+              result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${params.data.domainName}/shardingCount/clean')">清除zk</button>`;
+            } else {
+              result = tooltipStr;
+            }
+            return result;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: dataArr,
           xCategories: domains,
           yTitle: '失败率(小数)',
           tooltip,
         };
-        this.$set(this.top10FailDomainOption, 'optionInfo', optionInfo);
+        this.top10FailDomainOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取失败率最高的Top10域请求失败！'); });
     },
@@ -129,28 +124,32 @@ export default {
         const dataArr = [];
         resultData.forEach((ele) => {
           domains.push(ele.domainName);
-          this.$set(ele, 'y', ele.shardingCount);
+          this.$set(ele, 'value', ele.shardingCount);
           this.$set(ele, 'columnType', 'domain');
           dataArr.push(ele);
         });
-        const tooltip = function setTooltip() {
-          let result = '';
-          const tooltipStr = `<b>${this.point.category}</b><br/>
-          分片次数: ${this.point.y}<br/>`;
-          if (hasAuth) {
-            result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${this.point.domainName}/shardingCount/clean')">清除zk</button>`;
-          } else {
-            result = tooltipStr;
-          }
-          return result;
+        const tooltip = {
+          position: 'inside',
+          enterable: true,
+          formatter(params) {
+            let result = '';
+            const tooltipStr = `<b>${params.name}</b><br/>
+            分片次数: ${params.value}<br/>`;
+            if (hasAuth) {
+              result = `${tooltipStr}<button class="chart-tooltip-btn" onclick="vm.clearZk('/console/dashboard/namespaces/${params.data.domainName}/shardingCount/clean')">清除zk</button>`;
+            } else {
+              result = tooltipStr;
+            }
+            return result;
+          },
         };
         const optionInfo = {
-          seriesData: [{ data: dataArr }],
+          seriesData: dataArr,
           xCategories: domains,
           yTitle: '分片次数',
           tooltip,
         };
-        this.$set(this.top10UnstableDomainOption, 'optionInfo', optionInfo);
+        this.top10UnstableDomainOptionInfo = optionInfo;
       })
       .catch(() => { this.$http.buildErrorHandler('获取稳定性最差的Top10域请求失败！'); });
     },
@@ -159,14 +158,15 @@ export default {
         const arr = [];
         Object.entries(data).forEach((ele) => {
           if (ele[0] === '-1') {
-            const a1 = ['未知版本', ele[1]];
+            const a1 = { name: '未知版本', value: ele[1] };
             arr.push(a1);
           } else {
-            arr.push(ele);
+            const item = { name: ele[0], value: ele[1] };
+            arr.push(item);
           }
         });
-        const seriesData = [{ name: '该版本域数量', data: arr }];
-        this.$set(this.domainExecutorVersionOption, 'seriesData', seriesData);
+        const seriesData = [{ name: '该版本域数量', type: 'pie', data: arr }];
+        this.$set(this.domainExecutorVersionOptionInfo, 'seriesData', seriesData);
       })
       .catch(() => { this.$http.buildErrorHandler('获取域版本分布请求失败！'); });
     },
@@ -174,9 +174,10 @@ export default {
       return this.$http.get('/console/dashboard/domainOperationCount', { zkClusterKey: this.zkClusterKey }).then((data) => {
         const optionInfo = {
           xAxis: data.xAxis,
-          yAxis: [{ name: '历史记录', data: data.yAxis }],
+          seriesData: [{ name: '历史记录', data: data.yAxis }],
+          yAxisName: '次',
         };
-        this.$set(this.allDomainHistoryOption, 'optionInfo', optionInfo);
+        this.allDomainHistoryOptionInfo = optionInfo;
       }).catch(() => { this.$http.buildErrorHandler('获取历史全域数据请求失败！'); });
     },
     init() {

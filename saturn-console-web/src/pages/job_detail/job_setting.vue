@@ -40,7 +40,12 @@
                         <el-row :gutter="10">
                             <el-col :span="11">
                                 <el-form-item prop="shardingTotalCount" label="作业分片数" v-if="!jobSettingInfo.localMode">
-                                    <el-input-number v-model="jobSettingInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                                    <el-tooltip popper-class="form-tooltip" placement="bottom" v-if="jobSettingInfo.downStream">
+                                        <div slot="content">
+                                             <span>{{ jobSettingInfo.downStream.length > 0 ? '该作业有下游作业，作业分片数必须为1' : '作业分片数'}}</span>
+                                        </div>
+                                        <el-input-number v-model="jobSettingInfo.shardingTotalCount" :disabled="jobSettingInfo.downStream.length > 0" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                                    </el-tooltip>
                                 </el-form-item>
                                 <el-form-item prop="shardingTotalCount" label="作业分片数" v-if="jobSettingInfo.localMode">
                                     <el-input value="N/A" disabled style="width: 100%;"></el-input>
@@ -48,7 +53,12 @@
                             </el-col>
                             <el-col :span="11">
                                 <el-form-item prop="localMode" label="本地模式">
-                                    <el-switch v-model="jobSettingInfo.localMode" @change="localModeChange"></el-switch>
+                                    <el-tooltip popper-class="form-tooltip" placement="bottom" v-if="jobSettingInfo.downStream">
+                                        <div slot="content">
+                                             <span>{{ jobSettingInfo.downStream.length > 0 ? '该作业有下游作业，不可选为本地模式' : '本地模式'}}</span>
+                                        </div>
+                                        <el-switch v-model="jobSettingInfo.localMode" :disabled="jobSettingInfo.downStream.length > 0"></el-switch>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -172,7 +182,7 @@
                             </el-col>
                             <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
-                                    <el-switch v-model="jobSettingInfo.enabledReport" @change="enabledReportChange"></el-switch>
+                                    <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11" v-if="$option.isMsg(jobSettingInfo.jobType)">
@@ -199,12 +209,23 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
+                        <el-row v-if="$option.isCron(jobSettingInfo.jobType) || $option.isPassive(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;">
-                                        <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"> </el-option>
-                                    </el-select>
+                                    <div slot="label">
+                                        下游作业
+                                        <el-tooltip content="查看作业依赖图" placement="top">
+                                            <el-button type="text" @click="handleArrangeLayout()"><i class="fa fa-search-plus"></i></el-button>
+                                        </el-tooltip>
+                                    </div>
+                                    <el-tooltip placement="bottom">
+                                        <div slot="content">
+                                            配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
+                                        </div>
+                                        <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
+                                            <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"></el-option>
+                                        </el-select>
+                                    </el-tooltip>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -244,6 +265,9 @@
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
         </div>
+        <div v-if="isArrangeLayoutVisible">
+            <arrange-layout-dialog :arrange-layout-info="arrangeLayoutInfo" @job-redirect="jobRedirect" @close-dialog="closeArrangeLayoutDialog"></arrange-layout-dialog>
+        </div>
     </div>
 </template>
 <script>
@@ -261,31 +285,24 @@ export default {
         queueName: [{ required: true, message: 'queue不能为空', trigger: 'blur' }],
       },
       preferListProvidedArray: [],
+      isArrangeLayoutVisible: false,
+      arrangeLayoutInfo: {},
     };
   },
   methods: {
-    localModeChange(value) {
-      if (!value) {
-        if (this.jobSettingInfo.enabledReport) {
-          this.jobSettingInfo.failover = true;
-        } else {
-          this.jobSettingInfo.failover = false;
-        }
-      } else {
-        this.jobSettingInfo.failover = false;
-      }
+    handleArrangeLayout() {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
+        this.arrangeLayoutInfo = data;
+        this.isArrangeLayoutVisible = true;
+      })
+      .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
-    enabledReportChange(value) {
-      if (value) {
-        if (this.jobSettingInfo.localMode) {
-          this.jobSettingInfo.failover = false;
-        } else {
-          this.jobSettingInfo.failover = true;
-        }
-      } else {
-        this.jobSettingInfo.failover = false;
-        this.jobSettingInfo.rerun = false;
-      }
+    jobRedirect(jobName) {
+      this.closeArrangeLayoutDialog();
+      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+    },
+    closeArrangeLayoutDialog() {
+      this.isArrangeLayoutVisible = false;
     },
     checkAndForecastCron() {
       const cronData = {
@@ -475,6 +492,7 @@ export default {
   watch: {
     $route: 'getJobSettingInfo',
     'jobSettingInfo.shardingTotalCount': {
+      immediate: true,
       handler(newCount) {
         if (newCount) {
           const result = [];
@@ -484,11 +502,38 @@ export default {
               result.push(`${ele}=`);
             });
             this.jobSettingInfo.shardingItemParameters = result.join(',');
-            console.info(this.jobSettingInfo.shardingItemParameters);
           }
         }
       },
+    },
+    'jobSettingInfo.localMode': {
       immediate: true,
+      handler(newCount) {
+        if (!newCount) {
+          if (this.jobSettingInfo.enabledReport) {
+            this.jobSettingInfo.failover = true;
+          } else {
+            this.jobSettingInfo.failover = false;
+          }
+        } else {
+          this.jobSettingInfo.failover = false;
+        }
+      },
+    },
+    'jobSettingInfo.enabledReport': {
+      immediate: true,
+      handler(newCount) {
+        if (newCount) {
+          if (this.jobSettingInfo.localMode) {
+            this.jobSettingInfo.failover = false;
+          } else {
+            this.jobSettingInfo.failover = true;
+          }
+        } else {
+          this.jobSettingInfo.failover = false;
+          this.jobSettingInfo.rerun = false;
+        }
+      },
     },
   },
 };
