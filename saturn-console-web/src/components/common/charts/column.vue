@@ -1,98 +1,110 @@
 <template>
     <div>
-        <div :id="id" :options="options" style="width: 100%;height:300px;"></div>
+        <div :id="id" style="width: 100%;height:300px"></div>
     </div>
 </template>
 
 <script>
-import Highcharts from 'highcharts';
-import Exporting from 'highcharts/modules/exporting';
+import echarts from 'echarts';
 
-Exporting(Highcharts);
+require('echarts/lib/chart/bar');
 
 export default {
   props: ['id', 'optionInfo'],
   data() {
     return {
-      options: {
-        chart: {
-          type: 'column',
-          marginTop: 25,
+      myChart: {},
+      option: {
+        color: ['#7CB5EC'],
+        tooltip: {},
+        grid: {
+          top: '40',
+          left: '3%',
+          right: '3%',
+          bottom: '3%',
+          containLabel: true,
         },
-        credits: {
-          enabled: false,
-        },
-        title: {
-          text: null,
-        },
-        xAxis: {
-          categories: this.optionInfo.xCategories,
-          labels: {
-            rotation: -20,
-          },
-        },
-        yAxis: {
-          min: 0,
-          title: {
-            text: this.optionInfo.yTitle,
-          },
-          stackLabels: {
-            enabled: true,
-            style: {
-              fontWeight: 'bold',
-              color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray',
-            },
-          },
-        },
-        legend: {
-          enabled: false,
-        },
-        tooltip: {
-          useHTML: true,
-          hideDelay: 1000,
-          formatter: this.optionInfo.tooltip,
-        },
-        plotOptions: {
-          column: {
-            stacking: 'normal',
-            dataLabels: {
-              enabled: false,
-              color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
-              style: {
-                textShadow: '0 0 3px black',
+        xAxis: [
+          {
+            type: 'category',
+            data: [],
+            axisLabel: {
+              show: true,
+              interval: 0,
+              rotate: '20',
+              formatter(value) {
+                const str = value.length < 15 ? value : `${value.substr(0, 13)}...`;
+                return str;
               },
             },
           },
-          series: {
-            cursor: 'pointer',
-            events: {
-              click: (e) => {
-                if (e.point.columnType === 'domain') {
-                  this.$router.push({ name: 'job_overview', params: { domain: e.point.domainName } });
-                } else if (e.point.columnType === 'job') {
-                  this.$router.push({ name: 'job_setting', params: { domain: e.point.domainName, jobName: e.point.jobName } });
-                }
+        ],
+        yAxis: [
+          {
+            type: 'value',
+            name: '',
+          },
+        ],
+        series: [{
+          type: 'bar',
+          barWidth: '40%',
+          itemStyle: {
+            normal: {
+              label: {
+                show: true,
+                position: 'top',
+                textStyle: {
+                  fontWeight: 'bold',
+                  color: 'gray',
+                  fontSize: 11,
+                },
               },
             },
           },
-        },
-        series: this.optionInfo.seriesData,
+          data: [],
+        }],
       },
     };
   },
   watch: {
-    optionInfo: 'buildPage',
+    optionInfo: {
+      handler() {
+        this.drawLine();
+      },
+      deep: true,
+    },
   },
   methods: {
-    buildPage() {
-      if (this.optionInfo) {
-        this.options.xAxis.categories = this.optionInfo.xCategories;
-        this.options.series = this.optionInfo.seriesData;
-        this.options.yAxis.text = this.optionInfo.yTitle;
-        this.options.tooltip.formatter = this.optionInfo.tooltip;
-        Highcharts.chart(this.id, this.options);
-      }
+    resize() {
+      window.addEventListener('resize', () => {
+        this.myChart.resize();
+      });
     },
+    handleClick() {
+      this.myChart.on('click', (handler) => {
+        if (handler.data.columnType === 'domain') {
+          this.$router.push({ name: 'job_overview', params: { domain: handler.data.domainName } });
+        } else if (handler.data.columnType === 'job') {
+          this.$router.push({ name: 'job_setting', params: { domain: handler.data.domainName, jobName: handler.data.jobName } });
+        }
+      });
+    },
+    drawLine() {
+      this.option.xAxis[0].data = this.optionInfo.xCategories;
+      this.option.yAxis[0].name = this.optionInfo.yTitle;
+      this.option.tooltip = this.optionInfo.tooltip;
+      this.option.series[0].data = this.optionInfo.seriesData;
+      this.myChart = echarts.init(document.getElementById(this.id));
+      this.myChart.setOption(this.option);
+      this.resize();
+      this.handleClick();
+    },
+  },
+  mounted() {
+    this.drawLine();
   },
 };
 </script>
+
+<style>
+</style>

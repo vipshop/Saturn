@@ -1,7 +1,10 @@
 <template>
     <div class="panel-container">
         <div class="panel-header">
-            <span class="pull-left">{{title}}</span>
+            <span class="pull-left">
+                <i :class="chartIcon" aria-hidden="true"></i>
+                {{title}}
+            </span>
             <a class="pull-right" @click="togglePanel">
                 <i v-if="isExpand" class="fa fa-minus"></i>
                 <i v-if="!isExpand" class="fa fa-plus"></i>
@@ -15,11 +18,16 @@
 
 <script>
 export default {
-  props: ['title'],
+  props: ['title', 'type'],
   data() {
     return {
       isExpand: true,
     };
+  },
+  computed: {
+    chartIcon() {
+      return `fa fa-${this.type}-chart`;
+    },
   },
   methods: {
     togglePanel() {

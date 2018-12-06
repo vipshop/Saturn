@@ -1,63 +1,61 @@
 <template>
     <div>
-        <div :id="id" :options="options" style="width: 100%;height:300px;"></div>
+        <div :id="id" style="width: 100%;height:300px"></div>
     </div>
 </template>
 
 <script>
-import Highcharts from 'highcharts';
-import Highcharts3D from 'highcharts/highcharts-3d';
-import Exporting from 'highcharts/modules/exporting';
+import echarts from 'echarts';
 
-Exporting(Highcharts);
-Highcharts3D(Highcharts);
+require('echarts/lib/chart/pie');
 
 export default {
-  props: ['id', 'dataOption'],
+  props: ['id', 'optionInfo'],
   data() {
     return {
-      options: {
-        lang: {
-          downloadJPEG: '下载JPEG图片',
-          downloadPDF: '下载PDF文件',
-          downloadPNG: '下载PNG文件',
-          downloadSVG: '下载SVG文件',
-          printChart: '打印图表',
-          noData: '暂无数据',
-        },
-        chart: {
-          type: 'pie',
-          options3d: {
-            enabled: true,
-            alpha: 45,
-          },
-        },
-        credits: {
-          enabled: false,
-        },
+      myChart: {},
+      option: {
         title: {
-          text: null,
+          show: false,
+          text: '',
         },
-        plotOptions: {
-          pie: {
-            innerSize: 100,
-            depth: 45,
-          },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b} : {c} ({d}%)',
         },
-        series: this.dataOption.seriesData,
+        legend: {
+          orient: 'vertical',
+          left: 'left',
+        },
+        series: [],
       },
     };
   },
   watch: {
-    dataOption: 'buildPage',
+    optionInfo: {
+      handler() {
+        this.drawLine();
+      },
+      deep: true,
+    },
   },
   methods: {
-    buildPage() {
-      if (this.dataOption) {
-        this.options.series = this.dataOption.seriesData;
-        Highcharts.chart(this.id, this.options);
-      }
+    resize() {
+      window.addEventListener('resize', () => {
+        this.myChart.resize();
+      });
     },
+    drawLine() {
+      this.option.series = this.optionInfo.seriesData;
+      this.myChart = echarts.init(document.getElementById(this.id));
+      this.myChart.setOption(this.option);
+      this.resize();
+    },
+  },
+  mounted() {
   },
 };
 </script>
+
+<style>
+</style>
