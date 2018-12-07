@@ -40,7 +40,7 @@ export default {
       let dataY = this.initY;
       const resultData = [];
       relatesData.forEach((ele) => {
-        dataX += 50;
+        dataX += 150;
         if (ele.length > 1) {
           let count = 0;
           if (ele.length % 2 === 0) {
