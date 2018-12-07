@@ -21,10 +21,12 @@ import org.apache.zookeeper.data.Stat;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.hamcrest.core.StringContains;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -43,6 +45,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JobServiceImplTest {
 
 	@Mock
@@ -228,9 +231,26 @@ public class JobServiceImplTest {
 
 	@Test
 	public void testRemoveJobFailByNotExist() throws SaturnJobConsoleException {
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(null);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.<JobConfig4DB>emptyList());
 		expectedException.expect(SaturnJobConsoleException.class);
 		expectedException.expectMessage(String.format("不能删除该作业（%s），因为该作业不存在", jobName));
+		jobService.removeJob(namespace, jobName);
+	}
+
+	@Test
+	public void testRemoveJobFailByHaveUpStream() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		JobConfig4DB upStream = new JobConfig4DB();
+		upStream.setJobName("upStreamJob");
+		upStream.setDownStream(jobName);
+		JobConfig4DB other = new JobConfig4DB();
+		other.setJobName("other");
+		when(currentJobConfigService.findConfigsByNamespace(namespace))
+				.thenReturn(Lists.newArrayList(jobConfig4DB, upStream, other));
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException.expectMessage(
+				String.format("不能删除该作业（%s），因为该作业存在上游作业[%s]，请先断开上下游关系再删除", jobName, upStream.getJobName()));
 		jobService.removeJob(namespace, jobName);
 	}
 
@@ -239,7 +259,7 @@ public class JobServiceImplTest {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.TRUE);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -257,7 +277,7 @@ public class JobServiceImplTest {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -280,7 +300,7 @@ public class JobServiceImplTest {
 		jobConfig4DB.setId(1L);
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -304,7 +324,7 @@ public class JobServiceImplTest {
 		jobConfig4DB.setId(1L);
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));

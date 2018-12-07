@@ -280,12 +280,34 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED), false);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
-		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
+		JobConfig4DB jobConfig = null;
+		List<String> upStreamJobNames = new ArrayList<>();
+		if (jobConfig4DBList != null) {
+			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
+				if (jobConfig4DB.getJobName().equals(jobName)) {
+					jobConfig = jobConfig4DB;
+					continue;
+				}
+				if (StringUtils.isBlank(jobConfig4DB.getDownStream())) {
+					continue;
+				}
+				for (String split : jobConfig4DB.getDownStream().split(",")) {
+					if (split.trim().equals(jobName)) {
+						upStreamJobNames.add(jobConfig4DB.getJobName());
+					}
+				}
+			}
+		}
 		if (jobConfig == null) {
 			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能删除该作业（" + jobName + "），因为该作业不存在");
+		}
+		if (!upStreamJobNames.isEmpty()) {
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED,
+					"不能删除该作业（" + jobName + "），因为该作业存在上游作业" + upStreamJobNames + "，请先断开上下游关系再删除");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
