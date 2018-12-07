@@ -23,6 +23,8 @@ public class NamespaceInfo {
 
 	private String namespace;
 
+	private String busId;
+
 	private String content;
 
 	public long getId() {
@@ -79,6 +81,14 @@ public class NamespaceInfo {
 
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
+	}
+
+	public String getBusId() {
+		return busId;
+	}
+
+	public void setBusId(String busId) {
+		this.busId = busId;
 	}
 
 	public String getContent() {
