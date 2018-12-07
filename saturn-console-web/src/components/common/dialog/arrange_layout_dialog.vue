@@ -2,8 +2,8 @@
     <el-dialog title="作业依赖图" width="70%" custom-class="arrange-layout-content" :visible.sync="isVisible" :before-close="closeDialog" v-loading="loading" element-loading-text="请稍等···">
         <div>
             <div class="job-type-tag">
-                <el-tag :type="$map.jobTypeTagMap[item.value]" v-for="item in $option.jobTypes" :key="item.value">
-                    {{item.label}}
+                <el-tag :type="$map.jobTypeTagMap[item]" v-for="item in existJobTypes" :key="item">
+                    {{$map.jobTypeMap[item]}}
                 </el-tag>
             </div>
             <el-row>
@@ -104,6 +104,15 @@ export default {
     },
   },
   computed: {
+    existJobTypes() {
+      const existJobArray = [];
+      this.arrangeLayoutInfo.levels.forEach((ele) => {
+        ele.forEach((ele2) => {
+          existJobArray.push(ele2.type);
+        });
+      });
+      return Array.from(new Set(existJobArray));
+    },
     optionInfo() {
       const resultInfo = {
         links: [],
