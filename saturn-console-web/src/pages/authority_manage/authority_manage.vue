@@ -22,13 +22,15 @@
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="getUserRolesReq">查询</el-button>
-                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()">添加权限集</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
                         <div class="page-table-header">
                             <div class="page-table-header-title"><i class="fa fa-list"></i>用户及其权限列表
                                 <el-button type="text" @click="getUserRolesReq"><i class="fa fa-refresh"></i></el-button>
+                            </div>
+                            <div class="pull-right">
+                                <el-button @click="handleAdd()"><i class="fa fa-plus-circle text-btn"></i>添加权限集</el-button>
                             </div>
                         </div>
                         <el-table stripe border @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">

@@ -6,7 +6,7 @@ import java.util.List;
 public class ArrangeLayout {
 
 	private List<ArrangePath> paths = new ArrayList<>();
-	private List<List<String>> levels = new ArrayList<>();
+	private List<List<ArrangeLevel>> levels = new ArrayList<>();
 
 	public List<ArrangePath> getPaths() {
 		return paths;
@@ -16,11 +16,11 @@ public class ArrangeLayout {
 		this.paths = paths;
 	}
 
-	public List<List<String>> getLevels() {
+	public List<List<ArrangeLevel>> getLevels() {
 		return levels;
 	}
 
-	public void setLevels(List<List<String>> levels) {
+	public void setLevels(List<List<ArrangeLevel>> levels) {
 		this.levels = levels;
 	}
 

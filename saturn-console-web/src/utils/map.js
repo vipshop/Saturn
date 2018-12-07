@@ -13,4 +13,16 @@ export default {
     NO_SHARDS: '没有分片',
     EXECUTORS_NOT_READY: '没有executor能运行该作业',
   },
+  jobTypeMap: {
+    JAVA_JOB: 'JAVA定时',
+    SHELL_JOB: 'SHELL定时',
+    PASSIVE_JAVA_JOB: 'JAVA被动',
+    PASSIVE_SHELL_JOB: 'SHELL被动',
+  },
+  jobTypeTagMap: {
+    JAVA_JOB: 'success',
+    SHELL_JOB: 'primary',
+    PASSIVE_JAVA_JOB: 'info',
+    PASSIVE_SHELL_JOB: 'danger',
+  },
 };

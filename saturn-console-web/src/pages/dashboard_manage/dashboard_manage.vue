@@ -24,21 +24,21 @@
             <div>
                 <el-row :gutter="10">
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="历史总域数">
+                        <Chart-container title="历史总域数" type="line">
                             <div slot="chart">
                                 <MyLine id="domainCountHistory" :option-info="domainCountOptionInfo"></MyLine>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="历史Executor数">
+                        <Chart-container title="历史Executor数" type="line">
                             <div slot="chart">
                                 <MyLine id="executorCountHistory" :option-info="executorCountOptionInfo"></MyLine>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="历史作业数">
+                        <Chart-container title="历史作业数" type="line">
                             <div slot="chart">
                                 <MyLine id="jobCountHistory" :option-info="jobCountOptionInfo"></MyLine>
                             </div>

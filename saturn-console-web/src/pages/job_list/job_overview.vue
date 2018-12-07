@@ -62,7 +62,7 @@
                                 <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
                                 <el-button @click="handleImport()" v-if="$common.hasPerm('job:import', domainName)"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
                                 <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
-                                <el-button @click="handleArrangeLayout()"><i class="fa fa-arrows text-btn"></i>作业依赖图</el-button>
+                                <el-button @click="handleArrangeLayout()"><i class="fa fa-line-chart text-btn"></i>作业依赖图</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" :data="jobList" @sort-change="scope.onSortChange" style="width: 100%">
@@ -70,14 +70,19 @@
                             <el-table-column prop="jobName" label="作业名" sortable="custom">
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
-                                        <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB'"></i>
-                                        <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB'"></i>
+                                        <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB' || scope.row.jobType === 'PASSIVE_JAVA_JOB'"></i>
+                                        <i class="iconfont icon-msnui-logo-linux" v-if="scope.row.jobType === 'SHELL_JOB' || scope.row.jobType === 'PASSIVE_SHELL_JOB'"></i>
                                         <i class="fa fa-envelope-o" v-if="scope.row.jobType === 'MSG_JOB'"></i>
                                         {{scope.row.jobName}}
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" width="100px">
+                            <el-table-column prop="jobType" label="作业类型" width="100px">
+                                <template slot-scope="scope"> 
+                                    {{$map.jobTypeMap[scope.row.jobType]}}
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="状态" prop="status" width="90px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
@@ -88,7 +93,7 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
                             <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.shardingList === ''">-</span>
@@ -192,13 +197,17 @@ export default {
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
-        this.isArrangeLayoutVisible = true;
+        if (this.arrangeLayoutInfo.paths.length > 0) {
+          this.isArrangeLayoutVisible = true;
+        } else {
+          this.$message.errorMessage('很抱歉！该域没有作业依赖');
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
     jobRedirect(jobName) {
-      this.closeArrangeLayoutDialog();
-      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      const routeData = this.$router.resolve({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      window.open(routeData.href, '_blank');
     },
     closeArrangeLayoutDialog() {
       this.isArrangeLayoutVisible = false;

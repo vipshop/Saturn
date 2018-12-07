@@ -13,35 +13,35 @@
             <div>
                 <el-row :gutter="10">
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="全域当天执行数据">
+                        <Chart-container title="全域当天执行数据" type="pie">
                             <div slot="chart">
                                 <Pie id="domainProcessCount" :option-info="domainProcessCountOptionInfo"></Pie>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="全域历史执行数据">
+                        <Chart-container title="全域历史执行数据" type="line">
                             <div slot="chart">
                                 <MyLine id="domainProcessHistory" :option-info="allDomainHistoryOptionInfo"></MyLine>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="失败率最高的Top10域">
+                        <Chart-container title="失败率最高的Top10域" type="bar">
                             <div slot="chart">
                                 <Column id="top10FailDomain" :option-info="top10FailDomainOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="稳定性最差的的Top10域">
+                        <Chart-container title="稳定性最差的的Top10域" type="bar">
                             <div slot="chart">
                                 <Column id="top10UnstableDomain" :option-info="top10UnstableDomainOptionInfo"></Column>
                             </div>
                         </Chart-container>
                     </el-col>
                     <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="12">
-                        <Chart-container title="域版本分布">
+                        <Chart-container title="域版本分布" type="pie">
                             <div slot="chart">
                                 <Pie id="domainExecutorVersion" :option-info="domainExecutorVersionOptionInfo"></Pie>
                             </div>
