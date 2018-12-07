@@ -79,7 +79,7 @@
                             </el-table-column>
                             <el-table-column prop="jobType" label="作业类型" width="100px">
                                 <template slot-scope="scope"> 
-                                    {{$map.jobMap[scope.row.jobType]}}
+                                    {{$map.jobTypeMap[scope.row.jobType]}}
                                 </template>
                             </el-table-column>
                             <el-table-column label="状态" prop="status" width="90px">
@@ -195,10 +195,9 @@ export default {
   },
   methods: {
     handleArrangeLayout() {
-      this.$http.get(`/console/namespaces/
-      ${this.domainName}/jobs/arrangeLayout`).then((data) => {
+      this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
-        if (this.arrangeLayoutInfo.paths > 0) {
+        if (this.arrangeLayoutInfo.paths.length > 0) {
           this.isArrangeLayoutVisible = true;
         } else {
           this.$message.errorMessage('很抱歉！该域没有作业依赖');
@@ -207,8 +206,8 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
     jobRedirect(jobName) {
-      this.closeArrangeLayoutDialog();
-      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      const routeData = this.$router.resolve({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      window.open(routeData.href, '_blank');
     },
     closeArrangeLayoutDialog() {
       this.isArrangeLayoutVisible = false;

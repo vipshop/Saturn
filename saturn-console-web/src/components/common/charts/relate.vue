@@ -18,7 +18,7 @@ export default {
         tooltip: {
           show: true,
           formatter(params) {
-            return params.dataType === 'node' ? `点击跳转到作业 ${params.name} 详情页面` : params.name;
+            return params.dataType === 'node' ? `作业描述: ${params.data.description || '暂无描述'}` : params.name;
           },
         },
         animationDurationUpdate: 1500,
