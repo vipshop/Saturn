@@ -30,6 +30,7 @@ export default {
         series: [{
           type: 'graph',
           layout: 'none',
+          focusNodeAdjacency: true,
           circular: {
             rotateLabel: true,
           },
