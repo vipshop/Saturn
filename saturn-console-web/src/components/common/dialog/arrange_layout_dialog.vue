@@ -1,11 +1,6 @@
 <template>
     <el-dialog title="作业依赖图" width="70%" custom-class="arrange-layout-content" :visible.sync="isVisible" :before-close="closeDialog" v-loading="loading" element-loading-text="请稍等···">
         <div>
-            <div class="job-type-tag">
-                <el-tag :type="$map.jobTypeTagMap[item]" v-for="item in existJobTypes" :key="item">
-                    {{$map.jobTypeMap[item]}}
-                </el-tag>
-            </div>
             <el-row>
                 <el-col :span="24">
                     <div>
@@ -117,24 +112,13 @@ export default {
       const resultInfo = {
         links: [],
         data: [],
+        categories: [],
       };
       const relateDatas = [];
-      const jobTypeStyleMap = {
-        JAVA_JOB: '#23ad07',
-        SHELL_JOB: '#487bb0',
-        PASSIVE_JAVA_JOB: '#50bfff',
-        PASSIVE_SHELL_JOB: '#de3434',
-        MSG_JOB: '#E6A23C',
-      };
       this.arrangeLayoutInfo.levels.forEach((ele) => {
         const levelItem = ele.map((obj) => {
           const rObj = { ...obj };
-          const pointStyle = {
-            normal: {
-              color: jobTypeStyleMap[obj.type],
-            },
-          };
-          rObj.itemStyle = pointStyle;
+          rObj.category = this.$map.jobTypeMap[obj.type];
           return rObj;
         });
         relateDatas.push(levelItem);
@@ -156,6 +140,11 @@ export default {
         }
         return rObj;
       });
+      resultInfo.categories = this.existJobTypes.map((obj) => {
+        const rObj = {};
+        rObj.name = this.$map.jobTypeMap[obj];
+        return rObj;
+      });
       return resultInfo;
     },
   },
@@ -165,12 +154,6 @@ export default {
 .arrange-layout-content {
     .el-dialog__body {
         padding: 15px;
-    }
-}
-.job-type-tag {
-    margin-bottom: 10px;
-    span {
-      margin-right: 10px;
     }
 }
 </style>

@@ -19,10 +19,4 @@ export default {
     PASSIVE_JAVA_JOB: 'JAVA被动',
     PASSIVE_SHELL_JOB: 'SHELL被动',
   },
-  jobTypeTagMap: {
-    JAVA_JOB: 'success',
-    SHELL_JOB: 'primary',
-    PASSIVE_JAVA_JOB: 'info',
-    PASSIVE_SHELL_JOB: 'danger',
-  },
 };

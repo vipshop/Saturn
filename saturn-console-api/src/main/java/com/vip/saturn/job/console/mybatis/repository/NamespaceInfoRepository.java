@@ -16,6 +16,8 @@ public interface NamespaceInfoRepository {
 
 	List<NamespaceInfo> selectAllByNamespaces(List<String> nsList);
 
+	List<String> fuzzySelectByNamespaceGroupId(String groupId);
+
 	int insert(NamespaceInfo namespaceInfo);
 
 	int update(NamespaceInfo namespaceInfo);
