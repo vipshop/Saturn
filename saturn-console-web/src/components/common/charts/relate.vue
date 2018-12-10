@@ -15,11 +15,15 @@ export default {
     return {
       myChart: {},
       option: {
+        symbolSize: 45,
         tooltip: {
           show: true,
           formatter(params) {
             return params.dataType === 'node' ? params.data.description : params.name;
           },
+        },
+        legend: {
+          show: true,
         },
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
@@ -29,8 +33,8 @@ export default {
           circular: {
             rotateLabel: true,
           },
-          animation: false,
-          symbolSize: 50, // 节点大小
+          animation: true,
+          symbolSize: 45, // 节点大小
           roam: true, // 通过鼠标迁移
           draggable: false,
           label: {
@@ -49,6 +53,7 @@ export default {
           },
           data: [],
           links: [],
+          categories: [],
           lineStyle: {
             normal: {
               opacity: 0.9,
@@ -130,6 +135,7 @@ export default {
       if (this.optionInfo) {
         this.option.series[0].data = this.optionInfo.data;
         this.option.series[0].links = this.optionInfo.links;
+        this.option.series[0].categories = this.optionInfo.categories;
         this.myChart = echarts.init(document.getElementById(this.id));
         this.myChart.setOption(this.option);
         this.resize();
