@@ -145,7 +145,7 @@ public class JobServiceImpl implements JobService {
 
 
 	@Override
-	public List<String> getGroups(String namespace) {
+	public List<String> getGroups(String namespace) throws SaturnJobConsoleException {
 		List<String> groups = new ArrayList<>();
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 		if (unSystemJobs != null) {
@@ -230,7 +230,7 @@ public class JobServiceImpl implements JobService {
 		return dependencyJobs;
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void enableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -249,15 +249,11 @@ public class JobServiceImpl implements JobService {
 		jobConfig.setEnabled(true);
 		jobConfig.setLastUpdateTime(new Date());
 		jobConfig.setLastUpdateBy(updatedBy);
-		try {
-			currentJobConfigService.updateByPrimaryKey(jobConfig);
-		} catch (Exception e) {
-			throw new SaturnJobConsoleException(e);
-		}
+		currentJobConfigService.updateByPrimaryKey(jobConfig);
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED), true);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void disableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
@@ -270,11 +266,7 @@ public class JobServiceImpl implements JobService {
 		jobConfig.setEnabled(Boolean.FALSE);
 		jobConfig.setLastUpdateTime(new Date());
 		jobConfig.setLastUpdateBy(updatedBy);
-		try {
-			currentJobConfigService.updateByPrimaryKey(jobConfig);
-		} catch (Exception e) {
-			throw new SaturnJobConsoleException(e);
-		}
+		currentJobConfigService.updateByPrimaryKey(jobConfig);
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		curatorFrameworkOp.update(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED), false);
@@ -328,11 +320,7 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 		// remove job from db
-		try {
-			currentJobConfigService.deleteByPrimaryKey(jobConfig.getId());
-		} catch (Exception e) {
-			throw new SaturnJobConsoleException(e);
-		}
+		currentJobConfigService.deleteByPrimaryKey(jobConfig.getId());
 		// remove job from zk
 		removeJobFromZk(jobName, curatorFrameworkOp);
 	}
@@ -541,6 +529,7 @@ public class JobServiceImpl implements JobService {
 		return taskIds;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void setPreferList(String namespace, String jobName, String preferList, String updatedBy)
 			throws SaturnJobConsoleException {
@@ -559,12 +548,7 @@ public class JobServiceImpl implements JobService {
 		JobConfig4DB newJobConfig = new JobConfig4DB();
 		BeanUtils.copyProperties(oldJobConfig, newJobConfig);
 		newJobConfig.setPreferList(preferList);
-		try {
-			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, updatedBy);
-		} catch (Exception e) {
-			log.error("exception is thrown during change preferList in db", e);
-			throw new SaturnJobConsoleException(e);
-		}
+		currentJobConfigService.updateNewAndSaveOld2History(newJobConfig, oldJobConfig, updatedBy);
 
 		// save to zk
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
@@ -759,13 +743,13 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void addJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException {
 		addOrCopyJob(namespace, jobConfig, null, createdBy);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void copyJob(String namespace, JobConfig jobConfig, String jobNameCopied, String createdBy)
 			throws SaturnJobConsoleException {
@@ -861,7 +845,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig> getUnSystemJobs(String namespace) {
+	public List<JobConfig> getUnSystemJobs(String namespace) throws SaturnJobConsoleException {
 		List<JobConfig> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfig4DBList != null) {
@@ -916,17 +900,18 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition) {
+	public int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition)
+			throws SaturnJobConsoleException {
 		return currentJobConfigService.countConfigsByNamespaceWithCondition(namespace, condition);
 	}
 
 	@Override
-	public int countEnabledUnSystemJobs(String namespace) {
+	public int countEnabledUnSystemJobs(String namespace) throws SaturnJobConsoleException {
 		return currentJobConfigService.countEnabledUnSystemJobsByNamespace(namespace);
 	}
 
 	@Override
-	public List<String> getUnSystemJobNames(String namespace) {
+	public List<String> getUnSystemJobNames(String namespace) throws SaturnJobConsoleException {
 		List<String> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfig4DBList != null) {
@@ -941,7 +926,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<String> getJobNames(String namespace) {
+	public List<String> getJobNames(String namespace) throws SaturnJobConsoleException {
 		List<String> jobNames = currentJobConfigService.findConfigNamesByNamespace(namespace);
 		return jobNames != null ? jobNames : Lists.<String>newArrayList();
 	}
@@ -1029,12 +1014,7 @@ public class JobServiceImpl implements JobService {
 		currentJobConfig.setCreateBy(createdBy);
 		currentJobConfig.setLastUpdateBy(createdBy);
 		currentJobConfig.setNamespace(namespace);
-		try {
-			currentJobConfigService.create(currentJobConfig);
-		} catch (Exception e) {
-			log.error("exception is thrown during creating job config in db", e);
-			throw new SaturnJobConsoleException(e);
-		}
+		currentJobConfigService.create(currentJobConfig);
 	}
 
 	private void saveJobConfigToZk(JobConfig jobConfig, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp) {
@@ -1904,7 +1884,8 @@ public class JobServiceImpl implements JobService {
 		return getJobConfigVo;
 	}
 
-	private List<String> getCandidateDownStream(String namespace, JobConfig jobConfig) {
+	private List<String> getCandidateDownStream(String namespace, JobConfig jobConfig)
+			throws SaturnJobConsoleException {
 		List<String> candidateDownStream = new ArrayList<>();
 		if (jobConfig.getLocalMode() == true) {
 			return candidateDownStream;
@@ -1924,7 +1905,7 @@ public class JobServiceImpl implements JobService {
 		return candidateDownStream;
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy)
 			throws SaturnJobConsoleException {
@@ -1966,10 +1947,9 @@ public class JobServiceImpl implements JobService {
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
 		AtomicInteger changeCount = new AtomicInteger(0);
-		CuratorRepository.CuratorFrameworkOp.CuratorTransactionOp curatorTransactionOp = null;
 		try {
 			String jobName = newJobConfig4DB.getJobName();
-			curatorTransactionOp = curatorFrameworkOp.inTransaction()
+			CuratorFrameworkOp.CuratorTransactionOp curatorTransactionOp = curatorFrameworkOp.inTransaction()
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE),
 							newJobConfig4DB.getJobMode(), changeCount)
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
@@ -2032,11 +2012,6 @@ public class JobServiceImpl implements JobService {
 					curatorFrameworkOp.deleteRecursive(executionNodePath);
 				}
 			}
-		} catch (Exception e) {
-			log.error("update settings to zk failed: {}", e);
-			throw new SaturnJobConsoleException(e);
-		}
-		try {
 			// config changed, update current config and save a copy to history config.
 			if (changeCount.get() > 0) {
 				currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, updatedBy);
@@ -2045,7 +2020,7 @@ public class JobServiceImpl implements JobService {
 				}
 			}
 		} catch (Exception e) {
-			log.error("update settings to db failed: {}", e);
+			log.error("update job config failed", e);
 			throw new SaturnJobConsoleException(e);
 		}
 	}
@@ -2071,7 +2046,7 @@ public class JobServiceImpl implements JobService {
 		return allJobs;
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateJobCron(String namespace, String jobName, String cron, Map<String, String> customContext,
 			String updatedBy) throws SaturnJobConsoleException {
@@ -2142,13 +2117,7 @@ public class JobServiceImpl implements JobService {
 		if (newCron != null) {
 			newJobConfig4DB.setCron(newCron);
 		}
-
-		try {
-			currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, updatedBy);
-		} catch (Exception e) {
-			log.error("exception is thrown during change job state in db", e);
-			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
-		}
+		currentJobConfigService.updateNewAndSaveOld2History(newJobConfig4DB, jobConfig4DB, updatedBy);
 	}
 
 	/**

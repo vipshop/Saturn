@@ -74,7 +74,7 @@ public class JobServiceImplTest {
 	public ExpectedException expectedException = ExpectedException.none();
 
 	@Test
-	public void testGetGroup() {
+	public void testGetGroup() throws SaturnJobConsoleException {
 		when(currentJobConfigService.findConfigsByNamespace(namespace))
 				.thenReturn(Lists.newArrayList(new JobConfig4DB()));
 		assertEquals(jobService.getGroups(namespace).size(), 1);
@@ -832,7 +832,7 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testGetUnSystemJob() {
+	public void testGetUnSystemJob() throws SaturnJobConsoleException {
 		when(currentJobConfigService.findConfigsByNamespace(namespace))
 				.thenReturn(Lists.newArrayList(new JobConfig4DB()));
 		assertEquals(jobService.getUnSystemJobs(namespace).size(), 1);
@@ -862,7 +862,7 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testGetUnSystemJobNames() {
+	public void testGetUnSystemJobNames() throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
@@ -870,7 +870,7 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testGetJobName() {
+	public void testGetJobName() throws SaturnJobConsoleException {
 		when(currentJobConfigService.findConfigNamesByNamespace(namespace)).thenReturn(null);
 		assertTrue(jobService.getJobNames(namespace).isEmpty());
 		when(currentJobConfigService.findConfigNamesByNamespace(namespace)).thenReturn(Lists.newArrayList(jobName));

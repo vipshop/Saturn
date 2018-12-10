@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -353,6 +354,7 @@ public class RestApiServiceImpl implements RestApiService {
 		return runningIp;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void enableJob(final String namespace, final String jobName) throws SaturnJobConsoleException {
 		ReuseUtils
@@ -379,16 +381,13 @@ public class RestApiServiceImpl implements RestApiService {
 						jobConfig.setEnabled(Boolean.TRUE);
 						jobConfig.setLastUpdateTime(new Date());
 						jobConfig.setLastUpdateBy("");
-						try {
-							currentJobConfigService.updateByPrimaryKey(jobConfig);
-						} catch (Exception e) {
-							throw new SaturnJobConsoleException(e);
-						}
+						currentJobConfigService.updateByPrimaryKey(jobConfig);
 						curatorFrameworkOp.update(enabledNodePath, "true");
 					}
 				});
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void disableJob(final String namespace, final String jobName) throws SaturnJobConsoleException {
 		ReuseUtils
@@ -414,11 +413,7 @@ public class RestApiServiceImpl implements RestApiService {
 						jobConfig.setEnabled(Boolean.FALSE);
 						jobConfig.setLastUpdateTime(new Date());
 						jobConfig.setLastUpdateBy("");
-						try {
-							currentJobConfigService.updateByPrimaryKey(jobConfig);
-						} catch (Exception e) {
-							throw new SaturnJobConsoleException(e);
-						}
+						currentJobConfigService.updateByPrimaryKey(jobConfig);
 						curatorFrameworkOp.update(enabledNodePath, "false");
 					}
 				});
