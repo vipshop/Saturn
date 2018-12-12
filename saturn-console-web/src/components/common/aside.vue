@@ -16,7 +16,7 @@
                             <span class="page-menu-item-title">
                                 {{menu.title}}
                             </span>
-                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : ''" v-if="menu.alarmCount && !collapse" />
+                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" v-if="menu.alarmCount && !collapse" />
                         </el-menu-item>
                     </el-menu>
                   </div>
