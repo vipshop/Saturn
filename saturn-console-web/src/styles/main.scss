@@ -288,3 +288,14 @@ form {
 .el-badge__content--warning {
     background-color: #e6a23c;
 }
+/* menu */
+.el-menu--popup {
+    z-index: 100;
+    min-width: 200px;
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+}
+.el-menu--popup-bottom-start {
+    margin-top: 5px;
+}
