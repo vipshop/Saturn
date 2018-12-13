@@ -6,7 +6,7 @@
             </router-link>
         </div>
         <div class="header-content">
-            <el-menu :default-active="activeIndex" class="el-menu--dark container" mode="horizontal" :router="true">
+            <el-menu :default-active="activeIndex" class="el-menu--dark el-menu--has-container" mode="horizontal" :router="true">
                 <template v-for='item in serviceList'>
                   <el-menu-item v-if="item.isSuper" :index="item.index" :route='item' :key="item.index"><i :class="item.icon"></i>{{item.title}}</el-menu-item>
                 </template>
