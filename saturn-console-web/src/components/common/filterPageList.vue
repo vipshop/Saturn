@@ -38,8 +38,8 @@ export default {
       paramsResult.order = this.order;
       if (this.filters) {
         Object.entries(this.filters).forEach((item) => {
-          if (item[1] !== '' && item[1] !== undefined) {
-            paramsResult[item[0]] = item[1];
+          if (item[1].value !== '' && item[1].value !== undefined) {
+            paramsResult[item[0]] = item[1].value;
           }
         });
       }
@@ -76,13 +76,17 @@ export default {
         if (this.filters) {
           Object.entries(this.filters).forEach((item) => {
             const key = item[0];
-            const value = item[1];
+            const precise = item[1].precise || false;
+            const value = item[1].value;
             if (value || (typeof value === 'boolean')) {
               filtered = filtered.filter((e) => {
                 if (typeof e[key] === 'string') {
-                  return e[key].toLowerCase().indexOf(value.toLowerCase().trim()) > -1;
+                  if (!precise) {
+                    return e[key].toLowerCase().indexOf(value.toLowerCase().trim()) > -1;
+                  }
+                  return Object.is(e[key], value);
                 }
-                return e[key] === value;
+                return Object.is(e[key], value);
               });
             }
           });

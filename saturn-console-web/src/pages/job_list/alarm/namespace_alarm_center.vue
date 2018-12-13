@@ -3,17 +3,17 @@
         <el-tabs v-model="activeName" @tab-click="onTabClick">
             <el-tab-pane name="namespace_abnormal_jobs">
               <span slot="label"><i class="fa fa-list-alt"></i>异常作业
-                <el-tag type="danger" class="alarm-tag" v-if="countOfAlarmJobs.unnormal_job">{{countOfAlarmJobs.unnormal_job}}</el-tag>
+                <el-badge type="danger" :value="countOfAlarmJobs.unnormal_job" v-if="countOfAlarmJobs.unnormal_job"></el-badge>
               </span>
             </el-tab-pane>
             <el-tab-pane name="namespace_timeout_jobs">
               <span slot="label"><i class="fa fa-clock-o"></i>超时作业
-                <el-tag type="danger" class="alarm-tag" v-if="countOfAlarmJobs.timeout_4_alarm_job">{{countOfAlarmJobs.timeout_4_alarm_job}}</el-tag>
+                <el-badge type="danger" :value="countOfAlarmJobs.timeout_4_alarm_job" v-if="countOfAlarmJobs.timeout_4_alarm_job"></el-badge>
               </span>
             </el-tab-pane>
             <el-tab-pane name="namespace_failover_jobs">
               <span slot="label"><i class="fa fa-exclamation-triangle"></i>无法高可用作业
-                <el-tag type="warning" class="alarm-tag" v-if="countOfAlarmJobs.unable_failover_job">{{countOfAlarmJobs.unable_failover_job}}</el-tag>
+                <el-badge type="warning" :value="countOfAlarmJobs.timeout_4_alarm_job" v-if="countOfAlarmJobs.unable_failover_job"></el-badge>
               </span>
             </el-tab-pane>
             <!-- <el-tab-pane name="namespace_abnormal_containers"><span slot="label"><i class="fa fa-cube"></i>异常容器</span></el-tab-pane> -->
@@ -80,14 +80,5 @@ export default {
 <style lang="sass" scoped>
 .alarm-center {
     margin: 10px 20px;
-}
-.alarm-tag {
-    border-radius: 6px;
-    margin-left: 3px;
-    min-width: 26px;
-    padding: 0 5px;
-    text-align: center;
-    height: 20px;
-    line-height: 20px;
 }
 </style>

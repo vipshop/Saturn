@@ -5,16 +5,16 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select v-model="filters.zkAlias" @change="scope.search">
+                            <el-select v-model="filters.zkAlias.value" @change="scope.search">
                                 <el-option label="全部ZK集群" value=""></el-option>
                                 <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkAlias" :key="item.zkAlias"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="搜索" v-model="filters.namespace" @keyup.enter.native="scope.search"></el-input>
+                            <el-input placeholder="请输入域名" v-model="filters.namespace.value" @keyup.enter.native="scope.search"></el-input>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select v-model="filters.container" @change="scope.search">
+                            <el-select v-model="filters.container.value" @change="scope.search">
                                 <el-option label="全部容器/物理机" value=""></el-option>
                                 <el-option v-for="item in containerKeys" :label="item.containerAlias" :value="item.value" :key="item.value"></el-option>
                             </el-select>
@@ -102,9 +102,9 @@ export default {
       containerKeys: [{ containerAlias: '物理机', value: false }, { containerAlias: '容器', value: true }],
       batchMigrateInfo: {},
       filters: {
-        namespace: '',
-        zkAlias: '',
-        container: '',
+        namespace: { value: '' },
+        zkAlias: { value: '', precise: true },
+        container: { value: '', precise: true },
       },
       orderBy: 'namespace',
       total: 0,

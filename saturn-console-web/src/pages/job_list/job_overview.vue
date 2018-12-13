@@ -23,19 +23,19 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.groups" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.groups.value" @change="scope.search">
                                 <el-option label="全部分组" value=""></el-option>
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status.value" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="scope.search">
+                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn].value" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>
@@ -168,10 +168,10 @@ export default {
         abnormalNumber: 0,
       },
       filters: {
-        jobName: '',
-        groups: '',
-        status: '',
-        description: '',
+        jobName: { value: '' },
+        groups: { value: '', precise: true },
+        status: { value: '', precise: true },
+        description: { value: '' },
       },
       jobList: [],
       total: 0,
@@ -222,8 +222,8 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
     selectColumnChange() {
-      this.filters.jobName = '';
-      this.filters.description = '';
+      this.filters.jobName.value = '';
+      this.filters.description.value = '';
     },
     toAbnormalJobPage() {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
