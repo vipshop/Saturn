@@ -242,8 +242,7 @@ public class ScriptJobRunner {
 
 		saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 				SaturnSystemErrorGroup.FAIL);
-		String template = "%s-%s Exception: ";
-		LogUtils.error(log, jobName, String.format(template, jobName), e);
+		LogUtils.error(log, jobName, "{}-{} Exception", jobName, item, errMsg);
 		return saturnJobReturn;
 	}
 }
