@@ -209,6 +209,15 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
+                        <el-row v-if="$option.isPassive(jobSettingInfo.jobType)">
+                            <el-col :span="22">
+                                <el-form-item prop="upStream" label="上游作业">
+                                    <el-select filterable multiple v-model="jobSettingInfo.upStream" style="width: 100%;">
+                                        <el-option v-for="item in jobSettingInfo.upStreamProvided" :label="item" :value="item" :key="item"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
                         <el-row v-if="$option.isCron(jobSettingInfo.jobType) || $option.isPassive(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
