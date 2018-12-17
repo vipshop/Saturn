@@ -82,7 +82,7 @@
                 </el-row>
                 <el-row v-if="$option.isPassive(jobInfo.jobType)">
                     <el-col :span="20">
-                        <el-form-item prop="upStream" label="上游作业" required>
+                        <el-form-item prop="upStream" label="上游作业">
                             <el-select filterable multiple v-model="jobInfo.upStream" style="width: 100%;">
                                 <el-option v-for="item in upStreamProvided" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
@@ -150,7 +150,6 @@ export default {
         cron: [{ required: true, message: 'cron表达式不能为空', trigger: 'blur' }],
         shardingItemParameters: [{ required: true, message: '分片序列号/参数对照表不能为空', trigger: 'blur' }],
         queueName: [{ required: true, message: 'queue不能为空', trigger: 'blur' }],
-        upStream: [{ validator: this.$validate.validateArray, trigger: 'change' }],
       },
       upStreamProvided: [],
       downStreamProvided: [],
