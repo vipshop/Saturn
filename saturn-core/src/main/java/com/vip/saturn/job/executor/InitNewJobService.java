@@ -2,7 +2,6 @@ package com.vip.saturn.job.executor;
 
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -185,7 +184,13 @@ public class InitNewJobService {
 			} catch (JobInitAlarmException e) {
 				if (!SystemEnvProperties.VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM) {
 					// no need to log exception stack as it should be logged in the original happen place
-					raiseAlarmForJobInitFailed(jobName, e);
+					if (e.getCause() instanceof ClassNotFoundException
+							&& SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM) {
+						//no need to raiseAlarm if class not found and VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM is true
+						LogUtils.debug(log, jobName, "job initialize, class not found");
+					} else {
+						raiseAlarmForJobInitFailed(jobName, e);
+					}
 				}
 			} catch (Throwable t) {
 				LogUtils.warn(log, jobName, "job initialize failed, but will not stop the init process", t);

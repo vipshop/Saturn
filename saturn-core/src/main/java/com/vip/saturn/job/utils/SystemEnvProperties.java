@@ -105,6 +105,11 @@ public class SystemEnvProperties {
 			System.getProperty(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM,
 					System.getenv(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM)));
 
+	private static final String NAME_VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM = "VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM";
+	public static boolean VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM = Boolean.parseBoolean(
+			System.getProperty(NAME_VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM,
+					System.getenv(NAME_VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM)));
+
 	static {
 		loadProperties();
 	}
@@ -153,7 +158,7 @@ public class SystemEnvProperties {
 
 		String zkClientConnectionTimeoutStr = System
 				.getProperty(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS,
-				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
+						System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
 		if (!Strings.isNullOrEmpty(zkClientConnectionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientConnectionTimeoutStr);
@@ -162,7 +167,8 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String zkClientRetryTimes = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES));
+		String zkClientRetryTimes = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES,
+				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES));
 		if (!Strings.isNullOrEmpty(zkClientRetryTimes)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_RETRY_TIMES = Integer.parseInt(zkClientRetryTimes);

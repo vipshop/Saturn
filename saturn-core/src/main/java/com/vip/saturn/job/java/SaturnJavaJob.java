@@ -107,7 +107,7 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 				SaturnApi saturnApi = new SaturnApi(getNamespace(), executorName);
 				jobClass.getMethod("setSaturnApi", Object.class).invoke(jobBusinessInstance, saturnApi);
 			} catch (Throwable t) {
-				throw new JobInitAlarmException(logBusinessExceptionIfNecessary(jobName, t));
+				throw new JobInitAlarmException(logBusinessExceptionIfNecessary(jobName, t), t);
 			} finally {
 				Thread.currentThread().setContextClassLoader(oldClassLoader);
 			}
