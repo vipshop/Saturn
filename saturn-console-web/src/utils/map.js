@@ -19,4 +19,10 @@ export default {
     PASSIVE_JAVA_JOB: 'JAVA被动',
     PASSIVE_SHELL_JOB: 'SHELL被动',
   },
+  jobStatusMap: {
+    READY: '已就绪',
+    RUNNING: '运行中',
+    STOPPING: '停止中',
+    STOPPED: '已停止',
+  },
 };

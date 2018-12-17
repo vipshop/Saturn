@@ -99,15 +99,6 @@ export default {
     },
   },
   computed: {
-    existJobTypes() {
-      const existJobArray = [];
-      this.arrangeLayoutInfo.levels.forEach((ele) => {
-        ele.forEach((ele2) => {
-          existJobArray.push(ele2.type);
-        });
-      });
-      return Array.from(new Set(existJobArray));
-    },
     optionInfo() {
       const resultInfo = {
         links: [],
@@ -118,7 +109,7 @@ export default {
       this.arrangeLayoutInfo.levels.forEach((ele) => {
         const levelItem = ele.map((obj) => {
           const rObj = { ...obj };
-          rObj.category = this.$map.jobTypeMap[obj.type];
+          rObj.category = this.$map.jobStatusMap[obj.jobStatus];
           return rObj;
         });
         relateDatas.push(levelItem);
@@ -140,11 +131,19 @@ export default {
         }
         return rObj;
       });
-      resultInfo.categories = this.existJobTypes.map((obj) => {
-        const rObj = {};
-        rObj.name = this.$map.jobTypeMap[obj];
-        return rObj;
-      });
+      resultInfo.categories = [{
+        name: this.$map.jobStatusMap.READY,
+        itemStyle: { color: '#487bb0' },
+      }, {
+        name: this.$map.jobStatusMap.RUNNING,
+        itemStyle: { color: '#23ad07' },
+      }, {
+        name: this.$map.jobStatusMap.STOPPING,
+        itemStyle: { color: '#E6A23C' },
+      }, {
+        name: this.$map.jobStatusMap.STOPPED,
+        itemStyle: { color: '#808080' },
+      }];
       return resultInfo;
     },
   },

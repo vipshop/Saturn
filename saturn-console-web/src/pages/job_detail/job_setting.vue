@@ -101,7 +101,7 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="preferList" label="优先executor">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
+                                    <el-select filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
                                         <el-option v-for="item in preferListProvidedArray" :label="item.executorDes" :value="item.executorName" :key="item.executorDes">
                                         </el-option>
                                     </el-select>
@@ -222,7 +222,7 @@
                                         <div slot="content">
                                             配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
                                         </div>
-                                        <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
+                                        <el-select filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
                                             <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"></el-option>
                                         </el-select>
                                     </el-tooltip>

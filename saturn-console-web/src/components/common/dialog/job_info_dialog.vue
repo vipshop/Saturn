@@ -34,7 +34,12 @@
                 </el-form-item>
                 <el-form-item label="作业分片总数" prop="shardingTotalCount">
                     <el-col :span="18">
-                        <el-input-number v-model="jobInfo.shardingTotalCount" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                        <el-tooltip popper-class="form-tooltip" placement="bottom" v-if="jobInfo.downStream">
+                            <div slot="content">
+                                  <span>{{ jobInfo.downStream.length > 0 ? '该作业有下游作业，作业分片数必须为1' : '作业分片数'}}</span>
+                            </div>
+                            <el-input-number v-model="jobInfo.shardingTotalCount" :disabled="jobInfo.downStream.length > 0" controls-position="right" :min="1" style="width: 100%;"></el-input-number>
+                        </el-tooltip>
                     </el-col>
                 </el-form-item>
                 <el-form-item label="分片参数" prop="shardingItemParameters">
@@ -57,12 +62,24 @@
                         </el-tooltip>
                     </el-col>
                 </el-form-item>
-                <el-form-item prop="timeZone" label="时区">
+                <el-form-item prop="upStream" label="上游作业" v-if="$option.isPassive(jobInfo.jobType)" required>
                     <el-col :span="18">
-                        <el-select filterable v-model="jobInfo.timeZone" style="width: 100%">
-                            <el-option v-for="item in timeZonesArray" :label="item" :value="item" :key="item"></el-option>
+                        <el-select filterable multiple v-model="jobInfo.upStream" style="width: 100%;">
+                            <el-option v-for="item in upStreamProvided" :label="item" :value="item" :key="item"></el-option>
                         </el-select>
                     </el-col>
+                </el-form-item>
+                <el-form-item prop="downStream" label="下游作业" v-if="$option.isPassive(jobInfo.jobType)">
+                  <el-col :span="18">
+                    <el-tooltip popper-class="form-tooltip" placement="bottom">
+                        <div slot="content">
+                            配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
+                        </div>
+                        <el-select filterable multiple v-model="jobInfo.downStream" style="width: 100%;" :disabled="jobInfo.localMode || jobInfo.shardingTotalCount !== 1">
+                            <el-option v-for="item in downStreamProvided" :label="item" :value="item" :key="item"></el-option>
+                        </el-select>
+                    </el-tooltip>
+                  </el-col>
                 </el-form-item>
                 <el-form-item label="Queue名" prop="queueName" v-if="$option.isMsg(jobInfo.jobType)">
                     <el-col :span="18">
@@ -100,7 +117,6 @@ export default {
       isCronPredictVisible: false,
       cronPredictParams: {},
       loading: false,
-      timeZonesArray: [],
       rules: {
         jobType: [{ required: true, message: '请选择作业类型', trigger: 'change' }],
         jobName: [{ required: true, message: '作业名不能为空', trigger: 'blur' }],
@@ -108,7 +124,10 @@ export default {
         cron: [{ required: true, message: 'cron表达式不能为空', trigger: 'blur' }],
         shardingItemParameters: [{ required: true, message: '分片序列号/参数对照表不能为空', trigger: 'blur' }],
         queueName: [{ required: true, message: 'queue不能为空', trigger: 'blur' }],
+        upStream: [{ validator: this.$validate.validateArray, trigger: 'change' }],
       },
+      upStreamProvided: [],
+      downStreamProvided: [],
     };
   },
   methods: {
@@ -155,12 +174,6 @@ export default {
     closeDialog() {
       this.$emit('close-dialog');
     },
-    getTimeZones() {
-      this.$http.get('/console/utils/timeZones').then((data) => {
-        this.timeZonesArray = data;
-      })
-      .catch(() => { this.$http.buildErrorHandler('获取时区请求失败！'); });
-    },
     validateShardingParamsNumber() {
       let flag = false;
       let arr = [];
@@ -197,6 +210,24 @@ export default {
       });
       return flag;
     },
+    getUpStream() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/candidateUpStream`).then((data) => {
+        this.upStreamProvided = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取上游作业失败！'); });
+    },
+    getDownStream() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/candidateDownStream`).then((data) => {
+        this.downStreamProvided = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取下游作业失败！'); });
+    },
+    getJobStream() {
+      this.loading = true;
+      Promise.all([this.getUpStream(), this.getDownStream()]).then(() => {
+        this.loading = false;
+      });
+    },
   },
   computed: {
     isEditable() {
@@ -205,6 +236,7 @@ export default {
   },
   watch: {
     'jobInfo.shardingTotalCount': {
+      immediate: true,
       handler(newCount) {
         if (newCount) {
           const result = [];
@@ -218,11 +250,18 @@ export default {
           }
         }
       },
-      immediate: true,
     },
-  },
-  created() {
-    this.getTimeZones();
+    'jobInfo.jobType': {
+      immediate: true,
+      handler(newCount) {
+        if (this.$option.isPassive(newCount)) {
+          this.getJobStream();
+        } else {
+          this.jobInfo.upStream = [];
+          this.jobInfo.downStream = [];
+        }
+      },
+    },
   },
 };
 </script>
