@@ -84,7 +84,7 @@
                             </el-table-column>
                             <el-table-column label="状态" prop="status" width="90px">
                                 <template slot-scope="scope"> 
-                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
+                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{$map.jobStatusMap[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述">
@@ -183,12 +183,6 @@ export default {
         RUNNING: 'success',
         STOPPING: 'warning',
         STOPPED: '',
-      },
-      translateStatus: {
-        READY: '已就绪',
-        RUNNING: '运行中',
-        STOPPING: '停止中',
-        STOPPED: '已停止',
       },
       multipleSelection: [],
     };
