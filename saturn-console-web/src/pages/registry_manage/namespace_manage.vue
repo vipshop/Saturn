@@ -5,24 +5,22 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select v-model="filters.zkAlias" @change="scope.search">
+                            <el-select v-model="filters.zkAlias.value" @change="scope.search">
                                 <el-option label="全部ZK集群" value=""></el-option>
                                 <el-option v-for="item in zkClusterKeys" :label="item.zkAlias" :value="item.zkAlias" :key="item.zkAlias"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input placeholder="搜索" v-model="filters.namespace" @keyup.enter.native="scope.search"></el-input>
+                            <el-input placeholder="请输入域名" v-model="filters.namespace.value" @keyup.enter.native="scope.search"></el-input>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select v-model="filters.container" @change="scope.search">
+                            <el-select v-model="filters.container.value" @change="scope.search">
                                 <el-option label="全部容器/物理机" value=""></el-option>
                                 <el-option v-for="item in containerKeys" :label="item.containerAlias" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item>
                             <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
-                            <el-button type="primary" icon="el-icon-plus" @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addNamespace')">添加域</el-button>
-                            <el-button type="primary" icon="el-icon-refresh" @click="handleRefreshCenter()" v-if="$common.hasPerm('registryCenter:addNamespace')">刷新注册中心</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table">
@@ -34,6 +32,10 @@
                             <div>
                                 <el-button @click="batchMigrate()" v-if="$common.hasPerm('registryCenter:batchMoveNamespaces')"><i class="fa fa-play-circle text-btn"></i>批量迁移</el-button>
                                 <el-button @click="handleExport()" v-if="$common.hasPerm('registryCenter:exportNamespaces')"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
+                            </div>
+                            <div class="pull-right">
+                                <el-button @click="handleAdd()" v-if="$common.hasPerm('registryCenter:addNamespace')"><i class="fa fa-plus-circle text-btn"></i>添加域</el-button>
+                                <el-button @click="handleRefreshCenter()" v-if="$common.hasPerm('registryCenter:addNamespace')"><i class="fa fa-refresh text-btn"></i>刷新注册中心</el-button>
                             </div>
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" @sort-change="scope.onSortChange" :data="scope.pageData" style="width: 100%">
@@ -100,9 +102,9 @@ export default {
       containerKeys: [{ containerAlias: '物理机', value: false }, { containerAlias: '容器', value: true }],
       batchMigrateInfo: {},
       filters: {
-        namespace: '',
-        zkAlias: '',
-        container: '',
+        namespace: { value: '' },
+        zkAlias: { value: '', precise: true },
+        container: { value: '', precise: true },
       },
       orderBy: 'namespace',
       total: 0,

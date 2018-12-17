@@ -49,9 +49,10 @@ public interface JobService {
 	List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition, int page, int size)
 			throws SaturnJobConsoleException;
 
-	int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition);
+	int countUnSystemJobsWithCondition(String namespace, Map<String, Object> condition)
+			throws SaturnJobConsoleException;
 
-	int countEnabledUnSystemJobs(String namespace);
+	int countEnabledUnSystemJobs(String namespace) throws SaturnJobConsoleException;
 
 	/**
 	 * @deprecated since 3.1.0，不再支持systemJob

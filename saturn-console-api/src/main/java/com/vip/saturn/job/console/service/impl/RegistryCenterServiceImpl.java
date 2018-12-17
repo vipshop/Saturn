@@ -1405,7 +1405,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		namespaceInfo.setLastUpdateTime(new Date());
 		namespaceInfo.setNamespace(namespaceDomainInfo.getNamespace());
 		namespaceInfo.setContent(namespaceDomainInfo.getContent());
-
+		namespaceInfo.setBusId("");
 		return namespaceInfo;
 	}
 

@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.mybatis.service.impl;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.mybatis.repository.HistoryJobConfigRepository;
 import com.vip.saturn.job.console.mybatis.service.HistoryJobConfigService;
@@ -18,25 +19,25 @@ public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int create(JobConfig4DB historyJobConfig) throws Exception {
+	public int create(JobConfig4DB historyJobConfig) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.insert(historyJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int createSelective(JobConfig4DB historyJobConfig) throws Exception {
+	public int createSelective(JobConfig4DB historyJobConfig) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.insertSelective(historyJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int deleteByPrimaryKey(Long id) throws Exception {
+	public int deleteByPrimaryKey(Long id) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.deleteByPrimaryKey(id);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public JobConfig4DB findByPrimaryKey(Long id) throws Exception {
+	public JobConfig4DB findByPrimaryKey(Long id) throws SaturnJobConsoleException {
 		JobConfig4DB historyJobConfig = historyJobConfigRepo.selectByPrimaryKey(id);
 		historyJobConfig.setDefaultValues();
 		return historyJobConfig;
@@ -44,25 +45,26 @@ public class HistoryJobConfigServiceImpl implements HistoryJobConfigService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public int selectCount(JobConfig4DB historyJobConfig) throws Exception {
+	public int selectCount(JobConfig4DB historyJobConfig) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.selectCount(historyJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int updateByPrimaryKey(JobConfig4DB historyJobConfig) throws Exception {
+	public int updateByPrimaryKey(JobConfig4DB historyJobConfig) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.updateByPrimaryKey(historyJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int updateByPrimaryKeySelective(JobConfig4DB historyJobConfig) throws Exception {
+	public int updateByPrimaryKeySelective(JobConfig4DB historyJobConfig) throws SaturnJobConsoleException {
 		return historyJobConfigRepo.updateByPrimaryKeySelective(historyJobConfig);
 	}
 
 	@Transactional
 	@Override
-	public List<JobConfig4DB> selectPage(JobConfig4DB historyjobconfig, Pageable pageable) throws Exception {
+	public List<JobConfig4DB> selectPage(JobConfig4DB historyjobconfig, Pageable pageable)
+			throws SaturnJobConsoleException {
 		List<JobConfig4DB> historyJobConfigs = historyJobConfigRepo.selectPage(historyjobconfig, pageable);
 		if (historyJobConfigs != null) {
 			int i = 1;

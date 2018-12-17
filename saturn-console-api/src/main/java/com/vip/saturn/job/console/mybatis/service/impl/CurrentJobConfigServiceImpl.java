@@ -32,19 +32,19 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int create(JobConfig4DB currentJobConfig) throws Exception {
+	public int create(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.insert(currentJobConfig);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int deleteByPrimaryKey(Long id) throws Exception {
+	public int deleteByPrimaryKey(Long id) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.deleteByPrimaryKey(id);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	public int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws Exception {
+	public int updateByPrimaryKey(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.updateByPrimaryKey(currentJobConfig);
 	}
 
@@ -65,14 +65,15 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName) {
+	public JobConfig4DB findConfigByNamespaceAndJobName(String namespace, String jobName)
+			throws SaturnJobConsoleException {
 		return currentJobConfigRepo.findConfigByNamespaceAndJobName(namespace, jobName);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
-			final String userName) throws Exception {
+			final String userName) throws SaturnJobConsoleException {
 		// 持久化当前配置
 		if (userName != null) {
 			newJobConfig.setLastUpdateBy(userName);
@@ -86,28 +87,29 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
-	public List<JobConfig4DB> findConfigsByNamespace(String namespace) {
+	public List<JobConfig4DB> findConfigsByNamespace(String namespace) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
 	}
 
 	@Override
 	public List<JobConfig4DB> findConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition,
-			Pageable pageable) {
+			Pageable pageable) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.findConfigsByNamespaceWithCondition(namespace, condition, pageable);
 	}
 
 	@Override
-	public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition) {
+	public int countConfigsByNamespaceWithCondition(String namespace, Map<String, Object> condition)
+			throws SaturnJobConsoleException {
 		return currentJobConfigRepo.countConfigsByNamespaceWithCondition(namespace, condition);
 	}
 
 	@Override
-	public int countEnabledUnSystemJobsByNamespace(String namespace) {
+	public int countEnabledUnSystemJobsByNamespace(String namespace) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.countEnabledUnSystemJobsByNamespace(namespace, 1);
 	}
 
 	@Override
-	public List<String> findConfigNamesByNamespace(String namespace) {
+	public List<String> findConfigNamesByNamespace(String namespace) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}
 

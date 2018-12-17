@@ -293,13 +293,17 @@ export default {
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
-        this.isArrangeLayoutVisible = true;
+        if (this.arrangeLayoutInfo.paths.length > 0) {
+          this.isArrangeLayoutVisible = true;
+        } else {
+          this.$message.errorMessage('很抱歉！该作业没有依赖');
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
     jobRedirect(jobName) {
-      this.closeArrangeLayoutDialog();
-      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      const routeData = this.$router.resolve({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      window.open(routeData.href, '_blank');
     },
     closeArrangeLayoutDialog() {
       this.isArrangeLayoutVisible = false;

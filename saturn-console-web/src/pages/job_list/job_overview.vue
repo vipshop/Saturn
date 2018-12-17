@@ -23,19 +23,19 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.groups" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.groups.value" @change="scope.search">
                                 <el-option label="全部分组" value=""></el-option>
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status.value" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="scope.search">
+                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn].value" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>
@@ -77,7 +77,12 @@
                                     </router-link>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" width="100px">
+                            <el-table-column prop="jobType" label="作业类型" width="100px">
+                                <template slot-scope="scope"> 
+                                    {{$map.jobTypeMap[scope.row.jobType]}}
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="状态" prop="status" width="90px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
                                 </template>
@@ -88,7 +93,7 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数" width="100px"></el-table-column>
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
                             <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.shardingList === ''">-</span>
@@ -163,10 +168,10 @@ export default {
         abnormalNumber: 0,
       },
       filters: {
-        jobName: '',
-        groups: '',
-        status: '',
-        description: '',
+        jobName: { value: '' },
+        groups: { value: '', precise: true },
+        status: { value: '', precise: true },
+        description: { value: '' },
       },
       jobList: [],
       total: 0,
@@ -192,13 +197,17 @@ export default {
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
-        this.isArrangeLayoutVisible = true;
+        if (this.arrangeLayoutInfo.paths.length > 0) {
+          this.isArrangeLayoutVisible = true;
+        } else {
+          this.$message.errorMessage('很抱歉！该域没有作业依赖');
+        }
       })
       .catch(() => { this.$http.buildErrorHandler('请求失败！'); });
     },
     jobRedirect(jobName) {
-      this.closeArrangeLayoutDialog();
-      this.$router.push({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      const routeData = this.$router.resolve({ name: 'job_setting', params: { domain: this.domainName, jobName } });
+      window.open(routeData.href, '_blank');
     },
     closeArrangeLayoutDialog() {
       this.isArrangeLayoutVisible = false;
@@ -213,8 +222,8 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
     selectColumnChange() {
-      this.filters.jobName = '';
-      this.filters.description = '';
+      this.filters.jobName.value = '';
+      this.filters.description.value = '';
     },
     toAbnormalJobPage() {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
