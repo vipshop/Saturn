@@ -257,6 +257,8 @@ export default {
         preferList: [],
         queueName: '',
         description: '',
+        upStream: [],
+        downStream: [],
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
     },
@@ -356,6 +358,8 @@ export default {
           timeZone: data.timeZone,
           queueName: data.queueName,
           description: data.description,
+          upStream: data.upStream || [],
+          downStream: data.downStream || [],
         };
         this.isJobInfoVisible = true;
         this.jobInfoTitle = '复制作业';
