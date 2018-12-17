@@ -372,7 +372,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	private void refreshRegistryCenter() {
+	@Override
+	public void refreshRegistryCenter() {
 		List<String> allOnlineNamespacesTemp = new ArrayList<>();
 		// 获取新的zkClusters
 		Map<String, ZkCluster> newClusterMap = getZkClusterInfo();
