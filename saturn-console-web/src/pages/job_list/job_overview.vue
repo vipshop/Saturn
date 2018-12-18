@@ -378,106 +378,19 @@ export default {
       });
     },
     handleBatchActive(params, jobArray, enabled) {
-      let dependUrl = '';
-      let operation = '';
-      let text = '';
-      let activeRequest = '';
-      if (enabled) {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/dependency`;
-        operation = '启用';
-        text = '禁用';
-        activeRequest = 'enable';
-      } else {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/beDependedJobs`;
-        operation = '禁用';
-        text = '启用';
-        activeRequest = 'disable';
-      }
-      this.$http.get(dependUrl, params).then((data) => {
-        let warningFlag = false;
-        jobArray.forEach((ele) => {
-          if (data[ele].length > 0) {
-            if (enabled) {
-              warningFlag = data[ele].some((ele2) => {
-                if (!ele2.enabled) {
-                  return true;
-                }
-                return false;
-              });
-            } else {
-              warningFlag = data[ele].some((ele3) => {
-                if (ele3.enabled) {
-                  return true;
-                }
-                return false;
-              });
-            }
-          }
-          return false;
-        });
-        if (warningFlag) {
-          this.$message.confirmMessage(`有依赖的作业已${text}，是否继续${operation}作业?`, () => {
-            this.batchActiveRequest(params, activeRequest);
-          });
-        } else {
-          const confirmText = jobArray.length < 10 ? `确定${operation}作业${params.jobNames}吗?` : `确认${operation}已选的 ${jobArray.length} 条作业吗?`;
-          this.$message.confirmMessage(confirmText, () => {
-            this.batchActiveRequest(params, activeRequest);
-          });
-        }
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+      const operation = enabled ? '启用' : '禁用';
+      const activeRequest = enabled ? 'enable' : 'disable';
+      const confirmText = jobArray.length < 10 ? `确定${operation}作业${params.jobNames}吗?` : `确认${operation}已选的 ${jobArray.length} 条作业吗?`;
+      this.$message.confirmMessage(confirmText, () => {
+        this.batchActiveRequest(params, activeRequest);
+      });
     },
     handleActive(row, enabled) {
-      let dependUrl = '';
-      let operation = '';
-      let text = '';
-      let activeRequest = '';
-      if (enabled) {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/dependency`;
-        operation = '启用';
-        text = '禁用';
-        activeRequest = 'enable';
-      } else {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/beDependedJobs`;
-        operation = '禁用';
-        text = '启用';
-        activeRequest = 'disable';
-      }
-      this.$http.get(dependUrl).then((data) => {
-        const arr = data;
-        if (arr.length > 0) {
-          const jobArr = [];
-          if (enabled) {
-            arr.forEach((ele) => {
-              if (!ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          } else {
-            arr.forEach((ele) => {
-              if (ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          }
-          if (jobArr.length > 0) {
-            const jobStr = jobArr.join(',');
-            this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
-              this.activeRequest(row.jobName, activeRequest);
-            });
-          } else {
-            this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-              this.activeRequest(row.jobName, activeRequest);
-            });
-          }
-        } else {
-          this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-            this.activeRequest(row.jobName, activeRequest);
-          });
-        }
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+      const operation = enabled ? '启用' : '禁用';
+      const activeRequest = enabled ? 'enable' : 'disable';
+      this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
+        this.activeRequest(row.jobName, activeRequest);
+      });
     },
     batchActiveRequest(params, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {

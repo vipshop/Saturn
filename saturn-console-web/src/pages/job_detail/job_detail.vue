@@ -79,55 +79,11 @@ export default {
       });
     },
     handleActive(enabled) {
-      let dependUrl = '';
-      let operation = '';
-      let text = '';
-      let activeRequest = '';
-      if (enabled) {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${this.jobName}/dependency`;
-        operation = '启用';
-        text = '禁用';
-        activeRequest = 'enable';
-      } else {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${this.jobName}/beDependedJobs`;
-        operation = '禁用';
-        text = '启用';
-        activeRequest = 'disable';
-      }
-      this.$http.get(dependUrl).then((data) => {
-        const arr = data;
-        if (arr.length > 0) {
-          const jobArr = [];
-          if (enabled) {
-            arr.forEach((ele) => {
-              if (!ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          } else {
-            arr.forEach((ele) => {
-              if (ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          }
-          if (jobArr.length > 0) {
-            const jobStr = jobArr.join(',');
-            this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
-              this.activeRequest(this.jobName, activeRequest);
-            });
-          } else {
-            this.$message.confirmMessage(`确定${operation}作业${this.jobName}吗?`, () => {
-              this.activeRequest(this.jobName, activeRequest);
-            });
-          }
-        } else {
-          this.$message.confirmMessage(`确定${operation}作业${this.jobName}吗?`, () => {
-            this.activeRequest(this.jobName, activeRequest);
-          });
-        }
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+      const operation = enabled ? '启用' : '禁用';
+      const activeRequest = enabled ? 'enable' : 'disable';
+      this.$message.confirmMessage(`确定${operation}作业${this.jobName}吗?`, () => {
+        this.activeRequest(this.jobName, activeRequest);
+      });
     },
     activeRequest(jobName, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
