@@ -37,8 +37,8 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author timmy.hu
@@ -204,57 +204,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 
 	protected void postRefreshStatistics2DB(StatisticsModel statisticsModel, ZkCluster zkCluster) {
 		statisticsModel.getOutdatedNoRunningJobAnalyzer().reportAlarmOutdatedNoRunningJobs();
-		calculateDashboardHistory(statisticsModel, zkCluster);
-	}
 
-	private void calculateDashboardHistory(StatisticsModel statisticsModel, ZkCluster zkCluster) {
 		List<DashboardHistory> dashboardHistories = new ArrayList<>();
 		Date currentDate = new Date();
-		calculateRunTimes(statisticsModel, zkCluster, dashboardHistories, currentDate);
-		calculateContainerCount(statisticsModel, zkCluster, dashboardHistories, currentDate);
-		calculateJobCount(statisticsModel, zkCluster, dashboardHistories, currentDate);
-		calculateDomainCount(statisticsModel, zkCluster, dashboardHistories, currentDate);
-		dashboardService.batchSaveDashboardHistory(dashboardHistories);
-	}
 
-	private void calculateDomainCount(StatisticsModel statisticsModel, ZkCluster zkCluster,
-			List<DashboardHistory> dashboardHistories, Date currentDate) {
-		Map<String, Integer> domainContent = new HashMap<>(1);
-		int domainCount = registryCenterService.domainCount(zkCluster.getZkClusterKey());
-		domainContent.put("domainCount", domainCount);
-		DashboardHistory domainHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
-				DashboardServiceImpl.DashboardType.DOMAIN.name(),
-				DashboardServiceImpl.DashboardTopic.DOMAIN_COUNT.name(), JSON.toJSONString(domainContent), currentDate);
-		dashboardHistories.add(domainHistory);
-	}
-
-	private void calculateJobCount(StatisticsModel statisticsModel, ZkCluster zkCluster,
-			List<DashboardHistory> dashboardHistories, Date currentDate) {
-		Map<String, Integer> jobContent = new HashMap<>(1);
-		int jobCount = statisticsModel.getJobStatisticsAnalyzer().getJobList().size();
-		jobContent.put("jobCount", jobCount);
-		DashboardHistory jobHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
-				DashboardServiceImpl.DashboardType.JOB.name(), DashboardServiceImpl.DashboardTopic.JOB_COUNT.name(),
-				JSON.toJSONString(jobContent), currentDate);
-		dashboardHistories.add(jobHistory);
-	}
-
-	private void calculateContainerCount(StatisticsModel statisticsModel, ZkCluster zkCluster,
-			List<DashboardHistory> dashboardHistories, Date currentDate) {
-		Map<String, Integer> executorContent = new HashMap<>(2);
-		int inDocker = statisticsModel.getExecutorInfoAnalyzer().getExeInDocker();
-		int notInDocker = statisticsModel.getExecutorInfoAnalyzer().getExeNotInDocker();
-		executorContent.put("dockerCount", inDocker);
-		executorContent.put("otherCount", notInDocker);
-		DashboardHistory executorHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
-				DashboardServiceImpl.DashboardType.EXECUTOR.name(),
-				DashboardServiceImpl.DashboardTopic.EXECUTOR_COUNT.name(), JSON.toJSONString(executorContent),
-				currentDate);
-		dashboardHistories.add(executorHistory);
-	}
-
-	private void calculateRunTimes(StatisticsModel statisticsModel, ZkCluster zkCluster,
-			List<DashboardHistory> dashboardHistories, Date currentDate) {
 		long successCount = statisticsModel.getZkClusterDailyCountAnalyzer().getTotalCount();
 		long failCount = statisticsModel.getZkClusterDailyCountAnalyzer().getErrorCount();
 		Map<String, Long> content = new HashMap<>(2);
@@ -265,6 +218,52 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 				DashboardServiceImpl.DashboardTopic.DOMAIN_OVERALL_COUNT.name(), JSON.toJSONString(content),
 				currentDate);
 		dashboardHistories.add(allDomainHistory);
+
+		//		dashboardService
+		//				.saveDashboardHistory(zkCluster.getZkClusterKey(), DashboardServiceImpl.DashboardType.DOMAIN.name(),
+		//						DashboardServiceImpl.DashboardTopic.DOMAIN_OVERALL_COUNT.name(), JSON.toJSONString(content));
+
+		Map<String, Integer> executorContent = new HashMap<>(2);
+		int inDocker = statisticsModel.getExecutorInfoAnalyzer().getExeInDocker();
+		int notInDocker = statisticsModel.getExecutorInfoAnalyzer().getExeNotInDocker();
+		executorContent.put("dockerCount", inDocker);
+		executorContent.put("otherCount", notInDocker);
+		DashboardHistory executorHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
+				DashboardServiceImpl.DashboardType.EXECUTOR.name(),
+				DashboardServiceImpl.DashboardTopic.EXECUTOR_COUNT.name(), JSON.toJSONString(executorContent),
+				currentDate);
+		dashboardHistories.add(executorHistory);
+
+
+		//		dashboardService
+		//				.saveDashboardHistory(zkCluster.getZkClusterKey(), DashboardServiceImpl.DashboardType.EXECUTOR.name(),
+		//						DashboardServiceImpl.DashboardTopic.EXECUTOR_COUNT.name(), JSON.toJSONString(executorContent));
+
+		Map<String, Integer> jobContent = new HashMap<>(1);
+		int jobCount = statisticsModel.getJobStatisticsAnalyzer().getJobList().size();
+		jobContent.put("jobCount", jobCount);
+		DashboardHistory jobHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
+				DashboardServiceImpl.DashboardType.JOB.name(), DashboardServiceImpl.DashboardTopic.JOB_COUNT.name(),
+				JSON.toJSONString(jobContent), currentDate);
+		dashboardHistories.add(jobHistory);
+
+		//		dashboardService
+		//				.saveDashboardHistory(zkCluster.getZkClusterKey(), DashboardServiceImpl.DashboardType.JOB.name(),
+		//						DashboardServiceImpl.DashboardTopic.JOB_COUNT.name(), JSON.toJSONString(jobContent));
+
+		Map<String, Integer> domainContent = new HashMap<>(1);
+		int domainCount = registryCenterService.domainCount(zkCluster.getZkClusterKey());
+		domainContent.put("domainCount", domainCount);
+		DashboardHistory domainHistory = new DashboardHistory(zkCluster.getZkClusterKey(),
+				DashboardServiceImpl.DashboardType.DOMAIN.name(),
+				DashboardServiceImpl.DashboardTopic.DOMAIN_COUNT.name(), JSON.toJSONString(domainContent), currentDate);
+		dashboardHistories.add(domainHistory);
+
+		dashboardService.batchSaveDashboardHistory(dashboardHistories);
+
+		//		dashboardService
+		//				.saveDashboardHistory(zkCluster.getZkClusterKey(), DashboardServiceImpl.DashboardType.DOMAIN.name(),
+		//						DashboardServiceImpl.DashboardTopic.DOMAIN_COUNT.name(), JSON.toJSONString(domainContent));
 	}
 
 	private void forwardDashboardRefreshToRemote(String zkClusterKey) throws SaturnJobConsoleException {
