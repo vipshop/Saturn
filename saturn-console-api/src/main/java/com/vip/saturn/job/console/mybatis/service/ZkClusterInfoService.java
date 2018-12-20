@@ -1,5 +1,6 @@
 package com.vip.saturn.job.console.mybatis.service;
 
+import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.entity.ZkClusterInfo;
 
 import java.util.List;
@@ -17,4 +18,5 @@ public interface ZkClusterInfoService {
 
 	int updateZkCluster(ZkClusterInfo zkClusterInfo);
 
+	void updateConsoleZKClusterMapping(String zkClusterKey) throws SaturnJobConsoleException;
 }
