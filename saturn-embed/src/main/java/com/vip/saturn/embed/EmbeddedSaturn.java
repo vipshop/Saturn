@@ -22,7 +22,6 @@ public class EmbeddedSaturn {
 				File zipFile = new File(saturnZip);
 				File saturnHome = null;
 				if (zipFile.canRead()) {
-					// saturnHome = zipFile.getParentFile().getAbsolutePath() + File.separator + "saturn";
 					saturnHome = new File(System.getProperty("user.home") + File.separator + "saturn");
 					deleteDir(saturnHome);
 					unzip(zipFile, saturnHome);

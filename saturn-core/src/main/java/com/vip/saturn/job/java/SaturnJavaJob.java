@@ -69,24 +69,7 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 			try {
 				Class<?> jobClass = jobClassLoader.loadClass(jobClassStr);
 
-				try {
-					Object saturnApplication = saturnExecutorService.getSaturnApplication();
-					if (saturnApplication != null) {
-						Class<?> ssaClazz = jobClassLoader
-								.loadClass("com.vip.saturn.job.spring.SpringSaturnApplication");
-						if (ssaClazz.isInstance(saturnApplication)) {
-							jobBusinessInstance = saturnApplication.getClass().getMethod("getJobInstance", Class.class)
-									.invoke(saturnApplication, jobClass);
-							if (jobBusinessInstance != null) {
-								LogUtils.info(log, jobName, "get job instance from spring");
-							}
-						}
-					}
-				} catch (ClassNotFoundException e) {
-					LogUtils.debug(log, jobName, "didn't use SpringSaturnApplication");
-				} catch (Throwable t) {
-					LogUtils.error(log, jobName, "get job instance from spring error", t);
-				}
+				jobBusinessInstance = tryToGetSaturnBusinessInstanceFromSaturnApplication(jobClassLoader, jobClass);
 
 				if (jobBusinessInstance == null) {
 					try {
