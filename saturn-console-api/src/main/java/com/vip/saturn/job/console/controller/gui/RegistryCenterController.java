@@ -84,7 +84,10 @@ public class RegistryCenterController extends AbstractGUIController {
 			namespaces.add(namespaceInfoList.get(i).getNamespace());
 		}
 
-		List<NamespaceInfo> namespaceInfos = namespaceInfoService.selectAll(namespaces);
+		List<NamespaceInfo> namespaceInfos = new ArrayList<>();
+		if (namespaces.size() > 0) {
+			namespaceInfos.addAll(namespaceInfoService.selectAll(namespaces));
+		}
 		List<DomainManagementVo> domainManagementVos = new ArrayList<>(namespaceInfos.size());
 
 		for (int i = 0; i < namespaceInfoList.size(); i++) {
