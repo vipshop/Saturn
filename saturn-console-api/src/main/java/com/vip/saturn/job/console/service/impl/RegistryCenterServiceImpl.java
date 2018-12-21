@@ -65,7 +65,7 @@ import java.util.concurrent.Executors;
 
 public class RegistryCenterServiceImpl implements RegistryCenterService {
 
-	protected static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
+	public static final String DEFAULT_CONSOLE_CLUSTER_ID = "default";
 
 	protected static final String NAMESPACE_CREATOR_NAME = "REST_API";
 
@@ -372,8 +372,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
-	@Override
-	public void refreshRegistryCenter() {
+	private void refreshRegistryCenter() {
 		List<String> allOnlineNamespacesTemp = new ArrayList<>();
 		// 获取新的zkClusters
 		Map<String, ZkCluster> newClusterMap = getZkClusterInfo();
@@ -1090,6 +1089,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					String.format("ZK cluster[%s]已经存在", zkClusterKey));
 		}
 		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, description, "");
+		zkClusterInfoService.updateConsoleZKClusterMapping(zkClusterKey);
 		notifyRefreshRegCenter();
 	}
 
@@ -1253,7 +1253,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				String container = null;
 				if (namespaceInfo.getContainer() == null || namespaceInfo.getContainer() == false) {
 					container = "物理机";
-				}else {
+				} else {
 					container = "容器";
 				}
 				sheet1.addCell(new Label(5, i + 1, container));

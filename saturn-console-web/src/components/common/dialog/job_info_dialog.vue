@@ -18,16 +18,16 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="$option.isJava(jobInfo.jobType)">
+                <el-row>
                     <el-col :span="20">
-                        <el-form-item label="作业实现类" prop="jobClass">
+                        <el-form-item label="作业实现类" prop="jobClass" v-if="$option.isJava(jobInfo.jobType)">
                             <el-input v-model="jobInfo.jobClass" placeholder="如com.vip.saturn.job.SaturnJavaJob"></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="$option.isCron(jobInfo.jobType)">
+                <el-row>
                     <el-col :span="20">
-                        <el-form-item label="cron表达式" prop="cron">
+                        <el-form-item label="cron表达式" prop="cron" v-if="$option.isCron(jobInfo.jobType)">
                             <el-tooltip popper-class="form-tooltip" content="作业启动时间的cron表达式。如每10秒运行:*/10****?,每5分钟运行:0*/5***?" placement="bottom">
                                 <el-input v-model="jobInfo.cron">
                                     <el-button slot="append" @click="checkAndForecastCron">预测</el-button>
@@ -36,9 +36,9 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="$option.isCron(jobInfo.jobType)">
+                <el-row>
                     <el-col>
-                        <el-form-item class="form-annotation">
+                        <el-form-item class="form-annotation" v-if="$option.isCron(jobInfo.jobType)">
                             <span>1. 每10秒运行一次的表达式：*/10 * * * * ?</span><br/>
                             <span>2. 每分钟运行一次的表达式：0 * * * * ?</span>
                         </el-form-item>
@@ -80,21 +80,27 @@
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="$option.isPassive(jobInfo.jobType)">
+                <el-row>
                     <el-col :span="20">
-                        <el-form-item prop="upStream" label="上游作业">
-                            <el-select filterable multiple v-model="jobInfo.upStream" style="width: 100%;">
-                                <el-option v-for="item in upStreamProvided" :label="item" :value="item" :key="item"></el-option>
-                            </el-select>
+                        <el-form-item prop="upStream" label="上游作业" v-if="$option.isPassive(jobInfo.jobType)">
+                            <el-tooltip placement="bottom">
+                                <div slot="content">
+                                    满足上游作业的条件<br/>1.只能是定时作业或被动作业<br/>2.分片只能为1<br/>3.不能是本地模式作业<br/>4.不能是本作业的直接或者间接下游
+                                </div>
+                                <el-select filterable multiple v-model="jobInfo.upStream" style="width: 100%;">
+                                    <el-option v-for="item in upStreamProvided" :label="item" :value="item" :key="item"></el-option>
+                                </el-select>
+                            </el-tooltip>
                         </el-form-item>
                     </el-col>
                 </el-row>
-                <el-row v-if="$option.isPassive(jobInfo.jobType)">
+                <el-row>
                     <el-col :span="20">
-                        <el-form-item prop="downStream" label="下游作业">
-                            <el-tooltip popper-class="form-tooltip" placement="bottom">
+                        <el-form-item prop="downStream" label="下游作业" v-if="$option.isPassive(jobInfo.jobType)">
+                            <el-tooltip placement="bottom">
                                 <div slot="content">
-                                    配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
+                                    配置下游作业的条件<br/>1.只能是定时作业或被动作业<br/>2.分片只能为1<br/>3.不能是本地模式作业<br/><br/>
+                                    满足下游作业的条件<br/>1.只能是被动作业<br/>2.不能是本作业的直接或者间接上游
                                 </div>
                                 <el-select filterable multiple v-model="jobInfo.downStream" style="width: 100%;" :disabled="jobInfo.localMode || jobInfo.shardingTotalCount !== 1">
                                     <el-option v-for="item in downStreamProvided" :label="item" :value="item" :key="item"></el-option>
@@ -277,7 +283,6 @@ export default {
       },
     },
     'jobInfo.jobType': {
-      immediate: true,
       handler(newCount) {
         if (this.$option.isPassive(newCount)) {
           this.getJobStream();

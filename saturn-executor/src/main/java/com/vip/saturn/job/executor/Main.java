@@ -121,15 +121,11 @@ public class Main {
 	}
 
 	private void initClassLoader(ClassLoader executorClassLoader, ClassLoader jobClassLoader) throws Exception {
-		if (executorClassLoader == null) {
-			List<URL> urls = getUrls(new File(saturnLibDir));
-			this.executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]),
-					Main.class.getClassLoader());
-			this.executorClassLoaderShouldBeClosed = true;
-		} else {
-			this.executorClassLoader = executorClassLoader;
-			this.executorClassLoaderShouldBeClosed = false;
-		}
+		setExecutorClassLoader(executorClassLoader);
+		setJobClassLoader(jobClassLoader);
+	}
+
+	private void setJobClassLoader(ClassLoader jobClassLoader) throws MalformedURLException {
 		if (jobClassLoader == null) {
 			if (new File(appLibDir).isDirectory()) {
 				List<URL> urls = getUrls(new File(appLibDir));
@@ -142,6 +138,18 @@ public class Main {
 		} else {
 			this.jobClassLoader = jobClassLoader;
 			this.jobClassLoaderShouldBeClosed = false;
+		}
+	}
+
+	private void setExecutorClassLoader(ClassLoader executorClassLoader) throws MalformedURLException {
+		if (executorClassLoader == null) {
+			List<URL> urls = getUrls(new File(saturnLibDir));
+			this.executorClassLoader = new SaturnClassLoader(urls.toArray(new URL[urls.size()]),
+					Main.class.getClassLoader());
+			this.executorClassLoaderShouldBeClosed = true;
+		} else {
+			this.executorClassLoader = executorClassLoader;
+			this.executorClassLoaderShouldBeClosed = false;
 		}
 	}
 
@@ -180,23 +188,19 @@ public class Main {
 	}
 
 	public void shutdown() throws Exception {
-		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader(executorClassLoader);
-		try {
-			Class<?> startExecutorClass = getSaturnExecutorClass();
-			startExecutorClass.getMethod("shutdown").invoke(saturnExecutor);
-		} finally {
-			Thread.currentThread().setContextClassLoader(oldCL);
-			closeClassLoader();
-		}
+		shutdown("shutdown");
 	}
 
 	public void shutdownGracefully() throws Exception {
+		shutdown("shutdownGracefully");
+	}
+
+	private void shutdown(String methodName) throws Exception {
 		ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(executorClassLoader);
 		try {
 			Class<?> startExecutorClass = getSaturnExecutorClass();
-			startExecutorClass.getMethod("shutdownGracefully").invoke(saturnExecutor);
+			startExecutorClass.getMethod(methodName).invoke(saturnExecutor);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldCL);
 			closeClassLoader();

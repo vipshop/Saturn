@@ -195,7 +195,6 @@ public class RegistryCenterController extends AbstractGUIController {
 			return new SuccessResponseEntity(zkCluster);
 		}
 
-		registryCenterService.refreshRegistryCenter();
 		Collection<ZkCluster> zkClusters = registryCenterService.getZkClusterList();
 		if (StringUtils.isBlank(status) || !"online".equals(status)) {
 			return new SuccessResponseEntity(zkClusters);
