@@ -114,27 +114,29 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 
 	@Override
 	protected boolean mayRunDownStream(JobExecutionMultipleShardingContext shardingContext) {
+		if (!super.mayRunDownStream(shardingContext)) {
+			return false;
+		}
+		// 只要有一个失败，就不触发下游
 		if (shardingContext instanceof SaturnExecutionContext) {
 			SaturnExecutionContext saturnContext = (SaturnExecutionContext) shardingContext;
 			Map<Integer, SaturnJobReturn> shardingItemResults = saturnContext.getShardingItemResults();
-			if (shardingItemResults != null) {
+			if (shardingItemResults != null && !shardingItemResults.isEmpty()) {
 				Iterator<Map.Entry<Integer, SaturnJobReturn>> iterator = shardingItemResults.entrySet().iterator();
 				while (iterator.hasNext()) {
 					Map.Entry<Integer, SaturnJobReturn> next = iterator.next();
 					Integer item = next.getKey();
 					SaturnJobReturn saturnJobReturn = next.getValue();
-					// 有一个失败，就不触发下游作业
 					if (saturnJobReturn.getErrorGroup() != SaturnSystemErrorGroup.SUCCESS) {
 						LogUtils.warn(log, jobName,
 								"item {} ran unsuccessfully, SaturnJobReturn is {}, wont run downStream", item,
-								saturnJobReturn);
+								saturnJobReturn, item);
 						return false;
 					}
 				}
 			}
-			return true;
 		}
-		return super.mayRunDownStream(shardingContext);
+		return true;
 	}
 
 	public Properties parseKV(String path) {

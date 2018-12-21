@@ -44,10 +44,12 @@ public class GetJobConfigVo {
 	// 'dependencies' is deprecated, the front web is not useful, so not transport it
 	private String groups;
 	private Boolean rerun;
+	private List<String> upStream;
 	private List<String> downStream;
 
 	private List<String> timeZonesProvided;
 	private List<ExecutorProvided> preferListProvided;
+	private List<String> upStreamProvided;
 	private List<String> downStreamProvided;
 	private JobStatus status;
 
@@ -60,6 +62,7 @@ public class GetJobConfigVo {
 		if (useDispreferList != null) {
 			onlyUsePreferList = !useDispreferList;
 		}
+		upStream = toList(jobConfig.getUpStream());
 		downStream = toList(jobConfig.getDownStream());
 	}
 
@@ -69,7 +72,7 @@ public class GetJobConfigVo {
 			String[] split = str.split(",");
 			for (String temp : split) {
 				if (StringUtils.isNotBlank(temp)) {
-					list.add(temp);
+					list.add(temp.trim());
 				}
 			}
 		}
@@ -308,6 +311,14 @@ public class GetJobConfigVo {
 		this.rerun = rerun;
 	}
 
+	public List<String> getUpStream() {
+		return upStream;
+	}
+
+	public void setUpStream(List<String> upStream) {
+		this.upStream = upStream;
+	}
+
 	public List<String> getDownStream() {
 		return downStream;
 	}
@@ -330,6 +341,14 @@ public class GetJobConfigVo {
 
 	public void setPreferListProvided(List<ExecutorProvided> preferListProvided) {
 		this.preferListProvided = preferListProvided;
+	}
+
+	public List<String> getUpStreamProvided() {
+		return upStreamProvided;
+	}
+
+	public void setUpStreamProvided(List<String> upStreamProvided) {
+		this.upStreamProvided = upStreamProvided;
 	}
 
 	public List<String> getDownStreamProvided() {

@@ -38,6 +38,7 @@ public class UpdateJobConfigVo {
 	private String dependencies;
 	private String groups;
 	private Boolean rerun;
+	private String upStream;
 	private String downStream;
 
 	public JobConfig toJobConfig() {
@@ -287,6 +288,14 @@ public class UpdateJobConfigVo {
 
 	public void setRerun(Boolean rerun) {
 		this.rerun = rerun;
+	}
+
+	public String getUpStream() {
+		return upStream;
+	}
+
+	public void setUpStream(String upStream) {
+		this.upStream = upStream;
 	}
 
 	public String getDownStream() {

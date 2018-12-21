@@ -52,6 +52,9 @@ public class JobServiceImplTest {
 	private CuratorFrameworkOp curatorFrameworkOp;
 
 	@Mock
+	private CuratorFrameworkOp.CuratorTransactionOp curatorTransactionOp;
+
+	@Mock
 	private CurrentJobConfigService currentJobConfigService;
 
 	@Mock
@@ -78,56 +81,6 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(namespace))
 				.thenReturn(Lists.newArrayList(new JobConfig4DB()));
 		assertEquals(jobService.getGroups(namespace).size(), 1);
-	}
-
-	@Test
-	public void testGetDependingJobs() throws SaturnJobConsoleException {
-		String dependedJob = "dependedJob";
-		String dependingJob = "dependingJob";
-		JobConfig4DB dependedJobConfig = new JobConfig4DB();
-		dependedJobConfig.setJobName(dependedJob);
-		dependedJobConfig.setDependencies(dependingJob);
-		JobConfig4DB dependingJobConfig = new JobConfig4DB();
-		dependingJobConfig.setJobName(dependingJob);
-		dependingJobConfig.setEnabled(Boolean.TRUE);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, dependedJob))
-				.thenReturn(dependedJobConfig);
-		when(currentJobConfigService.findConfigsByNamespace(namespace))
-				.thenReturn(Lists.newArrayList(dependedJobConfig, dependingJobConfig));
-		List<DependencyJob> dependingJobs = jobService.getDependingJobs(namespace, dependedJob);
-		assertEquals(dependingJobs.size(), 1);
-		assertEquals(dependingJobs.get(0).getJobName(), dependingJob);
-
-		// test not exist job
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, dependedJob)).thenReturn(null);
-		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(String.format("不能获取该作业（%s）依赖的所有作业，因为该作业不存在", dependedJob));
-		jobService.getDependingJobs(namespace, dependedJob);
-	}
-
-	@Test
-	public void testGetDependedJobs() throws SaturnJobConsoleException {
-		String dependedJob = "dependedJob";
-		String dependingJob = "dependingJob";
-		JobConfig4DB dependedJobConfig = new JobConfig4DB();
-		dependedJobConfig.setJobName(dependedJob);
-		dependedJobConfig.setEnabled(Boolean.TRUE);
-		dependedJobConfig.setDependencies(dependingJob);
-		JobConfig4DB dependingJobConfig = new JobConfig4DB();
-		dependingJobConfig.setJobName(dependingJob);
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, dependingJob))
-				.thenReturn(dependingJobConfig);
-		when(currentJobConfigService.findConfigsByNamespace(namespace))
-				.thenReturn(Lists.newArrayList(dependedJobConfig, dependingJobConfig));
-		List<DependencyJob> dependingJobs = jobService.getDependedJobs(namespace, dependingJob);
-		assertEquals(dependingJobs.size(), 1);
-		assertEquals(dependingJobs.get(0).getJobName(), dependedJob);
-
-		// test not exist job
-		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, dependingJob)).thenReturn(null);
-		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(String.format("不能获取依赖该作业（%s）的所有作业，因为该作业不存在", dependingJob));
-		jobService.getDependedJobs(namespace, dependingJob);
 	}
 
 	@Test
@@ -605,8 +558,10 @@ public class JobServiceImplTest {
 	public void testAddJobFailByLimitNum() throws SaturnJobConsoleException {
 		JobConfig jobConfig = createValidJob();
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName("abc");
 		when(systemConfigService.getIntegerValue(eq(SystemConfigProperties.MAX_JOB_NUM), eq(100))).thenReturn(1);
 		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		expectedException.expect(SaturnJobConsoleException.class);
 		expectedException.expectMessage(String.format("总作业数超过最大限制(%d)，作业名%s创建失败", 1, jobName));
 		jobService.addJob(namespace, jobConfig, userName);
@@ -634,6 +589,8 @@ public class JobServiceImplTest {
 	public void testAddJobSuccess() throws Exception {
 		JobConfig jobConfig = createValidJob();
 		when(registryCenterService.getCuratorFrameworkOp(eq(namespace))).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.inTransaction()).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.create(anyString(), anyString())).thenReturn(curatorTransactionOp);
 		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())))).thenReturn(true);
 		jobService.addJob(namespace, jobConfig, userName);
 		verify(curatorFrameworkOp).deleteRecursive(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())));
@@ -644,10 +601,14 @@ public class JobServiceImplTest {
 	public void testCopyJobSuccess() throws Exception {
 		JobConfig jobConfig = createValidJob();
 		when(registryCenterService.getCuratorFrameworkOp(eq(namespace))).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.inTransaction()).thenReturn(curatorTransactionOp);
 		when(curatorFrameworkOp.checkExists(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())))).thenReturn(true);
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		when(currentJobConfigService.findConfigByNamespaceAndJobName(eq(namespace), eq("copyJob")))
 				.thenReturn(jobConfig4DB);
+		when(curatorFrameworkOp.inTransaction()).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.replaceIfChanged(anyString(), anyString())).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.create(anyString(), anyString())).thenReturn(curatorTransactionOp);
 		jobService.copyJob(namespace, jobConfig, "copyJob", userName);
 		verify(curatorFrameworkOp).deleteRecursive(eq(JobNodePath.getJobNodePath(jobConfig.getJobName())));
 		verify(currentJobConfigService).create(any(JobConfig4DB.class));
@@ -755,21 +716,63 @@ public class JobServiceImplTest {
 	}
 
 	@Test
-	public void testAddJobFailByHasDownStreamButIsAncestor() throws SaturnJobConsoleException {
+	public void testAddJobFailByHasDownStreamButIsAncestor() throws Exception {
 		JobConfig jobConfig = new JobConfig();
 		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.JAVA_JOB.name());
-		jobConfig.setCron("0 */2 * * * ?");
-		jobConfig.setJobClass("testCLass");
+		jobConfig.setJobType(JobType.PASSIVE_SHELL_JOB.name());
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setUpStream("test1");
 		jobConfig.setDownStream("test1");
+
 		JobConfig4DB test1 = new JobConfig4DB();
 		test1.setJobName("test1");
-		test1.setDownStream(jobName);
+		test1.setJobType(JobType.PASSIVE_SHELL_JOB.name());
+		test1.setShardingTotalCount(1);
+		test1.setShardingItemParameters("0=0");
+
 		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.inTransaction()).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.replaceIfChanged(anyString(), anyString())).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.create(anyString(), anyString())).thenReturn(curatorTransactionOp);
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage("下游作业(test1)不能是该作业的祖先");
+		expectedException.expectMessage(String.format("该域(%s)作业编排有误，存在环: %s", namespace, "[testJob, test1, testJob]"));
+		jobService.addJob(namespace, jobConfig, userName);
+	}
+
+	@Test
+	public void testAddJobFailByHasDownStreamButIsAncestor2() throws Exception {
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName(jobName);
+		jobConfig.setJobType(JobType.PASSIVE_SHELL_JOB.name());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setUpStream("test2");
+		jobConfig.setDownStream("test1");
+
+		JobConfig4DB test1 = new JobConfig4DB();
+		test1.setJobName("test1");
+		test1.setJobType(JobType.PASSIVE_SHELL_JOB.name());
+		test1.setShardingTotalCount(1);
+		test1.setShardingItemParameters("0=0");
+		test1.setDownStream("test2");
+
+		JobConfig4DB test2 = new JobConfig4DB();
+		test2.setJobName("test2");
+		test2.setJobType(JobType.PASSIVE_SHELL_JOB.name());
+		test2.setShardingTotalCount(1);
+		test2.setShardingItemParameters("0=0");
+		test2.setUpStream("test1");
+
+		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1, test2));
+		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
+		when(curatorFrameworkOp.inTransaction()).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.replaceIfChanged(anyString(), anyString())).thenReturn(curatorTransactionOp);
+		when(curatorTransactionOp.create(anyString(), anyString())).thenReturn(curatorTransactionOp);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException
+				.expectMessage(String.format("该域(%s)作业编排有误，存在环: %s", namespace, "[testJob, test2, test1, testJob]"));
 		jobService.addJob(namespace, jobConfig, userName);
 	}
 
@@ -788,29 +791,6 @@ public class JobServiceImplTest {
 		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1));
 		expectedException.expect(SaturnJobConsoleException.class);
 		expectedException.expectMessage("下游作业(test1)不是被动作业");
-		jobService.addJob(namespace, jobConfig, userName);
-	}
-
-	@Test
-	public void testAddJobFailByHasDownStreamButIsAncestor2() throws SaturnJobConsoleException {
-		JobConfig jobConfig = new JobConfig();
-		jobConfig.setJobName(jobName);
-		jobConfig.setJobType(JobType.JAVA_JOB.name());
-		jobConfig.setCron("0 */2 * * * ?");
-		jobConfig.setJobClass("testCLass");
-		jobConfig.setShardingTotalCount(1);
-		jobConfig.setShardingItemParameters("0=0");
-		jobConfig.setDownStream("test1, test2 ");
-		JobConfig4DB test1 = new JobConfig4DB();
-		test1.setJobName("test1");
-		test1.setJobType(JobType.PASSIVE_JAVA_JOB.name());
-		JobConfig4DB test2 = new JobConfig4DB();
-		test2.setJobName("test2");
-		test2.setJobType(JobType.PASSIVE_JAVA_JOB.name());
-		test2.setDownStream(jobName);
-		when(currentJobConfigService.findConfigsByNamespace(eq(namespace))).thenReturn(Arrays.asList(test1, test2));
-		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage("下游作业(test2)不能是该作业的祖先");
 		jobService.addJob(namespace, jobConfig, userName);
 	}
 
@@ -1896,7 +1876,7 @@ public class JobServiceImplTest {
 				.thenReturn(Lists.newArrayList(executor));
 		when(curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executor, "status"))).thenReturn("true");
 		jobService.runAtOnce(namespace, jobName);
-		verify(curatorFrameworkOp).create(JobNodePath.getRunOneTimePath(jobName, executor));
+		verify(curatorFrameworkOp).create(JobNodePath.getRunOneTimePath(jobName, executor), "null");
 	}
 
 	@Test

@@ -435,7 +435,8 @@ ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '�
 
 -- 3.3.0 update
 ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';
-ALTER TABLE `job_config` ADD `down_stream` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '下游作业';
+ALTER TABLE `job_config` ADD `up_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '上游作业';
+ALTER TABLE `job_config` ADD `down_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '下游作业';
 
 CREATE TABLE `saturn_dashboard_history` (
   `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',

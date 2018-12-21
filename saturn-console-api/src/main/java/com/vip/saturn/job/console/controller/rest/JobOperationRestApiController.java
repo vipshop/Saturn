@@ -133,7 +133,7 @@ public class JobOperationRestApiController extends AbstractRestController {
 	public ResponseEntity<Object> run(@PathVariable("namespace") String namespace,
 			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		try {
-			restApiService.runJobAtOnce(namespace, jobName);
+			restApiService.runJobAtOnce(namespace, jobName, null);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -188,10 +188,11 @@ public class JobOperationRestApiController extends AbstractRestController {
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}/runDownStream", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> runDownStream(@PathVariable("namespace") String namespace,
-			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+			@PathVariable("jobName") String jobName, @RequestBody Map<String, Object> triggeredData)
+			throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			List<BatchJobResult> batchJobResultList = restApiService.runDownStream(namespace, jobName);
+			List<BatchJobResult> batchJobResultList = restApiService.runDownStream(namespace, jobName, triggeredData);
 			return new ResponseEntity<Object>(batchJobResultList, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
@@ -273,6 +274,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
+		jobConfig.setUpStream(checkAndGetParametersValueAsString(configParams, "upStream", false));
+
 		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
 
 		return jobConfig;
@@ -342,6 +345,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		jobConfig.setRerun(checkAndGetParametersValueAsBoolean(configParams, "rerun", false));
 
 		jobConfig.setFailover(checkAndGetParametersValueAsBoolean(configParams, "failover", false));
+
+		jobConfig.setUpStream(checkAndGetParametersValueAsString(configParams, "upStream", false));
 
 		jobConfig.setDownStream(checkAndGetParametersValueAsString(configParams, "downStream", false));
 

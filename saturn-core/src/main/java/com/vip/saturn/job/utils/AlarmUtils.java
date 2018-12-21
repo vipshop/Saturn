@@ -1,6 +1,6 @@
 package com.vip.saturn.job.utils;
 
-import com.alibaba.fastjson.JSONObject;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -41,14 +41,15 @@ public class AlarmUtils {
 			CloseableHttpClient httpClient = null;
 			try {
 				checkParameters(alarmInfo);
-				JSONObject json = new JSONObject(alarmInfo);
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPost request = new HttpPost(targetUrl);
 				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
 						.setSocketTimeout(10000).build();
 				request.setConfig(requestConfig);
-				StringEntity params = new StringEntity(json.toString());
+				StringEntity params = new StringEntity(
+						JsonUtils.getGson().toJson(alarmInfo, new TypeToken<Map<String, Object>>() {
+						}.getType()));
 				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 				request.setEntity(params);
 

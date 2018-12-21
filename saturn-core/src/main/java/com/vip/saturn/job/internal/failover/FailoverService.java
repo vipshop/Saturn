@@ -172,7 +172,7 @@ public class FailoverService extends AbstractSaturnService {
 				getJobNodeStorage()
 						.fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
 				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
-				jobScheduler.triggerJob();
+				jobScheduler.triggerJob(null);
 			}
 		}
 	}

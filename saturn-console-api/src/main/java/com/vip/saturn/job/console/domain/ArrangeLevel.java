@@ -4,7 +4,7 @@ public class ArrangeLevel {
 
 	private String name;
 	private String description;
-	private String type;
+	private JobStatus jobStatus;
 
 	public String getName() {
 		return name;
@@ -22,12 +22,12 @@ public class ArrangeLevel {
 		this.description = description;
 	}
 
-	public String getType() {
-		return type;
+	public JobStatus getJobStatus() {
+		return jobStatus;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setJobStatus(JobStatus jobStatus) {
+		this.jobStatus = jobStatus;
 	}
 
 }

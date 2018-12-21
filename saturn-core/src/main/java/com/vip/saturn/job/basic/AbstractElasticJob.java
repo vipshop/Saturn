@@ -27,6 +27,7 @@ import com.vip.saturn.job.internal.sharding.ShardingService;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.trigger.SaturnScheduler;
 import com.vip.saturn.job.trigger.Trigger;
+import com.vip.saturn.job.trigger.Triggered;
 import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -39,6 +40,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -141,7 +143,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 		getExecutorService();
 	}
 
-	public final void execute() {
+	public final void execute(final Triggered triggered) {
 		LogUtils.debug(log, jobName, "Saturn start to execute job [{}]", jobName);
 		// 对每一个jobScheduler，作业对象只有一份，多次使用，所以每次开始执行前先要reset
 		reset();
@@ -163,7 +165,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 				return;
 			}
 
-			shardingContext = executionContextService.getJobExecutionShardingContext();
+			shardingContext = executionContextService.getJobExecutionShardingContext(triggered);
 			if (shardingContext.getShardingItems() == null || shardingContext.getShardingItems().isEmpty()) {
 				LogUtils.debug(log, jobName, "{} 's items of the executor is empty, do nothing about business.",
 						jobName);
@@ -238,7 +240,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 		if (!mayRunDownStream(shardingContext)) {
 			return;
 		}
-
+		String downStreamDataStr = scheduler.getTrigger().serializeDownStreamData(shardingContext.getTriggered());
 		String logMessagePrefix = "call runDownStream api";
 		int size = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.size();
 		for (int i = 0; i < size; i++) {
@@ -253,6 +255,7 @@ public abstract class AbstractElasticJob implements Stoppable {
 						.setSocketTimeout(10000).build();
 				request.setConfig(requestConfig);
 				request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+				request.setEntity(new StringEntity(downStreamDataStr));
 				CloseableHttpResponse httpResponse = httpClient.execute(request);
 				StatusLine statusLine = httpResponse.getStatusLine();
 				if (statusLine != null && statusLine.getStatusCode() == HttpStatus.SC_OK) {

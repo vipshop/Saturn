@@ -1,7 +1,9 @@
 package com.vip.saturn.job.executor;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
@@ -302,7 +304,9 @@ public class SaturnExecutor {
 				String responseBody = EntityUtils.toString(httpResponse.getEntity());
 				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
 				if (statusLine != null && statusCode.intValue() == HttpStatus.SC_OK) {
-					Map<String, String> discoveryInfo = JSONObject.parseObject(responseBody, Map.class);
+					Map<String, String> discoveryInfo = JsonUtils.getGson()
+							.fromJson(responseBody, new TypeToken<Map<String, String>>() {
+							}.getType());
 					String connectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
 					if (StringUtils.isBlank(connectionString)) {
 						LogUtils.warn(log, LogEvents.ExecutorEvent.INIT, "ZK connection string is blank!");
@@ -361,9 +365,9 @@ public class SaturnExecutor {
 	}
 
 	private String obtainErrorResponseMsg(String responseBody) {
-		if (responseBody != null && !responseBody.trim().isEmpty()) {
-			JSONObject parseObject = JSONObject.parseObject(responseBody);
-			return parseObject.getString("message");
+		if (StringUtils.isNotBlank(responseBody)) {
+			JsonElement message = JsonUtils.getJsonParser().parse(responseBody).getAsJsonObject().get("message");
+			return message == JsonNull.INSTANCE || message == null ? "" : message.getAsString();
 		}
 
 		return "";
