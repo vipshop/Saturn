@@ -185,15 +185,16 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
+		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		if (saturnApplication == null) {
 			saturnApplication = validateAndLoadSaturnApplication(jobClassLoader);
 		}
-		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader, saturnApplication);
 	}
 
 	/*
 	 * Try to parse the SaturnApplication from saturn.properties. If SaturnApplication is defined then call the method 'init'.
+	 * This method should be called after logger is initialized.
 	 */
 	private static Object validateAndLoadSaturnApplication(ClassLoader jobClassLoader) {
 		try {
@@ -215,6 +216,7 @@ public class SaturnExecutor {
 				if (saturnApplicationClass.isAssignableFrom(appClass)) {
 					Object saturnApplication = appClass.newInstance();
 					appClass.getMethod("init").invoke(saturnApplication);
+					LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "SaturnApplication init successfully");
 					return saturnApplication;
 				} else {
 					throw new RuntimeException(
@@ -224,9 +226,10 @@ public class SaturnExecutor {
 				Thread.currentThread().setContextClassLoader(oldCL);
 			}
 		} catch (RuntimeException e) {
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to load SaturnApplication", e);
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to load SaturnApplication", e);
 			throw new RuntimeException(e);
 		}
 	}
