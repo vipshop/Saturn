@@ -207,35 +207,23 @@ public class JobServiceImpl implements JobService {
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void removeJob(String namespace, String jobName) throws SaturnJobConsoleException {
-		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
-		JobConfig4DB jobConfig = null;
-		List<String> upStreamJobNames = new ArrayList<>();
-		if (jobConfig4DBList != null) {
-			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
-				if (jobConfig4DB.getJobName().equals(jobName)) {
-					jobConfig = jobConfig4DB;
-					continue;
-				}
-				if (StringUtils.isBlank(jobConfig4DB.getDownStream())) {
-					continue;
-				}
-				for (String split : jobConfig4DB.getDownStream().split(",")) {
-					if (split.trim().equals(jobName)) {
-						upStreamJobNames.add(jobConfig4DB.getJobName());
-					}
-				}
-			}
-		}
-		if (jobConfig == null) {
+		JobConfig4DB jobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName);
+		if (jobConfig4DB == null) {
 			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED, "不能删除该作业（" + jobName + "），因为该作业不存在");
 		}
-		if (!upStreamJobNames.isEmpty()) {
+		String upStream = jobConfig4DB.getUpStream();
+		if (StringUtils.isNotBlank(upStream)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED,
-					"不能删除该作业（" + jobName + "），因为该作业存在上游作业" + upStreamJobNames + "，请先断开上下游关系再删除");
+					"不能删除该作业（" + jobName + "），因为该作业存在上游作业（" + upStream + "），请先断开上下游关系再删除");
+		}
+		String downStream = jobConfig4DB.getDownStream();
+		if (StringUtils.isNotBlank(downStream)) {
+			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED,
+					"不能删除该作业（" + jobName + "），因为该作业存在下游作业（" + downStream + "），请先断开上下游关系再删除");
 		}
 		CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = registryCenterService
 				.getCuratorFrameworkOp(namespace);
-		JobStatus jobStatus = getJobStatus(jobName, curatorFrameworkOp, jobConfig.getEnabled());
+		JobStatus jobStatus = getJobStatus(jobName, curatorFrameworkOp, jobConfig4DB.getEnabled());
 
 		if (JobStatus.STOPPED != jobStatus) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
@@ -252,7 +240,7 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 		// remove job from db
-		currentJobConfigService.deleteByPrimaryKey(jobConfig.getId());
+		currentJobConfigService.deleteByPrimaryKey(jobConfig4DB.getId());
 		// remove job from zk
 		removeJobFromZk(jobName, curatorFrameworkOp);
 	}

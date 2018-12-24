@@ -194,16 +194,23 @@ public class JobServiceImplTest {
 	public void testRemoveJobFailByHaveUpStream() throws SaturnJobConsoleException {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
-		JobConfig4DB upStream = new JobConfig4DB();
-		upStream.setJobName("upStreamJob");
-		upStream.setDownStream(jobName);
-		JobConfig4DB other = new JobConfig4DB();
-		other.setJobName("other");
-		when(currentJobConfigService.findConfigsByNamespace(namespace))
-				.thenReturn(Lists.newArrayList(jobConfig4DB, upStream, other));
+		jobConfig4DB.setUpStream("upStreamJob");
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
 		expectedException.expect(SaturnJobConsoleException.class);
-		expectedException.expectMessage(
-				String.format("不能删除该作业（%s），因为该作业存在上游作业[%s]，请先断开上下游关系再删除", jobName, upStream.getJobName()));
+		expectedException
+				.expectMessage(String.format("不能删除该作业（%s），因为该作业存在上游作业（%s），请先断开上下游关系再删除", jobName, "upStreamJob"));
+		jobService.removeJob(namespace, jobName);
+	}
+
+	@Test
+	public void testRemoveJobFailByHaveDownStream() throws SaturnJobConsoleException {
+		JobConfig4DB jobConfig4DB = new JobConfig4DB();
+		jobConfig4DB.setJobName(jobName);
+		jobConfig4DB.setDownStream("downStreamJob");
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
+		expectedException.expect(SaturnJobConsoleException.class);
+		expectedException
+				.expectMessage(String.format("不能删除该作业（%s），因为该作业存在下游作业（%s），请先断开上下游关系再删除", jobName, "downStreamJob"));
 		jobService.removeJob(namespace, jobName);
 	}
 
@@ -212,7 +219,7 @@ public class JobServiceImplTest {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.TRUE);
-		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -230,7 +237,7 @@ public class JobServiceImplTest {
 		JobConfig4DB jobConfig4DB = new JobConfig4DB();
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -253,7 +260,7 @@ public class JobServiceImplTest {
 		jobConfig4DB.setId(1L);
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
@@ -277,7 +284,7 @@ public class JobServiceImplTest {
 		jobConfig4DB.setId(1L);
 		jobConfig4DB.setJobName(jobName);
 		jobConfig4DB.setEnabled(Boolean.FALSE);
-		when(currentJobConfigService.findConfigsByNamespace(namespace)).thenReturn(Lists.newArrayList(jobConfig4DB));
+		when(currentJobConfigService.findConfigByNamespaceAndJobName(namespace, jobName)).thenReturn(jobConfig4DB);
 		when(registryCenterService.getCuratorFrameworkOp(namespace)).thenReturn(curatorFrameworkOp);
 		when(curatorFrameworkOp.getChildren(JobNodePath.getExecutionNodePath(jobName)))
 				.thenReturn(Lists.newArrayList("1"));
