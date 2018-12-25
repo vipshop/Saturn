@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_ADDED_COUNT;
+import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME;
 
 /**
  * @author hebelala
@@ -184,8 +185,12 @@ public class InitNewJobService {
 			} catch (JobInitAlarmException e) {
 				if (!SystemEnvProperties.VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM) {
 					// no need to log exception stack as it should be logged in the original happen place
+					String groupNameFromSystem = StringUtils.trim(getGroupNameFromSystemPropertyOrEnv());
+					String groupNameFromZk = StringUtils.trim(getGroupNameFromZk(jobName));
+					boolean needSkipClassNotFoundException = hasTheSameGroupName(groupNameFromSystem, groupNameFromZk);
 					if (e.getCause() instanceof ClassNotFoundException
-							&& SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM) {
+							&& SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM
+							&& needSkipClassNotFoundException) {
 						//no need to raiseAlarm if class not found and VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM is true
 						LogUtils.debug(log, jobName, "job initialize, class not found");
 					} else {
@@ -197,6 +202,22 @@ public class InitNewJobService {
 			}
 
 			return false;
+		}
+
+		private boolean hasTheSameGroupName(String groupNameFromSystem, String groupNameFromZk) {
+			if (StringUtils.isBlank(groupNameFromSystem) || StringUtils.isBlank(groupNameFromZk)) {
+				return false;
+			}
+			return StringUtils.equals(groupNameFromSystem, groupNameFromZk);
+		}
+
+		private String getGroupNameFromSystemPropertyOrEnv() {
+			return System.getProperty(VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME,
+					System.getenv(VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME));
+		}
+
+		private String getGroupNameFromZk(String jobName) {
+			return regCenter.get(JobNodePath.getConfigNodePath(jobName, "groups"));
 		}
 
 		private void raiseAlarmForJobInitFailed(String jobName, JobInitAlarmException jobInitAlarmException) {

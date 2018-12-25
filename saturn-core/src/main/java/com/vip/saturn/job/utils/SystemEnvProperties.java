@@ -110,6 +110,8 @@ public class SystemEnvProperties {
 			System.getProperty(NAME_VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM,
 					System.getenv(NAME_VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM)));
 
+	public static final String VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME = "VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME";
+
 	static {
 		loadProperties();
 	}
