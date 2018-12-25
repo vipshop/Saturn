@@ -15,7 +15,7 @@
 package com.vip.saturn.job.internal.config;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.basic.*;
 import com.vip.saturn.job.exception.ShardingItemParametersException;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
@@ -24,8 +24,6 @@ import com.vip.saturn.job.utils.JsonUtils;
 import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.type.MapType;
-import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +44,6 @@ public class ConfigurationService extends AbstractSaturnService {
 
 	// 参考http://stackoverflow.com/questions/17963969/java-regex-pattern-split-commna
 	private static final String PATTERN = ",(?=(([^\"]*\"){2})*[^\"]*$)";
-
-	private MapType customContextType = TypeFactory.defaultInstance()
-			.constructMapType(HashMap.class, String.class, String.class);
 
 	private TimeZone jobTimeZone;
 
@@ -408,11 +403,12 @@ public class ConfigurationService extends AbstractSaturnService {
 	 * @return 自定义上下文map
 	 */
 	private Map<String, String> toCustomContext(String customContextStr) {
-		if (StringUtils.isNotBlank(customContextStr)) {
-			return JsonUtils.fromJSON(customContextStr, customContextType);
+		Map<String, String> customContext = JsonUtils.fromJson(customContextStr, new TypeToken<Map<String, String>>() {
+		}.getType());
+		if (customContext == null) {
+			customContext = new HashMap<>();
 		}
-
-		return Maps.newHashMap();
+		return customContext;
 	}
 
 	public JobType getJobType() {

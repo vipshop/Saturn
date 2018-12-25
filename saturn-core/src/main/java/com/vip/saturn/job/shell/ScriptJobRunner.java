@@ -1,12 +1,12 @@
 package com.vip.saturn.job.shell;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
+import com.vip.saturn.job.utils.JsonUtils;
 import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -14,6 +14,7 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,8 +99,8 @@ public class ScriptJobRunner {
 		if (saturnOutputFile != null && saturnOutputFile.exists()) {
 			try {
 				String fileContents = FileUtils.readFileToString(saturnOutputFile);
-				if (fileContents != null && !fileContents.trim().isEmpty()) {
-					tmp = JSON.parseObject(fileContents.trim(), SaturnJobReturn.class);
+				if (StringUtils.isNotBlank(fileContents)) {
+					tmp = JsonUtils.getGson().fromJson(fileContents.trim(), SaturnJobReturn.class);
 					businessReturned = true; // 脚本成功返回数据
 				}
 			} catch (Throwable t) {
@@ -242,7 +243,7 @@ public class ScriptJobRunner {
 
 		saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 				SaturnSystemErrorGroup.FAIL);
-		LogUtils.error(log, jobName, "{}-{} Exception", jobName, item, errMsg);
+		LogUtils.error(log, jobName, "{}-{} Exception: {}", jobName, item, errMsg, e);
 		return saturnJobReturn;
 	}
 }

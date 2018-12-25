@@ -1,26 +1,18 @@
 package com.vip.saturn.demo;
 
 import com.vip.saturn.job.spring.GenericSpringSaturnApplication;
-import org.springframework.context.ApplicationContext;
 
+/**
+ * Entrance of the demo application, make sure the class name is defined in saturn.properties.
+ */
 public class Application extends GenericSpringSaturnApplication {
 
-	/**
-	 * If the Spring container defaults aren’t to your taste, you can instead customize it
-	 * @return the running ApplicationContext
-	 */
-	@Override
-	protected ApplicationContext run() {
-		return super.run();
-	}
-
-	/**
-	 * You can override this method, to load the custom xml files. The <code>applicationContext.xml</code> will be loaded by default.
-	 * @return array of resource locations
+	/*
+	 * Set the Spring applicationContext file locations
 	 */
 	@Override
 	protected String[] getConfigLocations() {
-		return super.getConfigLocations();
+		return new String[]{"classpath:customContext.xml"};
 	}
 
 }

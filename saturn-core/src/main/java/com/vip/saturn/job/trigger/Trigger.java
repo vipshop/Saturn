@@ -2,6 +2,9 @@ package com.vip.saturn.job.trigger;
 
 import com.vip.saturn.job.basic.AbstractElasticJob;
 
+/**
+ * @author hebelala
+ */
 public interface Trigger {
 
 	void init(AbstractElasticJob job);
@@ -17,5 +20,9 @@ public interface Trigger {
 	void onResharding();
 
 	boolean isFailoverSupported();
+
+	Triggered createTriggered(boolean yes, String upStreamDataStr);
+
+	String serializeDownStreamData(Triggered triggered);
 
 }

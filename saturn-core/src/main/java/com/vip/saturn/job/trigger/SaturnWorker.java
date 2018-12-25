@@ -19,14 +19,17 @@ public class SaturnWorker implements Runnable {
 
 	static Logger log = LoggerFactory.getLogger(SaturnWorker.class);
 	private final Object sigLock = new Object();
-	private AbstractElasticJob job;
+	private final AbstractElasticJob job;
+	private final Triggered notTriggered;
 	private volatile OperableTrigger triggerObj;
 	private volatile boolean paused = false;
-	private volatile boolean triggered = false;
+	private volatile Triggered triggered;
 	private AtomicBoolean halted = new AtomicBoolean(false);
 
-	public SaturnWorker(AbstractElasticJob job, Trigger trigger) {
+	public SaturnWorker(AbstractElasticJob job, Triggered notTriggered, Trigger trigger) {
 		this.job = job;
+		this.notTriggered = notTriggered;
+		this.triggered = notTriggered;
 		initTrigger(trigger);
 	}
 
@@ -71,9 +74,9 @@ public class SaturnWorker implements Runnable {
 		}
 	}
 
-	void trigger() {
+	void trigger(Triggered triggered) {
 		synchronized (sigLock) {
-			triggered = true;
+			this.triggered = triggered == null ? notTriggered : triggered;
 			sigLock.notifyAll();
 		}
 	}
@@ -123,7 +126,7 @@ public class SaturnWorker implements Runnable {
 						if (halted.get()) {
 							break;
 						}
-						if (triggered) {
+						if (triggered.isYes()) {
 							break;
 						}
 
@@ -144,12 +147,14 @@ public class SaturnWorker implements Runnable {
 					}
 				}
 				boolean goAhead;
+				Triggered currentTriggered = notTriggered;
 				// 触发执行只有两个条件：1.时间到了 2.点立即执行
 				synchronized (sigLock) {
 					goAhead = !halted.get() && !paused;
-					// 重置立即执行标志；
-					if (triggered) {
-						triggered = false;
+					// 重置立即执行标志，赋值当前立即执行数据
+					if (triggered.isYes()) {
+						currentTriggered = triggered;
+						triggered = notTriggered;
 					} else if (goAhead) { // 非立即执行。即，执行时间到了，或者没有下次执行时间
 						goAhead = goAhead && !noFireTime; // 有下次执行时间，即执行时间到了，才执行作业
 						if (goAhead) { // 执行时间到了，更新执行时间
@@ -165,7 +170,7 @@ public class SaturnWorker implements Runnable {
 					}
 				}
 				if (goAhead) {
-					job.execute();
+					job.execute(currentTriggered);
 				}
 
 			} catch (RuntimeException e) {

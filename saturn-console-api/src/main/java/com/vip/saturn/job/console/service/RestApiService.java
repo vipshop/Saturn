@@ -71,7 +71,7 @@ public interface RestApiService {
 	/**
 	 * Run the job immediately.
 	 */
-	void runJobAtOnce(String namespace, String jobName) throws SaturnJobConsoleException;
+	void runJobAtOnce(String namespace, String jobName, Map<String, Object> triggeredData) throws SaturnJobConsoleException;
 
 	/**
 	 * Stop the job immediately. The job status will change to STOPPING.
@@ -106,5 +106,6 @@ public interface RestApiService {
 	/**
 	 * Trigger the job's downStream to run
 	 */
-	List<BatchJobResult> runDownStream(String namespace, String jobName) throws SaturnJobConsoleException;
+	List<BatchJobResult> runDownStream(String namespace, String jobName, Map<String, Object> triggeredData)
+			throws SaturnJobConsoleException;
 }

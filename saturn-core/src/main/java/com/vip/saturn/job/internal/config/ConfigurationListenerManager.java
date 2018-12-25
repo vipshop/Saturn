@@ -28,6 +28,8 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+
 public class ConfigurationListenerManager extends AbstractListenerManager {
 	static Logger log = LoggerFactory.getLogger(ConfigurationListenerManager.class);
 
@@ -55,6 +57,8 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 	public void start() {
 		zkCacheManager.addTreeCacheListener(new CronPathListener(),
 				JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
+		zkCacheManager.addTreeCacheListener(new DownStreamPathListener(),
+				JobNodePath.getNodeFullPath(jobName, ConfigurationNode.DOWN_STREAM), 0);
 		zkCacheManager.addTreeCacheListener(new EnabledPathListener(),
 				JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
@@ -64,6 +68,7 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 		super.shutdown();
 		isShutdown = true;
 		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.CRON), 0);
+		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.DOWN_STREAM), 0);
 		zkCacheManager.closeTreeCache(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.ENABLED), 0);
 	}
 
@@ -131,6 +136,27 @@ public class ConfigurationListenerManager extends AbstractListenerManager {
 				}
 			}
 		}
+	}
+
+	class DownStreamPathListener extends AbstractJobListener {
+
+		@Override
+		protected void dataChanged(CuratorFramework client, TreeCacheEvent event, String path) {
+			if (isShutdown) {
+				return;
+			}
+			if (ConfigurationNode.isDownStreamPath(jobName, path) && Type.NODE_UPDATED == event.getType()) {
+				try {
+					byte[] data = event.getData().getData();
+					String dataStr = data == null ? "" : new String(data, "UTF-8");
+					jobConfiguration.setDownStream(dataStr);
+					LogUtils.info(log, jobName, "{} 's downStream updated to {}", jobName, dataStr);
+				} catch (UnsupportedEncodingException e) {
+					LogUtils.error(log, jobName, "unexpected error", e);
+				}
+			}
+		}
+
 	}
 
 }

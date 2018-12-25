@@ -17,10 +17,6 @@ public interface JobService {
 
 	List<String> getGroups(String namespace) throws SaturnJobConsoleException;
 
-	List<DependencyJob> getDependingJobs(String namespace, String jobName) throws SaturnJobConsoleException;
-
-	List<DependencyJob> getDependedJobs(String namespace, String jobName) throws SaturnJobConsoleException;
-
 	void enableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException;
 
 	void disableJob(String namespace, String jobName, String updatedBy) throws SaturnJobConsoleException;
@@ -34,6 +30,10 @@ public interface JobService {
 
 	void setPreferList(String namespace, String jobName, String preferList, String updatedBy)
 			throws SaturnJobConsoleException;
+
+	List<String> getCandidateUpStream(String namespace) throws SaturnJobConsoleException;
+
+	List<String> getCandidateDownStream(String namespace) throws SaturnJobConsoleException;
 
 	void addJob(String namespace, JobConfig jobConfig, String createdBy) throws SaturnJobConsoleException;
 

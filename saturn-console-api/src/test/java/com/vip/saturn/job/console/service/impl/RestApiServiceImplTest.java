@@ -81,7 +81,7 @@ public class RestApiServiceImplTest {
 		List<JobServerStatus> jobServerStatusList = getJobServerStatus(servers);
 		when(jobService.getJobServersStatus(TEST_NAME_SPACE_NAME, jobName)).thenReturn(jobServerStatusList);
 		// run
-		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
+		restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName, null);
 	}
 
 	private List<JobServerStatus> getJobServerStatus(List<JobServer> servers) {
@@ -105,7 +105,7 @@ public class RestApiServiceImplTest {
 
 		// run
 		try {
-			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
+			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName, null);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "job's status is not {READY}", e.getMessage());
@@ -123,7 +123,7 @@ public class RestApiServiceImplTest {
 
 		// run
 		try {
-			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName);
+			restApiService.runJobAtOnce(TEST_NAME_SPACE_NAME, jobName, null);
 		} catch (SaturnJobConsoleHttpException e) {
 			assertEquals("status code is not 400", 400, e.getStatusCode());
 			assertEquals("error message is not equals", "no executor found for this job", e.getMessage());

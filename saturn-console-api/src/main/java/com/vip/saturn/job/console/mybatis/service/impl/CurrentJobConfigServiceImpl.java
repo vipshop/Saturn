@@ -27,6 +27,7 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 
 	@Autowired
 	private CurrentJobConfigRepository currentJobConfigRepo;
+
 	@Autowired
 	private SqlSessionFactory sqlSessionFactory;
 
@@ -84,6 +85,12 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		// 持久化历史配置
 		oldJobConfig.setId(null);
 		historyJobConfigService.create(oldJobConfig);
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public void updateStream(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException {
+		currentJobConfigRepo.updateStream(currentJobConfig);
 	}
 
 	@Override

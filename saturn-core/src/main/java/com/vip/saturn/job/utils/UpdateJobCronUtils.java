@@ -1,6 +1,7 @@
 package com.vip.saturn.job.utils;
 
 import com.google.common.collect.Maps;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -47,7 +48,8 @@ public class UpdateJobCronUtils {
 					bodyEntity.putAll(customContext);
 				}
 				bodyEntity.put("cron", cron);
-				String json = JsonUtils.toJSON(bodyEntity);
+				String json = JsonUtils.toJson(bodyEntity, new TypeToken<Map<String, String>>() {
+				}.getType());
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPut request = new HttpPut(targetUrl);

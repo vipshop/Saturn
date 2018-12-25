@@ -85,6 +85,8 @@ public final class ConfigurationNode {
 	 */
 	public static final String CHANNEL_NAME = ROOT + "/channelName";
 
+	public static final String UP_STREAM = ROOT + "/upStream";
+
 	public static final String DOWN_STREAM = ROOT + "/downStream";
 
 	/**
@@ -207,6 +209,10 @@ public final class ConfigurationNode {
 
 	public static boolean isTimeoutSecondsPath(final String jobName, final String path) {
 		return JobNodePath.getNodeFullPath(jobName, TIMEOUTSECONDS).equals(path);
+	}
+
+	public static boolean isDownStreamPath(final String jobName, final String path) {
+		return JobNodePath.getNodeFullPath(jobName, DOWN_STREAM).equals(path);
 	}
 
 	/**

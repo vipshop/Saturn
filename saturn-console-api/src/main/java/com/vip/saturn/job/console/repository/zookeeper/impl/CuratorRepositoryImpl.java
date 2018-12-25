@@ -22,6 +22,7 @@ import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.ZooDefs;
@@ -162,7 +163,8 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 		@Override
 		public void create(final String znode, Object data) {
 			try {
-				curatorFramework.create().creatingParentsIfNeeded().forPath(znode, data.toString().getBytes(Charset.forName("UTF-8")));
+				curatorFramework.create().creatingParentsIfNeeded()
+						.forPath(znode, data.toString().getBytes(Charset.forName("UTF-8")));
 			} catch (final NodeExistsException ignore) {
 				// CHECKSTYLE:OFF
 			} catch (final Exception ex) {
@@ -229,7 +231,8 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 			if (!checkExists(node)) {
 				try {
-					curatorFramework.create().creatingParentsIfNeeded().forPath(node, value.toString().getBytes(Charset.forName("UTF-8")));
+					curatorFramework.create().creatingParentsIfNeeded()
+							.forPath(node, value.toString().getBytes(Charset.forName("UTF-8")));
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -313,7 +316,8 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 
 			private CuratorTransactionOpImpl create(String znode, byte[] data) throws Exception {
-				curatorTransactionFinal = curatorTransactionFinal.create().forPath(znode, data).and();
+				curatorTransactionFinal = curatorTransactionFinal.create().withMode(CreateMode.PERSISTENT)
+						.forPath(znode, data).and();
 				return this;
 			}
 
@@ -340,6 +344,13 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 				return true;
 			}
 
+			@Override
+			public CuratorTransactionOpImpl replace(String znode, Object value) throws Exception {
+				byte[] data = toData(value);
+				curatorTransactionFinal = curatorTransactionFinal.setData().forPath(znode, data).and();
+				return this;
+			}
+
 			public CuratorTransactionOpImpl replaceIfChanged(String znode, Object value) throws Exception {
 				return replaceIfChanged(znode, value, new AtomicInteger(0));
 			}
@@ -362,8 +373,10 @@ public class CuratorRepositoryImpl implements CuratorRepository {
 			}
 
 			@Override
-			public CuratorTransactionOpImpl create(String znode) throws Exception {
-				curatorTransactionFinal = curatorTransactionFinal.create().forPath(znode).and();
+			public CuratorTransactionOp create(String znode, Object value) throws Exception {
+				byte[] data = toData(value);
+				curatorTransactionFinal = curatorTransactionFinal.create().withMode(CreateMode.PERSISTENT)
+						.forPath(znode, data).and();
 				return this;
 			}
 

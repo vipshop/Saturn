@@ -46,6 +46,7 @@ public class JobConfig implements Serializable {
 	private String dependencies;
 	private String groups;
 	private Boolean rerun;
+	private String upStream;
 	private String downStream;
 
 	private Boolean isCopyJob = Boolean.FALSE;
@@ -86,6 +87,7 @@ public class JobConfig implements Serializable {
 		dependencies = getDefaultIfNull(dependencies, "");
 		groups = getDefaultIfNull(groups, "");
 		rerun = getDefaultIfNull(rerun, Boolean.FALSE);
+		upStream = getDefaultIfNull(upStream, "");
 		downStream = getDefaultIfNull(downStream, "");
 	}
 
@@ -353,6 +355,14 @@ public class JobConfig implements Serializable {
 		this.rerun = rerun;
 	}
 
+	public String getUpStream() {
+		return upStream;
+	}
+
+	public void setUpStream(String upStream) {
+		this.upStream = upStream;
+	}
+
 	public String getDownStream() {
 		return downStream;
 	}
@@ -450,7 +460,12 @@ public class JobConfig implements Serializable {
 			return false;
 		if (rerun != null ? !rerun.equals(jobConfig.rerun) : jobConfig.rerun != null)
 			return false;
-		return downStream != null ? downStream.equals(jobConfig.downStream) : jobConfig.downStream == null;
+		if (upStream != null ? !upStream.equals(jobConfig.upStream) : jobConfig.upStream != null)
+			return false;
+		if (downStream != null ? !downStream.equals(jobConfig.downStream) : jobConfig.downStream != null) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -487,6 +502,7 @@ public class JobConfig implements Serializable {
 		result = 31 * result + (dependencies != null ? dependencies.hashCode() : 0);
 		result = 31 * result + (groups != null ? groups.hashCode() : 0);
 		result = 31 * result + (rerun != null ? rerun.hashCode() : 0);
+		result = 31 * result + (upStream != null ? upStream.hashCode() : 0);
 		result = 31 * result + (downStream != null ? downStream.hashCode() : 0);
 		return result;
 	}

@@ -1,7 +1,9 @@
 package com.vip.saturn.job.executor;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.basic.JobRegistry;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.ShutdownHandler;
@@ -42,6 +44,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SaturnExecutor {
 
 	private static final String DISCOVER_INFO_ZK_CONN_STR = "zkConnStr";
+
+	private static final String SATURN_PROPERTY_NAME = "saturn.properties";
+
+	private static final String SATURN_APPLICATION_CLASS = "com.vip.saturn.job.application.SaturnApplication";
 
 	private static Logger log;
 
@@ -179,72 +185,85 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
+		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		if (saturnApplication == null) {
 			saturnApplication = validateAndLoadSaturnApplication(jobClassLoader);
 		}
-		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader, saturnApplication);
 	}
 
+	/*
+	 * Try to parse the SaturnApplication from saturn.properties. If SaturnApplication is defined then call the method 'init'.
+	 * This method should be called after logger is initialized.
+	 */
 	private static Object validateAndLoadSaturnApplication(ClassLoader jobClassLoader) {
 		try {
-			String saturnProperties = "saturn.properties";
-			int count = 0;
-			Enumeration<URL> resources = jobClassLoader.getResources(saturnProperties);
-			if (resources == null || !resources.hasMoreElements()) {
-				count = 0;
-			} else {
-				while (resources.hasMoreElements()) {
-					resources.nextElement();
-					count++;
-				}
-			}
-			if (count == 0) {
+			Properties properties = getSaturnProperty(jobClassLoader);
+			if (properties == null) {
 				return null;
 			}
-			if (count > 1) {
-				throw new RuntimeException("the file [" + saturnProperties + "] shouldn't exceed one");
+			String appClassStr = properties.getProperty("app.class");
+			if (StringUtils.isBlank(appClassStr)) {
+				return null;
 			}
 
-			// load SaturnApplication, and init it
-			Properties properties = new Properties();
-			InputStream is = null;
+			appClassStr = appClassStr.trim();
+			ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 			try {
-				is = jobClassLoader.getResourceAsStream(saturnProperties);
-				properties.load(is);
+				Thread.currentThread().setContextClassLoader(jobClassLoader);
+				Class<?> appClass = jobClassLoader.loadClass(appClassStr);
+				Class<?> saturnApplicationClass = jobClassLoader.loadClass(SATURN_APPLICATION_CLASS);
+				if (saturnApplicationClass.isAssignableFrom(appClass)) {
+					Object saturnApplication = appClass.newInstance();
+					appClass.getMethod("init").invoke(saturnApplication);
+					LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "SaturnApplication init successfully");
+					return saturnApplication;
+				} else {
+					throw new RuntimeException(
+							"the app.class " + appClassStr + " must be instance of " + SATURN_APPLICATION_CLASS);
+				}
 			} finally {
-				if (is != null) {
-					is.close();
-				}
+				Thread.currentThread().setContextClassLoader(oldCL);
 			}
-			String appClassStr = properties.getProperty("app.class");
-			if (StringUtils.isNotBlank(appClassStr)) {
-				appClassStr = appClassStr.trim();
-				ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-				try {
-					Thread.currentThread().setContextClassLoader(jobClassLoader);
-					Class<?> appClass = jobClassLoader.loadClass(appClassStr);
-					String saturnApplicationClassStr = "com.vip.saturn.job.application.SaturnApplication";
-					Class<?> saturnApplicationClass = jobClassLoader.loadClass(saturnApplicationClassStr);
-					if (saturnApplicationClass.isAssignableFrom(appClass)) {
-						Object saturnApplication = appClass.newInstance();
-						appClass.getMethod("init").invoke(saturnApplication);
-						return saturnApplication;
-					} else {
-						throw new RuntimeException(
-								"the app.class " + appClassStr + " must implement " + saturnApplicationClassStr);
-					}
-				} finally {
-					Thread.currentThread().setContextClassLoader(oldCL);
-				}
-			}
-			return null;
 		} catch (RuntimeException e) {
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to load SaturnApplication", e);
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to load SaturnApplication", e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static Properties getSaturnProperty(ClassLoader jobClassLoader) throws IOException {
+		Enumeration<URL> resources = jobClassLoader.getResources(SATURN_PROPERTY_NAME);
+		int count = 0;
+		if (resources == null || !resources.hasMoreElements()) {
+			return null;
+		} else {
+			while (resources.hasMoreElements()) {
+				resources.nextElement();
+				count++;
+			}
+		}
+		if (count == 0) {
+			return null;
+		}
+		if (count > 1) {
+			throw new RuntimeException("the file [" + SATURN_PROPERTY_NAME + "] shouldn't exceed one");
+		}
+
+		// load SaturnApplication, and init it
+		Properties properties = new Properties();
+		InputStream is = null;
+		try {
+			is = jobClassLoader.getResourceAsStream(SATURN_PROPERTY_NAME);
+			properties.load(is);
+		} finally {
+			if (is != null) {
+				is.close();
+			}
+		}
+		return properties;
 	}
 
 	private static void init(String executorName, String namespace, ClassLoader executorClassLoader,
@@ -302,7 +321,9 @@ public class SaturnExecutor {
 				String responseBody = EntityUtils.toString(httpResponse.getEntity());
 				Integer statusCode = statusLine != null ? statusLine.getStatusCode() : null;
 				if (statusLine != null && statusCode.intValue() == HttpStatus.SC_OK) {
-					Map<String, String> discoveryInfo = JSONObject.parseObject(responseBody, Map.class);
+					Map<String, String> discoveryInfo = JsonUtils.getGson()
+							.fromJson(responseBody, new TypeToken<Map<String, String>>() {
+							}.getType());
 					String connectionString = discoveryInfo.get(DISCOVER_INFO_ZK_CONN_STR);
 					if (StringUtils.isBlank(connectionString)) {
 						LogUtils.warn(log, LogEvents.ExecutorEvent.INIT, "ZK connection string is blank!");
@@ -361,9 +382,9 @@ public class SaturnExecutor {
 	}
 
 	private String obtainErrorResponseMsg(String responseBody) {
-		if (responseBody != null && !responseBody.trim().isEmpty()) {
-			JSONObject parseObject = JSONObject.parseObject(responseBody);
-			return parseObject.getString("message");
+		if (StringUtils.isNotBlank(responseBody)) {
+			JsonElement message = JsonUtils.getJsonParser().parse(responseBody).getAsJsonObject().get("message");
+			return message == JsonNull.INSTANCE || message == null ? "" : message.getAsString();
 		}
 
 		return "";
@@ -650,6 +671,8 @@ public class SaturnExecutor {
 				try {
 					Thread.currentThread().setContextClassLoader(jobClassLoader);
 					saturnApplication.getClass().getMethod("destroy").invoke(saturnApplication);
+					LogUtils.info(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN,
+							"SaturnApplication destroy successfully");
 				} catch (Throwable t) {
 					LogUtils.error(log, LogEvents.ExecutorEvent.GRACEFUL_SHUTDOWN, "SaturnApplication destroy error",
 							t);

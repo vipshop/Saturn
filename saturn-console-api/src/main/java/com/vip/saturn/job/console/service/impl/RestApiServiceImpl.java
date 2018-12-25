@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
@@ -62,6 +63,8 @@ public class RestApiServiceImpl implements RestApiService {
 
 	@Resource
 	private ReportAlarmService reportAlarmService;
+
+	private Gson gson = new Gson();
 
 	@Override
 	public void createJob(final String namespace, final JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -448,7 +451,8 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public void runJobAtOnce(final String namespace, final String jobName) throws SaturnJobConsoleException {
+	public void runJobAtOnce(final String namespace, final String jobName, final Map<String, Object> triggeredData)
+			throws SaturnJobConsoleException {
 		ReuseUtils
 				.reuse(namespace, jobName, registryCenterService, curatorRepository, new ReuseCallBackWithoutReturn() {
 					@Override
@@ -475,9 +479,10 @@ public class RestApiServiceImpl implements RestApiService {
 								if (curatorFrameworkOp.checkExists(path)) {
 									curatorFrameworkOp.delete(path);
 								}
-								curatorFrameworkOp.create(path);
-								log.info("runAtOnce namespace:{}, jobName:{}, executorName:{}", namespace, jobName,
-										executorName);
+								String triggeredDataStr = gson.toJson(triggeredData);
+								curatorFrameworkOp.create(path, triggeredDataStr);
+								log.info("runAtOnce namespace:{}, jobName:{}, executorName:{}, triggeredData:{}",
+										namespace, jobName, executorName, triggeredDataStr);
 							}
 						}
 
@@ -650,8 +655,8 @@ public class RestApiServiceImpl implements RestApiService {
 	}
 
 	@Override
-	public List<BatchJobResult> runDownStream(final String namespace, final String jobName)
-			throws SaturnJobConsoleException {
+	public List<BatchJobResult> runDownStream(final String namespace, final String jobName,
+			final Map<String, Object> triggeredData) throws SaturnJobConsoleException {
 		return ReuseUtils.reuse(namespace, jobName, registryCenterService, curatorRepository,
 				new ReuseCallBack<List<BatchJobResult>>() {
 					@Override
@@ -678,7 +683,7 @@ public class RestApiServiceImpl implements RestApiService {
 							BatchJobResult batchJobResult = new BatchJobResult();
 							batchJobResult.setJobName(childNameTrim);
 							try {
-								runJobAtOnce(namespace, childNameTrim);
+								runJobAtOnce(namespace, childNameTrim, triggeredData);
 								batchJobResult.setSuccess(true);
 							} catch (SaturnJobConsoleException e) {
 								batchJobResult.setSuccess(false);

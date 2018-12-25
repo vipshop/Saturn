@@ -24,6 +24,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -86,14 +87,29 @@ public class JobOperationListenerManager extends AbstractListenerManager {
 			if ((Type.NODE_ADDED == event.getType() || Type.NODE_UPDATED == event.getType()) && ServerNode
 					.isRunOneTimePath(jobName, path, executorName)) {
 				if (!jobScheduler.getJob().isRunning()) {
-					LogUtils.info(log, jobName, "job run-at-once triggered.");
-					jobScheduler.triggerJob();
+					String triggeredDataStr = getTriggeredDataStr(event);
+					LogUtils.info(log, jobName, "job run-at-once triggered, triggeredData:{}", triggeredDataStr);
+					jobScheduler.triggerJob(triggeredDataStr);
 				} else {
 					LogUtils.info(log, jobName, "job is running, run-at-once ignored.");
 				}
 				coordinatorRegistryCenter.remove(path);
 			}
 		}
+
+		private String getTriggeredDataStr(final TreeCacheEvent event) {
+			String transDataStr = null;
+			try {
+				byte[] data = event.getData().getData();
+				if (data != null) {
+					transDataStr = new String(data, "UTF-8");
+				}
+			} catch (UnsupportedEncodingException e) {
+				LogUtils.error(log, jobName, "unexpected error", e);
+			}
+			return transDataStr;
+		}
+
 	}
 
 	/**
