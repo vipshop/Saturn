@@ -24,7 +24,7 @@ Saturn Executor是执行任务的Worker：按照作业配置的要求去执行�
 ```
 $ git clone https://github.com/vipshop/Saturn
 $ git checkout develop
-$ cd saturn-docker
+$ cd quickstart
 $ chmod +x quickstart.sh
 $ ./quickstart.sh
 ```
