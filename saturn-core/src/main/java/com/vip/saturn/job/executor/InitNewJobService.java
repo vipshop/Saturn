@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_ADDED_COUNT;
-import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME;
+import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME;
 
 /**
  * @author hebelala
@@ -162,6 +162,20 @@ public class InitNewJobService {
 
 		private boolean initJobScheduler(String jobName) {
 			try {
+				String groupNameFromSystem = getGroupNameFromSystemPropertyOrEnv();
+				if (StringUtils.isNotBlank(groupNameFromSystem)) {
+					String[] splittedGroupNames = groupNameFromSystem.split(",");
+					String groupNameFromZk = getGroupNameFromZk(jobName);
+					for (int i = 0; i < splittedGroupNames.length; i++) {
+						String groupName = splittedGroupNames[i];
+						if (hasTheSameGroupName(groupName, groupNameFromZk)) {
+							LogUtils.info(log, jobName,
+									"the job do not need to init because VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME is assigned",
+									jobName);
+							return false;
+						}
+					}
+				}
 				LogUtils.info(log, jobName, "start to initialize the new job");
 				JOB_INIT_FAILED_RECORDS.get(executorName).putIfAbsent(jobName, new HashSet<Integer>());
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
@@ -185,17 +199,7 @@ public class InitNewJobService {
 			} catch (JobInitAlarmException e) {
 				if (!SystemEnvProperties.VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM) {
 					// no need to log exception stack as it should be logged in the original happen place
-					String groupNameFromSystem = StringUtils.trim(getGroupNameFromSystemPropertyOrEnv());
-					String groupNameFromZk = StringUtils.trim(getGroupNameFromZk(jobName));
-					boolean needSkipClassNotFoundException = hasTheSameGroupName(groupNameFromSystem, groupNameFromZk);
-					if (e.getCause() instanceof ClassNotFoundException
-							&& SystemEnvProperties.VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM
-							&& needSkipClassNotFoundException) {
-						//no need to raiseAlarm if class not found and VIP_SATURN_DISABLE_CLASS_NOT_FOUND_ALARM is true
-						LogUtils.debug(log, jobName, "job initialize, class not found");
-					} else {
-						raiseAlarmForJobInitFailed(jobName, e);
-					}
+					raiseAlarmForJobInitFailed(jobName, e);
 				}
 			} catch (Throwable t) {
 				LogUtils.warn(log, jobName, "job initialize failed, but will not stop the init process", t);
@@ -212,8 +216,8 @@ public class InitNewJobService {
 		}
 
 		private String getGroupNameFromSystemPropertyOrEnv() {
-			return System.getProperty(VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME,
-					System.getenv(VIP_SATURN_DISABLE_CLASS_NOT_FOUND_GROUP_NAME));
+			return System.getProperty(VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME,
+					System.getenv(VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME));
 		}
 
 		private String getGroupNameFromZk(String jobName) {
