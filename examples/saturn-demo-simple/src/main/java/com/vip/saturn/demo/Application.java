@@ -11,4 +11,8 @@ public class Application implements SaturnApplication {
 	public void destroy() {
 		System.out.println("destroy...");
 	}
+
+	public <J> J getJobInstance(Class<J> jobClass) {
+		return null;
+	}
 }
