@@ -3,16 +3,10 @@ package com.vip.saturn.demo;
 import com.vip.saturn.job.spring.GenericSpringSaturnApplication;
 
 /**
- * Entrance of the demo application, make sure the class name is defined in saturn.properties.
+ * 简单的，继承GenericSpringSaturnApplication，并在saturn.properties中声明该类，然后在applicationContext.xml文件中定义作业类即可。
+ *
+ * <p>如果想自定义启动Spring，可重写GenericSpringSaturnApplication的某些方法，具体可查看其javadoc。
  */
 public class Application extends GenericSpringSaturnApplication {
-
-	/*
-	 * Set the Spring applicationContext file locations
-	 */
-	@Override
-	protected String[] getConfigLocations() {
-		return new String[]{"classpath:customContext.xml"};
-	}
 
 }

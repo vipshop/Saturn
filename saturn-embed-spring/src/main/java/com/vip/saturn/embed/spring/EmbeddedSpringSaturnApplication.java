@@ -10,6 +10,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
+ * Spring环境，嵌入式使用Saturn
  * @author hebelala
  */
 public class EmbeddedSpringSaturnApplication extends AbstractSpringSaturnApplication implements ApplicationListener {
@@ -60,6 +61,9 @@ public class EmbeddedSpringSaturnApplication extends AbstractSpringSaturnApplica
 		return ignoreExceptions;
 	}
 
+	/**
+	 * 当启动或停止Saturn出现异常时，是否抛出异常，阻止程序继续运行
+	 */
 	public void setIgnoreExceptions(boolean ignoreExceptions) {
 		this.ignoreExceptions = ignoreExceptions;
 	}

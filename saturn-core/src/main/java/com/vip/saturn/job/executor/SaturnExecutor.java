@@ -45,7 +45,7 @@ public class SaturnExecutor {
 
 	private static final String DISCOVER_INFO_ZK_CONN_STR = "zkConnStr";
 
-	private static final String SATURN_PROPERTY_NAME = "saturn.properties";
+	private static final String SATURN_PROPERTY_FILE_PATH = "saturn.properties";
 
 	private static final String SATURN_APPLICATION_CLASS = "com.vip.saturn.job.application.SaturnApplication";
 
@@ -235,7 +235,7 @@ public class SaturnExecutor {
 	}
 
 	private static Properties getSaturnProperty(ClassLoader jobClassLoader) throws IOException {
-		Enumeration<URL> resources = jobClassLoader.getResources(SATURN_PROPERTY_NAME);
+		Enumeration<URL> resources = jobClassLoader.getResources(SATURN_PROPERTY_FILE_PATH);
 		int count = 0;
 		if (resources == null || !resources.hasMoreElements()) {
 			return null;
@@ -249,14 +249,13 @@ public class SaturnExecutor {
 			return null;
 		}
 		if (count > 1) {
-			throw new RuntimeException("the file [" + SATURN_PROPERTY_NAME + "] shouldn't exceed one");
+			throw new RuntimeException("the file [" + SATURN_PROPERTY_FILE_PATH + "] shouldn't exceed one");
 		}
 
-		// load SaturnApplication, and init it
 		Properties properties = new Properties();
 		InputStream is = null;
 		try {
-			is = jobClassLoader.getResourceAsStream(SATURN_PROPERTY_NAME);
+			is = jobClassLoader.getResourceAsStream(SATURN_PROPERTY_FILE_PATH);
 			properties.load(is);
 		} finally {
 			if (is != null) {
