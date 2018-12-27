@@ -48,6 +48,8 @@ public class RegistryCenterConfiguration implements Serializable {
 
 	private String version;
 
+	private Boolean container;
+
 	public RegistryCenterConfiguration(final String name, final String namespace, final String zkAddressList) {
 		this.name = name;
 		this.namespace = namespace;
@@ -161,6 +163,14 @@ public class RegistryCenterConfiguration implements Serializable {
 		this.version = version;
 	}
 
+	public Boolean getContainer() {
+		return container;
+	}
+
+	public void setContainer(Boolean container) {
+		this.container = container;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -180,6 +190,7 @@ public class RegistryCenterConfiguration implements Serializable {
 		if (sysAdmin != null ? !sysAdmin.equals(that.sysAdmin) : that.sysAdmin != null) return false;
 		if (techAdmin != null ? !techAdmin.equals(that.techAdmin) : that.techAdmin != null) return false;
 		if (degree != null ? !degree.equals(that.degree) : that.degree != null) return false;
+		if (container != null ? !container.equals(that.container) : that.container != null) return false;
 		return version != null ? version.equals(that.version) : that.version == null;
 
 	}
@@ -197,6 +208,7 @@ public class RegistryCenterConfiguration implements Serializable {
 		result = 31 * result + (techAdmin != null ? techAdmin.hashCode() : 0);
 		result = 31 * result + (degree != null ? degree.hashCode() : 0);
 		result = 31 * result + (version != null ? version.hashCode() : 0);
+		result = 31 * result + (container != null ? container.hashCode() : 0);
 		return result;
 	}
 
@@ -209,7 +221,7 @@ public class RegistryCenterConfiguration implements Serializable {
 		return "RegistryCenterConfiguration [name=" + name + ", zkAddressList=" + zkAddressList + ", namespace="
 				+ namespace + ", zkAlias=" + zkAlias + ", zkClusterKey=" + zkClusterKey + ", digest=" + digest
 				+ ", nameAndNamespace=" + nameAndNamespace + ", sysAdmin=" + sysAdmin + ", techAdmin=" + techAdmin
-				+ ", degree=" + degree + ", version=" + version + "]";
+				+ ", degree=" + degree + ", version=" + version + ", container=" + container + "]";
 	}
 
 }

@@ -19,7 +19,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
@@ -48,7 +51,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -226,7 +228,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	private synchronized void localRefresh() {
 		try {
-			log.info("Swztart refresh RegCenter");
+			log.info("Start refresh RegCenter");
 			long startTime = System.currentTimeMillis();
 			refreshRestrictComputeZkClusters();
 			if (restrictComputeZkClusterKeys.isEmpty()) {
@@ -1189,48 +1191,13 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			}
 		}
 
-		List<String> namespaces = new ArrayList<>();
-		for (int i = 0; i < namespaceInfoList.size(); i++) {
-			namespaces.add(namespaceInfoList.get(i).getNamespace());
-		}
-
-		List<NamespaceInfo> namespaceInfos = namespaceInfoService.selectAll(namespaces);
-		List<DomainManagementVo> domainManagementVos = new ArrayList<>(namespaceInfos.size());
-
-		for (int i = 0; i < namespaceInfoList.size(); i++) {
-			RegistryCenterConfiguration registryCenterConfiguration = namespaceInfoList.get(i);
-			boolean isContainer = false;
-			for (int j = 0; j < namespaceInfos.size(); j++) {
-				NamespaceInfo namespaceInfo = namespaceInfos.get(j);
-				if (StringUtils.equals(registryCenterConfiguration.getNamespace(), namespaceInfo.getNamespace())) {
-					String namespaceContent = namespaceInfos.get(j).getContent();
-					if (StringUtils.isNotEmpty(namespaceContent)) {
-						Map<String, Object> content = JSON.parseObject(namespaceInfos.get(j).getContent(), Map.class);
-						if (content != null) {
-							Integer containerTemplateId = (Integer) content.get("appContainerTemplateId");
-							if (containerTemplateId != null) {
-								isContainer = true;
-							}
-						}
-					}
-					break;
-				}
-			}
-			DomainManagementVo vo = new DomainManagementVo();
-			BeanUtils.copyProperties(registryCenterConfiguration, vo);
-			if (isContainer) {
-				vo.setContainer(true);
-			}
-			domainManagementVos.add(vo);
-		}
-
-		return exportNamespaceInfo2Excel(domainManagementVos);
+		return exportNamespaceInfo2Excel(namespaceInfoList);
 	}
 
 	/**
 	 * Export namespac
 	 */
-	private File exportNamespaceInfo2Excel(List<DomainManagementVo> namespaceInfoList)
+	File exportNamespaceInfo2Excel(List<RegistryCenterConfiguration> namespaceInfoList)
 			throws SaturnJobConsoleException {
 		try {
 			File tmpFile = SaturnConsoleUtils.createTmpFile();
@@ -1241,22 +1208,14 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			sheet1.addCell(new Label(2, 0, "重要等级"));
 			sheet1.addCell(new Label(3, 0, "Executor版本"));
 			sheet1.addCell(new Label(4, 0, "ZK集群"));
-			sheet1.addCell(new Label(5, 0, "是否容器域"));
 
 			for (int i = 0; i < namespaceInfoList.size(); i++) {
-				DomainManagementVo namespaceInfo = namespaceInfoList.get(i);
+				RegistryCenterConfiguration namespaceInfo = namespaceInfoList.get(i);
 				sheet1.addCell(new Label(0, i + 1, namespaceInfo.getNamespace()));
 				sheet1.addCell(new Label(1, i + 1, namespaceInfo.getName()));
 				sheet1.addCell(new Label(2, i + 1, namespaceInfo.getDegree()));
 				sheet1.addCell(new Label(3, i + 1, namespaceInfo.getVersion()));
 				sheet1.addCell(new Label(4, i + 1, namespaceInfo.getZkAlias()));
-				String container = null;
-				if (namespaceInfo.getContainer() == null || namespaceInfo.getContainer() == false) {
-					container = "物理机";
-				} else {
-					container = "容器";
-				}
-				sheet1.addCell(new Label(5, i + 1, container));
 			}
 
 			writableWorkbook.write();
