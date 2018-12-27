@@ -1,8 +1,8 @@
 package com.vip.saturn.demo;
 
-import com.vip.saturn.job.application.SaturnApplication;
+import com.vip.saturn.job.application.AbstractSaturnApplication;
 
-public class Application implements SaturnApplication {
+public class Application extends AbstractSaturnApplication {
 
 	public void init() {
 		System.out.println("init...");
@@ -11,4 +11,5 @@ public class Application implements SaturnApplication {
 	public void destroy() {
 		System.out.println("destroy...");
 	}
+
 }

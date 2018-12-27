@@ -1,11 +1,12 @@
 package com.vip.saturn.job.spring;
 
+import com.vip.saturn.job.application.AbstractSaturnApplication;
 import org.springframework.context.ApplicationContext;
 
 /**
  * @author hebelala
  */
-public abstract class AbstractSpringSaturnApplication implements SpringSaturnApplication {
+public abstract class AbstractSpringSaturnApplication extends AbstractSaturnApplication {
 
 	protected ApplicationContext applicationContext;
 

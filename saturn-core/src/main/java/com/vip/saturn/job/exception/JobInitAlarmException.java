@@ -15,7 +15,4 @@ public class JobInitAlarmException extends JobException {
 		super(errorMessage, args);
 	}
 
-	public JobInitAlarmException(String message, Throwable cause) {
-		super(message, cause);
-	}
 }

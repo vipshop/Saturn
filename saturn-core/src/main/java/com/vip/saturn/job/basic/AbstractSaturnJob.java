@@ -237,21 +237,21 @@ public abstract class AbstractSaturnJob extends AbstractElasticJob {
 		try {
 			Object saturnApplication = saturnExecutorService.getSaturnApplication();
 			if (saturnApplication != null) {
-				Class<?> ssaClazz = jobClassLoader.loadClass("com.vip.saturn.job.spring.SpringSaturnApplication");
+				Class<?> ssaClazz = jobClassLoader
+						.loadClass("com.vip.saturn.job.application.AbstractSaturnApplication");
 				if (ssaClazz.isInstance(saturnApplication)) {
 					Object jobBusinessInstance = saturnApplication.getClass().getMethod("getJobInstance", Class.class)
 							.invoke(saturnApplication, jobClass);
 					if (jobBusinessInstance != null) {
+						LogUtils.info(log, jobName, "get job instance from {}",
+								saturnApplication.getClass().getCanonicalName());
 						return jobBusinessInstance;
 					}
 				}
 			}
-		} catch (ClassNotFoundException e) {
-			LogUtils.debug(log, jobName, "SpringSaturnApplication is not set");
 		} catch (Throwable t) {
-			LogUtils.error(log, jobName, "get job instance from spring fail", t);
+			LogUtils.error(log, jobName, "get job instance from SaturnApplication fail", t);
 		}
-
 		return null;
 	}
 }

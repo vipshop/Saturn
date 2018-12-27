@@ -39,7 +39,4 @@ public class JobException extends RuntimeException {
 		super(cause);
 	}
 
-	public JobException(String message, Throwable cause) {
-		super(message, cause);
-	}
 }
