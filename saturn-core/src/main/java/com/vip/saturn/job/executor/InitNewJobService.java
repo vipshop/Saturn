@@ -27,7 +27,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.vip.saturn.job.executor.SaturnExecutorService.WAIT_JOBCLASS_ADDED_COUNT;
-import static com.vip.saturn.job.utils.SystemEnvProperties.VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME;
 
 /**
  * @author hebelala
@@ -129,7 +128,7 @@ public class InitNewJobService {
 				LogUtils.info(log, jobName, "new job: {} 's jobClass created event received", jobName);
 
 				if (!jobNames.contains(jobName)) {
-					if (initJobScheduler(jobName)) {
+					if (canInitTheJob(jobName) && initJobScheduler(jobName)) {
 						jobNames.add(jobName);
 						LogUtils.info(log, jobName, "the job {} initialize successfully", jobName);
 					}
@@ -141,41 +140,33 @@ public class InitNewJobService {
 			}
 		}
 
-		public Map<String, Object> constructAlarmInfo(String namespace, String jobName, String executorName,
-				String alarmMessage) {
-			Map<String, Object> alarmInfo = new HashMap<>();
-
-			alarmInfo.put("jobName", jobName);
-			alarmInfo.put("executorName", executorName);
-			alarmInfo.put("name", "Saturn Event");
-			alarmInfo.put("title", String.format("JOB_INIT_FAIL:%s", jobName));
-			alarmInfo.put("level", "CRITICAL");
-			alarmInfo.put("message", alarmMessage);
-
-			Map<String, String> customFields = Maps.newHashMap();
-			customFields.put("sourceType", "saturn");
-			customFields.put("domain", namespace);
-			alarmInfo.put("additionalInfo", customFields);
-
-			return alarmInfo;
+		/**
+		 * 如果Executor配置了groups，则只能初始化属于groups的作业；否则，可以初始化全部作业
+		 */
+		private boolean canInitTheJob(String jobName) {
+			Set<String> executorGroups = SystemEnvProperties.VIP_SATURN_INIT_JOB_BY_GROUPS;
+			if (executorGroups.isEmpty()) {
+				return true;
+			}
+			String jobGroups = regCenter.getDirectly(JobNodePath.getNodeFullPath(jobName, ConfigurationNode.GROUPS));
+			if (StringUtils.isNotBlank(jobGroups)) {
+				String[] split = jobGroups.split(",");
+				for (String temp : split) {
+					if (StringUtils.isBlank(temp)) {
+						continue;
+					}
+					if (executorGroups.contains(temp.trim())) {
+						return true;
+					}
+				}
+			}
+			LogUtils.info(log, jobName, "the job {} wont be initialized, because it's not in the groups {}", jobName,
+					executorGroups);
+			return false;
 		}
 
 		private boolean initJobScheduler(String jobName) {
 			try {
-				String groupNameFromSystem = getGroupNameFromSystemPropertyOrEnv();
-				if (StringUtils.isNotBlank(groupNameFromSystem)) {
-					String[] splittedGroupNames = groupNameFromSystem.split(",");
-					String groupNameFromZk = getGroupNameFromZk(jobName);
-					for (int i = 0; i < splittedGroupNames.length; i++) {
-						String groupName = splittedGroupNames[i];
-						if (hasTheSameGroupName(groupName, groupNameFromZk)) {
-							LogUtils.info(log, jobName,
-									"the job do not need to init because VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME is assigned",
-									jobName);
-							return false;
-						}
-					}
-				}
 				LogUtils.info(log, jobName, "start to initialize the new job");
 				JOB_INIT_FAILED_RECORDS.get(executorName).putIfAbsent(jobName, new HashSet<Integer>());
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
@@ -208,22 +199,6 @@ public class InitNewJobService {
 			return false;
 		}
 
-		private boolean hasTheSameGroupName(String groupNameFromSystem, String groupNameFromZk) {
-			if (StringUtils.isBlank(groupNameFromSystem) || StringUtils.isBlank(groupNameFromZk)) {
-				return false;
-			}
-			return StringUtils.equals(groupNameFromSystem, groupNameFromZk);
-		}
-
-		private String getGroupNameFromSystemPropertyOrEnv() {
-			return System.getProperty(VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME,
-					System.getenv(VIP_SATURN_UNINIT_JOBS_BY_GROUP_NAME));
-		}
-
-		private String getGroupNameFromZk(String jobName) {
-			return regCenter.get(JobNodePath.getConfigNodePath(jobName, "groups"));
-		}
-
 		private void raiseAlarmForJobInitFailed(String jobName, JobInitAlarmException jobInitAlarmException) {
 			String message = jobInitAlarmException.getMessage();
 			int messageHashCode = message.hashCode();
@@ -241,6 +216,26 @@ public class InitNewJobService {
 						"job initialize failed but will not raise alarm as such kind of alarm already been raise before");
 			}
 		}
+
+		private Map<String, Object> constructAlarmInfo(String namespace, String jobName, String executorName,
+				String alarmMessage) {
+			Map<String, Object> alarmInfo = new HashMap<>();
+
+			alarmInfo.put("jobName", jobName);
+			alarmInfo.put("executorName", executorName);
+			alarmInfo.put("name", "Saturn Event");
+			alarmInfo.put("title", String.format("JOB_INIT_FAIL:%s", jobName));
+			alarmInfo.put("level", "CRITICAL");
+			alarmInfo.put("message", alarmMessage);
+
+			Map<String, String> customFields = Maps.newHashMap();
+			customFields.put("sourceType", "saturn");
+			customFields.put("domain", namespace);
+			alarmInfo.put("additionalInfo", customFields);
+
+			return alarmInfo;
+		}
+
 	}
 
 	public static boolean containsJobInitFailedRecord(String executorName, String jobName, String message) {
