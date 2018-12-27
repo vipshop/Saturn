@@ -63,16 +63,15 @@ public class UpdateJobCronUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				LogUtils.error(log, jobName, "SaturnJobException throws: ", se);
+				LogUtils.error(log, jobName, "SaturnJobException throws: {}", se.getMessage(), se);
 				throw se;
 			} catch (ConnectException e) {
-				String template = "Fail to connect to url:%s, throws: ";
-				LogUtils.error(log, jobName, String.format(template, targetUrl), e);
+				LogUtils.error(log, jobName, "Fail to connect to url:{}, throws: {}", targetUrl, e.getMessage(), e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				LogUtils.error(log, jobName, "Other exception throws: ", e);
+				LogUtils.error(log, jobName, "Other exception throws: {}", e.getMessage(), e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuietly(httpClient);

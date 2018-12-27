@@ -155,7 +155,7 @@ public class SaturnExecuteWatchdog extends ExecuteWatchdog {
 			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON, "Get Process Id: {}", pid);
 			return Long.parseLong(pid.toString());
 		} catch (Exception e) {
-			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Getting pid error: " + e.getMessage(), e);
+			LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Getting pid error: {}", e.getMessage(), e);
 			return INVALID_PID;
 		}
 	}

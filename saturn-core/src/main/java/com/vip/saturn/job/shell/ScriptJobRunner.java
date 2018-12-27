@@ -104,9 +104,8 @@ public class ScriptJobRunner {
 					businessReturned = true; // 脚本成功返回数据
 				}
 			} catch (Throwable t) {
-				String template = "%s - %s read SaturnJobReturn from %s error";
-				LogUtils.error(log, jobName, String.format(template, jobName, item, saturnOutputFile.getAbsolutePath()),
-						t);
+				LogUtils.error(log, jobName, "{} - {} read SaturnJobReturn from {} error", jobName, item,
+						saturnOutputFile.getAbsolutePath(), t);
 				tmp = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + t,
 						SaturnSystemErrorGroup.FAIL);
 			}
@@ -139,8 +138,7 @@ public class ScriptJobRunner {
 			createSaturnJobReturnFile();
 			saturnJobReturn = execute(timeoutSeconds);
 		} catch (Throwable t) {
-			String template = "%s - %s Exception";
-			LogUtils.error(log, jobName, String.format(template, jobName, item), t);
+			LogUtils.error(log, jobName, "{} - {} Exception", jobName, item, t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t,
 					SaturnSystemErrorGroup.FAIL);
 		} finally {
@@ -188,8 +186,8 @@ public class ScriptJobRunner {
 				handleJobLog(processOutputStream.getJobLog());
 				processOutputStream.close();
 			} catch (Exception ex) {
-				String template = "%s-%s Error at closing output stream. Should not be concern: ";
-				LogUtils.error(log, jobName, String.format(template, jobName, item), ex);
+				LogUtils.error(log, jobName, "{}-{} Error at closing output stream. Should not be concern: {}", jobName,
+						item, ex.getMessage(), ex);
 			}
 			stopStreamHandler(streamHandler);
 			ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getPid());
@@ -218,8 +216,8 @@ public class ScriptJobRunner {
 		try {
 			streamHandler.stop();
 		} catch (IOException ex) {
-			String template = "%s-%s Error at closing log stream. Should not be concern: ";
-			LogUtils.debug(log, jobName, String.format(template, jobName, item), ex);
+			LogUtils.debug(log, jobName, "{}-{} Error at closing log stream. Should not be concern: {}", jobName, item,
+					ex.getMessage(), ex);
 		}
 	}
 

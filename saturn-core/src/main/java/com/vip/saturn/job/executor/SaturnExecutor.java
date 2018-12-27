@@ -337,7 +337,7 @@ public class SaturnExecutor {
 					handleDiscoverException(responseBody, statusCode);
 				}
 			} catch (SaturnExecutorException e) {
-				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, e.toString(), e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, e.getMessage(), e);
 				if (e.getCode() != SaturnExecutorExceptionCode.UNEXPECTED_EXCEPTION) {
 					throw e;
 				}
