@@ -123,8 +123,10 @@ public class InitJobByGroupsIT extends AbstractSaturnIT {
 
 				ILoggingEvent lastLog = logbackListAppender.getLastLog();
 				assertThat(lastLog.getLevel()).isEqualTo(Level.INFO);
-				assertThat(lastLog.getFormattedMessage()).isEqualTo(
-						"[testC_ExecutorConfigGroupsAndInitJobFailed] msg=the job testC_ExecutorConfigGroupsAndInitJobFailed wont be initialized, because it's not in the groups [group1, group2]");
+				// VIP_SATURN_INIT_JOB_BY_GROUPS is Set, not ArrayList
+				assertThat(lastLog.getFormattedMessage())
+						.isIn("[testC_ExecutorConfigGroupsAndInitJobFailed] msg=the job testC_ExecutorConfigGroupsAndInitJobFailed wont be initialized, because it's not in the groups [group1, group2]",
+								"[testC_ExecutorConfigGroupsAndInitJobFailed] msg=the job testC_ExecutorConfigGroupsAndInitJobFailed wont be initialized, because it's not in the groups [group2, group1]");
 
 				removeJob(jobConfig.getJobName());
 			} finally {
