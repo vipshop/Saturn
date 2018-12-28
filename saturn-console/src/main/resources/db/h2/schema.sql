@@ -327,4 +327,4 @@ CREATE TABLE `saturn_dashboard_history` (
   UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
 )ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8;
 
-ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id'
+ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
