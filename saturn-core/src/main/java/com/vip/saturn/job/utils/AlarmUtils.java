@@ -1,6 +1,6 @@
 package com.vip.saturn.job.utils;
 
-import com.alibaba.fastjson.JSONObject;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -41,14 +41,15 @@ public class AlarmUtils {
 			CloseableHttpClient httpClient = null;
 			try {
 				checkParameters(alarmInfo);
-				JSONObject json = new JSONObject(alarmInfo);
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPost request = new HttpPost(targetUrl);
 				final RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
 						.setSocketTimeout(10000).build();
 				request.setConfig(requestConfig);
-				StringEntity params = new StringEntity(json.toString());
+				StringEntity params = new StringEntity(
+						JsonUtils.getGson().toJson(alarmInfo, new TypeToken<Map<String, Object>>() {
+						}.getType()));
 				request.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 				request.setEntity(params);
 
@@ -58,16 +59,17 @@ public class AlarmUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "SaturnJobException throws: ", se);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "SaturnJobException throws: {}", se.getMessage(),
+						se);
 				throw se;
 			} catch (ConnectException e) {
-				String template = "Fail to connect to url:%s, throws: ";
-				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, String.format(template, targetUrl), e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Fail to connect to url:{}, throws: {}", targetUrl,
+						e.getMessage(), e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Other exception throws", e);
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, "Other exception throws: {}", e.getMessage(), e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuietly(httpClient);

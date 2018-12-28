@@ -1,6 +1,7 @@
 package com.vip.saturn.job.utils;
 
-import com.alibaba.fastjson.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -26,7 +27,8 @@ public class HttpUtils {
 		if (status >= HttpStatus.SC_BAD_REQUEST && status <= HttpStatus.SC_INTERNAL_SERVER_ERROR) {
 			String responseBody = EntityUtils.toString(httpResponse.getEntity());
 			if (StringUtils.isNotBlank(responseBody)) {
-				String errMsg = JSONObject.parseObject(responseBody).getString("message");
+				JsonElement message = JsonUtils.getJsonParser().parse(responseBody).getAsJsonObject().get("message");
+				String errMsg = message == JsonNull.INSTANCE || message == null ? "" : message.getAsString();
 				throw new SaturnJobException(SaturnJobException.ILLEGAL_ARGUMENT, errMsg);
 			} else {
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "internal server error");

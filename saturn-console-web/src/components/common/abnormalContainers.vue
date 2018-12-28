@@ -4,7 +4,7 @@
             <el-form :inline="true" class="table-filter">
                 <input type="text" v-show="false"/>
                 <el-form-item label="">
-                    <el-input placeholder="搜索" v-model="filters.taskId" @keyup.enter.native="scope.search"></el-input>
+                    <el-input placeholder="请输入容器名" v-model="filters.taskId.value" @keyup.enter.native="scope.search"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" icon="el-icon-search" @click="scope.search">查询</el-button>
@@ -44,7 +44,7 @@ export default {
   data() {
     return {
       filters: {
-        taskId: '',
+        taskId: { value: '' },
       },
       orderBy: 'taskId',
       total: this.abnormalContainersList.length,

@@ -101,7 +101,7 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="preferList" label="优先executor">
-                                    <el-select size="small" filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
+                                    <el-select filterable multiple v-model="jobSettingInfo.preferList" style="width: 100%;">
                                         <el-option v-for="item in preferListProvidedArray" :label="item.executorDes" :value="item.executorName" :key="item.executorDes">
                                         </el-option>
                                     </el-select>
@@ -209,6 +209,20 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
+                        <el-row v-if="$option.isPassive(jobSettingInfo.jobType)">
+                            <el-col :span="22">
+                                <el-form-item prop="upStream" label="上游作业">
+                                    <el-tooltip placement="bottom">
+                                        <div slot="content">
+                                            满足上游作业的条件<br/>1.只能是定时作业或被动作业<br/>2.分片只能为1<br/>3.不能是本地模式作业<br/>4.不能是本作业的直接或者间接下游
+                                        </div>
+                                        <el-select filterable multiple v-model="jobSettingInfo.upStream" style="width: 100%;">
+                                            <el-option v-for="item in jobSettingInfo.upStreamProvided" :label="item" :value="item" :key="item"></el-option>
+                                        </el-select>
+                                    </el-tooltip>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
                         <el-row v-if="$option.isCron(jobSettingInfo.jobType) || $option.isPassive(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="downStream" label="下游作业">
@@ -220,9 +234,10 @@
                                     </div>
                                     <el-tooltip placement="bottom">
                                         <div slot="content">
-                                            配置下游作业条件<br/>1.不能是本地模式作业<br/>2.作业分片数为1<br/>3.只能是定时作业与被动作业
+                                            配置下游作业的条件<br/>1.只能是定时作业或被动作业<br/>2.分片只能为1<br/>3.不能是本地模式作业<br/><br/>
+                                            满足下游作业的条件<br/>1.只能是被动作业<br/>2.不能是本作业的直接或者间接上游
                                         </div>
-                                        <el-select size="small" filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
+                                        <el-select filterable multiple v-model="jobSettingInfo.downStream" style="width: 100%;" :disabled="jobSettingInfo.localMode || jobSettingInfo.shardingTotalCount !== 1">
                                             <el-option v-for="item in jobSettingInfo.downStreamProvided" :label="item" :value="item" :key="item"></el-option>
                                         </el-select>
                                     </el-tooltip>

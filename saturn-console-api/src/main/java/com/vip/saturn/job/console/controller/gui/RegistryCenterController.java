@@ -1,30 +1,24 @@
 package com.vip.saturn.job.console.controller.gui;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
-import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
-import com.vip.saturn.job.console.mybatis.service.NamespaceInfoService;
 import com.vip.saturn.job.console.service.NamespaceZkClusterMappingService;
 import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.utils.SaturnConsoleUtils;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 @RequestMapping("/console")
 public class RegistryCenterController extends AbstractGUIController {
@@ -33,9 +27,6 @@ public class RegistryCenterController extends AbstractGUIController {
 
 	@Resource
 	private NamespaceZkClusterMappingService namespaceZkClusterMappingService;
-
-	@Resource
-	private NamespaceInfoService namespaceInfoService;
 
 	/**
 	 * 创建域
@@ -78,41 +69,7 @@ public class RegistryCenterController extends AbstractGUIController {
 			}
 		}
 
-
-		List<String> namespaces = new ArrayList<>();
-		for (int i = 0; i < namespaceInfoList.size(); i++) {
-			namespaces.add(namespaceInfoList.get(i).getNamespace());
-		}
-
-		List<NamespaceInfo> namespaceInfos = namespaceInfoService.selectAll(namespaces);
-		List<DomainManagementVo> domainManagementVos = new ArrayList<>(namespaceInfos.size());
-
-		for (int i = 0; i < namespaceInfoList.size(); i++) {
-			RegistryCenterConfiguration registryCenterConfiguration = namespaceInfoList.get(i);
-			boolean isContainer = false;
-			for (int j = 0; j < namespaceInfos.size(); j++) {
-				NamespaceInfo namespaceInfo = namespaceInfos.get(j);
-				if (StringUtils.equals(registryCenterConfiguration.getNamespace(), namespaceInfo.getNamespace())) {
-					String namespaceContent = namespaceInfos.get(j).getContent();
-					if (StringUtils.isNotEmpty(namespaceContent)) {
-						Map<String, Object> content = JSON.parseObject(namespaceInfos.get(j).getContent(), Map.class);
-						if (content != null) {
-							Integer containerTemplateId = (Integer) content.get("appContainerTemplateId");
-							if (containerTemplateId != null) {
-								isContainer = true;
-							}
-						}
-					}
-					break;
-				}
-			}
-			DomainManagementVo vo = new DomainManagementVo();
-			BeanUtils.copyProperties(registryCenterConfiguration, vo);
-			vo.setContainer(isContainer);
-			domainManagementVos.add(vo);
-		}
-
-		return new SuccessResponseEntity(domainManagementVos);
+		return new SuccessResponseEntity(namespaceInfoList);
 	}
 
 	/**

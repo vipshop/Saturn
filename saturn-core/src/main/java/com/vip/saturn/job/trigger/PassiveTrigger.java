@@ -1,5 +1,8 @@
 package com.vip.saturn.job.trigger;
 
+/**
+ * @author hebelala
+ */
 public class PassiveTrigger extends AbstractTrigger {
 
 	@Override

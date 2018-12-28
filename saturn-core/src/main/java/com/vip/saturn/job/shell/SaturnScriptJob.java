@@ -127,7 +127,7 @@ public class SaturnScriptJob extends AbstractSaturnJob {
 		callable.setSaturnJobReturn(saturnJobReturn);
 		afterExecution(callable);
 
-		LogUtils.debug(log, jobName, "job:[{}] item:[{}] finish execution, which takes {}ms", jobName, item,
+		LogUtils.debug(log, jobName, "job:{} item:{} finish execution, which takes {}ms", jobName, item,
 				callable.getExecutionTime());
 
 		return saturnJobReturn;

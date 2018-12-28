@@ -1,12 +1,13 @@
 package com.vip.saturn.job.utils;
 
-import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SystemEnvProperties {
 
@@ -105,6 +106,10 @@ public class SystemEnvProperties {
 			System.getProperty(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM,
 					System.getenv(NAME_VIP_SATURN_DISABLE_JOB_INIT_FAILED_ALARM)));
 
+	// Just init the jobs that are in the groups, if the variable is configured
+	public static final String NAME_VIP_SATURN_INIT_JOB_BY_GROUPS = "VIP_SATURN_INIT_JOB_BY_GROUPS";
+	public static Set<String> VIP_SATURN_INIT_JOB_BY_GROUPS = new HashSet<>();
+
 	static {
 		loadProperties();
 	}
@@ -112,7 +117,7 @@ public class SystemEnvProperties {
 	public static void loadProperties() {
 		String maxNumberOfJobs = System
 				.getProperty(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS, System.getenv(NAME_VIP_SATURN_MAX_NUMBER_OF_JOBS));
-		if (!Strings.isNullOrEmpty(maxNumberOfJobs)) {
+		if (StringUtils.isNotBlank(maxNumberOfJobs)) {
 			try {
 				VIP_SATURN_MAX_NUMBER_OF_JOBS = Integer.parseInt(maxNumberOfJobs);
 			} catch (Throwable t) {
@@ -122,7 +127,7 @@ public class SystemEnvProperties {
 
 		String shutdownTimeout = System
 				.getProperty(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT, System.getenv(NAME_VIP_SATURN_SHUTDOWN_TIMEOUT));
-		if (!Strings.isNullOrEmpty(shutdownTimeout)) {
+		if (StringUtils.isNotBlank(shutdownTimeout)) {
 			try {
 				VIP_SATURN_SHUTDOWN_TIMEOUT = Integer.parseInt(shutdownTimeout);
 			} catch (Throwable t) {
@@ -143,7 +148,7 @@ public class SystemEnvProperties {
 
 		String zkClientSessionTimeoutStr = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS,
 				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS));
-		if (!Strings.isNullOrEmpty(zkClientSessionTimeoutStr)) {
+		if (StringUtils.isNotBlank(zkClientSessionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_SESSION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientSessionTimeoutStr);
 			} catch (Throwable t) {
@@ -153,8 +158,8 @@ public class SystemEnvProperties {
 
 		String zkClientConnectionTimeoutStr = System
 				.getProperty(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS,
-				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
-		if (!Strings.isNullOrEmpty(zkClientConnectionTimeoutStr)) {
+						System.getenv(NAME_VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS));
+		if (StringUtils.isNotBlank(zkClientConnectionTimeoutStr)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_CONNECTION_TIMEOUT_IN_SECONDS = Integer.parseInt(zkClientConnectionTimeoutStr);
 			} catch (Throwable t) {
@@ -162,8 +167,9 @@ public class SystemEnvProperties {
 			}
 		}
 
-		String zkClientRetryTimes = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES, System.getenv(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES));
-		if (!Strings.isNullOrEmpty(zkClientRetryTimes)) {
+		String zkClientRetryTimes = System.getProperty(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES,
+				System.getenv(NAME_VIP_SATURN_ZK_CLIENT_RETRY_TIMES));
+		if (StringUtils.isNotBlank(zkClientRetryTimes)) {
 			try {
 				VIP_SATURN_ZK_CLIENT_RETRY_TIMES = Integer.parseInt(zkClientRetryTimes);
 			} catch (Throwable t) {
@@ -173,13 +179,13 @@ public class SystemEnvProperties {
 
 		String useUnstableNetworkSettings = System.getProperty(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING,
 				System.getenv(NAME_VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING));
-		if (!Strings.isNullOrEmpty(useUnstableNetworkSettings)) {
+		if (StringUtils.isNotBlank(useUnstableNetworkSettings)) {
 			VIP_SATURN_USE_UNSTABLE_NETWORK_SETTING = Boolean.parseBoolean(useUnstableNetworkSettings);
 		}
 
 		String checkNohupOutSizeInterval = System.getProperty(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC,
 				System.getenv(NAME_VIP_SATURN_CHECK_NOHUPOUT_SIZE_INTERVAL_IN_SEC));
-		if (!Strings.isNullOrEmpty(checkNohupOutSizeInterval)) {
+		if (StringUtils.isNotBlank(checkNohupOutSizeInterval)) {
 			try {
 				int interval_in_sec = Integer.parseInt(checkNohupOutSizeInterval);
 				if (interval_in_sec > 0) {
@@ -192,7 +198,7 @@ public class SystemEnvProperties {
 
 		String noHupOutSizeLimit = System.getProperty(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES,
 				System.getenv(NAME_VIP_SATURN_NOHUPOUT_SIZE_LIMIT_IN_BYTES));
-		if (!Strings.isNullOrEmpty(noHupOutSizeLimit)) {
+		if (StringUtils.isNotBlank(noHupOutSizeLimit)) {
 			try {
 				long sizeLimit = Long.parseLong(noHupOutSizeLimit);
 				if (sizeLimit > 0) {
@@ -202,6 +208,28 @@ public class SystemEnvProperties {
 				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
 			}
 		}
+
+		Set<String> tempSet = new HashSet<>();
+		String initJobByGroups = System
+				.getProperty(NAME_VIP_SATURN_INIT_JOB_BY_GROUPS, System.getenv(NAME_VIP_SATURN_INIT_JOB_BY_GROUPS));
+		if (StringUtils.isNotBlank(initJobByGroups)) {
+			try {
+				String[] split = initJobByGroups.split(",");
+				for (String temp : split) {
+					if (StringUtils.isNotBlank(temp)) {
+						tempSet.add(temp.trim());
+					}
+				}
+			} catch (Throwable t) {
+				LogUtils.error(log, LogEvents.ExecutorEvent.COMMON, t.getMessage(), t);
+			}
+		}
+		VIP_SATURN_INIT_JOB_BY_GROUPS = tempSet;
+		if (!VIP_SATURN_INIT_JOB_BY_GROUPS.isEmpty()) {
+			LogUtils.info(log, LogEvents.ExecutorEvent.COMMON, "the {} is set to {}",
+					NAME_VIP_SATURN_INIT_JOB_BY_GROUPS, VIP_SATURN_INIT_JOB_BY_GROUPS);
+		}
+
 	}
 
 	protected static String trim(String property) {

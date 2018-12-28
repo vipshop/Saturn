@@ -236,11 +236,11 @@ public class JobScheduler {
 	/**
 	 * 立刻启动作业.
 	 */
-	public void triggerJob() {
+	public void triggerJob(String triggeredDataStr) {
 		if (job.getScheduler().isShutdown()) {
 			return;
 		}
-		job.getScheduler().trigger();
+		job.getScheduler().trigger(triggeredDataStr);
 	}
 
 	/**

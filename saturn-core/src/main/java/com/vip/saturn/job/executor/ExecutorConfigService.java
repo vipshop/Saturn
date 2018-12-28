@@ -1,7 +1,7 @@
 package com.vip.saturn.job.executor;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.exception.SaturnExecutorException;
+import com.vip.saturn.job.utils.JsonUtils;
 import com.vip.saturn.job.utils.LogEvents;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,7 +62,7 @@ public class ExecutorConfigService {
 					if (StringUtils.isBlank(configStr)) {
 						executorConfig = executorConfigClass.newInstance();
 					} else {
-						executorConfig = JSON.parseObject(configStr, executorConfigClass);
+						executorConfig = JsonUtils.getGson().fromJson(configStr, executorConfigClass);
 					}
 				} catch (Throwable t) {
 					LogUtils.error(log, LogEvents.ExecutorEvent.INIT, t.toString(), t);

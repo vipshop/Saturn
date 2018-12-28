@@ -305,12 +305,12 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 		try {
 			client.delete().guaranteed().forPath(key);
 		} catch (KeeperException.NotEmptyException e) {
-			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON,
-					"try to delete path:" + key + " but fail for NotEmptyException", e);
+			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON, "try to delete path: {} but fail for NotEmptyException",
+					key, e);
 			deleteChildrenIfNeeded(key);
 		} catch (KeeperException.NoNodeException e) {
-			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON,
-					"try to delete path:" + key + " but fail for NoNodeException", e);
+			LogUtils.debug(log, LogEvents.ExecutorEvent.COMMON, "try to delete path: {} but fail for NoNodeException",
+					key, e);
 		} catch (final Exception ex) {
 			RegExceptionHandler.handleException(ex);
 		}

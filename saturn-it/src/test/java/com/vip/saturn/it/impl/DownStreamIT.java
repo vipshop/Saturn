@@ -6,6 +6,7 @@ import com.vip.saturn.it.job.downStream.JobA;
 import com.vip.saturn.it.job.downStream.JobB;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobType;
+import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -73,6 +74,13 @@ public class DownStreamIT extends AbstractSaturnIT {
 		disableJob(jobA.getJobName());
 		disableJob(jobB.getJobName());
 		Thread.sleep(1000);
+
+		UpdateJobConfigVo updateJobConfigVo = new UpdateJobConfigVo();
+		updateJobConfigVo.setJobName(jobA.getJobName());
+		updateJobConfigVo.setDownStream("");
+		updateJob(updateJobConfigVo);
+		Thread.sleep(1000);
+
 		removeJob(jobA.getJobName());
 		removeJob(jobB.getJobName());
 	}

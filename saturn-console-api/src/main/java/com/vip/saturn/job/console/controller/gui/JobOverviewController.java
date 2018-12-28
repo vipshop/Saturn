@@ -266,54 +266,6 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getGroups(namespace));
 	}
 
-	// TODO dependency beDependedJobs可以删除，等前台同步删除
-
-	/**
-	 * 获取该作业依赖的所有作业
-	 */
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/{jobName}/dependency")
-	public SuccessResponseEntity getDependingJobs(final HttpServletRequest request, @PathVariable String namespace,
-			@PathVariable String jobName) throws SaturnJobConsoleException {
-		List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
-		return new SuccessResponseEntity(dependencyJobs);
-	}
-
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/dependency")
-	public SuccessResponseEntity batchGetDependingJob(final HttpServletRequest request, @PathVariable String namespace,
-			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
-		for (String jobName : jobNames) {
-			List<DependencyJob> dependencyJobs = jobService.getDependingJobs(namespace, jobName);
-			dependencyJobsMap.put(jobName, dependencyJobs);
-		}
-		return new SuccessResponseEntity(dependencyJobsMap);
-	}
-
-	/**
-	 * 获取依赖该作业的所有作业
-	 */
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/{jobName}/beDependedJobs")
-	public SuccessResponseEntity getDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
-			@PathVariable String jobName) throws SaturnJobConsoleException {
-		List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
-		return new SuccessResponseEntity(dependedJobs);
-	}
-
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
-	@GetMapping(value = "/beDependedJobs")
-	public SuccessResponseEntity batchGetDependedJobs(final HttpServletRequest request, @PathVariable String namespace,
-			@RequestParam List<String> jobNames) throws SaturnJobConsoleException {
-		Map<String, List<DependencyJob>> dependencyJobsMap = new HashMap<>();
-		for (String jobName : jobNames) {
-			List<DependencyJob> dependedJobs = jobService.getDependedJobs(namespace, jobName);
-			dependencyJobsMap.put(jobName, dependedJobs);
-		}
-		return new SuccessResponseEntity(dependencyJobsMap);
-	}
-
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/{jobName}/enable")
@@ -417,6 +369,20 @@ public class JobOverviewController extends AbstractGUIController {
 			jobService.setPreferList(namespace, jobName, preferList, userName);
 		}
 		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/candidateDownStream")
+	public SuccessResponseEntity getCandidateDownStream(final HttpServletRequest request,
+			@PathVariable String namespace) throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getCandidateDownStream(namespace));
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/candidateUpStream")
+	public SuccessResponseEntity getCandidateUpStream(final HttpServletRequest request, @PathVariable String namespace)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(jobService.getCandidateUpStream(namespace));
 	}
 
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})

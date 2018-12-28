@@ -1,12 +1,12 @@
 package com.vip.saturn.job.shell;
 
-import com.alibaba.fastjson.JSON;
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.SaturnSystemErrorGroup;
 import com.vip.saturn.job.SaturnSystemReturnCode;
 import com.vip.saturn.job.basic.AbstractSaturnJob;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
+import com.vip.saturn.job.utils.JsonUtils;
 import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.ScriptPidUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
@@ -14,6 +14,7 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,14 +99,13 @@ public class ScriptJobRunner {
 		if (saturnOutputFile != null && saturnOutputFile.exists()) {
 			try {
 				String fileContents = FileUtils.readFileToString(saturnOutputFile);
-				if (fileContents != null && !fileContents.trim().isEmpty()) {
-					tmp = JSON.parseObject(fileContents.trim(), SaturnJobReturn.class);
+				if (StringUtils.isNotBlank(fileContents)) {
+					tmp = JsonUtils.getGson().fromJson(fileContents.trim(), SaturnJobReturn.class);
 					businessReturned = true; // 脚本成功返回数据
 				}
 			} catch (Throwable t) {
-				String template = "%s - %s read SaturnJobReturn from %s error";
-				LogUtils.error(log, jobName, String.format(template, jobName, item, saturnOutputFile.getAbsolutePath()),
-						t);
+				LogUtils.error(log, jobName, "{} - {} read SaturnJobReturn from {} error", jobName, item,
+						saturnOutputFile.getAbsolutePath(), t);
 				tmp = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + t,
 						SaturnSystemErrorGroup.FAIL);
 			}
@@ -138,8 +138,7 @@ public class ScriptJobRunner {
 			createSaturnJobReturnFile();
 			saturnJobReturn = execute(timeoutSeconds);
 		} catch (Throwable t) {
-			String template = "%s - %s Exception";
-			LogUtils.error(log, jobName, String.format(template, jobName, item), t);
+			LogUtils.error(log, jobName, "{} - {} Exception", jobName, item, t);
 			saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, "Exception: " + t,
 					SaturnSystemErrorGroup.FAIL);
 		} finally {
@@ -187,8 +186,8 @@ public class ScriptJobRunner {
 				handleJobLog(processOutputStream.getJobLog());
 				processOutputStream.close();
 			} catch (Exception ex) {
-				String template = "%s-%s Error at closing output stream. Should not be concern: ";
-				LogUtils.error(log, jobName, String.format(template, jobName, item), ex);
+				LogUtils.error(log, jobName, "{}-{} Error at closing output stream. Should not be concern: {}", jobName,
+						item, ex.getMessage(), ex);
 			}
 			stopStreamHandler(streamHandler);
 			ScriptPidUtils.removePidFile(job.getExecutorName(), jobName, "" + item, watchdog.getPid());
@@ -217,8 +216,8 @@ public class ScriptJobRunner {
 		try {
 			streamHandler.stop();
 		} catch (IOException ex) {
-			String template = "%s-%s Error at closing log stream. Should not be concern: ";
-			LogUtils.debug(log, jobName, String.format(template, jobName, item), ex);
+			LogUtils.debug(log, jobName, "{}-{} Error at closing log stream. Should not be concern: {}", jobName, item,
+					ex.getMessage(), ex);
 		}
 	}
 
@@ -242,8 +241,7 @@ public class ScriptJobRunner {
 
 		saturnJobReturn = new SaturnJobReturn(SaturnSystemReturnCode.USER_FAIL, "Exception: " + errMsg,
 				SaturnSystemErrorGroup.FAIL);
-		String template = "%s-%s Exception: ";
-		LogUtils.error(log, jobName, String.format(template, jobName), e);
+		LogUtils.error(log, jobName, "{}-{} Exception: {}", jobName, item, errMsg, e);
 		return saturnJobReturn;
 	}
 }

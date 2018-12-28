@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -18,8 +18,6 @@ import com.vip.saturn.job.internal.storage.JobNodePath;
 
 /**
  * Saturn配置根节点名称的常量类.
- * 
- * 
  */
 public final class ConfigurationNode {
 
@@ -85,11 +83,14 @@ public final class ConfigurationNode {
 	 */
 	public static final String CHANNEL_NAME = ROOT + "/channelName";
 
+	public static final String GROUPS = ROOT + "/groups";
+
+	public static final String UP_STREAM = ROOT + "/upStream";
+
 	public static final String DOWN_STREAM = ROOT + "/downStream";
 
 	/**
 	 * 判断是否为作业配置路径.
-	 * 
 	 * @param path 节点路径
 	 * @return 是否为作业配置路径
 	 */
@@ -99,7 +100,6 @@ public final class ConfigurationNode {
 
 	/**
 	 * 判断是否为作业分片总数路径.
-	 * 
 	 * @param path 节点路径
 	 * @return 是否为作业分片总数路径
 	 */
@@ -108,8 +108,7 @@ public final class ConfigurationNode {
 	}
 
 	/**
-	 * 判断是否为统计处理数据量的间隔秒数路径。
-	 * 
+	 * 判断是否为统计处理数据量的间隔秒数路径
 	 * @param path 节点路径
 	 * @return 是否为统计处理数据量的间隔秒数路径。
 	 */
@@ -119,7 +118,6 @@ public final class ConfigurationNode {
 
 	/**
 	 * 判断是否为失效转移设置路径.
-	 * 
 	 * @param jobName 作业名称
 	 * @param path 节点路径
 	 * @return 是否为失效转移设置路径
@@ -130,7 +128,6 @@ public final class ConfigurationNode {
 
 	/**
 	 * 判断是否为作业调度配置路径.
-	 * 
 	 * @param path 节点路径
 	 * @return 是否为作业调度配置路径
 	 */
@@ -197,7 +194,6 @@ public final class ConfigurationNode {
 	}
 
 	/**
-	 * 
 	 * @param path 指定路径
 	 * @return 是否为jobParameter路径
 	 */
@@ -207,6 +203,10 @@ public final class ConfigurationNode {
 
 	public static boolean isTimeoutSecondsPath(final String jobName, final String path) {
 		return JobNodePath.getNodeFullPath(jobName, TIMEOUTSECONDS).equals(path);
+	}
+
+	public static boolean isDownStreamPath(final String jobName, final String path) {
+		return JobNodePath.getNodeFullPath(jobName, DOWN_STREAM).equals(path);
 	}
 
 	/**

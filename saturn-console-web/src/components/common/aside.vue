@@ -8,7 +8,7 @@
                         <li class="el-menu-item page-sidebar-toggle-btn" @click="collapseChange()" :style="styleObject">
                           <i class="fa fa-angle-left" :class="{'fa-angle-left':!collapse, 'fa-angle-right':collapse}"></i>
                         </li>
-                        <el-menu-item v-for="(menu, index) in sidebarMenus" :key="menu.index" class="page-menu-item"
+                        <el-menu-item v-for="menu in sidebarMenus" :key="menu.index" class="page-menu-item"
                                       :class="{active: activeMenu === menu.index}"
                                       :style="styleObject"
                                       :index="menu.index" :route="menu">
@@ -16,7 +16,7 @@
                             <span class="page-menu-item-title">
                                 {{menu.title}}
                             </span>
-                            <el-tag :type="menu.name === 'unable_failover_jobs' || menu.name === 'change_manage' ? 'warning' : 'danger'" class="warning-tag" v-if="menu.alarmCount && !collapse">{{menu.alarmCount}}</el-tag>
+                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" v-if="menu.alarmCount && !collapse" />
                         </el-menu-item>
                     </el-menu>
                   </div>
@@ -88,15 +88,6 @@
   };
 </script>
 <style lang="sass">
-.warning-tag {
-    border-radius: 6px;
-    margin-left: 15px;
-    min-width: 28px;
-    padding: 0 5px;
-    text-align: center;
-    height: 20px;
-    line-height: 20px;
-}
 .my-sider {
   .el-aside {
     overflow: visible;

@@ -20,6 +20,7 @@ import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.basic.SaturnExecutionContext;
 import com.vip.saturn.job.internal.config.ConfigurationService;
 import com.vip.saturn.job.internal.failover.FailoverService;
+import com.vip.saturn.job.trigger.Triggered;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +50,11 @@ public class ExecutionContextService extends AbstractSaturnService {
 	 *
 	 * @return 当前作业服务器运行时分片上下文
 	 */
-	public JobExecutionMultipleShardingContext getJobExecutionShardingContext() {
+	public JobExecutionMultipleShardingContext getJobExecutionShardingContext(final Triggered triggered) {
 		SaturnExecutionContext result = new SaturnExecutionContext();
 		result.setJobName(configService.getJobName());
 		result.setShardingTotalCount(configService.getShardingTotalCount());
+		result.setTriggered(triggered);
 		List<Integer> shardingItems = getShardingItems();
 		boolean isEnabledReport = configService.isEnabledReport();
 		if (isEnabledReport) {

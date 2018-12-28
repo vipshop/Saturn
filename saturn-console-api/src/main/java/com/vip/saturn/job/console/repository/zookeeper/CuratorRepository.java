@@ -57,12 +57,14 @@ public interface CuratorRepository {
 
 		interface CuratorTransactionOp {
 
+			CuratorTransactionOp replace(String znode, Object value) throws Exception;
+
 			CuratorTransactionOp replaceIfChanged(String znode, Object value) throws Exception;
 
 			CuratorTransactionOp replaceIfChanged(String znode, Object value, AtomicInteger changedCount)
 					throws Exception;
 
-			CuratorTransactionOp create(String znode) throws Exception;
+			CuratorTransactionOp create(String znode, Object value) throws Exception;
 
 			CuratorTransactionOp delete(String znode) throws Exception;
 

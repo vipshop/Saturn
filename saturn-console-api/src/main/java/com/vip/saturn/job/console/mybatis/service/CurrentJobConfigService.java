@@ -34,4 +34,5 @@ public interface CurrentJobConfigService {
 	void updateNewAndSaveOld2History(final JobConfig4DB newJobConfig, final JobConfig4DB oldJobConfig,
 			final String userName) throws SaturnJobConsoleException;
 
+	void updateStream(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException;
 }

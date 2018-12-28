@@ -1,6 +1,7 @@
 package com.vip.saturn.job.utils;
 
 import com.google.common.collect.Maps;
+import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.exception.SaturnJobException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -47,7 +48,8 @@ public class UpdateJobCronUtils {
 					bodyEntity.putAll(customContext);
 				}
 				bodyEntity.put("cron", cron);
-				String json = JsonUtils.toJSON(bodyEntity);
+				String json = JsonUtils.toJson(bodyEntity, new TypeToken<Map<String, String>>() {
+				}.getType());
 				// prepare
 				httpClient = HttpClientBuilder.create().build();
 				HttpPut request = new HttpPut(targetUrl);
@@ -61,16 +63,15 @@ public class UpdateJobCronUtils {
 				HttpUtils.handleResponse(httpResponse);
 				return;
 			} catch (SaturnJobException se) {
-				LogUtils.error(log, jobName, "SaturnJobException throws: ", se);
+				LogUtils.error(log, jobName, "SaturnJobException throws: {}", se.getMessage(), se);
 				throw se;
 			} catch (ConnectException e) {
-				String template = "Fail to connect to url:%s, throws: ";
-				LogUtils.error(log, jobName, String.format(template, targetUrl), e);
+				LogUtils.error(log, jobName, "Fail to connect to url:{}, throws: {}", targetUrl, e.getMessage(), e);
 				if (i == size - 1) {
 					throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, "no available console server", e);
 				}
 			} catch (Exception e) {
-				LogUtils.error(log, jobName, "Other exception throws: ", e);
+				LogUtils.error(log, jobName, "Other exception throws: {}", e.getMessage(), e);
 				throw new SaturnJobException(SaturnJobException.SYSTEM_ERROR, e.getMessage(), e);
 			} finally {
 				HttpUtils.closeHttpClientQuietly(httpClient);

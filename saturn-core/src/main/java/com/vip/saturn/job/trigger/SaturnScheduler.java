@@ -41,9 +41,9 @@ public class SaturnScheduler {
 	}
 
 	public void start() {
-		saturnWorker = new SaturnWorker(job, trigger.createQuartzTrigger());
+		saturnWorker = new SaturnWorker(job, trigger.createTriggered(false, null), trigger.createQuartzTrigger());
 		if (trigger.isInitialTriggered()) {
-			saturnWorker.trigger();
+			trigger(null);
 		}
 		executor.submit(saturnWorker);
 	}
@@ -69,8 +69,8 @@ public class SaturnScheduler {
 		}
 	}
 
-	public void trigger() {
-		saturnWorker.trigger();
+	public void trigger(String triggeredDataStr) {
+		saturnWorker.trigger(trigger.createTriggered(true, triggeredDataStr));
 	}
 
 	public boolean isShutdown() {

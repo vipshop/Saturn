@@ -23,19 +23,19 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.groups" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.groups.value" @change="scope.search">
                                 <el-option label="全部分组" value=""></el-option>
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.status" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status.value" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="scope.search">
+                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn].value" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>
@@ -84,7 +84,7 @@
                             </el-table-column>
                             <el-table-column label="状态" prop="status" width="90px">
                                 <template slot-scope="scope"> 
-                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{translateStatus[scope.row.status]}}</el-tag>
+                                    <el-tag :type="statusTag[scope.row.status]" close-transition>{{$map.jobStatusMap[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述">
@@ -168,10 +168,10 @@ export default {
         abnormalNumber: 0,
       },
       filters: {
-        jobName: '',
-        groups: '',
-        status: '',
-        description: '',
+        jobName: { value: '' },
+        groups: { value: '', precise: true },
+        status: { value: '', precise: true },
+        description: { value: '' },
       },
       jobList: [],
       total: 0,
@@ -183,12 +183,6 @@ export default {
         RUNNING: 'success',
         STOPPING: 'warning',
         STOPPED: '',
-      },
-      translateStatus: {
-        READY: '已就绪',
-        RUNNING: '运行中',
-        STOPPING: '停止中',
-        STOPPED: '已停止',
       },
       multipleSelection: [],
     };
@@ -222,8 +216,8 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
     selectColumnChange() {
-      this.filters.jobName = '';
-      this.filters.description = '';
+      this.filters.jobName.value = '';
+      this.filters.description.value = '';
     },
     toAbnormalJobPage() {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
@@ -263,6 +257,8 @@ export default {
         preferList: [],
         queueName: '',
         description: '',
+        upStream: [],
+        downStream: [],
       };
       this.jobInfo = JSON.parse(JSON.stringify(jobAddInfo));
     },
@@ -362,6 +358,8 @@ export default {
           timeZone: data.timeZone,
           queueName: data.queueName,
           description: data.description,
+          upStream: data.upStream || [],
+          downStream: data.downStream || [],
         };
         this.isJobInfoVisible = true;
         this.jobInfoTitle = '复制作业';
@@ -380,106 +378,19 @@ export default {
       });
     },
     handleBatchActive(params, jobArray, enabled) {
-      let dependUrl = '';
-      let operation = '';
-      let text = '';
-      let activeRequest = '';
-      if (enabled) {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/dependency`;
-        operation = '启用';
-        text = '禁用';
-        activeRequest = 'enable';
-      } else {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/beDependedJobs`;
-        operation = '禁用';
-        text = '启用';
-        activeRequest = 'disable';
-      }
-      this.$http.get(dependUrl, params).then((data) => {
-        let warningFlag = false;
-        jobArray.forEach((ele) => {
-          if (data[ele].length > 0) {
-            if (enabled) {
-              warningFlag = data[ele].some((ele2) => {
-                if (!ele2.enabled) {
-                  return true;
-                }
-                return false;
-              });
-            } else {
-              warningFlag = data[ele].some((ele3) => {
-                if (ele3.enabled) {
-                  return true;
-                }
-                return false;
-              });
-            }
-          }
-          return false;
-        });
-        if (warningFlag) {
-          this.$message.confirmMessage(`有依赖的作业已${text}，是否继续${operation}作业?`, () => {
-            this.batchActiveRequest(params, activeRequest);
-          });
-        } else {
-          const confirmText = jobArray.length < 10 ? `确定${operation}作业${params.jobNames}吗?` : `确认${operation}已选的 ${jobArray.length} 条作业吗?`;
-          this.$message.confirmMessage(confirmText, () => {
-            this.batchActiveRequest(params, activeRequest);
-          });
-        }
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+      const operation = enabled ? '启用' : '禁用';
+      const activeRequest = enabled ? 'enable' : 'disable';
+      const confirmText = jobArray.length < 10 ? `确定${operation}作业${params.jobNames}吗?` : `确认${operation}已选的 ${jobArray.length} 条作业吗?`;
+      this.$message.confirmMessage(confirmText, () => {
+        this.batchActiveRequest(params, activeRequest);
+      });
     },
     handleActive(row, enabled) {
-      let dependUrl = '';
-      let operation = '';
-      let text = '';
-      let activeRequest = '';
-      if (enabled) {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/dependency`;
-        operation = '启用';
-        text = '禁用';
-        activeRequest = 'enable';
-      } else {
-        dependUrl = `/console/namespaces/${this.domainName}/jobs/${row.jobName}/beDependedJobs`;
-        operation = '禁用';
-        text = '启用';
-        activeRequest = 'disable';
-      }
-      this.$http.get(dependUrl).then((data) => {
-        const arr = data;
-        if (arr.length > 0) {
-          const jobArr = [];
-          if (enabled) {
-            arr.forEach((ele) => {
-              if (!ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          } else {
-            arr.forEach((ele) => {
-              if (ele.enabled) {
-                jobArr.push(ele.jobName);
-              }
-            });
-          }
-          if (jobArr.length > 0) {
-            const jobStr = jobArr.join(',');
-            this.$message.confirmMessage(`有依赖的作业${jobStr}已${text}，是否继续${operation}该作业?`, () => {
-              this.activeRequest(row.jobName, activeRequest);
-            });
-          } else {
-            this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-              this.activeRequest(row.jobName, activeRequest);
-            });
-          }
-        } else {
-          this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
-            this.activeRequest(row.jobName, activeRequest);
-          });
-        }
-      })
-      .catch(() => { this.$http.buildErrorHandler(`${dependUrl}请求失败！`); });
+      const operation = enabled ? '启用' : '禁用';
+      const activeRequest = enabled ? 'enable' : 'disable';
+      this.$message.confirmMessage(`确定${operation}作业${row.jobName}吗?`, () => {
+        this.activeRequest(row.jobName, activeRequest);
+      });
     },
     batchActiveRequest(params, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {

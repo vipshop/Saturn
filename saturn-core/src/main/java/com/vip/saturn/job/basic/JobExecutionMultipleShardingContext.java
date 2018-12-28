@@ -3,9 +3,9 @@
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -14,14 +14,15 @@
 
 package com.vip.saturn.job.basic;
 
+import com.vip.saturn.job.exception.JobException;
+import com.vip.saturn.job.trigger.Triggered;
+import org.apache.commons.beanutils.BeanUtils;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.beanutils.BeanUtils;
-import com.vip.saturn.job.exception.JobException;
 
 /**
  * 作业运行时多片分片上下文.
@@ -45,8 +46,12 @@ public class JobExecutionMultipleShardingContext extends AbstractJobExecutionSha
 	/**
 	 * 数据分片项和数据处理位置Map.
 	 */
-
 	private Map<Integer, String> offsets = new HashMap<>();
+
+	/**
+	 * 触发执行的数据
+	 */
+	private Triggered triggered;
 
 	public static int getInitCollectionSize() {
 		return initCollectionSize;
@@ -80,9 +85,17 @@ public class JobExecutionMultipleShardingContext extends AbstractJobExecutionSha
 		this.offsets = offsets;
 	}
 
+	public Triggered getTriggered() {
+		return triggered;
+	}
+
+	public void setTriggered(Triggered triggered) {
+		this.triggered = triggered;
+	}
+
 	/**
 	 * 根据分片项获取单分片作业运行时上下文.
-	 * 
+	 *
 	 * @param item 分片项
 	 * @return 单分片作业运行时上下文
 	 */
@@ -101,8 +114,9 @@ public class JobExecutionMultipleShardingContext extends AbstractJobExecutionSha
 
 	@Override
 	public String toString() {
-		return String.format(
-				"jobName: %s, shardingTotalCount: %s, shardingItems: %s, shardingItemParameters: %s, jobParameter: %s",
-				getJobName(), getShardingTotalCount(), shardingItems, shardingItemParameters, getJobParameter());
+		return String
+				.format("jobName: %s, shardingTotalCount: %s, shardingItems: %s, shardingItemParameters: %s, jobParameter: %s",
+						getJobName(), getShardingTotalCount(), shardingItems, shardingItemParameters,
+						getJobParameter());
 	}
 }

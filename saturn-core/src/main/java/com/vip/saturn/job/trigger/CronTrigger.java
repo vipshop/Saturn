@@ -8,6 +8,9 @@ import org.quartz.TriggerBuilder;
 
 import java.text.ParseException;
 
+/**
+ * @author hebelala
+ */
 public class CronTrigger extends AbstractTrigger {
 
 	@Override

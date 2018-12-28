@@ -19,6 +19,8 @@ public interface CurrentJobConfigRepository {
 
 	void updatePreferList(JobConfig4DB currentJobConfig);
 
+	void updateStream(JobConfig4DB currentJobConfig);
+
 	List<JobConfig4DB> findConfigsByNamespace(@Param("namespace") String namespace);
 
 	List<JobConfig4DB> findConfigsByNamespaceWithCondition(@Param("namespace") String namespace,
