@@ -443,10 +443,12 @@ CREATE TABLE `saturn_dashboard_history` (
   `zk_cluster` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '所属zk集群',
   `record_type` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '类型',
   `topic` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '主题',
-  `content` LONGTEXT NOT NULL COMMENT '内容',
-  `record_date` DATE NOT NULL COMMENT '记录日期',
+  `content` LONGTEXT  COMMENT '内容',
+  `record_date` DATE  COMMENT '记录日期',
+  `create_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+  UNIQUE KEY `history_key` (`zk_cluster`, `record_type`, `topic`, `record_date`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
 
 ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';

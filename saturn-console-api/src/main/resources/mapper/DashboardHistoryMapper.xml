@@ -50,15 +50,16 @@
 
     <insert id="batchCreateOrUpdateHistory" parameterType="java.util.List">
         insert into saturn_dashboard_history(
-        zk_cluster, record_type , topic, content, record_date
+        zk_cluster, record_type , topic, content, record_date, create_time
         ) values
         <foreach collection="list" item="item" index="index" separator=",">
             (
-            #{item.zkCluster}, #{item.type}, #{item.topic}, #{item.content}, #{item.recordDate}
+            #{item.zkCluster}, #{item.type}, #{item.topic}, #{item.content}, #{item.recordDate}, #{item.recordDate}
             )
         </foreach>
         on duplicate key update
-        content = values(content)
+        content = values(content),
+        update_time = values(create_time)
     </insert>
 
 </mapper>
