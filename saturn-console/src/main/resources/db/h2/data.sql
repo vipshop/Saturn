@@ -129,7 +129,6 @@ INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_R
 INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
