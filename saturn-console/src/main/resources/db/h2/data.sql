@@ -122,3 +122,14 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_ad
 UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHERE `role_key`='system_admin';
 UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
 UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
+
+-- 3.3.0 update
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_JOB_NUM', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_REPORT', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
