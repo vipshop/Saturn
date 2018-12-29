@@ -7,6 +7,8 @@ import com.vip.saturn.job.shell.SaturnScriptJob;
 import com.vip.saturn.job.trigger.CronTrigger;
 import com.vip.saturn.job.trigger.PassiveTrigger;
 import com.vip.saturn.job.utils.LocalHostService;
+import com.vip.saturn.job.utils.LogEvents;
+import com.vip.saturn.job.utils.LogUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,5 +110,12 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 	@Override
 	public void postDiscover(Map<String, String> discoveryInfo) {
 		// do nothing
+	}
+
+	@Override
+	public void handleExecutorStartError(Throwable t) {
+		if (log != null) {
+			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "fail to start executor", t);
+		}
 	}
 }

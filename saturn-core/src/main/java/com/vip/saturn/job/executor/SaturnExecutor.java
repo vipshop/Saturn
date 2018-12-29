@@ -448,7 +448,7 @@ public class SaturnExecutor {
 				LogUtils.info(log, LogEvents.ExecutorEvent.INIT, "The executor {} start successfully which used {} ms",
 						executorName, System.currentTimeMillis() - startTime);
 			} catch (Throwable t) {
-				LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to start executor {}", executorName, t);
+				saturnExecutorExtension.handleExecutorStartError(t);
 				shutdown0();
 				throw t;
 			}

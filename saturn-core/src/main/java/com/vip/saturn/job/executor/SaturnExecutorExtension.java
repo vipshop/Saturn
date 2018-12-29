@@ -40,4 +40,6 @@ public abstract class SaturnExecutorExtension {
 
 	public abstract void postDiscover(Map<String, String> discoveryInfo);
 
+	public abstract void handleExecutorStartError(Throwable t);
+
 }
