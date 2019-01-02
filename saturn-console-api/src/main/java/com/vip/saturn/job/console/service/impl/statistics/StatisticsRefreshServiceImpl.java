@@ -430,7 +430,6 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 	protected StatisticsModel initStatisticsModel() {
 		StatisticsModel statisticsModel = new StatisticsModel();
 		ExecutorInfoAnalyzer executorInfoAnalyzer = new ExecutorInfoAnalyzer();
-		executorInfoAnalyzer.setReportAlarmService(reportAlarmService);
 		statisticsModel.setExecutorInfoAnalyzer(executorInfoAnalyzer);
 
 		OutdatedNoRunningJobAnalyzer outdatedNoRunningJobAnalyzer = new OutdatedNoRunningJobAnalyzer();
