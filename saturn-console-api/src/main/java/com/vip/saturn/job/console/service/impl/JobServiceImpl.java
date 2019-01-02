@@ -632,7 +632,7 @@ public class JobServiceImpl implements JobService {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片数为1，才能配置下游作业");
 			} else {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-						"配置的上游作业(" + jobConfig.getJobName() + ")分片数不能为1");
+						"配置的上游作业(" + jobConfig.getJobName() + ")分片数必须为1");
 			}
 		}
 	}
