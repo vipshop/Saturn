@@ -435,8 +435,8 @@ ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '�
 
 -- 3.3.0 update
 ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';
-ALTER TABLE `job_config` ADD `up_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '上游作业';
-ALTER TABLE `job_config` ADD `down_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '下游作业';
+ALTER TABLE `job_config` ADD `up_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '上游作业',ADD `down_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '下游作业';
+ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
 
 CREATE TABLE `saturn_dashboard_history` (
   `id` bigint(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -448,17 +448,17 @@ CREATE TABLE `saturn_dashboard_history` (
   `create_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `history_key` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+  UNIQUE KEY `uniq_dashboard_history_zk_cluster_record_type_topic_record_date` (`zk_cluster`, `record_type`, `topic`, `record_date`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
 
-ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
+
 
 INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_JOB_NUM', '100');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_REPORT', '5');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', 'false');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '300');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', 'false');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', 'default:');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', 'default:/default');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
