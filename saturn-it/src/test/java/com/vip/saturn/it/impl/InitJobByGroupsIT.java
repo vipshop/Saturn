@@ -1,12 +1,9 @@
 package com.vip.saturn.it.impl;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.vip.saturn.it.base.AbstractSaturnIT;
-import com.vip.saturn.it.utils.LogbackListAppender;
+import com.vip.saturn.it.job.InitByGroupsJob;
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.domain.JobType;
-import com.vip.saturn.job.executor.InitNewJobService;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -37,30 +34,24 @@ public class InitJobByGroupsIT extends AbstractSaturnIT {
 		System.clearProperty(SystemEnvProperties.NAME_VIP_SATURN_INIT_JOB_BY_GROUPS);
 		SystemEnvProperties.loadProperties();
 
-		LogbackListAppender logbackListAppender = new LogbackListAppender();
-		logbackListAppender.addToLogger(InitNewJobService.class);
-		logbackListAppender.start();
-		try {
-			startOneNewExecutorList();
-			Thread.sleep(1000);
-			JobConfig jobConfig = new JobConfig();
-			jobConfig.setJobName("testA_ExecutorNotConfigGroups");
-			jobConfig.setCron("*/2 * * * * ?");
-			jobConfig.setJobType(JobType.SHELL_JOB.toString());
-			jobConfig.setShardingTotalCount(1);
-			jobConfig.setShardingItemParameters("0=0");
-			jobConfig.setGroups("");
-			addJob(jobConfig);
-			Thread.sleep(1000);
+		InitByGroupsJob.inited = false;
 
-			assertThat(logbackListAppender.getLastMessage()).isEqualTo(
-					"[testA_ExecutorNotConfigGroups] msg=the job testA_ExecutorNotConfigGroups initialize successfully");
+		startOneNewExecutorList();
+		Thread.sleep(1000);
+		JobConfig jobConfig = new JobConfig();
+		jobConfig.setJobName("testA_ExecutorNotConfigGroups");
+		jobConfig.setCron("*/2 * * * * ?");
+		jobConfig.setJobType(JobType.JAVA_JOB.toString());
+		jobConfig.setJobClass(InitByGroupsJob.class.getCanonicalName());
+		jobConfig.setShardingTotalCount(1);
+		jobConfig.setShardingItemParameters("0=0");
+		jobConfig.setGroups("");
+		addJob(jobConfig);
+		Thread.sleep(1000);
 
-			removeJob(jobConfig.getJobName());
-		} finally {
-			logbackListAppender.clearLogs();
-			logbackListAppender.stop();
-		}
+		assertThat(InitByGroupsJob.inited).isTrue();
+
+		removeJob(jobConfig.getJobName());
 	}
 
 	@Test
@@ -69,30 +60,24 @@ public class InitJobByGroupsIT extends AbstractSaturnIT {
 			System.setProperty(SystemEnvProperties.NAME_VIP_SATURN_INIT_JOB_BY_GROUPS, "group1, group2");
 			SystemEnvProperties.loadProperties();
 
-			LogbackListAppender logbackListAppender = new LogbackListAppender();
-			logbackListAppender.addToLogger(InitNewJobService.class);
-			logbackListAppender.start();
-			try {
-				startOneNewExecutorList();
-				Thread.sleep(1000);
-				JobConfig jobConfig = new JobConfig();
-				jobConfig.setJobName("testB_ExecutorConfigGroupsAndInitJobSuccessfully");
-				jobConfig.setCron("*/2 * * * * ?");
-				jobConfig.setJobType(JobType.SHELL_JOB.toString());
-				jobConfig.setShardingTotalCount(1);
-				jobConfig.setShardingItemParameters("0=0");
-				jobConfig.setGroups("group2");
-				addJob(jobConfig);
-				Thread.sleep(1000);
+			InitByGroupsJob.inited = false;
 
-				assertThat(logbackListAppender.getLastMessage()).isEqualTo(
-						"[testB_ExecutorConfigGroupsAndInitJobSuccessfully] msg=the job testB_ExecutorConfigGroupsAndInitJobSuccessfully initialize successfully");
+			startOneNewExecutorList();
+			Thread.sleep(1000);
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName("testB_ExecutorConfigGroupsAndInitJobSuccessfully");
+			jobConfig.setCron("*/2 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(InitByGroupsJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1);
+			jobConfig.setShardingItemParameters("0=0");
+			jobConfig.setGroups("group2");
+			addJob(jobConfig);
+			Thread.sleep(1000);
 
-				removeJob(jobConfig.getJobName());
-			} finally {
-				logbackListAppender.clearLogs();
-				logbackListAppender.stop();
-			}
+			assertThat(InitByGroupsJob.inited).isTrue();
+
+			removeJob(jobConfig.getJobName());
 		} finally {
 			System.clearProperty(SystemEnvProperties.NAME_VIP_SATURN_INIT_JOB_BY_GROUPS);
 			SystemEnvProperties.loadProperties();
@@ -105,34 +90,24 @@ public class InitJobByGroupsIT extends AbstractSaturnIT {
 			System.setProperty(SystemEnvProperties.NAME_VIP_SATURN_INIT_JOB_BY_GROUPS, "group1, group2");
 			SystemEnvProperties.loadProperties();
 
-			LogbackListAppender logbackListAppender = new LogbackListAppender();
-			logbackListAppender.addToLogger(InitNewJobService.class);
-			logbackListAppender.start();
-			try {
-				startOneNewExecutorList();
-				Thread.sleep(1000);
-				JobConfig jobConfig = new JobConfig();
-				jobConfig.setJobName("testC_ExecutorConfigGroupsAndInitJobFailed");
-				jobConfig.setCron("*/2 * * * * ?");
-				jobConfig.setJobType(JobType.SHELL_JOB.toString());
-				jobConfig.setShardingTotalCount(1);
-				jobConfig.setShardingItemParameters("0=0");
-				jobConfig.setGroups("");
-				addJob(jobConfig);
-				Thread.sleep(1000);
+			InitByGroupsJob.inited = false;
 
-				ILoggingEvent lastLog = logbackListAppender.getLastLog();
-				assertThat(lastLog.getLevel()).isEqualTo(Level.INFO);
-				// VIP_SATURN_INIT_JOB_BY_GROUPS is Set, not ArrayList
-				assertThat(lastLog.getFormattedMessage())
-						.isIn("[testC_ExecutorConfigGroupsAndInitJobFailed] msg=the job testC_ExecutorConfigGroupsAndInitJobFailed wont be initialized, because it's not in the groups [group1, group2]",
-								"[testC_ExecutorConfigGroupsAndInitJobFailed] msg=the job testC_ExecutorConfigGroupsAndInitJobFailed wont be initialized, because it's not in the groups [group2, group1]");
+			startOneNewExecutorList();
+			Thread.sleep(1000);
+			JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName("testC_ExecutorConfigGroupsAndInitJobFailed");
+			jobConfig.setCron("*/2 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(InitByGroupsJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1);
+			jobConfig.setShardingItemParameters("0=0");
+			jobConfig.setGroups("");
+			addJob(jobConfig);
+			Thread.sleep(1000);
 
-				removeJob(jobConfig.getJobName());
-			} finally {
-				logbackListAppender.clearLogs();
-				logbackListAppender.stop();
-			}
+			assertThat(InitByGroupsJob.inited).isFalse();
+
+			removeJob(jobConfig.getJobName());
 		} finally {
 			System.clearProperty(SystemEnvProperties.NAME_VIP_SATURN_INIT_JOB_BY_GROUPS);
 			SystemEnvProperties.loadProperties();
