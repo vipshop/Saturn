@@ -453,12 +453,12 @@ CREATE TABLE `saturn_dashboard_history` (
 
 ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
 
-INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_JOB_NUM', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_REPORT', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', '');
-INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_JOB_NUM', '100');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_REPORT', '5');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', 'false');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '300');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', 'false');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', 'default:');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
