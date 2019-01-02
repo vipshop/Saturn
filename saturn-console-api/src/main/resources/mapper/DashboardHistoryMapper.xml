@@ -59,7 +59,7 @@
         </foreach>
         on duplicate key update
         content = values(content),
-        update_time = values(create_time)
+        last_update_time = values(create_time)
     </insert>
 
 </mapper>
