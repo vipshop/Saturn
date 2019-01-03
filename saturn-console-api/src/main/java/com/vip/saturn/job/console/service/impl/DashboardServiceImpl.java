@@ -595,6 +595,13 @@ public class DashboardServiceImpl implements DashboardService {
 
 		List<String> zkClusters = getAvailableZkClusterKey();
 
+		if (zkClusters.isEmpty()) {
+			Map<String, List> result = new HashMap<>(2);
+			result.put("xAxis", null);
+			result.put("yAxis", null);
+			return result;
+		}
+
 		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
 				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
 
@@ -650,6 +657,13 @@ public class DashboardServiceImpl implements DashboardService {
 			zkClusters.add(zkCluster);
 		}
 
+		if (zkClusters.isEmpty()) {
+			Map<String, List> result = new HashMap<>(2);
+			result.put("xAxis", null);
+			result.put("yAxis", null);
+			return result;
+		}
+
 		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
 				.selectByZkClustersAndTypeAndTopicAndFromStartDateToEndDate(zkClusters, type, topic, fromDate, toDate);
 
@@ -703,6 +717,13 @@ public class DashboardServiceImpl implements DashboardService {
 			zkClusters.addAll(getAvailableZkClusterKey());
 		} else {
 			zkClusters.add(zkCluster);
+		}
+
+		if (zkClusters.isEmpty()) {
+			Map<String, List> result = new HashMap<>(2);
+			result.put("xAxis", null);
+			result.put("yAxis", null);
+			return result;
 		}
 
 		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
@@ -772,6 +793,13 @@ public class DashboardServiceImpl implements DashboardService {
 			zkClusters.addAll(getAvailableZkClusterKey());
 		} else {
 			zkClusters.add(zkCluster);
+		}
+
+		if (zkClusters.isEmpty()) {
+			Map<String, List> result = new HashMap<>(2);
+			result.put("xAxis", null);
+			result.put("yAxis", null);
+			return result;
 		}
 
 		List<DashboardHistory> dashboardHistories = dashboardHistoryRepository
