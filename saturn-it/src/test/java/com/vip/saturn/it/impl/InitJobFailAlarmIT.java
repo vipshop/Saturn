@@ -41,7 +41,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
 				"java.lang.ArithmeticException: / by zero")).isTrue();
 		removeJob(jobConfig.getJobName());
@@ -59,7 +59,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
 				"java.lang.ArithmeticException: / by zero")).isTrue();
 		removeJob(jobConfig.getJobName());
@@ -77,7 +77,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
 				"java.lang.RuntimeException: RuntimeException!!!")).isTrue();
 		removeJob(jobConfig.getJobName());
@@ -95,7 +95,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "java.lang.Error: Error!!!"))
 				.isTrue();
@@ -114,7 +114,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingTotalCount(1);
 		jobConfig.setShardingItemParameters("0=0");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
 				"java.lang.ClassNotFoundException: WhoAmI")).isTrue();
 		removeJob(jobConfig.getJobName());
@@ -133,7 +133,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingItemParameters("0=0");
 		// just add to zk, because add fail if add job by console api
 		zkAddJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isTrue();
 		zkRemoveJob(jobConfig.getJobName());
@@ -152,7 +152,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingItemParameters("0=0");
 		// just add to zk, because add fail if add job by console api
 		zkAddJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isTrue();
 
@@ -160,7 +160,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 
 		jobConfig.setJobClass("WhoAmI");
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isTrue();
 		assertThat(InitNewJobService.containsJobInitFailedRecord(executorName, jobConfig.getJobName(),
@@ -182,7 +182,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 		jobConfig.setShardingItemParameters("0=0");
 		// just add to zk, because add fail if add job by console api
 		zkAddJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isTrue();
 
@@ -190,7 +190,7 @@ public class InitJobFailAlarmIT extends AbstractSaturnIT {
 
 		jobConfig.setJobClass(InitSuccessfullyJob.class.getCanonicalName());
 		addJob(jobConfig);
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 		assertThat(InitNewJobService
 				.containsJobInitFailedRecord(executorName, jobConfig.getJobName(), "jobClass is not set")).isFalse();
 
