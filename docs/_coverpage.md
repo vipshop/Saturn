@@ -1,4 +1,4 @@
-![logo](zh-cn/3.0/_media/saturn-logo-new.png)
+![logo](zh-cn/3.x/_media/saturn-logo-new.png)
 
 > A distributed job scheduling platform
 
@@ -7,4 +7,5 @@
 - Fault tolerance
 
 [GitHub](https://github.com/vipshop/Saturn)
-[Docs](zh-cn/3.0/)
+[Docs 2.x](zh-cn/2.x/)
+[Docs 3.x](zh-cn/3.x/)

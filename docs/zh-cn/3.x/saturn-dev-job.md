@@ -151,7 +151,7 @@ Shell作业实际上不局限于Shell脚本，还可以是一切能在Executor�
 
 具体原理见下图。在满足调度条件时，Saturn Executor会调用System.exec()去调用脚本/程序。
 
-![shell原理](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/saturn_shell_%E5%8E%9F%E7%90%86.jpg)
+![shell原理](_media/saturn_shell_%E5%8E%9F%E7%90%86.jpg)
 
 ### 2.1 开发第一个Shell作业
 
@@ -165,13 +165,13 @@ Shell作业实际上不局限于Shell脚本，还可以是一切能在Executor�
 #### 2.1.1 简易开发
 
 首先通过首页进入默认域（或自定义域）
-![add shell job](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/add_simple_shell_job_1.jpg)
+![add shell job](_media/add_simple_shell_job_1.jpg)
 
 然后点击“添加”按钮添加新作业
-![add shell job](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/add_simple_shell_job_2.jpg)
+![add shell job](_media/add_simple_shell_job_2.jpg)
 
 接着添加Shell作业，在“分片参数”输入框中输入Shell脚本
-![add shell job](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/add_simple_shell_job_3.jpg)
+![add shell job](_media/add_simple_shell_job_3.jpg)
 
 最后点击“确定”保存
 
@@ -194,7 +194,7 @@ chmod +x /apps/sh/demojob.sh
 
 脚本准备完后添加Shell作业
 
-![add shell job](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/add_shell_job.jpg)
+![add shell job](_media/add_shell_job.jpg)
 
 留意分片参数配置，参数的值是执行/apps/sh/demojob.sh脚本的命令。
 
@@ -210,7 +210,7 @@ Shell没办法像Java一样使用Maven插件去调试，我们需要下载并启
 
 当Executor启动后，作业不会自动执行，直到在Saturn Console启动相应的Shell作业。
 
-![enable shell job](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/enable_shell_job.jpg)
+![enable shell job](_media/enable_shell_job.jpg)
 
 如果一切正常会在IDE的console看到作业运行的日志，也可以在“分片”标签看到执行的结果。（当然，前提是作业到点执行了）
 
@@ -225,6 +225,117 @@ Shell没办法像Java一样使用Maven插件去调试，我们需要下载并启
 
 下面是Console看到的结果：
 
-![shell job successfully](/Users/kfchu/Dev/Code/Saturn/docs/zh-cn/3.0/_media/shell_job_successful.jpg)
+![shell job successfully](_media/shell_job_successful.jpg)
 
 至此，你的第一个Shell作业已经顺利开发完成！
+
+## 3 集成Spring
+
+从3.3.0版本开始支持该功能。
+
+下载Demo工程 [saturn-demo-spring](https://github.com/vipshop/Saturn/tree/develop/examples/saturn-demo-spring)
+
+### 3.2.1 依赖saturn-spring
+
+```xml
+<dependency>
+    <groupId>com.vip.saturn</groupId>
+    <artifactId>saturn-spring</artifactId>
+    <!-- 修改成指定版本 -->
+    <version>master-SNAPSHOT</version>
+</dependency>
+```
+
+### 3.2.2 配置saturn.properties
+
+在classpath根目录下添加`saturn.properties`文件，添加app.class配置。
+
+```properties
+app.class=com.vip.saturn.job.spring.GenericSpringSaturnApplication
+```
+
+`GenericSpringSaturnApplication`将使用`ClassPathXmlApplicationContext`，加载`applicationContext.xml`文件来启动Spring。
+
+### 3.2.3 自定义启动Spring
+
+- 您可以通过编写`GenericSpringSaturnApplication`的子类，重写其方法，并配置`app.class`为该类，来达到自定义启动Spring的目的。
+
+- 如果您想自定义启动加载的xml文件，那么您可以重写`getConfigLocations()`方法。
+
+- 如果您想完全自定义启动Spring，那么您可以重写`run()`方法。
+
+## 4 集成SpringBoot
+
+从3.3.0版本开始支持该功能。
+
+下载Demo工程 [saturn-demo-springboot](https://github.com/vipshop/Saturn/tree/develop/examples/saturn-demo-springboot)
+
+### 4.2.1 依赖saturn-springboot
+
+```xml
+<dependency>
+    <groupId>com.vip.saturn</groupId>
+    <artifactId>saturn-springboot</artifactId>
+    <!-- 修改成指定版本 -->
+    <version>master-SNAPSHOT</version>
+</dependency>
+```
+
+### 4.2.2 配置saturn.properties
+
+在classpath根目录下添加`saturn.properties`文件，添加app.class配置。
+
+```properties
+app.class=com.vip.saturn.job.springboot.GenericSpringBootSaturnApplication
+```
+
+`GenericSpringBootSaturnApplication`将使用`SpringApplication.run(source())`来启动SpringBoot。
+
+### 4.2.3 自定义启动SpringBoot
+
+- 您可以通过编写`GenericSpringBootSaturnApplication`的子类，重写其方法，并配置`app.class`为该类，来达到自定义启动SpringBoot的目的。
+
+- 如果您想自定义启动加载的source，那么您可以重写`source()`方法。
+
+- 如果您想完全自定义启动SpringBoot，那么您可以重写`run()`方法。
+
+## 5 嵌入式使用Saturn（不建议）
+
+<font color="red">
+因为嵌入式使用Saturn，其打包方式、运行方式、运行jvm参数都依赖于工程的主框架（比如Spring、Tomcat等），造成Saturn ClassLoader不能与业务ClassLoader分离，从而带来的日志分离、包冲突等问题，而且导致Executor一键重启、自动升级等功能失效。所以，我们不建议使用嵌入式。
+</font>
+
+在此，介绍在Spring或SpringBoot环境中嵌入式使用Saturn，不再需要使用saturn-plugin插件，Saturn Executor的启动或停止依赖于Spring的启动或停止。
+
+从3.3.0版本开始支持该功能。
+
+下载Demo工程 [saturn-demo-springboot-embedded](https://github.com/vipshop/Saturn/tree/develop/examples/saturn-demo-springboot-embedded)
+
+### 5.2.1 依赖saturn-embed-spring
+
+```xml
+<dependency>
+    <groupId>com.vip.saturn</groupId>
+    <artifactId>saturn-embed-spring</artifactId>
+    <!-- 修改成指定版本 -->
+    <version>master-SNAPSHOT</version>
+</dependency>
+```
+
+### 5.2.2 注册EmbeddedSpringSaturnApplication
+
+```java
+@Bean
+public EmbeddedSpringSaturnApplication embeddedSpringSaturnApplication() {
+  EmbeddedSpringSaturnApplication embeddedSpringSaturnApplication = new EmbeddedSpringSaturnApplication();
+  embeddedSpringSaturnApplication.setIgnoreExceptions(false);
+  return embeddedSpringSaturnApplication;
+}
+```
+
+以上例子是在SpringBoot环境中注册，如果Spring环境，您可以通过配置xml来注册该bean。
+
+`EmbeddedSpringSaturnApplication`将监听Spring容器的`ContextRefreshedEvent`事件来启动Saturn Executor，监听`ContextClosedEvent`事件来优雅停止Saturn Executor。
+
+其中，`setIgnoreExceptions()`方法，如果设置`true`，那么当启动或停止Executor时出现异常，将只打印Warn日志，不抛出异常，不影响Spring容器的运行；如果设置`false`，则不仅打印日志，而且会抛出异常，影响Spring容器的启动和停止。
+
