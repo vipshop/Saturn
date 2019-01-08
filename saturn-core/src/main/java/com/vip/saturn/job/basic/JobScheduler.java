@@ -174,11 +174,10 @@ public class JobScheduler {
 	}
 
 	private void createJob() {
-		Class<?> jobClass = currentConf.getSaturnJobClass();
 		try {
-			job = (AbstractElasticJob) jobClass.newInstance();
+			job = JobTypeManager.get(currentConf.getJobType()).getHandlerClass().newInstance();
 		} catch (Exception e) {
-			LogUtils.error(log, jobName, "unexptected error", e);
+			LogUtils.error(log, jobName, "unexpected error", e);
 			throw new JobException(e);
 		}
 		job.setJobScheduler(this);

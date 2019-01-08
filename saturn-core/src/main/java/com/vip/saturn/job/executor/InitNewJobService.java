@@ -2,6 +2,8 @@ package com.vip.saturn.job.executor;
 
 import com.google.common.collect.Maps;
 import com.vip.saturn.job.basic.JobScheduler;
+import com.vip.saturn.job.basic.JobType;
+import com.vip.saturn.job.basic.JobTypeManager;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.exception.JobInitAlarmException;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -170,10 +172,19 @@ public class InitNewJobService {
 				LogUtils.info(log, jobName, "start to initialize the new job");
 				JOB_INIT_FAILED_RECORDS.get(executorName).putIfAbsent(jobName, new HashSet<Integer>());
 				JobConfiguration jobConfig = new JobConfiguration(regCenter, jobName);
-				if (jobConfig.getSaturnJobClass() == null) {
+				String jobTypeStr = jobConfig.getJobType();
+				JobType jobType = JobTypeManager.get(jobTypeStr);
+				if (jobType == null) {
+					String message = String
+							.format("the jobType %s is not supported by the executor version %s", jobTypeStr,
+									saturnExecutorService.getExecutorVersion());
+					LogUtils.warn(log, jobName, message);
+					throw new JobInitAlarmException(message);
+				}
+				if (jobType.getHandlerClass() == null) {
 					throw new JobException(
 							"unexpected error, the saturnJobClass cannot be null, jobName is %s, jobType is %s",
-							jobName, jobConfig.getJobType());
+							jobName, jobTypeStr);
 				}
 				if (jobConfig.isDeleting()) {
 					String serverNodePath = JobNodePath.getServerNodePath(jobName, executorName);

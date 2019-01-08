@@ -12,8 +12,6 @@
 package com.vip.saturn.job.internal.config;
 
 import com.google.common.base.Strings;
-import com.vip.saturn.job.basic.AbstractElasticJob;
-import com.vip.saturn.job.basic.JobTypeManager;
 import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.reg.base.CoordinatorRegistryCenter;
@@ -29,8 +27,6 @@ public class JobConfiguration {
 	 * 作业名称.
 	 */
 	private final String jobName;
-
-	private Class<? extends AbstractElasticJob> saturnJobClass;
 	/**
 	 * 如果regCenter!=null, 取值从zk取
 	 */
@@ -146,15 +142,6 @@ public class JobConfiguration {
 	 */
 	private String downStream;
 
-	// Test Use Only!
-	public JobConfiguration(String jobName, Class<? extends AbstractElasticJob> jobClass, int shardingTotalCount,
-			String cron) {
-		this.jobName = jobName;
-		this.saturnJobClass = jobClass;
-		this.shardingTotalCount = shardingTotalCount;
-		this.cron = cron;
-	}
-
 	public JobConfiguration(CoordinatorRegistryCenter regCenter, String jobName) {
 		this.jobName = jobName;
 		this.regCenter = regCenter;
@@ -163,19 +150,6 @@ public class JobConfiguration {
 
 	public JobConfiguration(String jobName) {
 		this.jobName = jobName;
-	}
-
-	public Class<? extends AbstractElasticJob> getSaturnJobClass() {
-		// 测试时可以直接设置实现类
-		if (saturnJobClass != null) {
-			return saturnJobClass;
-		}
-
-		return JobTypeManager.get(getJobType()).getHandlerClass();
-	}
-
-	public void setSaturnJobClass(Class<? extends AbstractElasticJob> saturnJobClass) {
-		this.saturnJobClass = saturnJobClass;
 	}
 
 	public void reloadConfig() {
