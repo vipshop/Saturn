@@ -107,16 +107,17 @@ chmod a+x saturn-executor.sh
 
 参数描述：
 
-| 参数      | 必填   | 描述                                       | 默认值                                      |
-| ------- | ---- | ---------------------------------------- | ---------------------------------------- |
-| -n      | Y    | 本executor所属的namespace                    |                                          |
-| -e      | N    | 本executor的唯一ID，如果不指定则使用hostname          | hostname                                 |
-| -env    | N    | 运行模式，可取值为dev/product。 dev模式下-Xmx为512m，product模式下-Xmx为2G | product                                  |
-| -d      | N    | 业务library所在目录                            | $TARGET_DIR/app                          |
-| -r      | N    | 运行模式，前台(foreground)或者后台(background)，空代表background模式。 | 空                                        |
-| -jmx    | N    | jmx端口                                    | 24501                                    |
-| -sld    | N    | saturn日志目录                               | /apps/logs/saturn/{namespace}/{executorname}-{ip}/ |
-| jvmArgs | N    | 需要添加的JVM参数                               | 空                                        |
+| 参数                                           | 必填 | 描述                                                         | 默认值                                             |
+| ---------------------------------------------- | ---- | ------------------------------------------------------------ | -------------------------------------------------- |
+| -n                                             | Y    | 本executor所属的namespace                                    |                                                    |
+| -e                                             | N    | 本executor的唯一ID，如果不指定则使用hostname                 | hostname                                           |
+| -env                                           | N    | 运行模式，可取值为dev/product。 dev模式下-Xmx为512m，product模式下-Xmx为2G | product                                            |
+| -d                                             | N    | 业务library所在目录                                          | $TARGET_DIR/app                                    |
+| -r                                             | N    | 运行模式，前台(foreground)或者后台(background)，空代表background模式。 | 空                                                 |
+| -jmx                                           | N    | jmx端口                                                      | 24501                                              |
+| -sld                                           | N    | saturn日志目录                                               | /apps/logs/saturn/{namespace}/{executorname}-{ip}/ |
+| jvmArgs                                        | N    | 需要添加的JVM参数                                            | 空                                                 |
+| VIP_SATURN_INIT_JOB_BY_GROUPS （-D或环境变量） | N    | 如果Executor机器设置了这个变量，则该Executor只能启动该域下属于该groups的作业； 否则，可以启动该域下全部作业。<br />多值用逗号分隔groups1,groups2 | 无                                                 |
 
 下面展示一个成功启动的console 输出：
 

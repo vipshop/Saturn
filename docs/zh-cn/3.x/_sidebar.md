@@ -2,6 +2,7 @@
   - [快速开始](zh-cn/3.x/quickstart.md)
   - [部署Saturn Console](zh-cn/3.x/saturn-console-deployment.md)
   - [开发你的作业](zh-cn/3.x/saturn-dev-job.md)
+    - [作业编排](zh-cn/3.x/job-orchestration.md)
   - [部署Saturn Executor](zh-cn/3.x/saturn-executor-deployment.md)
 
 - Console操作手册  
@@ -11,8 +12,6 @@
   - [用户的认证与授权](zh-cn/3.x/aa.md)
 
 - [FAQ](zh-cn/3.x/faq.md)
-
-- API与命令参数详解
 
 - 其他
 
