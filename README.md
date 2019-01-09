@@ -1,4 +1,4 @@
-# ![logo](https://vipshop.github.io/Saturn/zh-cn/3.0/_media/saturn-logo-new.png)
+# ![logo](https://vipshop.github.io/Saturn/zh-cn/3.x/_media/saturn-logo-new.png)
 
 [![Build Status](https://secure.travis-ci.org/vipshop/Saturn.png?branch=develop)](https://travis-ci.org/vipshop/Saturn)
 [![GitHub release](https://img.shields.io/github/release/vipshop/Saturn.svg)](https://github.com/vipshop/Saturn/releases)
@@ -33,7 +33,7 @@ For production environement, please follow this [instruction](https://vipshop.gi
 
 [Release notes](https://github.com/vipshop/Saturn/releases)
 
-*[3.1.0](https://github.com/vipshop/Saturn/releases/tag/v3.1.0) is the latest stable release, or checkout the develop branch to try something new and cool.*
+*[3.3.0](https://github.com/vipshop/Saturn/releases/tag/v3.3.0) is the latest stable release, or checkout the develop branch to try something new and cool.*
 
 ## Documents & Tutorials 文档与教程
 
