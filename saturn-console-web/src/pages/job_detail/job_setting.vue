@@ -244,15 +244,6 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row>
-                            <el-col :span="22">
-                                <el-form-item prop="channelName" label="执行结果发送的Channel名">
-                                    <el-tooltip popper-class="form-tooltip" content="执行消息作业结果发送的channel名，注意不能跟queue绑定的channel一致，以免造成死循环" placement="bottom">
-                                        <el-input v-model="jobSettingInfo.channelName"></el-input>
-                                    </el-tooltip>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
                         <el-row v-if="$option.isCron(jobSettingInfo.jobType)">
                             <el-col :span="22">
                                 <el-form-item prop="pausePeriodDate" label="暂停日期段">
