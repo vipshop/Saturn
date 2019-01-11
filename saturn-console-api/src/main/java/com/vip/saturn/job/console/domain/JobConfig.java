@@ -4,9 +4,6 @@ import com.vip.saturn.job.console.utils.SaturnConstants;
 
 import java.io.Serializable;
 
-/**
- * @author chembo.huang
- */
 public class JobConfig implements Serializable {
 
 	private static final long serialVersionUID = 7366583369937964951L;
@@ -38,7 +35,7 @@ public class JobConfig implements Serializable {
 	private Boolean useSerial;
 	private Boolean failover;
 	private String jobMode; // 系统作业等
-	private String customContext;
+	private String customContext; // 仅仅用于动态更新cron时携带的上下文数据
 	/**
 	 * @deprecated replaced by downStream
 	 */
@@ -63,6 +60,7 @@ public class JobConfig implements Serializable {
 		cron = getDefaultIfNull(cron, "");
 		pausePeriodDate = getDefaultIfNull(pausePeriodDate, "");
 		pausePeriodTime = getDefaultIfNull(pausePeriodTime, "");
+		shardingItemParameters = getDefaultIfNull(shardingItemParameters, "");
 		jobParameter = getDefaultIfNull(jobParameter, "");
 		processCountIntervalSeconds = getDefaultIfNull(processCountIntervalSeconds, 300);
 		description = getDefaultIfNull(description, "");
@@ -84,6 +82,7 @@ public class JobConfig implements Serializable {
 		useSerial = getDefaultIfNull(useSerial, Boolean.FALSE);
 		failover = getDefaultIfNull(failover, !localMode); // 已经设置localMode
 		jobMode = getDefaultIfNull(jobMode, "");
+		customContext = getDefaultIfNull(customContext, "{}");
 		dependencies = getDefaultIfNull(dependencies, "");
 		groups = getDefaultIfNull(groups, "");
 		rerun = getDefaultIfNull(rerun, Boolean.FALSE);

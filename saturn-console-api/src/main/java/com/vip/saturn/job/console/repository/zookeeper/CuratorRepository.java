@@ -15,7 +15,6 @@ import org.apache.zookeeper.data.Stat;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public interface CuratorRepository {
 
@@ -27,21 +26,21 @@ public interface CuratorRepository {
 
 	interface CuratorFrameworkOp {
 
-		boolean checkExists(String znode);
+		boolean checkExists(String node);
 
-		String getData(String znode);
+		String getData(String node);
 
-		List<String> getChildren(String znode);
+		List<String> getChildren(String node);
 
-		void create(String znode);
+		void create(String node);
 
-		void create(final String znode, Object value);
+		void create(final String node, Object value);
 
-		void update(String znode, Object value);
+		void update(String node, Object value);
 
-		void delete(String znode);
+		void delete(String node);
 
-		void deleteRecursive(String znode);
+		void deleteRecursive(String node);
 
 		void fillJobNodeIfNotExist(String node, Object value);
 
@@ -57,16 +56,13 @@ public interface CuratorRepository {
 
 		interface CuratorTransactionOp {
 
-			CuratorTransactionOp replace(String znode, Object value) throws Exception;
+			CuratorTransactionOp replace(String node, Object value) throws Exception;
 
-			CuratorTransactionOp replaceIfChanged(String znode, Object value) throws Exception;
+			CuratorTransactionOp replaceIfChanged(String node, Object value) throws Exception;
 
-			CuratorTransactionOp replaceIfChanged(String znode, Object value, AtomicInteger changedCount)
-					throws Exception;
+			CuratorTransactionOp create(String node, Object value) throws Exception;
 
-			CuratorTransactionOp create(String znode, Object value) throws Exception;
-
-			CuratorTransactionOp delete(String znode) throws Exception;
+			CuratorTransactionOp delete(String node) throws Exception;
 
 			Collection<CuratorTransactionResult> commit() throws Exception;
 		}
