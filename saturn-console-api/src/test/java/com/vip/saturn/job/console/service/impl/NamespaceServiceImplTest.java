@@ -13,6 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
@@ -33,44 +34,45 @@ public class NamespaceServiceImplTest {
 	private NamespaceServiceImpl namespaceService;
 
 	@Test
-	public void testSrcNamespaceIsNull() throws SaturnJobConsoleException {
-		IllegalArgumentException exception = null;
+	public void testSrcNamespaceIsNull() {
+		SaturnJobConsoleException exception = null;
 
 		try {
 			namespaceService.importJobsFromNamespaceToNamespace(null, null, null);
-		} catch (IllegalArgumentException e) {
+		} catch (SaturnJobConsoleException e) {
 			exception = e;
 		}
+
 		Assert.assertNotNull(exception);
 		Assert.assertEquals(exception.getMessage(), "srcNamespace should not be null");
 	}
 
 	@Test
-	public void testDestNamespaceIsNull() throws SaturnJobConsoleException {
-		IllegalArgumentException exception = null;
+	public void testDestNamespaceIsNull() {
+		SaturnJobConsoleException exception = null;
 		try {
 
 			namespaceService.importJobsFromNamespaceToNamespace("saturn.vip.vip.com", null, null);
-		} catch (IllegalArgumentException e) {
+		} catch (SaturnJobConsoleException e) {
 			exception = e;
 		}
+
 		Assert.assertNotNull(exception);
 		Assert.assertEquals(exception.getMessage(), "destNamespace should not be null");
 	}
 
 	@Test
 	public void testSrcNamespaceIdenticalToDestNamespace() throws SaturnJobConsoleException {
-		IllegalArgumentException exception = null;
+		SaturnJobConsoleException exception = null;
 		String srcNamespace = "saturn.vip.vip.com";
 		String destNamespace = "saturn.vip.vip.com";
 
 		try {
 			namespaceService.importJobsFromNamespaceToNamespace(srcNamespace, destNamespace, null);
-		} catch (IllegalArgumentException e) {
-			exception = e;
 		} catch (SaturnJobConsoleException e) {
-			throw e;
+			exception = e;
 		}
+
 		Assert.assertNotNull(exception);
 		Assert.assertEquals(exception.getMessage(), "destNamespace and destNamespace should be difference");
 	}
@@ -80,9 +82,9 @@ public class NamespaceServiceImplTest {
 		List<JobConfig> jobConfigs = new ArrayList<>();
 		when(jobService.getUnSystemJobs("saturn.vip.vip.com")).thenReturn(jobConfigs);
 
-		List successJobs = namespaceService
+		Map<String, List> result = namespaceService
 				.importJobsFromNamespaceToNamespace("saturn.vip.vip.com", "saturn.vip.vip.com_tt", "ray.leung");
-		Assert.assertThat(successJobs.size(), is(0));
+		Assert.assertThat(result.get("success").size(), is(0));
 	}
 
 	@Test
@@ -93,9 +95,10 @@ public class NamespaceServiceImplTest {
 		jobConfigs.add(new JobConfig());
 		when(jobService.getUnSystemJobs("saturn.vip.vip.com")).thenReturn(jobConfigs);
 
-		List successJobs = namespaceService
+		Map<String, List> result = namespaceService
 				.importJobsFromNamespaceToNamespace("saturn.vip.vip.com", "saturn.vip.vip.com_tt", "ray.leung");
-		Assert.assertThat(successJobs.size(), is(3));
+
+		Assert.assertThat(result.get("success").size(), is(3));
 	}
 
 	@Test
@@ -112,6 +115,7 @@ public class NamespaceServiceImplTest {
 		} catch (Exception e) {
 			exception = e;
 		}
+
 		Assert.assertNotNull(exception);
 	}
 }

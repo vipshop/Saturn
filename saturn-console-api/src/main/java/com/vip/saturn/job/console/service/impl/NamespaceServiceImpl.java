@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rayleung
@@ -23,21 +25,26 @@ public class NamespaceServiceImpl implements NamespaceService {
 	private JobService jobService;
 
 	@Override
-	public List<String> importJobsFromNamespaceToNamespace(String srcNamespace, String destNamespace, String createdBy)
-			throws SaturnJobConsoleException {
+	public Map<String, List> importJobsFromNamespaceToNamespace(String srcNamespace, String destNamespace,
+			String createdBy) throws SaturnJobConsoleException {
 
 		if (StringUtils.isBlank(srcNamespace)) {
-			throw new IllegalArgumentException("srcNamespace should not be null");
+			throw new SaturnJobConsoleException("srcNamespace should not be null");
 		}
 		if (StringUtils.isBlank(destNamespace)) {
-			throw new IllegalArgumentException("destNamespace should not be null");
+			throw new SaturnJobConsoleException("destNamespace should not be null");
 		}
 		if (StringUtils.equals(srcNamespace, destNamespace)) {
-			throw new IllegalArgumentException("destNamespace and destNamespace should be difference");
+			throw new SaturnJobConsoleException("destNamespace and destNamespace should be difference");
 		}
 
 		try {
 			List<String> successfullyImportedJobs = new ArrayList<>();
+			List<String> failedJobs = new ArrayList<>();
+			Map result = new HashMap(2);
+			result.put("success", successfullyImportedJobs);
+			result.put("fail", failedJobs);
+
 			List<JobConfig> jobConfigs = jobService.getUnSystemJobs(srcNamespace);
 			for (int i = 0; i < jobConfigs.size(); i++) {
 				JobConfig jobConfig = jobConfigs.get(i);
@@ -45,10 +52,12 @@ public class NamespaceServiceImpl implements NamespaceService {
 					jobService.addJob(destNamespace, jobConfig, createdBy);
 					successfullyImportedJobs.add(jobConfig.getJobName());
 				} catch (SaturnJobConsoleException e) {
-					log.warn("fail to import job from {} to {}", srcNamespace, destNamespace, e);
+					log.warn("fail to import job {} from {} to {}", jobConfig.getJobName(), srcNamespace, destNamespace,
+							e);
+					failedJobs.add(jobConfig.getJobName());
 				}
 			}
-			return successfullyImportedJobs;
+			return result;
 		} catch (SaturnJobConsoleException e) {
 			log.warn("import jobs from {} to {} fail", srcNamespace, destNamespace, e);
 			throw e;
