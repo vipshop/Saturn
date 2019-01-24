@@ -8,6 +8,7 @@ import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.RestApiJobInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.service.NamespaceService;
 import com.vip.saturn.job.console.service.RestApiService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,9 @@ public class JobOperationRestApiController extends AbstractRestController {
 
 	@Resource
 	private RestApiService restApiService;
+
+	@Resource
+	private NamespaceService namespaceService;
 
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -200,6 +205,35 @@ public class JobOperationRestApiController extends AbstractRestController {
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
 	}
+
+	@Audit(type = AuditType.REST)
+	@RequestMapping(value = "/namespaces/importJobFromNamespacetoNamespace", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> importJobsFromNamespaceToNamespace(@RequestBody Map<String, Object> reqParams)
+			throws SaturnJobConsoleHttpException {
+
+		String srcNamespace = (String) reqParams.get("srcNamespace");
+		String destNamespace = (String) reqParams.get("destNamespace");
+		String createdBy = (String) reqParams.get("createdBy");
+
+		Map<String, Object> result = new HashMap(3);
+		try {
+			List successJobs = namespaceService
+					.importJobsFromNamespaceToNamespace(srcNamespace, destNamespace, createdBy);
+			result.put("code", 200);
+			result.put("message", "success");
+			result.put("data", successJobs);
+			return new ResponseEntity<Object>(result, HttpStatus.OK);
+		} catch (IllegalArgumentException e) {
+			result.put("code", 201);
+			result.put("message", e.getMessage());
+			return new ResponseEntity<Object>(result, HttpStatus.OK);
+		} catch (SaturnJobConsoleException e) {
+			result.put("code", 202);
+			result.put("message", "internal exception");
+			return new ResponseEntity<Object>(result, HttpStatus.OK);
+		}
+	}
+
 
 	private JobConfig constructJobConfigOfCreate(String namespace, Map<String, Object> reqParams)
 			throws SaturnJobConsoleException {

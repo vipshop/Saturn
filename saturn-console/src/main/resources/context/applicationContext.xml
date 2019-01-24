@@ -52,6 +52,8 @@
 		class="com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl"/>
     <bean id="authenticationService"
           class="com.vip.saturn.job.console.service.impl.AuthenticationServiceImpl"/>
+    <bean id="namespaceService"
+          class="com.vip.saturn.job.console.service.impl.NamespaceServiceImpl"/>
     <!-- Service Beans End -->
 
 	<aop:aspectj-autoproxy/>
