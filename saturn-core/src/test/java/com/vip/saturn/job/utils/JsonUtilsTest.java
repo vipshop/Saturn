@@ -8,7 +8,7 @@ import com.vip.saturn.job.executor.ExecutorConfig;
 import com.vip.saturn.job.trigger.TriggeredData;
 import org.junit.Test;
 
-import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -120,7 +120,7 @@ public class JsonUtilsTest {
 	}
 
 	@Test
-	public void testFromJson2() throws IOException {
+	public void testFromJson2() {
 		String triggeredDataStr = null;
 		assertNull(JsonUtils.fromJson(triggeredDataStr, TriggeredData.class));
 
@@ -132,6 +132,17 @@ public class JsonUtilsTest {
 
 		triggeredDataStr = "abc";
 		assertNull(JsonUtils.fromJson(triggeredDataStr, TriggeredData.class));
+	}
+
+	@Test
+	public void testEscapeHtmlChar() {
+		String str = "<>'=";
+		assertEquals("\"" + str + "\"", JsonUtils.toJson(str));
+	}
+
+	@Test
+	public void testDateFormat() {
+		assertTrue(JsonUtils.toJson(new Date()).matches("\"\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\""));
 	}
 
 }

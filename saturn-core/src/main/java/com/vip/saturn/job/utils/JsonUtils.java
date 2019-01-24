@@ -1,9 +1,6 @@
 package com.vip.saturn.job.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +14,8 @@ public class JsonUtils {
 
 	private static final Logger log = LoggerFactory.getLogger(JsonUtils.class);
 
-	private static final Gson gson = new Gson();
+	private static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping()
+			.create();
 	private static final JsonParser jsonParser = new JsonParser();
 	private static final String JSON_NULL_STR;
 
