@@ -610,7 +610,7 @@ public class DashboardServiceImpl implements DashboardService {
 		Date tmpDate = tmpCalendar.getTime();
 
 		List<String> resultDate = new ArrayList<>();
-		List<Integer> resultCount = new ArrayList<>();
+		List<Long> resultCount = new ArrayList<>();
 		while (tmpDate.getTime() <= toDate.getTime()) {
 			List<DashboardHistory> tmpHistories = new ArrayList<>();
 			for (DashboardHistory history : dashboardHistories) {
@@ -622,10 +622,10 @@ public class DashboardServiceImpl implements DashboardService {
 					tmpHistories.add(history);
 				}
 			}
-			int count = 0;
+			long count = 0;
 			for (DashboardHistory sumHistory : tmpHistories) {
 				Map content = JSON.parseObject(sumHistory.getContent(), Map.class);
-				Integer tmpCount = (Integer) content.get("count");
+				Long tmpCount = Long.valueOf(String.valueOf(content.get("count")));
 				count += tmpCount;
 			}
 			resultDate.add(sdf.format(tmpDate));
