@@ -47,6 +47,8 @@ For the document of 2.x, please come [here](https://vipshop.github.io/Saturn/#/z
 
 ## Cases 使用案例
 
+![orgs](https://vipshop.github.io/Saturn/zh-cn/3.x/_media/orgs.jpg)
+
 [Organizations using Saturn](https://github.com/vipshop/Saturn/wiki/Organizations-using-Saturn)
 
 使用Saturn的公司如果方便请在[这里](https://github.com/vipshop/Saturn/issues/506)留下公司+网址，方便我们宣传，感谢
