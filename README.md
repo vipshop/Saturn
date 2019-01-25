@@ -23,17 +23,36 @@ Saturn is a platform created by VIP.com(唯品会) to provide a distributed, fau
 
 ## Quick Start 快速安装
 
-[Via Maven](https://vipshop.github.io/Saturn/#/zh-cn/3.0/quickstart?id=_1-%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8)
+Make sure below stuff already been installed：
 
-[Via Docker compose](https://vipshop.github.io/Saturn/#/zh-cn/3.0/quickstart?id=_2-docker%E5%90%AF%E5%8A%A8)
+- Java 7+
+- Maven 3.0.4+
+- node.js 8.7.0+
+- npm 5.4.2+
+- git (any version)
 
-For production environement, please follow this [instruction](https://vipshop.github.io/Saturn/#/zh-cn/3.x/saturn-console-deployment).
+Then checkout the code and start:
+
+```
+git clone https://github.com/vipshop/Saturn
+git checkout develop
+cd saturn-docker
+# for linux
+chmod +x quickstart.sh
+sh quickstart.sh
+# for MS Windows
+# quickstart.bat
+```
+
+Or you can quick start [via docker compose](https://vipshop.github.io/Saturn/#/zh-cn/3.x/quickstart?id=_2-docker%E5%90%AF%E5%8A%A8)
+
+**To notice that the quick start just for demo purpose, for production environement, please follow this [instruction](https://vipshop.github.io/Saturn/#/zh-cn/3.x/saturn-console-deployment).**
 
 ## Releases 发布历史
 
 [Release notes](https://github.com/vipshop/Saturn/releases)
 
-*[3.3.0](https://github.com/vipshop/Saturn/releases/tag/v3.3.0) is the latest stable release, or checkout the develop branch to try something new and cool.*
+*[3.3.1](https://github.com/vipshop/Saturn/releases/tag/v3.3.1) is the latest stable release, or checkout the develop branch to try something new and cool.*
 
 ## Documents & Tutorials 文档与教程
 
