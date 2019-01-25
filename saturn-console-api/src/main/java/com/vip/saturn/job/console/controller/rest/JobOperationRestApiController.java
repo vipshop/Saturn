@@ -14,10 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -206,16 +203,16 @@ public class JobOperationRestApiController extends AbstractRestController {
 	}
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = "/namespaces/importJobFromNamespaceToNamespace/{srcNamespace}/{destNamespace}/{createBy}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> importJobsFromNamespaceToNamespace(@PathVariable("srcNamespace") String srcNamespace,
-			@PathVariable("destNamespace") String destNamespace, @PathVariable("createBy") String createBy)
+	@RequestMapping(value = "/namespaces/importJobFromNamespaceToNamespace", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> importJobsFromNamespaceToNamespace(@RequestParam("srcNamespace") String srcNamespace,
+			@RequestParam("destNamespace") String destNamespace, @RequestParam("createBy") String createBy)
 			throws SaturnJobConsoleException {
 		try {
 			Map<String, List> result = namespaceService
 					.importJobsFromNamespaceToNamespace(srcNamespace, destNamespace, createBy);
 			return new ResponseEntity<Object>(result, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+			throw e;
 		} catch (Exception e) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}

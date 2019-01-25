@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +30,13 @@ public class NamespaceServiceImpl implements NamespaceService {
 			String createdBy) throws SaturnJobConsoleException {
 
 		if (StringUtils.isBlank(srcNamespace)) {
-			throw new SaturnJobConsoleException("srcNamespace should not be null");
+			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "srcNamespace should not be null");
 		}
 		if (StringUtils.isBlank(destNamespace)) {
-			throw new SaturnJobConsoleException("destNamespace should not be null");
+			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "destNamespace should not be null");
 		}
 		if (StringUtils.equals(srcNamespace, destNamespace)) {
-			throw new SaturnJobConsoleException("destNamespace and destNamespace should be difference");
+			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "destNamespace and destNamespace should be difference");
 		}
 
 		try {
