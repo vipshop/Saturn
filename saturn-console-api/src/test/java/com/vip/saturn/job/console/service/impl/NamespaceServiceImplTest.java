@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import org.junit.Assert;
@@ -34,12 +35,12 @@ public class NamespaceServiceImplTest {
 	private NamespaceServiceImpl namespaceService;
 
 	@Test
-	public void testSrcNamespaceIsNull() {
-		SaturnJobConsoleException exception = null;
+	public void testSrcNamespaceIsNull() throws SaturnJobConsoleException {
+		SaturnJobConsoleHttpException exception = null;
 
 		try {
 			namespaceService.importJobsFromNamespaceToNamespace(null, null, null);
-		} catch (SaturnJobConsoleException e) {
+		} catch (SaturnJobConsoleHttpException e) {
 			exception = e;
 		}
 
@@ -48,12 +49,12 @@ public class NamespaceServiceImplTest {
 	}
 
 	@Test
-	public void testDestNamespaceIsNull() {
-		SaturnJobConsoleException exception = null;
+	public void testDestNamespaceIsNull() throws SaturnJobConsoleException {
+		SaturnJobConsoleHttpException exception = null;
 		try {
 
 			namespaceService.importJobsFromNamespaceToNamespace("saturn.vip.vip.com", null, null);
-		} catch (SaturnJobConsoleException e) {
+		} catch (SaturnJobConsoleHttpException e) {
 			exception = e;
 		}
 
@@ -63,13 +64,13 @@ public class NamespaceServiceImplTest {
 
 	@Test
 	public void testSrcNamespaceIdenticalToDestNamespace() throws SaturnJobConsoleException {
-		SaturnJobConsoleException exception = null;
+		SaturnJobConsoleHttpException exception = null;
 		String srcNamespace = "saturn.vip.vip.com";
 		String destNamespace = "saturn.vip.vip.com";
 
 		try {
 			namespaceService.importJobsFromNamespaceToNamespace(srcNamespace, destNamespace, null);
-		} catch (SaturnJobConsoleException e) {
+		} catch (SaturnJobConsoleHttpException e) {
 			exception = e;
 		}
 

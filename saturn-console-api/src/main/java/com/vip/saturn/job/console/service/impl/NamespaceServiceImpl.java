@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.JobConfig;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,13 +31,13 @@ public class NamespaceServiceImpl implements NamespaceService {
 			String createdBy) throws SaturnJobConsoleException {
 
 		if (StringUtils.isBlank(srcNamespace)) {
-			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "srcNamespace should not be null");
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "srcNamespace should not be null");
 		}
 		if (StringUtils.isBlank(destNamespace)) {
-			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "destNamespace should not be null");
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "destNamespace should not be null");
 		}
 		if (StringUtils.equals(srcNamespace, destNamespace)) {
-			throw new SaturnJobConsoleException(HttpStatus.BAD_REQUEST.value(), "destNamespace and destNamespace should be difference");
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "destNamespace and destNamespace should be difference");
 		}
 
 		try {
