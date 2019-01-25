@@ -2499,10 +2499,14 @@ public class JobServiceImpl implements JobService {
 		JobServerStatus result = new JobServerStatus();
 		result.setExecutorName(executorName);
 		result.setJobName(jobName);
-		String status = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "status"));
-		result.setServerStatus(ServerStatus.getServerStatus(status));
-
+		result.setServerStatus(getJobServerStatus0(jobName, executorName, curatorFrameworkOp));
 		return result;
+	}
+
+	private ServerStatus getJobServerStatus0(String jobName, String executorName,
+			CuratorFrameworkOp curatorFrameworkOp) {
+		String status = curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "status"));
+		return ServerStatus.getServerStatus(status);
 	}
 
 	private JobServer getJobServer(String jobName, String leaderIp, String executorName,
@@ -2519,7 +2523,7 @@ public class JobServiceImpl implements JobService {
 		result.setProcessFailureCount(null == processFailureCount ? 0 : Integer.parseInt(processFailureCount));
 		result.setSharding(
 				curatorFrameworkOp.getData(JobNodePath.getServerNodePath(jobName, executorName, "sharding")));
-		result.setStatus(ServerStatus.getServerStatus(result.getIp()));
+		result.setStatus(getJobServerStatus0(jobName, executorName, curatorFrameworkOp));
 		result.setLeader(executorName.equals(leaderIp));
 		result.setJobVersion(getJobVersion(jobName, executorName, curatorFrameworkOp));
 		result.setContainer(curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorTaskNodePath(executorName)));
