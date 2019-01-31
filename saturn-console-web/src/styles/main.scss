@@ -299,3 +299,23 @@ form {
 .el-menu--popup-bottom-start {
     margin-top: 5px;
 }
+/* table */
+.el-table .sort-caret {
+    font-family: element-icons!important;
+    speak: none;
+    font-style: normal;
+    font-weight: 400;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    vertical-align: baseline;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.sort-caret.descending:before {
+    content: "\e60b"
+} 
+.sort-caret.ascending:before {
+    content: "\e60c"
+}
