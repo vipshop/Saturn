@@ -6,16 +6,11 @@ import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
 import com.vip.saturn.job.console.utils.ExecutorNodePath;
 import com.vip.saturn.job.console.utils.JobNodePath;
-import com.vip.saturn.job.integrate.entity.AlarmInfo;
-import com.vip.saturn.job.integrate.exception.ReportAlarmException;
-import com.vip.saturn.job.integrate.service.ReportAlarmService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,10 +34,8 @@ public class ExecutorInfoAnalyzer {
 
 	private AtomicInteger exeNotInDocker = new AtomicInteger(0);
 
-	private ReportAlarmService reportAlarmService;
-
 	public void analyzeExecutor(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			RegistryCenterConfiguration config) {
+								RegistryCenterConfiguration config) {
 		long executorNumber = 0L; // 该域的在线executor数量
 		// 统计物理容器资源，统计版本数据
 		if (!curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNodePath())) {
@@ -66,7 +59,8 @@ public class ExecutorInfoAnalyzer {
 				if (executorStatistics == null) {
 					executorStatistics = new ExecutorStatistics(exe, config.getNamespace());
 					executorStatistics.setNns(config.getNameAndNamespace());
-					executorStatistics.setIp(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(exe)));
+					executorStatistics
+							.setIp(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(exe)));
 					executorMap.put(executorMapKey, executorStatistics);
 				}
 				// set runInDocker field
@@ -88,60 +82,10 @@ public class ExecutorInfoAnalyzer {
 			version = "-1";
 		}
 		addVersionNumber(version, executorNumber);
-
-		List<String> executorsNoTrafficMoreThen24Hour = new ArrayList<>();
-		for (String exe : executors) {
-			if (executorIsOnline(curatorFrameworkOp, exe) && executorIsNoTraffic(curatorFrameworkOp, exe)) {
-				Stat stat = curatorFrameworkOp.getStat(ExecutorNodePath.getExecutorNoTrafficNodePath(exe));
-				Date startDate = new Date(stat.getCtime());
-				Date currentDate = new Date();
-				long spendTime = currentDate.getTime() - startDate.getTime();
-				double spendTimeInHour = spendTime * 1.0 / (1000 * 60 * 60);
-				if (spendTimeInHour > 24) {
-					executorsNoTrafficMoreThen24Hour.add(exe);
-				}
-			}
-		}
-		raiseAlarmForExecutorsNoTrafficMoreThen24HourIfNeeded(config.getNamespace(), executorsNoTrafficMoreThen24Hour);
 	}
 
-	private boolean executorIsOnline(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String executorName) {
-		return curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorIpNodePath(executorName));
-	}
-
-	/**
-	 * 判断executor是摘流了
-	 * @param curatorFrameworkOp
-	 * @param executorName
-	 * @return
-	 */
-	private boolean executorIsNoTraffic(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String executorName) {
-		return curatorFrameworkOp.checkExists(ExecutorNodePath.getExecutorNoTrafficNodePath(executorName));
-	}
-
-	private void raiseAlarmForExecutorsNoTrafficMoreThen24HourIfNeeded(String namespace,
-			List<String> executorsNoTrafficMoreThen24Hour) {
-		for (int i = 0; i < executorsNoTrafficMoreThen24Hour.size(); i++) {
-			String exec = executorsNoTrafficMoreThen24Hour.get(i);
-			try {
-				reportAlarmService.raise(namespace, null, exec, null, constructAlarmInfo(namespace, exec));
-			} catch (ReportAlarmException e) {
-				log.warn("fail to raise alarm", e);
-			}
-		}
-	}
-
-	private AlarmInfo constructAlarmInfo(String namespace, String executorName) {
-		AlarmInfo alarmInfo = new AlarmInfo();
-		alarmInfo.setLevel("WARNING");
-		alarmInfo.setName("Saturn Event");
-		alarmInfo.setTitle("Executor no traffic more than 24 hour");
-		alarmInfo.setMessage(
-				"Executor no traffic more than 24 hour: namespace:[" + namespace + "] executor:[" + executorName + "]");
-		return alarmInfo;
-	}
-
-	public boolean isExecutorInDocker(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String executorName) {
+	public boolean isExecutorInDocker(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+									  String executorName) {
 		return curatorFrameworkOp.checkExists(ExecutorNodePath.get$ExecutorTaskNodePath(executorName));
 	}
 
@@ -163,7 +107,8 @@ public class ExecutorInfoAnalyzer {
 	}
 
 	public void analyzeServer(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, List<String> servers, String job,
-			String nns, RegistryCenterConfiguration config, int loadLevel, JobStatistics jobStatistics) {
+							  String nns,
+							  RegistryCenterConfiguration config, int loadLevel, JobStatistics jobStatistics) {
 		for (String server : servers) {
 			// 如果结点存活，算两样东西：1.遍历所有servers节点里面的processSuccessCount &
 			// processFailureCount，用以统计作业每天的执行次数；2.统计executor的loadLevel;，
@@ -174,13 +119,13 @@ public class ExecutorInfoAnalyzer {
 			calcJobProcessCount(curatorFrameworkOp, nns, server, job, config.getNamespace(), jobStatistics);
 
 			// 2.统计executor的loadLevel
-			calcLoadLevelOfExecutors(curatorFrameworkOp, nns, server, job, config.getNamespace(), loadLevel,
-					jobStatistics);
+			calcLoadLevelOfExecutors(curatorFrameworkOp, nns, server, job, config.getNamespace(), loadLevel, jobStatistics);
 		}
 	}
 
-	private void calcJobProcessCount(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String nns, String server,
-			String job, String namespace, JobStatistics jobStatistics) {
+	private void calcJobProcessCount(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+									 String nns, String server, String job, String namespace,
+									 JobStatistics jobStatistics)	{
 		// 1.遍历所有servers节点里面的processSuccessCount &
 		// processFailureCount，用以统计作业每天的执行次数；
 		try {
@@ -188,12 +133,10 @@ public class ExecutorInfoAnalyzer {
 					.getData(JobNodePath.getProcessSucessCount(job, server));
 			String processFailureCountOfThisExeStr = curatorFrameworkOp
 					.getData(JobNodePath.getProcessFailureCount(job, server));
-			long processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ?
-					0 :
-					Long.parseLong(processSuccessCountOfThisExeStr);
-			long processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ?
-					0 :
-					Long.parseLong(processFailureCountOfThisExeStr);
+			long processSuccessCountOfThisExe = StringUtils.isBlank(processSuccessCountOfThisExeStr) ? 0
+					: Long.parseLong(processSuccessCountOfThisExeStr);
+			long processFailureCountOfThisExe = StringUtils.isBlank(processFailureCountOfThisExeStr) ? 0
+					: Long.parseLong(processFailureCountOfThisExeStr);
 
 			// executor当天运行成功失败数
 			String executorMapKey = server + "-" + namespace;
@@ -201,14 +144,14 @@ public class ExecutorInfoAnalyzer {
 			if (executorStatistics == null) {
 				executorStatistics = new ExecutorStatistics(server, namespace);
 				executorStatistics.setNns(nns);
-				executorStatistics.setIp(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(server)));
+				executorStatistics
+						.setIp(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(server)));
 				executorMap.put(executorMapKey, executorStatistics);
 			}
 			executorStatistics.setFailureCountOfTheDay(
 					executorStatistics.getFailureCountOfTheDay() + processFailureCountOfThisExe);
-			executorStatistics.setProcessCountOfTheDay(
-					executorStatistics.getProcessCountOfTheDay() + processSuccessCountOfThisExe
-							+ processFailureCountOfThisExe);
+			executorStatistics.setProcessCountOfTheDay(executorStatistics.getProcessCountOfTheDay()
+					+ processSuccessCountOfThisExe + processFailureCountOfThisExe);
 			jobStatistics.incrProcessCountOfTheDay(processSuccessCountOfThisExe + processFailureCountOfThisExe);
 			jobStatistics.incrFailureCountOfTheDay(processFailureCountOfThisExe);
 		} catch (Exception e) {
@@ -216,8 +159,10 @@ public class ExecutorInfoAnalyzer {
 		}
 	}
 
-	private void calcLoadLevelOfExecutors(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String nns,
-			String server, String job, String namespace, int loadLevel, JobStatistics jobStatistics) {
+	private void calcLoadLevelOfExecutors(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+										  String nns,
+										  String server, String job, String namespace,
+										  int loadLevel, JobStatistics jobStatistics){
 		try {
 			// enabled 的作业才需要计算权重
 			if (!Boolean.parseBoolean(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(job, "enabled")))) {
@@ -227,9 +172,8 @@ public class ExecutorInfoAnalyzer {
 			String sharding = curatorFrameworkOp.getData(JobNodePath.getServerSharding(job, server));
 			if (StringUtils.isNotEmpty(sharding)) {
 				// 更新job的executorsAndshards
-				String exesAndShards =
-						(jobStatistics.getExecutorsAndShards() == null ? "" : jobStatistics.getExecutorsAndShards())
-								+ server + ":" + sharding + "; ";
+				String exesAndShards = (jobStatistics.getExecutorsAndShards() == null ? ""
+						: jobStatistics.getExecutorsAndShards()) + server + ":" + sharding + "; ";
 				jobStatistics.setExecutorsAndShards(exesAndShards);
 				// 2.统计是物理机还是容器
 				String executorMapKey = server + "-" + namespace;
@@ -237,8 +181,8 @@ public class ExecutorInfoAnalyzer {
 				if (executorStatistics == null) {
 					executorStatistics = new ExecutorStatistics(server, namespace);
 					executorStatistics.setNns(nns);
-					executorStatistics
-							.setIp(curatorFrameworkOp.getData(ExecutorNodePath.getExecutorIpNodePath(server)));
+					executorStatistics.setIp(curatorFrameworkOp
+							.getData(ExecutorNodePath.getExecutorIpNodePath(server)));
 					executorMap.put(executorMapKey, executorStatistics);
 					// set runInDocker field
 					if (isExecutorInDocker(curatorFrameworkOp, server)) {
@@ -249,8 +193,8 @@ public class ExecutorInfoAnalyzer {
 					}
 				}
 				if (executorStatistics.getJobAndShardings() != null) {
-					executorStatistics
-							.setJobAndShardings(executorStatistics.getJobAndShardings() + job + ":" + sharding + ";");
+					executorStatistics.setJobAndShardings(
+							executorStatistics.getJobAndShardings() + job + ":" + sharding + ";");
 				} else {
 					executorStatistics.setJobAndShardings(job + ":" + sharding + ";");
 				}
@@ -284,9 +228,5 @@ public class ExecutorInfoAnalyzer {
 
 	public int getExeNotInDocker() {
 		return exeNotInDocker.get();
-	}
-
-	public void setReportAlarmService(ReportAlarmService reportAlarmService) {
-		this.reportAlarmService = reportAlarmService;
 	}
 }
