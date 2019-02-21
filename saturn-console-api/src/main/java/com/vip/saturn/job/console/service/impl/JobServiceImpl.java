@@ -2651,7 +2651,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public Map<String, List> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException {
+	public List<NamespaceAndJobNameInfo> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException {
 		Map<String, List> result = new HashMap<>();
 		List<JobConfig4DB> jobConfigs = currentJobConfigService.findConfigByQueue(queue);
 		for (int i = 0; i < jobConfigs.size(); i++) {
@@ -2661,7 +2661,17 @@ public class JobServiceImpl implements JobService {
 			}
 			result.get(jobConfig.getNamespace()).add(jobConfig.getJobName());
 		}
-		return result;
+
+		List<NamespaceAndJobNameInfo> namespaceAndJobNameInfos = new ArrayList<>();
+		Iterator<Map.Entry<String, List>> entries = result.entrySet().iterator();
+		while (entries.hasNext()) {
+			Map.Entry<String, List> entry = entries.next();
+			NamespaceAndJobNameInfo info = new NamespaceAndJobNameInfo();
+			info.setNamespace(entry.getKey());
+			info.setJobs(entry.getValue());
+			namespaceAndJobNameInfos.add(info);
+		}
+		return namespaceAndJobNameInfos;
 	}
 
 	private void updateReportNodeAndWait(String jobName, CuratorFrameworkOp curatorFrameworkOp, long sleepInMill) {

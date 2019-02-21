@@ -2,10 +2,7 @@ package com.vip.saturn.job.console.controller.rest;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
-import com.vip.saturn.job.console.domain.BatchJobResult;
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.JobType;
-import com.vip.saturn.job.console.domain.RestApiJobInfo;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.service.JobService;
@@ -68,11 +65,11 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
-	@RequestMapping(value = "/queryJobInfoByQueue/{queue}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/queryJobNameAndNamespaceByQueue/{queue}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@PathVariable("queue") String queue) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			Map<String, List> jobInfo = jobService.getJobNameAndNamespaceByQueue(queue);
+			List<NamespaceAndJobNameInfo> jobInfo = jobService.getJobNameAndNamespaceByQueue(queue);
 			return new ResponseEntity<Object>(jobInfo, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;

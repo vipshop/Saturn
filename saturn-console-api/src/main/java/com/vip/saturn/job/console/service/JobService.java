@@ -128,5 +128,5 @@ public interface JobService {
 	/**
 	 * query job name and namespace by queue name
 	 */
-	Map<String, List> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException;
+	List<NamespaceAndJobNameInfo> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException;
 }
