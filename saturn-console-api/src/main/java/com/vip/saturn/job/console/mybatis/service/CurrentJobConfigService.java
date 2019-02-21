@@ -35,4 +35,6 @@ public interface CurrentJobConfigService {
 			final String userName) throws SaturnJobConsoleException;
 
 	void updateStream(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException;
+
+	List<JobConfig4DB> findConfigByQueue(String queue);
 }

@@ -144,6 +144,14 @@
         and job_name = #{jobName,jdbcType=VARCHAR} limit 0,1
     </select>
 
+    <select id="findConfigsByQueue" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from job_config
+        where queue_name = #{queueName,jdbcType=VARCHAR}
+        order by job_name
+    </select>
+
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from job_config
         where id = #{id,jdbcType=BIGINT}

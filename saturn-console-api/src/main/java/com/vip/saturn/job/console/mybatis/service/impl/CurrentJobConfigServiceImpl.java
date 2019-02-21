@@ -94,6 +94,11 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	}
 
 	@Override
+	public List<JobConfig4DB> findConfigByQueue(String queue) {
+		return currentJobConfigRepo.findConfigsByQueue(queue);
+	}
+
+	@Override
 	public List<JobConfig4DB> findConfigsByNamespace(String namespace) throws SaturnJobConsoleException {
 		return currentJobConfigRepo.findConfigsByNamespace(namespace);
 	}

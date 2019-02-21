@@ -36,4 +36,5 @@ public interface CurrentJobConfigRepository {
 	JobConfig4DB findConfigByNamespaceAndJobName(@Param("namespace") String namespace,
 			@Param("jobName") String jobName);
 
+	List<JobConfig4DB> findConfigsByQueue(@Param("queueName") String queueName);
 }

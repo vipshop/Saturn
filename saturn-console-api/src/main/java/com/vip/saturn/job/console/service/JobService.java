@@ -124,4 +124,9 @@ public interface JobService {
 	 * 获取运行日志
 	 */
 	String getExecutionLog(String namespace, String jobName, String jobItem) throws SaturnJobConsoleException;
+
+	/**
+	 * query job name and namespace by queue name
+	 */
+	Map<String, List> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException;
 }
