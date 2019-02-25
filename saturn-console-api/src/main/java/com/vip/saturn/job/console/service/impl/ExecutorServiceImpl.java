@@ -207,7 +207,10 @@ public class ExecutorServiceImpl implements ExecutorService {
 		String jobName = jobConfig.getJobName();
 		// 对于不上报运行状态的作业，所有分配的分片均作为潜在运行中的作业
 		if (!jobConfig.getEnabledReport()) {
-			serverRunningInfo.getPotentialRunningJobItems().put(jobName, StringUtils.join(shardingItems, ','));
+			if (jobConfig.getEnabled() != null && jobConfig.getEnabled()) {
+				serverRunningInfo.getPotentialRunningJobItems().put(jobName, StringUtils.join(shardingItems, ','));
+			}
+			return;
 		}
 
 		List<String> runningItems = Lists.newArrayList();
