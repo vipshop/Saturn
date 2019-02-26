@@ -2651,27 +2651,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<NamespaceAndJobNameInfo> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException {
-		Map<String, List> result = new HashMap<>();
-		List<JobConfig4DB> jobConfigs = currentJobConfigService.findConfigByQueue(queue);
-		for (int i = 0; i < jobConfigs.size(); i++) {
-			JobConfig4DB jobConfig = jobConfigs.get(i);
-			if (!result.containsKey(jobConfig.getNamespace())) {
-				result.put(jobConfig.getNamespace(), new ArrayList());
-			}
-			result.get(jobConfig.getNamespace()).add(jobConfig.getJobName());
-		}
-
-		List<NamespaceAndJobNameInfo> namespaceAndJobNameInfos = new ArrayList<>();
-		Iterator<Map.Entry<String, List>> entries = result.entrySet().iterator();
-		while (entries.hasNext()) {
-			Map.Entry<String, List> entry = entries.next();
-			NamespaceAndJobNameInfo info = new NamespaceAndJobNameInfo();
-			info.setNamespace(entry.getKey());
-			info.setJobs(entry.getValue());
-			namespaceAndJobNameInfos.add(info);
-		}
-		return namespaceAndJobNameInfos;
+	public List<JobConfig4DB> getJobNameAndNamespaceByQueue(String queue) {
+		return currentJobConfigService.findConfigByQueue(queue);
 	}
 
 	private void updateReportNodeAndWait(String jobName, CuratorFrameworkOp curatorFrameworkOp, long sleepInMill) {

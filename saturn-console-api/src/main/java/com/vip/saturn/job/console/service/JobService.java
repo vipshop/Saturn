@@ -2,6 +2,7 @@ package com.vip.saturn.job.console.service;
 
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository.CuratorFrameworkOp;
 import com.vip.saturn.job.console.vo.GetJobConfigVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -128,5 +129,5 @@ public interface JobService {
 	/**
 	 * query job name and namespace by queue name
 	 */
-	List<NamespaceAndJobNameInfo> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException;
+	List<JobConfig4DB> getJobNameAndNamespaceByQueue(String queue) throws SaturnJobConsoleException;
 }
