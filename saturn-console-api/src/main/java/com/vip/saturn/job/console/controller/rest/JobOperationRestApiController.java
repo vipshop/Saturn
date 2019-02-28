@@ -69,11 +69,11 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
-	@RequestMapping(value = "/queryJobInfoByQueue", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@RequestParam("queue") String queue) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
-			List<JobConfig4DB> jobInfo = jobService.getJobNameAndNamespaceByQueue(queue);
+			List<JobConfig4DB> jobInfo = jobService.getJobsByQueue(queue);
 			return new ResponseEntity<Object>(jobInfo, httpHeaders, HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;

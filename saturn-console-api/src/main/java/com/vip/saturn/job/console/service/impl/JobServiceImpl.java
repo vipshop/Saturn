@@ -2651,7 +2651,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig4DB> getJobNameAndNamespaceByQueue(String queue) {
+	public List<JobConfig4DB> getJobsByQueue(String queue) {
 		return currentJobConfigService.findConfigByQueue(queue);
 	}
 
