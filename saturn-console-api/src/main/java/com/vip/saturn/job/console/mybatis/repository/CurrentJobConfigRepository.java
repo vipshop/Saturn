@@ -13,6 +13,8 @@ public interface CurrentJobConfigRepository {
 
 	int deleteByPrimaryKey(Long id);
 
+	int deleteByNamespace(String namespace);
+
 	int insert(JobConfig4DB currentJobConfig);
 
 	int updateByPrimaryKey(JobConfig4DB currentJobConfig);

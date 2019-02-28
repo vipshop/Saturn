@@ -157,6 +157,11 @@
         where id = #{id,jdbcType=BIGINT}
     </delete>
 
+    <delete id="deleteByNamespace" parameterType="java.lang.String">
+        delete from job_config
+        where namespace = #{namespace,jdbcType=VARCHAR}
+    </delete>
+
     <insert id="insert" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB">
         insert into job_config (job_name, job_class,
         sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list,

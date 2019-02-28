@@ -30,6 +30,8 @@ public interface RegistryCenterService {
 
 	RegistryCenterClient connectByNamespace(String namespace);
 
+	void closeByNamespace(String namespace);
+
 	RegistryCenterClient getCuratorByNameAndNamespace(String nameAndNamespace);
 
 	RegistryCenterConfiguration findConfig(String nameAndNamespace);

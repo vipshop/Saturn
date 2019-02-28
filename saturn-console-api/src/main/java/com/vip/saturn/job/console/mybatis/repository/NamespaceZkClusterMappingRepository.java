@@ -1,8 +1,9 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
-import java.util.List;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @author hebelala
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Repository;
 public interface NamespaceZkClusterMappingRepository {
 
 	NamespaceZkClusterMapping selectByNamespace(String namespace);
+
+	Integer deleteByNamespace(String namespace);
 
 	List<NamespaceZkClusterMapping> selectAll();
 

@@ -1,15 +1,26 @@
 package com.vip.saturn.job.console.service.impl;
 
 import com.vip.saturn.job.console.domain.JobConfig;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ServerBriefInfo;
+import com.vip.saturn.job.console.domain.ServerStatus;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
+import com.vip.saturn.job.console.mybatis.repository.NamespaceInfoRepository;
+import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository;
+import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
+import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.NamespaceService;
+import com.vip.saturn.job.console.service.RegistryCenterService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +37,24 @@ public class NamespaceServiceImpl implements NamespaceService {
 	@Autowired
 	private JobService jobService;
 
+	@Autowired
+	private ExecutorService executorService;
+
+	@Autowired
+	private NamespaceInfoRepository namespaceInfoRepository;
+
+	@Autowired
+	private CurrentJobConfigRepository currentJobConfigRepository;
+
+	@Autowired
+	private NamespaceZkClusterMappingRepository namespaceZkClusterMappingRepository;
+
+	@Autowired
+	private RegistryCenterService registryCenterService;
+
+	@Autowired
+	private CuratorRepository curatorRepository;
+
 	@Override
 	public Map<String, List> importJobsFromNamespaceToNamespace(String srcNamespace, String destNamespace,
 			String createdBy) throws SaturnJobConsoleException {
@@ -37,7 +66,8 @@ public class NamespaceServiceImpl implements NamespaceService {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "destNamespace should not be null");
 		}
 		if (StringUtils.equals(srcNamespace, destNamespace)) {
-			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(), "destNamespace and destNamespace should be difference");
+			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
+					"destNamespace and destNamespace should be difference");
 		}
 
 		try {
@@ -64,5 +94,72 @@ public class NamespaceServiceImpl implements NamespaceService {
 			log.warn("import jobs from {} to {} fail", srcNamespace, destNamespace, e);
 			throw e;
 		}
+	}
+
+	@Override
+	public boolean deleteNamespace(String namespace) throws SaturnJobConsoleException {
+		boolean online = isExecutorsOnline(namespace);
+		if (online) {
+			log.info("namespace {} has online executor, can not delete it", namespace);
+			return false;
+		} else {
+			deleteInfosInDB(namespace);
+			closeZkConnection(namespace);
+			deleteNamespaceInZk(namespace);
+			return true;
+		}
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	protected void deleteInfosInDB(String namespace) {
+		deleteNamespaceInDB(namespace);
+		log.info("delete namespace in DB success - namespace {}", namespace);
+		deleteNamespaceZkClusterMappingInD(namespace);
+		log.info("delete namespaceZkCluster in DB success - namespace {}", namespace);
+		deleteJobsInDB(namespace);
+		log.info("delete jobs in DB success - namespace {}", namespace);
+	}
+
+	protected void deleteNamespaceZkClusterMappingInD(String namespace) {
+		namespaceZkClusterMappingRepository.deleteByNamespace(namespace);
+	}
+
+	protected void deleteJobsInDB(String namespace) {
+		currentJobConfigRepository.deleteByNamespace(namespace);
+	}
+
+	protected void deleteNamespaceInZk(String namespace) {
+		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
+				.findConfigByNamespace(namespace);
+		CuratorFramework curatorFramework = null;
+		try {
+			curatorFramework = curatorRepository.connect(registryCenterConfiguration.getZkAddressList(), null,
+					registryCenterConfiguration.getDigest());
+			curatorFramework.delete().deletingChildrenIfNeeded().forPath("/" + namespace);
+			log.info("delete namespace in zk success - namespace {}", namespace);
+		} catch (Exception e) {
+			log.warn("fail to delete namespace:{}", namespace, e);
+		} finally {
+			if (curatorFramework != null) {
+				curatorFramework.close();
+			}
+		}
+	}
+
+	protected void closeZkConnection(String namespace) {
+		namespace = "/" + namespace;
+		registryCenterService.closeByNamespace(namespace);
+	}
+
+	protected void deleteNamespaceInDB(String namespace) {
+		namespaceInfoRepository.deleteByNamespace(namespace);
+	}
+
+	protected boolean isExecutorsOnline(String namespace) throws SaturnJobConsoleException {
+		List<ServerBriefInfo> executors = executorService.getExecutors(namespace, ServerStatus.ONLINE);
+		if (executors.size() > 0) {
+			return true;
+		}
+		return false;
 	}
 }

@@ -19,7 +19,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vip.saturn.job.console.SaturnEnvProperties;
-import com.vip.saturn.job.console.domain.*;
+import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
+import com.vip.saturn.job.console.domain.RegistryCenterClient;
+import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
+import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.entity.NamespaceInfo;
@@ -983,6 +986,11 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				return registryCenterClient;
 			}
 		}
+	}
+
+	@Override
+	public void closeByNamespace(String namespace) {
+		this.closeNamespace(namespace);
 	}
 
 	@Override

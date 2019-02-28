@@ -45,4 +45,8 @@
         set is_deleted = #{isDeleted, jdbcType=INTEGER}, create_time = #{createTime, jdbcType=VARCHAR}, created_by = #{createdBy, jdbcType=VARCHAR}, last_update_time = #{lastUpdateTime, jdbcType=VARCHAR}, last_updated_by = #{lastUpdatedBy, jdbcType=VARCHAR}, namespace = #{namespace, jdbcType=VARCHAR}, name = #{name, jdbcType=VARCHAR}, zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
         where id = #{id, jdbcType=BIGINT}
     </update>
+    <delete id="deleteByNamespace" parameterType="java.lang.String">
+        delete from namespace_zkcluster_mapping
+        where namespace = #{namespace,jdbcType=VARCHAR}
+    </delete>
 </mapper>
