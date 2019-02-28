@@ -55,9 +55,9 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
+	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/{namespace}/jobs/{jobName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace,
-			@PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
+	public ResponseEntity<Object> query(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
 			RestApiJobInfo restAPIJobInfo = restApiService.getRestAPIJobInfo(namespace, jobName);
@@ -69,7 +69,8 @@ public class JobOperationRestApiController extends AbstractRestController {
 		}
 	}
 
-	@RequestMapping(value = "/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@Audit(type = AuditType.REST)
+	@RequestMapping(value = "/all/jobs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> query(@RequestParam("queue") String queue) throws SaturnJobConsoleException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		try {
