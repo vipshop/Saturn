@@ -104,7 +104,6 @@ public class NamespaceServiceImpl implements NamespaceService {
 			return false;
 		} else {
 			deleteInfosInDB(namespace);
-			closeZkConnection(namespace);
 			deleteNamespaceInZk(namespace);
 			return true;
 		}
@@ -144,11 +143,6 @@ public class NamespaceServiceImpl implements NamespaceService {
 				curatorFramework.close();
 			}
 		}
-	}
-
-	protected void closeZkConnection(String namespace) {
-		namespace = "/" + namespace;
-		registryCenterService.closeByNamespace(namespace);
 	}
 
 	protected void deleteNamespaceInDB(String namespace) {

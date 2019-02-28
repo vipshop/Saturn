@@ -989,11 +989,6 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public void closeByNamespace(String namespace) {
-		this.closeNamespace(namespace);
-	}
-
-	@Override
 	public RegistryCenterConfiguration findConfig(String nameAndNamespace) {
 		if (Strings.isNullOrEmpty(nameAndNamespace)) {
 			return null;
