@@ -53,6 +53,7 @@ public class ExecutionContextService extends AbstractSaturnService {
 	public JobExecutionMultipleShardingContext getJobExecutionShardingContext(final Triggered triggered) {
 		SaturnExecutionContext result = new SaturnExecutionContext();
 		result.setJobName(configService.getJobName());
+		result.setQueueName(configService.getQueueName());
 		result.setShardingTotalCount(configService.getShardingTotalCount());
 		result.setTriggered(triggered);
 		List<Integer> shardingItems = getShardingItems();

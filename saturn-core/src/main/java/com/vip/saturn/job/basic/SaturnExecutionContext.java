@@ -1,10 +1,10 @@
 package com.vip.saturn.job.basic;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.vip.saturn.job.SaturnJobReturn;
 import com.vip.saturn.job.internal.config.JobConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Saturn的作业运行上下文
@@ -37,6 +37,8 @@ public class SaturnExecutionContext extends JobExecutionMultipleShardingContext 
 	 * 作业配置类
 	 */
 	private JobConfiguration jobConfiguration;
+
+	private String queueName;
 
 	private String namespace;
 
@@ -124,4 +126,11 @@ public class SaturnExecutionContext extends JobExecutionMultipleShardingContext 
 		this.jobClass = jobClass;
 	}
 
+	public String getQueueName() {
+		return queueName;
+	}
+
+	public void setQueueName(String queueName) {
+		this.queueName = queueName;
+	}
 }

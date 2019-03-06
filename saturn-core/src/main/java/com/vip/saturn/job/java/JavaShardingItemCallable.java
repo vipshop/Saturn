@@ -78,6 +78,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 			context.setJobParameter(shardingContext.getJobParameter());
 			context.setShardingItems(shardingContext.getShardingItems());
 			context.setShardingTotalCount(shardingContext.getShardingTotalCount());
+			context.setQueueName(shardingContext.getQueueName());
 			contextForJob = cloneObject(context, jobClassLoader);
 		}
 
