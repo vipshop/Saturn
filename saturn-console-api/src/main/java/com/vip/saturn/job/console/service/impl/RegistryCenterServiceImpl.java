@@ -400,6 +400,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 		// 直接赋值新的
 		zkClusterMap = (LinkedHashMap<String, ZkCluster>) newClusterMap;
+		log.info("new zkClusterMap is : {}", zkClusterMap);
 		allOnlineNamespaces = allOnlineNamespacesTemp;
 	}
 
@@ -1375,12 +1376,12 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		try {
 			RegistryCenterConfiguration registryCenterConfiguration = findConfigByNamespace(namespace);
 			if (registryCenterConfiguration == null) {
-				throw new SaturnJobConsoleException("Connect zookeeper failed");
+				throw new SaturnJobConsoleException("find registryCenterConfiguration failed");
 			}
 
 			String nns = registryCenterConfiguration.getNameAndNamespace();
 			if (nns == null) {
-				throw new SaturnJobConsoleException("Connect zookeeper failed");
+				throw new SaturnJobConsoleException("get name and namespace failed");
 			}
 
 			String zkAddressList = registryCenterConfiguration.getZkAddressList();

@@ -146,4 +146,11 @@ public class ZkCluster implements Serializable {
 		result = 31 * result + (digest != null ? digest.hashCode() : 0);
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "ZkCluster{" + "zkClusterKey='" + zkClusterKey + '\'' + ", zkAlias='" + zkAlias + '\'' + ", zkAddr='"
+				+ zkAddr + '\'' + ", description='" + description + '\'' + ", digest='" + digest + '\'' + ", offline="
+				+ offline + ", regCenterConfList=" + regCenterConfList + '}';
+	}
 }
