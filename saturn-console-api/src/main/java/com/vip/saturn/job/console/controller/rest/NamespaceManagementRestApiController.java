@@ -46,7 +46,7 @@ public class NamespaceManagementRestApiController extends AbstractRestController
 	}
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = "/namespaces/{namespace}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/namespaces/{namespace:.+}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
 		try {
 			checkMissingParameter("namespace", namespace);
