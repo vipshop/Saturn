@@ -1007,6 +1007,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 
 	@Override
 	public RegistryCenterConfiguration findConfigByNamespace(String namespace) {
+		log.info("findConfigByNamespace namespace : {}", namespace);
+
 		if (Strings.isNullOrEmpty(namespace)) {
 			log.info("findConfigByNamespace, namespace is null");
 			return null;
@@ -1023,6 +1025,8 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				}
 			}
 		}
+
+		log.info("findConfigByNamespace return null");
 		return null;
 	}
 
