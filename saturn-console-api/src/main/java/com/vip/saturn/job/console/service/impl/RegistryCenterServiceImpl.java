@@ -1008,12 +1008,17 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	@Override
 	public RegistryCenterConfiguration findConfigByNamespace(String namespace) {
 		if (Strings.isNullOrEmpty(namespace)) {
+			log.info("findConfigByNamespace, namespace is null");
 			return null;
 		}
 		Collection<ZkCluster> zkClusters = zkClusterMap.values();
+		log.info("findConfigByNamespace zkClusterMap size : {}", zkClusters.size());
 		for (ZkCluster zkCluster : zkClusters) {
+			log.info("findConfigByNamespace regCenterConfList size : {}", zkCluster.getRegCenterConfList().size());
 			for (RegistryCenterConfiguration each : zkCluster.getRegCenterConfList()) {
+				log.info("registryCenterConfiguration : {}", each);
 				if (each != null && namespace.equals(each.getNamespace())) {
+					log.info("got it");
 					return each;
 				}
 			}
