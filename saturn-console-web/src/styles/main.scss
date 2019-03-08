@@ -233,6 +233,9 @@ form {
 .el-select .el-tag {
     background-color: #4185cd;
 }
+.el-select__tags {
+    display: flex;
+}
 /* dialog */
 .el-dialog__header {
     border-bottom: 1px solid #b7c0c9;
