@@ -5,22 +5,18 @@ import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.console.domain.ServerRunningInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.repository.zookeeper.CuratorRepository;
-import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
 import com.vip.saturn.job.console.utils.JobNodePath;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Maps;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Map;
-
 import static com.vip.saturn.job.console.utils.JobNodePath.$JOBS_NODE_NAME;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -115,7 +111,7 @@ public class ExecutorServiceImplTest {
 		assertEquals("0,1,2", serverRunningInfo.getRunningJobItems().get("jobA"));
 		assertEquals("1", serverRunningInfo.getRunningJobItems().get("jobC"));
 
-		assertEquals(1, serverRunningInfo.getPotentialRunningJobItems().size());
-		assertEquals("2,3", serverRunningInfo.getPotentialRunningJobItems().get("jobB"));
+		assertEquals(0, serverRunningInfo.getPotentialRunningJobItems().size());
+		assertEquals(null, serverRunningInfo.getPotentialRunningJobItems().get("jobB"));
 	}
 }
