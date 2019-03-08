@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
@@ -354,8 +355,38 @@ public class SaturnExecutor {
 			}
 		}
 
+		logContextInfo();
 		throw new Exception(
 				"Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console.");
+	}
+
+	private String getTargetConsoleIp() {
+		String consoleUrl = getTargetConsoleUrl();
+		try {
+			URL url = new URL(consoleUrl);
+			String host = url.getHost();
+			return InetAddress.getByName(host).getHostAddress();
+		} catch (Exception e) {
+			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception : {}",
+					consoleUrl, e);
+			return "unknown host";
+		}
+	}
+
+	private String getTargetConsoleUrl() {
+		return SystemEnvProperties.VIP_SATURN_CONSOLE_URI;
+	}
+
+	private String getTargetNamespace() {
+		return System.getProperty("namespace");
+	}
+
+	private void logContextInfo() {
+		String namespace = getTargetNamespace();
+		String consoleUrl = getTargetConsoleUrl();
+		String consoleIp = getTargetConsoleIp();
+		log.info("Fail to discover from Saturn Console: targetNamespace:{}, targetConsoleUrl:{}, targetConsoleIp:{}",
+				namespace, consoleUrl, consoleIp);
 	}
 
 	private void handleDiscoverException(String responseBody, Integer statusCode) throws SaturnExecutorException {
