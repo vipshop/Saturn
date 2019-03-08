@@ -103,8 +103,10 @@ public class NamespaceServiceImpl implements NamespaceService {
 			log.info("namespace {} has online executor, can not delete it", namespace);
 			return false;
 		} else {
+			RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
+					.findConfigByNamespace(namespace);
 			deleteInfosInDB(namespace);
-			deleteNamespaceInZk(namespace);
+			deleteNamespaceInZk(registryCenterConfiguration, namespace);
 			return true;
 		}
 	}
@@ -127,9 +129,7 @@ public class NamespaceServiceImpl implements NamespaceService {
 		currentJobConfigRepository.deleteByNamespace(namespace);
 	}
 
-	protected void deleteNamespaceInZk(String namespace) {
-		RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
-				.findConfigByNamespace(namespace);
+	protected void deleteNamespaceInZk(RegistryCenterConfiguration registryCenterConfiguration, String namespace) {
 		CuratorFramework curatorFramework = null;
 		try {
 			curatorFramework = curatorRepository.connect(registryCenterConfiguration.getZkAddressList(), null,
