@@ -355,9 +355,11 @@ public class SaturnExecutor {
 			}
 		}
 
-		logContextInfo();
-		throw new Exception(
-				"Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console.");
+		String namespace = getTargetNamespace();
+		String consoleUrl = getTargetConsoleUrl();
+		String consoleIp = getTargetConsoleIp();
+		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, targetNamespace:%s, targetConsoleUrl:%s, targetConsoleIp:%s";
+		throw new Exception(String.format(msg, namespace, consoleUrl, consoleIp));
 	}
 
 	private String getTargetConsoleIp() {
@@ -367,8 +369,7 @@ public class SaturnExecutor {
 			String host = url.getHost();
 			return InetAddress.getByName(host).getHostAddress();
 		} catch (Exception e) {
-			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception : {}",
-					consoleUrl, e);
+			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl, e);
 			return "unknown host";
 		}
 	}
@@ -379,14 +380,6 @@ public class SaturnExecutor {
 
 	private String getTargetNamespace() {
 		return System.getProperty("namespace");
-	}
-
-	private void logContextInfo() {
-		String namespace = getTargetNamespace();
-		String consoleUrl = getTargetConsoleUrl();
-		String consoleIp = getTargetConsoleIp();
-		log.info("Fail to discover from Saturn Console: targetNamespace:{}, targetConsoleUrl:{}, targetConsoleIp:{}",
-				namespace, consoleUrl, consoleIp);
 	}
 
 	private void handleDiscoverException(String responseBody, Integer statusCode) throws SaturnExecutorException {
