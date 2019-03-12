@@ -48,7 +48,7 @@
         id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial,
         use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
         sharding_item_parameters, job_parameter, process_count_interval_seconds,
-        failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
+        failover, dependencies, `groups`, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
         channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
         namespace, zk_list,is_enabled,job_mode,custom_context,rerun, up_stream, down_stream
     </sql>

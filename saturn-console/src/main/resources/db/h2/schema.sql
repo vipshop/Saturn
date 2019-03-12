@@ -324,6 +324,10 @@ CREATE TABLE `saturn_dashboard_history` (
   `topic` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '主题',
   `content` LONGTEXT NOT NULL COMMENT '内容',
   `record_date` DATE NOT NULL COMMENT '记录日期',
+  `created_by` varchar(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` varchar(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` timestamp NOT NULL DEFAULT '1980-01-01 00:00:00'  COMMENT '最近一次的更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
 )ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8;
