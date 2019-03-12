@@ -92,6 +92,13 @@ public class SaturnJobExecutionContext implements Serializable {
 				this.customContext = (Map) res;
 			}
 
+			field = clazz.getDeclaredField("queueName");
+			field.setAccessible(true);
+			res = field.get(source);
+			if (res != null) {
+				this.queueName = (String) res;
+			}
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
