@@ -68,9 +68,9 @@
             namespace = #{namespace,jdbcType=VARCHAR}
             <if test="condition.groups != null">
                 and (
-                groups = #{condition.groups}
+                `groups` = #{condition.groups}
                 <if test="condition.groups == ''">
-                    or groups is NULL
+                    or `groups` is NULL
                 </if>
                 )
             </if>
@@ -105,9 +105,9 @@
             namespace = #{namespace,jdbcType=VARCHAR}
             <if test="condition.groups != null">
                 and (
-                groups = #{condition.groups}
+                `groups` = #{condition.groups}
                 <if test="condition.groups == ''">
-                    or groups is NULL
+                    or `groups` is NULL
                 </if>
                 )
             </if>
@@ -168,7 +168,7 @@
         time_zone, cron, prefer_list, pause_period_date,
         pause_period_time, sharding_item_parameters,
         job_parameter, process_count_interval_seconds,
-        failover, dependencies, groups, description,
+        failover, dependencies, `groups`, description,
         timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
         job_type, queue_name, create_by,
         create_time, last_update_by, last_update_time,
@@ -215,7 +215,7 @@
         process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER},
         failover = #{failover,jdbcType=BIT},
         dependencies = #{dependencies,jdbcType=VARCHAR},
-        groups = #{groups,jdbcType=VARCHAR},
+        `groups` = #{groups,jdbcType=VARCHAR},
         description = #{description,jdbcType=VARCHAR},
         timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER},
         timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
