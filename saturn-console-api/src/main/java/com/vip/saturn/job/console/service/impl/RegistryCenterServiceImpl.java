@@ -1420,4 +1420,73 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		return curatorFrameworkOp;
 	}
 
+	@Override
+	public void refreshRegistryCenterForNamespace(String zkCluster, String namespace) {
+		ZkCluster targetZkCluster = null;
+		Map<String, ZkCluster> newClusterMap = new HashMap<>(1);
+
+		Map<String, ZkCluster> zkClusterInfo = getZkClusterInfo();
+		Iterator<Map.Entry<String, ZkCluster>> entries = zkClusterInfo.entrySet().iterator();
+		while (entries.hasNext()) {
+			Map.Entry<String, ZkCluster> entry = entries.next();
+			if (entry.getKey().equals(zkCluster)) {
+				newClusterMap.put(zkCluster, entry.getValue());
+				break;
+			}
+		}
+
+		closeInvalidZkClient(newClusterMap);
+		connectToZkClusterIfPossible(newClusterMap);
+
+		for (int i = 0; i < newClusterMap.size(); i++) {
+			if (newClusterMap.get(zkCluster) != null) {
+				targetZkCluster = newClusterMap.get(zkCluster);
+				break;
+			}
+		}
+
+		if (targetZkCluster != null) {
+			List<NamespaceZkClusterMapping> nsZkClusterMappingList = namespaceZkClusterMapping4SqlService
+					.getAllMappingsOfCluster(zkCluster);
+			List<NamespaceZkClusterMapping> filteredList = new ArrayList<>();
+			for (NamespaceZkClusterMapping n : nsZkClusterMappingList) {
+				if (n.getNamespace().equals(namespace)) {
+					filteredList.add(n);
+					break;
+				}
+			}
+			List<String> allOnlineNamespacesTemp = new ArrayList<>();
+			initOrUpdateNamespace(allOnlineNamespacesTemp, targetZkCluster, filteredList,
+					targetZkCluster.getRegCenterConfList());
+
+
+			RegistryCenterConfiguration targetRegistryCenterConfiguration = null;
+			List<RegistryCenterConfiguration> regCenterConfList = newClusterMap.get(zkCluster).getRegCenterConfList();
+			for (RegistryCenterConfiguration conf : regCenterConfList) {
+				if (conf.getNamespace().equals(namespace)) {
+					targetRegistryCenterConfiguration = conf;
+				}
+			}
+
+
+			List<RegistryCenterConfiguration> sourceRegCenterConfList = zkClusterMap.get(zkCluster)
+					.getRegCenterConfList();
+			boolean isRegCenterConfDuplicated = false;
+			for (RegistryCenterConfiguration conf : sourceRegCenterConfList) {
+				if (conf.getNamespace().equals(namespace)) {
+					isRegCenterConfDuplicated = true;
+					break;
+				}
+			}
+
+			if (!isRegCenterConfDuplicated) {
+				zkClusterMap.get(namespace).getRegCenterConfList().add(targetRegistryCenterConfiguration);
+			}
+			for (String onlineNamespace : allOnlineNamespacesTemp) {
+				if (!allOnlineNamespaces.contains(onlineNamespace)) {
+					allOnlineNamespaces.add(onlineNamespace);
+				}
+			}
+		}
+	}
 }

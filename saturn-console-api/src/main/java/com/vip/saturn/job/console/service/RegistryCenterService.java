@@ -85,4 +85,6 @@ public interface RegistryCenterService {
 
 	CuratorRepository.CuratorFrameworkOp getCuratorFrameworkOp(String namespace) throws SaturnJobConsoleException;
 
+	void refreshRegistryCenterForNamespace(String zkCluster, String namespace);
+
 }

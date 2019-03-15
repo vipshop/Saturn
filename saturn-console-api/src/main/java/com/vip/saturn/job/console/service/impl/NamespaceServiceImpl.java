@@ -1,9 +1,6 @@
 package com.vip.saturn.job.console.service.impl;
 
-import com.vip.saturn.job.console.domain.JobConfig;
-import com.vip.saturn.job.console.domain.RegistryCenterConfiguration;
-import com.vip.saturn.job.console.domain.ServerBriefInfo;
-import com.vip.saturn.job.console.domain.ServerStatus;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
 import com.vip.saturn.job.console.mybatis.repository.CurrentJobConfigRepository;
@@ -69,6 +66,10 @@ public class NamespaceServiceImpl implements NamespaceService {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
 					"destNamespace and destNamespace should be difference");
 		}
+
+
+		NamespaceDomainInfo namespaceDomainInfo = registryCenterService.getNamespace(destNamespace);
+		registryCenterService.refreshRegistryCenterForNamespace(namespaceDomainInfo.getZkCluster(), destNamespace);
 
 		try {
 			List<String> successfullyImportedJobs = new ArrayList<>();
