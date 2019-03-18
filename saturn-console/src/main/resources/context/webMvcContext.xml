@@ -65,6 +65,8 @@
           class="com.vip.saturn.job.console.controller.rest.DashboardRefreshRestApiController"/>
     <bean id="jobOperationRestApiController"
           class="com.vip.saturn.job.console.controller.rest.JobOperationRestApiController"/>
+    <bean id="NamespaceAndJobController"
+          class="com.vip.saturn.job.console.controller.rest.NamespaceAndJobController"/>
     <bean id="namespaceMgmtRestApiController"
           class="com.vip.saturn.job.console.controller.rest.NamespaceManagementRestApiController"/>
     <bean id="zkDbDiffRestApiController"

@@ -1437,6 +1437,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 					targetZkCluster.getRegCenterConfList());
 			updateStatus(targetZkCluster, zkClusterName, namespace, allOnlineNamespacesTemp);
 		}
+		log.info("refreshRegistryCenterForNamespace done : {}, {}", zkClusterName, namespace);
 	}
 
 	private Map<String, ZkCluster> getTargetZkCluster(String zkCluster) {
