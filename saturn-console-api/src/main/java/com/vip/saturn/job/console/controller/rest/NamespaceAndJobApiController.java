@@ -27,7 +27,7 @@ public class NamespaceAndJobApiController extends AbstractRestController {
 	private NamespaceService namespaceService;
 
 	@Audit(type = AuditType.REST)
-	@RequestMapping(value = "/createNamespaceAndImportJobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/namespaces/createNamespaceAndImportJobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
 			throws SaturnJobConsoleException {
 		try {
