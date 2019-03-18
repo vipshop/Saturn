@@ -17,6 +17,7 @@ import com.vip.saturn.job.utils.*;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.list.TreeList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -356,26 +357,33 @@ public class SaturnExecutor {
 		}
 
 		String namespace = getTargetNamespace();
-		String consoleUrl = getTargetConsoleUrl();
-		String consoleIp = getTargetConsoleIp();
+		List<String> consoleUrls = getTargetConsoleUrl();
+		List consoleIps = getTargetConsoleIp();
 		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, targetNamespace:%s, targetConsoleUrl:%s, targetConsoleIp:%s";
-		throw new Exception(String.format(msg, namespace, consoleUrl, consoleIp));
+		throw new Exception(String.format(msg, namespace, consoleUrls, consoleIps));
 	}
 
-	private String getTargetConsoleIp() {
-		String consoleUrl = getTargetConsoleUrl();
-		try {
-			URL url = new URL(consoleUrl);
-			String host = url.getHost();
-			return InetAddress.getByName(host).getHostAddress();
-		} catch (Exception e) {
-			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl, e);
-			return "unknown host";
+	private List getTargetConsoleIp() {
+		List<String> consoleUrls = getTargetConsoleUrl();
+		List<String> targetIps = new TreeList();
+
+		for (String consoleUrl : consoleUrls) {
+			try {
+				URL url = new URL(consoleUrl);
+				String host = url.getHost();
+				String hostAddress = InetAddress.getByName(host).getHostAddress();
+				targetIps.add(hostAddress);
+			} catch (Exception e) {
+				LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl,
+						e);
+				targetIps.add("unknown host");
+			}
 		}
+		return targetIps;
 	}
 
-	private String getTargetConsoleUrl() {
-		return SystemEnvProperties.VIP_SATURN_CONSOLE_URI;
+	private List<String> getTargetConsoleUrl() {
+		return SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST;
 	}
 
 	private String getTargetNamespace() {
