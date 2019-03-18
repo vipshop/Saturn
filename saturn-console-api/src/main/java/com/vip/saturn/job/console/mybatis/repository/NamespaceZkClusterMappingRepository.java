@@ -1,6 +1,7 @@
 package com.vip.saturn.job.console.mybatis.repository;
 
 import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.List;
 public interface NamespaceZkClusterMappingRepository {
 
 	NamespaceZkClusterMapping selectByNamespace(String namespace);
+
+	List<NamespaceZkClusterMapping> selectByNamespaceAndZkClusterKey(@Param("namespace") String namespace, @Param("zkClusterKey") String zkClusterKey);
 
 	Integer deleteByNamespace(String namespace);
 

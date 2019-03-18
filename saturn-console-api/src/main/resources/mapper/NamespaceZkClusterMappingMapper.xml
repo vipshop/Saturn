@@ -21,6 +21,12 @@
         from namespace_zkcluster_mapping
         where namespace = #{namespace, jdbcType=VARCHAR} limit 0,1
     </select>
+    <select id="selectByNamespaceAndZkClusterKey" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from namespace_zkcluster_mapping
+        where namespace = #{namespace, jdbcType=VARCHAR} and zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
+    </select>
     <select id="selectAll" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
