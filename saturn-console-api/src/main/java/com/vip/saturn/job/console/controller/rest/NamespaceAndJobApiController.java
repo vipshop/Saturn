@@ -21,7 +21,7 @@ import java.util.Map;
  * @author Ray Leung
  */
 @RequestMapping("/rest/v1")
-public class NamespaceAndJobController extends AbstractRestController {
+public class NamespaceAndJobApiController extends AbstractRestController {
 
 	@Autowired
 	private NamespaceService namespaceService;
