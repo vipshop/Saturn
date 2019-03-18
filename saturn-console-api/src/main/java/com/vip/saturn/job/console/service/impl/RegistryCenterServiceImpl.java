@@ -1421,7 +1421,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 	}
 
 	@Override
-	public void refreshRegistryCenterForNamespace(String zkClusterName, String namespace) {
+	public synchronized void refreshRegistryCenterForNamespace(String zkClusterName, String namespace) {
 		ZkCluster targetZkCluster;
 		Map<String, ZkCluster> zkClusterMap;
 
