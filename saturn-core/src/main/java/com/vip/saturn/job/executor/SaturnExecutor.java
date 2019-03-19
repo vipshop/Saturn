@@ -17,7 +17,6 @@ import com.vip.saturn.job.utils.*;
 import com.vip.saturn.job.utils.StartCheckUtil.StartCheckItem;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.list.TreeList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -357,29 +356,34 @@ public class SaturnExecutor {
 		}
 
 		String namespace = getTargetNamespace();
-		List<String> consoleUrls = getTargetConsoleUrl();
-		List consoleIps = getTargetConsoleIp();
-		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, targetNamespace:%s, targetConsoleUrl:%s, targetConsoleIp:%s";
-		throw new Exception(String.format(msg, namespace, consoleUrls, consoleIps));
+		List contexts = buildLog();
+		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, targetNamespace:%s, contexts:%s";
+		throw new Exception(String.format(msg, namespace, contexts));
 	}
 
-	private List getTargetConsoleIp() {
+	private List<String> buildLog() {
+		List<String> result = new ArrayList<>(5);
 		List<String> consoleUrls = getTargetConsoleUrl();
-		List<String> targetIps = new TreeList();
-
-		for (String consoleUrl : consoleUrls) {
-			try {
-				URL url = new URL(consoleUrl);
-				String host = url.getHost();
-				String hostAddress = InetAddress.getByName(host).getHostAddress();
-				targetIps.add(hostAddress);
-			} catch (Exception e) {
-				LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl,
-						e);
-				targetIps.add("unknown host");
-			}
+		for (String url : consoleUrls) {
+			String ip = getTargetConsoleIp(url);
+			String tmp = url + " - " + ip;
+			result.add(tmp);
 		}
-		return targetIps;
+		return result;
+	}
+
+	private String getTargetConsoleIp(String consoleUrl) {
+		String result = null;
+		try {
+			URL url = new URL(consoleUrl);
+			String host = url.getHost();
+			String hostAddress = InetAddress.getByName(host).getHostAddress();
+			result = hostAddress;
+		} catch (Exception e) {
+			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl, e);
+			result = "UnknownHost";
+		}
+		return result;
 	}
 
 	private List<String> getTargetConsoleUrl() {
