@@ -50,12 +50,8 @@ public class NamespaceManagementRestApiController extends AbstractRestController
 	public ResponseEntity<Object> delete(@PathVariable("namespace") String namespace) throws SaturnJobConsoleException {
 		try {
 			checkMissingParameter("namespace", namespace);
-			boolean result = namespaceService.deleteNamespace(namespace);
-			if (result) {
-				return new ResponseEntity<>(HttpStatus.OK);
-			} else {
-				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-			}
+			namespaceService.deleteNamespace(namespace);
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {

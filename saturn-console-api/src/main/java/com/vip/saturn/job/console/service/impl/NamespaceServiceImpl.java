@@ -97,17 +97,16 @@ public class NamespaceServiceImpl implements NamespaceService {
 	}
 
 	@Override
-	public boolean deleteNamespace(String namespace) throws SaturnJobConsoleException {
+	public void deleteNamespace(String namespace) throws SaturnJobConsoleException {
 		boolean online = isExecutorsOnline(namespace);
 		if (online) {
 			log.info("namespace {} has online executor, can not delete it", namespace);
-			return false;
+			throw new SaturnJobConsoleException("namespace has online executor, can not delete it");
 		} else {
 			RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 					.findConfigByNamespace(namespace);
 			deleteInfosInDB(namespace);
 			deleteNamespaceInZk(registryCenterConfiguration, namespace);
-			return true;
 		}
 	}
 

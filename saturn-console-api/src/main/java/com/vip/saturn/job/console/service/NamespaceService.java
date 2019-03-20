@@ -24,7 +24,8 @@ public interface NamespaceService {
 	/**
 	 * 删除域
 	 * @param namespace
+	 * @throws SaturnJobConsoleException
 	 */
-	boolean deleteNamespace(String namespace) throws SaturnJobConsoleException;
+	void deleteNamespace(String namespace) throws SaturnJobConsoleException;
 
 }
