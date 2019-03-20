@@ -355,43 +355,30 @@ public class SaturnExecutor {
 			}
 		}
 
-		String namespace = getTargetNamespace();
-		List contexts = buildLog();
-		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, targetNamespace:%s, contexts:%s";
-		throw new Exception(String.format(msg, namespace, contexts));
+		List<String> context = buildContext();
+		String msg = "Fail to discover from Saturn Console! Please make sure that you have added the target namespace on Saturn Console, namespace:%s, context:%s";
+		throw new Exception(String.format(msg, namespace, context));
 	}
 
-	private List<String> buildLog() {
+	private List<String> buildContext() {
 		List<String> result = new ArrayList<>(5);
-		List<String> consoleUrls = getTargetConsoleUrl();
-		for (String url : consoleUrls) {
-			String ip = getTargetConsoleIp(url);
+		for (String url : SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST) {
+			String ip = getConsoleIp(url);
 			String tmp = url + " - " + ip;
 			result.add(tmp);
 		}
 		return result;
 	}
 
-	private String getTargetConsoleIp(String consoleUrl) {
-		String result = null;
+	private String getConsoleIp(String consoleUrl) {
 		try {
 			URL url = new URL(consoleUrl);
 			String host = url.getHost();
-			String hostAddress = InetAddress.getByName(host).getHostAddress();
-			result = hostAddress;
+			return InetAddress.getByName(host).getHostAddress();
 		} catch (Exception e) {
 			LogUtils.warn(log, LogEvents.ExecutorEvent.COMMON, "fail to parse url - {} to ip exception", consoleUrl, e);
-			result = "UnknownHost";
+			return "unknownIp";
 		}
-		return result;
-	}
-
-	private List<String> getTargetConsoleUrl() {
-		return SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST;
-	}
-
-	private String getTargetNamespace() {
-		return System.getProperty("namespace");
 	}
 
 	private void handleDiscoverException(String responseBody, Integer statusCode) throws SaturnExecutorException {
