@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,9 +50,8 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 				throw new SaturnJobConsoleException("srcNamespace is empty");
 			}
 			String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
-			List<NamespaceZkClusterMapping> mapping = namespaceZkClusterMappingRepository
-					.selectByNamespaceAndZkClusterKey(srcNamespace, zkClusterName);
-			if (mapping == null || mapping.isEmpty()) {
+			NamespaceZkClusterMapping mapping = namespaceZkClusterMappingRepository.selectByNamespace(srcNamespace);
+			if (mapping == null) {
 				throw new SaturnJobConsoleException("no zkcluster mapping is not found");
 			}
 
