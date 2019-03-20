@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
+import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository;
 import com.vip.saturn.job.console.service.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
@@ -50,10 +51,10 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 				throw new SaturnJobConsoleException("srcNamespace is empty");
 			}
 			String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
-			List mapping = namespaceZkClusterMappingRepository
+			List<NamespaceZkClusterMapping> mapping = namespaceZkClusterMappingRepository
 					.selectByNamespaceAndZkClusterKey(srcNamespace, zkClusterName);
-			if (mapping.size() == 0) {
-				throw new SaturnJobConsoleException("srcNamespace is not found");
+			if (mapping == null || mapping.isEmpty()) {
+				throw new SaturnJobConsoleException("no zkcluster mapping is not found");
 			}
 
 			NamespaceDomainInfo namespaceInfo = new NamespaceDomainInfo();

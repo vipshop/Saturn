@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
+
 /**
  * @author rayleung
  */
@@ -101,7 +103,8 @@ public class NamespaceServiceImpl implements NamespaceService {
 		boolean online = isExecutorsOnline(namespace);
 		if (online) {
 			log.info("namespace {} has online executor, can not delete it", namespace);
-			throw new SaturnJobConsoleException("namespace has online executor, can not delete it");
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+					"namespace has online executor, can not delete it");
 		} else {
 			RegistryCenterConfiguration registryCenterConfiguration = registryCenterService
 					.findConfigByNamespace(namespace);
