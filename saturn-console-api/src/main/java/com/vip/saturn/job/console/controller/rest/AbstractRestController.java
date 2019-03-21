@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -17,9 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
-import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_INTERNAL_ERROR;
-import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
+import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.*;
 
 /**
  * Handler for RESTful API Exception.
@@ -103,10 +102,9 @@ public abstract class AbstractRestController extends AbstractController {
 
 	private ResponseEntity<Object> constructErrorResponse(String errorMsg, HttpStatus status) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-
+		httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
 		RestApiErrorResult restApiErrorResult = new RestApiErrorResult();
 		restApiErrorResult.setMessage(errorMsg);
-
 		return new ResponseEntity<Object>(restApiErrorResult, httpHeaders, status);
 	}
 }
