@@ -621,6 +621,8 @@ public class ShardingIT extends AbstractSaturnIT {
 				}
 			}, 10);
 
+			// wait running completed
+			Thread.sleep(1000);
 			// executor2下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
@@ -713,6 +715,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
+			// wait running completed
+			Thread.sleep(1000);
 			// executor2下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
@@ -804,6 +808,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
+			// wait running completed
+			Thread.sleep(1000);
 			// executor2下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
@@ -895,6 +901,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(
 					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executor1.getExecutorName()))));
 			assertThat(items).isEmpty();
+			// wait running completed
+			Thread.sleep(1000);
 			// executor2下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000L);
@@ -986,6 +994,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
 					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
+			// wait running completed
+			Thread.sleep(1000);
 			// vdosExecutor下线
 			stopExecutorGracefully(1);
 			Thread.sleep(1000);
@@ -1082,6 +1092,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
 					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
+			// wait running completed
+			Thread.sleep(1000);
 			// vdosExecutor下线
 			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
@@ -1178,6 +1190,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			items = ItemUtils.toItemList(regCenter.getDirectly(JobNodePath
 					.getNodeFullPath(jobName, ShardingNode.getShardingNode(logicExecutor.getExecutorName()))));
 			assertThat(items).contains(0, 1);
+			// wait running completed
+			Thread.sleep(1000);
 			// vdosExecutor下线
 			stopExecutorGracefully(0);
 			Thread.sleep(1000L);
@@ -1479,6 +1493,8 @@ public class ShardingIT extends AbstractSaturnIT {
 			}
 		}, 10);
 
+		// wait running completed
+		Thread.sleep(1000);
 		// offline executor2
 		stopExecutorGracefully(1);
 		Thread.sleep(1000);
