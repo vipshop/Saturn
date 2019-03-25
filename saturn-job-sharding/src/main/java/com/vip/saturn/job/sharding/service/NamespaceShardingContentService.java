@@ -1,25 +1,17 @@
 package com.vip.saturn.job.sharding.service;
 
 import com.google.common.collect.Maps;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * @author hebelala
@@ -67,8 +59,8 @@ public class NamespaceShardingContentService {
 				end = length;
 			}
 			byte[] subBytes = Arrays.copyOfRange(shardingContentBytes, start, end);
-			curatorFramework.create().forPath(SaturnExecutorsNode.getShardingContentElementNodePath(String.valueOf(i)),
-					subBytes);
+			curatorFramework.create()
+					.forPath(SaturnExecutorsNode.getShardingContentElementNodePath(String.valueOf(i)), subBytes);
 		}
 	}
 
@@ -180,13 +172,13 @@ public class NamespaceShardingContentService {
 		Map<String, List<Integer>> shardContent = new HashMap<>();
 		try {
 			// TODO: can change to Jackson ?
-			Map<String, List<Integer>> obj = gson.fromJson(jobNecessaryContent,
-					new TypeToken<Map<String, List<Integer>>>() {
+			Map<String, List<Integer>> obj = gson
+					.fromJson(jobNecessaryContent, new TypeToken<Map<String, List<Integer>>>() {
 					}.getType());
 			shardContent.putAll(obj);
 		} catch (Exception e) {
-			log.warn("get " + jobName + "'s shards from necessary failed, will try to get shards from sharding/content",
-					e);
+			log.warn("deserialize " + jobName
+					+ "'s shards from necessary failed, will try to get shards from sharding/content", e);
 			shardContent.putAll(getShardingItems(jobName));
 		}
 		return shardContent;

@@ -16,7 +16,6 @@ package com.vip.saturn.job.internal.sharding;
 
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
-import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.exception.JobShuttingDownException;
 import com.vip.saturn.job.internal.election.LeaderElectionService;
 import com.vip.saturn.job.internal.execution.ExecutionService;
@@ -134,7 +133,7 @@ public class ShardingService extends AbstractSaturnService {
 		if (getJobNodeStorage().isJobNodeExisted(ShardingNode.NECESSARY)) {
 			getDataStat = getNecessaryDataStat();
 		}
-		// sharding neccessary内容为空，或者内容是"0"则返回，否则，需要进行sharding处理
+		// sharding necessary内容为空，或者内容是"0"则返回，否则，需要进行sharding处理
 		if (getDataStat == null || SHARDING_UN_NECESSARY.equals(getDataStat.getData())) {
 			return;
 		}
@@ -144,17 +143,17 @@ public class ShardingService extends AbstractSaturnService {
 		}
 		// 如果有作业分片处于running状态则等待（无限期）
 		waitingOtherJobCompleted();
-		// 建立一个临时节点，标记shardig处理中
+		// 建立一个临时节点，标记sharding处理中
 		getJobNodeStorage().fillEphemeralJobNode(ShardingNode.PROCESSING, "");
 		try {
 			// 删除作业下面的所有JobServer的sharding节点
 			clearShardingInfo();
 
-			int retryCount = 3;
+			int maxRetryTime = 3;
+			int retryCount = 0;
 			while (!isShutdown) {
-				boolean needRetry = false;
 				int version = getDataStat.getVersion();
-				// 首先尝试从job/leader/sharding/neccessary节点获取，如果失败，会从$SaturnExecutors/sharding/content下面获取
+				// 首先尝试从job/leader/sharding/necessary节点获取，如果失败，会从$SaturnExecutors/sharding/content下面获取
 				// key is executor, value is sharding items
 				Map<String, List<Integer>> shardingItems = namespaceShardingContentService
 						.getShardContent(jobName, getDataStat.getData());
@@ -171,27 +170,42 @@ public class ShardingService extends AbstractSaturnService {
 							.forPath(JobNodePath.getNodeFullPath(jobName, ShardingNode.NECESSARY),
 									SHARDING_UN_NECESSARY.getBytes(StandardCharsets.UTF_8)).and();
 					curatorTransactionFinal.commit();
+					break;
 				} catch (BadVersionException e) {
-					LogUtils.warn(log, jobName, "zookeeper bad version exception happens.", e);
-					needRetry = true;
-					retryCount--;
-				} catch (Exception e) {
-					// 可能多个sharding task导致计算结果有滞后，但是server机器已经被删除，导致commit失败
-					// 实际上可能不影响最终结果，仍然能正常分配分片，因为还会有resharding事件被响应
-					// 修改日志级别为warn级别，避免不必要的告警
-					LogUtils.warn(log, jobName, "Commit shards failed", e);
-				}
-				if (needRetry) {
-					if (retryCount >= 0) {
+					LogUtils.warn(log, jobName, "zookeeper bad version exception happens", e);
+					if (++retryCount <= maxRetryTime) {
 						LogUtils.info(log, jobName,
-								"Bad version because of concurrency, will retry to get shards later");
+								"bad version because of concurrency, will retry to get shards from sharding/necessary later");
 						Thread.sleep(200L); // NOSONAR
 						getDataStat = getNecessaryDataStat();
-					} else {
-						LogUtils.warn(log, jobName, "Bad version because of concurrency, give up to retry");
-						break;
 					}
-				} else {
+				} catch (Exception e) {
+					LogUtils.warn(log, jobName, "commit shards failed", e);
+					/**
+					 * 已知场景：
+					 *   异常为NoNodeException，域下作业数量大，业务容器上下线。
+					 *   原因是，大量的sharding task导致计算结果有滞后，同时某些server被删除，导致commit失败，报NoNode异常。
+					 *
+					 * 是否需要重试：
+					 *   如果作业一直处于启用状态，necessary最终会被更新正确，这时不需要主动重试。 如果重试，可能导致提前拿到数据，后面再重新拿一次数据，不过也没多大问题。
+					 *   如果作业在中途禁用了，那么necessary将不会被更新，这时从necessary拿到的数据是过时的，仍然会commit失败，这时需要从content获取数据来重试。
+					 *   如果是其他未知场景导致的commit失败，也是可以尝试从content获取数据来重试。
+					 *   所以，为了保险起见，均从content获取数据来重试。
+					 */
+					if (++retryCount <= maxRetryTime) {
+						LogUtils.info(log, jobName, "unexpected error, will retry to get shards from sharding/content later");
+						// 睡一下，没必要马上重试。减少对zk的压力。
+						Thread.sleep(200L); // NOSONAR
+						/**
+						 * 注意：
+						 *   data为x，是为了使得反序列化失败，然后从sharding/content下获取数据。
+						 *   version使用necessary的version。
+						 */
+						getDataStat = new GetDataStat("x", version);
+					}
+				}
+				if (retryCount > maxRetryTime) {
+					LogUtils.warn(log, jobName, "retry time exceed {}, will give up to get shards", maxRetryTime);
 					break;
 				}
 			}
