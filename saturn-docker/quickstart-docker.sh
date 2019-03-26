@@ -6,8 +6,7 @@
 #VERSION=LATEST
 #REPO=snapshots
 
-#get the 3.1.0 release
-VERSION=3.1.0
+VERSION=3.3.1
 REPO=releases
 
 EXECUTOR_DL_URL="https://oss.sonatype.org/service/local/artifact/maven/content?r=${REPO}&g=com.vip.saturn&a=saturn-executor&v=${VERSION}&e=zip&c=zip"

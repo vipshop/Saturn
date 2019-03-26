@@ -2,13 +2,11 @@ DROP DATABASE IF EXISTS `saturn_console`;
 CREATE DATABASE `saturn_console` default charset utf8 COLLATE utf8_general_ci;
 USE saturn_console;
 
-
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
 -- Table structure for `job_config`
 -- ----------------------------
-DROP TABLE IF EXISTS `job_config`;
 CREATE TABLE `job_config` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
   `job_name` varchar(255) NOT NULL COMMENT '作业名称',
@@ -67,7 +65,6 @@ CREATE TABLE `job_config` (
 -- ----------------------------
 -- Table structure for `job_config_history`
 -- ----------------------------
-DROP TABLE IF EXISTS `job_config_history`;
 CREATE TABLE `job_config_history` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '作业ID主键',
   `job_name` varchar(255) NOT NULL COMMENT '作业名称',
@@ -123,7 +120,6 @@ CREATE TABLE `job_config_history` (
 -- ----------------------------
 -- Table structure for `saturn_statistics`
 -- ----------------------------
-DROP TABLE IF EXISTS `saturn_statistics`;
 CREATE TABLE `saturn_statistics` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '统计表主键ID',
   `name` varchar(255) NOT NULL COMMENT '统计名称，例如top10FailJob',
@@ -135,7 +131,6 @@ CREATE TABLE `saturn_statistics` (
 -- ----------------------------
 -- Table structure for `namespace_info`
 -- ----------------------------
-DROP TABLE IF EXISTS `namespace_info`;
 CREATE TABLE `namespace_info` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
@@ -153,7 +148,6 @@ CREATE TABLE `namespace_info` (
 -- ----------------------------
 -- Table structure for `sys_config`
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_config`;
 CREATE TABLE `sys_config` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `property` varchar(255) NOT NULL COMMENT '属性名',
@@ -165,7 +159,6 @@ CREATE TABLE `sys_config` (
 -- ----------------------------
 -- Table structure for `zk_cluster_info`
 -- ----------------------------
-DROP TABLE IF EXISTS `zk_cluster_info`;
 CREATE TABLE `zk_cluster_info` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
@@ -184,7 +177,6 @@ CREATE TABLE `zk_cluster_info` (
 -- ----------------------------
 -- Table structure for `namespace_zkcluster_mapping`
 -- ----------------------------
-DROP TABLE IF EXISTS `namespace_zkcluster_mapping`;
 CREATE TABLE `namespace_zkcluster_mapping` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
@@ -200,7 +192,6 @@ CREATE TABLE `namespace_zkcluster_mapping` (
   KEY `idx_zk_cluster_key` (`zk_cluster_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名集群映射表';
 
-DROP TABLE IF EXISTS `release_version_info`;
 CREATE TABLE `release_version_info` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `version_number` varchar(255) NOT NULL DEFAULT '' COMMENT '版本号',
@@ -215,10 +206,10 @@ CREATE TABLE `release_version_info` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_rvi_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Saturn发布版本信息表';
- 
-DROP TABLE IF EXISTS `namespace_version_mapping`;
+
+
 CREATE TABLE `namespace_version_mapping` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主 键',
   `namespace` varchar(255) NOT NULL DEFAULT '' COMMENT '域名',
   `version_number` varchar(255) NOT NULL DEFAULT '' COMMENT '版本号',
   `is_forced` tinyint(1) DEFAULT '0' COMMENT '当前版本已经不低于该版本时，是否强制使用该配置版本：0，不强制；1，强制',
@@ -232,7 +223,7 @@ CREATE TABLE `namespace_version_mapping` (
   KEY `idx_nvm_version_number` (`version_number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='域名版本配置表';
 
-DROP TABLE IF EXISTS `temporary_shared_status`;
+
 CREATE TABLE `temporary_shared_status` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `status_key` varchar(255) NOT NULL DEFAULT '' COMMENT '状态键',
@@ -330,16 +321,6 @@ INSERT INTO `user_role`(`user_name`, `role_key`, `need_approval`) VALUES('admin'
 INSERT INTO `role`(`role_key`) VALUES('system_admin');
 INSERT INTO `role`(`role_key`) VALUES('namespace_developer');
 INSERT INTO `role`(`role_key`) VALUES('namespace_admin');
-
-ALTER TABLE `role` ADD `is_relating_to_namespace` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否关联域：0，不关联；1，关联';
-ALTER TABLE `user_role` ADD KEY `idx_user_role_u_r_n_n_i` (`user_name`, `role_key`, `namespace`, `need_approval`, `is_deleted`);
-ALTER TABLE `user_role` ADD KEY `idx_user_role_r_n_n_i` (`role_key`, `namespace`, `need_approval`, `is_deleted`);
-ALTER TABLE `user_role` ADD KEY `idx_user_role_n_n_i` (`namespace`, `need_approval`, `is_deleted`);
-ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_deleted`);
-
-UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHERE `role_key`='system_admin';
-UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
-UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
 
 INSERT INTO `permission`(`permission_key`) VALUES('job:enable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchEnable');
@@ -440,6 +421,54 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_ad
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'executor:shardAllAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setAbnormalJobRead');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'alarmCenter:setTimeout4AlarmJobRead');
+
+-- 3.0.1 update
+ALTER TABLE `role` ADD `is_relating_to_namespace` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否关联域：0，不关联；1，关联';
+ALTER TABLE `user_role` ADD KEY `idx_user_role_u_r_n_n_i` (`user_name`, `role_key`, `namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_r_n_n_i` (`role_key`, `namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_n_n_i` (`namespace`, `need_approval`, `is_deleted`);
+ALTER TABLE `user_role` ADD KEY `idx_user_role_n_i` (`need_approval`, `is_deleted`);
+
+UPDATE `role` SET `role_name`='系统管理', `is_relating_to_namespace`='0' WHERE `role_key`='system_admin';
+UPDATE `role` SET `role_name`='域开发管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_developer';
+UPDATE `role` SET `role_name`='域管理', `is_relating_to_namespace`='1' WHERE `role_key`='namespace_admin';
+
+-- 3.2.0 update
+ALTER TABLE `job_config` ADD `rerun` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否重跑标志';
+
+-- 3.3.0 update
+ALTER TABLE `zk_cluster_info` ADD `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '集群描述';
+ALTER TABLE `job_config` ADD `up_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '上游作业',ADD `down_stream` VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '下游作业';
+ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
+
+CREATE TABLE `saturn_dashboard_history` (
+  `id` BIGINT(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `zk_cluster` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '所属zk集群',
+  `record_type` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '类型',
+  `topic` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '主题',
+  `content` LONGTEXT  COMMENT '内容',
+  `record_date` DATE  COMMENT '记录日期',
+  `created_by` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近一次的更新时间',
+  `is_deleted` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_dashboard_history_zk_cluster_record_type_topic_record_date` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
+
+
+
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_JOB_NUM', '100');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('INTERVAL_TIME_OF_ENABLED_REPORT', '5');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('ALARM_RAISED_ON_EXECUTOR_RESTART', 'false');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('MAX_SECONDS_FORCE_KILL_EXECUTOR', '300');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('AUTHORIZATION_ENABLED', 'false');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING', 'default:/default');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
+INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
+
 
 #data
 INSERT INTO `zk_cluster_info`(`zk_cluster_key`, `alias`, `connect_string`) VALUES('cluster1', '集群1', 'console:2181');
