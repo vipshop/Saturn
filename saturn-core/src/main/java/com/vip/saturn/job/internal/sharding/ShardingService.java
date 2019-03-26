@@ -220,7 +220,7 @@ public class ShardingService extends AbstractSaturnService {
 	/**
 	 * <p>如果不是leader，等待leader分片完成，返回true；如果期间变为leader，返回false。
 	 * <p>
-	 *     TODO：如果业务运行时间很快，以至于在followers waitingShortTime的期间，其他分片已经运行完，并且leader crash并当前follower变为leader了。
+	 *     TODO：如果业务运行时间很快，以至于在followers waitingShortTime的100ms期间，其他分片已经运行完，并且leader crash并当前follower变为leader了。
 	 *     		这种情况，如果返回false，则当前线程作为leader获取分片完，会再次跑业务。 这可能不被期望。
 	 *     		所以，最好是能有全局的作业级别轮次锁定。
 	 * @return true or false
