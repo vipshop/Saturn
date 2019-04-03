@@ -69,7 +69,7 @@ public class NamespaceServiceImpl implements NamespaceService {
 		}
 		if (StringUtils.equals(srcNamespace, destNamespace)) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
-					"destNamespace and destNamespace should be difference");
+					"srcNamespace and destNamespace should be difference");
 		}
 
 		try {

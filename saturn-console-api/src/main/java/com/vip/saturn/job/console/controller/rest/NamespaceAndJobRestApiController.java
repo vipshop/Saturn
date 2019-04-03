@@ -2,11 +2,10 @@ package com.vip.saturn.job.console.controller.rest;
 
 import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
-import com.vip.saturn.job.console.domain.NamespaceDomainInfo;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.mybatis.entity.NamespaceZkClusterMapping;
 import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository;
+import com.vip.saturn.job.console.service.NamespaceAndJobService;
 import com.vip.saturn.job.console.service.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +31,9 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 	@Autowired
 	private NamespaceZkClusterMappingRepository namespaceZkClusterMappingRepository;
 
+	@Autowired
+	private NamespaceAndJobService namespaceAndJobService;
+
 	@Audit(type = AuditType.REST)
 	@RequestMapping(value = "/namespaces/createNamespaceAndImportJobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Object> create(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
@@ -50,24 +52,33 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 				throw new SaturnJobConsoleException("srcNamespace is empty");
 			}
 			String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
-			NamespaceZkClusterMapping mapping = namespaceZkClusterMappingRepository.selectByNamespace(srcNamespace);
-			if (mapping == null) {
-				throw new SaturnJobConsoleException("no zkcluster mapping is not found");
-			}
-
-			NamespaceDomainInfo namespaceInfo = new NamespaceDomainInfo();
-			namespaceInfo.setNamespace(namespace);
-			namespaceInfo.setZkCluster(zkClusterName);
-			namespaceInfo.setContent("");
-
-			registryCenterService.createNamespace(namespaceInfo);
-			registryCenterService.refreshRegistryCenterForNamespace(zkClusterName, srcNamespace);
-			namespaceService.importJobsFromNamespaceToNamespace(srcNamespace, namespace, createBy);
+			namespaceAndJobService.createNamespaceAndCloneJobs(srcNamespace, namespace, zkClusterName, createBy);
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new SaturnJobConsoleHttpException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), e);
 		}
+	}
+
+	@Audit(type = AuditType.REST)
+	@RequestMapping(value = "/namespaces/asyncCreateNamespaceAndImportJobs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Object> asyncCreate(@RequestBody Map<String, Object> reqParams, HttpServletRequest request)
+			throws SaturnJobConsoleException {
+		String namespace = checkAndGetParametersValueAsString(reqParams, "namespace", true);
+		if (StringUtils.isEmpty(namespace)) {
+			throw new SaturnJobConsoleException("namespace is empty");
+		}
+		String zkClusterName = checkAndGetParametersValueAsString(reqParams, "zkCluster", true);
+		if (StringUtils.isEmpty(zkClusterName)) {
+			throw new SaturnJobConsoleException("zkCluster is empty");
+		}
+		String srcNamespace = checkAndGetParametersValueAsString(reqParams, "srcNamespace", true);
+		if (StringUtils.isEmpty(srcNamespace)) {
+			throw new SaturnJobConsoleException("srcNamespace is empty");
+		}
+		String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
+		namespaceAndJobService.aysncCreateNamespaceAndCloneJobs(srcNamespace, namespace, zkClusterName, createBy);
+		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 }
