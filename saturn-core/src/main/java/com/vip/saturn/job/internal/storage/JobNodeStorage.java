@@ -14,7 +14,6 @@
 
 package com.vip.saturn.job.internal.storage;
 
-import com.vip.saturn.job.basic.SaturnConstant;
 import com.vip.saturn.job.exception.JobException;
 import com.vip.saturn.job.internal.config.JobConfiguration;
 import com.vip.saturn.job.internal.server.ServerNode;
@@ -27,6 +26,7 @@ import com.vip.saturn.job.utils.LogUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -325,9 +325,20 @@ public class JobNodeStorage {
 		try {
 			newZk.init(); // maybe throw RuntimeException
 			newZk.remove(ServerNode.getServerNode(jobName, executorName));
+
+			String fullPath = JobNodePath.getJobNameFullPath(jobConfiguration.getJobName());
+			Stat stat = newZk.getStat(fullPath);
+			if (stat == null) {
+				return;
+			}
+			long ctime = stat.getCtime();
 			for (int i = 0; i < MAX_DELETE_RETRY_TIMES; i++) {
-				String fullPath = JobNodePath.getJobNameFullPath(jobConfiguration.getJobName());
-				if (!newZk.isExisted(fullPath)) {
+				stat = newZk.getStat(fullPath);
+				if (stat == null) {
+					return;
+				}
+				if (stat.getCtime() != ctime) {
+					LogUtils.info(log, jobName, "the job node ctime has changed, give up to delete");
 					return;
 				}
 				List<String> servers = newZk.getChildrenKeys(ServerNode.getServerRoot(jobName));

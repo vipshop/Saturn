@@ -29,6 +29,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,6 +244,17 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
 			// CHECKSTYLE:ON
 			RegExceptionHandler.handleException(ex);
 			return false;
+		}
+	}
+
+	public Stat getStat(final String key) {
+		try {
+			return client.checkExists().forPath(key);
+			// CHECKSTYLE:OFF
+		} catch (final Exception ex) {
+			// CHECKSTYLE:ON
+			RegExceptionHandler.handleException(ex);
+			return null;
 		}
 	}
 
