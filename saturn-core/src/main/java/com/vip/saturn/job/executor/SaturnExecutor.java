@@ -186,11 +186,38 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
-		init(executorName, namespace, executorClassLoader, jobClassLoader);
+
+		ClassLoader customerJobClassLoader = getCustomerJobClassLoader(jobClassLoader) != null ?
+				getCustomerJobClassLoader(jobClassLoader) :
+				jobClassLoader;
+
+		init(executorName, namespace, executorClassLoader, customerJobClassLoader);
 		if (saturnApplication == null) {
-			saturnApplication = validateAndLoadSaturnApplication(jobClassLoader);
+			saturnApplication = validateAndLoadSaturnApplication(customerJobClassLoader);
 		}
-		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader, saturnApplication);
+		return new SaturnExecutor(namespace, executorName, executorClassLoader, customerJobClassLoader, saturnApplication);
+	}
+
+	private static ClassLoader getCustomerJobClassLoader(ClassLoader jobClassLoader){
+		Thread.currentThread().setContextClassLoader(jobClassLoader);
+		ClassLoader customerClassLoader = null;
+		try {
+			Properties properties = getSaturnProperty(jobClassLoader);
+			if (properties == null) {
+				return null;
+			}
+			String jobClassLoaderClassStr = properties.getProperty("app.jobClassLoaderClass");
+			String jobClassLoaderMethodStr = properties.getProperty("app.jobClassLoaderMethod");
+			if (StringUtils.isBlank(jobClassLoaderClassStr) || StringUtils.isBlank(jobClassLoaderMethodStr)) {
+				return null;
+			}
+
+			Class customerClClass = jobClassLoader.loadClass(jobClassLoaderClassStr);
+			customerClassLoader = (ClassLoader) customerClClass.getMethod(jobClassLoaderMethodStr).invoke(null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return customerClassLoader;
 	}
 
 	/*
