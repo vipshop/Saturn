@@ -36,7 +36,7 @@ public class UpdateJobCronUtils {
 			String consoleUri = SystemEnvProperties.VIP_SATURN_CONSOLE_URI_LIST.get(i);
 			String targetUrl = consoleUri + "/rest/v1/" + namespace + "/jobs/" + jobName + "/cron";
 
-			LogUtils.error(log, jobName, "update job cron of domain {} to url {}: {}, retry count: {}", namespace,
+			LogUtils.info(log, jobName, "update job cron of domain {} to url {}: {}, retry count: {}", namespace,
 					targetUrl, cron, i);
 
 			CloseableHttpClient httpClient = null;
