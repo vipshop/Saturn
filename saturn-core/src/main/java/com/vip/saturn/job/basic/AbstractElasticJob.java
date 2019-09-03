@@ -210,11 +210,11 @@ public abstract class AbstractElasticJob implements Stoppable {
 						continue;
 					}
 					if (!aborted) {
-						executionService
-								.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
-					}
-					if (isFailoverSupported() && configService.isFailover()) {
-						failoverService.updateFailoverComplete(item);
+						executionService.registerJobCompletedByItem(shardingContext, item,
+								nextFireTimePausePeriodEffected);
+						if (isFailoverSupported() && configService.isFailover()) {
+							failoverService.updateFailoverComplete(item);
+						}
 					}
 				}
 			}
@@ -295,8 +295,8 @@ public abstract class AbstractElasticJob implements Stoppable {
 				long ephemeralOwner = itemStat.getEphemeralOwner();
 				if (ephemeralOwner != sessionId) {
 					LogUtils.info(log, jobName,
-							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk "
-									+ "sessionid is {}", item, ephemeralOwner, sessionId);
+							"item={} 's running node doesn't belong to current zk, node sessionid is {}, current zk sessionid is {}",
+							item, ephemeralOwner, sessionId);
 					return false;
 				} else {
 					return true;
