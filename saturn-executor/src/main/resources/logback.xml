@@ -7,7 +7,7 @@
     <property name="log.maxIndex" value="${saturn.log.maxIndex:-10}"/>
     <property name="log.pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] [%thread] [%logger{50}] >>> %msg%n"/>
     <property name="log.error.log.level" value="WARN"/>
-    <property name="log.async.queue.size" value="1024"/>
+    <property name="log.async.queue.size" value="40960"/>
 
     <contextName>${log.context.name}</contextName>
 
@@ -35,8 +35,7 @@
 
     <!-- Asynchronized log, for FILE only -->
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
-        <!-- Don't discard log, logback will discard TRACE, DEBUG, INFO log when queue 80% capacity reached by default. -->
-        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
         <queueSize>${log.async.queue.size}</queueSize>
         <appender-ref ref="FILE"/>
     </appender>
