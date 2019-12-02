@@ -34,8 +34,7 @@ public class AbstractController {
 	public static String checkAndGetParametersValueAsString(Map<String, Object> map, String key, boolean isMandatory)
 			throws SaturnJobConsoleException {
 		if (map.containsKey(key)) {
-			String value = (String) map.get(key);
-			return StringUtils.isBlank(value) ? null : value;
+			return (String) map.get(key);
 		} else {
 			if (isMandatory) {
 				throw new SaturnJobConsoleHttpException(HttpStatus.BAD_REQUEST.value(),
