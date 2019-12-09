@@ -66,13 +66,16 @@
         from job_config
         <where>
             namespace = #{namespace,jdbcType=VARCHAR}
-            <if test="condition.groups != null">
+            <!-- modified by cobin.chen at 2019.12.9 to support mulit-group -->
+            <if test="condition.groups != null and condition.groups != ''">
                 and (
-                groups = #{condition.groups}
-                <if test="condition.groups == ''">
-                    or groups is NULL
-                </if>
+                    <foreach collection="condition.groups.split(',')" item="item" separator="or">
+                        FIND_IN_SET(#{item}, groups)
+                    </foreach>
                 )
+            </if>
+            <if test="condition.groups != null and condition.groups == ''">
+                and groups is NULL
             </if>
             <if test="condition.isEnabled != null">
                 and is_enabled = #{condition.isEnabled}

@@ -143,10 +143,10 @@ public class JobServiceImpl implements JobService {
 		return isAllShardsFinished;
 	}
 
-
+	// updated by cobin.chen at 2019.12.9
 	@Override
 	public List<String> getGroups(String namespace) throws SaturnJobConsoleException {
-		List<String> groups = new ArrayList<>();
+		Set<String> groups = new HashSet<>();
 		List<JobConfig> unSystemJobs = getUnSystemJobs(namespace);
 		if (unSystemJobs != null) {
 			for (JobConfig jobConfig : unSystemJobs) {
@@ -154,12 +154,13 @@ public class JobServiceImpl implements JobService {
 				if (StringUtils.isBlank(jobGroups)) {
 					jobGroups = SaturnConstants.NO_GROUPS_LABEL;
 				}
-				if (!groups.contains(jobGroups)) {
-					groups.add(jobGroups);
-				}
+				String[] groupArray = jobGroups.replaceAll("\\s*", "").split(",");
+				groups.addAll(Arrays.asList(groupArray));
 			}
 		}
-		return groups;
+		ArrayList<String> groupList = new ArrayList<>(groups);
+		Collections.sort(groupList);
+		return groupList;
 	}
 
 	@Transactional(rollbackFor = Exception.class)
