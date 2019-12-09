@@ -40,15 +40,15 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 			throws SaturnJobConsoleException {
 		try {
 			String namespace = checkAndGetParametersValueAsString(reqParams, "namespace", true);
-			if (StringUtils.isEmpty(namespace)) {
+			if (StringUtils.isBlank(namespace)) {
 				throw new SaturnJobConsoleException("namespace is empty");
 			}
 			String zkClusterName = checkAndGetParametersValueAsString(reqParams, "zkCluster", true);
-			if (StringUtils.isEmpty(zkClusterName)) {
+			if (StringUtils.isBlank(zkClusterName)) {
 				throw new SaturnJobConsoleException("zkCluster is empty");
 			}
 			String srcNamespace = checkAndGetParametersValueAsString(reqParams, "srcNamespace", true);
-			if (StringUtils.isEmpty(srcNamespace)) {
+			if (StringUtils.isBlank(srcNamespace)) {
 				throw new SaturnJobConsoleException("srcNamespace is empty");
 			}
 			String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
