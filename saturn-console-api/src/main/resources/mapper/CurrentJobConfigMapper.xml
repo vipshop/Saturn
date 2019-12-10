@@ -66,7 +66,6 @@
         from job_config
         <where>
             namespace = #{namespace,jdbcType=VARCHAR}
-            <!-- modified by cobin.chen at 2019.12.9 to support mulit-group -->
             <if test="condition.groups != null and condition.groups != ''">
                 and (
                     <foreach collection="condition.groups.split(',')" item="item" separator="or">

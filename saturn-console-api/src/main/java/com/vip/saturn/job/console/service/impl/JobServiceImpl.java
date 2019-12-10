@@ -143,7 +143,6 @@ public class JobServiceImpl implements JobService {
 		return isAllShardsFinished;
 	}
 
-	// updated by cobin.chen at 2019.12.9
 	@Override
 	public List<String> getGroups(String namespace) throws SaturnJobConsoleException {
 		Set<String> groups = new HashSet<>();
