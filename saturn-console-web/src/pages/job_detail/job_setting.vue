@@ -149,7 +149,9 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="groups" label="所属分组">
-                                    <el-input v-model="jobSettingInfo.groups"></el-input>
+                                    <el-select style="width: 100%;" placeholder="请选择分组" filterable allow-create multiple v-model="jobSettingInfo.groups">
+                                        <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
+                                    </el-select>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -293,6 +295,7 @@ export default {
       preferListProvidedArray: [],
       isArrangeLayoutVisible: false,
       arrangeLayoutInfo: {},
+      groupList: [],
     };
   },
   methods: {
@@ -328,13 +331,17 @@ export default {
     updateInfo() {
       this.$refs.jobSettingInfo.validate((valid) => {
         if (valid) {
+          const paramsInfo = JSON.parse(JSON.stringify(this.jobSettingInfo));
+          if (paramsInfo.groups.length > 0) {
+            this.$set(paramsInfo, 'groups', paramsInfo.groups.join(','));
+          }
           if (this.validateLocalMode()) {
-            if (this.jobSettingInfo.localMode) {
-              this.jobSettingInfo.shardingTotalCount = 1;
+            if (paramsInfo.localMode) {
+              paramsInfo.shardingTotalCount = 1;
             }
             if (this.validateShardingParamsNumber()) {
               if (this.validateShardingParam()) {
-                this.jobSettingInfoRequest();
+                this.jobSettingInfoRequest(paramsInfo);
               } else {
                 this.$message.errorMessage('请正确输入分片参数!');
               }
@@ -347,17 +354,18 @@ export default {
         }
       });
     },
-    jobSettingInfoRequest() {
-      if (this.jobSettingInfo.preferList.length > 0) {
-        this.jobSettingInfo.preferList.forEach((ele1, index1) => {
-          this.jobSettingInfo.preferListProvided.forEach((ele2) => {
+    jobSettingInfoRequest(paramsInfo) {
+      if (paramsInfo.preferList.length > 0) {
+        paramsInfo.preferList.forEach((ele1, index1) => {
+          paramsInfo.preferListProvided.forEach((ele2) => {
             if (ele1 === ele2.executorName && ele2.type === 'DOCKER') {
-              this.jobSettingInfo.preferList[index1] = `@${ele1}`;
+              // eslint-disable-next-line no-param-reassign
+              paramsInfo.preferList[index1] = `@${ele1}`;
             }
           });
         });
       }
-      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, paramsInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
       })
@@ -419,12 +427,20 @@ export default {
         domainName: this.domainName,
         jobName: this.jobName,
       };
-      this.loading = true;
       this.$store.dispatch('setJobInfo', params).then((resp) => {
         console.log(resp);
       })
-      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'))
-      .finally(() => {
+      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'));
+    },
+    getGroupList() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
+        this.groupList = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getGroupList()]).then(() => {
         this.loading = false;
       });
     },
@@ -545,6 +561,9 @@ export default {
         }
       },
     },
+  },
+  created() {
+    this.init();
   },
 };
 </script>

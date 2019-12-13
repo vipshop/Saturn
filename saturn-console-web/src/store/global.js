@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 import * as types from './types';
 import Http from '../utils/request';
+import ArrayMethod from '../utils/array';
 
 export default {
   state: {
@@ -84,6 +85,7 @@ export default {
     },
     [types.SET_JOB_INFO]({ commit }, jobInfoParams) {
       return Http.get(`/console/namespaces/${jobInfoParams.domainName}/jobs/${jobInfoParams.jobName}/config`).then((data) => {
+        data.groups = ArrayMethod.strToArray(data.groups);
         commit(types.SET_JOB_INFO, data);
         return data;
       });
