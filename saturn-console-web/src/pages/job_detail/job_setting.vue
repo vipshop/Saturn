@@ -149,9 +149,27 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="groups" label="所属分组">
-                                    <el-select style="width: 100%;" placeholder="请选择分组" filterable allow-create multiple v-model="jobSettingInfo.groups">
-                                        <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
-                                    </el-select>
+                                    <el-tag
+                                      :key="group"
+                                      v-for="group in jobSettingInfo.groups"
+                                      type="primary"
+                                      closable
+                                      :disable-transitions="false"
+                                      style="margin: 0 3px 3px 0;"
+                                      @close="handleDeleteGroup(group)">
+                                      {{group}}
+                                    </el-tag>
+                                    <el-autocomplete
+                                      v-if="inputGroupVisible"
+                                      v-model="groupSelected"
+                                      ref="saveGroupInput"
+                                      :fetch-suggestions="querySearchGroups"
+                                      placeholder="请添加或选择分组"
+                                      @select="handleInputGroup"
+                                      @keyup.enter.native="handleInputGroup"
+                                    >
+                                    </el-autocomplete>
+                                    <el-button v-else size="small" @click="showInput">+ 分组</el-button>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -295,10 +313,48 @@ export default {
       preferListProvidedArray: [],
       isArrangeLayoutVisible: false,
       arrangeLayoutInfo: {},
+      inputGroupVisible: false,
+      groupSelected: '',
       groupList: [],
     };
   },
   methods: {
+    handleDeleteGroup(group) {
+      this.jobSettingInfo.groups.splice(this.jobSettingInfo.groups.indexOf(group), 1);
+    },
+    showInput() {
+      this.inputGroupVisible = true;
+      this.$nextTick(() => {
+        this.$refs.saveGroupInput.$refs.input.focus();
+      });
+    },
+    handleInputGroup() {
+      const groupSelected = this.groupSelected;
+      if (groupSelected) {
+        if (groupSelected.length > 10) {
+          this.$message.errorMessage('分组名称不能超过10个字符');
+        } else {
+          // eslint-disable-next-line no-lonely-if
+          if (this.jobSettingInfo.groups.includes(groupSelected)) {
+            this.$message.errorMessage('该分组已被选择！');
+          } else {
+            this.jobSettingInfo.groups.push(groupSelected);
+          }
+        }
+      }
+      this.inputGroupVisible = false;
+      this.groupSelected = '';
+    },
+    querySearchGroups(queryString, cb) {
+      const groupList = this.groupList;
+      const results = queryString ?
+      groupList.filter(this.createStateFilter(queryString)) : groupList;
+      cb(results);
+    },
+    createStateFilter(queryString) {
+      return state =>
+        state.value.indexOf(queryString) >= 0;
+    },
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
@@ -434,7 +490,11 @@ export default {
     },
     getGroupList() {
       return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
-        this.groupList = data;
+        this.groupList = data.map((obj) => {
+          const rObj = {};
+          rObj.value = obj;
+          return rObj;
+        });
       })
       .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); });
     },

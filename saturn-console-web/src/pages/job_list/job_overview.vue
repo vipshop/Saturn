@@ -23,12 +23,12 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 170px;" placeholder="请选择分组" multiple collapse-tags v-model="filters.groups.value" @change="scope.search">
+                            <el-select style="width: 250px;" placeholder="请选择分组" multiple collapse-tags v-model="filters.groups.value" @change="scope.search">
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 170px;" v-model="filters.status.value" @change="scope.search">
+                            <el-select style="width: 140px;" v-model="filters.status.value" @change="scope.search">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
@@ -93,7 +93,7 @@
                             </el-table-column>
                             <el-table-column prop="groups" label="分组">
                                 <template slot-scope="scope"> 
-                                    <el-tag type="success" size="mini" style="margin-right: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
+                                    <el-tag type="success" size="mini" style="margin-right: 3px;margin-bottom: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
