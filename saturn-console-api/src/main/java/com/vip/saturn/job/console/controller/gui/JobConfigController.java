@@ -10,7 +10,6 @@ import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +40,7 @@ public class JobConfigController extends AbstractGUIController {
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping
-	public ResponseEntity updateJobConfig(final HttpServletRequest request,
+	public SuccessResponseEntity updateJobConfig(final HttpServletRequest request,
 			@AuditParam("namespace") @PathVariable String namespace,
 			@AuditParam("jobName") @PathVariable String jobName, UpdateJobConfigVo updateJobConfigVo)
 			throws SaturnJobConsoleException {
