@@ -149,7 +149,27 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="groups" label="所属分组">
-                                    <el-input v-model="jobSettingInfo.groups"></el-input>
+                                    <el-tag
+                                      :key="group"
+                                      v-for="group in jobSettingInfo.groups"
+                                      type="primary"
+                                      closable
+                                      :disable-transitions="false"
+                                      style="margin: 0 3px 3px 0;"
+                                      @close="handleDeleteGroup(group)">
+                                      {{group}}
+                                    </el-tag>
+                                    <el-autocomplete
+                                      v-if="inputGroupVisible"
+                                      v-model="groupSelected"
+                                      ref="saveGroupInput"
+                                      :fetch-suggestions="querySearchGroups"
+                                      placeholder="请添加或选择分组"
+                                      @select="handleInputGroup"
+                                      @keyup.enter.native="handleInputGroup"
+                                    >
+                                    </el-autocomplete>
+                                    <el-button v-else size="small" @click="showInput">+ 分组</el-button>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -293,9 +313,48 @@ export default {
       preferListProvidedArray: [],
       isArrangeLayoutVisible: false,
       arrangeLayoutInfo: {},
+      inputGroupVisible: false,
+      groupSelected: '',
+      groupList: [],
     };
   },
   methods: {
+    handleDeleteGroup(group) {
+      this.jobSettingInfo.groups.splice(this.jobSettingInfo.groups.indexOf(group), 1);
+    },
+    showInput() {
+      this.inputGroupVisible = true;
+      this.$nextTick(() => {
+        this.$refs.saveGroupInput.$refs.input.focus();
+      });
+    },
+    handleInputGroup() {
+      const groupSelected = this.groupSelected;
+      if (groupSelected) {
+        if (groupSelected.length > 10) {
+          this.$message.errorMessage('分组名称不能超过10个字符');
+        } else {
+          // eslint-disable-next-line no-lonely-if
+          if (this.jobSettingInfo.groups.includes(groupSelected)) {
+            this.$message.errorMessage('该分组已被选择！');
+          } else {
+            this.jobSettingInfo.groups.push(groupSelected);
+          }
+        }
+      }
+      this.inputGroupVisible = false;
+      this.groupSelected = '';
+    },
+    querySearchGroups(queryString, cb) {
+      const groupList = this.groupList;
+      const results = queryString ?
+      groupList.filter(this.createStateFilter(queryString)) : groupList;
+      cb(results);
+    },
+    createStateFilter(queryString) {
+      return state =>
+        state.value.indexOf(queryString) >= 0;
+    },
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;
@@ -328,13 +387,17 @@ export default {
     updateInfo() {
       this.$refs.jobSettingInfo.validate((valid) => {
         if (valid) {
+          const paramsInfo = JSON.parse(JSON.stringify(this.jobSettingInfo));
+          if (paramsInfo.groups.length > 0) {
+            this.$set(paramsInfo, 'groups', paramsInfo.groups.join(','));
+          }
           if (this.validateLocalMode()) {
-            if (this.jobSettingInfo.localMode) {
-              this.jobSettingInfo.shardingTotalCount = 1;
+            if (paramsInfo.localMode) {
+              paramsInfo.shardingTotalCount = 1;
             }
             if (this.validateShardingParamsNumber()) {
               if (this.validateShardingParam()) {
-                this.jobSettingInfoRequest();
+                this.jobSettingInfoRequest(paramsInfo);
               } else {
                 this.$message.errorMessage('请正确输入分片参数!');
               }
@@ -347,17 +410,18 @@ export default {
         }
       });
     },
-    jobSettingInfoRequest() {
-      if (this.jobSettingInfo.preferList.length > 0) {
-        this.jobSettingInfo.preferList.forEach((ele1, index1) => {
-          this.jobSettingInfo.preferListProvided.forEach((ele2) => {
+    jobSettingInfoRequest(paramsInfo) {
+      if (paramsInfo.preferList.length > 0) {
+        paramsInfo.preferList.forEach((ele1, index1) => {
+          paramsInfo.preferListProvided.forEach((ele2) => {
             if (ele1 === ele2.executorName && ele2.type === 'DOCKER') {
-              this.jobSettingInfo.preferList[index1] = `@${ele1}`;
+              // eslint-disable-next-line no-param-reassign
+              paramsInfo.preferList[index1] = `@${ele1}`;
             }
           });
         });
       }
-      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, this.jobSettingInfo).then(() => {
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, paramsInfo).then(() => {
         this.getJobSettingInfo();
         this.$message.successNotify('更新作业操作成功');
       })
@@ -419,12 +483,24 @@ export default {
         domainName: this.domainName,
         jobName: this.jobName,
       };
-      this.loading = true;
       this.$store.dispatch('setJobInfo', params).then((resp) => {
         console.log(resp);
       })
-      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'))
-      .finally(() => {
+      .catch(() => this.$http.buildErrorHandler('获取作业信息请求失败！'));
+    },
+    getGroupList() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
+        this.groupList = data.map((obj) => {
+          const rObj = {};
+          rObj.value = obj;
+          return rObj;
+        });
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取groups失败！'); });
+    },
+    init() {
+      this.loading = true;
+      Promise.all([this.getGroupList()]).then(() => {
         this.loading = false;
       });
     },
@@ -545,6 +621,9 @@ export default {
         }
       },
     },
+  },
+  created() {
+    this.init();
   },
 };
 </script>

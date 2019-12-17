@@ -23,8 +23,7 @@
                 <template slot-scope="scope">
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.groups.value" @change="scope.search">
-                                <el-option label="全部分组" value=""></el-option>
+                            <el-select style="width: 250px;" placeholder="请选择分组" multiple collapse-tags v-model="filters.groups.value" @change="scope.search">
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
@@ -92,7 +91,11 @@
                                     {{scope.row.description}}
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="groups" label="分组" width="120px"></el-table-column>
+                            <el-table-column prop="groups" label="分组">
+                                <template slot-scope="scope"> 
+                                    <el-tag type="success" size="mini" style="margin-right: 3px;margin-bottom: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
+                                </template>
+                            </el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
                             <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
                                 <template slot-scope="scope">
@@ -169,7 +172,7 @@ export default {
       },
       filters: {
         jobName: { value: '' },
-        groups: { value: '', precise: true },
+        groups: { value: [] },
         status: { value: '', precise: true },
         description: { value: '' },
       },
@@ -439,7 +442,11 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取作业总数失败！'); });
     },
-    getJobList(params) {
+    getJobList(filterParams) {
+      const params = JSON.parse(JSON.stringify(filterParams));
+      if (params.groups && params.groups.length > 0) {
+        this.$set(params, 'groups', params.groups.join(','));
+      }
       this.tableLoading = true;
       this.$http.get(`/console/namespaces/${this.domainName}/jobs`, params).then((data) => {
         this.jobList = data.jobs;

@@ -38,8 +38,16 @@ export default {
       paramsResult.order = this.order;
       if (this.filters) {
         Object.entries(this.filters).forEach((item) => {
-          if (item[1].value !== '' && item[1].value !== undefined) {
-            paramsResult[item[0]] = item[1].value;
+          if (Array.isArray(item[1].value)) {
+            console.log('array', item);
+            if (item[1].value.length > 0) {
+              paramsResult[item[0]] = item[1].value;
+            }
+          } else {
+            // eslint-disable-next-line no-lonely-if
+            if (item[1].value !== '' && item[1].value !== undefined) {
+              paramsResult[item[0]] = item[1].value;
+            }
           }
         });
       }
