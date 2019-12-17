@@ -13,10 +13,11 @@
                                       :style="styleObject"
                                       :index="menu.index" :route="menu">
                             <i :class="menu.icon"></i>
-                            <span class="page-menu-item-title">
-                                {{menu.title}}
-                            </span>
-                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" v-if="menu.alarmCount && !collapse" />
+                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" :max="99" :hidden="!menu.alarmCount || collapse">
+                              <span class="page-menu-item-title">
+                                  {{menu.title}}
+                              </span>
+                            </el-badge>
                         </el-menu-item>
                     </el-menu>
                   </div>
@@ -73,7 +74,7 @@
         if (this.collapse) {
           w = '50px';
         } else {
-          w = '190px';
+          w = '170px';
         }
         return w;
       },
@@ -95,7 +96,7 @@
 }
 .page-sidebar-container {
   .page-sidebar {
-    width: 190px;
+    width: 170px;
     background-color: #283340;
 
     .el-menu {
