@@ -1,7 +1,10 @@
 <template>
     <div class="page-content" v-loading="loading" element-loading-text="请稍等···">
         <el-form :model="jobSettingInfo" :rules="rules" ref="jobSettingInfo" label-width="140px">
-            <el-button type="primary" v-if="$common.hasPerm('job:update', domainName)" @click.stop="updateInfo" style="margin-bottom: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+            <div v-if="$common.hasPerm('job:update', domainName)" style="margin-bottom: 10px;">
+              <el-button type="primary" @click.stop="updateInfo(false)" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+              <el-button type="primary" @click.stop="updateInfo(true)" :disabled="jobSettingInfo.enabled"><i class="fa fa-play-circle"></i>更新并启用</el-button>
+            </div>
             <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                     <template slot="title">
@@ -286,7 +289,10 @@
                     </div>
                 </el-collapse-item>
             </el-collapse>
-            <el-button type="primary" v-if="$common.hasPerm('job:update', domainName)" @click.stop="updateInfo" style="margin-top: 10px;" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+            <div v-if="$common.hasPerm('job:update', domainName)" style="margin-top: 10px;">
+              <el-button type="primary" @click.stop="updateInfo(false)" :disabled="jobSettingInfo.enabled"><i class="fa fa-database"></i>更新</el-button>
+              <el-button type="primary" @click.stop="updateInfo(true)" :disabled="jobSettingInfo.enabled"><i class="fa fa-play-circle"></i>更新并启用</el-button>
+            </div>
         </el-form>
         <div v-if="isCronPredictVisible">
             <CronPredictDialog :cron-predict-params="cronPredictParams" @close-dialog="closeCronDialog"></CronPredictDialog>
@@ -384,7 +390,7 @@ export default {
     closeCronDialog() {
       this.isCronPredictVisible = false;
     },
-    updateInfo() {
+    updateInfo(active) {
       this.$refs.jobSettingInfo.validate((valid) => {
         if (valid) {
           const paramsInfo = JSON.parse(JSON.stringify(this.jobSettingInfo));
@@ -395,9 +401,19 @@ export default {
             if (paramsInfo.localMode) {
               paramsInfo.shardingTotalCount = 1;
             }
+            if (paramsInfo.preferList.length > 0) {
+              paramsInfo.preferList.forEach((ele1, index1) => {
+                paramsInfo.preferListProvided.forEach((ele2) => {
+                  if (ele1 === ele2.executorName && ele2.type === 'DOCKER') {
+                    // eslint-disable-next-line no-param-reassign
+                    paramsInfo.preferList[index1] = `@${ele1}`;
+                  }
+                });
+              });
+            }
             if (this.validateShardingParamsNumber()) {
               if (this.validateShardingParam()) {
-                this.jobSettingInfoRequest(paramsInfo);
+                this.jobSettingInfoRequest(paramsInfo, active);
               } else {
                 this.$message.errorMessage('请正确输入分片参数!');
               }
@@ -410,22 +426,38 @@ export default {
         }
       });
     },
-    jobSettingInfoRequest(paramsInfo) {
-      if (paramsInfo.preferList.length > 0) {
-        paramsInfo.preferList.forEach((ele1, index1) => {
-          paramsInfo.preferListProvided.forEach((ele2) => {
-            if (ele1 === ele2.executorName && ele2.type === 'DOCKER') {
-              // eslint-disable-next-line no-param-reassign
-              paramsInfo.preferList[index1] = `@${ele1}`;
-            }
-          });
-        });
-      }
+    jobSettingInfoRequest(paramsInfo, active) {
+      this.loading = true;
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/config`, paramsInfo).then(() => {
-        this.getJobSettingInfo();
-        this.$message.successNotify('更新作业操作成功');
+        if (active) {
+          this.activeRequest();
+        } else {
+          this.updateInfoSuccess();
+          this.$message.successNotify('更新作业操作成功');
+        }
       })
-      .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); });
+      .catch(() => { this.$http.buildErrorHandler('更新作业请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
+    },
+    activeRequest() {
+      this.loading = true;
+      this.$http.post(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/enable`, '').then(() => {
+        this.updateInfoSuccess();
+        this.$message.successNotify('更新并启用作业操作成功');
+      })
+      .catch(() => { this.$http.buildErrorHandler('更新并启用作业请求失败！'); })
+      .finally(() => {
+        this.loading = false;
+      });
+    },
+    updateInfoSuccess() {
+      this.loading = true;
+      Promise.all([this.getGroupList(), this.getJobSettingInfo()]).then()
+      .finally(() => {
+        this.loading = false;
+      });
     },
     validateLocalMode() {
       let flag = true;
