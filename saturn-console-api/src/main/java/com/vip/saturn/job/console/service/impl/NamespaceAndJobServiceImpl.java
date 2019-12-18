@@ -8,23 +8,25 @@ import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRe
 import com.vip.saturn.job.console.service.NamespaceAndJobService;
 import com.vip.saturn.job.console.service.NamespaceService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.SaturnThreadFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.*;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.vip.saturn.job.console.service.impl.RegistryCenterServiceImpl.ERR_MSG_NS_ALREADY_EXIST;
 
 /**
  * @author Ray Leung
  */
-
 public class NamespaceAndJobServiceImpl implements NamespaceAndJobService {
 
-	private static final Logger log = LoggerFactory.getLogger(NamespaceAndJobServiceImpl.class);
-	private static final ExecutorService executorService;
+	private static final Logger logger = LoggerFactory.getLogger(NamespaceAndJobServiceImpl.class);
 
 	@Autowired
 	private RegistryCenterService registryCenterService;
@@ -35,60 +37,66 @@ public class NamespaceAndJobServiceImpl implements NamespaceAndJobService {
 	@Autowired
 	private NamespaceService namespaceService;
 
-	static {
-		executorService = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(5),
-				new ThreadFactory() {
-					@Override
-					public Thread newThread(Runnable r) {
-						return new Thread(r, "Saturn-NamespaceAndJob-Thread");
-					}
-				});
+	private ExecutorService executorService;
+
+	@PostConstruct
+	public void init() {
+		if (executorService == null) {
+			executorService = Executors.newFixedThreadPool(5, new SaturnThreadFactory("Saturn-NamespaceAndJob-Thread"));
+		}
+	}
+
+	@PreDestroy
+	public void destroy() {
+		if (executorService != null) {
+			executorService.shutdownNow();
+		}
 	}
 
 	@Override
 	public void createNamespaceAndCloneJobs(String srcNamespace, String namespace, String zkClusterName,
 			String createBy) throws SaturnJobConsoleException {
-		log.info("start createNamespaceAndCloneJobs, srcNamesapce:{}, namespace:{}, zkClusterName:{}", srcNamespace,
+		logger.info("start createNamespaceAndCloneJobs, srcNamespace: {}, namespace: {}, zkClusterName: {}",
+				srcNamespace,
 				namespace, zkClusterName);
 		NamespaceZkClusterMapping mapping = namespaceZkClusterMappingRepository.selectByNamespace(srcNamespace);
 		if (mapping == null) {
-			throw new SaturnJobConsoleException("no zkcluster mapping is not found");
+			throw new SaturnJobConsoleException("no zkCluster mapping is not found");
 		}
 
 		NamespaceDomainInfo namespaceInfo = new NamespaceDomainInfo();
 		namespaceInfo.setNamespace(namespace);
 		namespaceInfo.setZkCluster(zkClusterName);
 		namespaceInfo.setContent("");
-
 		try {
 			registryCenterService.createNamespace(namespaceInfo);
 			registryCenterService.refreshRegistryCenterForNamespace(zkClusterName, srcNamespace);
-		} catch (SaturnJobConsoleHttpException ex) {
-			if (StringUtils.equals(String.format(ERR_MSG_NS_ALREADY_EXIST, namespace), ex.getMessage())) {
-				log.warn("namespace already exists, ignore this exception and move on");
+		} catch (SaturnJobConsoleHttpException e) {
+			if (StringUtils.equals(String.format(ERR_MSG_NS_ALREADY_EXIST, namespace), e.getMessage())) {
+				logger.warn("namespace already exists, ignore this exception and move on");
 			} else {
-				throw ex;
+				throw e;
 			}
 		}
 		namespaceService.importJobsFromNamespaceToNamespace(srcNamespace, namespace, createBy);
-		log.info("end createNamespaceAndCloneJobs, srcNamesapce:{}, namespace:{}, zkClusterName:{}", srcNamespace,
+		logger.info("finish createNamespaceAndCloneJobs, srcNamespace: {}, namespace: {}, zkClusterName: {}",
+				srcNamespace,
 				namespace, zkClusterName);
 	}
 
 	@Override
-	public void aysncCreateNamespaceAndCloneJobs(final String srcNamespace, final String namespace,
+	public void asyncCreateNamespaceAndCloneJobs(final String srcNamespace, final String namespace,
 			final String zkClusterName, final String createBy) {
-		Runnable runnable = new Runnable() {
+		executorService.submit(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					createNamespaceAndCloneJobs(srcNamespace, namespace, zkClusterName, createBy);
 				} catch (SaturnJobConsoleException e) {
-					log.warn("fail to create and clone jobs, srcNamespace:{}, namespace:{}, zkClusterName:{}",
+					logger.warn("fail to create and clone jobs, srcNamespace: {}, namespace: {}, zkClusterName: {}",
 							srcNamespace, namespace, zkClusterName, e);
 				}
 			}
-		};
-		executorService.submit(runnable);
+		});
 	}
 }

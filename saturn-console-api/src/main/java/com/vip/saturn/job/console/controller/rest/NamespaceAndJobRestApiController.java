@@ -4,9 +4,7 @@ import com.vip.saturn.job.console.aop.annotation.Audit;
 import com.vip.saturn.job.console.aop.annotation.AuditType;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleHttpException;
-import com.vip.saturn.job.console.mybatis.repository.NamespaceZkClusterMappingRepository;
 import com.vip.saturn.job.console.service.NamespaceAndJobService;
-import com.vip.saturn.job.console.service.NamespaceService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,12 +22,6 @@ import java.util.Map;
  */
 @RequestMapping("/rest/v1")
 public class NamespaceAndJobRestApiController extends AbstractRestController {
-
-	@Autowired
-	private NamespaceService namespaceService;
-
-	@Autowired
-	private NamespaceZkClusterMappingRepository namespaceZkClusterMappingRepository;
 
 	@Autowired
 	private NamespaceAndJobService namespaceAndJobService;
@@ -78,7 +70,7 @@ public class NamespaceAndJobRestApiController extends AbstractRestController {
 			throw new SaturnJobConsoleException("srcNamespace is empty");
 		}
 		String createBy = checkAndGetParametersValueAsString(reqParams, "createBy", true);
-		namespaceAndJobService.aysncCreateNamespaceAndCloneJobs(srcNamespace, namespace, zkClusterName, createBy);
+		namespaceAndJobService.asyncCreateNamespaceAndCloneJobs(srcNamespace, namespace, zkClusterName, createBy);
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 }

@@ -16,6 +16,7 @@ public interface NamespaceAndJobService {
 	/**
 	 * 异步新建域和拷贝作业
 	 */
-	void aysncCreateNamespaceAndCloneJobs(String srcNamespace, String namespace, String zkClusterName, String createBy);
+	void asyncCreateNamespaceAndCloneJobs(String srcNamespace, String namespace, String zkClusterName, String createBy)
+			throws SaturnJobConsoleException;
 
 }
