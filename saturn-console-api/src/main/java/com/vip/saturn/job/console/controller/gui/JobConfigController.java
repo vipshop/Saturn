@@ -45,8 +45,9 @@ public class JobConfigController extends AbstractGUIController {
 			@AuditParam("jobName") @PathVariable String jobName, UpdateJobConfigVo updateJobConfigVo)
 			throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.jobUpdate, namespace);
-		if(updateJobConfigVo.getGroups().length() >= 255) {
-			throw new SaturnJobConsoleException("分组总数不能超过15个");
+		String groups = updateJobConfigVo.getGroups();
+		if (groups != null && groups.length() > 255) {
+			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
 		jobService.updateJobConfig(namespace, updateJobConfigVo.toJobConfig(), getCurrentLoginUserName());
 		return new SuccessResponseEntity();
