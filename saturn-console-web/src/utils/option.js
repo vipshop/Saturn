@@ -31,6 +31,7 @@ export default {
     jobName: { value: '' },
     groups: { value: [] },
     status: { value: '', precise: true },
+    jobType: { value: '', precise: true },
     description: { value: '' },
   },
   jobOverviewInputFilters: [{

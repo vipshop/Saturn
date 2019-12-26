@@ -34,6 +34,12 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
+                            <el-select style="width: 140px;" v-model="filters.jobType.value" @change="scope.search">
+                                <el-option label="全部作业类型" value=""></el-option>
+                                <el-option v-for="item in $option.jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="">
                             <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn].value" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option v-for="item in $option.jobOverviewInputFilters" :key="item.value" :label="item.label" :value="item.value"></el-option>
