@@ -108,14 +108,19 @@
         from job_config
         <where>
             namespace = #{namespace,jdbcType=VARCHAR}
-            <if test="condition.groups != null">
-                and (
-                groups = #{condition.groups}
-                <if test="condition.groups == ''">
-                    or groups is NULL
-                </if>
-                )
-            </if>
+            <choose>
+                <when test="condition.groups == null"></when>
+                <when test="condition.groups == ''">
+                    and (groups = #{condition.groups} or groups is NULL)
+                </when>
+                <otherwise>
+                    and (
+                    <foreach collection="condition.groups.split(',')" item="item" separator="or">
+                        FIND_IN_SET(#{item}, groups)
+                    </foreach>
+                    )
+                </otherwise>
+            </choose>
             <if test="condition.isEnabled != null">
                 and is_enabled = #{condition.isEnabled}
             </if>
