@@ -65,18 +65,6 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        <el-row v-if="$option.isMsg(jobSettingInfo.jobType)">
-                            <el-col :span="22">
-                                <el-form-item prop="queueName" label="Queue名">
-                                    <el-tooltip popper-class="form-tooltip" placement="bottom">
-                                        <div slot="content">
-                                            消息类型job的queue名
-                                        </div>
-                                        <el-input type="textarea" v-model="jobSettingInfo.queueName"></el-input>
-                                    </el-tooltip>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="shardingItemParameters" label="分片参数">
@@ -206,11 +194,6 @@
                             <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11">
                                 <el-form-item prop="enabledReport" label="上报运行状态">
                                     <el-switch v-model="jobSettingInfo.enabledReport"></el-switch>
-                                </el-form-item>
-                            </el-col>
-                            <el-col :span="$option.isMsg(jobSettingInfo.jobType) ? 7 : 11" v-if="$option.isMsg(jobSettingInfo.jobType)">
-                                <el-form-item prop="useSerial" label="串行消费">
-                                    <el-switch v-model="jobSettingInfo.useSerial"></el-switch>
                                 </el-form-item>
                             </el-col>
                         </el-row>

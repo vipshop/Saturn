@@ -36,9 +36,7 @@
                         <el-form-item label="">
                             <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn].value" @keyup.enter.native="scope.search">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
-                                  <el-option label="作业名" value="jobName"></el-option>
-                                  <el-option label="作业描述" value="description"></el-option>
-                                  <el-option label="Queue名" value="queueName"></el-option>
+                                  <el-option v-for="item in $option.jobOverviewInputFilters" :key="item.value" :label="item.label" :value="item.value"></el-option>
                               </el-select>
                             </el-input>
                         </el-form-item>
@@ -171,13 +169,7 @@ export default {
         enabledNumber: 0,
         abnormalNumber: 0,
       },
-      filters: {
-        jobName: { value: '' },
-        groups: { value: [] },
-        status: { value: '', precise: true },
-        description: { value: '' },
-        queueName: { value: '' },
-      },
+      filters: this.$option.jobOverviewFilters,
       jobList: [],
       total: 0,
       orderBy: '',
@@ -221,8 +213,9 @@ export default {
       .catch(() => { this.$http.buildErrorHandler('获取作业分片分配失败！'); });
     },
     selectColumnChange() {
-      this.filters.jobName.value = '';
-      this.filters.description.value = '';
+      this.$option.jobOverviewInputFilters.forEach((ele) => {
+        this.filters[ele.value].value = '';
+      });
     },
     toAbnormalJobPage() {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
