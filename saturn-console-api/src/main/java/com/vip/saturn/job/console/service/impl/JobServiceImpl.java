@@ -543,6 +543,8 @@ public class JobServiceImpl implements JobService {
 		validateCronFieldOfJobConfig(jobConfig);
 		// 校验shardingItemParameters
 		validateShardingItemFieldOfJobConfig(jobConfig);
+		// 校验分组
+		validateGroupsFieldOfJobConfig(jobConfig);
 		// 不能添加系统作业
 		if (jobConfig.getJobMode() != null && jobConfig.getJobMode().startsWith(JobMode.SYSTEM_PREFIX)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "作业模式有误，不能添加系统作业");
@@ -554,6 +556,13 @@ public class JobServiceImpl implements JobService {
 	protected void validateQueue(JobConfig jobConfig) throws SaturnJobConsoleException {
 		if (StringUtils.isBlank(jobConfig.getQueueName())) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于消息作业，queue必填");
+		}
+	}
+
+	private void validateGroupsFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
+		String groups = jobConfig.getGroups();
+		if (groups != null && groups.length() > 255) {
+			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
 	}
 
