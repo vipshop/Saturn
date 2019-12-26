@@ -38,6 +38,7 @@
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option label="作业名" value="jobName"></el-option>
                                   <el-option label="作业描述" value="description"></el-option>
+                                  <el-option label="Queue名" value="queueName"></el-option>
                               </el-select>
                             </el-input>
                         </el-form-item>
@@ -175,6 +176,7 @@ export default {
         groups: { value: [] },
         status: { value: '', precise: true },
         description: { value: '' },
+        queueName: { value: '' },
       },
       jobList: [],
       total: 0,
