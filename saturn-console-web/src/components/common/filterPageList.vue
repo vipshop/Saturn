@@ -39,7 +39,6 @@ export default {
       if (this.filters) {
         Object.entries(this.filters).forEach((item) => {
           if (Array.isArray(item[1].value)) {
-            console.log('array', item);
             if (item[1].value.length > 0) {
               paramsResult[item[0]] = item[1].value;
             }

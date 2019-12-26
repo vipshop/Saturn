@@ -27,6 +27,20 @@ export default {
   isMsg(jobType) {
     return jobType === 'MSG_JOB' || jobType === 'VSHELL';
   },
+  jobOverviewFilters: {
+    jobName: { value: '' },
+    groups: { value: [] },
+    status: { value: '', precise: true },
+    jobType: { value: '', precise: true },
+    description: { value: '' },
+  },
+  jobOverviewInputFilters: [{
+    label: '作业名',
+    value: 'jobName',
+  }, {
+    label: '作业描述',
+    value: 'description',
+  }],
   jobStatusTypes: [{
     value: 0,
     label: '已停止',
