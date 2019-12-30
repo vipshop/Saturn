@@ -89,6 +89,9 @@
                 <when test="condition.description != null">
                     and description like CONCAT('%',#{condition.description},'%')
                 </when>
+                <when test="condition.queueName != null">
+                    and queue_name like CONCAT('%',#{condition.queueName},'%')
+                </when>
             </choose>
         </where>
         <if test="condition.order != null">
@@ -130,6 +133,9 @@
                 </when>
                 <when test="condition.description != null">
                     and description like CONCAT('%',#{condition.description},'%')
+                </when>
+                <when test="condition.queueName != null">
+                    and queue_name like CONCAT('%',#{condition.queueName},'%')
                 </when>
             </choose>
         </where>
