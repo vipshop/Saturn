@@ -82,6 +82,9 @@
             <if test="condition.isEnabled != null">
                 and is_enabled = #{condition.isEnabled}
             </if>
+	    <if test="condition.jobType != null">
+                and job_type = #{condition.jobType}
+            </if>
             <choose>
                 <when test="condition.jobName != null">
                     and job_name like CONCAT('%',#{condition.jobName},'%')
@@ -126,6 +129,9 @@
             </choose>
             <if test="condition.isEnabled != null">
                 and is_enabled = #{condition.isEnabled}
+            </if>
+	    <if test="condition.jobType != null">
+                and job_type = #{condition.jobType}
             </if>
             <choose>
                 <when test="condition.jobName != null">
