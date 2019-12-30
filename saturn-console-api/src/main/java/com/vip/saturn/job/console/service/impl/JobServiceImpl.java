@@ -561,11 +561,16 @@ public class JobServiceImpl implements JobService {
 
 	private void validateGroupsFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
 		String groups = jobConfig.getGroups();
-		if (groups != null && groups.length() > 255) {
+		if (groups == null) {
+			return;
+		}
+		if (groups.length() > 255) {
 			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
-		if (groups != null && groups.contains("未分组")) {
-			throw new SaturnJobConsoleException("分组名不能为：未分组");
+		for (String group : groups.split(",")) {
+			if (group.trim().equals("未分组")) {
+				throw new SaturnJobConsoleException("分组名不能为：未分组");
+			}
 		}
 	}
 

@@ -78,7 +78,7 @@
                                 FIND_IN_SET(#{item}, groups)
                             </if>
                             <if test="item == '未分组'">
-                                groups = ''
+                                (groups = '' or groups is NULL)
                             </if>
                         </foreach>
                     )
@@ -131,7 +131,7 @@
                             FIND_IN_SET(#{item}, groups)
                         </if>
                         <if test="item == '未分组'">
-                            groups = ''
+                            (groups = '' or groups is NULL)
                         </if>
                     </foreach>
                     )
