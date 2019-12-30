@@ -564,6 +564,9 @@ public class JobServiceImpl implements JobService {
 		if (groups != null && groups.length() > 255) {
 			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
+		if (groups != null && groups.contains("未分组")) {
+			throw new SaturnJobConsoleException("分组名不能为：未分组");
+		}
 	}
 
 	private void validateStreamAndLinkingUpdateOtherJobs(String namespace, JobConfig jobConfig,

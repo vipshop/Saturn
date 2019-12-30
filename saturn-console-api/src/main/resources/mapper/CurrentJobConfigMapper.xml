@@ -74,7 +74,12 @@
                 <otherwise>
                     and (
                         <foreach collection="condition.groups.split(',')" item="item" separator="or">
-                            FIND_IN_SET(#{item}, groups)
+                            <if test="item != '未分组'">
+                                FIND_IN_SET(#{item}, groups)
+                            </if>
+                            <if test="item == '未分组'">
+                                groups = ''
+                            </if>
                         </foreach>
                     )
                 </otherwise>
@@ -122,7 +127,12 @@
                 <otherwise>
                     and (
                     <foreach collection="condition.groups.split(',')" item="item" separator="or">
-                        FIND_IN_SET(#{item}, groups)
+                        <if test="item != '未分组'">
+                            FIND_IN_SET(#{item}, groups)
+                        </if>
+                        <if test="item == '未分组'">
+                            groups = ''
+                        </if>
                     </foreach>
                     )
                 </otherwise>
