@@ -41,6 +41,7 @@ import java.io.File;
 import java.lang.Boolean;
 import java.text.ParseException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST;
 import static com.vip.saturn.job.console.exception.SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED;
@@ -567,9 +568,13 @@ public class JobServiceImpl implements JobService {
 		if (groups.length() > 255) {
 			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
+		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
 		for (String group : groups.split(",")) {
 			if (group.trim().equals("未分组")) {
 				throw new SaturnJobConsoleException("分组名不能为：未分组");
+			}
+			if (pattern.matcher(group).find()) {
+				throw new SaturnJobConsoleException("分组名中不能包含特殊字符");
 			}
 		}
 	}
