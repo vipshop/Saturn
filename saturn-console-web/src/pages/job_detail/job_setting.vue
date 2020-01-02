@@ -317,18 +317,25 @@ export default {
         this.$refs.saveGroupInput.$refs.input.focus();
       });
     },
+    validateGroup(group) {
+      let flag = false;
+      const parten = /^[\u4e00-\u9fa5_a-zA-Z0-9]+$/;
+      if (group.length > 10) {
+        this.$message.errorMessage('分组名称不能超过10个字符');
+      } else if (!parten.test(group)) {
+        this.$message.errorMessage('分组名称不能使用特殊字符');
+      } else if (this.jobSettingInfo.groups.includes(group)) {
+        this.$message.errorMessage('该分组已被选择！');
+      } else {
+        flag = true;
+      }
+      return flag;
+    },
     handleInputGroup() {
       const groupSelected = this.groupSelected;
       if (groupSelected) {
-        if (groupSelected.length > 10) {
-          this.$message.errorMessage('分组名称不能超过10个字符');
-        } else {
-          // eslint-disable-next-line no-lonely-if
-          if (this.jobSettingInfo.groups.includes(groupSelected)) {
-            this.$message.errorMessage('该分组已被选择！');
-          } else {
-            this.jobSettingInfo.groups.push(groupSelected);
-          }
+        if (this.validateGroup(groupSelected)) {
+          this.jobSettingInfo.groups.push(groupSelected);
         }
       }
       this.inputGroupVisible = false;
@@ -505,7 +512,7 @@ export default {
     },
     getGroupList() {
       return this.$http.get(`/console/namespaces/${this.domainName}/jobs/groups`).then((data) => {
-        this.groupList = data.map((obj) => {
+        this.groupList = data.filter(v => v !== '未分组').map((obj) => {
           const rObj = {};
           rObj.value = obj;
           return rObj;
