@@ -570,12 +570,19 @@ public class JobServiceImpl implements JobService {
 		}
 		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
 		for (String group : groups.split(",")) {
-			if (group.trim().equals("未分组")) {
-				throw new SaturnJobConsoleException("分组名不能为：未分组");
-			}
-			if (pattern.matcher(group).find()) {
-				throw new SaturnJobConsoleException("分组名中不能包含特殊字符");
-			}
+			validateGroupName(group, pattern);
+		}
+	}
+
+	private void validateGroupName(String groupName, Pattern pattern) throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(groupName)) {
+			throw new SaturnJobConsoleException("分组名不能为为空");
+		}
+		if (groupName.trim().equals("未分组")) {
+			throw new SaturnJobConsoleException("分组名不能为：未分组");
+		}
+		if (pattern.matcher(groupName).find()) {
+			throw new SaturnJobConsoleException("分组名中不能包含特殊字符");
 		}
 	}
 
@@ -2875,4 +2882,51 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 	}
+
+	/**
+	 * 批量设置作业的分组
+	 * @param namespace
+	 * @param jobNames 待设置分组的作业名集合
+	 * @param oldGroupNames 修改前的分组名集合
+	 * @param newGroupNames 修改后的分组名集合
+	 * @param userName 操作者
+	 */
+	@Override
+	public void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames, List<String> newGroupNames, String userName)  throws SaturnJobConsoleException {
+		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
+		List<String> checkList = new ArrayList<>();
+		checkList.addAll(oldGroupNames);
+		checkList.addAll(newGroupNames);
+		for (String groupName: checkList) {
+			validateGroupName(groupName, pattern);
+		}
+
+		Collections.sort(oldGroupNames);
+		Collections.sort(newGroupNames);
+		// 新旧分组集合元素相同，无需处理
+		if (oldGroupNames.toString().equals(newGroupNames.toString())) {
+			return;
+		}
+
+		List<String> oldGroupNamesTemp = new ArrayList<>(oldGroupNames);
+		List<String> newGroupNamesTemp = new ArrayList<>(newGroupNames);
+		// 求 oldGroupNamesTemp 与 newGroupNamesTemp 的差集(oldGroupNamesTemp 中存在，newGroupNamesTemp 中不存在的元素)，即删除的分组
+		oldGroupNamesTemp.removeAll(newGroupNamesTemp);
+		// 前端操作有删除分组，则将删除的分组从数据库中删除
+		if (!CollectionUtils.isEmpty(oldGroupNamesTemp)) {
+			for (String groupName : oldGroupNamesTemp) {
+				currentJobConfigService.batchSetGroups(namespace, jobNames, groupName, userName);
+			}
+		}
+
+		// 求 newGroupNames 与 oldGroupNames 的差集(newGroupNames 中存在，oldGroupNames 中不存在的元素)，即新增的分组
+		newGroupNames.removeAll(oldGroupNames);
+		// 前端操作有新增分组，则将新增的分组追加到原有分组后面，用英文逗号连接
+		if (!CollectionUtils.isEmpty(newGroupNamesTemp)) {
+			for(String groupName : newGroupNamesTemp) {
+				currentJobConfigService.addToGroups(namespace, jobNames, groupName, userName);
+			}
+		}
+	}
+
 }

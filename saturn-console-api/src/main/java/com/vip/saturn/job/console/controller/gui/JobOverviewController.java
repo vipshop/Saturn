@@ -454,4 +454,21 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.getCandidateExecutors(namespace, jobName));
 	}
 
+	/**
+	 * 批量设置作业的分组
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping(value = "/batchSetGroups")
+	public SuccessResponseEntity batchSetGroups(final HttpServletRequest request,
+			@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames,
+			@AuditParam("oldGroupNames") @RequestParam List<String> oldGroupNames,
+			@AuditParam("newGroupNames") @RequestParam List<String> newGroupNames) throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.jobBatchSetPreferExecutors, namespace);
+		String userName = getCurrentLoginUserName();
+		jobService.batchSetGroups(namespace, jobNames, oldGroupNames, newGroupNames, userName);
+		return new SuccessResponseEntity();
+	}
+
 }

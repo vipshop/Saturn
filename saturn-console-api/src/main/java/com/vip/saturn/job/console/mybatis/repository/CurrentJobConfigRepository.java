@@ -39,4 +39,8 @@ public interface CurrentJobConfigRepository {
 			@Param("jobName") String jobName);
 
 	List<JobConfig4DB> findConfigsByQueue(@Param("queueName") String queueName);
+
+	void batchSetGroups(@Param("namespace") String namespace, @Param("jobNames") List<String> jobNames, @Param("groupName") String groupName, @Param("lastUpdateBy") String lastUpdateBy);
+
+	void addToGroups(@Param("namespace") String namespace, @Param("jobNames") List<String> jobNames, @Param("groupName") String groupName, @Param("lastUpdateBy") String lastUpdateBy);
 }

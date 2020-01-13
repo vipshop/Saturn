@@ -37,4 +37,8 @@ public interface CurrentJobConfigService {
 	void updateStream(JobConfig4DB currentJobConfig) throws SaturnJobConsoleException;
 
 	List<JobConfig4DB> findConfigByQueue(String queue);
+
+	void batchSetGroups(String namespace, List<String> jobNames, String groupName, String userName);
+
+	void addToGroups(String namespace, List<String> jobNames, String groupName, String userName);
 }

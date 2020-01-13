@@ -130,4 +130,14 @@ public interface JobService {
 	 * 通过Queue名获取作业信息
 	 */
 	List<JobConfig4DB> getJobsByQueue(String queue) throws SaturnJobConsoleException;
+
+	/**
+	 * 批量设置作业的分组
+	 * @param namespace
+	 * @param jobNames 待设置分组的作业名集合
+	 * @param oldGroupNames 修改前的分组名集合
+	 * @param newGroupsNames 修改后的分组名集合
+	 * @param userName 操作者
+	 */
+	void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames, List<String> newGroupsNames, String userName)  throws SaturnJobConsoleException;
 }

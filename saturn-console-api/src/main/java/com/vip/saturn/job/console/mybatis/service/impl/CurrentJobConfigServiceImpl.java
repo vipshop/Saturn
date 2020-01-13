@@ -125,4 +125,13 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 		return currentJobConfigRepo.findConfigNamesByNamespace(namespace);
 	}
 
+	@Override
+	public void batchSetGroups(String namespace, List<String> jobNames, String groupName, String userName) {
+		currentJobConfigRepo.batchSetGroups(namespace, jobNames, groupName, userName);
+	}
+
+	@Override
+	public void addToGroups(String namespace, List<String> jobNames, String groupName, String userName) {
+		currentJobConfigRepo.addToGroups(namespace, jobNames, groupName, userName);
+	}
 }

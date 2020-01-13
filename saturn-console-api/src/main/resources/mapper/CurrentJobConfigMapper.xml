@@ -284,4 +284,46 @@
         where namespace = #{namespace,jdbcType=VARCHAR} and job_name = #{jobName,jdbcType=VARCHAR}
     </update>
 
+    <update id="addToGroups">
+        UPDATE job_config
+        SET last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
+        groups =
+        (
+        CASE
+            WHEN groups REGEXP '^${groupName},' THEN groups
+            WHEN groups REGEXP ',${groupName}$' THEN groups
+            WHEN groups REGEXP ',${groupName},' THEN groups
+            WHEN groups IS NULL OR groups = '' THEN CONCAT(groups,'${groupName}')
+            ELSE CONCAT(groups,',${groupName}')
+        END
+        )
+        WHERE namespace = #{namespace,jdbcType=VARCHAR}
+        AND job_name IN
+        <foreach collection="jobNames" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <update id="batchSetGroups">
+        UPDATE job_config
+        SET last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
+        groups =
+        (
+        CASE
+            WHEN groups REGEXP '^${groupName},' THEN RIGHT(groups, LENGTH(groups) - LENGTH('${groupName},'))
+            WHEN groups REGEXP ',${groupName}$' THEN LEFT(groups, LENGTH(groups) - LENGTH(',${groupName}'))
+            WHEN groups REGEXP ',${groupName},' THEN REPLACE(groups, ',${groupName},', ',')
+            WHEN groups = 'cat' THEN groups = NULL
+            ELSE groups
+        END
+        )
+        WHERE namespace = #{namespace,jdbcType=VARCHAR}
+        AND job_name IN
+        <foreach collection="jobNames" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
 </mapper>
