@@ -575,10 +575,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private void validateGroupName(String groupName, Pattern pattern) throws SaturnJobConsoleException {
-		if (StringUtils.isBlank(groupName)) {
-			throw new SaturnJobConsoleException("分组名不能为为空");
-		}
-		if (groupName.trim().equals("未分组")) {
+		if ("未分组".equals(groupName.trim())) {
 			throw new SaturnJobConsoleException("分组名不能为：未分组");
 		}
 		if (pattern.matcher(groupName).find()) {
@@ -2893,25 +2890,43 @@ public class JobServiceImpl implements JobService {
 	 */
 	@Override
 	public void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames, List<String> newGroupNames, String userName)  throws SaturnJobConsoleException {
-		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
-		List<String> checkList = new ArrayList<>();
-		checkList.addAll(oldGroupNames);
-		checkList.addAll(newGroupNames);
-		for (String groupName: checkList) {
-			validateGroupName(groupName, pattern);
+		if (CollectionUtils.isEmpty(jobNames)) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "请选择要分组的作业");
 		}
-
-		Collections.sort(oldGroupNames);
-		Collections.sort(newGroupNames);
-		// 新旧分组集合元素相同，无需处理
-		if (oldGroupNames.toString().equals(newGroupNames.toString())) {
+		if (CollectionUtils.isEmpty(oldGroupNames) && CollectionUtils.isEmpty(newGroupNames)) {
 			return;
 		}
 
-		List<String> oldGroupNamesTemp = new ArrayList<>(oldGroupNames);
-		List<String> newGroupNamesTemp = new ArrayList<>(newGroupNames);
+		List<String> oldGroupNamesTemp = null;
+		List<String> newGroupNamesTemp = null;
+
+		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
+		if (!CollectionUtils.isEmpty(oldGroupNames)) {
+			for (String groupName: oldGroupNames) {
+				validateGroupName(groupName, pattern);
+			}
+			oldGroupNamesTemp = new ArrayList<>(oldGroupNames);
+		}
+		if (!CollectionUtils.isEmpty(newGroupNames)) {
+			for (String groupName: newGroupNames) {
+				validateGroupName(groupName, pattern);
+			}
+			newGroupNamesTemp = new ArrayList<>(newGroupNames);
+		}
+
+		// 新旧分组集合元素相同，无需处理
+		if (!CollectionUtils.isEmpty(oldGroupNames) && !CollectionUtils.isEmpty(newGroupNames)) {
+			Collections.sort(oldGroupNames);
+			Collections.sort(newGroupNames);
+			if (oldGroupNames.toString().equals(newGroupNames.toString())) {
+				return;
+			}
+		}
+
 		// 求 oldGroupNamesTemp 与 newGroupNamesTemp 的差集(oldGroupNamesTemp 中存在，newGroupNamesTemp 中不存在的元素)，即删除的分组
-		oldGroupNamesTemp.removeAll(newGroupNamesTemp);
+		if (!CollectionUtils.isEmpty(oldGroupNamesTemp) && !CollectionUtils.isEmpty(newGroupNamesTemp)) {
+			oldGroupNamesTemp.removeAll(newGroupNamesTemp);
+		}
 		// 前端操作有删除分组，则将删除的分组从数据库中删除
 		if (!CollectionUtils.isEmpty(oldGroupNamesTemp)) {
 			for (String groupName : oldGroupNamesTemp) {
@@ -2920,10 +2935,12 @@ public class JobServiceImpl implements JobService {
 		}
 
 		// 求 newGroupNames 与 oldGroupNames 的差集(newGroupNames 中存在，oldGroupNames 中不存在的元素)，即新增的分组
-		newGroupNames.removeAll(oldGroupNames);
+		if (!CollectionUtils.isEmpty(newGroupNames) && !CollectionUtils.isEmpty(oldGroupNames)) {
+			newGroupNames.removeAll(oldGroupNames);
+		}
 		// 前端操作有新增分组，则将新增的分组追加到原有分组后面，用英文逗号连接
-		if (!CollectionUtils.isEmpty(newGroupNamesTemp)) {
-			for(String groupName : newGroupNamesTemp) {
+		if (!CollectionUtils.isEmpty(newGroupNames)) {
+			for(String groupName : newGroupNames) {
 				currentJobConfigService.addToGroups(namespace, jobNames, groupName, userName);
 			}
 		}
