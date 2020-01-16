@@ -3,10 +3,11 @@ package com.vip.saturn.job.sharding.task;
 import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 作业启用，获取该作业的shards，注意要过滤不能运行该作业的executors
@@ -38,7 +39,7 @@ public class ExecuteJobEnableShardingTask extends AbstractAsyncShardingTask {
 	protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 		// 移除已经在Executor运行的该作业的所有Shard
-		namespaceShardingService.removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
+		removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
 
 		// 修正该所有executor的对该作业的jobNameList
 		fixJobNameList(lastOnlineExecutorList, jobName);

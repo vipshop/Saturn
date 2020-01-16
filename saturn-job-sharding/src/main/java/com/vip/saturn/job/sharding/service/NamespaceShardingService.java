@@ -90,25 +90,6 @@ public class NamespaceShardingService {
 		});
 	}
 
-	public List<Shard> removeAllShardsOnExecutors(List<Executor> lastOnlineTrafficExecutorList, String jobName) {
-		List<Shard> removedShards = Lists.newArrayList();
-
-		for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
-			Executor executor = lastOnlineTrafficExecutorList.get(i);
-			Iterator<Shard> iterator = executor.getShardList().iterator();
-			while (iterator.hasNext()) {
-				Shard shard = iterator.next();
-				if (jobName.equals(shard.getJobName())) {
-					executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
-					iterator.remove();
-					removedShards.add(shard);
-				}
-			}
-		}
-
-		return removedShards;
-	}
-
 	/**
 	 * 进行全量分片
 	 */

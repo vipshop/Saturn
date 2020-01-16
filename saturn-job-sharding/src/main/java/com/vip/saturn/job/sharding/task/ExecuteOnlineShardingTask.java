@@ -3,15 +3,16 @@ package com.vip.saturn.job.sharding.task;
 import com.vip.saturn.job.sharding.entity.Executor;
 import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * executor上线，仅仅添加executor空壳，如果其不存在；如果已经存在，重新设置下ip，防止ExecuteJobServerOnlineShardingTask先于执行而没设ip
  *
- * 特别的，如果当前没有executor，也就是这是第一台executor上线，则需要域全量分片，因为可能已经有作业处理启用状态了。
+ * 特别的，如果当前没有executor，也就是这是第一台executor上线，则需要域全量分片，因为可能已经有作业处于启用状态了。
  */
 public class ExecuteOnlineShardingTask extends AbstractAsyncShardingTask {
 

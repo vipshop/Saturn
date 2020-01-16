@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * 作业的executor上线，executor级别平衡摘取，但是只能摘取该作业的shard；添加的新的shard
+ * 作业的executor上线，executor或者该作业级别平衡摘取，只摘取该作业的shard；添加的新的shard；
  */
 public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTask {
 
@@ -220,11 +220,14 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 		if (preferListIsConfigured) {
 			pickIntelligentWithPreferListConfigured(allEnableJobs, shardList, lastOnlineTrafficExecutorList,
 					preferListConfigured, hasShardRunning, shardingTotalCount, loadLevel);
-
 		} else {
 			// 如果有分片正在运行，则平衡摘取
 			if (hasShardRunning) {
-				pickBalance(shardList, lastOnlineTrafficExecutorList);
+				if (ENABLE_JOB_AVERAGE) {
+					pickBalanceWithJobAverage(shardList, filterOnlineExecutors(lastOnlineTrafficExecutorList));
+				} else {
+					pickBalance(shardList, lastOnlineTrafficExecutorList);
+				}
 			} else {
 				// 如果没有分片正在运行，则需要新建，无需平衡摘取
 				if (allEnableJobs.contains(jobName)) {
@@ -234,16 +237,21 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 		}
 	}
 
-	public void pickIntelligentWithPreferListConfigured(List<String> allEnableJobs, List<Shard> shardList,
+	private void pickIntelligentWithPreferListConfigured(List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineTrafficExecutorList, List<String> preferListConfigured, boolean hasShardRunning,
 			int shardingTotalCount, int loadLevel) throws Exception {
 		boolean useDispreferList = useDispreferList(jobName); // 是否useDispreferList
-
 		if (preferListConfigured.contains(executorName)) {
 			// 如果有分片正在运行，摘取全部运行在非优先节点上的分片，还可以平衡摘取
 			if (hasShardRunning) {
 				shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
-				pickBalance(shardList, lastOnlineTrafficExecutorList);
+				if (ENABLE_JOB_AVERAGE) {
+					pickBalanceWithJobAverage(shardList,
+							filterOnlineExecutorsByPreferListConfigured(preferListConfigured,
+									lastOnlineTrafficExecutorList, true));
+				} else {
+					pickBalance(shardList, lastOnlineTrafficExecutorList);
+				}
 			} else {
 				// 如果没有分片正在运行，则需要新建，无需平衡摘取
 				if (allEnableJobs.contains(jobName)) {
@@ -258,7 +266,13 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 					boolean shardsAllRunningInDispreferList = shardsAllRunningInDispreferList(preferListConfigured,
 							lastOnlineTrafficExecutorList);
 					if (shardsAllRunningInDispreferList) {
-						pickBalance(shardList, lastOnlineTrafficExecutorList);
+						if (ENABLE_JOB_AVERAGE) {
+							pickBalanceWithJobAverage(shardList,
+									filterOnlineExecutorsByPreferListConfigured(preferListConfigured,
+											lastOnlineTrafficExecutorList, false));
+						} else {
+							pickBalance(shardList, lastOnlineTrafficExecutorList);
+						}
 					} else {
 						shardList.addAll(
 								pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
@@ -272,6 +286,62 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 			} else { // 不能再平衡摘取
 				// 摘取全部运行在非优先节点上的分片
 				shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
+			}
+		}
+	}
+
+	// 过滤能运行该作业的优先节点，或者非优先节点
+	private List<Executor> filterOnlineExecutorsByPreferListConfigured(List<String> preferListConfigured,
+			List<Executor> lastOnlineTrafficExecutorList, boolean contains) {
+		List<Executor> onlineExecutorListByPreferListConfigured = new ArrayList<>();
+		for (Executor executor : lastOnlineTrafficExecutorList) {
+			if (executor.getJobNameList().contains(jobName) && contains == preferListConfigured.contains(executor)) {
+				onlineExecutorListByPreferListConfigured.add(executor);
+			}
+		}
+		return onlineExecutorListByPreferListConfigured;
+	}
+
+	private List<Executor> filterOnlineExecutors(List<Executor> lastOnlineTrafficExecutorList) {
+		List<Executor> onlineExecutor = new ArrayList<>();
+		for (Executor executor : lastOnlineTrafficExecutorList) {
+			if (executor.getJobNameList().contains(jobName)) {
+				onlineExecutor.add(executor);
+			}
+		}
+		return onlineExecutor;
+	}
+
+	// executorList是可以接管该作业的机器
+	private void pickBalanceWithJobAverage(List<Shard> shardList, List<Executor> executorList) {
+		// 计算出executor对该作业的平均负荷
+		int totalJobLoadLevel = 0;
+		for (Shard shard : shardList) {
+			totalJobLoadLevel += shard.getLoadLevel();
+		}
+		for (Executor executor : executorList) {
+			for (Shard shard : executor.getShardList()) {
+				if (jobName.equals(shard.getJobName())) {
+					totalJobLoadLevel += shard.getLoadLevel();
+				}
+			}
+		}
+		int average = totalJobLoadLevel / executorList.size();
+		// 摘取executor超出平均负荷的分片
+		for (Executor executor : executorList) {
+			int jobTotalLoadLevel = 0;
+			Iterator<Shard> iterator = executor.getShardList().iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				if (jobName.equals(shard.getJobName())) {
+					if (average == 0 || jobTotalLoadLevel + shard.getLoadLevel() > average) {
+						shardList.add(shard);
+						executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
+						iterator.remove();
+					} else {
+						jobTotalLoadLevel += shard.getLoadLevel();
+					}
+				}
 			}
 		}
 	}

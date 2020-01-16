@@ -8,11 +8,15 @@ import com.vip.saturn.job.console.domain.JobType;
 import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
+import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
+import com.vip.saturn.job.sharding.task.AbstractAsyncShardingTask;
 import com.vip.saturn.job.utils.ItemUtils;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -22,6 +26,10 @@ import static org.junit.Assert.assertEquals;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShardingWithLoadIT extends AbstractSaturnIT {
+
+	private NamespaceShardingContentService namespaceShardingContentService = new NamespaceShardingContentService(
+			(CuratorFramework) regCenter.getRawClient());
+
 	@BeforeClass
 	public static void setUp() throws Exception {
 		startSaturnConsoleList(1);
@@ -45,17 +53,27 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	@Test
 	public void A_JavaMultiJobWithLoad() throws Exception {
-		String preferList = null;
-		multiJobSharding(preferList);
-		stopExecutorListGracefully();
+		AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = false;
+		try {
+			String preferList = null;
+			multiJobSharding(preferList);
+			stopExecutorListGracefully();
+		} finally {
+			AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = true;
+		}
 	}
 
-	@Test
 	// 仅对作业3增加优先节点1,2
+	@Test
 	public void B_JavaMultiJobWithLoadWithPreferList() throws Exception {
-		String preferList = "executorName" + "0," + "executorName" + 1;
-		multiJobSharding(preferList);
-		stopExecutorListGracefully();
+		AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = false;
+		try {
+			String preferList = "executorName0,executorName1";
+			multiJobSharding(preferList);
+			stopExecutorListGracefully();
+		} finally {
+			AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = true;
+		}
 	}
 
 	public void multiJobSharding(String preferListJob3) throws Exception {
@@ -96,12 +114,12 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		}
 		addSimpleJavaJob(jobName3, 3, jobConfig3);
 
-		Thread.sleep(1 * 1000);
+		Thread.sleep(1000);
 		// 启用作业1,2,3
 		enableJob(jobName1);
 		enableJob(jobName2);
 		enableJob(jobName3);
-		Thread.sleep(1 * 1000);
+		Thread.sleep(1000);
 
 		Main executor1 = startOneNewExecutorList();// 启动第1台executor
 		Thread.sleep(1000);
@@ -262,6 +280,124 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 		removeJob(jobName3);
 
 		Thread.sleep(1000);
+		stopExecutorListGracefully();
+	}
+
+	@Test
+	public void C_jobAverage() throws Exception {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+			return;
+		}
+		// 启动第2台executor
+		Main executor1 = startOneNewExecutorList();
+		Main executor2 = startOneNewExecutorList();
+		// 添加第1个作业，负荷设置2，设置优先节点是executor1
+		final String job1 = "test_B_JobAverage_job1";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job1);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1);
+			jobConfig.setShardingItemParameters("0=0");
+			jobConfig.setLoadLevel(2);
+			jobConfig.setPreferList(executor1.getExecutorName());
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 添加第2个作业，负荷设置1，设置优先节点为executor2
+		final String job2 = "test_B_JobAverage_job2";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job2);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1);
+			jobConfig.setShardingItemParameters("0=0");
+			jobConfig.setPreferList(executor2.getExecutorName());
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用job1、job2
+		enableJob(job1);
+		enableJob(job2);
+		Thread.sleep(2000);
+		// 校验
+		Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(0);
+
+		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		// 新增job3
+		final String job3 = "test_B_JobAverage_job3";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job3);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1);
+			jobConfig.setShardingItemParameters("0=0");
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用job3
+		enableJob(job3);
+		Thread.sleep(2000);
+		// 校验，job1、job2保持不变，job3一定是被分配到executor2，因为executor2的总负荷小于executor1
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(0);
+		shardingItems = namespaceShardingContentService.getShardingItems(job3);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(0);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job3, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job3, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+
+		// 关闭
+		disableJob(job1);
+		disableJob(job2);
+		disableJob(job3);
+		Thread.sleep(1000);
+		removeJob(job1);
+		removeJob(job2);
+		removeJob(job3);
 		stopExecutorListGracefully();
 	}
 }

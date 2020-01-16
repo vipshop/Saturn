@@ -9,6 +9,8 @@ import com.vip.saturn.job.executor.Main;
 import com.vip.saturn.job.internal.sharding.ShardingNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
+import com.vip.saturn.job.sharding.task.AbstractAsyncShardingTask;
 import com.vip.saturn.job.utils.ItemUtils;
 import com.vip.saturn.job.utils.SystemEnvProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -19,11 +21,15 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ShardingIT extends AbstractSaturnIT {
+
+	private NamespaceShardingContentService namespaceShardingContentService = new NamespaceShardingContentService(
+			(CuratorFramework) regCenter.getRawClient());
 
 	@BeforeClass
 	public static void setUp() throws Exception {
@@ -167,6 +173,436 @@ public class ShardingIT extends AbstractSaturnIT {
 		disableJob(jobName);
 		Thread.sleep(1000);
 		removeJob(jobName);
+		stopExecutorListGracefully();
+	}
+
+	@Test
+	public void test_B_JobAverage() throws Exception {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+			return;
+		}
+		// 启动第1台executor
+		Main executor1 = startOneNewExecutorList();
+		// 添加第1个作业
+		final String job1 = "test_B_JobAverage_job1";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job1);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(2);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 添加第2个作业
+		final String job2 = "test_B_JobAverage_job2";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job2);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(2);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用job1
+		enableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+
+		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		// 启动第2台executor
+		Main executor2 = startOneNewExecutorList();
+		// 等待作业执行获取分片
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(1);
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		// 启用job2
+		enableJob(job2);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(1);
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(1);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		// 禁用job1
+		disableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(0);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(1);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0); // 由于禁用的作业没有被notify，所以这个节点的内容还是原来的
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		// 下线executor1
+		stopExecutorGracefully(0);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(2).contains(0, 1);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+
+		// 关闭
+		removeJob(job1);
+		Thread.sleep(1000);
+		disableJob(job2);
+		Thread.sleep(1000);
+		removeJob(job2);
+		stopExecutorListGracefully();
+	}
+
+	@Test
+	public void test_B_JobAverageWithPreferListAndUseDispreferList() throws Exception {
+		testJobAverageWithPreferList("test_B_JobAverageWithPreferListAndUseDispreferList", true);
+	}
+
+	@Test
+	public void test_B_JobAverageWithPreferList() throws Exception {
+		testJobAverageWithPreferList("test_B_JobAverageWithPreferList", false);
+	}
+
+	private void testJobAverageWithPreferList(String jobPrefix, boolean useDispreferList) throws Exception {
+		if(!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+			return;
+		}
+		// 启动第1台executor
+		Main executor1 = startOneNewExecutorList();
+		// 添加第1个作业，设置preferList
+		final String job1 = jobPrefix + "_job1";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job1);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(2);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setPreferList(executor1.getExecutorName());
+			jobConfig.setUseDispreferList(useDispreferList);
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 添加第2个作业
+		final String job2 = jobPrefix + "_job2";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job2);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(2);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用job1
+		enableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+
+		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		// 启动第2台executor
+		Main executor2 = startOneNewExecutorList();
+		// 等待作业执行获取分片
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2)
+				.contains(0, 1); // 由于设置了preferList为executor1
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		// 启用job2
+		enableJob(job2);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(0);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0); // 由于优先放回总负荷最小的，所以executor2首先被分配0
+		// 禁用job1
+		disableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isEmpty();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1).contains(0);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1); // 由于禁用的作业没有被notify，所以这个节点的内容还是原来的
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		// 下线executor1
+		stopExecutorGracefully(0);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(2).contains(0, 1);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		// 启用job1
+		enableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		if (useDispreferList) { // 由于useDispreferList为true，所以分片被executor2接管
+			assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(2).contains(0, 1);
+		} else {
+			assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		}
+		shardingItems = namespaceShardingContentService.getShardingItems(job2);
+		assertThat(shardingItems.get(executor1.getExecutorName())).isNull();
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(2).contains(0, 1);
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		if (useDispreferList) {
+			assertThat(items).hasSize(2).contains(0, 1);
+		} else {
+			assertThat(items).isEmpty();
+		}
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+
+		// 关闭
+		disableJob(job1);
+		Thread.sleep(1000);
+		removeJob(job1);
+		Thread.sleep(1000);
+		disableJob(job2);
+		Thread.sleep(1000);
+		removeJob(job2);
+		stopExecutorListGracefully();
+	}
+
+	@Test
+	public void test_C_JobAverageWithLocalMode() throws Exception {
+		if(!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+			return;
+		}
+		// 启动第1台executor
+		Main executor1 = startOneNewExecutorList();
+		Main executor2 = startOneNewExecutorList();
+		// 添加第1个作业，设置preferList
+		final String job1 = "test_C_JobAverageWithLocalMode_job1";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job1);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(2);
+			jobConfig.setShardingItemParameters("0=0,1=1");
+			jobConfig.setPreferList(executor1.getExecutorName()); // 设置preferList
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用作业
+		enableJob(job1);
+		Thread.sleep(2000);
+		// 校验
+		Map<String, List<Integer>> shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+
+		List<Integer> items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		// 添加第2个作业，设置本地模式
+		final String job2 = "test_C_JobAverageWithLocalMode_job2";
+		{
+			final JobConfig jobConfig = new JobConfig();
+			jobConfig.setJobName(job2);
+			jobConfig.setCron("0/1 * * * * ?");
+			jobConfig.setJobType(JobType.JAVA_JOB.toString());
+			jobConfig.setJobClass(SimpleJavaJob.class.getCanonicalName());
+			jobConfig.setShardingTotalCount(1); // 注意，设置1
+			jobConfig.setShardingItemParameters("*=0");
+			jobConfig.setLocalMode(true); // 设置本地模式
+			addJob(jobConfig);
+			Thread.sleep(1000);
+		}
+		// 启用job2
+		enableJob(job2);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isEmpty();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2); // 由于job2为本地模式，所以仍然是每台机一个分片
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).hasSize(1)
+				.contains(0); // 由于优先分配给总负荷最小的机器，所以executor2被分配0
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).isEmpty();
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor2.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(0);
+		// 下线executor2
+		stopExecutorGracefully(1);
+		Thread.sleep(2000);
+		// 校验
+		shardingItems = namespaceShardingContentService.getShardingItems(job1);
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(2).contains(0, 1);
+		assertThat(shardingItems.get(executor2.getExecutorName())).isNull();
+		shardingItems = namespaceShardingContentService.getShardingItems(job2); // 由于job2为本地模式，所以仍然是每台机一个分片
+		assertThat(shardingItems.get(executor1.getExecutorName())).hasSize(1).contains(1); // 不会改变为0分片
+		assertThat(shardingItems.get(executor2.getExecutorName())).isNull();
+
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job1, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(2).contains(0, 1);
+		items = ItemUtils.toItemList(regCenter.getDirectly(
+				JobNodePath.getNodeFullPath(job2, ShardingNode.getShardingNode(executor1.getExecutorName()))));
+		assertThat(items).hasSize(1).contains(1);
+
+		// 关闭
+		disableJob(job1);
+		Thread.sleep(1000);
+		removeJob(job1);
+		Thread.sleep(1000);
+		disableJob(job2);
+		Thread.sleep(1000);
+		removeJob(job2);
 		stopExecutorListGracefully();
 	}
 

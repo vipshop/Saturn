@@ -7,25 +7,34 @@ import com.vip.saturn.job.sharding.entity.Shard;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
 import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.sharding.service.NamespaceShardingService;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 
 public abstract class AbstractAsyncShardingTask implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractAsyncShardingTask.class);
 
 	private static final int LOAD_LEVEL_DEFAULT = 1;
+
+	private static final String NAME_ENABLE_JOB_AVERAGE = "VIP_SATURN_SHARDING_ENABLE_JOB_AVERAGE";
+	public static boolean ENABLE_JOB_AVERAGE = true;
+
+	static {
+		String enableJobAverage = System.getProperty(NAME_ENABLE_JOB_AVERAGE);
+		if (StringUtils.isBlank(enableJobAverage)) {
+			enableJobAverage = System.getenv(NAME_ENABLE_JOB_AVERAGE);
+		}
+		if (StringUtils.isNotBlank(enableJobAverage)) {
+			ENABLE_JOB_AVERAGE = Boolean.parseBoolean(enableJobAverage);
+		}
+	}
 
 	protected NamespaceShardingService namespaceShardingService;
 
@@ -76,8 +85,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			List<String> allEnableJobs = getAllEnableJobs(allJobs);
 			List<Executor> oldOnlineExecutorList = getLastOnlineExecutorList();
 			List<Executor> customLastOnlineExecutorList = customLastOnlineExecutorList();
-			List<Executor> lastOnlineExecutorList = customLastOnlineExecutorList == null
-					? copyOnlineExecutorList(oldOnlineExecutorList) : customLastOnlineExecutorList;
+			List<Executor> lastOnlineExecutorList = customLastOnlineExecutorList == null ?
+					copyOnlineExecutorList(oldOnlineExecutorList) :
+					customLastOnlineExecutorList;
 			List<Executor> lastOnlineTrafficExecutorList = getTrafficExecutorList(lastOnlineExecutorList);
 			List<Shard> shardList = new ArrayList<>();
 			// 摘取
@@ -127,8 +137,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			namespaceShardingService.shutdownInner(false);
 		} catch (InterruptedException e) {
 			log.info("{}-{} {}-shutdownInner is interrupted", namespaceShardingService.getNamespace(),
-					namespaceShardingService.getHostValue(),
-					this.getClass().getSimpleName());
+					namespaceShardingService.getHostValue(), this.getClass().getSimpleName());
 			Thread.currentThread().interrupt();
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
@@ -149,8 +158,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	private boolean shardingContentIsChanged(List<Executor> oldOnlineExecutorList,
 			List<Executor> lastOnlineExecutorList) {
 		return !namespaceShardingContentService.toShardingContent(oldOnlineExecutorList)
-				.equals(namespaceShardingContentService
-						.toShardingContent(lastOnlineExecutorList));
+				.equals(namespaceShardingContentService.toShardingContent(lastOnlineExecutorList));
 	}
 
 	private List<Executor> copyOnlineExecutorList(List<Executor> oldOnlineExecutorList) {
@@ -182,6 +190,23 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		return newOnlineExecutorList;
 	}
 
+	protected List<Shard> removeAllShardsOnExecutors(List<Executor> lastOnlineTrafficExecutorList, String jobName) {
+		List<Shard> removedShards = Lists.newArrayList();
+		for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
+			Executor executor = lastOnlineTrafficExecutorList.get(i);
+			Iterator<Shard> iterator = executor.getShardList().iterator();
+			while (iterator.hasNext()) {
+				Shard shard = iterator.next();
+				if (jobName.equals(shard.getJobName())) {
+					executor.setTotalLoadLevel(executor.getTotalLoadLevel() - shard.getLoadLevel());
+					iterator.remove();
+					removedShards.add(shard);
+				}
+			}
+		}
+		return removedShards;
+	}
+
 	/**
 	 * 修正lastOnlineExecutorList中的jobNameList
 	 */
@@ -195,8 +220,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			List<String> jobNameList = executor.getJobNameList();
 			String jobServersExecutorStatusNodePath = SaturnExecutorsNode
 					.getJobServersExecutorStatusNodePath(jobName, executor.getExecutorName());
-			if (curatorFramework.checkExists().forPath(jobServersExecutorStatusNodePath)
-					!= null) {
+			if (curatorFramework.checkExists().forPath(jobServersExecutorStatusNodePath) != null) {
 				if (!jobNameList.contains(jobName)) {
 					jobNameList.add(jobName);
 					fixed = true;
@@ -213,10 +237,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 
 	private void increaseShardingCount() throws Exception {
 		Integer shardingCount = 1;
-		if (null != curatorFramework.checkExists()
-				.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH)) {
-			byte[] shardingCountData = curatorFramework.getData()
-					.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH);
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH) != null) {
+			byte[] shardingCountData = curatorFramework.getData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH);
 			if (shardingCountData != null) {
 				try {
 					shardingCount = Integer.parseInt(new String(shardingCountData, StandardCharsets.UTF_8.name())) + 1;
@@ -227,9 +249,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			curatorFramework.setData().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
 					shardingCount.toString().getBytes(StandardCharsets.UTF_8.name()));
 		} else {
-			curatorFramework.create().creatingParentsIfNeeded()
-					.forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
-							shardingCount.toString().getBytes(StandardCharsets.UTF_8.name()));
+			curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.SHARDING_COUNT_PATH,
+					shardingCount.toString().getBytes(StandardCharsets.UTF_8.name()));
 		}
 	}
 
@@ -238,9 +259,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 * thread is all-shard-task
 	 * Return the jobs and their shardContent.
 	 */
-	private Map<String, Map<String, List<Integer>>> getEnabledAndShardsChangedJobShardContent(
-			boolean isAllShardingTask, List<String> allEnableJobs, List<Executor> oldOnlineExecutorList,
-			List<Executor> lastOnlineExecutorList) {
+	private Map<String, Map<String, List<Integer>>> getEnabledAndShardsChangedJobShardContent(boolean isAllShardingTask,
+			List<String> allEnableJobs, List<Executor> oldOnlineExecutorList, List<Executor> lastOnlineExecutorList) {
 		Map<String, Map<String, List<Integer>>> jobShardContent = new HashMap<>();
 		if (isAllShardingTask) {
 			for (String enableJob : allEnableJobs) {
@@ -348,10 +368,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		int shardingTotalCount = 0;
 		String jobConfigShardingTotalCountNodePath = SaturnExecutorsNode
 				.getJobConfigShardingTotalCountNodePath(jobName);
-		if (curatorFramework.checkExists().forPath(jobConfigShardingTotalCountNodePath)
-				!= null) {
-			byte[] shardingTotalCountData = curatorFramework.getData()
-					.forPath(jobConfigShardingTotalCountNodePath);
+		if (curatorFramework.checkExists().forPath(jobConfigShardingTotalCountNodePath) != null) {
+			byte[] shardingTotalCountData = curatorFramework.getData().forPath(jobConfigShardingTotalCountNodePath);
 			if (shardingTotalCountData != null) {
 				try {
 					shardingTotalCount = Integer
@@ -368,8 +386,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		int loadLevel = LOAD_LEVEL_DEFAULT;
 		String jobConfigLoadLevelNodePath = SaturnExecutorsNode.getJobConfigLoadLevelNodePath(jobName);
 		if (curatorFramework.checkExists().forPath(jobConfigLoadLevelNodePath) != null) {
-			byte[] loadLevelData = curatorFramework.getData()
-					.forPath(jobConfigLoadLevelNodePath);
+			byte[] loadLevelData = curatorFramework.getData().forPath(jobConfigLoadLevelNodePath);
 			try {
 				if (loadLevelData != null) {
 					loadLevel = Integer.parseInt(new String(loadLevelData, StandardCharsets.UTF_8.name()));
@@ -441,8 +458,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 			Executor executor = lastOnlineExecutorList.get(i);
 			String executorName = executor.getExecutorName();
-			if (curatorFramework.checkExists()
-					.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executorName)) == null) {
+			if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executorName))
+					== null) {
 				nonDockerExecutors.add(executor);
 			}
 		}
@@ -452,8 +469,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	protected void putBackBalancing(List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 		if (lastOnlineExecutorList.isEmpty()) {
-			log
-					.warn("Unnecessary to put shards back to executors balanced because of no executor");
+			log.warn("Unnecessary to put shards back to executors balanced because of no executor");
 			return;
 		}
 
@@ -478,8 +494,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		while (iterator.hasNext()) {
 			String jobName = iterator.next().getJobName();
 
-			checkAndPutIntoMap(jobName,
-					filterExecutorsByJob(notDockerExecutors, jobName), noDockerTrafficExecutorsMapByJob);
+			checkAndPutIntoMap(jobName, filterExecutorsByJob(notDockerExecutors, jobName),
+					noDockerTrafficExecutorsMapByJob);
 
 			checkAndPutIntoMap(jobName, filterExecutorsByJob(lastOnlineTrafficExecutorList, jobName),
 					lastOnlineTrafficExecutorListMapByJob);
@@ -500,8 +516,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		// 如果配置了preferList，则选取preferList中的executor。
 		// 如果preferList中的executor都挂了，则不转移；否则，选取没有接管该作业的executor列表的loadLevel最小的一个。
 		// 如果没有配置preferList，则选取没有接管该作业的executor列表的loadLevel最小的一个。
-		putBackShardWithLocalMode(shardList, noDockerTrafficExecutorsMapByJob,
-				lastOnlineTrafficExecutorListMapByJob,
+		putBackShardWithLocalMode(shardList, noDockerTrafficExecutorsMapByJob, lastOnlineTrafficExecutorListMapByJob,
 				localModeMap, preferListIsConfiguredMap, preferListConfiguredMap);
 
 		// 2、放回配置了preferList的Shard
@@ -523,8 +538,10 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		Iterator<Shard> iterator = shardList.iterator();
 		while (iterator.hasNext()) {
 			Shard shard = iterator.next();
-			Executor executor = getExecutorWithMinLoadLevel(
-					noDockerTrafficExecutorsMapByJob.get(shard.getJobName()));
+			List<Executor> executors = noDockerTrafficExecutorsMapByJob.get(shard.getJobName());
+			Executor executor = ENABLE_JOB_AVERAGE ?
+					getExecutorWithMinJobLoadLevel(executors, shard.getJobName()) :
+					getExecutorWithMinLoadLevel(executors);
 			putShardIntoExecutor(shard, executor);
 			iterator.remove();
 		}
@@ -541,12 +558,14 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 			if (preferListIsConfiguredMap.get(jobName)) { // fix,
 				// preferList为空不能作为判断是否配置preferList的依据，比如说配置了容器资源，但是全部下线了。
 				List<String> preferList = preferListConfiguredMap.get(jobName);
-				List<Executor> preferExecutorList = getPreferExecutors(
-						lastOnlineTrafficExecutorListMapByJob, jobName, preferList);
+				List<Executor> preferExecutorList = getPreferExecutors(lastOnlineTrafficExecutorListMapByJob, jobName,
+						preferList);
 				// 如果preferList的Executor都offline，则放回到全部online的Executor中某一个。如果是这种情况，则后续再操作，避免不均衡的情况
 				// 如果存在preferExecutor，择优放回
 				if (!preferExecutorList.isEmpty()) {
-					Executor executor = getExecutorWithMinLoadLevel(preferExecutorList);
+					Executor executor = ENABLE_JOB_AVERAGE ?
+							getExecutorWithMinJobLoadLevel(preferExecutorList, jobName) :
+							getExecutorWithMinLoadLevel(preferExecutorList);
 					putShardIntoExecutor(shard, executor);
 					iterator.remove();
 				} else { // 如果不存在preferExecutor
@@ -577,15 +596,13 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					List<Executor> preferExecutorList = getPreferExecutors(lastOnlineTrafficExecutorListMapByJob,
 							jobName, preferListConfigured);
 					if (!preferExecutorList.isEmpty()) {
-						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList,
-								jobName);
+						Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(preferExecutorList, jobName);
 						putShardIntoExecutor(shard, executor);
 					}
 				}
 			} else {
 				Executor executor = getExecutorWithMinLoadLevelAndNoThisJob(
-						noDockerTrafficExecutorsMapByJob.get(jobName),
-						jobName);
+						noDockerTrafficExecutorsMapByJob.get(jobName), jobName);
 				putShardIntoExecutor(shard, executor);
 			}
 			iterator.remove();
@@ -595,8 +612,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	private List<Executor> getPreferExecutors(Map<String, List<Executor>> lastOnlineTrafficExecutorListMapByJob,
 			String jobName, List<String> preferListConfigured) {
 		List<Executor> preferExecutorList = new ArrayList<>();
-		List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob
-				.get(jobName);
+		List<Executor> lastOnlineTrafficExecutorListByJob = lastOnlineTrafficExecutorListMapByJob.get(jobName);
 		for (int i = 0; i < lastOnlineTrafficExecutorListByJob.size(); i++) {
 			Executor executor = lastOnlineTrafficExecutorListByJob.get(i);
 			if (preferListConfigured.contains(executor.getExecutorName())) {
@@ -613,12 +629,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 * 2、其他情况，返回true
 	 */
 	protected boolean useDispreferList(String jobName) throws Exception {
-		String jobConfigUseDispreferListNodePath = SaturnExecutorsNode
-				.getJobConfigUseDispreferListNodePath(jobName);
-		if (curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath)
-				!= null) {
-			byte[] useDispreferListData = curatorFramework.getData()
-					.forPath(jobConfigUseDispreferListNodePath);
+		String jobConfigUseDispreferListNodePath = SaturnExecutorsNode.getJobConfigUseDispreferListNodePath(jobName);
+		if (curatorFramework.checkExists().forPath(jobConfigUseDispreferListNodePath) != null) {
+			byte[] useDispreferListData = curatorFramework.getData().forPath(jobConfigUseDispreferListNodePath);
 			if (useDispreferListData != null && !Boolean
 					.parseBoolean(new String(useDispreferListData, StandardCharsets.UTF_8.name()))) {
 				return false;
@@ -631,12 +644,41 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		Executor minLoadLevelExecutor = null;
 		for (int i = 0; i < executorList.size(); i++) {
 			Executor executor = executorList.get(i);
-			if (minLoadLevelExecutor == null
-					|| minLoadLevelExecutor.getTotalLoadLevel() > executor.getTotalLoadLevel()) {
+			if (minLoadLevelExecutor == null || minLoadLevelExecutor.getTotalLoadLevel() > executor
+					.getTotalLoadLevel()) {
 				minLoadLevelExecutor = executor;
 			}
 		}
 		return minLoadLevelExecutor;
+	}
+
+	// 获取该作业负荷最小的executor，如果相同，那么取所有作业负荷最小的executor
+	private Executor getExecutorWithMinJobLoadLevel(List<Executor> executorList, String jobName) {
+		Executor minLoadLevelExecutor = null;
+		int minTotalLoadLevel = 0;
+		for (int i = 0; i < executorList.size(); i++) {
+			Executor executor = executorList.get(i);
+			int totalJobLoadLevel = getTotalJobLoadLevel(executor, jobName);
+			if (minLoadLevelExecutor == null || minTotalLoadLevel > totalJobLoadLevel
+					|| minTotalLoadLevel == totalJobLoadLevel && minLoadLevelExecutor.getTotalLoadLevel() > executor
+					.getTotalLoadLevel()) {
+				minLoadLevelExecutor = executor;
+				minTotalLoadLevel = totalJobLoadLevel;
+			}
+		}
+		return minLoadLevelExecutor;
+	}
+
+	private int getTotalJobLoadLevel(Executor executor, String jobName) {
+		int totalJobLoadLevel = 0;
+		List<Shard> shardList = executor.getShardList();
+		for (int i = 0; i < shardList.size(); i++) {
+			Shard shard = shardList.get(i);
+			if (jobName.equals(shard.getJobName())) {
+				totalJobLoadLevel += shard.getLoadLevel();
+			}
+		}
+		return totalJobLoadLevel;
 	}
 
 	private Executor getExecutorWithMinLoadLevelAndNoThisJob(List<Executor> executorList, String jobName) {
@@ -652,8 +694,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 					break;
 				}
 			}
-			if (!containThisJob && (minLoadLevelExecutor == null
-					|| minLoadLevelExecutor.getTotalLoadLevel() > executor.getTotalLoadLevel())) {
+			if (!containThisJob && (minLoadLevelExecutor == null || minLoadLevelExecutor.getTotalLoadLevel() > executor
+					.getTotalLoadLevel())) {
 				minLoadLevelExecutor = executor;
 			}
 		}
@@ -663,8 +705,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	private void putShardIntoExecutor(Shard shard, Executor executor) {
 		if (executor != null) {
 			if (isIn(shard, executor.getShardList())) {
-				log.error("The shard({}-{}) is running in the executor of {}, cannot be put again",
-						shard.getJobName(), shard.getItem(), executor.getExecutorName());
+				log.error("The shard({}-{}) is running in the executor of {}, cannot be put again", shard.getJobName(),
+						shard.getItem(), executor.getExecutorName());
 			} else {
 				executor.getShardList().add(shard);
 				executor.setTotalLoadLevel(executor.getTotalLoadLevel() + shard.getLoadLevel());
@@ -679,13 +721,10 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 */
 	private List<String> getAllJobs() throws Exception {
 		List<String> allJob = new ArrayList<>();
-		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH)
-				== null) {
-			curatorFramework.create().creatingParentsIfNeeded()
-					.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.JOBSNODE_PATH) == null) {
+			curatorFramework.create().creatingParentsIfNeeded().forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 		}
-		List<String> tmp = curatorFramework.getChildren()
-				.forPath(SaturnExecutorsNode.JOBSNODE_PATH);
+		List<String> tmp = curatorFramework.getChildren().forPath(SaturnExecutorsNode.JOBSNODE_PATH);
 		if (tmp != null) {
 			allJob.addAll(tmp);
 		}
@@ -699,8 +738,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		List<String> allEnableJob = new ArrayList<>();
 		for (int i = 0; i < allJob.size(); i++) {
 			String job = allJob.get(i);
-			if (curatorFramework.checkExists()
-					.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job)) != null) {
+			if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job)) != null) {
 				byte[] enableData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getJobConfigEnableNodePath(job));
 				if (enableData != null && Boolean.parseBoolean(new String(enableData, StandardCharsets.UTF_8.name()))) {
@@ -722,8 +760,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	}
 
 	protected boolean preferListIsConfigured(String jobName) throws Exception {
-		if (curatorFramework.checkExists()
-				.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)) != null) {
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName))
+				!= null) {
 			byte[] preferListData = curatorFramework.getData()
 					.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName));
 			if (preferListData != null) {
@@ -738,8 +776,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	 */
 	protected List<String> getPreferListConfigured(String jobName) throws Exception {
 		List<String> preferList = new ArrayList<>();
-		if (curatorFramework.checkExists()
-				.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName)) != null) {
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName))
+				!= null) {
 			byte[] preferListData = curatorFramework.getData()
 					.forPath(SaturnExecutorsNode.getJobConfigPreferListNodePath(jobName));
 			if (preferListData != null) {
@@ -758,10 +796,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 
 	private List<String> getAllExistingExecutors() throws Exception {
 		List<String> allExistsExecutors = new ArrayList<>();
-		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorsNodePath())
-				!= null) {
-			List<String> executors = curatorFramework.getChildren()
-					.forPath(SaturnExecutorsNode.getExecutorsNodePath());
+		if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorsNodePath()) != null) {
+			List<String> executors = curatorFramework.getChildren().forPath(SaturnExecutorsNode.getExecutorsNodePath());
 			if (executors != null) {
 				allExistsExecutors.addAll(executors);
 			}
@@ -786,8 +822,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		String task = prefer.substring(1);
 		for (int i = 0; i < allExistsExecutors.size(); i++) {
 			String executor = allExistsExecutors.get(i);
-			if (curatorFramework.checkExists()
-					.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
+			if (curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor)) != null) {
 				byte[] taskData = curatorFramework.getData()
 						.forPath(SaturnExecutorsNode.getExecutorTaskNodePath(executor));
 				if (taskData != null && task.equals(new String(taskData, StandardCharsets.UTF_8.name())) && !preferList
@@ -815,8 +850,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		List<Executor> preferListOnlineByJob = new ArrayList<>();
 		for (int i = 0; i < lastOnlineExecutorList.size(); i++) {
 			Executor executor = lastOnlineExecutorList.get(i);
-			if (preferListConfigured.contains(executor.getExecutorName())
-					&& executor.getJobNameList().contains(jobName)) {
+			if (preferListConfigured.contains(executor.getExecutorName()) && executor.getJobNameList()
+					.contains(jobName)) {
 				preferListOnlineByJob.add(executor);
 			}
 		}
@@ -863,8 +898,8 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 	}
 
 	protected boolean getExecutorNoTraffic(String executorName) throws Exception {
-		return curatorFramework.checkExists()
-				.forPath(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executorName)) != null;
+		return curatorFramework.checkExists().forPath(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executorName))
+				!= null;
 	}
 
 }
