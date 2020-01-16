@@ -1341,12 +1341,21 @@ public class JobServiceImpl implements JobService {
 	}
 
 	protected List<BatchJobResult> doCreateJobFromImportFile(String namespace, List<JobConfig> jobConfigList,
-			String createdBy) {
+			String createdBy) throws SaturnJobConsoleException {
 		List<BatchJobResult> results = new ArrayList<>();
+		List<JobConfig> jobConfigListTemp = new ArrayList<>();
 		for (JobConfig jobConfig : jobConfigList) {
 			BatchJobResult batchJobResult = new BatchJobResult();
 			batchJobResult.setJobName(jobConfig.getJobName());
 			try {
+				// 如果存在上下游关联关系，直接导入会检验不通过；需要先解除关联关系，创建成功后再更新关联关系
+				if (!(StringUtils.isBlank(jobConfig.getUpStream()) && StringUtils.isBlank(jobConfig.getDownStream()))) {
+					JobConfig jobConfigTemp = new JobConfig();
+					SaturnBeanUtils.copyProperties(jobConfig, jobConfigTemp);
+					jobConfigListTemp.add(jobConfigTemp);
+					jobConfig.setUpStream(null);
+					jobConfig.setDownStream(null);
+				}
 				addJob(namespace, jobConfig, createdBy);
 				batchJobResult.setSuccess(true);
 			} catch (SaturnJobConsoleException e) {
@@ -1359,6 +1368,11 @@ public class JobServiceImpl implements JobService {
 				log.warn("exception: {}", e);
 			}
 			results.add(batchJobResult);
+		}
+		if (!CollectionUtils.isEmpty(jobConfigListTemp)) {
+			for (JobConfig jobConfig : jobConfigListTemp) {
+				updateJobConfig(namespace, jobConfig, createdBy);
+			}
 		}
 		return results;
 	}

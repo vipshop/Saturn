@@ -14,6 +14,7 @@ import com.vip.saturn.job.console.service.ExecutorService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.service.NamespaceService;
 import com.vip.saturn.job.console.service.RegistryCenterService;
+import com.vip.saturn.job.console.utils.SaturnBeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,15 +82,29 @@ public class NamespaceServiceImpl implements NamespaceService {
 			result.put("fail", failedJobs);
 
 			List<JobConfig> jobConfigs = jobService.getUnSystemJobs(srcNamespace);
+			List<JobConfig> jobConfigListTemp = new ArrayList<>();
 			for (int i = 0; i < jobConfigs.size(); i++) {
 				JobConfig jobConfig = jobConfigs.get(i);
 				try {
+					// 如果存在上下游关联关系，直接导入会检验不通过；需要先解除关联关系，创建成功后再更新关联关系
+					if (!(StringUtils.isBlank(jobConfig.getUpStream()) && StringUtils.isBlank(jobConfig.getDownStream()))) {
+						JobConfig jobConfigTemp = new JobConfig();
+						SaturnBeanUtils.copyProperties(jobConfig, jobConfigTemp);
+						jobConfigListTemp.add(jobConfigTemp);
+						jobConfig.setUpStream(null);
+						jobConfig.setDownStream(null);
+					}
 					jobService.addJob(destNamespace, jobConfig, createdBy);
 					successfullyImportedJobs.add(jobConfig.getJobName());
 				} catch (SaturnJobConsoleException e) {
 					log.warn("fail to import job {} from {} to {}", jobConfig.getJobName(), srcNamespace, destNamespace,
 							e);
 					failedJobs.add(jobConfig.getJobName());
+				}
+			}
+			if (!CollectionUtils.isEmpty(jobConfigListTemp)) {
+				for (JobConfig jobConfig : jobConfigListTemp) {
+					jobService.updateJobConfig(destNamespace, jobConfig, createdBy);
 				}
 			}
 			return result;
