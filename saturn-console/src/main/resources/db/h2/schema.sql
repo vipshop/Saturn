@@ -322,10 +322,15 @@ CREATE TABLE `saturn_dashboard_history` (
   `zk_cluster` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '所属zk集群',
   `record_type` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '类型',
   `topic` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '主题',
-  `content` LONGTEXT NOT NULL COMMENT '内容',
-  `record_date` DATE NOT NULL COMMENT '记录日期',
+  `content` LONGTEXT COMMENT '内容',
+  `record_date` DATE COMMENT '记录日期',
+  `created_by` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '创建人',
+  `create_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' COMMENT '创建时间',
+  `last_updated_by` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '最近一次的更新人',
+  `last_update_time` TIMESTAMP NOT NULL DEFAULT '1980-01-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '最近一次的更新时间',
+  `is_deleted` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '是否删除：0，未删除；1，删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `index1` (`zk_cluster`, `record_type`, `topic`, `record_date`)
-)ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8;
+  UNIQUE KEY `uniq_dashboard_history_zk_cluster_record_type_topic_record_date` (`zk_cluster`, `record_type`, `topic`, `record_date`)
+)ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8 COMMENT ='dashboard历史记录表';
 
 ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
