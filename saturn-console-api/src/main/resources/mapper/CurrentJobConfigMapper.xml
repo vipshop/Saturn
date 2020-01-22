@@ -314,7 +314,7 @@
             WHEN groups REGEXP '^${groupName},' THEN RIGHT(groups, LENGTH(groups) - LENGTH('${groupName},'))
             WHEN groups REGEXP ',${groupName}$' THEN LEFT(groups, LENGTH(groups) - LENGTH(',${groupName}'))
             WHEN groups REGEXP ',${groupName},' THEN REPLACE(groups, ',${groupName},', ',')
-            WHEN groups = 'cat' THEN ''
+            WHEN groups = '${groupName}' THEN ''
             ELSE groups
         END
         )

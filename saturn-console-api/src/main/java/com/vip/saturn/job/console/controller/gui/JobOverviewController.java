@@ -12,7 +12,6 @@ import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.*;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -206,10 +205,6 @@ public class JobOverviewController extends AbstractGUIController {
 				SaturnBeanUtils.copyProperties(jobConfig, jobOverviewJobVo);
 
 				updateJobTypesInOverview(jobConfig, jobOverviewJobVo);
-
-				if (StringUtils.isBlank(jobOverviewJobVo.getGroups())) {
-					jobOverviewJobVo.setGroups(SaturnConstants.NO_GROUPS_LABEL);
-				}
 
 				if (jobStatus == null) {
 					jobOverviewJobVo.setStatus(jobService.getJobStatus(namespace, jobConfig));
