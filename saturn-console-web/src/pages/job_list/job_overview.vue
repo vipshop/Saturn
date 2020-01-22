@@ -61,6 +61,7 @@
                                 <el-button @click="batchDisabled()" v-if="$common.hasPerm('job:batchDisable', domainName)"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
                                 <el-button @click="batchDelete()" v-if="$common.hasPerm('job:batchRemove', domainName)"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()" v-if="$common.hasPerm('job:batchSetPreferExecutors', domainName)"><i class="fa fa-level-up text-btn"></i>优先</el-button>
+                                <el-button @click="batchGroup()"><i class="fa fa-object-group text-btn"></i>分组</el-button>
                             </div>
                             <div class="pull-right">
                                 <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
@@ -97,8 +98,9 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="groups" label="分组">
-                                <template slot-scope="scope"> 
-                                    <el-tag type="success" size="mini" style="margin-right: 3px;margin-bottom: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
+                                <template slot-scope="scope">
+                                    <el-tag v-if="scope.row.groups === ''" type="success" size="mini">未分组</el-tag>
+                                    <el-tag v-else type="success" size="mini" style="margin-right: 3px;margin-bottom: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
@@ -142,6 +144,9 @@
             </div>
             <div v-if="isArrangeLayoutVisible">
                 <arrange-layout-dialog :arrange-layout-info="arrangeLayoutInfo" @job-redirect="jobRedirect" @close-dialog="closeArrangeLayoutDialog"></arrange-layout-dialog>
+            </div>
+            <div v-if="isJobGroupVisible">
+                <job-group-dialog :job-groups="jobGroups" @job-group-success="jobGroupSuccess" @close-dialog="closeJobGroupDialog"></job-group-dialog>
             </div>
         </div>
     </div>
@@ -188,9 +193,30 @@ export default {
         STOPPED: '',
       },
       multipleSelection: [],
+      isJobGroupVisible: false,
+      jobGroups: [],
     };
   },
   methods: {
+    batchGroup() {
+      this.batchOperation('分组', (arr) => {
+        this.jobGroups = arr.map((obj) => {
+          const rObj = {};
+          rObj.jobName = obj.jobName;
+          rObj.groups = obj.groups;
+          return rObj;
+        });
+        this.isJobGroupVisible = true;
+      });
+    },
+    jobGroupSuccess() {
+      this.closeJobGroupDialog();
+      this.refreshPage();
+      this.$message.successNotify('批量作业分组操作成功');
+    },
+    closeJobGroupDialog() {
+      this.isJobGroupVisible = false;
+    },
     handleArrangeLayout() {
       this.$http.get(`/console/namespaces/${this.domainName}/jobs/arrangeLayout`).then((data) => {
         this.arrangeLayoutInfo = data;

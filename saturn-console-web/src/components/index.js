@@ -29,7 +29,7 @@ import JobInfoDialog from './common/dialog/job_info_dialog';
 import BatchPriorityDialog from './/common/dialog/batch_priority_dialog';
 import ImportResultDialog from './common/dialog/import_result_dialog';
 import ArrangeLayoutDialog from './common/dialog/arrange_layout_dialog';
-
+import JobGroupDialog from './common/dialog/job_group_dialog';
 
 Vue.component('Container', Container);
 Vue.component('VHeader', VHeader);
@@ -61,3 +61,4 @@ Vue.component('job-info-dialog', JobInfoDialog);
 Vue.component('batch-priority-dialog', BatchPriorityDialog);
 Vue.component('import-result-dialog', ImportResultDialog);
 Vue.component('arrange-layout-dialog', ArrangeLayoutDialog);
+Vue.component('job-group-dialog', JobGroupDialog);
