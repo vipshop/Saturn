@@ -53,26 +53,26 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	@Test
 	public void A_JavaMultiJobWithLoad() throws Exception {
-		AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = false;
+		AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING = false;
 		try {
 			String preferList = null;
 			multiJobSharding(preferList);
 			stopExecutorListGracefully();
 		} finally {
-			AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = true;
+			AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING = true;
 		}
 	}
 
 	// 仅对作业3增加优先节点1,2
 	@Test
 	public void B_JavaMultiJobWithLoadWithPreferList() throws Exception {
-		AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = false;
+		AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING = false;
 		try {
 			String preferList = "executorName0,executorName1";
 			multiJobSharding(preferList);
 			stopExecutorListGracefully();
 		} finally {
-			AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE = true;
+			AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING = true;
 		}
 	}
 
@@ -285,7 +285,7 @@ public class ShardingWithLoadIT extends AbstractSaturnIT {
 
 	@Test
 	public void C_jobAverage() throws Exception {
-		if (!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING) {
 			return;
 		}
 		// 启动第2台executor

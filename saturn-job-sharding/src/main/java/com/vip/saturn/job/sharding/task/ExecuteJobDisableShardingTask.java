@@ -31,7 +31,7 @@ public class ExecuteJobDisableShardingTask extends AbstractAsyncShardingTask {
 	protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) {
 		// 摘取所有该作业的Shard
-		shardList.addAll(removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName));
+		shardList.addAll(removeJobShardsOnExecutors(lastOnlineTrafficExecutorList, jobName));
 
 		// 如果shardList为空，则没必要进行放回等操作，摘取失败
 		if (shardList.isEmpty()) {

@@ -39,7 +39,7 @@ public class ExecuteJobEnableShardingTask extends AbstractAsyncShardingTask {
 	protected boolean pick(List<String> allJobs, List<String> allEnableJobs, List<Shard> shardList,
 			List<Executor> lastOnlineExecutorList, List<Executor> lastOnlineTrafficExecutorList) throws Exception {
 		// 移除已经在Executor运行的该作业的所有Shard
-		removeAllShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
+		removeJobShardsOnExecutors(lastOnlineTrafficExecutorList, jobName);
 
 		// 修正该所有executor的对该作业的jobNameList
 		fixJobNameList(lastOnlineExecutorList, jobName);

@@ -223,8 +223,8 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 		} else {
 			// 如果有分片正在运行，则平衡摘取
 			if (hasShardRunning) {
-				if (ENABLE_JOB_AVERAGE) {
-					pickBalanceWithJobAverage(shardList, filterOnlineExecutors(lastOnlineTrafficExecutorList));
+				if (ENABLE_JOB_BASED_SHARDING) {
+					pickBalanceWithJobBased(shardList, filterOnlineExecutors(lastOnlineTrafficExecutorList));
 				} else {
 					pickBalance(shardList, lastOnlineTrafficExecutorList);
 				}
@@ -245,8 +245,8 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 			// 如果有分片正在运行，摘取全部运行在非优先节点上的分片，还可以平衡摘取
 			if (hasShardRunning) {
 				shardList.addAll(pickShardsRunningInDispreferList(preferListConfigured, lastOnlineTrafficExecutorList));
-				if (ENABLE_JOB_AVERAGE) {
-					pickBalanceWithJobAverage(shardList,
+				if (ENABLE_JOB_BASED_SHARDING) {
+					pickBalanceWithJobBased(shardList,
 							filterOnlineExecutorsByPreferListConfigured(preferListConfigured,
 									lastOnlineTrafficExecutorList, true));
 				} else {
@@ -266,8 +266,8 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 					boolean shardsAllRunningInDispreferList = shardsAllRunningInDispreferList(preferListConfigured,
 							lastOnlineTrafficExecutorList);
 					if (shardsAllRunningInDispreferList) {
-						if (ENABLE_JOB_AVERAGE) {
-							pickBalanceWithJobAverage(shardList,
+						if (ENABLE_JOB_BASED_SHARDING) {
+							pickBalanceWithJobBased(shardList,
 									filterOnlineExecutorsByPreferListConfigured(preferListConfigured,
 											lastOnlineTrafficExecutorList, false));
 						} else {
@@ -295,7 +295,8 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 			List<Executor> lastOnlineTrafficExecutorList, boolean contains) {
 		List<Executor> onlineExecutorListByPreferListConfigured = new ArrayList<>();
 		for (Executor executor : lastOnlineTrafficExecutorList) {
-			if (executor.getJobNameList().contains(jobName) && contains == preferListConfigured.contains(executor)) {
+			if (executor.getJobNameList().contains(jobName) && contains == preferListConfigured
+					.contains(executor.getExecutorName())) {
 				onlineExecutorListByPreferListConfigured.add(executor);
 			}
 		}
@@ -313,7 +314,7 @@ public class ExecuteJobServerOnlineShardingTask extends AbstractAsyncShardingTas
 	}
 
 	// executorList是可以接管该作业的机器
-	private void pickBalanceWithJobAverage(List<Shard> shardList, List<Executor> executorList) {
+	private void pickBalanceWithJobBased(List<Shard> shardList, List<Executor> executorList) {
 		// 计算出executor对该作业的平均负荷
 		int totalJobLoadLevel = 0;
 		for (Shard shard : shardList) {

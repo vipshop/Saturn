@@ -20,20 +20,17 @@ import java.util.concurrent.ExecutorService;
 public abstract class AbstractAsyncShardingTask implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractAsyncShardingTask.class);
-
 	private static final int LOAD_LEVEL_DEFAULT = 1;
-
-	private static final String NAME_ENABLE_JOB_AVERAGE = "VIP_SATURN_SHARDING_ENABLE_JOB_AVERAGE";
-	public static boolean ENABLE_JOB_AVERAGE = true;
+	private static final String NAME_ENABLE_JOB_BASED_SHARDING = "VIP_SATURN_ENABLE_JOB_BASED_SHARDING";
+	public static boolean ENABLE_JOB_BASED_SHARDING = true;
 
 	static {
-		String enableJobAverage = System.getProperty(NAME_ENABLE_JOB_AVERAGE);
-		if (StringUtils.isBlank(enableJobAverage)) {
-			enableJobAverage = System.getenv(NAME_ENABLE_JOB_AVERAGE);
-		}
+		String enableJobAverage = System
+				.getProperty(NAME_ENABLE_JOB_BASED_SHARDING, System.getenv(NAME_ENABLE_JOB_BASED_SHARDING));
 		if (StringUtils.isNotBlank(enableJobAverage)) {
-			ENABLE_JOB_AVERAGE = Boolean.parseBoolean(enableJobAverage);
+			ENABLE_JOB_BASED_SHARDING = Boolean.parseBoolean(enableJobAverage);
 		}
+		log.info("ENABLE_JOB_BASED_SHARDING is {}", ENABLE_JOB_BASED_SHARDING);
 	}
 
 	protected NamespaceShardingService namespaceShardingService;
@@ -190,7 +187,10 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		return newOnlineExecutorList;
 	}
 
-	protected List<Shard> removeAllShardsOnExecutors(List<Executor> lastOnlineTrafficExecutorList, String jobName) {
+	/**
+	 * 移除特定作业的shard
+	 */
+	protected List<Shard> removeJobShardsOnExecutors(List<Executor> lastOnlineTrafficExecutorList, String jobName) {
 		List<Shard> removedShards = Lists.newArrayList();
 		for (int i = 0; i < lastOnlineTrafficExecutorList.size(); i++) {
 			Executor executor = lastOnlineTrafficExecutorList.get(i);
@@ -524,7 +524,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				preferListConfiguredMap, useDispreferListMap);
 
 		// 3、放回没有配置preferList的Shard
-		putBackShardWithoutPreferlist(shardList, noDockerTrafficExecutorsMapByJob);
+		putBackShardWithoutPreferList(shardList, noDockerTrafficExecutorsMapByJob);
 	}
 
 	private <T> void checkAndPutIntoMap(String key, T value, Map<String, T> targetMap) {
@@ -533,13 +533,13 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		}
 	}
 
-	private void putBackShardWithoutPreferlist(List<Shard> shardList,
+	private void putBackShardWithoutPreferList(List<Shard> shardList,
 			Map<String, List<Executor>> noDockerTrafficExecutorsMapByJob) {
 		Iterator<Shard> iterator = shardList.iterator();
 		while (iterator.hasNext()) {
 			Shard shard = iterator.next();
 			List<Executor> executors = noDockerTrafficExecutorsMapByJob.get(shard.getJobName());
-			Executor executor = ENABLE_JOB_AVERAGE ?
+			Executor executor = ENABLE_JOB_BASED_SHARDING ?
 					getExecutorWithMinJobLoadLevel(executors, shard.getJobName()) :
 					getExecutorWithMinLoadLevel(executors);
 			putShardIntoExecutor(shard, executor);
@@ -563,7 +563,7 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 				// 如果preferList的Executor都offline，则放回到全部online的Executor中某一个。如果是这种情况，则后续再操作，避免不均衡的情况
 				// 如果存在preferExecutor，择优放回
 				if (!preferExecutorList.isEmpty()) {
-					Executor executor = ENABLE_JOB_AVERAGE ?
+					Executor executor = ENABLE_JOB_BASED_SHARDING ?
 							getExecutorWithMinJobLoadLevel(preferExecutorList, jobName) :
 							getExecutorWithMinLoadLevel(preferExecutorList);
 					putShardIntoExecutor(shard, executor);
@@ -652,7 +652,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		return minLoadLevelExecutor;
 	}
 
-	// 获取该作业负荷最小的executor，如果相同，那么取所有作业负荷最小的executor
+	/**
+	 * 获取该作业负荷最小的executor，如果相同，那么取所有作业负荷最小的executor
+	 */
 	private Executor getExecutorWithMinJobLoadLevel(List<Executor> executorList, String jobName) {
 		Executor minLoadLevelExecutor = null;
 		int minTotalLoadLevel = 0;
@@ -669,6 +671,9 @@ public abstract class AbstractAsyncShardingTask implements Runnable {
 		return minLoadLevelExecutor;
 	}
 
+	/**
+	 * 计算指定作业在特定executor上的负荷
+	 */
 	private int getTotalJobLoadLevel(Executor executor, String jobName) {
 		int totalJobLoadLevel = 0;
 		List<Shard> shardList = executor.getShardList();

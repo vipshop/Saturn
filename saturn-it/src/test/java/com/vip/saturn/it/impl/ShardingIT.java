@@ -178,7 +178,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 	@Test
 	public void test_B_JobAverage() throws Exception {
-		if (!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING) {
 			return;
 		}
 		// 启动第1台executor
@@ -331,7 +331,7 @@ public class ShardingIT extends AbstractSaturnIT {
 	}
 
 	private void testJobAverageWithPreferList(String jobPrefix, boolean useDispreferList) throws Exception {
-		if(!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING) {
 			return;
 		}
 		// 启动第1台executor
@@ -505,7 +505,7 @@ public class ShardingIT extends AbstractSaturnIT {
 
 	@Test
 	public void test_C_JobAverageWithLocalMode() throws Exception {
-		if(!AbstractAsyncShardingTask.ENABLE_JOB_AVERAGE) {
+		if (!AbstractAsyncShardingTask.ENABLE_JOB_BASED_SHARDING) {
 			return;
 		}
 		// 启动第1台executor
