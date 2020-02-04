@@ -89,7 +89,9 @@ public class NamespaceServiceImpl implements NamespaceService {
 					// 如果存在上下游关联关系，直接导入会检验不通过；需要先解除关联关系，创建成功后再更新关联关系
 					if (!(StringUtils.isBlank(jobConfig.getUpStream()) && StringUtils.isBlank(jobConfig.getDownStream()))) {
 						JobConfig jobConfigTemp = new JobConfig();
-						SaturnBeanUtils.copyProperties(jobConfig, jobConfigTemp);
+						jobConfigTemp.setJobName(jobConfig.getJobName());
+						jobConfigTemp.setUpStream(jobConfig.getUpStream());
+						jobConfigTemp.setDownStream(jobConfig.getDownStream());
 						jobConfigListTemp.add(jobConfigTemp);
 						jobConfig.setUpStream(null);
 						jobConfig.setDownStream(null);
@@ -97,14 +99,18 @@ public class NamespaceServiceImpl implements NamespaceService {
 					jobService.addJob(destNamespace, jobConfig, createdBy);
 					successfullyImportedJobs.add(jobConfig.getJobName());
 				} catch (SaturnJobConsoleException e) {
-					log.warn("fail to import job {} from {} to {}", jobConfig.getJobName(), srcNamespace, destNamespace,
-							e);
+					log.warn("fail to import job {} from {} to {}", jobConfig.getJobName(), srcNamespace, destNamespace, e);
 					failedJobs.add(jobConfig.getJobName());
 				}
 			}
 			if (!CollectionUtils.isEmpty(jobConfigListTemp)) {
 				for (JobConfig jobConfig : jobConfigListTemp) {
-					jobService.updateJobConfig(destNamespace, jobConfig, createdBy);
+					try {
+						jobService.updateJobConfig(destNamespace, jobConfig, createdBy);
+					} catch (SaturnJobConsoleException e) {
+						log.warn("fail to update jobConfig, namespace is {} jobName is {}", destNamespace, jobConfig.getJobName(), e);
+						failedJobs.add(jobConfig.getJobName());
+					}
 				}
 			}
 			return result;
