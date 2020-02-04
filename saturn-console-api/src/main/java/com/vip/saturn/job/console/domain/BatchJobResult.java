@@ -33,4 +33,8 @@ public class BatchJobResult {
 		this.message = message;
 	}
 
+	public void appendMessage(String message) {
+		this.message = this.message == null ? message : this.message + "; " + message;
+	}
+
 }

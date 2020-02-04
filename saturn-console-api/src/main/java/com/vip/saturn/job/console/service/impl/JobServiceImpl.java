@@ -89,8 +89,8 @@ public class JobServiceImpl implements JobService {
 	private static final int DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT = 5;
 	// 最大允许显示的job log为zk默认的max jute buffer size
 	private static final int DEFAULT_MAX_ZNODE_DATA_LENGTH = 1048576;
-	private static final String ERR_MSG_PENDING_STATUS =
-			"job:[{}] item:[{}] on executor:[{}] execution status is " + "PENDING as {}";
+	private static final String ERR_MSG_PENDING_STATUS = "job:[{}] item:[{}] on executor:[{}] execution status is "
+			+ "PENDING as {}";
 	private static final String ERR_MSG_TOO_LONG_TO_DISPLAY = "Not display the log as the length is out of max length";
 
 	@Resource
@@ -104,8 +104,8 @@ public class JobServiceImpl implements JobService {
 
 	private Random random = new Random();
 
-	private MapType customContextType = TypeFactory.defaultInstance()
-			.constructMapType(HashMap.class, String.class, String.class);
+	private MapType customContextType = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class,
+			String.class);
 
 	private JobStatus getJobStatus(final String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
 			boolean enabled) {
@@ -133,7 +133,8 @@ public class JobServiceImpl implements JobService {
 						.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "completed"));
 				boolean isItemRunning = curatorFrameworkOp
 						.checkExists(JobNodePath.getExecutionNodePath(jobName, itemStr, "running"));
-				// if executor is kill by -9 while it is running, completed node won't exists as well as running node.
+				// if executor is kill by -9 while it is running, completed node won't exists as
+				// well as running node.
 				// under this circumstance, we consider it is completed.
 				if (!isItemCompleted && isItemRunning) {
 					isAllShardsFinished = false;
@@ -248,7 +249,9 @@ public class JobServiceImpl implements JobService {
 
 	/**
 	 * 删除zk上的作业结点。先持久化config/toDelete结点，让executor收到该事件，shutdown自身的该作业。如果所有executor都已经shutdown该作业，则才可以安全删除作业结点。
-	 * @return 等待executor shutdown作业，等待一定时间后，如果executor还没完全shutdown，则放弃等待，返回false。 否则，在等待时间内，executor都shutdown完全，则删除作业结点，并返回true。
+	 * 
+	 * @return 等待executor shutdown作业，等待一定时间后，如果executor还没完全shutdown，则放弃等待，返回false。
+	 *         否则，在等待时间内，executor都shutdown完全，则删除作业结点，并返回true。
 	 */
 	private boolean removeJobFromZk(String jobName, CuratorRepository.CuratorFrameworkOp curatorFrameworkOp)
 			throws SaturnJobConsoleException {
@@ -871,8 +874,8 @@ public class JobServiceImpl implements JobService {
 			if (jobConfig.getShardingTotalCount() == null || jobConfig.getShardingTotalCount() < 1) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片数不能为空，并且不能小于1");
 			}
-			if ((jobConfig.getShardingTotalCount() > 0) && (jobConfig.getShardingItemParameters() == null || jobConfig
-					.getShardingItemParameters().trim().isEmpty()
+			if ((jobConfig.getShardingTotalCount() > 0) && (jobConfig.getShardingItemParameters() == null
+					|| jobConfig.getShardingItemParameters().trim().isEmpty()
 					|| jobConfig.getShardingItemParameters().split(",").length < jobConfig.getShardingTotalCount())) {
 				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "分片参数不能小于分片总数");
 			}
@@ -984,8 +987,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	private int getMaxZnodeDataLength() {
-		int result = systemConfigService
-				.getIntegerValue(SystemConfigProperties.MAX_ZNODE_DATA_LENGTH, DEFAULT_MAX_ZNODE_DATA_LENGTH);
+		int result = systemConfigService.getIntegerValue(SystemConfigProperties.MAX_ZNODE_DATA_LENGTH,
+				DEFAULT_MAX_ZNODE_DATA_LENGTH);
 		return result <= 0 ? DEFAULT_MAX_ZNODE_DATA_LENGTH : result;
 	}
 
@@ -1045,8 +1048,8 @@ public class JobServiceImpl implements JobService {
 		}
 
 		List<JobConfig4DB> jobConfig4DBList = new ArrayList<>();
-		List<JobConfig4DB> enabledJobConfigList = currentJobConfigService
-				.findConfigsByNamespaceWithCondition(namespace, condition, null);
+		List<JobConfig4DB> enabledJobConfigList = currentJobConfigService.findConfigsByNamespaceWithCondition(namespace,
+				condition, null);
 		for (JobConfig4DB jobConfig4DB : enabledJobConfigList) {
 			JobStatus currentJobStatus = getJobStatus(namespace, jobConfig4DB.getJobName());
 			if (jobStatus.equals(currentJobStatus)) {
@@ -1073,8 +1076,8 @@ public class JobServiceImpl implements JobService {
 		List<JobConfig4DB> jobConfig4DBList = currentJobConfigService.findConfigsByNamespace(namespace);
 		if (jobConfig4DBList != null) {
 			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
-				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode()) && jobConfig4DB.getJobMode()
-						.startsWith(JobMode.SYSTEM_PREFIX))) {
+				if (!(StringUtils.isNotBlank(jobConfig4DB.getJobMode())
+						&& jobConfig4DB.getJobMode().startsWith(JobMode.SYSTEM_PREFIX))) {
 					unSystemJobs.add(jobConfig4DB.getJobName());
 				}
 			}
@@ -1087,7 +1090,6 @@ public class JobServiceImpl implements JobService {
 		List<String> jobNames = currentJobConfigService.findConfigNamesByNamespace(namespace);
 		return jobNames != null ? jobNames : Lists.<String>newArrayList();
 	}
-
 
 	@Override
 	public void persistJobFromDB(String namespace, JobConfig jobConfig) throws SaturnJobConsoleException {
@@ -1118,9 +1120,8 @@ public class JobServiceImpl implements JobService {
 
 		boolean enabledReport = true;
 		try {
-			Integer intervalTimeConfigured = systemConfigService
-					.getIntegerValue(SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT,
-							DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
+			Integer intervalTimeConfigured = systemConfigService.getIntegerValue(
+					SystemConfigProperties.INTERVAL_TIME_OF_ENABLED_REPORT, DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT);
 			if (intervalTimeConfigured == null) {
 				log.warn("unexpected error, get INTERVAL_TIME_OF_ENABLED_REPORT null");
 				intervalTimeConfigured = DEFAULT_INTERVAL_TIME_OF_ENABLED_REPORT;
@@ -1243,9 +1244,9 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getJobType());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE),
 				jobConfig.getJobMode());
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS),
-						jobConfig.getShardingItemParameters());
+		curatorFrameworkOp.fillJobNodeIfNotExist(
+				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_ITEM_PARAMETERS),
+				jobConfig.getShardingItemParameters());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_PARAMETER),
 				jobConfig.getJobParameter());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_QUEUE_NAME),
@@ -1254,17 +1255,17 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getChannelName());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_FAILOVER),
 				jobConfig.getFailover());
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_MONITOR_EXECUTION), "true");
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS),
-						jobConfig.getTimeout4AlarmSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_MONITOR_EXECUTION),
+				"true");
+		curatorFrameworkOp.fillJobNodeIfNotExist(
+				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS),
+				jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS),
 				jobConfig.getTimeoutSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE),
 				jobConfig.getTimeZone());
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), jobConfig.getCron());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON),
+				jobConfig.getCron());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE),
 				jobConfig.getPausePeriodDate());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_TIME),
@@ -1272,9 +1273,9 @@ public class JobServiceImpl implements JobService {
 		curatorFrameworkOp.fillJobNodeIfNotExist(
 				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
 				jobConfig.getProcessCountIntervalSeconds());
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
-						jobConfig.getShardingTotalCount());
+		curatorFrameworkOp.fillJobNodeIfNotExist(
+				JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
+				jobConfig.getShardingTotalCount());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG),
 				jobConfig.getShowNormalLog());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL),
@@ -1295,8 +1296,8 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getDependencies());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS),
 				jobConfig.getGroups());
-		curatorFrameworkOp
-				.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN), jobConfig.getRerun());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_RERUN),
+				jobConfig.getRerun());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_UPSTREAM),
 				jobConfig.getUpStream());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM),
@@ -1342,39 +1343,53 @@ public class JobServiceImpl implements JobService {
 
 	protected List<BatchJobResult> doCreateJobFromImportFile(String namespace, List<JobConfig> jobConfigList,
 			String createdBy) throws SaturnJobConsoleException {
-		List<BatchJobResult> results = new ArrayList<>();
+		Map<String, BatchJobResult> resultMap = new LinkedHashMap<>();
+		List<JobConfig> jobConfigUpdatedList = new ArrayList<>();
 		for (JobConfig jobConfig : jobConfigList) {
+			String jobName = jobConfig.getJobName();
 			BatchJobResult batchJobResult = new BatchJobResult();
-			batchJobResult.setJobName(jobConfig.getJobName());
+			batchJobResult.setJobName(jobName);
 			try {
 				// 如果存在上下游关联关系，直接导入会检验不通过；需要先解除关联关系，创建成功后再更新关联关系
 				JobConfig jobConfigUpdated = null;
 				if (StringUtils.isNotBlank(jobConfig.getUpStream())
 						|| StringUtils.isNotBlank(jobConfig.getDownStream())) {
 					jobConfigUpdated = new JobConfig();
-					jobConfigUpdated.setJobName(jobConfig.getJobName());
+					jobConfigUpdated.setJobName(jobName);
 					jobConfigUpdated.setUpStream(jobConfig.getUpStream());
 					jobConfigUpdated.setDownStream(jobConfig.getDownStream());
 					jobConfig.setUpStream(null);
 					jobConfig.setDownStream(null);
 				}
 				addJob(namespace, jobConfig, createdBy);
-				if (jobConfigUpdated != null) {
-					updateJobConfig(namespace, jobConfigUpdated, createdBy);
-				}
 				batchJobResult.setSuccess(true);
+				if (jobConfigUpdated != null) {
+					jobConfigUpdatedList.add(jobConfigUpdated);
+				}
 			} catch (SaturnJobConsoleException e) {
 				batchJobResult.setSuccess(false);
 				batchJobResult.setMessage(e.getMessage());
-				log.warn("exception: {}", e);
+				log.warn(e.getMessage(), e);
 			} catch (Exception e) {
 				batchJobResult.setSuccess(false);
 				batchJobResult.setMessage(e.toString());
-				log.warn("exception: {}", e);
+				log.warn(e.getMessage(), e);
 			}
-			results.add(batchJobResult);
+			resultMap.put(jobName, batchJobResult);
 		}
-		return results;
+		for (JobConfig jobConfig : jobConfigUpdatedList) {
+			BatchJobResult batchJobResult = resultMap.get(jobConfig.getJobName());
+			try {
+				updateJobConfig(namespace, jobConfig, createdBy);
+			} catch (SaturnJobConsoleException e) {
+				batchJobResult.appendMessage(e.getMessage());
+				log.warn(e.getMessage(), e);
+			} catch (Exception e) {
+				batchJobResult.appendMessage(e.toString());
+				log.warn(e.getMessage(), e);
+			}
+		}
+		return new ArrayList<>(resultMap.values());
 	}
 
 	private boolean isBlankRow(Cell[] rowCells) {
@@ -1499,8 +1514,9 @@ public class JobServiceImpl implements JobService {
 							createExceptionMessage(sheetNumber, rowNumber, 10, "对于本地模式作业，分片参数必须包含如*=xx。"));
 				}
 			}
-		} else if ((shardingTotalCount > 0) && (shardingItemParameters == null || shardingItemParameters.trim()
-				.isEmpty() || shardingItemParameters.split(",").length < shardingTotalCount)) {
+		} else if ((shardingTotalCount > 0)
+				&& (shardingItemParameters == null || shardingItemParameters.trim().isEmpty()
+						|| shardingItemParameters.split(",").length < shardingTotalCount)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
 					createExceptionMessage(sheetNumber, rowNumber, 10, "分片参数不能小于分片总数。"));
 		}
@@ -2012,8 +2028,8 @@ public class JobServiceImpl implements JobService {
 		} else {
 			result.setJobDegree(Integer.valueOf(jobDegree));
 		}
-		result.setEnabled(Boolean.valueOf(
-				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));// 默认是禁用的
+		result.setEnabled(Boolean
+				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));// 默认是禁用的
 		result.setPreferList(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PREFER_LIST)));
 		String useDispreferList = curatorFrameworkOp
@@ -2023,8 +2039,8 @@ public class JobServiceImpl implements JobService {
 		} else {
 			result.setUseDispreferList(Boolean.valueOf(useDispreferList));
 		}
-		result.setLocalMode(Boolean.valueOf(
-				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
+		result.setLocalMode(Boolean
+				.valueOf(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOCAL_MODE))));
 		result.setDependencies(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES)));
 		result.setGroups(curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS)));
@@ -2149,8 +2165,8 @@ public class JobServiceImpl implements JobService {
 		Set<String> ancestors = getAncestors(namespace, jobConfig, unSystemJobs, new Stack<String>(), false);
 		for (JobConfig otherJob : unSystemJobs) {
 			String otherJobName = otherJob.getJobName();
-			if (!jobConfig.getJobName().equals(otherJobName) && !downStream.contains(otherJobName) && !ancestors
-					.contains(otherJobName) && canBeDownStream(otherJob)) {
+			if (!jobConfig.getJobName().equals(otherJobName) && !downStream.contains(otherJobName)
+					&& !ancestors.contains(otherJobName) && canBeDownStream(otherJob)) {
 				candidateDownStream.add(otherJobName);
 			}
 		}
@@ -2205,8 +2221,8 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public void updateJobConfig(String namespace, JobConfig jobConfig, String updatedBy)
 			throws SaturnJobConsoleException {
-		JobConfig4DB oldJobConfig4DB = currentJobConfigService
-				.findConfigByNamespaceAndJobName(namespace, jobConfig.getJobName());
+		JobConfig4DB oldJobConfig4DB = currentJobConfigService.findConfigByNamespaceAndJobName(namespace,
+				jobConfig.getJobName());
 		if (oldJobConfig4DB == null) {
 			throw new SaturnJobConsoleException(ERROR_CODE_NOT_EXISTED,
 					String.format("该作业(%s)不存在", jobConfig.getJobName()));
@@ -2289,8 +2305,9 @@ public class JobServiceImpl implements JobService {
 								streamChangedJob.getDownStream());
 			}
 			// 更新作业
-			curatorTransactionOp.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED),
-					jobConfig.getEnabled())
+			curatorTransactionOp
+					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED),
+							jobConfig.getEnabled())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DESCRIPTION),
 							jobConfig.getDescription())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CUSTOM_CONTEXT),
@@ -2320,9 +2337,10 @@ public class JobServiceImpl implements JobService {
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE),
 							jobConfig.getPausePeriodDate())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_TIME),
-							jobConfig.getPausePeriodTime()).replaceIfChanged(
-					JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
-					jobConfig.getProcessCountIntervalSeconds())
+							jobConfig.getPausePeriodTime())
+					.replaceIfChanged(
+							JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PROCESS_COUNT_INTERVAL_SECONDS),
+							jobConfig.getProcessCountIntervalSeconds())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHARDING_TOTAL_COUNT),
 							jobConfig.getShardingTotalCount())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_SHOW_NORMAL_LOG),
@@ -2896,14 +2914,16 @@ public class JobServiceImpl implements JobService {
 
 	/**
 	 * 批量设置作业的分组
+	 * 
 	 * @param namespace
-	 * @param jobNames 待设置分组的作业名集合
+	 * @param jobNames      待设置分组的作业名集合
 	 * @param oldGroupNames 修改前的分组名集合
 	 * @param newGroupNames 修改后的分组名集合
-	 * @param userName 操作者
+	 * @param userName      操作者
 	 */
 	@Override
-	public void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames, List<String> newGroupNames, String userName)  throws SaturnJobConsoleException {
+	public void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames,
+			List<String> newGroupNames, String userName) throws SaturnJobConsoleException {
 		if (CollectionUtils.isEmpty(jobNames)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "请选择要分组的作业");
 		}
@@ -2916,13 +2936,13 @@ public class JobServiceImpl implements JobService {
 
 		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
 		if (!CollectionUtils.isEmpty(oldGroupNames)) {
-			for (String groupName: oldGroupNames) {
+			for (String groupName : oldGroupNames) {
 				validateGroupName(groupName, pattern);
 			}
 			oldGroupNamesTemp = new ArrayList<>(oldGroupNames);
 		}
 		if (!CollectionUtils.isEmpty(newGroupNames)) {
-			for (String groupName: newGroupNames) {
+			for (String groupName : newGroupNames) {
 				validateGroupName(groupName, pattern);
 			}
 			newGroupNamesTemp = new ArrayList<>(newGroupNames);
@@ -2937,7 +2957,8 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 
-		// 求 oldGroupNamesTemp 与 newGroupNamesTemp 的差集(oldGroupNamesTemp 中存在，newGroupNamesTemp 中不存在的元素)，即删除的分组
+		// 求 oldGroupNamesTemp 与 newGroupNamesTemp 的差集(oldGroupNamesTemp
+		// 中存在，newGroupNamesTemp 中不存在的元素)，即删除的分组
 		if (!CollectionUtils.isEmpty(oldGroupNamesTemp) && !CollectionUtils.isEmpty(newGroupNamesTemp)) {
 			oldGroupNamesTemp.removeAll(newGroupNamesTemp);
 		}
@@ -2948,13 +2969,14 @@ public class JobServiceImpl implements JobService {
 			}
 		}
 
-		// 求 newGroupNames 与 oldGroupNames 的差集(newGroupNames 中存在，oldGroupNames 中不存在的元素)，即新增的分组
+		// 求 newGroupNames 与 oldGroupNames 的差集(newGroupNames 中存在，oldGroupNames
+		// 中不存在的元素)，即新增的分组
 		if (!CollectionUtils.isEmpty(newGroupNames) && !CollectionUtils.isEmpty(oldGroupNames)) {
 			newGroupNames.removeAll(oldGroupNames);
 		}
 		// 前端操作有新增分组，则将新增的分组追加到原有分组后面，用英文逗号连接
 		if (!CollectionUtils.isEmpty(newGroupNames)) {
-			for(String groupName : newGroupNames) {
+			for (String groupName : newGroupNames) {
 				currentJobConfigService.addToGroups(namespace, jobNames, groupName, userName);
 			}
 		}
