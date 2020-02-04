@@ -2921,6 +2921,7 @@ public class JobServiceImpl implements JobService {
 	 * @param newGroupNames 修改后的分组名集合
 	 * @param userName      操作者
 	 */
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void batchSetGroups(String namespace, List<String> jobNames, List<String> oldGroupNames,
 			List<String> newGroupNames, String userName) throws SaturnJobConsoleException {
