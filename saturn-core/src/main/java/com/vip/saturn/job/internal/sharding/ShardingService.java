@@ -196,13 +196,14 @@ public class ShardingService extends AbstractSaturnService {
 						LogUtils.info(log, jobName,
 								"unexpected error, will retry to get shards from sharding/content later");
 						// 睡一下，没必要马上重试。减少对zk的压力。
-						Thread.sleep(200L); // NOSONAR
+						Thread.sleep(500L); // NOSONAR
 						/**
 						 * 注意：
-						 *   data为x，是为了使得反序列化失败，然后从sharding/content下获取数据。
+						 *   data为GET_SHARD_FROM_CONTENT_NODE_FLAG，会从sharding/content下获取数据。
 						 *   version使用necessary的version。
 						 */
-						getDataStat = new GetDataStat("x", version);
+						getDataStat = new GetDataStat(NamespaceShardingContentService.GET_SHARD_FROM_CONTENT_NODE_FLAG,
+								version);
 					}
 				}
 				if (retryCount > maxRetryTime) {

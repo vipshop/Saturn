@@ -18,6 +18,8 @@ import java.util.*;
  */
 public class NamespaceShardingContentService {
 
+	public static final String GET_SHARD_FROM_CONTENT_NODE_FLAG = "GET_SHARD_FROM_CONTENT_NODE_FLAG";
+
 	private static final Logger log = LoggerFactory.getLogger(NamespaceShardingContentService.class);
 
 	private static final int SHARDING_CONTENT_SLICE_LEN = 1024 * 1023;
@@ -170,6 +172,13 @@ public class NamespaceShardingContentService {
 
 	public Map<String, List<Integer>> getShardContent(String jobName, String jobNecessaryContent) throws Exception {
 		Map<String, List<Integer>> shardContent = new HashMap<>();
+
+		// data为'GET_SHARD_FROM_CONTENT_NODE_FLAG'，会直接从/content节点获取数据
+		if (GET_SHARD_FROM_CONTENT_NODE_FLAG.equals(jobNecessaryContent)) {
+			shardContent.putAll(getShardingItems(jobName));
+			return shardContent;
+		}
+
 		try {
 			// TODO: can change to Jackson ?
 			Map<String, List<Integer>> obj = gson
