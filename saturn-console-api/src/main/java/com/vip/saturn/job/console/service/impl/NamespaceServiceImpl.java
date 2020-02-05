@@ -77,40 +77,45 @@ public class NamespaceServiceImpl implements NamespaceService {
 		try {
 			List<String> successfullyImportedJobs = new ArrayList<>();
 			List<String> failedJobs = new ArrayList<>();
-			Map result = new HashMap(2);
+			Map<String, List> result = new HashMap<>();
 			result.put("success", successfullyImportedJobs);
 			result.put("fail", failedJobs);
 
 			List<JobConfig> jobConfigs = jobService.getUnSystemJobs(srcNamespace);
-			List<JobConfig> jobConfigListTemp = new ArrayList<>();
-			for (int i = 0; i < jobConfigs.size(); i++) {
-				JobConfig jobConfig = jobConfigs.get(i);
+			List<JobConfig> jobConfigUpdatedList = new ArrayList<>();
+			for (JobConfig jobConfig : jobConfigs) {
+				String jobName = jobConfig.getJobName();
 				try {
 					// 如果存在上下游关联关系，直接导入会检验不通过；需要先解除关联关系，创建成功后再更新关联关系
-					if (!(StringUtils.isBlank(jobConfig.getUpStream()) && StringUtils.isBlank(jobConfig.getDownStream()))) {
-						JobConfig jobConfigTemp = new JobConfig();
-						jobConfigTemp.setJobName(jobConfig.getJobName());
-						jobConfigTemp.setUpStream(jobConfig.getUpStream());
-						jobConfigTemp.setDownStream(jobConfig.getDownStream());
-						jobConfigListTemp.add(jobConfigTemp);
+					JobConfig jobConfigUpdated = null;
+					if (StringUtils.isBlank(jobConfig.getUpStream())
+							|| StringUtils.isBlank(jobConfig.getDownStream())) {
+						jobConfigUpdated = new JobConfig();
+						jobConfigUpdated.setJobName(jobName);
+						jobConfigUpdated.setUpStream(jobConfig.getUpStream());
+						jobConfigUpdated.setDownStream(jobConfig.getDownStream());
 						jobConfig.setUpStream(null);
 						jobConfig.setDownStream(null);
 					}
 					jobService.addJob(destNamespace, jobConfig, createdBy);
-					successfullyImportedJobs.add(jobConfig.getJobName());
+					if (jobConfigUpdated != null) {
+						jobConfigUpdatedList.add(jobConfigUpdated);
+					}
+					successfullyImportedJobs.add(jobName);
 				} catch (SaturnJobConsoleException e) {
-					log.warn("fail to import job {} from {} to {}", jobConfig.getJobName(), srcNamespace, destNamespace, e);
-					failedJobs.add(jobConfig.getJobName());
+					log.warn("fail to import job {} from {} to {}", jobName, srcNamespace, destNamespace, e);
+					failedJobs.add(jobName);
 				}
 			}
-			if (!CollectionUtils.isEmpty(jobConfigListTemp)) {
-				for (JobConfig jobConfig : jobConfigListTemp) {
-					try {
-						jobService.updateJobConfig(destNamespace, jobConfig, createdBy);
-					} catch (SaturnJobConsoleException e) {
-						log.warn("fail to update jobConfig, namespace is {} jobName is {}", destNamespace, jobConfig.getJobName(), e);
-						failedJobs.add(jobConfig.getJobName());
-					}
+			for (JobConfig jobConfig : jobConfigUpdatedList) {
+				String jobName = jobConfig.getJobName();
+				try {
+					jobService.updateJobConfig(destNamespace, jobConfig, createdBy);
+				} catch (SaturnJobConsoleException e) {
+					log.warn("fail to update job upStream or downStream, namespace is {} jobName is {}", destNamespace,
+							jobName, e);
+					failedJobs.add(jobName);
+					successfullyImportedJobs.remove(jobName);
 				}
 			}
 			return result;
