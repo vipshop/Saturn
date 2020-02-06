@@ -53,5 +53,8 @@ export default {
   }, {
     value: 3,
     label: '停止中',
+  }, {
+    value: 4,
+    label: '非禁用',
   }],
 };
