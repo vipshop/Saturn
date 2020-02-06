@@ -61,10 +61,7 @@ public class JobOverviewController extends AbstractGUIController {
 		if (condition.containsKey(QUERY_CONDITION_STATUS)) {
 			String statusStr = checkAndGetParametersValueAsString(condition, QUERY_CONDITION_STATUS, false);
 			JobStatus jobStatus = JobStatus.getJobStatus(statusStr);
-			if (jobStatus != null) {
-				return new SuccessResponseEntity(
-						getJobOverviewByStatusAndPage(namespace, jobStatus, condition, page, size));
-			}
+			return new SuccessResponseEntity(getJobOverviewByStatusAndPage(namespace, jobStatus, condition, page, size));
 		}
 		return new SuccessResponseEntity(getJobOverviewByPage(namespace, condition, page, size));
 	}
