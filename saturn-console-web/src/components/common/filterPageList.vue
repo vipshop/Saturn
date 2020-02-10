@@ -68,6 +68,7 @@ export default {
   },
   methods: {
     search() {
+      this.currentPage = 1;
       this.getDataByParams();
     },
     getDataByParams() {
