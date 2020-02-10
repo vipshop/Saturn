@@ -150,12 +150,12 @@ public class JobOverviewController extends AbstractGUIController {
 			}
 
 			Pageable pageable = PageableUtil.generatePageble(page, size);
-
-			List<JobConfig> targetJobs = getJobSubListByPage(unSystemJobs, pageable);
+			// 当 jobStatus 为null时，底层取数据已经做了分页，此处无需再次分页
+			List<JobConfig> targetJobs = jobStatus == null ? unSystemJobs : getJobSubListByPage(unSystemJobs, pageable);
 			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, targetJobs, jobStatus);
 
 			jobOverviewVo.setJobs(jobOverviewList);
-			jobOverviewVo.setTotalNumber(unSystemJobs.size());
+			jobOverviewVo.setTotalNumber(jobService.countUnSystemJobsWithCondition(namespace, condition));
 		} catch (SaturnJobConsoleException e) {
 			throw e;
 		} catch (Exception e) {
