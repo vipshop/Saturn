@@ -1,6 +1,12 @@
 <template>
     <el-dialog title="作业批量分组" v-loading="loading" element-loading-text="请稍等···" :visible.sync="isVisible" :before-close="closeDialog">
         <el-form label-width="140px">
+            <el-alert
+              style="margin-bottom: 10px;"
+              title="输入共同分组后回车产生分组标签，最后点击确定按钮保存"
+              show-icon
+              type="warning">
+            </el-alert>
             <input type="text" v-show="false" />
             <el-form-item label="作业名称" prop="jobName">
                 <el-col :span="18">
@@ -8,12 +14,6 @@
                 </el-col>
             </el-form-item>
             <el-form-item prop="groups" label="共同分组">
-                <div slot="label">
-                    <span>共同分组</span>
-                    <el-tooltip placement="top" content="输入共同分组后回车产生分组标签，最后点击确定按钮保存" effect="light" popper-class="allocation-popper">
-                        <i class="fa fa-question-circle"></i>
-                    </el-tooltip>
-                </div>
                 <el-tag
                     :key="group"
                     v-for="group in groups"
