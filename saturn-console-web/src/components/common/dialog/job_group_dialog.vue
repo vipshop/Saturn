@@ -7,7 +7,13 @@
                     <el-tag type="success" class="form-tags" v-for="item in jobGroups" :key="item.jobName">{{item.jobName}}</el-tag>
                 </el-col>
             </el-form-item>
-            <el-form-item prop="groups" label="所属分组">
+            <el-form-item prop="groups" label="共同分组">
+                <div slot="label">
+                    <span>共同分组</span>
+                    <el-tooltip placement="top" content="输入共同分组后回车产生分组标签，最后点击确定按钮保存" effect="light" popper-class="allocation-popper">
+                        <i class="fa fa-question-circle"></i>
+                    </el-tooltip>
+                </div>
                 <el-tag
                     :key="group"
                     v-for="group in groups"
