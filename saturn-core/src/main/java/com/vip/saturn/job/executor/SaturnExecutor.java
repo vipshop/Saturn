@@ -186,38 +186,11 @@ public class SaturnExecutor {
 			}
 			executorName = hostName;// NOSONAR
 		}
-
-		ClassLoader customerJobClassLoader = getCustomerJobClassLoader(jobClassLoader) != null ?
-				getCustomerJobClassLoader(jobClassLoader) :
-				jobClassLoader;
-
-		init(executorName, namespace, executorClassLoader, customerJobClassLoader);
+		init(executorName, namespace, executorClassLoader, jobClassLoader);
 		if (saturnApplication == null) {
-			saturnApplication = validateAndLoadSaturnApplication(customerJobClassLoader);
+			saturnApplication = validateAndLoadSaturnApplication(jobClassLoader);
 		}
-		return new SaturnExecutor(namespace, executorName, executorClassLoader, customerJobClassLoader, saturnApplication);
-	}
-
-	private static ClassLoader getCustomerJobClassLoader(ClassLoader jobClassLoader){
-		Thread.currentThread().setContextClassLoader(jobClassLoader);
-		ClassLoader customerClassLoader = null;
-		try {
-			Properties properties = getSaturnProperty(jobClassLoader);
-			if (properties == null) {
-				return null;
-			}
-			String jobClassLoaderClassStr = properties.getProperty("app.jobClassLoaderClass");
-			String jobClassLoaderMethodStr = properties.getProperty("app.jobClassLoaderMethod");
-			if (StringUtils.isBlank(jobClassLoaderClassStr) || StringUtils.isBlank(jobClassLoaderMethodStr)) {
-				return null;
-			}
-
-			Class customerClClass = jobClassLoader.loadClass(jobClassLoaderClassStr);
-			customerClassLoader = (ClassLoader) customerClClass.getMethod(jobClassLoaderMethodStr).invoke(null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return customerClassLoader;
+		return new SaturnExecutor(namespace, executorName, executorClassLoader, jobClassLoader, saturnApplication);
 	}
 
 	/*
