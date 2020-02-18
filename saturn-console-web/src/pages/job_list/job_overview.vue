@@ -22,31 +22,31 @@
             <div>
                     <el-form :inline="true" class="table-filter">
                         <el-form-item label="">
-                            <el-select style="width: 250px;" placeholder="请选择分组" multiple collapse-tags v-model="filters.groups" @change="getJobList">
+                            <el-select style="width: 250px;" placeholder="请选择分组" multiple collapse-tags v-model="filters.groups" @change="filterJobList">
                                 <el-option v-for="item in groupList" :label="item" :value="item" :key="item"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.status" @change="getJobList">
+                            <el-select style="width: 140px;" v-model="filters.status" @change="filterJobList">
                                 <el-option label="全部状态" value=""></el-option>
                                 <el-option v-for="item in $option.jobStatusTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-select style="width: 140px;" v-model="filters.jobType" @change="getJobList">
+                            <el-select style="width: 140px;" v-model="filters.jobType" @change="filterJobList">
                                 <el-option label="全部作业类型" value=""></el-option>
                                 <el-option v-for="item in $option.jobTypes" :label="item.label" :value="item.value" :key="item.value"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="">
-                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="getJobList">
+                            <el-input :placeholder="filterColumnPlaceholder" v-model.trim="filters[selectColumn]" @keyup.enter.native="filterJobList">
                               <el-select style="width: 120px;" slot="prepend" v-model="selectColumn" @change="selectColumnChange">
                                   <el-option v-for="item in $option.jobOverviewInputFilters" :key="item.value" :label="item.label" :value="item.value"></el-option>
                               </el-select>
                             </el-input>
                         </el-form-item>
                         <el-form-item>
-                            <el-button type="primary" icon="el-icon-search" @click="getJobList">查询</el-button>
+                            <el-button type="primary" icon="el-icon-search" @click="filterJobList">查询</el-button>
                         </el-form-item>
                     </el-form>
                     <div class="page-table" v-loading="loading" element-loading-text="请稍等···">
@@ -186,7 +186,7 @@ export default {
         enabledNumber: 0,
         abnormalNumber: 0,
       },
-      filters: this.$option.jobOverviewFilters,
+      filters: JSON.parse(JSON.stringify(this.$option.jobOverviewFilters)),
       jobList: [],
       pageSize: 25,
       currentPage: 1,
@@ -235,7 +235,7 @@ export default {
     },
     jobGroupSuccess() {
       this.closeJobGroupDialog();
-      this.refreshPage();
+      this.init();
       this.$message.successNotify('批量作业分组操作成功');
     },
     closeJobGroupDialog() {
@@ -293,7 +293,7 @@ export default {
     },
     closeImportResultDialog() {
       this.isImportResultVisible = false;
-      this.refreshPage();
+      this.init();
     },
     handleAdd() {
       this.isJobInfoVisible = true;
@@ -321,7 +321,7 @@ export default {
     },
     jobInfoSuccess() {
       this.isJobInfoVisible = false;
-      this.refreshPage();
+      this.init();
       this.$message.successNotify('保存作业操作成功');
     },
     batchEnabled() {
@@ -362,7 +362,7 @@ export default {
           const confirmText = stopedJob.length < 10 ? `确认删除作业 ${params.jobNames} 吗?` : `确认删除已选的 ${stopedJob.length} 条作业吗?`;
           this.$message.confirmMessage(confirmText, () => {
             this.$http.delete(`/console/namespaces/${this.domainName}/jobs`, params).then(() => {
-              this.refreshPage();
+              this.init();
               this.$message.successNotify('批量删除作业操作成功');
             })
             .catch(() => { this.$http.buildErrorHandler('批量删除作业请求失败！'); });
@@ -382,7 +382,7 @@ export default {
     },
     batchPrioritySuccess() {
       this.isBatchPriorityVisible = false;
-      this.refreshPage();
+      this.init();
       this.$message.successNotify('批量设置作业的优先Executors成功');
     },
     batchOperation(text, callback) {
@@ -425,7 +425,7 @@ export default {
     handleDelete(row) {
       this.$message.confirmMessage(`确认删除作业 ${row.jobName} 吗?`, () => {
         this.$http.delete(`/console/namespaces/${this.domainName}/jobs/${row.jobName}`).then(() => {
-          this.refreshPage();
+          this.init();
           this.$message.successNotify('删除作业操作成功');
         })
         .catch(() => { this.$http.buildErrorHandler('删除作业请求失败！'); });
@@ -449,14 +449,14 @@ export default {
     batchActiveRequest(params, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${reqUrl}`, params).then(() => {
         this.$message.successNotify('操作成功');
-        this.refreshPage();
+        this.init();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
     activeRequest(jobName, reqUrl) {
       this.$http.post(`/console/namespaces/${this.domainName}/jobs/${jobName}/${reqUrl}`, '').then(() => {
         this.$message.successNotify('操作成功');
-        this.refreshPage();
+        this.init();
       })
       .catch(() => { this.$http.buildErrorHandler(`${reqUrl}请求失败！`); });
     },
@@ -537,15 +537,23 @@ export default {
         this.loading = false;
       });
     },
-    refreshPage() {
+    routerRefresh() {
+      this.filters = JSON.parse(JSON.stringify(this.$option.jobOverviewFilters));
+      this.pageSize = 25;
+      this.currentPage = 1;
+      this.order = '';
       this.init();
+    },
+    filterJobList() {
+      this.currentPage = 1;
+      this.getJobList();
     },
   },
   created() {
     this.init();
   },
   watch: {
-    $route: 'init',
+    $route: 'routerRefresh',
   },
   computed: {
     domainName() {
