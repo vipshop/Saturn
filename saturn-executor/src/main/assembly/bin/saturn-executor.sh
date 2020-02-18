@@ -305,7 +305,6 @@ DUMP()
 STOP()
 {
     LOG_FMT "Begin to stop executor."
-    DUMP
     PID=$(GET_PID)
 	  stoptime=0
     if [ "$PID" != "" ]; then
