@@ -14,14 +14,13 @@
 </template>
 <script>
 export default {
-  props: ['getData', 'data', 'total', 'orderBy', 'filters'],
+  props: ['data', 'total', 'orderBy', 'filters'],
   data() {
     return {
       pageSize: 25,
       currentPage: 1,
       orderby: this.orderBy,
       orderKey: undefined,
-      order: undefined,
       pageData: [],
       filtered: [],
     };
@@ -35,21 +34,6 @@ export default {
       paramsResult.size = this.pageSize;
       paramsResult.page = this.currentPage;
       paramsResult.orderKey = this.orderKey;
-      paramsResult.order = this.order;
-      if (this.filters) {
-        Object.entries(this.filters).forEach((item) => {
-          if (Array.isArray(item[1].value)) {
-            if (item[1].value.length > 0) {
-              paramsResult[item[0]] = item[1].value;
-            }
-          } else {
-            // eslint-disable-next-line no-lonely-if
-            if (item[1].value !== '' && item[1].value !== undefined) {
-              paramsResult[item[0]] = item[1].value;
-            }
-          }
-        });
-      }
       return paramsResult;
     },
     totalRecords() {
@@ -74,8 +58,6 @@ export default {
     getDataByParams() {
       if (this.data) {
         this.buildCurrentPage();
-      } else if (this.getData) {
-        this.getData(this.params);
       }
     },
     buildCurrentPage() {
@@ -132,7 +114,6 @@ export default {
         this.orderby = `${sort.prop}`;
       }
       // this.orderKey = sort.prop;
-      this.order = sort.order;
       this.getDataByParams();
     },
     onCurrentChange(page) {

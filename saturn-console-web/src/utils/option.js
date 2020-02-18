@@ -28,11 +28,11 @@ export default {
     return jobType === 'MSG_JOB' || jobType === 'VSHELL';
   },
   jobOverviewFilters: {
-    jobName: { value: '' },
-    groups: { value: [] },
-    status: { value: '', precise: true },
-    jobType: { value: '', precise: true },
-    description: { value: '' },
+    jobName: '',
+    groups: [],
+    status: '',
+    jobType: '',
+    description: '',
   },
   jobOverviewInputFilters: [{
     label: '作业名',
