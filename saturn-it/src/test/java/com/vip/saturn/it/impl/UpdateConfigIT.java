@@ -173,7 +173,7 @@ public class UpdateConfigIT extends AbstractSaturnIT {
 
 		Thread.sleep(1 * 1000);
 		enableJob(jobName);
-		Thread.sleep(2000);
+		Thread.sleep(4000);
 
 		doReport(jobName);
 
