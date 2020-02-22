@@ -18,6 +18,8 @@ PARENT_DIR=`cd "$BASE_DIR/.." >/dev/null; pwd`
 
 NAMESPACE=""
 EXECUTORNAME=`hostname`
+START_TIME=""
+DEFAULT_START_TIME=120
 SATURN_LIB_DIR=$BASE_DIR/lib
 APP_LIB_DIR=$PARENT_DIR/app
 RUN_MODE="background"
@@ -27,7 +29,7 @@ CUSTOM_LOGDIR=""
 
 TEMP_DIR=${PRG_DIR}/temp
 if [ ! -d $TEMP_DIR ]; then
-		mkdir -p $TEMP_DIR
+  mkdir -p $TEMP_DIR
 fi
 STATUS_FILE=$TEMP_DIR/status
 PID_FILE=$TEMP_DIR/PID
@@ -36,29 +38,30 @@ LAST_START_COMMAND_FILE=$TEMP_DIR/last_start_command.sh
 
 USAGE()
 {
-	echo -e "Usage: ${PRG_FILE} start | stop | restart"
-	echo -e "    -------------------------------"
-	echo -e "    start [-n|--namespace namespace] [-e|--executorName executorName] [-jmx|--jmx-port port] [jvmArgs, its position should be the last.]"
-	echo -e "        '-n|--namespace': required."
-	echo -e "        '-e|--executorName': optional,default value is ${EXECUTORNAME}."
-	echo -e "        '-d|--libdir': optional, default value is ${PARENT_DIR}/app."
-	echo -e "        '-r|--runmode': optional, default value is ${RUN_MODE}, you can set it foreground"
-	echo -e "        '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
-	echo -e "        '-env|--environment': optional."
-	echo -e "        '-sld|--saturnLogDir': optional."
-	echo -e "        jvmArgs: optional."
-	echo -e "    -------------------------------"
-	echo -e "    dump, no parameters."
-	echo -e "    -------------------------------"
-	echo -e "    stop, no parameters."
-	echo -e "    -------------------------------"
-	echo -e "    restart, no parameters."
-	echo -e "    -------------------------------"
+  echo -e "Usage: ${PRG_FILE} start | stop | restart"
+  echo -e "    -------------------------------"
+  echo -e "    start [-n|--namespace namespace] [-e|--executorName executorName] [-jmx|--jmx-port port] [jvmArgs, its position should be the last.]"
+  echo -e "        '-n|--namespace': required."
+  echo -e "        '-e|--executorName': optional,default value is ${EXECUTORNAME}."
+  echo -e "        '-d|--libdir': optional, default value is ${PARENT_DIR}/app."
+  echo -e "        '-r|--runmode': optional, default value is ${RUN_MODE}, you can set it foreground"
+  echo -e "        '-t|--start-timeout': optional, default value is ${DEFAULT_START_TIME}s"
+  echo -e "        '-jmx|--jmx-port': optional, default value is ${JMX_PORT}."
+  echo -e "        '-env|--environment': optional."
+  echo -e "        '-sld|--saturnLogDir': optional."
+  echo -e "        jvmArgs: optional."
+  echo -e "    -------------------------------"
+  echo -e "    dump, no parameters."
+  echo -e "    -------------------------------"
+  echo -e "    stop, no parameters."
+  echo -e "    -------------------------------"
+  echo -e "    restart, no parameters."
+  echo -e "    -------------------------------"
 }
 
 if [ $# -lt 1 ]; then
-	USAGE
-	exit -1
+  USAGE
+  exit -1
 fi
 
 LOG_FMT()
@@ -71,32 +74,33 @@ CMD="$1"
 shift
 
 while true; do
-	case "$1" in
-		-n|--namespace) NAMESPACE="$2"; shift 2;;
-		-e|--executorName) EXECUTORNAME="$2"; shift 2;;
-		-d| --libdir) APP_LIB_DIR="$2"; shift 2;;
-		-r| --runmode) RUN_MODE="$2"; shift 2;;
-		-jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
-		-env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
-		-sld|--saturnLogDir) CUSTOM_LOGDIR="$2" ; shift 2 ;;
-		*) break;;
-	esac
+  case "$1" in
+    -n|--namespace) NAMESPACE="$2"; shift 2;;
+    -e|--executorName) EXECUTORNAME="$2"; shift 2;;
+    -d|--libdir) APP_LIB_DIR="$2"; shift 2;;
+    -r|--runmode) RUN_MODE="$2"; shift 2;;
+    -t|--start-timeout) START_TIME="$2" ; shift 2 ;;
+    -jmx|--jmx-port) JMX_PORT="$2" ; shift 2 ;;
+    -env|--environment) RUN_ENVIRONMENT="$2" ; shift 2 ;;
+    -sld|--saturnLogDir) CUSTOM_LOGDIR="$2" ; shift 2 ;;
+    *) break;;
+  esac
 done
 
 ADDITIONAL_OPTS=$*;
 
 CHECK_JMX()
 {
-	if [ x"$JMX_PORT" == x ]; then
-		JMX_OPTS=""
-	else
-		TMP=$(echo `lsof -P -i :${JMX_PORT} | grep LISTEN | awk '{print $2}'`)
-		if [ x"$TMP" != x ]; then
-			LOG_FMT "The jmx port is used, please use other port."
-			exit -1
-		fi
-		LOG_FMT "The jmx port is ${JMX_PORT}."
-	fi
+  if [ x"$JMX_PORT" == x ]; then
+    JMX_OPTS=""
+  else
+    TMP=$(echo `lsof -P -i :${JMX_PORT} | grep LISTEN | awk '{print $2}'`)
+    if [ x"$TMP" != x ]; then
+      LOG_FMT "The jmx port is used, please use other port."
+      exit -1
+    fi
+    LOG_FMT "The jmx port is ${JMX_PORT}."
+  fi
 }
 
 GET_PID()
@@ -110,11 +114,11 @@ GET_PID()
 
 CHECK_PARAMETERS()
 {
-	if [ x$NAMESPACE == x ]; then
-		LOG_FMT "The parameter -n|--namespace is required."
-		USAGE;
-		exit -1
-	fi
+  if [ x$NAMESPACE == x ]; then
+    LOG_FMT "The parameter -n|--namespace is required."
+    USAGE;
+    exit -1
+  fi
 }
 
 STARTUP_DELAY()
@@ -140,7 +144,7 @@ LOG_STARTLOG()
 START()
 {
   CHECK_JMX
-	CHECK_PARAMETERS
+  CHECK_PARAMETERS
 
   PERM_SIZE="256m"
   MAX_PERM_SIZE="512m"
@@ -195,83 +199,91 @@ START()
   LOG_FMT "The java version is ${JAVA_VERSION}"
   LOG_FMT "Log redirects to ${LOGDIR}"
 
-	if [ ! -d $LOGDIR ]; then
-		LOG_FMT "[WARNING] the log directory of $LOGDIR is not existed, try to create it."
-		mkdir -p $LOGDIR
-		if [ -d $LOGDIR ]; then
-			LOG_FMT "Create log directory successfully."
-		else
-			LOG_FMT "Create log directory failed."
-			exit -1
-		fi
+  if [ ! -d $LOGDIR ]; then
+    LOG_FMT "[WARNING] the log directory of $LOGDIR is not existed, try to create it."
+    mkdir -p $LOGDIR
+    if [ -d $LOGDIR ]; then
+      LOG_FMT "Create log directory successfully."
+    else
+      LOG_FMT "Create log directory failed."
+      exit -1
+    fi
   fi
 
-	if [ -f $PID_FILE ] ; then
-		PID=`cat $PID_FILE`
-	fi
+  if [ -f $PID_FILE ] ; then
+    PID=`cat $PID_FILE`
+  fi
 
-	if [ "$PID" != "" ]; then
-		if [ -d /proc/$PID ];then
-		 LOG_FMT "Saturn executor is running as process:$PID, please stop it first!!"
-		 exit -1
-		fi
-	fi
+  if [ "$PID" != "" ]; then
+    if [ -d /proc/$PID ];then
+      LOG_FMT "Saturn executor is running as process:$PID, please stop it first!!"
+      exit -1
+    fi
+  fi
 
   # delete nohup.out if possible
-	if [ -f $OUTFILE ] ; then
+  if [ -f $OUTFILE ] ; then
     rm -rf $OUTFILE
   fi
 
-	STARTUP_DELAY
+  STARTUP_DELAY
 
-	echo "" > ${STATUS_FILE}
-	RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
+  echo "" > ${STATUS_FILE}
+  RUN_PARAMS="-namespace ${NAMESPACE} -executorName ${EXECUTORNAME} -saturnLibDir ${SATURN_LIB_DIR} -appLibDir ${APP_LIB_DIR}"
   nohup java  $JAVA_OPTS $MEM_OPTS $GC_OPTS $JMX_OPTS $GCLOG_OPTS $CRASH_OPTS $SETTING_CONF $ADDITIONAL_OPTS -jar ${BASE_DIR}/saturn-executor.jar ${RUN_PARAMS}  >> $OUTFILE 2>&1 &
-	PID=$!
-	echo $PID > $PID_FILE
-	echo $LOGDIR > $LOGDIR_FILE
+  PID=$!
+  echo $PID > $PID_FILE
+  echo $LOGDIR > $LOGDIR_FILE
 
-	#record the start command
-	echo -e "#!/bin/bash\ncd ${WORKING_DIR}\nchmod +x ${PRG_DIRECT}\n${COMMAND}" > ${LAST_START_COMMAND_FILE}
-	chmod +x ${LAST_START_COMMAND_FILE}
+  #record the start command
+  echo -e "#!/bin/bash\ncd ${WORKING_DIR}\nchmod +x ${PRG_DIRECT}\n${COMMAND}" > ${LAST_START_COMMAND_FILE}
+  chmod +x ${LAST_START_COMMAND_FILE}
 
+  # post init executor start up timeout in seconds
+  if [ x$START_TIME == x ]; then
+    if [[ -z "${VIP_SATURN_START_TIMEOUT}" ]]; then
+      START_TIME=${DEFAULT_START_TIME}
+    else
+      START_TIME=${VIP_SATURN_START_TIMEOUT}
+    fi
+  fi
+  LOG_FMT "Saturn executor start up timeout is set to ${START_TIME}s"
   LOG_FMT "Starting...\c"
-	sleep 3
+  sleep 3
 
-	CHECK_STATUS=`cat ${STATUS_FILE}`
-	START_TIME=20
-	starttime=0
-	while  [ x"$CHECK_STATUS" == x ]; do
-    if [[ "$starttime" -lt ${START_TIME} ]]; then
+  CHECK_STATUS=`cat ${STATUS_FILE}`
+  starttime=0
+  while  [ x"$CHECK_STATUS" == x ]; do
+  if [[ "$starttime" -lt ${START_TIME} ]]; then
       sleep 1
       ((starttime++))
       echo -e ".\c"
       CHECK_STATUS=`cat ${STATUS_FILE}`
-    else
+  else
       echo -e ""
-      LOG_FMT "Saturn executor start may be fail! See ${OUTFILE} for more information."
+      LOG_FMT "Saturn executor start may fails, checking not finished until reach the starting timeout! See ${OUTFILE} for more information."
       exit -1
-    fi
-	done
+  fi
+  done
 
   echo -e ""
 
-	if [ $CHECK_STATUS = "SUCCESS" ]; then
-		LOG_FMT "Saturn executor start successfully, running as process:$PID."
-		LOG_STARTLOG "Saturn executor is started, running as process:$PID, parameters are: $RUN_PARAMS"
-		echo ${RUN_PARAMS} > ${STATUS_FILE}
-	fi
+  if [ $CHECK_STATUS = "SUCCESS" ]; then
+    LOG_FMT "Saturn executor start successfully, running as process:$PID."
+    LOG_STARTLOG "Saturn executor is started, running as process:$PID, parameters are: $RUN_PARAMS"
+    echo ${RUN_PARAMS} > ${STATUS_FILE}
+  fi
 
-	if [ $CHECK_STATUS = "ERROR" ]; then
-		kill -9 $PID
-		LOG_FMT "Saturn executor start is failed ! See ${OUTFILE} for more information."
-		exit -1
-	fi
+  if [ $CHECK_STATUS = "ERROR" ]; then
+    kill -9 $PID
+    LOG_FMT "Saturn executor start failed ! See ${OUTFILE} for more information."
+    exit -1
+  fi
 
-	if [[ "$RUN_MODE" = "foreground" ]]; then
-		trap STOP SIGTERM
-		wait $PID
-	fi
+  if [[ "$RUN_MODE" = "foreground" ]]; then
+    trap STOP SIGTERM
+    wait $PID
+  fi
 }
 
 DUMP()
@@ -282,6 +294,7 @@ DUMP()
       LOG_FILE_POSTFIX="`date '+%Y-%m-%d-%H%M%S'`"
       cp ${LOGDIR}/gc.log ${LOGDIR}/gc_${LOG_FILE_POSTFIX}.log
       LOG_FMT "Backup gc log is done: gc_${LOG_FILE_POSTFIX}.log"
+      LOG_FMT "Dump executor successfully."
 
       PID=$(GET_PID)
       if [ "$PID" != "" ]; then
@@ -306,7 +319,7 @@ STOP()
 {
     LOG_FMT "Begin to stop executor."
     PID=$(GET_PID)
-	  stoptime=0
+    stoptime=0
     if [ "$PID" != "" ]; then
       if [ -d /proc/$PID ];then
         RUN_PARAMS=`cat ${STATUS_FILE}`
@@ -329,10 +342,10 @@ STOP()
         LOG_STARTLOG "Saturn executor is stopped."
       else
         LOG_FMT "Saturn executor with PID:$PID is not running."
-		  fi
-	  else
-		  LOG_FMT "Saturn executor is not running."
-	  fi
+      fi
+    else
+      LOG_FMT "Saturn executor is not running."
+    fi
 }
 
 RESTART()
