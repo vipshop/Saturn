@@ -114,10 +114,14 @@ chmod a+x saturn-executor.sh
 | -env                                           | N    | 运行模式，可取值为dev/product。 dev模式下-Xmx为512m，product模式下-Xmx为2G | product                                            |
 | -d                                             | N    | 业务library所在目录                                          | $TARGET_DIR/app                                    |
 | -r                                             | N    | 运行模式，前台(foreground)或者后台(background)，空代表background模式。 | 空                                                 |
+| -t                                             | N    | 本executor启动的超时时间，单位为秒                           | 120                                                |
 | -jmx                                           | N    | jmx端口                                                      | 24501                                              |
 | -sld                                           | N    | saturn日志目录                                               | /apps/logs/saturn/{namespace}/{executorname}-{ip}/ |
 | jvmArgs                                        | N    | 需要添加的JVM参数                                            | 空                                                 |
 | VIP_SATURN_INIT_JOB_BY_GROUPS （-D或环境变量） | N    | 如果Executor机器设置了这个变量，则该Executor只能启动该域下属于该groups的作业； 否则，可以启动该域下全部作业。<br />多值用逗号分隔groups1,groups2 | 无                                                 |
+| VIP_SATURN_START_TIMEOUT                       | N    | 本executor的启动超时时间，单位为秒                           | 120                                                |
+| VIP_SATURN_RUNNING_IP<br />（-D或环境变量）    | N    | 本executor的运行ip(在某些mac上没有eth0和bond0时启动会报错，通过配置hosts或者配置该环境变量可以解决此报错问题) |                                                    |
+| VIP_SATURN_RUNNING_HOSTNAME                    | N    | 本executor的运行主机名                                       |                                                    |
 
 下面展示一个成功启动的console 输出：
 
