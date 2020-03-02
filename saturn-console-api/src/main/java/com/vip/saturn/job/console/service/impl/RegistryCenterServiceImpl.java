@@ -804,6 +804,29 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 		}
 	}
 
+	private void checkConnectString(String connectString) throws SaturnJobConsoleException {
+		String[] connectStrs = connectString.split(",");
+		for (String connectStr: connectStrs) {
+			if(!connectStr.contains(":")) {
+				throw new SaturnJobConsoleException("连接字符串格式不正确，IP端口应该用英文冒号隔开");
+			}
+			String[] ipPort = connectStr.split(":");
+			if(ipPort.length != 2) {
+				throw new SaturnJobConsoleException("连接字符串格式不正确，请按示例输入正确的连接字符串");
+			}
+			boolean isLegalIP = ipPort[0].matches(
+					"((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))");
+			if(!isLegalIP) {
+				throw new SaturnJobConsoleException("连接字符串中有非法IP");
+			}
+			boolean isLegalPort = ipPort[1].matches(
+					"^[1-9]$|(^[1-9][0-9]$)|(^[1-9][0-9][0-9]$)|(^[1-9][0-9][0-9][0-9]$)|(^[1-6][0-5][0-5][0-3][0-5]$)");
+			if(!isLegalPort) {
+				throw new SaturnJobConsoleException("连接字符串中有非法端口号");
+			}
+		}
+	}
+
 	private void updateExecutorConfigToZkIfNecessary(ZkCluster zkCluster) {
 		try {
 			CuratorRepository.CuratorFrameworkOp curatorFrameworkOp = zkCluster.getCuratorFrameworkOp();
@@ -1091,6 +1114,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_BAD_REQUEST,
 					String.format("ZK cluster[%s]已经存在", zkClusterKey));
 		}
+		checkConnectString(connectString);
 		zkClusterInfoService.createZkCluster(zkClusterKey, alias, connectString, description, "");
 		notifyRefreshRegCenter();
 	}
@@ -1104,6 +1128,7 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			throw new SaturnJobConsoleException(SaturnJobConsoleException.ERROR_CODE_NOT_EXISTED,
 					String.format("ZK cluster[%s]不存在", zkClusterKey));
 		}
+		checkConnectString(connectString);
 		// cannot change alias but connectString and description
 		zkClusterInfo.setConnectString(connectString);
 		zkClusterInfo.setDescription(description);
