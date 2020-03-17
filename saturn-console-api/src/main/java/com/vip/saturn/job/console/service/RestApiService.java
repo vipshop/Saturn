@@ -108,4 +108,9 @@ public interface RestApiService {
 	 */
 	List<BatchJobResult> runDownStream(String namespace, String jobName, Map<String, Object> triggeredData)
 			throws SaturnJobConsoleException;
+
+	/**
+	 * Get the enabled jobs brief info under the namespace
+	 */
+	List<JobConfig> getJobConfigList(String namespace) throws SaturnJobConsoleException;
 }

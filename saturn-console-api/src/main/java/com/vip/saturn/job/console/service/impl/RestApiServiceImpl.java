@@ -697,4 +697,9 @@ public class RestApiServiceImpl implements RestApiService {
 				});
 	}
 
+	@Override
+	public List<JobConfig> getJobConfigList(String namespace) throws SaturnJobConsoleException {
+		return jobService.getUnSystemJobs(namespace);
+	}
+
 }
