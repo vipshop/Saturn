@@ -2478,7 +2478,7 @@ public class JobServiceImpl implements JobService {
 		JobConfig4DB newJobConfig4DB = new JobConfig4DB();
 		SaturnBeanUtils.copyProperties(jobConfig4DB, newJobConfig4DB);
 		if (newCustomContextStr != null) {
-			newJobConfig4DB.setCustomContext(newCustomContextStr);
+			newJobConfig4DB.setJobParameter(newCustomContextStr);
 		}
 		if (newCron != null) {
 			newJobConfig4DB.setCron(newCron);
