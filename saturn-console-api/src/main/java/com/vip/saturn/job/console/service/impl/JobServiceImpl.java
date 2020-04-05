@@ -2935,7 +2935,7 @@ public class JobServiceImpl implements JobService {
 		List<String> oldGroupNamesTemp = null;
 		List<String> newGroupNamesTemp = null;
 
-		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
+		Pattern pattern = Pattern.compile("[`!@#$%^！@#￥%……&*（）|{}【】‘；：”“’。，、？ ]");
 		if (!CollectionUtils.isEmpty(oldGroupNames)) {
 			for (String groupName : oldGroupNames) {
 				validateGroupName(groupName, pattern);
