@@ -16,6 +16,15 @@ import './styles/main.scss';
 Vue.use(ElementUI);
 Vue.use(Utils);
 
+// eslint-disable-next-line no-extend-native
+Promise.prototype.finally = function f(callback) {
+  const P = this.constructor;
+  return this.then(
+    value => P.resolve(callback()).then(() => value),
+    reason => P.resolve(callback()).then(() => { throw reason; }),
+  );
+};
+
 /* eslint-disable no-new */
 /* eslint-disable no-undef */
 window.vm = new Vue({
