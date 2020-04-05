@@ -1767,8 +1767,10 @@ public class JobServiceImpl implements JobService {
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_JOB_MODE))));
 				sheet1.addCell(new Label(23, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DEPENDENCIES))));
-				sheet1.addCell(new Label(24, i + 1,
-						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS))));
+//				sheet1.addCell(new Label(24, i + 1,
+//						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_GROUPS))));
+				// 批量分组后，分组只写到了db并没有写到zk，导出的Excel表格缺失分组名数据，所以这里直接取db的数据
+				sheet1.addCell(new Label(24, i + 1, unSystemJobs.get(i).getGroups()));
 				sheet1.addCell(new Label(25, i + 1, curatorFrameworkOp
 						.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS))));
 				sheet1.addCell(new Label(26, i + 1,
@@ -1781,6 +1783,8 @@ public class JobServiceImpl implements JobService {
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_UPSTREAM))));
 				sheet1.addCell(new Label(30, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM))));
+				sheet1.addCell(new Label(31, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));
 			}
 		}
 	}
@@ -1844,7 +1848,7 @@ public class JobServiceImpl implements JobService {
 		sheet1.addCell(dependenciesLabel);
 
 		Label groupsLabel = new Label(24, 0, "所属分组");
-		setCellComment(groupsLabel, "作业所属分组，一个作业只能属于一个分组，一个分组可以包含多个作业");
+		setCellComment(groupsLabel, "作业所属分组，一个作业可以属于多个分组，一个分组可以包含多个作业");
 		sheet1.addCell(groupsLabel);
 
 		Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
@@ -1866,6 +1870,8 @@ public class JobServiceImpl implements JobService {
 		Label downStream = new Label(30, 0, "下游作业");
 		setCellComment(downStream, "该作业执行成功后，触发下游作业执行。多个下游作业使用英文逗号隔开。");
 		sheet1.addCell(downStream);
+
+		sheet1.addCell(new Label(31, 0, "是否启用"));
 	}
 
 	protected void setCellComment(WritableCell cell, String comment) {
