@@ -571,7 +571,7 @@ public class JobServiceImpl implements JobService {
 		if (groups.length() > 255) {
 			throw new SaturnJobConsoleException("分组过长，不能超过255个字符");
 		}
-		Pattern pattern = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？ ]");
+		Pattern pattern = Pattern.compile("[`!@#$%^！@#￥%……&*（）|{}【】‘；：”“’。，、？ ]");
 		for (String group : groups.split(",")) {
 			validateGroupName(group, pattern);
 		}
