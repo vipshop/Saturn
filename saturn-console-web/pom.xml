@@ -17,6 +17,17 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>saturn-web</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>sh</executable>
+                            <commandlineArgs>npm-config.sh</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>exec-npm-install</id>
                         <phase>prepare-package</phase>
                         <goals>
