@@ -83,9 +83,7 @@
                         <el-row>
                             <el-col :span="22">
                                 <el-form-item prop="jobParameter" label="自定义参数">
-                                    <el-tooltip popper-class="form-tooltip" content="配置格式: 多个配置使用逗号分隔(key1=value1, key2=value2)。在分片序列号/参数对照表中可作为alias形式引用，格式为{key1}" placement="bottom">
-                                        <el-input type="textarea" v-model="jobSettingInfo.jobParameter"></el-input>
-                                    </el-tooltip>
+                                    <el-input type="textarea" v-model="jobSettingInfo.jobParameter"></el-input>
                                 </el-form-item>
                             </el-col>
                         </el-row>
@@ -319,9 +317,9 @@ export default {
     },
     validateGroup(group) {
       let flag = false;
-      const parten = /^[\u4e00-\u9fa5_a-zA-Z0-9]+$/;
-      if (group.length > 10) {
-        this.$message.errorMessage('分组名称不能超过10个字符');
+      const parten = /^[\u4e00-\u9fa5a-zA-Z0-9_.-]+$/;
+      if (group.length > 15) {
+        this.$message.errorMessage('分组名称不能超过15个字符');
       } else if (!parten.test(group)) {
         this.$message.errorMessage('分组名称不能使用特殊字符');
       } else if (this.jobSettingInfo.groups.includes(group)) {
