@@ -317,9 +317,9 @@ export default {
     },
     validateGroup(group) {
       let flag = false;
-      const parten = /^[\u4e00-\u9fa5_a-zA-Z0-9]+$/;
-      if (group.length > 10) {
-        this.$message.errorMessage('分组名称不能超过10个字符');
+      const parten = /^[\u4e00-\u9fa5a-zA-Z0-9_.-]+$/;
+      if (group.length > 15) {
+        this.$message.errorMessage('分组名称不能超过15个字符');
       } else if (!parten.test(group)) {
         this.$message.errorMessage('分组名称不能使用特殊字符');
       } else if (this.jobSettingInfo.groups.includes(group)) {
