@@ -61,11 +61,11 @@
                                 <el-button @click="batchDelete()" v-if="$common.hasPerm('job:batchRemove', domainName)"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()" v-if="$common.hasPerm('job:batchSetPreferExecutors', domainName)"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                                 <el-button @click="batchGroup()"><i class="fa fa-object-group text-btn"></i>分组</el-button>
+                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                             </div>
                             <div class="pull-right">
                                 <el-button @click="handleAdd()" v-if="$common.hasPerm('job:add', domainName)"><i class="fa fa-plus-circle text-btn"></i>添加</el-button>
                                 <el-button @click="handleImport()" v-if="$common.hasPerm('job:import', domainName)"><i class="fa fa-arrow-circle-o-down text-btn"></i>导入</el-button>
-                                <el-button @click="handleExport()"><i class="fa fa-arrow-circle-o-up text-btn"></i>导出</el-button>
                                 <el-button @click="handleArrangeLayout()"><i class="fa fa-line-chart text-btn"></i>作业依赖图</el-button>
                             </div>
                         </div>
@@ -277,7 +277,14 @@ export default {
       this.$router.push({ name: 'namespace_abnormal_jobs', params: { domain: this.domainName } });
     },
     handleExport() {
-      window.location.href = `/console/namespaces/${this.domainName}/jobs/export`;
+      this.batchOperation('导出', (arr) => {
+        if (arr.length === 0) {
+          this.$message.errorMessage('没有可以导出的作业,请重新勾选!');
+        } else {
+          const jobNames = this.getJobNameArray(arr).join(',');
+          window.location.href = `/console/namespaces/${this.domainName}/jobs/exportSelected?jobList=${jobNames}`;
+        }
+      });
     },
     handleImport() {
       this.isImportVisible = true;
