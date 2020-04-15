@@ -1710,6 +1710,48 @@ public class JobServiceImpl implements JobService {
 		}
 	}
 
+	@Override
+	public File exportSelectedJobs(String namespace, List<String> jobList) throws SaturnJobConsoleException {
+		try {
+			File tmp = new File(SaturnConstants.CACHES_FILE_PATH,
+					"tmp_exportFile_" + System.currentTimeMillis() + "_" + random.nextInt(1000) + ".xls");
+			if (!tmp.exists()) {
+				FileUtils.forceMkdir(tmp.getParentFile());
+				tmp.createNewFile();
+			}
+			WritableWorkbook writableWorkbook = Workbook.createWorkbook(tmp);
+			WritableSheet sheet1 = writableWorkbook.createSheet("Sheet1", 0);
+			setExcelHeader(sheet1);
+			// 单个域下作业量不会很大，直接复用之前的方法取该域下全部作业再过滤
+			List<JobConfig> targetJobs = filterTargetJobs(jobList, getUnSystemJobs(namespace));
+			// sort by jobName
+			Collections.sort(targetJobs, new Comparator<JobConfig>() {
+				@Override
+				public int compare(JobConfig o1, JobConfig o2) {
+					return o1.getJobName().compareTo(o2.getJobName());
+				}
+			});
+			setExcelContent(namespace, sheet1, targetJobs);
+
+			writableWorkbook.write();
+			writableWorkbook.close();
+
+			return tmp;
+		} catch (Exception e) {
+			throw new SaturnJobConsoleException(e);
+		}
+	}
+
+	private List<JobConfig> filterTargetJobs(List<String> jobList, List<JobConfig> jobConfigList) {
+		List<JobConfig> result = new ArrayList<>();
+		for (JobConfig jobConfig : jobConfigList) {
+			if (jobList.contains(jobConfig.getJobName())) {
+				result.add(jobConfig);
+			}
+		}
+		return result;
+	}
+
 	protected void setExcelContent(String namespace, WritableSheet sheet1, List<JobConfig> unSystemJobs)
 			throws SaturnJobConsoleException, WriteException {
 		if (unSystemJobs != null && !unSystemJobs.isEmpty()) {

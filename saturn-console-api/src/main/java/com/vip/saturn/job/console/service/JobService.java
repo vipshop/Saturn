@@ -79,6 +79,8 @@ public interface JobService {
 
 	File exportJobs(String namespace) throws SaturnJobConsoleException;
 
+	File exportSelectedJobs(String namespace, List<String> jobList) throws SaturnJobConsoleException;
+
 	ArrangeLayout getArrangeLayout(String namespace) throws SaturnJobConsoleException;
 
 	JobConfig getJobConfigFromZK(String namespace, String jobName) throws SaturnJobConsoleException;

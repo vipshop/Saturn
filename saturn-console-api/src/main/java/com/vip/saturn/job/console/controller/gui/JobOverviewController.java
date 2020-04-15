@@ -418,6 +418,7 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity(jobService.importJobs(namespace, file, getCurrentLoginUserName()));
 	}
 
+	// 导出全部的作业
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@GetMapping(value = "/export")
@@ -426,6 +427,19 @@ public class JobOverviewController extends AbstractGUIController {
 		File exportJobFile = jobService.exportJobs(namespace);
 		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 		String exportFileName = namespace + "_allJobs_" + currentTime + ".xls";
+		SaturnConsoleUtils.exportFile(response, exportJobFile, exportFileName, true);
+	}
+
+	// 导出选定的作业
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@GetMapping(value = "/exportSelected")
+	public void exportSelectedJobs(final HttpServletRequest request, @AuditParam("namespace") @PathVariable String namespace,
+			@RequestParam(required = false) List<String> jobList, final HttpServletResponse response) throws SaturnJobConsoleException {
+		// assertIsPermitted(PermissionKeys.jobExport, namespace);
+		File exportJobFile = jobService.exportSelectedJobs(namespace, jobList);
+		String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+		String exportFileName = namespace + "_" + currentTime + ".xls";
 		SaturnConsoleUtils.exportFile(response, exportJobFile, exportFileName, true);
 	}
 
