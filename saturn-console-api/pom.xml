@@ -154,8 +154,8 @@
 
 		<!-- DB begin -->
 		<dependency>
-			<groupId>com.alibaba.druid</groupId>
-			<artifactId>druid-wrapper</artifactId>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid</artifactId>
 		</dependency>
 		<dependency>
 				<groupId>org.mybatis</groupId>
