@@ -87,4 +87,5 @@ public interface RegistryCenterService {
 
 	void refreshRegistryCenterForNamespace(String zkCluster, String namespace);
 
+	void deleteZkCluster(String zkClusterKey) throws SaturnJobConsoleException ;
 }

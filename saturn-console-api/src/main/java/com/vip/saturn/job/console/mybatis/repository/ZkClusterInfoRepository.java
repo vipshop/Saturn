@@ -19,4 +19,6 @@ public interface ZkClusterInfoRepository {
 
 	int update(ZkClusterInfo zkClusterInfo);
 
+	int deleteByClusterKey(String zkClusterKey);
+
 }

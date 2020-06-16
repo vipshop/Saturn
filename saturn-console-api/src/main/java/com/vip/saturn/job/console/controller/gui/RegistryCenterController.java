@@ -136,6 +136,16 @@ public class RegistryCenterController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PutMapping(value = "/zkClusters/delete")
+	public SuccessResponseEntity deleteZkCluster(@AuditParam("zkClusterKey") @RequestParam String zkClusterKey)
+			throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.registryCenterRemoveZkCluster);
+		registryCenterService.deleteZkCluster(zkClusterKey);
+		return new SuccessResponseEntity();
+	}
+
 	/**
 	 * 获取单个或所有zk集群信息
 	 */

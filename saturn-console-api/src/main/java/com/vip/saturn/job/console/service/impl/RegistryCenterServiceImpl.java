@@ -602,6 +602,9 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 				ZkCluster newZkCluster = newClusterMap.get(zkClusterKey);
 				if (zkCluster.equals(newZkCluster)) {
 					newClusterMap.put(zkClusterKey, zkCluster);
+				} else if (zkCluster.equalsNoNeedReconnect(newZkCluster)){
+					zkCluster.setDescription(newZkCluster.getDescription());
+					newClusterMap.put(zkClusterKey, zkCluster);
 				} else {
 					iterator.remove();
 					closeZkCluster(zkCluster);
@@ -1439,6 +1442,22 @@ public class RegistryCenterServiceImpl implements RegistryCenterService {
 			updateAllOnlineNamespaces(namespace);
 		}
 		log.info("refreshRegistryCenterForNamespace done : {}, {}", zkClusterName, namespace);
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public void deleteZkCluster(String zkClusterKey) throws SaturnJobConsoleException {
+		if (getZkCluster(zkClusterKey) == null) {
+			throw new SaturnJobConsoleException("fail to delete.for ZkCluster does not exist");
+		}
+		if (domainCount(zkClusterKey) > 0) {
+			throw new SaturnJobConsoleException("fail to delete.for ZkCluster still has domains");
+		}
+		if (!CollectionUtils.isEmpty(namespaceZkClusterMapping4SqlService.getAllNamespacesOfCluster(zkClusterKey))) {
+			throw new SaturnJobConsoleException("fail to delete.for ZkCluster still has domains");
+		}
+		zkClusterInfoService.deleteZkCluster(zkClusterKey);
+		notifyRefreshRegCenter();
 	}
 
 	private Map<String, ZkCluster> getTargetZkCluster(String zkCluster) {

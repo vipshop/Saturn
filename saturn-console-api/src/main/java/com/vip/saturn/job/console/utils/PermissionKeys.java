@@ -41,6 +41,7 @@ public class PermissionKeys {
 	public static final String registryCenterBatchMoveNamespaces = "registryCenter:batchMoveNamespaces";
 	public static final String registryCenterExportNamespaces = "registryCenter:exportNamespaces";
 	public static final String registryCenterAddZkCluster = "registryCenter:addZkCluster";
+	public static final String registryCenterRemoveZkCluster = "registryCenter:removeZkCluster";
 
 	public static final String systemConfig = "systemConfig";
 

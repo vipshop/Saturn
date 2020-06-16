@@ -52,4 +52,10 @@ public class ZkClusterInfoServiceImpl implements ZkClusterInfoService {
 	public int updateZkCluster(ZkClusterInfo zkClusterInfo) {
 		return zkClusterInfoRepository.update(zkClusterInfo);
 	}
+
+	@Transactional
+	@Override
+	public int deleteZkCluster(String zkClusterKey) {
+		return zkClusterInfoRepository.deleteByClusterKey(zkClusterKey);
+	}
 }

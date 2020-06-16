@@ -137,6 +137,33 @@ public class ZkCluster implements Serializable {
 
 	}
 
+
+	/**
+	 * 某些信息相等时不需要更新
+	 */
+	public boolean equalsNoNeedReconnect(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof ZkCluster)) {
+			return false;
+		}
+
+		ZkCluster zkCluster = (ZkCluster) o;
+
+		if (zkClusterKey != null ? !zkClusterKey.equals(zkCluster.zkClusterKey) : zkCluster.zkClusterKey != null) {
+			return false;
+		}
+		if (zkAlias != null ? !zkAlias.equals(zkCluster.zkAlias) : zkCluster.zkAlias != null) {
+			return false;
+		}
+		if (zkAddr != null ? !zkAddr.equals(zkCluster.zkAddr) : zkCluster.zkAddr != null) {
+			return false;
+		}
+		return digest != null ? digest.equals(zkCluster.digest) : zkCluster.digest == null;
+
+	}
+
 	@Override
 	public int hashCode() {
 		int result = zkClusterKey != null ? zkClusterKey.hashCode() : 0;

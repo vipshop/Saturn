@@ -351,6 +351,7 @@ INSERT INTO `permission`(`permission_key`) VALUES('registryCenter:addNamespace')
 INSERT INTO `permission`(`permission_key`) VALUES('registryCenter:batchMoveNamespaces');
 INSERT INTO `permission`(`permission_key`) VALUES('registryCenter:exportNamespaces');
 INSERT INTO `permission`(`permission_key`) VALUES('registryCenter:addZkCluster');
+INSERT INTO `permission`(`permission_key`) VALUES('registryCenter:removeZkCluster');
 INSERT INTO `permission`(`permission_key`) VALUES('systemConfig');
 INSERT INTO `permission`(`permission_key`) VALUES('authorizationManage');
 
@@ -386,6 +387,7 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'registryCenter:batchMoveNamespaces');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'registryCenter:exportNamespaces');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'registryCenter:addZkCluster');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'registryCenter:removeZkCluster');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'systemConfig');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'authorizationManage');
 

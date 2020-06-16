@@ -40,4 +40,8 @@
         last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP}
         where zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR}
     </update>
+    <delete id="deleteByClusterKey" parameterType="java.lang.String">
+        delete from zk_cluster_info
+        where zk_cluster_key = #{zkClusterKey, jdbcType=VARCHAR} limit 1
+    </delete>
 </mapper>
