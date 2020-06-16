@@ -239,12 +239,37 @@ public class OutdatedNoRunningJobAnalyzer {
 		String jobName = abnormalJob.getJobName();
 		int cversion = getCversion(curatorFrameworkOp, JobNodePath.getExecutionItemNodePath(jobName, item));
 		long nextFireTime = checkShardingItemState(curatorFrameworkOp, abnormalJob, enabledPath, item);
-		if (nextFireTime != -1 && doubleCheckShardingState(abnormalJob, item, cversion)) {
+		if (nextFireTime != -1 && doubleCheckShardingState(abnormalJob, item, cversion)
+				&& !hasOtherItemRunningBefore(curatorFrameworkOp, abnormalJob, nextFireTime)) {
 			if (abnormalJob.getCause() == null) {
 				abnormalJob.setCause(AbnormalJob.Cause.NOT_RUN.name());
 			}
 			handleOutdatedNoRunningJob(oldAbnormalJobs, curatorFrameworkOp, abnormalJob, nextFireTime);
 		}
+	}
+
+	/**
+	 * 判断是否有其他分片在nextFireTime之前就已经开始运行到现在
+	 * 假如有，说明可能处于以下两种情况，作业正常：
+	 * 1.有重新分片任务下发到/necessary节点，当前分片机器正在block等待running的分片运行结束
+	 * 2.当前分片被failover，但是其他executor都有该job的分片任务并处于running状态，failover无法立即运行
+	 * @return
+	 */
+	private boolean hasOtherItemRunningBefore(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			AbnormalJob abnormalJob, long nextFireTime) {
+		List<String> executionItems = curatorFrameworkOp
+				.getChildren(JobNodePath.getExecutionNodePath(abnormalJob.getJobName()));
+
+		if (!CollectionUtils.isEmpty(executionItems)) {
+			for (String item : executionItems) {
+				String runningNodePath = JobNodePath.getRunningNodePath(abnormalJob.getJobName(), item);
+				Stat stat = curatorFrameworkOp.getStat(runningNodePath);
+				if (stat != null && stat.getCtime() < nextFireTime) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private int getCversion(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String path) {
