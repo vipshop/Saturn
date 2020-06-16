@@ -5,6 +5,7 @@ import com.vip.saturn.job.console.domain.ZkCluster;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 import com.vip.saturn.job.console.mybatis.service.NamespaceZkClusterMapping4SqlService;
 import com.vip.saturn.job.console.mybatis.service.ZkClusterInfoService;
+import com.vip.saturn.job.console.service.SystemConfigService;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +33,9 @@ public class RegistryCenterServiceImplTest {
 
 	@Mock
 	private ZkClusterInfoService zkClusterInfoService;
+
+	@Mock
+	private SystemConfigService systemConfigService;
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
