@@ -1023,20 +1023,20 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
-	public List<JobConfig> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition, int page,
+	public List<JobConfig4DB> getUnSystemJobsWithCondition(String namespace, Map<String, Object> condition, int page,
 			int size) throws SaturnJobConsoleException {
-		List<JobConfig> unSystemJobs = new ArrayList<>();
 		List<JobConfig4DB> jobConfig4DBList = getJobConfigByStatusWithCondition(namespace, condition, page, size);
-		if (jobConfig4DBList != null) {
-			for (JobConfig4DB jobConfig4DB : jobConfig4DBList) {
-				if (!isSystemJob(jobConfig4DB)) {
-					JobConfig jobConfig = new JobConfig();
-					SaturnBeanUtils.copyProperties(jobConfig4DB, jobConfig);
-					unSystemJobs.add(jobConfig);
-				}
+		if (CollectionUtils.isEmpty(jobConfig4DBList)) {
+			return new ArrayList<>();
+		}
+
+		Iterator<JobConfig4DB> iterator = jobConfig4DBList.iterator();
+		while (iterator.hasNext()) {
+			if (isSystemJob(iterator.next())) {
+				iterator.remove();
 			}
 		}
-		return unSystemJobs;
+		return jobConfig4DBList;
 	}
 
 	private List<JobConfig4DB> getJobConfigByStatusWithCondition(String namespace, Map<String, Object> condition,

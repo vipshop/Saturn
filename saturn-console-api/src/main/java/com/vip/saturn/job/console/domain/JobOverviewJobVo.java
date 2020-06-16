@@ -1,5 +1,7 @@
 package com.vip.saturn.job.console.domain;
 
+import java.util.Date;
+
 /**
  * @author hebelala
  */
@@ -28,6 +30,14 @@ public class JobOverviewJobVo {
 	private JobStatus status;
 
 	private String shardingList;
+
+	private String createBy;
+
+	private String lastUpdateBy;
+
+	private Date createTime;
+
+	private Date lastUpdateTime;
 
 	public String getJobName() {
 		return jobName;
@@ -123,5 +133,37 @@ public class JobOverviewJobVo {
 
 	public void setShardingList(String shardingList) {
 		this.shardingList = shardingList;
+	}
+
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
+	public String getLastUpdateBy() {
+		return lastUpdateBy;
+	}
+
+	public void setLastUpdateBy(String lastUpdateBy) {
+		this.lastUpdateBy = lastUpdateBy;
+	}
+
+	public Date getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+
+	public Date getLastUpdateTime() {
+		return lastUpdateTime;
+	}
+
+	public void setLastUpdateTime(Date lastUpdateTime) {
+		this.lastUpdateTime = lastUpdateTime;
 	}
 }

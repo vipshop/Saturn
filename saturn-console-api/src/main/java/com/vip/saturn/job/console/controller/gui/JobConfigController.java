@@ -10,13 +10,12 @@ import com.vip.saturn.job.console.utils.PermissionKeys;
 import com.vip.saturn.job.console.vo.UpdateJobConfigVo;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * Job config related operations.
@@ -56,6 +55,20 @@ public class JobConfigController extends AbstractGUIController {
 			@AuditParam("jobName") @PathVariable String jobName) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.jobRunAtOnce, namespace);
 		jobService.runAtOnce(namespace, jobName);
+		return new SuccessResponseEntity();
+	}
+
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping("/batchRunAtOnce")
+	public SuccessResponseEntity batchRunAtOnce(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.jobBatchRunAtOnce, namespace);
+		if (!CollectionUtils.isEmpty(jobNames)) {
+			for (String jobName : jobNames) {
+				jobService.runAtOnce(namespace, jobName);
+			}
+		}
 		return new SuccessResponseEntity();
 	}
 

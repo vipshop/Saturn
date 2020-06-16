@@ -7,6 +7,7 @@ import com.vip.saturn.job.console.aop.annotation.AuditParam;
 import com.vip.saturn.job.console.controller.SuccessResponseEntity;
 import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
+import com.vip.saturn.job.console.mybatis.entity.JobConfig4DB;
 import com.vip.saturn.job.console.service.AlarmStatisticsService;
 import com.vip.saturn.job.console.service.JobService;
 import com.vip.saturn.job.console.utils.*;
@@ -116,7 +117,7 @@ public class JobOverviewController extends AbstractGUIController {
 		try {
 			preHandleCondition(condition);
 
-			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
+			List<JobConfig4DB> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
 			if (unSystemJobs == null || unSystemJobs.isEmpty()) {
 				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
 				jobOverviewVo.setTotalNumber(0);
@@ -142,7 +143,7 @@ public class JobOverviewController extends AbstractGUIController {
 		try {
 			preHandleStatusAndCondition(condition, jobStatus);
 
-			List<JobConfig> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
+			List<JobConfig4DB> unSystemJobs = jobService.getUnSystemJobsWithCondition(namespace, condition, page, size);
 			if (unSystemJobs == null || unSystemJobs.isEmpty()) {
 				jobOverviewVo.setJobs(Lists.<JobOverviewJobVo>newArrayList());
 				jobOverviewVo.setTotalNumber(0);
@@ -151,7 +152,7 @@ public class JobOverviewController extends AbstractGUIController {
 
 			Pageable pageable = PageableUtil.generatePageble(page, size);
 			// 当 jobStatus 为null时，底层取数据已经做了分页，此处无需再次分页
-			List<JobConfig> targetJobs = jobStatus == null ? unSystemJobs : getJobSubListByPage(unSystemJobs, pageable);
+			List<JobConfig4DB> targetJobs = jobStatus == null ? unSystemJobs : getJobSubListByPage(unSystemJobs, pageable);
 			List<JobOverviewJobVo> jobOverviewList = updateJobOverviewDetail(namespace, targetJobs, jobStatus);
 
 			jobOverviewVo.setJobs(jobOverviewList);
@@ -191,10 +192,10 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 	}
 
-	private List<JobOverviewJobVo> updateJobOverviewDetail(String namespace, List<JobConfig> unSystemJobs,
+	private List<JobOverviewJobVo> updateJobOverviewDetail(String namespace, List<JobConfig4DB> unSystemJobs,
 			JobStatus jobStatus) {
 		List<JobOverviewJobVo> result = Lists.newArrayList();
-		for (JobConfig jobConfig : unSystemJobs) {
+		for (JobConfig4DB jobConfig : unSystemJobs) {
 			try {
 				jobConfig.setDefaultValues();
 
@@ -229,7 +230,7 @@ public class JobOverviewController extends AbstractGUIController {
 		}
 	}
 
-	protected List<JobConfig> getJobSubListByPage(List<JobConfig> unSystemJobs, Pageable pageable) {
+	protected List getJobSubListByPage(List unSystemJobs, Pageable pageable) {
 		int totalCount = unSystemJobs.size();
 		int offset = pageable.getOffset();
 		int end = offset + pageable.getPageSize();

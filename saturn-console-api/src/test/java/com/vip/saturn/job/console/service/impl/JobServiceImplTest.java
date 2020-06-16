@@ -811,6 +811,11 @@ public class JobServiceImplTest {
 				.findConfigsByNamespaceWithCondition(eq(namespace), eq(condition), Matchers.<Pageable>anyObject()))
 				.thenReturn(buildJobConfig4DBList(namespace, jobName, count));
 		assertTrue(jobService.getUnSystemJobsWithCondition(namespace, condition, 1, 25).size() == count);
+
+		when(currentJobConfigService
+				.findConfigsByNamespaceWithCondition(eq(namespace), eq(condition), Matchers.<Pageable>anyObject()))
+				.thenReturn(buildSystemJobConfig4DBList(namespace, jobName, count));
+		assertTrue(jobService.getUnSystemJobsWithCondition(namespace, condition, 1, 25).size() == 0);
 	}
 
 	@Test
@@ -1653,6 +1658,21 @@ public class JobServiceImplTest {
 			config.setEnabled(true);
 			config.setEnabledReport(true);
 			config.setJobType(JobType.JAVA_JOB.toString());
+			config4DBList.add(config);
+		}
+		return config4DBList;
+	}
+
+	private List<JobConfig4DB> buildSystemJobConfig4DBList(String namespace, String jobName, int count) {
+		List<JobConfig4DB> config4DBList = new ArrayList<>();
+		for (int i = 0; i < count; i++) {
+			JobConfig4DB config = new JobConfig4DB();
+			config.setNamespace(namespace);
+			config.setJobName(jobName + i);
+			config.setEnabled(true);
+			config.setEnabledReport(true);
+			config.setJobType(JobType.JAVA_JOB.toString());
+			config.setJobMode("system_test");
 			config4DBList.add(config);
 		}
 		return config4DBList;

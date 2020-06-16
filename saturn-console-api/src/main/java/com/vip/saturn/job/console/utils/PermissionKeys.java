@@ -10,6 +10,7 @@ public class PermissionKeys {
 	public static final String jobDisable = "job:disable";
 	public static final String jobBatchDisable = "job:batchDisable";
 	public static final String jobRunAtOnce = "job:runAtOnce";
+	public static final String jobBatchRunAtOnce = "job:batchRunAtOnce";
 	public static final String jobStopAtOnce = "job:stopAtOnce";
 	public static final String jobRemove = "job:remove";
 	public static final String jobBatchRemove = "job:batchRemove";

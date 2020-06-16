@@ -324,6 +324,7 @@ INSERT INTO `permission`(`permission_key`) VALUES('job:batchEnable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:disable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchDisable');
 INSERT INTO `permission`(`permission_key`) VALUES('job:runAtOnce');
+INSERT INTO `permission`(`permission_key`) VALUES('job:batchRunAtOnce');
 INSERT INTO `permission`(`permission_key`) VALUES('job:stopAtOnce');
 INSERT INTO `permission`(`permission_key`) VALUES('job:remove');
 INSERT INTO `permission`(`permission_key`) VALUES('job:batchRemove');
@@ -358,6 +359,7 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:disable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:batchDisable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:runAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:batchRunAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:stopAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:remove');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('system_admin', 'job:batchRemove');
@@ -391,6 +393,8 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_de
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:batchEnable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:disable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:batchDisable');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:runAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:batchRunAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'job:stopAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'alarmCenter:setAbnormalJobRead');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_developer', 'alarmCenter:setTimeout4AlarmJobRead');
@@ -400,6 +404,7 @@ INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_ad
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:disable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:batchDisable');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:runAtOnce');
+INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:batchRunAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:stopAtOnce');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:remove');
 INSERT INTO `role_permission`(`role_key`, `permission_key`) VALUES('namespace_admin', 'job:batchRemove');
