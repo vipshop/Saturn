@@ -58,6 +58,7 @@
                             <div>
                                 <el-button @click="batchEnabled()" v-if="$common.hasPerm('job:batchEnable', domainName)"><i class="fa fa-play-circle text-btn"></i>启用</el-button>
                                 <el-button @click="batchDisabled()" v-if="$common.hasPerm('job:batchDisable', domainName)"><i class="fa fa-stop-circle text-warning"></i>禁用</el-button>
+                                <el-button @click="batchRunAtOnce()" v-if="$common.hasPerm('job:batchRunAtOnce', domainName)"><i class="fa fa-play-circle-o text-btn"></i>立即执行</el-button>
                                 <el-button @click="batchDelete()" v-if="$common.hasPerm('job:batchRemove', domainName)"><i class="fa fa-trash text-danger"></i>删除</el-button>
                                 <el-button @click="batchPriority()" v-if="$common.hasPerm('job:batchSetPreferExecutors', domainName)"><i class="fa fa-level-up text-btn"></i>优先</el-button>
                                 <el-button @click="batchGroup()"><i class="fa fa-object-group text-btn"></i>分组</el-button>
@@ -71,7 +72,7 @@
                         </div>
                         <el-table stripe border ref="multipleTable" @selection-change="handleSelectionChange" :data="jobList" @sort-change="sortChange" style="width: 100%">
                             <el-table-column type="selection" width="55"></el-table-column>
-                            <el-table-column prop="jobName" label="作业名" sortable="custom">
+                            <el-table-column prop="jobName" label="作业名" min-width="100" sortable="custom">
                                 <template slot-scope="scope">
                                     <router-link tag="a" :to="{ name: 'job_setting', params: { domain: domainName, jobName: scope.row.jobName } }">
                                         <i class="iconfont icon-java" v-if="scope.row.jobType === 'JAVA_JOB' || scope.row.jobType === 'PASSIVE_JAVA_JOB'"></i>
@@ -86,7 +87,7 @@
                                     {{$map.jobTypeMap[scope.row.jobType]}}
                                 </template>
                             </el-table-column>
-                            <el-table-column label="状态" prop="status" width="90px">
+                            <el-table-column label="状态" prop="status" width="80px">
                                 <template slot-scope="scope"> 
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{$map.jobStatusMap[scope.row.status]}}</el-tag>
                                 </template>
@@ -102,11 +103,16 @@
                                     <el-tag v-else type="" size="mini" style="margin-right: 3px;margin-bottom: 3px;" v-for="item in $array.strToArray(scope.row.groups)" :key="item">{{item}}</el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="shardingTotalCount" label="分片数" width="70px"></el-table-column>
-                            <el-table-column prop="shardingList" label="是否已分配分片" width="130px">
+                            <el-table-column prop="shardingTotalCount" label="分片数" width="65px"></el-table-column>
+                            <el-table-column prop="shardingList" label="分配分片" width="90px">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.shardingList === ''">-</span>
                                     <el-tag v-else :type="scope.row.shardingList === '已分配' ? 'primary' : ''">{{ scope.row.shardingList }}</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="lastUpdateTime" label="更新时间" width="160px">
+                                <template slot-scope="scope">
+                                    {{ scope.row.lastUpdateTime | formatDate }}
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="120px" align="center">
@@ -116,6 +122,9 @@
                                     </el-tooltip>
                                     <el-tooltip content="禁用" placement="top" v-if="$common.hasPerm('job:disable', domainName) && (scope.row.status === 'READY' || scope.row.status === 'RUNNING')">
                                         <el-button type="text" @click="handleActive(scope.row, false)"><i class="fa fa-stop-circle text-warning"></i></el-button>
+                                    </el-tooltip>
+                                    <el-tooltip content="立即执行" placement="top" v-if="$common.hasPerm('job:runAtOnce', domainName) && (scope.row.status === 'READY' && !$option.isMsg(scope.row.jobType))">
+                                        <el-button type="text" @click="runAtOnce(scope.row)" ><i class="fa fa-play-circle-o text-btn"></i></el-button>
                                     </el-tooltip>
                                     <el-tooltip content="复制" placement="top" v-if="$common.hasPerm('job:copy', domainName)">
                                         <el-button type="text" @click="handleCopy(scope.row)"><i class="fa fa-clone"></i></el-button>
@@ -206,6 +215,43 @@ export default {
     };
   },
   methods: {
+    batchRunAtOnce() {
+      this.batchOperation('立即执行', (arr) => {
+        const unstopedJob = this.getUnstoptedJobArray(arr);
+        if (unstopedJob.length === 0) {
+          this.$message.errorMessage('没有可以立即执行的作业（已就绪）,请重新勾选!');
+        } else {
+          const params = {
+            jobNames: this.getJobNameArray(unstopedJob).join(','),
+          };
+          const confirmText = unstopedJob.length < 10 ? `确认立即执行作业 ${params.jobNames} 吗?` : `确认立即执行已选的 ${unstopedJob.length} 条作业吗?`;
+          this.$message.confirmMessage(confirmText, () => {
+            this.loading = true;
+            this.$http.post(`/console/namespaces/${this.domainName}/jobs/jobName/config/batchRunAtOnce`, params).then(() => {
+              this.$message.successNotify('批量立即执行作业操作成功');
+              this.getJobList();
+            })
+            .catch(() => { this.$http.buildErrorHandler('批量立即执行作业请求失败！'); })
+            .finally(() => {
+              this.loading = false;
+            });
+          });
+        }
+      });
+    },
+    runAtOnce(row) {
+      this.$message.confirmMessage(`确认立即执行作业 ${row.jobName} 吗?`, () => {
+        this.loading = true;
+        this.$http.post(`/console/namespaces/${this.domainName}/jobs/${row.jobName}/config/runAtOnce`, '').then(() => {
+          this.$message.successNotify('立即执行操作成功');
+          this.getJobList();
+        })
+        .catch(() => { this.$http.buildErrorHandler('立即执行请求失败！'); })
+        .finally(() => {
+          this.loading = false;
+        });
+      });
+    },
     onCurrentChange(page) {
       this.currentPage = page;
       this.getJobList();
