@@ -227,7 +227,7 @@ export default {
           const confirmText = unstopedJob.length < 10 ? `确认立即执行作业 ${params.jobNames} 吗?` : `确认立即执行已选的 ${unstopedJob.length} 条作业吗?`;
           this.$message.confirmMessage(confirmText, () => {
             this.loading = true;
-            this.$http.post(`/console/namespaces/${this.domainName}/jobs/jobName/config/batchRunAtOnce`, params).then(() => {
+            this.$http.post(`/console/namespaces/${this.domainName}/jobs/batchRunAtOnce`, params).then(() => {
               this.$message.successNotify('批量立即执行作业操作成功');
               this.getJobList();
             })
