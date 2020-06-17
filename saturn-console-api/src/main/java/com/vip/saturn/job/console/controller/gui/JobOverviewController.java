@@ -478,4 +478,18 @@ public class JobOverviewController extends AbstractGUIController {
 		return new SuccessResponseEntity();
 	}
 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping("/batchRunAtOnce")
+	public SuccessResponseEntity batchRunAtOnce(@AuditParam("namespace") @PathVariable String namespace,
+			@AuditParam("jobNames") @RequestParam List<String> jobNames) throws SaturnJobConsoleException {
+		assertIsPermitted(PermissionKeys.jobBatchRunAtOnce, namespace);
+		if (!CollectionUtils.isEmpty(jobNames)) {
+			for (String jobName : jobNames) {
+				jobService.runAtOnce(namespace, jobName);
+			}
+		}
+		return new SuccessResponseEntity();
+	}
+
 }
