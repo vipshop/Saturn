@@ -36,6 +36,9 @@
                                     <el-tooltip content="编辑" placement="top" v-if="$common.hasPerm('registryCenter:addZkCluster')">
                                         <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
                                     </el-tooltip>
+                                    <el-tooltip content="删除" placement="top" v-if="$common.hasPerm('registryCenter:removeZkCluster')">
+                                        <el-button type="text" icon="el-icon-delete text-danger" @click="handleDelete(scope.row)"></el-button>
+                                    </el-tooltip>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -72,6 +75,19 @@ export default {
     };
   },
   methods: {
+    handleDelete(row) {
+      this.$message.confirmMessage(`确认删除ZK集群 ${row.zkAlias} 吗?`, () => {
+        this.loading = true;
+        this.$http.put('/console/zkClusters/delete', { zkClusterKey: row.zkClusterKey }).then(() => {
+          this.$message.successNotify('删除ZK集群操作成功,若列表未更新,请稍后手动刷新页面');
+          this.getAllClusters();
+        })
+        .catch(() => { this.$http.buildErrorHandler('删除ZK集群请求失败！'); })
+        .finally(() => {
+          this.loading = false;
+        });
+      });
+    },
     handleAdd() {
       const clusterAddInfo = {
         zkClusterKey: '',
