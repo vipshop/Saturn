@@ -98,6 +98,7 @@ JDK 1.8:
 | server.port | JVM参数(-D)       | 启动端口，默认9088      | N    |
 | authentication.enabled | JVM参数(-D) | 是否启用用户认证。默认为false。详情参阅认证和授权一节 | N |
 | authorization.enabled.default | JVM参数(-D) | 是否默认启用用户鉴权。默认为false。详情参阅认证和授权一节 | N |
+| VIP_SATURN_DASHBOARD_NOT_RUNNING_WARN_DELAY_MS_WHEN_JOB_RUNNING | 都支持            | 当job处于running时的job not running告警延时，单位是毫秒。默认值是2小时。      | N    |
 
 使用浏览器访问 http://localhost:9088 即可看到你的Saturn Console！
 

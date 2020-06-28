@@ -134,4 +134,12 @@ public final class JobNodePath {
 		return JobNodePath.getConfigNodePath(jobName, "enabledReport");
 	}
 
+	public static String getLeaderFailoverNodePath(final String jobName) {
+		return JobNodePath.getLeaderNodePath(jobName, "failover");
+	}
+
+	public static String getLeaderFailoverItemPath(final String jobName, final String item) {
+		return String.format("%s/items/%s", getLeaderFailoverNodePath(jobName), item);
+	}
+
 }

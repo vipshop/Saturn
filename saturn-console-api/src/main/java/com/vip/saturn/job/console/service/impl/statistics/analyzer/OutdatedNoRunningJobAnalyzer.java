@@ -240,7 +240,7 @@ public class OutdatedNoRunningJobAnalyzer {
 		int cversion = getCversion(curatorFrameworkOp, JobNodePath.getExecutionItemNodePath(jobName, item));
 		long nextFireTime = checkShardingItemState(curatorFrameworkOp, abnormalJob, enabledPath, item);
 		if (nextFireTime != -1 && doubleCheckShardingState(abnormalJob, item, cversion)
-				&& !hasOtherItemRunningBefore(curatorFrameworkOp, abnormalJob, nextFireTime)) {
+				&& !mayBlockWaitingRunningItemEnd(curatorFrameworkOp, abnormalJob, nextFireTime, item)) {
 			if (abnormalJob.getCause() == null) {
 				abnormalJob.setCause(AbnormalJob.Cause.NOT_RUN.name());
 			}
@@ -249,27 +249,52 @@ public class OutdatedNoRunningJobAnalyzer {
 	}
 
 	/**
-	 * 判断是否有其他分片在nextFireTime之前就已经开始运行到现在
-	 * 假如有，说明可能处于以下两种情况，作业正常：
-	 * 1.有重新分片任务下发到/necessary节点，当前分片机器正在block等待running的分片运行结束
-	 * 2.当前分片被failover，但是其他executor都有该job的分片任务并处于running状态，failover无法立即运行
-	 * @return
+	 * 判断是否可能在等待其他处于running状态的item运行结束
+	 *
+	 * 假如当前job有其它item在running，在以下情形下会导致当前item无法准点运行
+	 * 1.当console下发重新分片时，会导致已经跑完的item等待running的item
+	 * 2.executor会优先运行failover的item，可能会导致自己的item无法准点运行
+	 * 3.需要被failover的item可能由于所有的executor都在running自己的分片，导致不能被及时failover
+	 * 可能不止以上的情况
+	 *
+	 * 处理方式为:
+	 * 在当前job有其它running的item时
+	 * 1.考虑failover节点mtime
+	 * 2.进一步增加告警延迟时间
+	 * @return 返回false会触发告警
 	 */
-	private boolean hasOtherItemRunningBefore(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
-			AbnormalJob abnormalJob, long nextFireTime) {
+	private boolean mayBlockWaitingRunningItemEnd(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp,
+			AbnormalJob abnormalJob, long nextFireTime, String shardingItemStr) {
 		List<String> executionItems = curatorFrameworkOp
 				.getChildren(JobNodePath.getExecutionNodePath(abnormalJob.getJobName()));
 
+		boolean hasRunningItem = false;
 		if (!CollectionUtils.isEmpty(executionItems)) {
 			for (String item : executionItems) {
 				String runningNodePath = JobNodePath.getRunningNodePath(abnormalJob.getJobName(), item);
-				Stat stat = curatorFrameworkOp.getStat(runningNodePath);
-				if (stat != null && stat.getCtime() < nextFireTime) {
-					return true;
+				if (curatorFrameworkOp.checkExists(runningNodePath)) {
+					hasRunningItem = true;
+					break;
 				}
 			}
 		}
-		return false;
+
+		if (!hasRunningItem) {
+			return false;
+		}
+
+		//假如failover节点mtime大于nextFireTime，则更新nextFireTime
+		long currentTime = System.currentTimeMillis();
+		long failoverMtime;
+		String failoverNodePath = JobNodePath.getFailoverNodePath(abnormalJob.getJobName(), shardingItemStr);
+		if ((failoverMtime = curatorFrameworkOp.getMtime(failoverNodePath)) <= 0) {
+			String leaderFailoverItemPath = JobNodePath
+					.getLeaderFailoverItemPath(abnormalJob.getJobName(), shardingItemStr);
+			failoverMtime = curatorFrameworkOp.getMtime(leaderFailoverItemPath);
+		}
+
+		long nextFireTimeTmp = failoverMtime > nextFireTime ? failoverMtime : nextFireTime;
+		return nextFireTimeTmp + DashboardConstants.NOT_RUNNING_WARN_DELAY_MS_WHEN_JOB_RUNNING > currentTime;
 	}
 
 	private int getCversion(CuratorRepository.CuratorFrameworkOp curatorFrameworkOp, String path) {
