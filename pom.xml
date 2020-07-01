@@ -38,7 +38,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.locale>zh_CN</project.build.locale>
 
-		<quartz.version>2.2.1</quartz.version>
+		<quartz.version>2.3.2</quartz.version>
 		<curator.version>2.10.0</curator.version>
         <springframework.version>4.3.2.RELEASE</springframework.version>
 		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
