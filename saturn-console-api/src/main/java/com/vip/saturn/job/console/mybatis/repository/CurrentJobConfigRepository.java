@@ -43,4 +43,14 @@ public interface CurrentJobConfigRepository {
 	void batchSetGroups(@Param("namespace") String namespace, @Param("jobNames") List<String> jobNames, @Param("groupName") String groupName, @Param("lastUpdateBy") String lastUpdateBy);
 
 	void addToGroups(@Param("namespace") String namespace, @Param("jobNames") List<String> jobNames, @Param("groupName") String groupName, @Param("lastUpdateBy") String lastUpdateBy);
+
+	/**
+	 * 查找具有有效作业的域名列表
+	 */
+	List<String> findHasValidJobNamespaces(@Param("jobType") String jobType, @Param("isEnabled") int isEnabled);
+
+	/**
+	 * 查找有效作业的cron配置
+	 */
+	List<JobConfig4DB> findValidJobsCronConfig();
 }

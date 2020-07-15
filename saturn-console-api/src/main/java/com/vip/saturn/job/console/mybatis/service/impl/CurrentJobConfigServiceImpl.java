@@ -134,4 +134,14 @@ public class CurrentJobConfigServiceImpl implements CurrentJobConfigService {
 	public void addToGroups(String namespace, List<String> jobNames, String groupName, String userName) {
 		currentJobConfigRepo.addToGroups(namespace, jobNames, groupName, userName);
 	}
+
+	@Override
+	public List<String> findHasValidJobNamespaces(String jobType, int isEnabled) {
+		return currentJobConfigRepo.findHasValidJobNamespaces(jobType, isEnabled);
+	}
+
+	@Override
+	public List<JobConfig4DB> findValidJobsCronConfig() {
+		return currentJobConfigRepo.findValidJobsCronConfig();
+	}
 }
