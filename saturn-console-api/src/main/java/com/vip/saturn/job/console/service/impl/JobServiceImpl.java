@@ -561,6 +561,7 @@ public class JobServiceImpl implements JobService {
 		if (StringUtils.isBlank(jobConfig.getQueueName())) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "对于消息作业，queue必填");
 		}
+		jobConfig.setQueueName(jobConfig.getQueueName().trim().replaceAll("\r\n", ""));
 	}
 
 	private void validateGroupsFieldOfJobConfig(JobConfig jobConfig) throws SaturnJobConsoleException {
