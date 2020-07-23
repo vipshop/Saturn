@@ -326,4 +326,41 @@
         </foreach>
     </update>
 
+
+    <select id="findHasValidJobNamespaces" resultType="java.lang.String">
+        SELECT DISTINCT
+          namespace
+        FROM
+          job_config jc
+        where EXISTS
+          (SELECT
+            *
+          FROM
+            namespace_info ni
+          WHERE jc.namespace = ni.namespace)
+        <if test="isEnabled != null">
+            AND is_enabled = #{isEnabled}
+        </if>
+        <if test="jobType != null">
+            AND job_type = #{jobType}
+        </if>
+    </select>
+
+    <select id="findValidJobsCronConfig" resultMap="BaseResultMap">
+        SELECT DISTINCT
+          namespace,
+          cron,
+          time_zone
+        FROM
+          job_config jc
+        WHERE is_enabled = 1
+          AND cron != ''
+          AND EXISTS
+          (SELECT
+            *
+          FROM
+            namespace_info ni
+          WHERE jc.namespace = ni.namespace)
+    </select>
+
 </mapper>
