@@ -1,10 +1,18 @@
-package com.vip.saturn.job.executor.utils;
-
-/*******************************************************************************
- * Copyright (c) 2005, 2014 springside.github.io
+/**
+ * Copyright 2016 vip.com.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- *******************************************************************************/
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * </p>
+ **/
+
+package com.vip.saturn.job.executor.utils;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
