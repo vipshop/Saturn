@@ -4,6 +4,7 @@ dist: trusty
 
 jdk:
   - oraclejdk8
+  - openjdk7
 
 branches:
   only:
