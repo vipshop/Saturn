@@ -11,6 +11,7 @@ import NamespaceAbnormalJobs from './pages/job_list/alarm/namespace_abnormal_job
 import NamespaceTimeoutJobs from './pages/job_list/alarm/namespace_timeout_jobs';
 import NamespaceFailoverJobs from './pages/job_list/alarm/namespace_failover_jobs';
 import NamespaceAbnormalContainers from './pages/job_list/alarm/namespace_abnormal_containers';
+import NamespaceDisabledTimeoutJobs from './pages/job_list/alarm/namespace_disabled_timeout_jobs';
 import JobDetail from './pages/job_detail/job_detail';
 import JobSetting from './pages/job_detail/job_setting';
 import JobSharding from './pages/job_detail/job_sharding';
@@ -29,6 +30,7 @@ import AlarmAbnormalJobs from './pages/alarm_manage/alarm_abnormal_jobs';
 import AlarmTimeoutJobs from './pages/alarm_manage/alarm_timeout_jobs';
 import UnableFailoverJobs from './pages/alarm_manage/unable_failover_jobs';
 import AlarmAbnormalContainers from './pages/alarm_manage/alarm_abnormal_containers';
+import AlarmDisabledTimeoutJobs from './pages/alarm_manage/alarm_disabled_timeout_jobs';
 import SystemConfigManage from './pages/system_config_manage/system_config_manage';
 import ConsoleConfig from './pages/system_config_manage/console_config';
 import AuthorityManage from './pages/authority_manage/authority_manage';
@@ -65,6 +67,7 @@ export default new Router({
             { name: 'namespace_timeout_jobs', path: RouterMapper.GetPath('namespaceTimeoutJobs'), component: NamespaceTimeoutJobs },
             { name: 'namespace_failover_jobs', path: RouterMapper.GetPath('namespaceFailoverJobs'), component: NamespaceFailoverJobs },
             { name: 'namespace_abnormal_containers', path: RouterMapper.GetPath('namespaceAbnormalContainers'), component: NamespaceAbnormalContainers },
+            { name: 'namespace_disabled_timeout_jobs', path: RouterMapper.GetPath('namespaceDisabledTimeoutJobs'), component: NamespaceDisabledTimeoutJobs },
           ],
         },
       ],
@@ -108,6 +111,7 @@ export default new Router({
         { name: 'alarm_timeout_jobs', path: RouterMapper.GetPath('alarmTimeoutJobs'), component: AlarmTimeoutJobs },
         { name: 'unable_failover_jobs', path: RouterMapper.GetPath('unableFailoverJobs'), component: UnableFailoverJobs },
         { name: 'alarm_abnormal_containers', path: RouterMapper.GetPath('alarmAbnormalContainers'), component: AlarmAbnormalContainers },
+        { name: 'alarm_disabled_timeout_jobs', path: RouterMapper.GetPath('alarmDisabledTimeoutJobs'), component: AlarmDisabledTimeoutJobs },
       ],
     }, {
       path: RouterMapper.GetPath('systemConfigManage'),

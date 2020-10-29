@@ -45,8 +45,10 @@
                             {{$map.degreeMap[scope.row.jobDegree]}}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="timeout4AlarmSeconds" label="超时秒数" width="110px"></el-table-column>
-                    <el-table-column prop="timeoutItems" label="超时分片"></el-table-column>
+                    <el-table-column v-if="type !== 'disabledTimeout'" prop="timeout4AlarmSeconds" label="超时秒数" width="110px"></el-table-column>
+                    <el-table-column v-if="type !== 'disabledTimeout'" prop="timeoutItems" label="超时分片"></el-table-column>
+                    <el-table-column v-if="type === 'disabledTimeout'" prop="disableTimeStr" label="禁用时间" width="160px"></el-table-column>
+                    <el-table-column v-if="type === 'disabledTimeout'" prop="disableTimeoutSeconds" label="设置超时秒数" width="110px"></el-table-column>
                     <el-table-column label="操作" width="100px" align="center">
                         <template slot-scope="scope">
                             <el-button v-if="$common.hasPerm('alarmCenter:setTimeout4AlarmJobRead', scope.row.domainName)" size="small" type="primary" @click="handleRead(scope.row)" :disabled="scope.row.read">不再告警</el-button>
@@ -59,7 +61,7 @@
 </template>
 <script>
 export default {
-  props: ['timeoutJobsList'],
+  props: ['timeoutJobsList', 'type'],
   data() {
     return {
       filters: {

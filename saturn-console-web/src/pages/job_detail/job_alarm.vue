@@ -1,6 +1,6 @@
 <template>
     <div class="margin-20">
-        <div v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === ''">
+        <div v-if="abnormalJob === '' && timeoutJob === '' && unableFailoverJob === '' && disabledTimeoutJob === ''">
             <el-col :span="24">
                 <div class="job-alarm-empty">
                     <span><i class="fa fa-info-circle"></i>当前没有告警信息</span>
@@ -23,7 +23,7 @@
                 </el-col>
                 <el-col :span="8" v-if="timeoutJob !== ''">
                     <Panel type="warning" class="job-alarm-panel">
-                        <div slot="title" class="job-alarm-title">超时告警</div>
+                        <div slot="title" class="job-alarm-title">运行超时告警</div>
                         <div slot="content">
                             <div class="job-alarm-content">
                                 <div class="panel-row">超时秒数: {{timeoutJob.timeout4AlarmSeconds}}s</div>
@@ -44,6 +44,17 @@
                         </div>
                     </Panel>
                 </el-col>
+                <el-col :span="8" v-if="disabledTimeoutJob !== ''">
+                    <Panel type="warning" class="job-alarm-panel">
+                        <div slot="title" class="job-alarm-title">禁用超时告警</div>
+                        <div slot="content">
+                            <div class="job-alarm-content">
+                                <div class="panel-row">禁用作业时间: {{disabledTimeoutJob.disableTimeStr}}</div>
+                                <div class="panel-btn" v-if="$common.hasPerm('alarmCenter:setTimeout4AlarmJobRead', domainName)"><el-button :disabled="timeoutJob.read" size="small" type="warning" @click="handleDisabledTimeoutJob()">不再告警</el-button></div>
+                            </div>
+                        </div>
+                    </Panel>
+                </el-col>
             </el-row>
         </div>
     </div>
@@ -56,6 +67,7 @@ export default {
       abnormalJob: '',
       timeoutJob: '',
       unableFailoverJob: '',
+      disabledTimeoutJob: '',
     };
   },
   methods: {
@@ -77,6 +89,12 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('获取无法高可用作业信息请求失败！'); });
     },
+    getDisabledTimeout() {
+      return this.$http.get(`/console/namespaces/${this.domainName}/jobs/${this.jobName}/isDisabledTimeout`).then((data) => {
+        this.disabledTimeoutJob = data;
+      })
+      .catch(() => { this.$http.buildErrorHandler('获取超时作业信息请求失败！'); });
+    },
     handleAbnormalJob() {
       this.$http.post(`/console/namespaces/${this.domainName}/setAbnormalJobMonitorStatusToRead`, { uuid: this.abnormalJob.uuid }).then(() => {
         this.init();
@@ -91,12 +109,20 @@ export default {
       })
       .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
     },
+    handleDisabledTimeoutJob() {
+      this.$http.post(`/console/namespaces/${this.domainName}/setDisabledTimeoutJobMonitorStatusToRead`, { uuid: this.disabledTimeoutJob.uuid }).then(() => {
+        this.init();
+        this.$message.successNotify('操作成功');
+      })
+      .catch(() => { this.$http.buildErrorHandler('不再告警操作请求失败！'); });
+    },
     init() {
       this.loading = true;
       Promise.all(
-      [this.getAbnormal(), this.getTimeout(), this.getUnableFailover()]).then(() => {
-        this.loading = false;
-      });
+        [this.getAbnormal(), this.getTimeout(), this.getUnableFailover(),
+          this.getDisabledTimeout()]).then(() => {
+            this.loading = false;
+          });
     },
   },
   computed: {

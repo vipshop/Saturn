@@ -13,7 +13,7 @@
                                       :style="styleObject"
                                       :index="menu.index" :route="menu">
                             <i :class="menu.icon"></i>
-                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' ? 'warning' : 'danger'" :max="99" :hidden="!menu.alarmCount || collapse">
+                            <el-badge :value="menu.alarmCount" :type="menu.name === 'unable_failover_jobs' || menu.name === 'alarm_disabled_timeout_jobs' ? 'warning' : 'danger'" :max="99" :hidden="!menu.alarmCount || collapse">
                               <span class="page-menu-item-title">
                                   {{menu.title}}
                               </span>
