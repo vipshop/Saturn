@@ -137,12 +137,12 @@
                         </el-row>
                         <el-row>
                             <el-col :span="11">
-                                <el-form-item prop="disableTimeoutSeconds " label="禁用超时告警(秒)">
+                                <el-form-item prop="disableTimeoutSeconds" label="禁用超时告警(秒)">
                                     <el-tooltip popper-class="form-tooltip" placement="top" effect="light">
                                         <div slot="content">
                                             <span class="text-warning">当禁用作业时长超过该值则触发告警，0为不告警</span>
                                         </div>
-                                        <el-input v-model="jobSettingInfo.disableTimeoutSeconds "></el-input>
+                                        <el-input v-model="jobSettingInfo.disableTimeoutSeconds"></el-input>
                                     </el-tooltip>
                                 </el-form-item>
                             </el-col>

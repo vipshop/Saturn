@@ -12,7 +12,7 @@
             </el-form>
             <div class="page-table">
                 <div class="page-table-header">
-                    <div class="page-table-header-title"><i class="fa fa-list"></i>运行超时（告警）的作业分片
+                    <div class="page-table-header-title"><i class="fa fa-list"></i>{{ type === 'disabledTimeout' ? '禁用' : '运行' }}超时（告警）的作业分片
                         <el-button type="text" @click="refreshList"><i class="fa fa-refresh"></i></el-button>
                     </div>
                 </div>
