@@ -72,6 +72,19 @@ public class OverallAlarmStatisticsController extends AbstractGUIController {
 		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobsStringByZKCluster(zkClusterKey));
 	}
 
+	/**
+	 * 根据zk集群查询禁用时长超时的作业
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/disabledTimeoutJobs")
+	public SuccessResponseEntity getDisabledTimeoutJobs(@RequestParam(required = false) String zkClusterKey)
+			throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(zkClusterKey)) {
+			return new SuccessResponseEntity(alarmStatisticsService.getDisabledTimeoutJobsString());
+		}
+		return new SuccessResponseEntity(alarmStatisticsService.getDisabledTimeoutJobsStringByZKCluster(zkClusterKey));
+	}
+
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/countOfAlarmJobs")
 	public SuccessResponseEntity getCountOfAlarmJobs() throws SaturnJobConsoleException {

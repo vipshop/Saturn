@@ -28,6 +28,7 @@ public class StatisticsTableKeyConstant {
 	public static final String UNABLE_FAILOVER_JOB = "unable_failover_job";
 	public static final String TIMEOUT_4_ALARM_JOB = "timeout_4_alarm_job";
 	public static final String ABNORMAL_CONTAINER = "abnormal_container";
+	public static final String DISABLED_TIMEOUT_JOB = "disabled_timeout_job";
 	// 即当天执行次数最多的作业
 	public static final String TOP_10_ACTIVE_JOB = "top_10_active_job";
 	public static final String TOP_10_LOAD_EXECUTOR = "top_10_load_executor";

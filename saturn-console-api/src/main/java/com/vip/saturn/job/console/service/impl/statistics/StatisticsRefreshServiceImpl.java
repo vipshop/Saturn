@@ -201,7 +201,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 			try {
 				forwardDashboardRefreshToRemote(zkClusterKey);
 			} catch (SaturnJobConsoleException e) {
-				log.warn("remote refresh request error, so refreshStatistics in the current Console, cause by {}", e);
+				log.warn("remote refresh request error, so refreshStatistics in the current Console", e);
 				refresh(zkClusterKey);
 			}
 		}
@@ -382,6 +382,7 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 					.getCuratorFrameworkOp(namespace);
 			List<AbnormalJob> oldAbnormalJobs = getOldAbnormalJobs(zkCluster);
 			List<Timeout4AlarmJob> oldTimeout4AlarmJobs = getOldTimeout4AlarmJobs(zkCluster);
+			List<DisabledTimeoutAlarmJob> disabledTimeoutAlarmJobs = getOldDisabledTimeoutJobs(zkCluster);
 			statisticsModel.analyzeExecutor(curatorFrameworkOp, config);
 			List<String> jobs = jobService.getUnSystemJobNames(config.getNamespace());
 			for (String job : jobs) {
@@ -403,6 +404,8 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 					statisticsModel
 							.analyzeTimeout4AlarmJob(curatorFrameworkOp, oldTimeout4AlarmJobs, job, jobDegree, config);
 					statisticsModel.analyzeUnableFailoverJob(curatorFrameworkOp, job, jobDegree, config);
+					statisticsModel.analyzeDisabledTimeoutJob(curatorFrameworkOp, disabledTimeoutAlarmJobs, job,
+							jobDegree, config);
 				} catch (Exception e) {
 					log.info(String.format("analyzeStatistics namespace(%s) jobName(%s) error", namespace, job), e);
 				}
@@ -441,6 +444,19 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		return oldTimeout4AlarmJobs;
 	}
 
+	private List<DisabledTimeoutAlarmJob> getOldDisabledTimeoutJobs(ZkCluster zkCluster) {
+		SaturnStatistics saturnStatistics = saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB, zkCluster.getZkAddr());
+		List<DisabledTimeoutAlarmJob> disabledTimeoutAlarmJobs = new ArrayList<>();
+		if (saturnStatistics != null) {
+			String result = saturnStatistics.getResult();
+			if (StringUtils.isNotBlank(result)) {
+				disabledTimeoutAlarmJobs = JSON.parseArray(result, DisabledTimeoutAlarmJob.class);
+			}
+		}
+		return disabledTimeoutAlarmJobs;
+	}
+
 	protected StatisticsModel initStatisticsModel() {
 		StatisticsModel statisticsModel = new StatisticsModel();
 		ExecutorInfoAnalyzer executorInfoAnalyzer = new ExecutorInfoAnalyzer();
@@ -459,6 +475,10 @@ public class StatisticsRefreshServiceImpl implements StatisticsRefreshService {
 		Timeout4AlarmJobAnalyzer timeout4AlarmJobAnalyzer = new Timeout4AlarmJobAnalyzer();
 		timeout4AlarmJobAnalyzer.setReportAlarmService(reportAlarmService);
 		statisticsModel.setTimeout4AlarmJobAnalyzer(timeout4AlarmJobAnalyzer);
+
+		DisabledTimeoutJobAnalyzer disabledTimeoutJobAnalyzer = new DisabledTimeoutJobAnalyzer();
+		disabledTimeoutJobAnalyzer.setReportAlarmService(reportAlarmService);
+		statisticsModel.setDisabledTimeoutJobAnalyzer(disabledTimeoutJobAnalyzer);
 
 		JobStatisticsAnalyzer jobStatisticsAnalyzer = new JobStatisticsAnalyzer();
 		statisticsModel.setJobStatisticsAnalyzer(jobStatisticsAnalyzer);

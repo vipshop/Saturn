@@ -79,6 +79,7 @@ public class JobServiceImpl implements JobService {
 	public static final String CONFIG_ITEM_MONITOR_EXECUTION = "monitorExecution";
 	public static final String CONFIG_ITEM_TIMEOUT_4_ALARM_SECONDS = "timeout4AlarmSeconds";
 	public static final String CONFIG_ITEM_TIMEOUT_SECONDS = "timeoutSeconds";
+	public static final String CONFIG_DISABLE_TIMEOUT_SECONDS = "disableTimeoutSeconds";
 	public static final String CONFIG_ITEM_TIME_ZONE = "timeZone";
 	public static final String CONFIG_ITEM_CRON = "cron";
 	public static final String CONFIG_ITEM_PAUSE_PERIOD_DATE = "pausePeriodDate";
@@ -1209,6 +1210,8 @@ public class JobServiceImpl implements JobService {
 							jobConfig.getTimeout4AlarmSeconds())
 					.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS),
 							jobConfig.getTimeoutSeconds())
+					.create(JobNodePath.getConfigNodePath(jobName, CONFIG_DISABLE_TIMEOUT_SECONDS),
+							jobConfig.getDisableTimeoutSeconds())
 					.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE), jobConfig.getTimeZone())
 					.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), jobConfig.getCron())
 					.create(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_PAUSE_PERIOD_DATE),
@@ -1277,6 +1280,8 @@ public class JobServiceImpl implements JobService {
 				jobConfig.getTimeout4AlarmSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS),
 				jobConfig.getTimeoutSeconds());
+		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_DISABLE_TIMEOUT_SECONDS),
+				jobConfig.getDisableTimeoutSeconds());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE),
 				jobConfig.getTimeZone());
 		curatorFrameworkOp.fillJobNodeIfNotExist(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON),
@@ -1680,6 +1685,18 @@ public class JobServiceImpl implements JobService {
 		}
 		jobConfig.setDownStream(downStream);
 
+		int disableTimeoutSeconds = 0;
+		try {
+			String tmp = getContents(rowCells, 31);
+			if (tmp != null && !tmp.trim().isEmpty()) {
+				disableTimeoutSeconds = Integer.parseInt(tmp.trim());
+			}
+		} catch (NumberFormatException e) {
+			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
+					createExceptionMessage(sheetNumber, rowNumber, 32, "禁用超时（告警）时间有误，" + e));
+		}
+		jobConfig.setDisableTimeoutSeconds(disableTimeoutSeconds);
+
 		return jobConfig;
 	}
 
@@ -1841,6 +1858,8 @@ public class JobServiceImpl implements JobService {
 				sheet1.addCell(new Label(30, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_DOWNSTREAM))));
 				sheet1.addCell(new Label(31, i + 1,
+						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_DISABLE_TIMEOUT_SECONDS))));
+				sheet1.addCell(new Label(32, i + 1,
 						curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_ENABLED))));
 			}
 		}
@@ -1861,7 +1880,7 @@ public class JobServiceImpl implements JobService {
 		setCellComment(shardingTotalCountLabel, "对本地作业无效");
 		sheet1.addCell(shardingTotalCountLabel);
 
-		Label timeoutSecondsLabel = new Label(7, 0, "超时（Kill线程/进程）时间");
+		Label timeoutSecondsLabel = new Label(7, 0, "运行超时（Kill线程/进程）时间");
 		setCellComment(timeoutSecondsLabel, "0表示无超时");
 		sheet1.addCell(timeoutSecondsLabel);
 
@@ -1908,7 +1927,7 @@ public class JobServiceImpl implements JobService {
 		setCellComment(groupsLabel, "作业所属分组，一个作业可以属于多个分组，一个分组可以包含多个作业");
 		sheet1.addCell(groupsLabel);
 
-		Label timeout4AlarmSecondsLabel = new Label(25, 0, "超时（告警）时间");
+		Label timeout4AlarmSecondsLabel = new Label(25, 0, "运行超时（告警）时间");
 		setCellComment(timeout4AlarmSecondsLabel, "0表示无超时");
 		sheet1.addCell(timeout4AlarmSecondsLabel);
 
@@ -1928,7 +1947,11 @@ public class JobServiceImpl implements JobService {
 		setCellComment(downStream, "该作业执行成功后，触发下游作业执行。多个下游作业使用英文逗号隔开。");
 		sheet1.addCell(downStream);
 
-		sheet1.addCell(new Label(31, 0, "是否启用"));
+		Label disableTimeoutSecondsLabel = new Label(31, 0, "禁用超时（告警）时间");
+		setCellComment(disableTimeoutSecondsLabel, "0表示无超时");
+		sheet1.addCell(disableTimeoutSecondsLabel);
+
+		sheet1.addCell(new Label(32, 0, "是否启用"));
 	}
 
 	protected void setCellComment(WritableCell cell, String comment) {
@@ -2079,6 +2102,13 @@ public class JobServiceImpl implements JobService {
 		}
 		result.setTimeoutSeconds(Integer.valueOf(
 				curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS))));
+		String disableTimeoutSecondsStr = curatorFrameworkOp
+				.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_DISABLE_TIMEOUT_SECONDS));
+		if (Strings.isNullOrEmpty(disableTimeoutSecondsStr)) {
+			result.setDisableTimeoutSeconds(0);
+		} else {
+			result.setDisableTimeoutSeconds(Integer.valueOf(disableTimeoutSecondsStr));
+		}
 		String lv = curatorFrameworkOp.getData(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_LOAD_LEVEL));
 		if (Strings.isNullOrEmpty(lv)) {
 			result.setLoadLevel(1);
@@ -2394,6 +2424,8 @@ public class JobServiceImpl implements JobService {
 							jobConfig.getTimeout4AlarmSeconds())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIMEOUT_SECONDS),
 							jobConfig.getTimeoutSeconds())
+					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_DISABLE_TIMEOUT_SECONDS),
+							jobConfig.getDisableTimeoutSeconds())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_TIME_ZONE),
 							jobConfig.getTimeZone())
 					.replaceIfChanged(JobNodePath.getConfigNodePath(jobName, CONFIG_ITEM_CRON), jobConfig.getCron())

@@ -83,6 +83,10 @@ public class StatisticsPersistence {
 		saveOrUpdateUnableFailoverJob(statisticsModel.getUnableFailoverJobAnalyzer().getUnableFailoverJobList(),
 				zkCluster.getZkAddr());
 
+		// 禁用时长超时的作业列表
+		saveOrUpdateDisabledTimeoutJob(statisticsModel.getDisabledTimeoutJobAnalyzer().getDisabledTimeoutAlarmJobList(),
+				zkCluster.getZkAddr());
+
 		// 不同版本的域数量
 		saveOrUpdateVersionDomainNumber(statisticsModel.getExecutorInfoAnalyzer().getVersionDomainNumber(),
 				zkCluster.getZkAddr());
@@ -431,6 +435,41 @@ public class StatisticsPersistence {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void saveOrUpdateDisabledTimeoutJob(List<DisabledTimeoutAlarmJob> disabledTimeoutAlarmJobs, String zkAddr) {
+		try {
+			String disabledTimeoutJobString = JSON.toJSONString(disabledTimeoutAlarmJobs);
+			SaturnStatistics saturnStatisticsFromDB = saturnStatisticsService
+					.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB, zkAddr);
+			if (saturnStatisticsFromDB == null) {
+				SaturnStatistics saturnStatistics = new SaturnStatistics(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB,
+						zkAddr, disabledTimeoutJobString);
+				saturnStatisticsService.create(saturnStatistics);
+			} else {
+				List<DisabledTimeoutAlarmJob> oldDisabledTimeoutJobs = JSON
+						.parseArray(saturnStatisticsFromDB.getResult(), DisabledTimeoutAlarmJob.class);
+				// 再次同步数据库中最新的read状态
+				dealWithReadStatus4DisabledTimeoutJob(disabledTimeoutAlarmJobs, oldDisabledTimeoutJobs);
+				saturnStatisticsFromDB.setResult(JSON.toJSONString(disabledTimeoutAlarmJobs));
+				saturnStatisticsService.updateByPrimaryKey(saturnStatisticsFromDB);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private void dealWithReadStatus4DisabledTimeoutJob(List<DisabledTimeoutAlarmJob> jobList,
+			List<DisabledTimeoutAlarmJob> oldJobList) {
+		if (oldJobList == null || oldJobList.isEmpty()) {
+			return;
+		}
+		for (DisabledTimeoutAlarmJob job : jobList) {
+			DisabledTimeoutAlarmJob oldJob = DashboardServiceHelper.findEqualDisabledTimeoutJob(job, oldJobList);
+			if (oldJob != null) {
+				job.setRead(oldJob.isRead());
+			}
 		}
 	}
 

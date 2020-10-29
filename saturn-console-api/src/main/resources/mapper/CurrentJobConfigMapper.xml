@@ -42,6 +42,7 @@
         <result column="rerun" property="rerun" jdbcType="BIT"/>
         <result column="up_stream" property="upStream" jdbcType="VARCHAR"/>
         <result column="down_stream" property="downStream" jdbcType="VARCHAR"/>
+        <result column="disable_timeout_seconds" property="disableTimeoutSeconds" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -50,7 +51,7 @@
         sharding_item_parameters, job_parameter, process_count_interval_seconds,
         failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
         channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
-        namespace, zk_list,is_enabled,job_mode,custom_context,rerun, up_stream, down_stream
+        namespace, zk_list,is_enabled,job_mode,custom_context,rerun, up_stream, down_stream, disable_timeout_seconds
     </sql>
 
     <select id="findConfigsByNamespace" resultMap="BaseResultMap">
@@ -205,7 +206,7 @@
         job_type, queue_name, create_by,
         create_time, last_update_by, last_update_time,
         namespace, zk_list,is_enabled,job_mode,custom_context,
-        rerun, up_stream, down_stream
+        rerun, up_stream, down_stream, disable_timeout_seconds
         )
         values (#{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR},
         #{shardingTotalCount,jdbcType=INTEGER}, #{loadLevel,jdbcType=INTEGER}, #{jobDegree,jdbcType=INTEGER},
@@ -222,7 +223,8 @@
         #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR},
         #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
         #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR},#{enabled,jdbcType=BIT},#{jobMode,jdbcType=VARCHAR},
-        #{customContext,jdbcType=VARCHAR}, #{rerun, jdbcType=BIT}, #{upStream,jdbcType=VARCHAR}, #{downStream,jdbcType=VARCHAR}
+        #{customContext,jdbcType=VARCHAR}, #{rerun, jdbcType=BIT}, #{upStream,jdbcType=VARCHAR}, #{downStream,jdbcType=VARCHAR},
+        #{disableTimeoutSeconds,jdbcType=INTEGER}
         )
     </insert>
 
@@ -266,7 +268,8 @@
         custom_context = #{customContext,jdbcType=VARCHAR},
         rerun = #{rerun,jdbcType=BIT},
         up_stream = #{upStream,jdbcType=VARCHAR},
-        down_stream = #{downStream,jdbcType=VARCHAR}
+        down_stream = #{downStream,jdbcType=VARCHAR},
+        disable_timeout_seconds = #{disableTimeoutSeconds,jdbcType=INTEGER}
         where id = #{id,jdbcType=BIGINT}
     </update>
 

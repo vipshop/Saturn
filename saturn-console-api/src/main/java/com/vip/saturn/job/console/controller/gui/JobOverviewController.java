@@ -201,7 +201,8 @@ public class JobOverviewController extends AbstractGUIController {
 	private void updateAbnormalJobSizeInOverview(String namespace, JobOverviewVo jobOverviewVo) {
 		try {
 			List<AbnormalJob> abnormalJobList = alarmStatisticsService.getAbnormalJobListByNamespace(namespace);
-			jobOverviewVo.setAbnormalNumber(abnormalJobList.size());
+			List<DisabledTimeoutAlarmJob> disabledTimeoutJobList = alarmStatisticsService.getDisabledTimeoutJobListByNamespace(namespace);
+			jobOverviewVo.setAbnormalNumber(abnormalJobList.size() + disabledTimeoutJobList.size());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -350,7 +351,7 @@ public class JobOverviewController extends AbstractGUIController {
 				successJobNames.add(jobName);
 			} catch (Exception e) {
 				failJobNames.add(jobName);
-				log.info("remove job failed, cause of {}", e);
+				log.info("remove job failed", e);
 			}
 		}
 		if (!failJobNames.isEmpty()) {

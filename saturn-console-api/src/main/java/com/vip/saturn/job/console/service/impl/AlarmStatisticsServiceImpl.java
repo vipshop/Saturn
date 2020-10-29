@@ -60,6 +60,25 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	@Override
+	public String getDisabledTimeoutJobsString() throws SaturnJobConsoleException {
+		List<DisabledTimeoutAlarmJob> disabledTimeoutJobList = getDisabledTimeoutJobList();
+		return JSON.toJSONString(disabledTimeoutJobList);
+	}
+
+	private List<DisabledTimeoutAlarmJob> getDisabledTimeoutJobList() throws SaturnJobConsoleException {
+		List<DisabledTimeoutAlarmJob> disabledTimeoutJobList = new ArrayList<>();
+		Collection<ZkCluster> zkClusterList = registryCenterService.getZkClusterList();
+		for (ZkCluster zkCluster : zkClusterList) {
+			String result = getDisabledTimeoutJobsStringByZKCluster(zkCluster.getZkClusterKey());
+			List<DisabledTimeoutAlarmJob> tempList = JSON.parseArray(result, DisabledTimeoutAlarmJob.class);
+			if (tempList != null) {
+				disabledTimeoutJobList.addAll(tempList);
+			}
+		}
+		return disabledTimeoutJobList;
+	}
+
+	@Override
 	public List<AlarmJobCount> getCountOfAlarmJobs() throws SaturnJobConsoleException {
 		List<AlarmJobCount> alarmJobCountList = new ArrayList<>();
 		alarmJobCountList.add(new AlarmJobCount(StatisticsTableKeyConstant.UNNORMAL_JOB, getAbnormalJobList().size()));
@@ -67,6 +86,8 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 				new AlarmJobCount(StatisticsTableKeyConstant.UNABLE_FAILOVER_JOB, getUnableFailoverJobList().size()));
 		alarmJobCountList.add(
 				new AlarmJobCount(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, getTimeout4AlarmJobList().size()));
+		alarmJobCountList.add(
+				new AlarmJobCount(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB, getDisabledTimeoutJobList().size()));
 		return alarmJobCountList;
 	}
 
@@ -98,6 +119,14 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 			throw new SaturnJobConsoleException("uuid不能为空");
 		}
 		setAlarmJobMonitorStatusToRead(uuid, StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB, Timeout4AlarmJob.class);
+	}
+
+	@Override
+	public void setDisabledTimeoutJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException {
+		if (StringUtils.isBlank(uuid)) {
+			throw new SaturnJobConsoleException("uuid不能为空");
+		}
+		setAlarmJobMonitorStatusToRead(uuid, StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB, DisabledTimeoutAlarmJob.class);
 	}
 
 	public List<AbnormalJob> getAbnormalJobList() throws SaturnJobConsoleException {
@@ -202,6 +231,14 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	@Override
+	public String getDisabledTimeoutJobsStringByZKCluster(String zkClusterKey) throws SaturnJobConsoleException {
+		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
+		SaturnStatistics saturnStatistics = saturnStatisticsService
+				.findStatisticsByNameAndZkList(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB, zkCluster.getZkAddr());
+		return saturnStatistics != null ? saturnStatistics.getResult() : null;
+	}
+
+	@Override
 	public String getAbnormalContainers(String zkClusterKey) throws SaturnJobConsoleException {
 		ZkCluster zkCluster = validateAndGetZKCluster(zkClusterKey);
 		SaturnStatistics saturnStatistics = saturnStatisticsService
@@ -258,10 +295,27 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 	}
 
 	@Override
+	public List<DisabledTimeoutAlarmJob> getDisabledTimeoutJobListByNamespace(String namespace)
+			throws SaturnJobConsoleException {
+		List<DisabledTimeoutAlarmJob> disabledTimeoutAlarmJobs = new ArrayList<>();
+		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
+		String result = getDisabledTimeoutJobsStringByZKCluster(conf.getZkClusterKey());
+		disabledTimeoutAlarmJobs.addAll(getAlarmJobListFilterByNamespace(namespace, result, DisabledTimeoutAlarmJob.class));
+		return disabledTimeoutAlarmJobs;
+	}
+
+	@Override
 	public String getTimeout4AlarmJobsStringByNamespace(String namespace) throws SaturnJobConsoleException {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getTimeout4AlarmJobsStringByZKCluster(conf.getZkClusterKey());
 		return JSON.toJSONString(getAlarmJobListFilterByNamespace(namespace, result, Timeout4AlarmJob.class));
+	}
+
+	@Override
+	public String getDisabledTimeoutJobsStringByNamespace(String namespace) throws SaturnJobConsoleException {
+		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
+		String result = getDisabledTimeoutJobsStringByZKCluster(conf.getZkClusterKey());
+		return JSON.toJSONString(getAlarmJobListFilterByNamespace(namespace, result, DisabledTimeoutAlarmJob.class));
 	}
 
 	@Override
@@ -273,6 +327,8 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 				getUnableFailoverListByNamespace(namespace).size()));
 		alarmJobCountList.add(new AlarmJobCount(StatisticsTableKeyConstant.TIMEOUT_4_ALARM_JOB,
 				getTimeout4AlarmJobListByNamespace(namespace).size()));
+		alarmJobCountList.add(new AlarmJobCount(StatisticsTableKeyConstant.DISABLED_TIMEOUT_JOB,
+				getDisabledTimeoutJobListByNamespace(namespace).size()));
 		return alarmJobCountList;
 	}
 
@@ -311,6 +367,14 @@ public class AlarmStatisticsServiceImpl implements AlarmStatisticsService {
 		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
 		String result = getTimeout4AlarmJobsStringByZKCluster(conf.getZkClusterKey());
 		return getAlarmJobFilterByNamespaceAndJobName(namespace, jobName, result, Timeout4AlarmJob.class);
+	}
+
+	@Override
+	public DisabledTimeoutAlarmJob isDisabledTimeout(String namespace, String jobName)
+			throws SaturnJobConsoleException {
+		RegistryCenterConfiguration conf = validateAndGetConf(namespace);
+		String result = getDisabledTimeoutJobsStringByZKCluster(conf.getZkClusterKey());
+		return getAlarmJobFilterByNamespaceAndJobName(namespace, jobName, result, DisabledTimeoutAlarmJob.class);
 	}
 
 	private <T extends AbstractAlarmJob> List<T> getAlarmJobListFilterByNamespace(String namespace, String result,

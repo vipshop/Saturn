@@ -14,9 +14,7 @@
 
 package com.vip.saturn.job.console.service;
 
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.AlarmJobCount;
-import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
+import com.vip.saturn.job.console.domain.*;
 import com.vip.saturn.job.console.exception.SaturnJobConsoleException;
 
 import java.util.List;
@@ -34,6 +32,8 @@ public interface AlarmStatisticsService {
 
 	String getTimeout4AlarmJobsString() throws SaturnJobConsoleException;
 
+	String getDisabledTimeoutJobsString() throws SaturnJobConsoleException;
+
 	List<AlarmJobCount> getCountOfAlarmJobs() throws SaturnJobConsoleException;
 
 	String getAbnormalContainers() throws SaturnJobConsoleException;
@@ -42,6 +42,8 @@ public interface AlarmStatisticsService {
 
 	void setTimeout4AlarmJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
 
+	void setDisabledTimeoutJobMonitorStatusToRead(String uuid) throws SaturnJobConsoleException;
+
 	// 集群的告警统计
 
 	String getAbnormalJobsStringByZKCluster(String zkClusterKey) throws SaturnJobConsoleException;
@@ -49,6 +51,8 @@ public interface AlarmStatisticsService {
 	String getUnableFailoverJobsStringByZKCluster(String zkClusterKey) throws SaturnJobConsoleException;
 
 	String getTimeout4AlarmJobsStringByZKCluster(String zkClusterKey) throws SaturnJobConsoleException;
+
+	String getDisabledTimeoutJobsStringByZKCluster(String zkClusterKey) throws SaturnJobConsoleException;
 
 	String getAbnormalContainers(String zkClusterKey) throws SaturnJobConsoleException;
 
@@ -60,9 +64,13 @@ public interface AlarmStatisticsService {
 
 	String getTimeout4AlarmJobsStringByNamespace(String namespace) throws SaturnJobConsoleException;
 
+	String getDisabledTimeoutJobsStringByNamespace(String namespace) throws SaturnJobConsoleException;
+
 	List<AlarmJobCount> getCountOfAlarmJobsByNamespace(String namespace) throws SaturnJobConsoleException;
 
 	List<AbnormalJob> getAbnormalJobListByNamespace(String namespace) throws SaturnJobConsoleException;
+
+	List<DisabledTimeoutAlarmJob> getDisabledTimeoutJobListByNamespace(String namespace) throws SaturnJobConsoleException;
 
 	String getAbnormalContainersByNamespace(String namespace) throws SaturnJobConsoleException;
 
@@ -73,4 +81,9 @@ public interface AlarmStatisticsService {
 	AbnormalJob isUnableFailoverJob(String namespace, String jobName) throws SaturnJobConsoleException;
 
 	Timeout4AlarmJob isTimeout4AlarmJob(String namespace, String jobName) throws SaturnJobConsoleException;
+
+	/**
+	 * 是否禁用作业超过设置时长
+	 */
+	DisabledTimeoutAlarmJob isDisabledTimeout(String namespace, String jobName) throws SaturnJobConsoleException;
 }

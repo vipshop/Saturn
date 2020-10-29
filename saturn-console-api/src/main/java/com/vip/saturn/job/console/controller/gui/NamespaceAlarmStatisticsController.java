@@ -58,6 +58,16 @@ public class NamespaceAlarmStatisticsController extends AbstractGUIController {
 		return new SuccessResponseEntity(alarmStatisticsService.getTimeout4AlarmJobsStringByNamespace(namespace));
 	}
 
+	/**
+	 * 根据域名查询禁用时长超时的作业
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/disabledTimeoutJobs")
+	public SuccessResponseEntity getDisabledTimeoutJobs(@PathVariable String namespace)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.getDisabledTimeoutJobsStringByNamespace(namespace));
+	}
+
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@GetMapping(value = "/countOfAlarmJobs")
 	public SuccessResponseEntity getCountOfAlarmJobs(@PathVariable String namespace)

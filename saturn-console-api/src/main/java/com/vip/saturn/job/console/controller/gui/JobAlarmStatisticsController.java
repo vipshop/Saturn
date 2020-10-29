@@ -65,6 +65,16 @@ public class JobAlarmStatisticsController extends AbstractGUIController {
 		return new SuccessResponseEntity(alarmStatisticsService.isTimeout4AlarmJob(namespace, jobName));
 	}
 
+	/**
+	 * 查询作业是否禁用时间超时
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@GetMapping(value = "/jobs/{jobName}/isDisabledTimeout")
+	public SuccessResponseEntity isDisabledTimeout(@PathVariable String namespace, @PathVariable String jobName)
+			throws SaturnJobConsoleException {
+		return new SuccessResponseEntity(alarmStatisticsService.isDisabledTimeout(namespace, jobName));
+	}
+
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
 	@Audit
 	@PostMapping(value = "/setAbnormalJobMonitorStatusToRead")
@@ -82,6 +92,18 @@ public class JobAlarmStatisticsController extends AbstractGUIController {
 			@AuditParam("namespace") @PathVariable String namespace) throws SaturnJobConsoleException {
 		assertIsPermitted(PermissionKeys.alarmCenterSetTimeout4AlarmJobRead, namespace);
 		alarmStatisticsService.setTimeout4AlarmJobMonitorStatusToRead(uuid);
+		return new SuccessResponseEntity();
+	}
+
+	/**
+	 * 将某个禁用时长超时的告警设为不再告警
+	 */
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Success/Fail", response = RequestResult.class)})
+	@Audit
+	@PostMapping(value = "/setDisabledTimeoutJobMonitorStatusToRead")
+	public SuccessResponseEntity setDisabledTimeoutJobMonitorStatusToRead(@AuditParam("uuid") @RequestParam String uuid,
+			@AuditParam("namespace") @PathVariable String namespace) throws SaturnJobConsoleException {
+		alarmStatisticsService.setDisabledTimeoutJobMonitorStatusToRead(uuid);
 		return new SuccessResponseEntity();
 	}
 

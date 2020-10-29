@@ -32,6 +32,8 @@ public class StatisticsModel {
 
 	private Timeout4AlarmJobAnalyzer timeout4AlarmJobAnalyzer;
 
+	private DisabledTimeoutJobAnalyzer disabledTimeoutJobAnalyzer;
+
 	private JobStatisticsAnalyzer jobStatisticsAnalyzer;
 
 	private DomainStatisticsAnalyzer domainStatisticsAnalyzer;
@@ -66,6 +68,15 @@ public class StatisticsModel {
 	public void analyzeUnableFailoverJob(CuratorFrameworkOp curatorFrameworkOp, String jobName, String jobDegree,
 			RegistryCenterConfiguration config) {
 		unableFailoverJobAnalyzer.analyze(curatorFrameworkOp, jobName, jobDegree, config);
+	}
+
+	/**
+	 * 扫描禁用作业时长超时的作业
+	 */
+	public void analyzeDisabledTimeoutJob(CuratorFrameworkOp curatorFrameworkOp,
+			List<DisabledTimeoutAlarmJob> oldDisabledTimeoutAlarmJobs, String jobName, String jobDegree,
+			RegistryCenterConfiguration config) {
+		disabledTimeoutJobAnalyzer.analyze(curatorFrameworkOp, oldDisabledTimeoutAlarmJobs, jobName, jobDegree, config);
 	}
 
 	public void analyzeProcessCount(DomainStatistics domainStatistics, List<String> jobs,
@@ -104,6 +115,14 @@ public class StatisticsModel {
 
 	public void setTimeout4AlarmJobAnalyzer(Timeout4AlarmJobAnalyzer timeout4AlarmJobAnalyzer) {
 		this.timeout4AlarmJobAnalyzer = timeout4AlarmJobAnalyzer;
+	}
+
+	public DisabledTimeoutJobAnalyzer getDisabledTimeoutJobAnalyzer() {
+		return disabledTimeoutJobAnalyzer;
+	}
+
+	public void setDisabledTimeoutJobAnalyzer(DisabledTimeoutJobAnalyzer disabledTimeoutJobAnalyzer) {
+		this.disabledTimeoutJobAnalyzer = disabledTimeoutJobAnalyzer;
 	}
 
 	public JobStatisticsAnalyzer getJobStatisticsAnalyzer() {

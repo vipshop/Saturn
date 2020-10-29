@@ -70,6 +70,14 @@ public class ReportAlarmServiceImpl implements ReportAlarmService {
 	}
 
 	@Override
+	public void dashboardLongTimeDisabledJob(String namespace, String jobName, long disableTime,
+			int disableTimeoutSeconds) throws ReportAlarmException {
+		log.error(
+				"dashboardLongTimeDisabledJob, namespace is {}, jobName is {}, disableTime is {}, disableTimeoutSeconds is {}",
+				namespace, jobName, disableTime, disableTimeoutSeconds);
+	}
+
+	@Override
 	public void executorRestart(String namespace, String executorName, String restartTime) throws ReportAlarmException {
 		log.error("executor restart, namespace is {}, executor is {}, restart on {}", namespace, executorName,
 				restartTime);

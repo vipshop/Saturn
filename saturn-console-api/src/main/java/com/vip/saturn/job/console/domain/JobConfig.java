@@ -38,6 +38,10 @@ public class JobConfig implements Serializable {
 	private String description;
 	private Integer timeout4AlarmSeconds;
 	private Integer timeoutSeconds;
+	/**
+	 * 禁用作业超时告警秒数
+	 */
+	private Integer disableTimeoutSeconds;
 	private Boolean showNormalLog;
 	private String channelName;
 	private String jobType;
@@ -83,6 +87,7 @@ public class JobConfig implements Serializable {
 		description = getDefaultIfNull(description, "");
 		timeout4AlarmSeconds = timeout4AlarmSeconds == null || timeout4AlarmSeconds < 0 ? 0 : timeout4AlarmSeconds;
 		timeoutSeconds = timeoutSeconds == null || timeoutSeconds < 0 ? 0 : timeoutSeconds;
+		disableTimeoutSeconds = disableTimeoutSeconds == null || disableTimeoutSeconds < 0 ? 0 : disableTimeoutSeconds;
 		showNormalLog = getDefaultIfNull(showNormalLog, Boolean.FALSE);
 		channelName = getDefaultIfNull(channelName, "");
 		queueName = getDefaultIfNull(queueName, "");
@@ -217,6 +222,14 @@ public class JobConfig implements Serializable {
 
 	public void setTimeoutSeconds(Integer timeoutSeconds) {
 		this.timeoutSeconds = timeoutSeconds;
+	}
+
+	public Integer getDisableTimeoutSeconds() {
+		return disableTimeoutSeconds;
+	}
+
+	public void setDisableTimeoutSeconds(Integer disableTimeoutSeconds) {
+		this.disableTimeoutSeconds = disableTimeoutSeconds;
 	}
 
 	public Boolean getShowNormalLog() {
@@ -479,6 +492,10 @@ public class JobConfig implements Serializable {
 		if (upStream != null ? !upStream.equals(jobConfig.upStream) : jobConfig.upStream != null)
 			return false;
 		if (downStream != null ? !downStream.equals(jobConfig.downStream) : jobConfig.downStream != null) {
+			return false;
+		}
+		if (disableTimeoutSeconds != null ? !disableTimeoutSeconds.equals(jobConfig.disableTimeoutSeconds) :
+				jobConfig.disableTimeoutSeconds != null) {
 			return false;
 		}
 		return true;

@@ -472,3 +472,7 @@ INSERT INTO `sys_config`(`property`, `value`) VALUES('CONSOLE_ZK_CLUSTER_MAPPING
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_ZK_CLUSTER_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_ID_MAPPING', '');
 INSERT INTO `sys_config`(`property`, `value`) VALUES('IDC_CONSOLE_DOMAIN_MAPPING', '');
+
+-- after 3.5.1(not included)
+ALTER TABLE `job_config` ADD `disable_timeout_seconds` INT(11) NOT NULL DEFAULT '0' COMMENT '禁用作业超时告警秒数';
+ALTER TABLE `job_config_history` ADD `disable_timeout_seconds` INT(11) NOT NULL DEFAULT '0' COMMENT '禁用作业超时告警秒数';

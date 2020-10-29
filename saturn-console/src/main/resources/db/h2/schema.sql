@@ -334,3 +334,7 @@ CREATE TABLE `saturn_dashboard_history` (
 )ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8;
 
 ALTER TABLE `namespace_info` ADD `bus_id` VARCHAR(255) NOT NULL DEFAULT  '' COMMENT '业务组id';
+
+-- after 3.5.1(not included)
+ALTER TABLE `job_config` ADD `disable_timeout_seconds` INT(11) NOT NULL DEFAULT '0' COMMENT '禁用作业超时告警秒数';
+ALTER TABLE `job_config_history` ADD `disable_timeout_seconds` INT(11) NOT NULL DEFAULT '0' COMMENT '禁用作业超时告警秒数';

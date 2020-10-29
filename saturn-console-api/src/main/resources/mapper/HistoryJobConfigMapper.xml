@@ -38,13 +38,14 @@
     <result column="zk_list" property="zkList" jdbcType="VARCHAR" />
     <result column="job_mode" property="jobMode" jdbcType="VARCHAR" />
     <result column="custom_context" property="customContext" jdbcType="VARCHAR" />
+    <result column="disable_timeout_seconds" property="disableTimeoutSeconds" jdbcType="INTEGER"/>
   </resultMap>
   <sql id="Base_Column_List" >
     id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
     failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
-    namespace, zk_list,zk_list,job_mode,custom_context
+    namespace, zk_list,zk_list,job_mode,custom_context,disable_timeout_seconds
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -65,7 +66,7 @@
       timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
       job_type, queue_name, create_by, 
       create_time, last_update_by, last_update_time,
-      namespace, zk_list,job_mode,custom_context
+      namespace, zk_list,job_mode,custom_context,disable_timeout_seconds
       )
     values (#{id,jdbcType=BIGINT}, #{jobName,jdbcType=VARCHAR}, #{jobClass,jdbcType=VARCHAR}, 
       #{shardingTotalCount,jdbcType=INTEGER},#{loadLevel,jdbcType=INTEGER},#{jobDegree,jdbcType=INTEGER},#{enabledReport,jdbcType=BIT},
@@ -78,7 +79,7 @@
       #{jobType,jdbcType=VARCHAR}, #{queueName,jdbcType=VARCHAR}, #{createBy,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateBy,jdbcType=VARCHAR}, #{lastUpdateTime,jdbcType=TIMESTAMP},
       #{namespace,jdbcType=VARCHAR}, #{zkList,jdbcType=VARCHAR},#{jobMode,jdbcType=VARCHAR},
-      #{customContext,jdbcType=VARCHAR}
+      #{customContext,jdbcType=VARCHAR}, #{disableTimeoutSeconds,jdbcType=INTEGER}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >
@@ -192,6 +193,9 @@
        <if test="customContext != null" >
         custom_context,
       </if>
+        <if test="disableTimeoutSeconds != null" >
+            disable_timeout_seconds,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -297,7 +301,10 @@
         #{jobMode,jdbcType=VARCHAR},
       </if>
       <if test="customContext != null" >
-        #{custom_context,jdbcType=VARCHAR},
+        #{customContext,jdbcType=VARCHAR},
+      </if>
+      <if test="disableTimeoutSeconds != null" >
+        #{disableTimeoutSeconds,jdbcType=INTEGER},
       </if>
     </trim>
   </insert>
@@ -409,6 +416,9 @@
       <if test="customContext != null" >
         custom_context = #{customContext,jdbcType=VARCHAR},
       </if>
+      <if test="disableTimeoutSeconds != null" >
+        disable_timeout_seconds = #{disableTimeoutSeconds,jdbcType=INTEGER},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -448,7 +458,8 @@
       zk_list = #{zkList,jdbcType=VARCHAR},
       namespace = #{namespace,jdbcType=VARCHAR},
       job_mode = #{jobMode,jdbcType=VARCHAR},
-      custom_context = #{customContext,jdbcType=VARCHAR}
+      custom_context = #{customContext,jdbcType=VARCHAR},
+      disable_timeout_seconds = #{disableTimeoutSeconds,jdbcType=INTEGER}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <select id="selectCount" resultType="java.lang.Integer" parameterType="com.vip.saturn.job.console.mybatis.entity.JobConfig4DB" >

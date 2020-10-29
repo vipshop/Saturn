@@ -16,11 +16,8 @@
  */
 package com.vip.saturn.job.console.service.helper;
 
-import com.vip.saturn.job.console.domain.AbnormalJob;
-import com.vip.saturn.job.console.domain.DomainStatistics;
-import com.vip.saturn.job.console.domain.ExecutorStatistics;
-import com.vip.saturn.job.console.domain.JobStatistics;
-import com.vip.saturn.job.console.domain.Timeout4AlarmJob;
+import com.vip.saturn.job.console.domain.*;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -132,6 +129,19 @@ public class DashboardServiceHelper {
 		for (Timeout4AlarmJob timeout4AlarmJob : oldTimeout4AlarmJobList) {
 			if (timeout4AlarmJob.equals(example)) {
 				return timeout4AlarmJob;
+			}
+		}
+		return null;
+	}
+
+	public static DisabledTimeoutAlarmJob findEqualDisabledTimeoutJob(DisabledTimeoutAlarmJob example,
+			List<DisabledTimeoutAlarmJob> oldDisabledTimeoutJobList) {
+		if (CollectionUtils.isEmpty(oldDisabledTimeoutJobList)) {
+			return null;
+		}
+		for (DisabledTimeoutAlarmJob disabledTimeoutAlarmJob : oldDisabledTimeoutJobList) {
+			if (disabledTimeoutAlarmJob.equals(example)) {
+				return disabledTimeoutAlarmJob;
 			}
 		}
 		return null;

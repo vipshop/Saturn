@@ -36,6 +36,7 @@ public class UpdateJobConfigVo {
 	private String description;
 	private Integer timeout4AlarmSeconds;
 	private Integer timeoutSeconds;
+	private Integer disableTimeoutSeconds;
 	private Boolean showNormalLog;
 	private String channelName;
 	private String jobType;
@@ -174,6 +175,14 @@ public class UpdateJobConfigVo {
 
 	public void setTimeoutSeconds(Integer timeoutSeconds) {
 		this.timeoutSeconds = timeoutSeconds;
+	}
+
+	public Integer getDisableTimeoutSeconds() {
+		return disableTimeoutSeconds;
+	}
+
+	public void setDisableTimeoutSeconds(Integer disableTimeoutSeconds) {
+		this.disableTimeoutSeconds = disableTimeoutSeconds;
 	}
 
 	public Boolean getShowNormalLog() {

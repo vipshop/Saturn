@@ -74,6 +74,16 @@ public interface ReportAlarmService {
 	void dashboardTimeout4AlarmJob(String namespace, String jobName, List<Integer> timeoutItems,
 			int timeout4AlarmSeconds) throws ReportAlarmException;
 
+	/**
+	 * Dashboard refresh data, find that the job is long time disabled
+	 *
+	 * @param namespace The domain or namespace
+	 * @param jobName The timeout job's name
+	 * @param disableTime The time when job disabled
+	 * @param disableTimeoutSeconds The disableTimeoutSeconds of job configured
+	 */
+	void dashboardLongTimeDisabledJob(String namespace, String jobName, long disableTime,
+			int disableTimeoutSeconds) throws ReportAlarmException;
 
 	/**
 	 * Alarm for executor restart.
