@@ -80,7 +80,7 @@
 
 		<swagger.version>2.4.0</swagger.version>
 
-		<junit.version>4.12</junit.version>
+		<junit.version>4.13.1</junit.version>
 		<assertj.version>1.7.1</assertj.version>
 		<unitils.core.version>3.4.2</unitils.core.version>
 		<mockito.version>1.10.19</mockito.version>
