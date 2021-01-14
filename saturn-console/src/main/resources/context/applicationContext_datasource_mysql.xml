@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-    xmlns:context="http://www.springframework.org/schema/context"
-    xmlns:tx="http://www.springframework.org/schema/tx"
-    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
                         http://www.springframework.org/schema/beans/spring-beans.xsd 
                         http://www.springframework.org/schema/context 
                         http://www.springframework.org/schema/context/spring-context.xsd
                         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
                         ">
+
+    <!--数据源加密操作-->
+    <bean id="dbPasswordCallback" class="com.vip.saturn.job.console.springboot.DbPasswordCallback" lazy-init="true"/>
+
     <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close" lazy-init="true">
         <property name="url" value="${SATURN_CONSOLE_DB_URL:jdbc:mysql://a.b.c.d}" />
         <property name="username" value="${SATURN_CONSOLE_DB_USERNAME:}" />
@@ -17,12 +21,15 @@
         <property name="minIdle" value="1" />
         <property name="maxActive" value="20" />
         <property name="maxWait" value="60000" />
+        <!--密码加密，${SATURN_CONSOLE_DB_PASSWORD:} 是加密后的数据库用户密码-->
+        <property name="connectionProperties" value="password=${SATURN_CONSOLE_DB_PASSWORD:}"/>
+        <property name="passwordCallback" ref="dbPasswordCallback"/>
         <property name="timeBetweenEvictionRunsMillis" value="60000" />
         <property name="minEvictableIdleTimeMillis" value="300000" />
         <property name="validationQuery" value="SELECT 'x'" />
         <property name="testOnBorrow" value="false" />
         <property name="testOnReturn" value="false" />
         <property name="testWhileIdle" value="true" />
-    </bean>	
-	
+    </bean>
+
 </beans>

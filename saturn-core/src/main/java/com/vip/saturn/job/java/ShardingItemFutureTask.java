@@ -104,6 +104,7 @@ public class ShardingItemFutureTask implements Callable<SaturnJobReturn> {
 			return;
 		}
 		done = true;
+		LogUtils.info(log, callable.getJobName(), "zy done true");
 		try {
 			try {
 				if (callable.isTimeout()) {

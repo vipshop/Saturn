@@ -92,6 +92,8 @@ public abstract class AbstractElasticJob implements Stoppable {
 
 	protected String jobVersion;
 
+	private final Object sigLock = new Object();
+
 	/**
 	 * 重置作业调用一次的生命周期内的变量
 	 */
@@ -155,6 +157,10 @@ public abstract class AbstractElasticJob implements Stoppable {
 
 		JobExecutionMultipleShardingContext shardingContext = null;
 		try {
+			synchronized(sigLock){
+				//每个该executor上失败的分片都会通过监听触发一次执行任务，为防止重复执行，使每次执行间隔1秒钟
+				Thread.currentThread().sleep(1000);
+			}
 			if (!configService.isEnabledReport() || failoverService.getLocalHostFailoverItems().isEmpty()) {
 				shardingService.shardingIfNecessary();
 			}
@@ -167,8 +173,10 @@ public abstract class AbstractElasticJob implements Stoppable {
 
 			shardingContext = executionContextService.getJobExecutionShardingContext(triggered);
 			if (shardingContext.getShardingItems() == null || shardingContext.getShardingItems().isEmpty()) {
-				LogUtils.debug(log, jobName, "{} 's items of the executor is empty, do nothing about business.",
+				LogUtils.info(log, jobName, "zy {} 's items of the executor is empty, do nothing about business.",
 						jobName);
+//				LogUtils.debug(log, jobName, "{} 's items of the executor is empty, do nothing about business.",
+//						jobName);
 				callbackWhenShardingItemIsEmpty(shardingContext);
 				return;
 			}
@@ -179,9 +187,16 @@ public abstract class AbstractElasticJob implements Stoppable {
 				return;
 			}
 
+			//处理失败分片的分片项
+			if(!failoverService.getLocalHostFailoverItems().isEmpty()){
+				shardingService.removeAndCreateShardingInfo(failoverService.getLocalHostFailoverItems());
+			}
+
 			executeJobInternal(shardingContext);
 
 			if (isFailoverSupported() && configService.isFailover() && !stopped && !forceStopped && !aborted) {
+				//add
+				LogUtils.info(log, jobName, "zy abstracElasticJob-execute-failoverIfNecessary-{}", jobName);
 				failoverService.failoverIfNecessary();
 			}
 
@@ -210,10 +225,14 @@ public abstract class AbstractElasticJob implements Stoppable {
 						continue;
 					}
 					if (!aborted) {
+						//add
+						LogUtils.info(log, jobName, "zy abstracElasticJob-executeJobInternal-registerJobCompletedByItem-{}", item);
 						executionService
 								.registerJobCompletedByItem(shardingContext, item, nextFireTimePausePeriodEffected);
 					}
 					if (isFailoverSupported() && configService.isFailover()) {
+						//add
+						LogUtils.info(log, jobName, "zy abstracElasticJob-executeJobInternal-updateFailoverComplete-{}", item);
 						failoverService.updateFailoverComplete(item);
 					}
 				}

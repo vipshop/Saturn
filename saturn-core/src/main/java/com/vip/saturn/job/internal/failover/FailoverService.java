@@ -13,6 +13,7 @@
  */
 package com.vip.saturn.job.internal.failover;
 
+import com.vip.saturn.job.basic.AbstractElasticJob;
 import com.vip.saturn.job.basic.AbstractSaturnService;
 import com.vip.saturn.job.basic.JobScheduler;
 import com.vip.saturn.job.internal.config.ConfigurationNode;
@@ -20,6 +21,7 @@ import com.vip.saturn.job.internal.execution.ExecutionNode;
 import com.vip.saturn.job.internal.storage.JobNodePath;
 import com.vip.saturn.job.internal.storage.LeaderExecutionCallback;
 import com.vip.saturn.job.sharding.node.SaturnExecutorsNode;
+import com.vip.saturn.job.trigger.Triggered;
 import com.vip.saturn.job.utils.LogUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -29,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -82,6 +86,18 @@ public class FailoverService extends AbstractSaturnService {
 		}
 		getJobNodeStorage()
 				.executeInLeader(FailoverNode.LATCH, new FailoverLeaderExecutionCallback(), 1, TimeUnit.MINUTES,
+						new FailoverTimeoutLeaderExecutionCallback());
+	}
+
+	/**
+	 * 如果需要失效转移, 则设置作业失效转移且执行失败分片.
+	 */
+	public void failoverAndExecute() {
+		if (!needFailover()) {
+			return;
+		}
+		getJobNodeStorage()
+				.executeInLeader(FailoverNode.LATCH, new DirectFailoverLeaderExecutionCallback(), 1, TimeUnit.MINUTES,
 						new FailoverTimeoutLeaderExecutionCallback());
 	}
 
@@ -177,11 +193,77 @@ public class FailoverService extends AbstractSaturnService {
 		}
 	}
 
+	class DirectFailoverLeaderExecutionCallback implements LeaderExecutionCallback {
+
+		@Override
+		public void execute() {
+			if (!needFailover()) {
+				return;
+			}
+			if (jobScheduler == null) {
+				return;
+			}
+			if (coordinatorRegistryCenter.isExisted(SaturnExecutorsNode.getExecutorNoTrafficNodePath(executorName))) {
+				return;
+			}
+			if (!jobScheduler.getConfigService().getPreferList().contains(executorName) && !jobScheduler
+					.getConfigService().isUseDispreferList()) {
+				return;
+			}
+			List<String> items = getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT);
+			if (items != null && !items.isEmpty()) {
+				int crashedItem = Integer
+						.parseInt(getJobNodeStorage().getJobNodeChildrenKeys(FailoverNode.ITEMS_ROOT).get(0));
+				LogUtils.debug(log, jobName, "Elastic job: failover job begin, crashed item:{}.", crashedItem);
+				getJobNodeStorage()
+						.fillEphemeralJobNode(FailoverNode.getExecutionFailoverNode(crashedItem), executorName);
+				getJobNodeStorage().removeJobNodeIfExisted(FailoverNode.getItemsNode(crashedItem));
+				Triggered currentTriggered = new Triggered();
+				currentTriggered.setYes(true);
+				currentTriggered.setUpStreamData(null);
+				currentTriggered.setDownStreamData(null);
+				//执行失败分片
+				ExecutorService pool = Executors.newSingleThreadExecutor();
+				try{
+					pool.submit(new ExecuteJobItemRunner(jobScheduler.getJob(), currentTriggered));
+				} catch (Exception e){
+
+				} finally {
+					pool.shutdown();
+				}
+			}
+		}
+	}
+
 	class FailoverTimeoutLeaderExecutionCallback implements LeaderExecutionCallback {
 
 		@Override
 		public void execute() {
 			LogUtils.warn(log, jobName, "Failover leader election timeout with a minute");
+		}
+	}
+
+	/**
+	 * 单线程异步执行失效转移任务
+	 */
+	public class ExecuteJobItemRunner implements Runnable {
+
+		private AbstractElasticJob job;
+
+		private Triggered currentTriggered;
+
+		public ExecuteJobItemRunner(AbstractElasticJob job, Triggered currentTriggered) {
+			this.job = job;
+			this.currentTriggered = currentTriggered;
+		}
+
+		@Override
+		public void run() {
+			try {
+				job.execute(currentTriggered);
+			} catch (Exception e) {
+				LogUtils.error(log, jobName, "Failover ExecuteJobItemRunner Exception:{}", e);
+			}
 		}
 	}
 }

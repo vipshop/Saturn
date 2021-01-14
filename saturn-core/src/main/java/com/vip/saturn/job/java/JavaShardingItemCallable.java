@@ -175,10 +175,12 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 
 			// 在此之后，不能再强制停止本线程
 			breakForceStop = true;
+			LogUtils.info(log, jobName, "zy call over");
 		} catch (Throwable t) {
 			// 在此之后，不能再强制停止本线程
 			breakForceStop = true;
 
+			LogUtils.info(log, jobName, "zy call Throwable over");
 			// 不是超时，不是强制停止。 打印错误日志，设置SaturnJobReturn。
 			if (status.get() != TIMEOUT && status.get() != FORCE_STOP) {
 				LogUtils.error(log, jobName, t.toString(), t);
