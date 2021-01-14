@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -22,6 +24,8 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 	private static Logger log = LoggerFactory.getLogger(SaturnJavaJob.class);
 
 	private Map<Integer, ShardingItemFutureTask> futureTaskMap = new HashMap<>();
+
+	private Set<Integer> currentRunningItemSets = new HashSet<>();
 
 	private Object jobBusinessInstance = null;
 
@@ -105,8 +109,10 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 	protected Map<Integer, SaturnJobReturn> handleJob(final SaturnExecutionContext shardingContext) {
 		final Map<Integer, SaturnJobReturn> retMap = new HashMap<Integer, SaturnJobReturn>();
 
+		//记录本次执行的分片序号
+		Set<Integer> itemSets = new HashSet<>();
 		synchronized (futureTaskMap) {
-			futureTaskMap.clear();
+//			futureTaskMap.clear();
 
 			final String jobName = shardingContext.getJobName();
 			final int timeoutSeconds = getTimeoutSeconds();
@@ -134,6 +140,9 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 					}
 					shardingItemFutureTask.setCallFuture(callFuture);
 					futureTaskMap.put(key, shardingItemFutureTask);
+					itemSets.add(key);
+					currentRunningItemSets.add(key);
+					LogUtils.info(log, jobName,"zy futureTaskMap insert put {}",key);
 				} catch (Throwable t) {
 					LogUtils.error(log, jobName, t.getMessage(), t);
 					retMap.put(key, new SaturnJobReturn(SaturnSystemReturnCode.SYSTEM_FAIL, t.getMessage(),
@@ -142,9 +151,8 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 			}
 		}
 
-		for (Entry<Integer, ShardingItemFutureTask> entry : futureTaskMap.entrySet()) {
-			Integer item = entry.getKey();
-			ShardingItemFutureTask futureTask = entry.getValue();
+		for (Integer item:itemSets){
+			ShardingItemFutureTask futureTask = futureTaskMap.get(item);
 			try {
 				futureTask.getCallFuture().get();
 			} catch (Exception e) {
@@ -154,10 +162,12 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 				continue;
 			}
 			retMap.put(item, futureTask.getCallable().getSaturnJobReturn());
+			LogUtils.info(log, jobName,"zy futureTaskMap insert get {}",item);
+			futureTaskMap.remove(item);
+			LogUtils.info(log, jobName,"zy futureTaskMap remove item {}", item);
 		}
-
 		synchronized (futureTaskMap) {
-			futureTaskMap.clear();
+			currentRunningItemSets.removeAll(itemSets);
 		}
 
 		return retMap;
@@ -173,7 +183,11 @@ public class SaturnJavaJob extends AbstractSaturnJob {
 	public void forceStop() {
 		super.forceStop();
 		synchronized (futureTaskMap) {
-			for (ShardingItemFutureTask shardingItemFutureTask : futureTaskMap.values()) {
+			for(Integer item:currentRunningItemSets){
+				ShardingItemFutureTask shardingItemFutureTask = futureTaskMap.get(item);
+				if(shardingItemFutureTask == null){
+					continue;
+				}
 				JavaShardingItemCallable shardingItemCallable = shardingItemFutureTask.getCallable();
 				Thread currentThread = shardingItemCallable.getCurrentThread();
 				if (currentThread != null) {

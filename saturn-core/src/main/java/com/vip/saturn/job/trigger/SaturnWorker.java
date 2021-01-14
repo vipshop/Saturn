@@ -95,6 +95,7 @@ public class SaturnWorker implements Runnable {
 
 	@Override
 	public void run() {
+		LogUtils.info(log, job.getJobName(),"zy saturn work" );
 		while (!halted.get()) {
 			try {
 				synchronized (sigLock) {

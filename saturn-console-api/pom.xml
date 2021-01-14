@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.vip.saturn</groupId>
 		<artifactId>saturn-job</artifactId>
-		<version>master-SNAPSHOT</version>
+		<version>3.3.1</version>
 	</parent>
 	<artifactId>saturn-console-api</artifactId>
 	<packaging>jar</packaging>

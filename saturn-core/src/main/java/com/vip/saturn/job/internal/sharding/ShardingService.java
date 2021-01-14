@@ -26,17 +26,18 @@ import com.vip.saturn.job.sharding.service.NamespaceShardingContentService;
 import com.vip.saturn.job.utils.BlockUtils;
 import com.vip.saturn.job.utils.ItemUtils;
 import com.vip.saturn.job.utils.LogUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.zookeeper.KeeperException.BadVersionException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 /**
@@ -233,6 +234,65 @@ public class ShardingService extends AbstractSaturnService {
 	private void clearShardingInfo() {
 		for (String each : serverService.getAllServers()) {
 			getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.getShardingNode(each));
+		}
+	}
+
+	/**
+	 *
+	 * @param getLocalHostFailoverItems
+	 * @throws Exception
+	 */
+	public synchronized void removeAndCreateShardingInfo(List<Integer> getLocalHostFailoverItems) throws Exception {
+		LogUtils.info(log, jobName, "removeAndCreateShardingInfo start.");
+		//加分布式锁，防止多个executor对同一个节点进行更新
+		CuratorFramework client = getJobNodeStorage().getClient();
+		InterProcessMutex mutex = new InterProcessMutex(client,"/saturnSharding/lock");
+		try {
+			mutex.acquire();
+			// 所有jobserver的（检查+创建），加上设置sharding necessary内容为0，都是一个事务
+			CuratorTransactionFinal curatorTransactionFinal = getJobNodeStorage().getClient().inTransaction()
+					.check().forPath("/").and();
+			//遍历所有的servers/executorName下分片序号，判断失败的分片是否在该executorName下，是则删除
+			Set<Integer> getLocalHostFailoverItemSets = new HashSet<>(getLocalHostFailoverItems);
+			for (String each : serverService.getAllServers()) {
+				if(StringUtils.equals(each,executorName)){
+					continue;
+				}
+				String value = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.getShardingNode(each));
+				if(StringUtils.isEmpty(value)){
+					continue;
+				}
+				List<Integer> getShardingItemsByexecutorName = ItemUtils.toItemList(value);
+				Set<Integer> getShardingItemSetsByexecutorName = new HashSet<>(getShardingItemsByexecutorName);
+				getShardingItemSetsByexecutorName.removeAll(getLocalHostFailoverItemSets);
+				getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.getShardingNode(each));
+				curatorTransactionFinal.create().forPath(
+						JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(each)),
+						ItemUtils.toItemsString(new ArrayList<>(getShardingItemSetsByexecutorName)).getBytes(StandardCharsets.UTF_8)).and();
+			}
+			LogUtils.info(log, jobName, "removeAndCreateShardingInfo delete LocalHostFailoverItems.");
+			//在local executorName下新加该失败的分片
+			String getLocalHostItems = getJobNodeStorage().getJobNodeDataDirectly(ShardingNode.getShardingNode(executorName));
+			List<Integer> getLocalHostItemsList = new ArrayList<>();
+			if(StringUtils.isEmpty(getLocalHostItems)){
+				getLocalHostItemsList = getLocalHostFailoverItems;
+			} else {
+				getLocalHostItemsList = ItemUtils.toItemList(getLocalHostItems);
+				getLocalHostItemsList.addAll(getLocalHostFailoverItems);
+			}
+			getJobNodeStorage().removeJobNodeIfExisted(ShardingNode.getShardingNode(executorName));
+			curatorTransactionFinal.create().forPath(
+					JobNodePath.getNodeFullPath(jobName, ShardingNode.getShardingNode(executorName)),
+					ItemUtils.toItemsString(getLocalHostItemsList).getBytes(StandardCharsets.UTF_8)).and();
+			curatorTransactionFinal.commit();
+			LogUtils.info(log, jobName, "removeAndCreateShardingInfo append LocalHostFailoverItems.");
+		} catch (Exception e) {
+			// 可能多个sharding task导致计算结果有滞后，但是server机器已经被删除，导致commit失败
+			// 实际上可能不影响最终结果，仍然能正常分配分片，因为还会有resharding事件被响应
+			// 修改日志级别为warn级别，避免不必要的告警
+			LogUtils.warn(log, jobName, "Commit shards failed", e);
+		} finally {
+			mutex.release();
 		}
 	}
 

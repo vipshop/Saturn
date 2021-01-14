@@ -1,0 +1,21 @@
+package com.vip.saturn.job.console.springboot.utils;
+
+public class RsaConfigTools {
+    /**
+     * 私钥对数据进行解密
+     */
+    private static final String PRIVATE_KEY_STRING = "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCCrE/StGyQ/+YVtMA4G3YK2xsFuST4msH18nCgH+OzNkmbmR+9MQ5Pfx2dJXtSEwdcyNPp5UTGejQU+3bIUensX3OsRwm7lnhrWp16VGBgsPyUJd2GVcT7Glte25FMh0SZvQgtO2f5YMSl1GLNYS1pSAonQnOaMB8TxYnV60MMJ7Lf9KDN9dXL0yJpXu+8/v/UoAD+A4qLUKNRA2bwc/SIwUVzLQ1ezoDvy/2GbUZoL9bbt8Zt3elMFPK5XjyPZoRpR4O1I2+40YXzkGX7UWkvilKMLWiH9gc8bb1Lo67qzVbsrK+xX53Fp5uFXWapzVd88uQE1j67OTmmIyNM4jvXAgMBAAECggEBAIBmasUjLq7IFMDtbBd1vGbsZ0AXbiGuh7pxcIOW8jottORk8RAJPQOWZ3X715KNSiW83KYu94aDm9umQFCUVORD4ri80O5363mpf6YtdMpt/rJgBq2yZ61Jd9DctYhaPmlGmts/TWp40KIV8MPYojOaaweqv0cZ09+sskT2OFqezmwITynTFr+oUI8zfwvuXi+dXkosiaH2Po1trP6q3/sO3RVIn1WuFvzIueIRSg4/xm1OU6UQ3tI7aX5sM7GfKTBia0pjQgaDExrp8FbY2RGzfGcZ0J91B66IyLRTPIXnoGYVCkqU8QKeQy2RWZsuUhC5JtIEKYVGHrRe0anQt+kCgYEA8P9G90KQZFrWoERFLtMLYSYimrNdm7Ght0R75q4dobruEH8yl3/IoVnvqe+qRwC/Gtc8Iz1MPvmweP276GyaXds+19E8J+e4VukW239A9CbsRRuVIG6WdAZsOanaE8gMpFX/kgRsgUzkbbKE6XWji3D4YcUjApH9cL/LEio0+rsCgYEAis7SfC5uknxCms1KAVk1NWICkeQWzDQIBfcqN8yaohScTYgwLDsUBd9VgxpeX5TQybRMHtNB/O7YVXyH308vyxN6yvdcTQ2gYviIrI/lggbgwh/qGWZTTHOeLGeVtWJlt33H6YZL5u37cVt86ZXYewFdEDIVrJoSLtNYAdX4l5UCgYB3DEOMJS+aw1y+crsSNGKsrN/vN6eIH6lZFNV30I8Gs4aiU5M0T4VWX00Kzz94L6A3rBci+UbO3R0Vx5GpcOyYbJOQnOVweQEQvbfy2dvGP+v6/3MdQEPGMN4JZiQ6HVpRW8IR6WmIPemhXsxVXy1Y1od8FJwEywU9SyEPahYdvQKBgFtNDM/Xrq01hI3UCCB47/GsBOq3L3Ojqb9awu8u6ms/yUuKD72YImR2cQWp+3c9KFPz/rmr1VSsOamJHsn4iQQ3TOZh69lW5C8VMLjocVqkcYPegBmy34mC5wBoJeXH0gXueucUiapc0K3QMopmIJ1P2UnE19LPCLS6GMIkXr49AoGBAJ7JhexixTTnOyqvZokIaMAC4Ce74jUynJTim0u8yeNchqECeCsfmmrryrkdUFigNt9o00YGF66B6ow20aIBSXxan6/VpZ72ham9l0r9I7xn/OfJNDROr6UFr1N/l1LzlBKI4cdYXa9v9BWj+0gxiLJ3rQ9qbyARXFEzo/Ick2qF";
+
+    /**
+     * 公钥对数据进行加密
+     */
+    public static final String PUBLIC_KEY_STRING = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgqxP0rRskP/mFbTAOBt2CtsbBbkk+JrB9fJwoB/jszZJm5kfvTEOT38dnSV7UhMHXMjT6eVExno0FPt2yFHp7F9zrEcJu5Z4a1qdelRgYLD8lCXdhlXE+xpbXtuRTIdEmb0ILTtn+WDEpdRizWEtaUgKJ0JzmjAfE8WJ1etDDCey3/SgzfXVy9MiaV7vvP7/1KAA/gOKi1CjUQNm8HP0iMFFcy0NXs6A78v9hm1GaC/W27fGbd3pTBTyuV48j2aEaUeDtSNvuNGF85Bl+1FpL4pSjC1oh/YHPG29S6Ou6s1W7KyvsV+dxaebhV1mqc1XfPLkBNY+uzk5piMjTOI71wIDAQAB";
+
+    public static void main(String[] args) throws Exception {
+        //密码明文，也就是数据库的密码
+        String plainText = "zSYMAElUu7";
+        String pd = RSAKeysUtil.encryptByPublicKey(PUBLIC_KEY_STRING,plainText);
+        System.out.println(pd);
+        System.out.println(RSAKeysUtil.decryptByPrivateKey(PRIVATE_KEY_STRING, pd));
+    }
+}

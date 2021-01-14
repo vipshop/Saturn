@@ -85,16 +85,15 @@ public class FailoverListenerManager extends AbstractListenerManager {
 		if (jobScheduler == null || jobScheduler.getJob() == null) {
 			return;
 		}
+		LogUtils.info(log, jobName, "zy init failover item : " + item);
 		if (!jobScheduler.getJob().isFailoverSupported() || !configService.isFailover() || executionService
 				.isCompleted(item)) {
+			LogUtils.info(log, jobName, "zy stop failover item : " + item);
 			return;
 		}
-
 		failoverService.createCrashedFailoverFlag(item);
-
-		if (!executionService.hasRunningItems(jobScheduler.getShardingService().getLocalHostShardingItems())) {
-			failoverService.failoverIfNecessary();
-		}
+		LogUtils.info(log, jobName, "zy failover createCrashedFailoverFlag");
+		failoverService.failoverAndExecute();
 	}
 
 	class ExecutionPathListener extends AbstractJobListener {
@@ -155,7 +154,9 @@ public class FailoverListenerManager extends AbstractListenerManager {
 						if (isShutdown) {
 							return;
 						}
+						LogUtils.info(log, jobName, "zy RunningPathListener {} crashed item:{}.",executionService.isRunning(item), item);
 						if (!executionService.isRunning(item)) {
+							LogUtils.info(log, jobName, "zy RunningPathListener-isRunning {} crashed item:{}.",executionService.isRunning(item), item);
 							failover(item);
 						}
 					} catch (Throwable t) {
@@ -183,7 +184,9 @@ public class FailoverListenerManager extends AbstractListenerManager {
 						if (isShutdown) {
 							return;
 						}
+						LogUtils.info(log, jobName, "zy FailoverPathJobListener {} crashed item:{}.",executionService.isFailover(item), item);
 						if (!executionService.isFailover(item)) {
+							LogUtils.info(log, jobName, "zy FailoverPathJobListener-isFailover {} crashed item:{}.",executionService.isFailover(item), item);
 							failover(item);
 						}
 					} catch (Throwable t) {
