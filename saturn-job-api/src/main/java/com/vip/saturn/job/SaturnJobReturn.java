@@ -14,9 +14,12 @@
 
 package com.vip.saturn.job;
 
+import com.vip.saturn.job.msg.MsgHolder;
+import com.vip.saturn.job.msg.SaturnDelayedLevel;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,9 +34,20 @@ public class SaturnJobReturn implements Serializable {
 
 	public static final String MSG_CONSUME_STATUS_PROP_KEY = "consumeStatus";
 
+	public static final String MSG_BATCH_CONSUME_SUCCESS_OFFSETS = "successOffsets";
+
+	public static final String MSG_BATCH_CONSUME_DISCARD_OFFSETS = "discardOffsets";
+
+	public static final String MSG_BATCH_CONSUME_DELAY_OFFSETS = "delayOffsets";
+
+	public static final String MSG_BATCH_CONSUME_DEFAULT_STATUS = "defaultConsumeStatus";
+
+	public static final String MSG_ALL = "MSG_ALL";
+
+	public static final String OFFSET_SEPERATOR = ",";
+
 	/**
-	 * 支持16个延时等级的投递，默认情况按照重试次数依次使用不同延时来进行消息再投递；用户亦可修改每次重试的延时。 16个延时级别为： 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m
-	 * 30m 1h; 用户可修改每次延迟的时间间隔; 其中delayLevel为1对应5s,16对应1h
+	 * please refer to SaturnDelayedLevel
 	 */
 	public static final String DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY = "delayLevel";
 
@@ -56,6 +70,10 @@ public class SaturnJobReturn implements Serializable {
 	 * 返回的属性，消息服务的作业会将该属性设置到发送的Channel中
 	 */
 	private Map<String, String> prop;
+
+	public static SaturnJobReturnBuilder builder() {
+		return new SaturnJobReturnBuilder();
+	}
 
 	/**
 	 * returnCode默认0（成功），errorGroup默认200（成功）。
@@ -153,6 +171,9 @@ public class SaturnJobReturn implements Serializable {
 		this.prop = prop;
 	}
 
+	/**
+	 * only use for single consume
+	 */
 	public void reconsumeLater() {
 		if (prop == null) {
 			prop = new ConcurrentHashMap<>();
@@ -160,6 +181,10 @@ public class SaturnJobReturn implements Serializable {
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.RECONSUME_LATER.name());
 	}
 
+	/**
+	 * only use for single consume
+	 */
+	@Deprecated
 	public void reconsumeLater(int delayLevel) {
 		if (prop == null) {
 			prop = new ConcurrentHashMap<>();
@@ -168,10 +193,339 @@ public class SaturnJobReturn implements Serializable {
 		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel));
 	}
 
+	/**
+	 * only use for single consume
+	 */
+	public void reconsumeLater(SaturnDelayedLevel delayLevel) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.RECONSUME_LATER.name());
+		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
+	}
+
+	/**
+	 * only use for single consume
+	 */
+	public void complete() {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.CONSUME_SUCCESS.name());
+	}
+
+	/**
+	 * only use for single consume
+	 */
+	public void discard() {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.CONSUME_DISCARD.name());
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void completeAll() {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_SUCCESS_OFFSETS, MSG_ALL);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public boolean isCompleteAll() {
+		if (prop == null) {
+			return false;
+		}
+		return MSG_ALL.equals(prop.get(MSG_BATCH_CONSUME_SUCCESS_OFFSETS));
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void completeSome(List<MsgHolder> msgHolders) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_SUCCESS_OFFSETS, collectOffsetsToString(msgHolders));
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public List<String> getCompleteOffsets() {
+		if (prop == null) {
+			return Collections.emptyList();
+		}
+		String offsetsStr = prop.get(MSG_BATCH_CONSUME_SUCCESS_OFFSETS);
+		return parseOffsetsStr(offsetsStr);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void reconsumeSome(List<MsgHolder> msgHolders) {
+		reconsumeSome(msgHolders, null);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void reconsumeSome(List<MsgHolder> msgHolders, SaturnDelayedLevel delayLevel) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, collectOffsetsToString(msgHolders));
+		if (delayLevel != null) {
+			prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
+		}
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public List<String> getReconsumeOffsets() {
+		if (prop == null) {
+			return Collections.emptyList();
+		}
+		String offsetsStr = prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS);
+		return parseOffsetsStr(offsetsStr);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void reconsumeAllLater() {
+		reconsumeAllLater(null);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void reconsumeAllLater(SaturnDelayedLevel delayLevel) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, MSG_ALL);
+		if (delayLevel != null) {
+			prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
+		}
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public boolean isReconsumeAll() {
+		if (prop == null) {
+			return false;
+		}
+		return MSG_ALL.equals(prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS));
+	}
+
+	public String getDelayLevel() {
+		if (prop == null) {
+			return null;
+		}
+		return prop.get(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void discardSome(List<MsgHolder> msgHolders) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_DISCARD_OFFSETS, collectOffsetsToString(msgHolders));
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public List<String> getDiscardOffsets() {
+		if (prop == null) {
+			return Collections.emptyList();
+		}
+		String offsetsStr = prop.get(MSG_BATCH_CONSUME_DISCARD_OFFSETS);
+		return parseOffsetsStr(offsetsStr);
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public void setBatchConsumeDefaultStatus(SaturnConsumeStatus consumeStatus) {
+		if (prop == null) {
+			prop = new ConcurrentHashMap<>();
+		}
+		prop.put(MSG_BATCH_CONSUME_DEFAULT_STATUS, consumeStatus.name());
+	}
+
+	/**
+	 * only use for batch consume
+	 */
+	public String getBatchConsumeDefaultStatus() {
+		if (prop == null) {
+			return null;
+		}
+		return prop.get(MSG_BATCH_CONSUME_DEFAULT_STATUS);
+	}
+
 	@Override
 	public String toString() {
 		return "SaturnJobReturn [returnCode=" + returnCode + ", returnMsg=" + returnMsg + ", errorGroup=" + errorGroup
 				+ ", prop=" + prop + "]";
+	}
+
+	private String collectOffsetsToString(List<MsgHolder> msgHolders) {
+		if (msgHolders == null && msgHolders.size() == 0) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < msgHolders.size(); i++) {
+			if (i > 0) {
+				sb.append(OFFSET_SEPERATOR);
+			}
+			sb.append(String.valueOf(msgHolders.get(i).getOffset()));
+		}
+		return sb.toString();
+	}
+
+	private List<String> parseOffsetsStr(String offsetsStr) {
+		if (offsetsStr == null || offsetsStr.isEmpty()) {
+			return Collections.emptyList();
+		}
+		String[] splits = offsetsStr.split(OFFSET_SEPERATOR);
+		return Arrays.asList(splits);
+	}
+
+
+	public static class SaturnJobReturnBuilder {
+
+		private SaturnJobReturn saturnJobReturn;
+
+		private SaturnJobReturnBuilder() {
+			this.saturnJobReturn = new SaturnJobReturn();
+		}
+
+		public SaturnJobReturn build() {
+			return saturnJobReturn;
+		}
+
+		public SaturnJobReturnBuilder returnCode(int returnCode) {
+			saturnJobReturn.returnCode = returnCode;
+			return this;
+		}
+
+		public SaturnJobReturnBuilder returnMsg(String returnMsg) {
+			saturnJobReturn.returnMsg = returnMsg;
+			return this;
+		}
+
+		public SaturnJobReturnBuilder errorGroup(int errorGroup) {
+			saturnJobReturn.errorGroup = errorGroup;
+			return this;
+		}
+
+		/**
+		 * only use for single consume
+		 */
+		public SaturnJobReturnBuilder reconsumeLater() {
+			saturnJobReturn.reconsumeLater();
+			return this;
+		}
+
+		/**
+		 * only use for single consume
+		 */
+		public SaturnJobReturnBuilder reconsumeLater(SaturnDelayedLevel delayLevel) {
+			saturnJobReturn.reconsumeLater(delayLevel);
+			return this;
+		}
+
+		/**
+		 * only use for single consume
+		 */
+		public SaturnJobReturnBuilder complete() {
+			saturnJobReturn.complete();
+			return this;
+		}
+
+		/**
+		 * only use for single consume
+		 */
+		public SaturnJobReturnBuilder discard() {
+			saturnJobReturn.discard();
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder completeAll() {
+			saturnJobReturn.completeAll();
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder completeSome(List<MsgHolder> msgHolders) {
+			saturnJobReturn.completeSome(msgHolders);
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder reconsumeSome(List<MsgHolder> msgHolders) {
+			saturnJobReturn.reconsumeSome(msgHolders);
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder reconsumeSome(List<MsgHolder> msgHolders, SaturnDelayedLevel delayLevel) {
+			saturnJobReturn.reconsumeSome(msgHolders, delayLevel);
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder reconsumeAll() {
+			saturnJobReturn.reconsumeAllLater();
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder reconsumeAll(SaturnDelayedLevel delayLevel) {
+			saturnJobReturn.reconsumeAllLater(delayLevel);
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder discardSome(List<MsgHolder> msgHolders) {
+			saturnJobReturn.discardSome(msgHolders);
+			return this;
+		}
+
+		/**
+		 * only use for batch consume
+		 */
+		public SaturnJobReturnBuilder batchConsumeDefaultStatus(SaturnConsumeStatus consumeStatus) {
+			saturnJobReturn.setBatchConsumeDefaultStatus(consumeStatus);
+			return this;
+		}
+
 	}
 
 }
