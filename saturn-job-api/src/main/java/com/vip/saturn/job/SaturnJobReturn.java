@@ -69,7 +69,7 @@ public class SaturnJobReturn implements Serializable {
 	/**
 	 * 返回的属性，消息服务的作业会将该属性设置到发送的Channel中
 	 */
-	private Map<String, String> prop;
+	private Map<String, String> prop = new ConcurrentHashMap<>();
 
 	public static SaturnJobReturnBuilder builder() {
 		return new SaturnJobReturnBuilder();
@@ -168,16 +168,17 @@ public class SaturnJobReturn implements Serializable {
 	}
 
 	public void setProp(Map<String, String> prop) {
-		this.prop = prop;
+		if (prop == null) {
+			this.prop = new HashMap<>();
+		} else {
+			this.prop = prop;
+		}
 	}
 
 	/**
 	 * only use for single consume
 	 */
 	public void reconsumeLater() {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.RECONSUME_LATER.name());
 	}
 
@@ -186,9 +187,6 @@ public class SaturnJobReturn implements Serializable {
 	 */
 	@Deprecated
 	public void reconsumeLater(int delayLevel) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.RECONSUME_LATER.name());
 		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel));
 	}
@@ -197,9 +195,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for single consume
 	 */
 	public void reconsumeLater(SaturnDelayedLevel delayLevel) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.RECONSUME_LATER.name());
 		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
 	}
@@ -208,9 +203,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for single consume
 	 */
 	public void complete() {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.CONSUME_SUCCESS.name());
 	}
 
@@ -218,9 +210,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for single consume
 	 */
 	public void discard() {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(SaturnJobReturn.MSG_CONSUME_STATUS_PROP_KEY, SaturnConsumeStatus.CONSUME_DISCARD.name());
 	}
 
@@ -228,9 +217,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void completeAll() {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(MSG_BATCH_CONSUME_SUCCESS_OFFSETS, MSG_ALL);
 	}
 
@@ -238,9 +224,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public boolean isCompleteAll() {
-		if (prop == null) {
-			return false;
-		}
 		return MSG_ALL.equals(prop.get(MSG_BATCH_CONSUME_SUCCESS_OFFSETS));
 	}
 
@@ -248,19 +231,14 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void completeSome(List<MsgHolder> msgHolders) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
-		prop.put(MSG_BATCH_CONSUME_SUCCESS_OFFSETS, collectOffsetsToString(msgHolders));
+		String finalOffsets = mergeOffsets(prop.get(MSG_BATCH_CONSUME_SUCCESS_OFFSETS), msgHolders);
+		prop.put(MSG_BATCH_CONSUME_SUCCESS_OFFSETS, finalOffsets);
 	}
 
 	/**
 	 * only use for batch consume
 	 */
 	public List<String> getCompleteOffsets() {
-		if (prop == null) {
-			return Collections.emptyList();
-		}
 		String offsetsStr = prop.get(MSG_BATCH_CONSUME_SUCCESS_OFFSETS);
 		return parseOffsetsStr(offsetsStr);
 	}
@@ -276,22 +254,18 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void reconsumeSome(List<MsgHolder> msgHolders, SaturnDelayedLevel delayLevel) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
-		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, collectOffsetsToString(msgHolders));
+		String finalOffsets = mergeOffsets(prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS), msgHolders);
+		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, finalOffsets);
 		if (delayLevel != null) {
 			prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
 		}
+
 	}
 
 	/**
 	 * only use for batch consume
 	 */
 	public List<String> getReconsumeOffsets() {
-		if (prop == null) {
-			return Collections.emptyList();
-		}
 		String offsetsStr = prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS);
 		return parseOffsetsStr(offsetsStr);
 	}
@@ -307,9 +281,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void reconsumeAllLater(SaturnDelayedLevel delayLevel) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, MSG_ALL);
 		if (delayLevel != null) {
 			prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
@@ -320,16 +291,10 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public boolean isReconsumeAll() {
-		if (prop == null) {
-			return false;
-		}
 		return MSG_ALL.equals(prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS));
 	}
 
 	public String getDelayLevel() {
-		if (prop == null) {
-			return null;
-		}
 		return prop.get(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY);
 	}
 
@@ -337,19 +302,14 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void discardSome(List<MsgHolder> msgHolders) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
-		prop.put(MSG_BATCH_CONSUME_DISCARD_OFFSETS, collectOffsetsToString(msgHolders));
+		String finalOffsets = mergeOffsets(prop.get(MSG_BATCH_CONSUME_DISCARD_OFFSETS), msgHolders);
+		prop.put(MSG_BATCH_CONSUME_DISCARD_OFFSETS, finalOffsets);
 	}
 
 	/**
 	 * only use for batch consume
 	 */
 	public List<String> getDiscardOffsets() {
-		if (prop == null) {
-			return Collections.emptyList();
-		}
 		String offsetsStr = prop.get(MSG_BATCH_CONSUME_DISCARD_OFFSETS);
 		return parseOffsetsStr(offsetsStr);
 	}
@@ -358,9 +318,6 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void setBatchConsumeDefaultStatus(SaturnConsumeStatus consumeStatus) {
-		if (prop == null) {
-			prop = new ConcurrentHashMap<>();
-		}
 		prop.put(MSG_BATCH_CONSUME_DEFAULT_STATUS, consumeStatus.name());
 	}
 
@@ -368,10 +325,33 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public String getBatchConsumeDefaultStatus() {
-		if (prop == null) {
-			return null;
-		}
 		return prop.get(MSG_BATCH_CONSUME_DEFAULT_STATUS);
+	}
+
+	private String mergeOffsets(String existedOffsets, List<MsgHolder> newMsgHolders) {
+		if (MSG_ALL.equals(existedOffsets)) {
+			return MSG_ALL;
+		}
+
+		List<Long> newOffsetList = new ArrayList<>();
+		for (MsgHolder msgHolder : newMsgHolders) {
+			newOffsetList.add(msgHolder.getOffset());
+		}
+
+		if (existedOffsets == null || existedOffsets.isEmpty()) {
+			return collectOffsetsToString(newOffsetList);
+		}
+
+		// 去重
+		List<String> existedOffsetList = parseOffsetsStr(existedOffsets);
+		List<Long> needToAddOffsets = new ArrayList<>();
+		for (Long newOffset : newOffsetList) {
+			if (!existedOffsetList.contains(String.valueOf(newOffset))) {
+				needToAddOffsets.add(newOffset);
+			}
+		}
+
+		return existedOffsets + OFFSET_SEPERATOR + collectOffsetsToString(needToAddOffsets);
 	}
 
 	@Override
@@ -380,16 +360,13 @@ public class SaturnJobReturn implements Serializable {
 				+ ", prop=" + prop + "]";
 	}
 
-	private String collectOffsetsToString(List<MsgHolder> msgHolders) {
-		if (msgHolders == null && msgHolders.size() == 0) {
-			return "";
-		}
+	private String collectOffsetsToString(List<Long> offsets) {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < msgHolders.size(); i++) {
+		for (int i = 0; i < offsets.size(); i++) {
 			if (i > 0) {
 				sb.append(OFFSET_SEPERATOR);
 			}
-			sb.append(String.valueOf(msgHolders.get(i).getOffset()));
+			sb.append(String.valueOf(offsets.get(i)));
 		}
 		return sb.toString();
 	}

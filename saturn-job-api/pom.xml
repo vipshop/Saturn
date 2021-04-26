@@ -8,4 +8,13 @@
     </parent>
     <artifactId>saturn-job-api</artifactId>
     <name>${project.artifactId}</name>
+
+    <dependencies>
+        <!-- Test start -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
