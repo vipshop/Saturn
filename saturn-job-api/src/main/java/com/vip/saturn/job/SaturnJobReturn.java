@@ -199,6 +199,10 @@ public class SaturnJobReturn implements Serializable {
 		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
 	}
 
+	public void setDelayLevel(SaturnDelayedLevel delayLevel) {
+		prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
+	}
+
 	/**
 	 * only use for single consume
 	 */
@@ -247,19 +251,8 @@ public class SaturnJobReturn implements Serializable {
 	 * only use for batch consume
 	 */
 	public void reconsumeSome(List<MsgHolder> msgHolders) {
-		reconsumeSome(msgHolders, null);
-	}
-
-	/**
-	 * only use for batch consume
-	 */
-	public void reconsumeSome(List<MsgHolder> msgHolders, SaturnDelayedLevel delayLevel) {
 		String finalOffsets = mergeOffsets(prop.get(MSG_BATCH_CONSUME_DELAY_OFFSETS), msgHolders);
 		prop.put(MSG_BATCH_CONSUME_DELAY_OFFSETS, finalOffsets);
-		if (delayLevel != null) {
-			prop.put(SaturnJobReturn.DELAY_LEVEL_WHEN_RECONSUME_PROP_KEY, String.valueOf(delayLevel.getValue()));
-		}
-
 	}
 
 	/**
@@ -407,6 +400,11 @@ public class SaturnJobReturn implements Serializable {
 			return this;
 		}
 
+		public SaturnJobReturnBuilder deleyLevel(SaturnDelayedLevel delayedLevel) {
+			saturnJobReturn.setDelayLevel(delayedLevel);
+			return this;
+		}
+
 		/**
 		 * only use for single consume
 		 */
@@ -460,14 +458,6 @@ public class SaturnJobReturn implements Serializable {
 		 */
 		public SaturnJobReturnBuilder reconsumeSome(List<MsgHolder> msgHolders) {
 			saturnJobReturn.reconsumeSome(msgHolders);
-			return this;
-		}
-
-		/**
-		 * only use for batch consume
-		 */
-		public SaturnJobReturnBuilder reconsumeSome(List<MsgHolder> msgHolders, SaturnDelayedLevel delayLevel) {
-			saturnJobReturn.reconsumeSome(msgHolders, delayLevel);
 			return this;
 		}
 
