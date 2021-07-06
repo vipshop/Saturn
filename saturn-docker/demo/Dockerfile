@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8-jre-slim
 
 ARG SATURN_EXECUTOR_DOWNLOAD_URL
 
