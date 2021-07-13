@@ -53,7 +53,7 @@ public class GenericSpringBootSaturnApplication extends AbstractSpringSaturnAppl
 	/**
 	 * 使用默认方式启动SpringBoot时，加载的source
 	 */
-	protected Object source() {
+	protected Class<?> source() {
 		return this.getClass();
 	}
 
