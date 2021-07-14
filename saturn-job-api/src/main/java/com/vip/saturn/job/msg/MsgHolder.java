@@ -41,6 +41,9 @@ public class MsgHolder implements Serializable {
 	/** Kafka offset */
 	private long offset;
 
+	/** Kafka partition */
+	private int partition;
+
 	/**
 	 * @deprecated because the String type of payload maybe is not right
 	 */
@@ -56,6 +59,14 @@ public class MsgHolder implements Serializable {
 		this.prop = prop;
 		this.messageId = messageId;
 		this.offset = offset;
+	}
+
+	public MsgHolder(byte[] payloadBytes, Set<Entry<String, String>> prop, String messageId, long offset, int partition) {// NOSONAR
+		this.payloadBytes = payloadBytes;
+		this.prop = prop;
+		this.messageId = messageId;
+		this.offset = offset;
+		this.partition = partition;
 	}
 
 	public MsgHolder(byte[] payloadBytes, Set<Entry<String, String>> prop, String messageId) {// NOSONAR
@@ -112,6 +123,13 @@ public class MsgHolder implements Serializable {
 				this.offset = (long) res;
 			}
 
+			field = clazz.getDeclaredField("partition");
+			field.setAccessible(true);
+			res = field.get(source);
+			if (res != null) {
+				this.partition = (int) res;
+			}
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -156,5 +174,9 @@ public class MsgHolder implements Serializable {
 
 	public long getOffset() {
 		return offset;
+	}
+
+	public int getPartition() {
+		return partition;
 	}
 }

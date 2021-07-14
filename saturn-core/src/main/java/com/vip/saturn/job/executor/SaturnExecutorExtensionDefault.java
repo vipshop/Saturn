@@ -38,7 +38,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 
 	private static Logger log;
 
-	private static final String NAME_VIP_SATURN_LOG_DIR = "VIP_SATURN_LOG_DIR";
+	protected static final String NAME_VIP_SATURN_LOG_DIR = "VIP_SATURN_LOG_DIR";
 
 	public SaturnExecutorExtensionDefault(String executorName, String namespace, ClassLoader executorClassLoader,
 			ClassLoader jobClassLoader) {
@@ -57,7 +57,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 		System.setProperty("saturn.log.dir", saturnLogDir); // for logback.xml
 	}
 
-	private static String getEnv(String key, String defaultValue) {
+	protected static String getEnv(String key, String defaultValue) {
 		String v = System.getenv(key);
 		if (v == null || v.isEmpty()) {
 			return defaultValue;
@@ -65,7 +65,7 @@ public class SaturnExecutorExtensionDefault extends SaturnExecutorExtension {
 		return v;
 	}
 
-	private static String getDefaultLogDir(String executorName) {
+	protected String getDefaultLogDir(String executorName) {
 		return "/apps/logs/saturn/" + System.getProperty("namespace") + "/" + executorName + "-"
 				+ LocalHostService.cachedIpAddress;
 	}
