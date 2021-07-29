@@ -2696,7 +2696,8 @@ public class JobServiceImpl implements JobService {
 		JobStatus jobStatus = getJobStatus(namespace, jobName);
 		if (!JobStatus.READY.equals(jobStatus)) {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-					String.format("该作业(%s)不处于READY状态，不能立即执行", jobName));
+					String.format("该作业(%s)不处于READY状态，不能立即执行。如executor已启动，可能作业初始化失败，"
+							+ "请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log", jobName));
 		}
 		List<JobServerStatus> jobServersStatus = getJobServersStatus(namespace, jobName);
 		if (jobServersStatus != null && !jobServersStatus.isEmpty()) {
@@ -2715,11 +2716,13 @@ public class JobServiceImpl implements JobService {
 				}
 			}
 			if (!hasOnlineExecutor) {
-				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "没有ONLINE的executor，不能立即执行");
+				throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST, "没有ONLINE的executor，不能立即执行。"
+						+ "如executor已启动，可能作业初始化失败，请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log");
 			}
 		} else {
 			throw new SaturnJobConsoleException(ERROR_CODE_BAD_REQUEST,
-					String.format("没有executor接管该作业(%s)，不能立即执行", jobName));
+					String.format("没有executor接管该作业(%s)，不能立即执行。如executor已启动，可能作业初始化失败，"
+							+ "请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log", jobName));
 		}
 	}
 
