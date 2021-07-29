@@ -64,6 +64,10 @@ public class SaturnExecutor {
 
 	private static final String SATURN_APPLICATION_CLASS = "com.vip.saturn.job.application.SaturnApplication";
 
+	private static final String APPLICATION_PROPERTY_FILE_PATH = "application.properties";
+
+	private static final String SATURN_APPLICATION_CLASS_KEY_IN_APPLICATION_PROPERTY = "saturn.spring.boot.application";
+
 	private static Logger log;
 
 	private static AtomicBoolean inited = new AtomicBoolean(false);
@@ -213,16 +217,11 @@ public class SaturnExecutor {
 	 */
 	private static Object validateAndLoadSaturnApplication(ClassLoader jobClassLoader) {
 		try {
-			Properties properties = getSaturnProperty(jobClassLoader);
-			if (properties == null) {
-				return null;
-			}
-			String appClassStr = properties.getProperty("app.class");
+			String appClassStr = getSaturnApplicationClass(jobClassLoader);
 			if (StringUtils.isBlank(appClassStr)) {
 				return null;
 			}
 
-			appClassStr = appClassStr.trim();
 			ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 			try {
 				Thread.currentThread().setContextClassLoader(jobClassLoader);
@@ -247,6 +246,54 @@ public class SaturnExecutor {
 			LogUtils.error(log, LogEvents.ExecutorEvent.INIT, "Fail to load SaturnApplication", e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * 加载application类的配置
+	 * @param jobClassLoader
+	 * @return
+	 */
+	private static String getSaturnApplicationClass(ClassLoader jobClassLoader) throws IOException {
+		String appClassStr = null;
+
+		Properties properties = getSaturnProperty(jobClassLoader);
+		if (properties != null) {
+			appClassStr = properties.getProperty("app.class");
+		}
+
+		if (StringUtils.isBlank(appClassStr)) {
+			appClassStr = tryGetApplicationClassFromApplicationProperties(jobClassLoader);
+		}
+
+		return appClassStr == null ? null : appClassStr.trim();
+	}
+
+	/**
+	 * 从application.properties加载springboot集成类
+	 * @param jobClassLoader
+	 * @return
+	 */
+	private static String tryGetApplicationClassFromApplicationProperties(ClassLoader jobClassLoader)
+			throws IOException {
+		Enumeration<URL> resources = jobClassLoader.getResources(APPLICATION_PROPERTY_FILE_PATH);
+		if (resources == null || !resources.hasMoreElements()) {
+			return null;
+		}
+
+		String appClassStr = null;
+		Properties properties = new Properties();
+		while (resources.hasMoreElements()) {
+			properties.clear();
+			URL url = resources.nextElement();
+			try (InputStream is = url.openStream()) {
+				properties.load(is);
+			}
+
+			if (StringUtils.isNotBlank(appClassStr = properties.getProperty(SATURN_APPLICATION_CLASS_KEY_IN_APPLICATION_PROPERTY))) {
+				break;
+			}
+		}
+		return appClassStr;
 	}
 
 	private static Properties getSaturnProperty(ClassLoader jobClassLoader) throws IOException {
