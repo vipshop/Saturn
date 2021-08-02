@@ -92,6 +92,22 @@
                                     <el-tag :type="statusTag[scope.row.status]" close-transition>{{$map.jobStatusMap[scope.row.status]}}</el-tag>
                                 </template>
                             </el-table-column>
+                            <el-table-column prop="shardingList" label="分配分片" width="90px">
+                                <template slot-scope="scope">
+                                    <span v-if="scope.row.shardingList === ''">-</span>
+                                    <el-tooltip
+                                    v-else
+                                    placement="top"
+                                    effect="light"
+                                    content="可能作业初始化失败，请排查错误日志：/apps/logs///saturn-job-executor-error.log"
+                                    :disabled="!(scope.row.status === 'READY' && scope.row.shardingList === '未分配')">
+                                        <el-tag :type="getShardingType(scope.row)">
+                                          <i v-if="scope.row.status === 'READY' && scope.row.shardingList === '未分配'" class="fa fa-exclamation-circle" style="margin-right:2px"></i>
+                                          {{ scope.row.shardingList }}
+                                        </el-tag>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
                             <el-table-column prop="description" show-overflow-tooltip label="描述">
                                 <template slot-scope="scope"> 
                                     {{scope.row.description}}
@@ -104,12 +120,6 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="shardingTotalCount" label="分片数" width="65px"></el-table-column>
-                            <el-table-column prop="shardingList" label="分配分片" width="90px">
-                                <template slot-scope="scope">
-                                    <span v-if="scope.row.shardingList === ''">-</span>
-                                    <el-tag v-else :type="scope.row.shardingList === '已分配' ? 'primary' : ''">{{ scope.row.shardingList }}</el-tag>
-                                </template>
-                            </el-table-column>
                             <el-table-column prop="lastUpdateTime" label="更新时间" width="160px">
                                 <template slot-scope="scope">
                                     {{ scope.row.lastUpdateTime | formatDate }}
@@ -215,6 +225,15 @@ export default {
     };
   },
   methods: {
+    getShardingType(row) {
+      let type = '';
+      if (row.shardingList === '已分配') {
+        type = 'primary';
+      } else if (row.status === 'READY') {
+        type = 'danger';
+      }
+      return type;
+    },
     batchRunAtOnce() {
       this.batchOperation('立即执行', (arr) => {
         const unstopedJob = this.getUnstoptedJobArray(arr);
