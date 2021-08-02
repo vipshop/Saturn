@@ -99,7 +99,7 @@
                                     v-else
                                     placement="top"
                                     effect="light"
-                                    content="可能作业初始化失败，请排查错误日志：/apps/logs///saturn-job-executor-error.log"
+                                    content="可能作业初始化失败，请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log"
                                     :disabled="!(scope.row.status === 'READY' && scope.row.shardingList === '未分配')">
                                         <el-tag :type="getShardingType(scope.row)">
                                           <i v-if="scope.row.status === 'READY' && scope.row.shardingList === '未分配'" class="fa fa-exclamation-circle" style="margin-right:2px"></i>
