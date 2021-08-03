@@ -99,7 +99,7 @@
                                     v-else
                                     placement="top"
                                     effect="light"
-                                    content="可能作业初始化失败，请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log"
+                                    content="没有运行中的executor或作业初始化失败，后者请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log"
                                     :disabled="!(scope.row.status === 'READY' && scope.row.shardingList === '未分配')">
                                         <el-tag :type="getShardingType(scope.row)">
                                           <i v-if="scope.row.status === 'READY' && scope.row.shardingList === '未分配'" class="fa fa-exclamation-circle" style="margin-right:2px"></i>
@@ -238,7 +238,7 @@ export default {
       this.batchOperation('立即执行', (arr) => {
         const unstopedJob = this.getUnstoptedJobArray(arr);
         if (unstopedJob.length === 0) {
-          this.$message.errorMessage('没有可以立即执行的作业（已就绪）,请重新勾选!');
+          this.$message.errorMessage('没有可以立即执行的作业（待运行）,请重新勾选!');
         } else {
           const params = {
             jobNames: this.getJobNameArray(unstopedJob).join(','),

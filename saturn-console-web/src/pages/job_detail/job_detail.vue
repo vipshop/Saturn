@@ -40,7 +40,7 @@ export default {
         STOPPED: '',
       },
       translateStatus: {
-        READY: '已就绪',
+        READY: '待运行',
         RUNNING: '运行中',
         STOPPING: '停止中',
         STOPPED: '已停止',

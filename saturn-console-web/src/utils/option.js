@@ -46,7 +46,7 @@ export default {
     label: '已停止',
   }, {
     value: 1,
-    label: '已就绪',
+    label: '待运行',
   }, {
     value: 2,
     label: '运行中',
