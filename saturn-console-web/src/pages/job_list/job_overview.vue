@@ -99,8 +99,12 @@
                                     v-else
                                     placement="top"
                                     effect="light"
-                                    content="没有运行中的executor或作业初始化失败，后者请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log"
                                     :disabled="!(scope.row.status === 'READY' && scope.row.shardingList === '未分配')">
+                                        <div slot="content">
+                                          未分配的情况：<br/>
+                                          1.作业启用之后未执行过，此为正常现象，点击立即执行或到达调度时间点时会自动分配。<br/>
+                                          2.没有运行中的executor或作业初始化失败，后者请排查错误日志：/apps/logs/*/*/saturn-job-executor-error.log。
+                                        </div>
                                         <el-tag :type="getShardingType(scope.row)">
                                           <i v-if="scope.row.status === 'READY' && scope.row.shardingList === '未分配'" class="fa fa-exclamation-circle" style="margin-right:2px"></i>
                                           {{ scope.row.shardingList }}
