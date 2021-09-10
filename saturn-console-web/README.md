@@ -21,6 +21,8 @@ Node4.0以上
 
 推荐使用[Yarn](https://yarnpkg.com/) 
 
+推荐使用node==10.24.1，较新版本的node因为底层c++版本的升级，会导致node-sass@4.9.3版本安装失败
+
 #### 如何安装
 
 * npm：`npm install` or `npm i`
