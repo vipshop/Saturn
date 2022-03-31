@@ -41,7 +41,7 @@
 		<quartz.version>2.2.1</quartz.version>
 		<curator.version>2.10.0</curator.version>
         <zookeeper.version>3.4.14</zookeeper.version>
-        <springframework.version>4.3.2.RELEASE</springframework.version>
+        <springframework.version>5.3.18</springframework.version>
 		<spring-boot-test.version>1.5.3.RELEASE</spring-boot-test.version>
 
 		<mybatis.version>3.2.7</mybatis.version>
