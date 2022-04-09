@@ -16,7 +16,7 @@
     "echarts": "^4.2.0-rc.2",
     "element-ui": "^2.4.11",
     "font-awesome": "^4.7.0",
-    "moment": "^2.18.1",
+    "moment": "^2.29.2",
     "opn": "^4.0.2",
     "url-search-params-polyfill": "^4.0.0",
     "vue": "2.5.2",
