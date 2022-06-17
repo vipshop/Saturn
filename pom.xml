@@ -55,7 +55,7 @@
 
 		<lombok.version>1.16.6</lombok.version>
 		<gson.version>2.5</gson.version>
-        <fastjson.version>1.2.72</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
 
 		<guava.version>18.0</guava.version>
 		<commons-beanutils.version>1.9.2</commons-beanutils.version>
