@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@cloudux/noah-theme": "^2.0.2",
-    "axios": "^0.16.2",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.26.0",
     "brace": "^0.10.0",
     "echarts": "^4.2.0-rc.2",
