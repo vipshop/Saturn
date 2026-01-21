@@ -49,7 +49,7 @@
         id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial,
         use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
         sharding_item_parameters, job_parameter, process_count_interval_seconds,
-        failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
+        failover, dependencies, `groups`, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
         channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
         namespace, zk_list,is_enabled,job_mode,custom_context,rerun, up_stream, down_stream, disable_timeout_seconds
     </sql>
@@ -70,16 +70,16 @@
             <choose>
                 <when test="condition.groups == null"></when>
                 <when test="condition.groups == ''">
-                    and (groups = #{condition.groups} or groups is NULL)
+                    and (`groups` = #{condition.groups} or `groups` is NULL)
                 </when>
                 <otherwise>
                     and (
                         <foreach collection="condition.groups.split(',')" item="item" separator="or">
                             <if test="item != '未分组'">
-                                FIND_IN_SET(#{item}, groups)
+                                FIND_IN_SET(#{item}, `groups`)
                             </if>
                             <if test="item == '未分组'">
-                                (groups = '' or groups is NULL)
+                                (`groups` = '' or `groups` is NULL)
                             </if>
                         </foreach>
                     )
@@ -123,16 +123,16 @@
             <choose>
                 <when test="condition.groups == null"></when>
                 <when test="condition.groups == ''">
-                    and (groups = #{condition.groups} or groups is NULL)
+                    and (`groups` = #{condition.groups} or `groups` is NULL)
                 </when>
                 <otherwise>
                     and (
                     <foreach collection="condition.groups.split(',')" item="item" separator="or">
                         <if test="item != '未分组'">
-                            FIND_IN_SET(#{item}, groups)
+                            FIND_IN_SET(#{item}, `groups`)
                         </if>
                         <if test="item == '未分组'">
-                            (groups = '' or groups is NULL)
+                            (`groups` = '' or `groups` is NULL)
                         </if>
                     </foreach>
                     )
@@ -201,7 +201,7 @@
         time_zone, cron, prefer_list, pause_period_date,
         pause_period_time, sharding_item_parameters,
         job_parameter, process_count_interval_seconds,
-        failover, dependencies, groups, description,
+        failover, dependencies, `groups`, description,
         timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
         job_type, queue_name, create_by,
         create_time, last_update_by, last_update_time,
@@ -249,7 +249,7 @@
         process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER},
         failover = #{failover,jdbcType=BIT},
         dependencies = #{dependencies,jdbcType=VARCHAR},
-        groups = #{groups,jdbcType=VARCHAR},
+        `groups` = #{groups,jdbcType=VARCHAR},
         description = #{description,jdbcType=VARCHAR},
         timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER},
         timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},
@@ -290,14 +290,14 @@
     <update id="addToGroups">
         UPDATE job_config
         SET last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
-        groups =
+        `groups` =
         (
         CASE
-            WHEN groups REGEXP '^${groupName},' THEN groups
-            WHEN groups REGEXP ',${groupName}$' THEN groups
-            WHEN groups REGEXP ',${groupName},' THEN groups
-            WHEN groups IS NULL OR groups = '' THEN CONCAT(groups,'${groupName}')
-            ELSE CONCAT(groups,',${groupName}')
+            WHEN `groups` REGEXP '^${groupName},' THEN `groups`
+            WHEN `groups` REGEXP ',${groupName}$' THEN `groups`
+            WHEN `groups` REGEXP ',${groupName},' THEN `groups`
+            WHEN `groups` IS NULL OR `groups` = '' THEN CONCAT(`groups`,'${groupName}')
+            ELSE CONCAT(`groups`,',${groupName}')
         END
         )
         WHERE namespace = #{namespace,jdbcType=VARCHAR}
@@ -311,14 +311,14 @@
     <update id="batchSetGroups">
         UPDATE job_config
         SET last_update_by = #{lastUpdateBy,jdbcType=VARCHAR},
-        groups =
+        `groups` =
         (
         CASE
-            WHEN groups REGEXP '^${groupName},' THEN RIGHT(groups, LENGTH(groups) - LENGTH('${groupName},'))
-            WHEN groups REGEXP ',${groupName}$' THEN LEFT(groups, LENGTH(groups) - LENGTH(',${groupName}'))
-            WHEN groups REGEXP ',${groupName},' THEN REPLACE(groups, ',${groupName},', ',')
-            WHEN groups = '${groupName}' THEN ''
-            ELSE groups
+            WHEN `groups` REGEXP '^${groupName},' THEN RIGHT(`groups`, LENGTH(`groups`) - LENGTH('${groupName},'))
+            WHEN `groups` REGEXP ',${groupName}$' THEN LEFT(`groups`, LENGTH(`groups`) - LENGTH(',${groupName}'))
+            WHEN `groups` REGEXP ',${groupName},' THEN REPLACE(`groups`, ',${groupName},', ',')
+            WHEN `groups` = '${groupName}' THEN ''
+            ELSE `groups`
         END
         )
         WHERE namespace = #{namespace,jdbcType=VARCHAR}

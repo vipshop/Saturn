@@ -43,7 +43,7 @@
   <sql id="Base_Column_List" >
     id, job_name, job_class, sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date, pause_period_time,
     sharding_item_parameters, job_parameter, process_count_interval_seconds, 
-    failover, dependencies, groups, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
+    failover, dependencies, `groups`, description, timeout_4_alarm_seconds, timeout_seconds, show_normal_log,
     channel_name, job_type, queue_name, create_by, create_time, last_update_by, last_update_time,
     namespace, zk_list,zk_list,job_mode,custom_context,disable_timeout_seconds
   </sql>
@@ -62,7 +62,7 @@
       sharding_total_count, load_level, job_degree, enabled_report, local_mode, use_serial, use_disprefer_list, time_zone, cron, prefer_list, pause_period_date,
       pause_period_time, sharding_item_parameters, 
       job_parameter, process_count_interval_seconds, 
-      failover, dependencies, groups, description,
+      failover, dependencies, `groups`, description,
       timeout_4_alarm_seconds, timeout_seconds, show_normal_log, channel_name,
       job_type, queue_name, create_by, 
       create_time, last_update_by, last_update_time,
@@ -146,7 +146,7 @@
         dependencies,
       </if>
       <if test="groups != null">
-        groups,
+        `groups`,
       </if>
       <if test="description != null" >
         description,
@@ -369,7 +369,7 @@
         dependencies = #{dependencies,jdbcType=VARCHAR},
       </if>
       <if test="groups != null">
-        groups = #{groups,jdbcType=VARCHAR},
+        `groups` = #{groups,jdbcType=VARCHAR},
       </if>
       <if test="description != null" >
         description = #{description,jdbcType=VARCHAR},
@@ -443,7 +443,7 @@
       process_count_interval_seconds = #{processCountIntervalSeconds,jdbcType=INTEGER},
       failover = #{failover,jdbcType=BIT},
       dependencies = #{dependencies,jdbcType=VARCHAR},
-      groups = #{groups,jdbcType=VARCHAR},
+      `groups` = #{groups,jdbcType=VARCHAR},
       description = #{description,jdbcType=VARCHAR},
       timeout_4_alarm_seconds = #{timeout4AlarmSeconds,jdbcType=INTEGER},
       timeout_seconds = #{timeoutSeconds,jdbcType=INTEGER},

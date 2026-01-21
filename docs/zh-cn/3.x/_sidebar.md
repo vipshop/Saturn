@@ -17,7 +17,7 @@
 
   - [作业的灰度发布](zh-cn/3.x/grayscale_publishing.md)
   - [性能测试报告](zh-cn/3.x/saturn_performance_test_2017.md)
-
+  - [编译说明](zh-cn/3.x/compile.md)
 - [Release Note](https://github.com/vipshop/Saturn/releases)
 
 - [Release Roadmap](zh-cn/3.x/saturn3-roadmap.md)
