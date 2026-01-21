@@ -1,0 +1,26 @@
+<assembly>
+	<id>assembly</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<includeBaseDirectory>true</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>src/main/saturn</directory>
+			<outputDirectory>saturn</outputDirectory>
+			<fileMode>0755</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/assembly/bin</directory>
+			<outputDirectory>bin</outputDirectory>
+			<fileMode>0755</fileMode>
+		</fileSet>
+	</fileSets>
+
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory><!-- 依赖jar包放置目录-->
+			<useProjectArtifact>true</useProjectArtifact> <!-- 当前项目构件是否包含在这个依赖集合里 -->
+		</dependencySet>
+	</dependencySets>
+</assembly>
