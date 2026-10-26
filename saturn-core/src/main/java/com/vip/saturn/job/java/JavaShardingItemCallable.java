@@ -210,7 +210,7 @@ public class JavaShardingItemCallable extends ShardingItemCallable {
 				String jobLog = SaturnSystemOutputStream.clearAndGetLog();
 				if (jobLog != null && jobLog.length() > SaturnConstant.MAX_JOB_LOG_DATA_LENGTH) {
 					LogUtils.info(log, jobName,
-							"As the job log exceed max length, only the previous {} characters will be reported",
+							"As the job log exceeds max length, only the previous {} characters will be reported",
 							SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 					jobLog = jobLog.substring(0, SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 				}

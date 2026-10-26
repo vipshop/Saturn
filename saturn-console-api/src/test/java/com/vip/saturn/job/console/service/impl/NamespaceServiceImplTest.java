@@ -89,7 +89,7 @@ public class NamespaceServiceImplTest {
 		}
 
 		Assert.assertNotNull(exception);
-		Assert.assertEquals(exception.getMessage(), "srcNamespace and destNamespace should be difference");
+		Assert.assertEquals(exception.getMessage(), "srcNamespace and destNamespace should be different");
 	}
 
 	@Test

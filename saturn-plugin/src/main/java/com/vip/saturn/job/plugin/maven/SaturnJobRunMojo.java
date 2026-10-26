@@ -64,7 +64,7 @@ public class SaturnJobRunMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		if (!CommonUtils.initSaturnHome())
-			throw new MojoExecutionException("The ${user.home}/.saturn/caches is not exists");
+			throw new MojoExecutionException("The ${user.home}/.saturn/caches does not exist");
 
 		Log log = getLog();
 		log.info("Running saturn job");
@@ -109,7 +109,7 @@ public class SaturnJobRunMojo extends AbstractMojo {
 					new URL[] { new File(saturnExecutorDir, "saturn-executor.jar").toURL() },
 					ClassLoader.getSystemClassLoader());
 		} catch (MalformedURLException e) {
-			throw new MojoExecutionException("get saturn-executor classLoad failed", e);
+			throw new MojoExecutionException("get saturn-executor classLoader failed", e);
 		}
 
 		final List<String> argList = new ArrayList<>();

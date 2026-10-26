@@ -216,7 +216,7 @@ public class ScriptJobRunner {
 		// 出于系统保护考虑，jobLog不能超过1M
 		if (jobLog != null && jobLog.length() > SaturnConstant.MAX_JOB_LOG_DATA_LENGTH) {
 			LogUtils.info(log, jobName,
-					"As the job log exceed max length, only the previous {} characters will be reported",
+					"As the job log exceeds max length, only the previous {} characters will be reported",
 					SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 			jobLog = jobLog.substring(0, SaturnConstant.MAX_JOB_LOG_DATA_LENGTH);
 		}

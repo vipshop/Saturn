@@ -50,7 +50,7 @@ public class SaturnJobZipMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		if (!CommonUtils.initSaturnHome())
-			throw new MojoExecutionException("The ${user.home}/.saturn/caches is not exists");
+			throw new MojoExecutionException("The ${user.home}/.saturn/caches does not exist");
 
 		Log log = getLog();
 
